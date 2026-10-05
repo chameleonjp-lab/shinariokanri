@@ -1,0 +1,226 @@
+{
+  "exampleKind": "behavior-fixture",
+  "fixtureVersion": "1.0.0",
+  "isNativeArchive": false,
+  "description": "分岐で鍵と手掛かりを得る道/飛ばす道が合流し、状態差が残る。古い世界出来事の回想は提示順で扱う。期待値は仕様の説明でありアプリ実行結果ではない。",
+  "projectId": "00000000-0000-4000-8000-000000000001",
+  "mainStart": "0",
+  "calendar": "proleptic-gregorian-second",
+  "characters": [
+    {
+      "id": "00000000-0000-4000-8000-00000000000a",
+      "name": "アオ",
+      "reading": "あお"
+    },
+    {
+      "id": "00000000-0000-4000-8000-00000000000b",
+      "name": "門番",
+      "reading": "もんばん"
+    }
+  ],
+  "events": [
+    {
+      "id": "00000000-0000-4000-8000-000000000014",
+      "name": "過去の鍵の記録",
+      "time": {
+        "mode": "instant",
+        "at": "-10",
+        "calendarId": "example-calendar"
+      },
+      "laneRole": "common",
+      "participants": []
+    }
+  ],
+  "variables": [
+    {
+      "id": "00000000-0000-4000-8000-000000000028",
+      "key": "has_key",
+      "valueType": "boolean",
+      "scope": "run",
+      "initial": {
+        "type": "boolean",
+        "value": false
+      },
+      "allowed": {
+        "values": [
+          false,
+          true
+        ]
+      }
+    }
+  ],
+  "foreshadows": [
+    {
+      "id": "00000000-0000-4000-8000-000000000032",
+      "question": "門を開く鍵はどこか",
+      "requiredInfoIds": [
+        "00000000-0000-4000-8000-000000000033"
+      ],
+      "resolutionPolicy": "this_work"
+    }
+  ],
+  "disclosures": [
+    {
+      "id": "00000000-0000-4000-8000-000000000033",
+      "foreshadowId": "00000000-0000-4000-8000-000000000032",
+      "nodeId": "00000000-0000-4000-8000-000000000020",
+      "role": "clue",
+      "stage": "hint",
+      "eventId": "00000000-0000-4000-8000-000000000014"
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000034",
+      "foreshadowId": "00000000-0000-4000-8000-000000000032",
+      "nodeId": "00000000-0000-4000-8000-000000000022",
+      "role": "payoff",
+      "stage": "reveal"
+    }
+  ],
+  "graph": {
+    "id": "00000000-0000-4000-8000-00000000001e",
+    "entryId": "00000000-0000-4000-8000-00000000001f",
+    "nodes": [
+      {
+        "id": "00000000-0000-4000-8000-00000000001f",
+        "nodeType": "choice",
+        "label": "記録を読むか",
+        "executionPolicy": "manual_choice"
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000020",
+        "nodeType": "automatic",
+        "label": "古い記録を提示",
+        "executionPolicy": "first_match",
+        "shownInformationIds": [
+          "00000000-0000-4000-8000-000000000033"
+        ]
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000021",
+        "nodeType": "automatic",
+        "label": "同じ門へ合流",
+        "executionPolicy": "first_match"
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000022",
+        "nodeType": "terminal",
+        "label": "真相を明かす",
+        "terminalReason": "意図した終了",
+        "shownInformationIds": [
+          "00000000-0000-4000-8000-000000000034"
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "id": "00000000-0000-4000-8000-00000000003d",
+        "fromId": "00000000-0000-4000-8000-00000000001f",
+        "toId": "00000000-0000-4000-8000-000000000020",
+        "edgeType": "choice",
+        "label": "鍵と記録を調べる",
+        "condition": {
+          "op": "constant",
+          "value": true
+        },
+        "effects": [
+          {
+            "operation": "set",
+            "targetId": "00000000-0000-4000-8000-000000000028",
+            "value": {
+              "type": "boolean",
+              "value": true
+            }
+          }
+        ]
+      },
+      {
+        "id": "00000000-0000-4000-8000-00000000003e",
+        "fromId": "00000000-0000-4000-8000-00000000001f",
+        "toId": "00000000-0000-4000-8000-000000000021",
+        "edgeType": "choice",
+        "label": "記録を飛ばす",
+        "condition": {
+          "op": "constant",
+          "value": true
+        },
+        "effects": []
+      },
+      {
+        "id": "00000000-0000-4000-8000-00000000003f",
+        "fromId": "00000000-0000-4000-8000-000000000020",
+        "toId": "00000000-0000-4000-8000-000000000021",
+        "edgeType": "automatic",
+        "priority": 1,
+        "condition": {
+          "op": "constant",
+          "value": true
+        },
+        "effects": []
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000040",
+        "fromId": "00000000-0000-4000-8000-000000000021",
+        "toId": "00000000-0000-4000-8000-000000000022",
+        "edgeType": "automatic",
+        "priority": 1,
+        "condition": {
+          "op": "constant",
+          "value": true
+        },
+        "effects": []
+      }
+    ]
+  },
+  "expectedRoutes": [
+    {
+      "name": "取得する道",
+      "edgeIds": [
+        "00000000-0000-4000-8000-00000000003d",
+        "00000000-0000-4000-8000-00000000003f",
+        "00000000-0000-4000-8000-000000000040"
+      ],
+      "stateAtMerge": {
+        "00000000-0000-4000-8000-000000000028": {
+          "type": "boolean",
+          "value": true
+        }
+      },
+      "presentedInformationIds": [
+        "00000000-0000-4000-8000-000000000033",
+        "00000000-0000-4000-8000-000000000034"
+      ],
+      "requiredPresentation": "satisfied",
+      "humanUnderstanding": "not_automatically_determined"
+    },
+    {
+      "name": "飛ばす道",
+      "edgeIds": [
+        "00000000-0000-4000-8000-00000000003e",
+        "00000000-0000-4000-8000-000000000040"
+      ],
+      "stateAtMerge": {
+        "00000000-0000-4000-8000-000000000028": {
+          "type": "boolean",
+          "value": false
+        }
+      },
+      "presentedInformationIds": [
+        "00000000-0000-4000-8000-000000000034"
+      ],
+      "requiredPresentation": "missing",
+      "witnessMissingInfoId": "00000000-0000-4000-8000-000000000033",
+      "humanUnderstanding": "not_automatically_determined"
+    }
+  ],
+  "expectedInvariants": [
+    "表示単位またはmainStart変更ではeventのat=-10が変わらない",
+    "合流nodeではhas_keyを初期化しない",
+    "取り消しでは変数、所持、知識、既読、乱数位置を一緒に戻す",
+    "common表示は全人物の参加や知識取得を意味しない"
+  ],
+  "acceptanceIds": [
+    "AT-E02",
+    "AT-E03",
+    "AT-E04"
+  ]
+}

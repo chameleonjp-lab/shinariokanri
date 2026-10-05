@@ -1,0 +1,716 @@
+[
+  {
+    "id": "WP01",
+    "stage": "A",
+    "title": "データ契約・固定データ・検査の基盤",
+    "depends_on": [],
+    "size": "L",
+    "deliverables": "型定義、版付きschema、整数tick・条件の三値評価・投影の純粋処理、試験固定データ、文書検査とアプリ検査のCIを用意する。",
+    "completion_gate": "必須型・参照・ID・三値評価の試験があり、文書の追跡とアプリ結果を別報告する。",
+    "primary_risk": "形式の土台が後で変わり全データを失う",
+    "requirement_ids": [
+      "REQ-N16"
+    ],
+    "acceptance_ids": [
+      "AT-N16"
+    ],
+    "status": "planned",
+    "estimate_status": "unestimated",
+    "owner_role": "実装担当（未割当）"
+  },
+  {
+    "id": "WP02",
+    "stage": "A",
+    "title": "PC・iPad・スマートフォンの編集基盤",
+    "depends_on": [
+      "WP01"
+    ],
+    "size": "L",
+    "deliverables": "画面幅別ナビゲーション、詳細編集、一覧代替、キーボードとタッチ、エラー表示、端末別ビュー状態、キャッシュ起動を実装する。",
+    "completion_gate": "スマートフォン単独の作成・条件・線編集・読み込み操作の導線があり、文字拡大とIMEを妨げない。",
+    "primary_risk": "図を縮小しただけで編集不能になる",
+    "requirement_ids": [
+      "REQ-F31",
+      "REQ-F32",
+      "REQ-F33",
+      "REQ-N01",
+      "REQ-N18"
+    ],
+    "acceptance_ids": [
+      "AT-F31",
+      "AT-F32",
+      "AT-F33",
+      "AT-N01",
+      "AT-N18"
+    ],
+    "status": "planned",
+    "estimate_status": "unestimated",
+    "owner_role": "実装担当（未割当）"
+  },
+  {
+    "id": "WP03",
+    "stage": "A",
+    "title": "端末内保存・履歴・送信待ち",
+    "depends_on": [
+      "WP01",
+      "WP02"
+    ],
+    "size": "L",
+    "deliverables": "原子的コマンド、IndexedDB保存、安定ID、履歴・取消・単体復元入口、送信待ち箱、移行復元点を実装する。",
+    "completion_gate": "容量不足・再起動・重複操作・取消を含む保存試験が成功し、成功前に保存済みを出さない。",
+    "primary_risk": "偽の保存表示と移行時の一部更新",
+    "requirement_ids": [
+      "REQ-B23",
+      "REQ-N06",
+      "REQ-N11"
+    ],
+    "acceptance_ids": [
+      "AT-B23",
+      "AT-N06",
+      "AT-N11"
+    ],
+    "status": "planned",
+    "estimate_status": "unestimated",
+    "owner_role": "実装担当（未割当）"
+  },
+  {
+    "id": "WP04",
+    "stage": "A",
+    "title": "共通データと入力雛形",
+    "depends_on": [
+      "WP01",
+      "WP02",
+      "WP03"
+    ],
+    "size": "M",
+    "deliverables": "人物・出来事・場所・物品・メモのCRUD、参加役割、型付き項目、追加雛形、原メモからの変換を実装する。",
+    "completion_gate": "名前または要約のみから始められ、不正な型変更を拒否し、参照のある削除は影響を示す。",
+    "primary_risk": "カスタム項目と標準項目の不整合",
+    "requirement_ids": [
+      "REQ-B01",
+      "REQ-B08",
+      "REQ-B11",
+      "REQ-F01",
+      "REQ-F02",
+      "REQ-F56"
+    ],
+    "acceptance_ids": [
+      "AT-B01",
+      "AT-B08",
+      "AT-B11",
+      "AT-F01",
+      "AT-F02",
+      "AT-F56"
+    ],
+    "status": "planned",
+    "estimate_status": "unestimated",
+    "owner_role": "実装担当（未割当）"
+  },
+  {
+    "id": "WP05",
+    "stage": "B",
+    "title": "検索・索引・参照・整理",
+    "depends_on": [
+      "WP04"
+    ],
+    "size": "L",
+    "deliverables": "IDリンク・段落リンク・逆参照、日本語検索、索引、固定/動的一覧、一括変更、統合、変更影響を実装する。",
+    "completion_gate": "同名・別名・改名・削除・一般語の候補除外を検証し、統合後も全参照を追える。",
+    "primary_risk": "名前を主キーにすることと検索からの秘密漏れ",
+    "requirement_ids": [
+      "REQ-B10",
+      "REQ-B24",
+      "REQ-F26",
+      "REQ-F27",
+      "REQ-F57",
+      "REQ-F58",
+      "REQ-F60",
+      "REQ-N13"
+    ],
+    "acceptance_ids": [
+      "AT-B10",
+      "AT-B24",
+      "AT-F26",
+      "AT-F27",
+      "AT-F57",
+      "AT-F58",
+      "AT-F60",
+      "AT-N13"
+    ],
+    "status": "planned",
+    "estimate_status": "unestimated",
+    "owner_role": "実装担当（未割当）"
+  },
+  {
+    "id": "WP06",
+    "stage": "B",
+    "title": "暦・時点・日時の制約",
+    "depends_on": [
+      "WP04"
+    ],
+    "size": "L",
+    "deliverables": "独自暦、負tick、不確定範囲、相対制約、年齢、基準点、変更影響と取消を実装する。",
+    "completion_gate": "表示単位と基準点変更では日時が不変。循環・閏・未定・固定日時の衝突試験を通す。",
+    "primary_risk": "概算値を確定値にすることと数値精度",
+    "requirement_ids": [
+      "REQ-B05",
+      "REQ-B06",
+      "REQ-B21",
+      "REQ-F07",
+      "REQ-F08"
+    ],
+    "acceptance_ids": [
+      "AT-B05",
+      "AT-B06",
+      "AT-B21",
+      "AT-F07",
+      "AT-F08"
+    ],
+    "status": "planned",
+    "estimate_status": "unestimated",
+    "owner_role": "実装担当（未割当）"
+  },
+  {
+    "id": "WP07",
+    "stage": "B",
+    "title": "年表とレーンの編集",
+    "depends_on": [
+      "WP02",
+      "WP05",
+      "WP06"
+    ],
+    "size": "L",
+    "deliverables": "固定ラベル、共通/人物レーン、グループ、多重参照、期間表示、選択同期、局所横移動と一覧編集を実装する。",
+    "completion_gate": "スマートフォンで横移動しながら人物を識別でき、多重表示の編集は一つの本体へ反映する。",
+    "primary_risk": "全件描画と共通出来事への全員自動参加",
+    "requirement_ids": [
+      "REQ-B02",
+      "REQ-B03",
+      "REQ-B04"
+    ],
+    "acceptance_ids": [
+      "AT-B02",
+      "AT-B03",
+      "AT-B04"
+    ],
+    "status": "planned",
+    "estimate_status": "unestimated",
+    "owner_role": "実装担当（未割当）"
+  },
+  {
+    "id": "WP08",
+    "stage": "B",
+    "title": "意味付きの関係と可視化",
+    "depends_on": [
+      "WP05",
+      "WP06",
+      "WP07"
+    ],
+    "size": "L",
+    "deliverables": "方向・時期・経路・根拠付き関係、図の種別、凡例、階層、一段/二段表示、タップによる線編集、関係表を実装する。",
+    "completion_gate": "図配置は表示状態だけを変え、色を見分けなくても関係を読み編集できる。",
+    "primary_risk": "異なる意味の線が混ざり方向を失う",
+    "requirement_ids": [
+      "REQ-B07",
+      "REQ-B09",
+      "REQ-F55",
+      "REQ-F59"
+    ],
+    "acceptance_ids": [
+      "AT-B07",
+      "AT-B09",
+      "AT-F55",
+      "AT-F59"
+    ],
+    "status": "planned",
+    "estimate_status": "unestimated",
+    "owner_role": "実装担当（未割当）"
+  },
+  {
+    "id": "WP09",
+    "stage": "B",
+    "title": "共通世界・場所・移動・正体",
+    "depends_on": [
+      "WP06",
+      "WP08"
+    ],
+    "size": "L",
+    "deliverables": "共通設定の版参照、地図階層、場所変化、移動、所有履歴、家系・別名・認識者を実装する。",
+    "completion_gate": "地図なしでも使え、時期/経路で表示を切替え、共通設定更新で旧作品を壊さない。",
+    "primary_risk": "所有重複、未確定移動の断定、正体漏れ",
+    "requirement_ids": [
+      "REQ-B18",
+      "REQ-F09",
+      "REQ-F10",
+      "REQ-F11",
+      "REQ-F12"
+    ],
+    "acceptance_ids": [
+      "AT-B18",
+      "AT-F09",
+      "AT-F10",
+      "AT-F11",
+      "AT-F12"
+    ],
+    "status": "planned",
+    "estimate_status": "unestimated",
+    "owner_role": "実装担当（未割当）"
+  },
+  {
+    "id": "WP10",
+    "stage": "C",
+    "title": "章・本文・構成・正本と別案",
+    "depends_on": [
+      "WP05",
+      "WP06"
+    ],
+    "size": "L",
+    "deliverables": "世界出来事と場面の対応、章順、筋、目標・変化、雛形・緊張値、要約/本文/メモ、ルビ/縦書き確認、正本/別案/公開版を実装する。",
+    "completion_gate": "回想を移動しても世界日付は不変。別案と公開版が独立し、未入力場面も作れる。",
+    "primary_risk": "本文を複製して図ごとに編集結果が分かれる",
+    "requirement_ids": [
+      "REQ-B13",
+      "REQ-B20",
+      "REQ-F03",
+      "REQ-F04",
+      "REQ-F05",
+      "REQ-F06",
+      "REQ-F25",
+      "REQ-N19"
+    ],
+    "acceptance_ids": [
+      "AT-B13",
+      "AT-B20",
+      "AT-F03",
+      "AT-F04",
+      "AT-F05",
+      "AT-F06",
+      "AT-F25",
+      "AT-N19"
+    ],
+    "status": "planned",
+    "estimate_status": "unestimated",
+    "owner_role": "実装担当（未割当）"
+  },
+  {
+    "id": "WP11",
+    "stage": "C",
+    "title": "フラグ・条件・状態遷移",
+    "depends_on": [
+      "WP01",
+      "WP04",
+      "WP05"
+    ],
+    "size": "L",
+    "deliverables": "状態辞書、型/範囲/初期化/算出、条件AST、三値説明、遷移表、参照/書込一覧、効果の原子適用を実装する。",
+    "completion_gate": "括弧、未定義、禁止遷移、循環算出、重複トリガーを固定データで検証する。",
+    "primary_risk": "未定義=偽と任意コード評価",
+    "requirement_ids": [
+      "REQ-B15",
+      "REQ-F37",
+      "REQ-F38",
+      "REQ-F39",
+      "REQ-F40",
+      "REQ-F41"
+    ],
+    "acceptance_ids": [
+      "AT-B15",
+      "AT-F37",
+      "AT-F38",
+      "AT-F39",
+      "AT-F40",
+      "AT-F41"
+    ],
+    "status": "planned",
+    "estimate_status": "unestimated",
+    "owner_role": "実装担当（未割当）"
+  },
+  {
+    "id": "WP12",
+    "stage": "C",
+    "title": "分岐図・クエスト・再利用",
+    "depends_on": [
+      "WP08",
+      "WP10",
+      "WP11"
+    ],
+    "size": "L",
+    "deliverables": "入口/出口のある階層分岐、選択/自動/終端、トリガー、会話/クエスト、共通場面の参照・複製・上書きを実装する。",
+    "completion_gate": "条件・効果の規則に一致し、入口不整合と選択肢ゼロを終端から分ける。",
+    "primary_risk": "折り畳みによるエラー隠蔽と再利用の意図しない伝播",
+    "requirement_ids": [
+      "REQ-B14",
+      "REQ-B22",
+      "REQ-F13",
+      "REQ-F14",
+      "REQ-F19"
+    ],
+    "acceptance_ids": [
+      "AT-B14",
+      "AT-B22",
+      "AT-F13",
+      "AT-F14",
+      "AT-F19"
+    ],
+    "status": "planned",
+    "estimate_status": "unestimated",
+    "owner_role": "実装担当（未割当）"
+  },
+  {
+    "id": "WP13",
+    "stage": "C",
+    "title": "試し読み・比較・周回",
+    "depends_on": [
+      "WP11",
+      "WP12"
+    ],
+    "size": "L",
+    "deliverables": "途中開始スナップショット、選択戻し、状態差分、合流比較、既読/抽選/周回、記録付き試読を実装する。",
+    "completion_gate": "鍵有無の二経路と抽選が巻き戻せ、合流で状態を初期化しない。",
+    "primary_risk": "状態/乱数の復元漏れと途中開始の証拠誤認",
+    "requirement_ids": [
+      "REQ-B16",
+      "REQ-F15",
+      "REQ-F16",
+      "REQ-F20"
+    ],
+    "acceptance_ids": [
+      "AT-B16",
+      "AT-F15",
+      "AT-F16",
+      "AT-F20"
+    ],
+    "status": "planned",
+    "estimate_status": "unestimated",
+    "owner_role": "実装担当（未割当）"
+  },
+  {
+    "id": "WP14",
+    "stage": "C",
+    "title": "経路記録・検査・網羅率",
+    "depends_on": [
+      "WP13"
+    ],
+    "size": "L",
+    "deliverables": "参照/行止まり/到達性候補、探索上限、根拠経路、複数の網羅率、回帰経路・変更後再確認を実装する。",
+    "completion_gate": "未確認・意図した終端・探索打切り・外部応答仮実が明確である。",
+    "primary_risk": "解けない条件を安全と断定する",
+    "requirement_ids": [
+      "REQ-F17",
+      "REQ-F18",
+      "REQ-N05",
+      "REQ-N12"
+    ],
+    "acceptance_ids": [
+      "AT-F17",
+      "AT-F18",
+      "AT-N05",
+      "AT-N12"
+    ],
+    "status": "planned",
+    "estimate_status": "unestimated",
+    "owner_role": "実装担当（未割当）"
+  },
+  {
+    "id": "WP15",
+    "stage": "C",
+    "title": "伏線・開示・認識の管理",
+    "depends_on": [
+      "WP09",
+      "WP10",
+      "WP13",
+      "WP14"
+    ],
+    "size": "L",
+    "deliverables": "独立伏線、手掛かり/回収/段階、経路上の提示検査、真実/証言/知識、回収方針と期限を実装する。",
+    "completion_gate": "手掛かりなしで真相へ行く証人経路を示し、理解を自動判定しない。",
+    "primary_risk": "世界時間と提示順の混同、知識の自動伝播",
+    "requirement_ids": [
+      "REQ-B17",
+      "REQ-B19",
+      "REQ-F43",
+      "REQ-F44",
+      "REQ-F45",
+      "REQ-F46",
+      "REQ-F47"
+    ],
+    "acceptance_ids": [
+      "AT-B17",
+      "AT-B19",
+      "AT-F43",
+      "AT-F44",
+      "AT-F45",
+      "AT-F46",
+      "AT-F47"
+    ],
+    "status": "planned",
+    "estimate_status": "unestimated",
+    "owner_role": "実装担当（未割当）"
+  },
+  {
+    "id": "WP16",
+    "stage": "D",
+    "title": "完全保存・読み込み・復元",
+    "depends_on": [
+      "WP03",
+      "WP09",
+      "WP10",
+      "WP15"
+    ],
+    "size": "L",
+    "deliverables": "版付き専用archive、manifest/ハッシュ、素材包含、事前検査、追加/置換/統合、移行、バックアップと復元を実装する。",
+    "completion_gate": "空環境への全情報往復、破損/危険パス/上限超過拒否、既存データ不変を確認する。",
+    "primary_risk": "出力にはあるが読み戻せない情報",
+    "requirement_ids": [
+      "REQ-B12",
+      "REQ-F35",
+      "REQ-N09",
+      "REQ-N14"
+    ],
+    "acceptance_ids": [
+      "AT-B12",
+      "AT-F35",
+      "AT-N09",
+      "AT-N14"
+    ],
+    "status": "planned",
+    "estimate_status": "unestimated",
+    "owner_role": "実装担当（未割当）"
+  },
+  {
+    "id": "WP17",
+    "stage": "D",
+    "title": "端末間の安全な同期",
+    "depends_on": [
+      "WP03",
+      "WP16"
+    ],
+    "size": "L",
+    "deliverables": "認証・作品membership、revision比較、冪等操作、三方向差分、削除対編集、添付同期、権限撤回を実装する。",
+    "completion_gate": "二端末同時編集/再送/通信断の試験と非メンバーRLS試験を通し、秘密キーを前面へ出さない。",
+    "primary_risk": "最終書込でデータが消えることと権限の回避",
+    "requirement_ids": [
+      "REQ-F34",
+      "REQ-N07"
+    ],
+    "acceptance_ids": [
+      "AT-F34",
+      "AT-N07"
+    ],
+    "status": "planned",
+    "estimate_status": "unestimated",
+    "owner_role": "実装担当（未割当）"
+  },
+  {
+    "id": "WP18",
+    "stage": "D",
+    "title": "共有範囲・レビュー・公開投影",
+    "depends_on": [
+      "WP05",
+      "WP09",
+      "WP15",
+      "WP17"
+    ],
+    "size": "L",
+    "deliverables": "閲覧/指摘/編集/管理、限定共有snapshot、公開投影、コメント版追跡、secretデータ/素材/検索の除外を実装する。",
+    "completion_gate": "正体の本名・家系・ファイル名・参照数まで限定閲覧者から取れない。",
+    "primary_risk": "UIでは隠れていてAPIや索引に残る",
+    "requirement_ids": [
+      "REQ-F29",
+      "REQ-F30",
+      "REQ-N08"
+    ],
+    "acceptance_ids": [
+      "AT-F29",
+      "AT-F30",
+      "AT-N08"
+    ],
+    "status": "planned",
+    "estimate_status": "unestimated",
+    "owner_role": "実装担当（未割当）"
+  },
+  {
+    "id": "WP19",
+    "stage": "E",
+    "title": "台詞ID・翻訳・収録・用語",
+    "depends_on": [
+      "WP10",
+      "WP12",
+      "WP18"
+    ],
+    "size": "L",
+    "deliverables": "不変台詞/選択肢ID、分割対応、言語別原稿、内容ハッシュ、音声/収録版、口調・用語・例外と担当別出力を実装する。",
+    "completion_gate": "並替/改名で音声がずれず、原文の変更は翻訳/収録を確認待ちにする。",
+    "primary_risk": "一つの完成フラグで各成果物を完成済みにする",
+    "requirement_ids": [
+      "REQ-F21",
+      "REQ-F23",
+      "REQ-F48"
+    ],
+    "acceptance_ids": [
+      "AT-F21",
+      "AT-F23",
+      "AT-F48"
+    ],
+    "status": "planned",
+    "estimate_status": "unestimated",
+    "owner_role": "実装担当（未割当）"
+  },
+  {
+    "id": "WP20",
+    "stage": "E",
+    "title": "素材・資料・絵コンテ・演出",
+    "depends_on": [
+      "WP18",
+      "WP19"
+    ],
+    "size": "L",
+    "deliverables": "素材版/不足/仮完成、資料の出所、台詞演出、絵コンテ、秒単位timecode、安全な添付表示を実装する。",
+    "completion_gate": "本文だけで読め、素材変更先を追え、演出時間と世界時間を混同しない。",
+    "primary_risk": "引用資料と作者設定の混同、能動内容の実行",
+    "requirement_ids": [
+      "REQ-F22",
+      "REQ-F28",
+      "REQ-F53",
+      "REQ-N10"
+    ],
+    "acceptance_ids": [
+      "AT-F22",
+      "AT-F28",
+      "AT-F53",
+      "AT-N10"
+    ],
+    "status": "planned",
+    "estimate_status": "unestimated",
+    "owner_role": "実装担当（未割当）"
+  },
+  {
+    "id": "WP21",
+    "stage": "E",
+    "title": "企画・制作依存・媒体別内容",
+    "depends_on": [
+      "WP10",
+      "WP14",
+      "WP19",
+      "WP20"
+    ],
+    "size": "L",
+    "deliverables": "企画意図/判断、プレイ行動/実装対応、工程別状態、期限/依存、固有制作量と経路量、媒体版を実装する。",
+    "completion_gate": "共通場面を制作数で二重計上せず、公開済み媒体版と改訂案を比較できる。",
+    "primary_risk": "物語時刻と制作期限、執筆完了と実装完了の混同",
+    "requirement_ids": [
+      "REQ-F49",
+      "REQ-F50",
+      "REQ-F51",
+      "REQ-F52",
+      "REQ-F54"
+    ],
+    "acceptance_ids": [
+      "AT-F49",
+      "AT-F50",
+      "AT-F51",
+      "AT-F52",
+      "AT-F54"
+    ],
+    "status": "planned",
+    "estimate_status": "unestimated",
+    "owner_role": "実装担当（未割当）"
+  },
+  {
+    "id": "WP22",
+    "stage": "E",
+    "title": "目的別出力と制作受け渡し",
+    "depends_on": [
+      "WP16",
+      "WP18",
+      "WP19",
+      "WP20",
+      "WP21"
+    ],
+    "size": "L",
+    "deliverables": "完全/公開/試遊/制作/相談プロファイル、汎用runtime JSON、外部値契約、対応表、AI相談用手動出力・別案取り込みを実装する。",
+    "completion_gate": "未対応機能を黙って落とさず、秘密・没案・作者メモの除外と対象版が確認できる。",
+    "primary_risk": "全ゲームエンジン互換やAI自動更新の思い込み",
+    "requirement_ids": [
+      "REQ-F24",
+      "REQ-F36",
+      "REQ-F42",
+      "REQ-N20"
+    ],
+    "acceptance_ids": [
+      "AT-F24",
+      "AT-F36",
+      "AT-F42",
+      "AT-N20"
+    ],
+    "status": "planned",
+    "estimate_status": "unestimated",
+    "owner_role": "実装担当（未割当）"
+  },
+  {
+    "id": "WP23",
+    "stage": "F",
+    "title": "全機能の実端末・性能・回帰検証",
+    "depends_on": [
+      "WP07",
+      "WP08",
+      "WP14",
+      "WP15",
+      "WP17",
+      "WP18",
+      "WP22"
+    ],
+    "size": "L",
+    "deliverables": "全受入試験の結果、iPhone/iPad/PC、アクセシビリティ、標準/大規模性能、障害注入、復元訓練を収集する。",
+    "completion_gate": "104要件と総合経路の結果に未実行・失敗が残らず、端末と版付き証拠がある。",
+    "primary_risk": "文書検査をアプリ試験の合格と取り違える",
+    "requirement_ids": [
+      "REQ-N02",
+      "REQ-N03",
+      "REQ-N04"
+    ],
+    "acceptance_ids": [
+      "AT-N02",
+      "AT-N03",
+      "AT-N04",
+      "AT-E01",
+      "AT-E02",
+      "AT-E03",
+      "AT-E04",
+      "AT-E05",
+      "AT-E06",
+      "AT-E07",
+      "AT-E08",
+      "AT-E09",
+      "AT-E10",
+      "AT-E11",
+      "AT-E12"
+    ],
+    "status": "planned",
+    "estimate_status": "unestimated",
+    "owner_role": "実装担当（未割当）"
+  },
+  {
+    "id": "WP24",
+    "stage": "F",
+    "title": "完成版の固定と運用引き継ぎ",
+    "depends_on": [
+      "WP23"
+    ],
+    "size": "M",
+    "deliverables": "利用ガイド、診断/バックアップ/移行手順、公開候補build、構成/費用/commit確認、互換表と次版規則を整理する。",
+    "completion_gate": "完成版の対象commitと試験結果を対応させ、公開前のレビューで費用と変更点を確認できる。",
+    "primary_risk": "未確認の費用や更新でデータを失う",
+    "requirement_ids": [
+      "REQ-N15",
+      "REQ-N17"
+    ],
+    "acceptance_ids": [
+      "AT-N15",
+      "AT-N17"
+    ],
+    "status": "planned",
+    "estimate_status": "unestimated",
+    "owner_role": "実装担当（未割当）"
+  }
+]
