@@ -303,7 +303,12 @@ export function worldSnapshotContents(worlds: Record<string, unknown>): Record<s
     const snapshot = (raw as ProjectData).snapshots.find(item => item && item.id === id);
     if (!snapshot?.content || typeof snapshot.content !== 'object' || !Array.isArray(snapshot.content.entities)
       || !Array.isArray(snapshot.content.relations) || !Array.isArray(snapshot.content.calendars)) continue;
+    if (contents[id] && !equalJson(contents[id], snapshot.content)) throw new StorageError('IMMUTABLE_SNAPSHOT', '同じ固定版IDに異なる内容があります。', id);
     contents[id] = snapshot.content;
+    for (const dependency of (raw as ProjectData).snapshots) if (dependency?.content?.projectId === (raw as ProjectData).projectId) {
+      if (contents[dependency.id] && !equalJson(contents[dependency.id], dependency.content)) throw new StorageError('IMMUTABLE_SNAPSHOT', '同じ固定版IDに異なる内容があります。', dependency.id);
+      contents[dependency.id] = dependency.content;
+    }
   }
   return contents;
 }

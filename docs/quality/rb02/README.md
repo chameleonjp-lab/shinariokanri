@@ -26,3 +26,10 @@ RB01を統合した `cbd7b750df40a246043bef637a55fde871971363` を基準に、RB
 独立したproduction Chromiumの再現では、短文保存待ち中に別情報へ移動し、元のメモを開き直して追加入力しても、古い保存完了で新しい入力が消えないことを確認した。未変更の取り込み欄は保存完了で消え、追加入力は未保存表示とともに残り、再保存で本文に追加される。
 
 Standard 8,800件の検索性能は [CATALOG_QUERY.md](CATALOG_QUERY.md) に条件と生データを保持する。実端末、Large素材、2時間編集、実同期、手動支援技術の合格はこの記録から推定しない。
+
+
+## 固定した段階結果
+
+[PR #5](https://github.com/chameleonjp-lab/shinariokanri/pull/5)を2026-10-05にmainへ統合した。検証対象headは `acddffcde2380beaa7b3c07002d6c3dee6706ff5`、統合版は `bfe927c`。[CI verify](https://github.com/chameleonjp-lab/shinariokanri/actions/runs/37350402080)で単体441件、Chromium/Firefox/WebKit各31件（計93件）、文書/公開gate、production buildが合格した。CIのbrowser-evidenceに画面操作の証拠を保持する。
+
+独立レビューは保存待ち中の移動、固定版参照、統合時の引用保持、数値/辞書キー/索引の途中入力を再現確認し、残るRB02指摘なしとした。これらは段階の検証結果であり、凍結した116受入ケースや実端末/実同期の最終結果ではない。

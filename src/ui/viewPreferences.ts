@@ -1,4 +1,5 @@
-import { ENTITY_KINDS } from '../domain/model';
+import { isTick } from '../domain/time';
+import { ENTITY_KINDS, ID_PATTERN } from '../domain/model';
 import type { EntityKind, Status, ViewState } from '../domain/types';
 
 export type WorkspacePage = 'timeline' | 'structure' | 'materials' | 'search' | 'work';
@@ -6,13 +7,14 @@ export type WorkspacePreferences = {
   page: WorkspacePage;
   structureTab: 'chapters' | 'branch' | 'state' | 'foreshadow' | 'reader' | 'production';
   workTab: 'backup' | 'export' | 'history' | 'settings';
-  timelineTab: 'timeline' | 'relations';
+  timelineTab: 'timeline' | 'relations' | 'world';
   kind: EntityKind;
   searchKind: 'all' | EntityKind;
   statusFilter: 'all' | Status;
   query: string;
   scrollY: number;
   hiddenPages?: WorkspacePage[];
+  worldTick?: string | null; worldCheckpoint?: string; worldPlace?: string | null;
 };
 
 export const WORKSPACE_VIEW_ID = 'workspace';
@@ -25,7 +27,7 @@ export const WORKSPACE_PREFERENCE_KEYS = {
 const PAGE_VALUES: readonly WorkspacePage[] = ['timeline', 'structure', 'materials', 'search', 'work'];
 const STRUCTURE_TABS: readonly WorkspacePreferences['structureTab'][] = ['chapters', 'branch', 'state', 'foreshadow', 'reader', 'production'];
 const WORK_TABS: readonly WorkspacePreferences['workTab'][] = ['backup', 'export', 'history', 'settings'];
-const TIMELINE_TABS: readonly WorkspacePreferences['timelineTab'][] = ['timeline', 'relations'];
+const TIMELINE_TABS: readonly WorkspacePreferences['timelineTab'][] = ['timeline', 'relations', 'world'];
 const STATUS_VALUES: readonly Status[] = ['confirmed', 'provisional', 'needs_review', 'rejected', 'alternate'];
 const EMPTY_PREFERENCES: WorkspacePreferences = {
   page: 'timeline', structureTab: 'chapters', workTab: 'backup', timelineTab: 'timeline',
@@ -62,7 +64,13 @@ export function restoreWorkspacePreferences(view?: Pick<ViewState, 'filters'> | 
   const statusFilter = statusValue === 'all' || typeof statusValue === 'string' && STATUS_VALUES.includes(statusValue as Status)
     ? statusValue as 'all' | Status : EMPTY_PREFERENCES.statusFilter;
   const query = filters[WORKSPACE_PREFERENCE_KEYS.query];
+  const savedTick = filters['world.tick'];
+  const savedCheckpoint = filters['world.checkpoint'];
+  const savedPlace = filters['world.place'];
   return {
+    ...(savedTick === '?' ? { worldTick: null } : isTick(savedTick) ? { worldTick: savedTick } : {}),
+    ...(typeof savedCheckpoint === 'string' && ID_PATTERN.test(savedCheckpoint) ? { worldCheckpoint: savedCheckpoint } : {}),
+    ...(typeof savedPlace === 'string' && ID_PATTERN.test(savedPlace) ? { worldPlace: savedPlace } : {}),
     page, structureTab, workTab, timelineTab, kind, searchKind, statusFilter,
     query: typeof query === 'string' ? query.slice(0, 2048) : '',
     scrollY: readScrollY(filters[WORKSPACE_PREFERENCE_KEYS.scrollY]),
@@ -82,6 +90,9 @@ export function saveWorkspaceViewState(input: {
   const preferences = input.preferences;
   const filters: Record<string, string | boolean> = {
     ...(previous?.filters ?? {}),
+    'world.tick': preferences.worldTick === null ? '?' : preferences.worldTick ?? '',
+    'world.checkpoint': preferences.worldCheckpoint ?? '',
+    'world.place': preferences.worldPlace ?? '',
     [WORKSPACE_PREFERENCE_KEYS.hiddenPages]: JSON.stringify(preferences.hiddenPages ?? []),
     [WORKSPACE_PREFERENCE_KEYS.page]: preferences.page,
     [WORKSPACE_PREFERENCE_KEYS.structureTab]: preferences.structureTab,

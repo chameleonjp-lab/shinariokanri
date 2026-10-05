@@ -1,4 +1,5 @@
 import Dexie, { type Table } from 'dexie';
+import { prepareWorldPin, type WorldPinInput } from './worldPins';
 import type { Block, CommandRecord, ContentState, Entity, ProjectContent, ProjectData, ProjectSnapshot, Relation, SavedView, ViewState } from '../domain/types';
 import { collectReferences, ID_PATTERN, newId, rewriteEntityReferences, rewriteRelationReferences, validateCurrentProject, validateProject, type DomainReference } from '../domain/model';
 import { remapEditedTextReferences, remapEditedTextRelationReferences } from '../domain/text';
@@ -49,7 +50,7 @@ interface StoredView extends SavedView { projectId: string }
 interface StoredViewState extends ViewState { key: string; projectId: string }
 interface ImportLog { operationId: string; projectId: string; mode: ImportMode; createdAt: string; idMap?: Record<string, string> }
 export interface SaveResult { project: ProjectData; operationId: string; localSaved: true; pendingSync: boolean }
-export interface SaveOptions { reason: string; operationId?: string; assets?: AssetInput[]; signal?: AbortSignal; compensatesOperationId?: string; includeHistory?: boolean }
+export interface SaveOptions { worldPin?: WorldPinInput; reason: string; operationId?: string; assets?: AssetInput[]; signal?: AbortSignal; compensatesOperationId?: string; includeHistory?: boolean }
 export type FaultStage = 'after-content' | 'after-history' | 'after-outbox' | 'before-commit';
 export interface SaveMetrics {
   operationId: string; projectId: string;
@@ -250,6 +251,8 @@ export class ScenarioStore {
   private readonly contentHeads = new Map<string, string | undefined>();
   private readonly cachedHistoryIds = new Map<string, string[]>();
   private readonly completeHistories = new Set<string>();
+  private readonly cacheEpochs = new Map<string, number>();
+  private cacheLifetime = 0;
   private readonly editingHistories = new WeakMap<CommandRecord[], { projectId: string; revision: string; historyIds: string[] }>();
   private readonly validationReferences = new WeakMap<Entity, DomainReference[]>();
   constructor(options: StoreOptions = {}) {
@@ -260,20 +263,37 @@ export class ScenarioStore {
   }
   // Store names avoid Dexie's recursive KeyPaths expansion on the domain's large discriminated unions.
   private get writeTables(): string[] { return ['projects', 'entities', 'relations', 'blocks', 'snapshots', 'commands', 'outbox', 'assets', 'views', 'syncMetadata', 'restorePoints', 'worlds', 'importLogs']; }
-  close(): void { this.cachedProjects.clear(); this.contentHeads.clear(); this.cachedHistoryIds.clear(); this.completeHistories.clear(); this.db.close(); }
+  private async guardWorldRegistry(incoming: ProjectData[]): Promise<void> {
+    const snapshots = new Map<string, ProjectSnapshot>();
+    for (const project of [...(await this.db.worlds.toArray()).map(row => row.project), ...incoming]) for (const snapshot of project.snapshots) {
+      const existing = snapshots.get(snapshot.id);
+      if (existing && !sameJson(existing, snapshot)) throw new StorageError('IMMUTABLE_SNAPSHOT', '固定版IDが別の保存済み内容と衝突しています。', snapshot.id);
+      snapshots.set(snapshot.id, snapshot);
+    }
+  }
+  close(): void { this.cacheLifetime++; for (const id of this.cacheEpochs.keys()) this.invalidateProjectCache(id); this.db.close(); }
   async deleteDatabase(): Promise<void> { this.close(); await this.db.delete(); }
 
-  private rememberProject(project: ProjectData, contentHeadOperationId?: string, historyIds = project.history.map(command => command.operationId)): ProjectData {
+  private invalidateProjectCache(projectId: string): void {
+    this.cacheEpochs.set(projectId, (this.cacheEpochs.get(projectId) ?? 0) + 1);
+    this.cachedProjects.delete(projectId); this.contentHeads.delete(projectId); this.cachedHistoryIds.delete(projectId); this.completeHistories.delete(projectId);
+  }
+  private rememberProject(project: ProjectData, contentHeadOperationId?: string, historyIds = project.history.map(command => command.operationId), readEpoch?: { project: number; lifetime: number }): ProjectData {
+    const cachedBefore = this.cachedProjects.get(project.projectId), epoch = this.cacheEpochs.get(project.projectId) ?? 0;
+    // Validation continues outside the read transaction. A newer save/import
+    // or completed read must not be replaced when an earlier read resumes.
+    if (readEpoch && (readEpoch.project !== epoch || readEpoch.lifetime !== this.cacheLifetime) || cachedBefore && BigInt(cachedBefore.revision) > BigInt(project.revision)) return project;
     const cached = freeze({ ...withoutHistory(project), history: freeze(project.history.map(command => freeze(command))) });
     this.cachedProjects.set(project.projectId, cached);
     this.contentHeads.set(project.projectId, contentHeadOperationId);
     this.cachedHistoryIds.set(project.projectId, historyIds);
     if (sameJson(historyIds, project.history.map(command => command.operationId))) this.completeHistories.add(project.projectId); else this.completeHistories.delete(project.projectId);
+    this.cacheEpochs.set(project.projectId, epoch + 1);
     return cached;
   }
-  private editingCopy(project: ProjectData): ProjectData {
+  private editingCopy(project: ProjectData, historyIds = project.history.map(command => command.operationId)): ProjectData {
     const history: CommandRecord[] = freeze([]);
-    this.editingHistories.set(history, { projectId: project.projectId, revision: project.revision, historyIds: this.cachedHistoryIds.get(project.projectId) ?? [] });
+    this.editingHistories.set(history, { projectId: project.projectId, revision: project.revision, historyIds });
     return { ...copy(withoutHistory(project)), history };
   }
   getHistoryCount(project: ProjectData): number { return this.editingHistories.get(project.history)?.historyIds.length ?? project.history.length; }
@@ -298,7 +318,7 @@ export class ScenarioStore {
     return record;
   }
 
-  private async readProject(projectId: string, includeHistory = true): Promise<ProjectData | undefined> {
+  private async readProject(projectId: string, includeHistory = true): Promise<{ project: ProjectData; historyIds: string[]; contentHeadOperationId?: string } | undefined> {
     const header = await this.db.projects.get(projectId);
     if (!header) return undefined;
     const { entityIds, relationIds, snapshotIds, historyIds, viewIds, contentHeadOperationId, ...project } = header;
@@ -314,46 +334,48 @@ export class ScenarioStore {
     const commandRows = new Map(commands.map(row => [row!.operationId, row!])), ready = new Map<string, CommandRecord>();
     const history: CommandRecord[] = [];
     for (const row of commands) history.push(await this.materializeCommand(row!, commandRows, ready));
-    this.contentHeads.set(projectId, contentHeadOperationId);
-    this.cachedHistoryIds.set(projectId, historyIds);
-    return { ...project, entities: entities.map(row => hydrateBlocks(row!.record, blocks)), relations: relations as Relation[],
+    return { historyIds, contentHeadOperationId, project: { ...project, entities: entities.map(row => hydrateBlocks(row!.record, blocks)), relations: relations as Relation[],
       snapshots: snapshots.map(row => { const { projectId: _projectId, ...snapshot } = row!; return snapshot; }),
-      history, views: views.map(row => { const { projectId: _projectId, ...view } = row!; return view; }) };
+      history, views: views.map(row => { const { projectId: _projectId, ...view } = row!; return view; }) } };
   }
 
   async getProject(projectId: string): Promise<ProjectData | undefined> {
     try {
-      const project = await this.db.transaction('r', this.writeTables, async () => {
+      const readEpoch = { project: this.cacheEpochs.get(projectId) ?? 0, lifetime: this.cacheLifetime };
+      const read = await this.db.transaction('r', this.writeTables, async () => {
         const header = await this.db.projects.get(projectId), cached = this.cachedProjects.get(projectId);
         if (!header) return undefined;
-        return cached?.revision === header.revision && this.completeHistories.has(projectId) && sameJson(this.cachedHistoryIds.get(projectId), header.historyIds) ? cached : this.readProject(projectId);
+        return cached?.revision === header.revision && this.completeHistories.has(projectId) && sameJson(this.cachedHistoryIds.get(projectId), header.historyIds) ? { project: cached, historyIds: header.historyIds, contentHeadOperationId: header.contentHeadOperationId } : this.readProject(projectId);
       });
-      if (!project) return undefined;
+      if (!read) return undefined;
+      let { project } = read;
       if (project !== this.cachedProjects.get(projectId)) {
         const worlds = await this.validationWorlds();
         validated(project, worldSnapshotContents(worlds)); verifyWorlds([project], worlds); await verifySnapshotHashes([project]);
-        this.rememberProject(project, this.contentHeads.get(projectId));
+        project = this.rememberProject(project, read.contentHeadOperationId, read.historyIds, readEpoch);
       }
-      return projectCopy(this.cachedProjects.get(projectId)!);
+      return projectCopy(project);
     }
     catch (error) { throw saveError(error); }
   }
   /** Editing reads current rows only. Its immutable history token lets saves retain history without loading it. */
   async getProjectForEditing(projectId: string): Promise<ProjectData | undefined> {
     try {
-      const project = await this.db.transaction('r', this.writeTables, async () => {
+      const readEpoch = { project: this.cacheEpochs.get(projectId) ?? 0, lifetime: this.cacheLifetime };
+      const read = await this.db.transaction('r', this.writeTables, async () => {
         const header = await this.db.projects.get(projectId), cached = this.cachedProjects.get(projectId);
         if (!header) return undefined;
-        return cached?.revision === header.revision && sameJson(this.cachedHistoryIds.get(projectId), header.historyIds) ? cached : this.readProject(projectId, false);
+        return cached?.revision === header.revision && sameJson(this.cachedHistoryIds.get(projectId), header.historyIds) ? { project: cached, historyIds: header.historyIds, contentHeadOperationId: header.contentHeadOperationId } : this.readProject(projectId, false);
       });
-      if (!project) return undefined;
+      if (!read) return undefined;
+      let { project } = read;
       if (project !== this.cachedProjects.get(projectId)) {
         const worlds = await this.validationWorlds();
         validated({ ...project, history: [] }, worldSnapshotContents(worlds));
         verifyWorlds([{ ...project, history: [] }], worlds); await verifySnapshotHashes([{ ...project, history: [] }]);
-        this.rememberProject(project, this.contentHeads.get(projectId), this.cachedHistoryIds.get(projectId));
+        project = this.rememberProject(project, read.contentHeadOperationId, read.historyIds, readEpoch);
       }
-      return this.editingCopy(this.cachedProjects.get(projectId)!);
+      return this.editingCopy(project, read.historyIds);
     } catch (error) { throw saveError(error); }
   }
   async listProjectsForEditing(): Promise<ProjectData[]> {
@@ -373,6 +395,7 @@ export class ScenarioStore {
     for (const [id, world] of Object.entries(extra)) worlds[id] = world;
     return worlds;
   }
+  async listWorldSnapshots(): Promise<Record<string, ProjectData>> { return copy(await this.validationWorlds()); }
   async getProjectAtRevision(projectId: string, revision: string): Promise<ProjectData | undefined> {
     if (!/^(?:0|[1-9]\d*)$/.test(revision)) throw new StorageError('VALIDATION_FAILED', 'revisionは正規の10進整数文字列で指定してください。');
     const current = await this.getProject(projectId);
@@ -462,7 +485,9 @@ export class ScenarioStore {
         if (editingHistory) await this.getProjectForEditing(draft.projectId); else await this.getProject(draft.projectId);
       }
       const previous = currentHeader ? this.cachedProjects.get(draft.projectId) : undefined;
-      const worlds = await this.validationWorlds(), worldContents = worldSnapshotContents(worlds);
+      const knownWorlds = await this.validationWorlds();
+      const pinnedWorlds = options.worldPin ? await prepareWorldPin(draft, options.worldPin, knownWorlds) : {};
+      const worlds = { ...knownWorlds, ...pinnedWorlds }, worldContents = worldSnapshotContents(worlds);
       measure('read');
       if (!duplicate && (previous && previous.revision !== draft.revision || !previous && draft.revision !== '0')) throw new StorageError('REVISION_CONFLICT', '別の編集が先に保存されています。現在版を読み直して変更を比較してください。', draft.projectId);
       const previousHistoryIds = currentHeader?.historyIds ?? [];
@@ -470,7 +495,7 @@ export class ScenarioStore {
       const suppliedHistoryIds = editingHistory?.historyIds ?? draft.history.map(command => command.operationId);
       const expectedHistory = duplicate ? previous?.history.slice(0, previous.history.findIndex(command => command.operationId === operationId)) ?? [] : previous?.history ?? [];
       if (!sameJson(expectedHistoryIds, suppliedHistoryIds) || !editingHistory && (expectedHistory.length !== draft.history.length || expectedHistory.some((command, index) => !sameJson(command, draft.history[index])))) throw new StorageError('OPERATION_CONFLICT', '履歴は保存コマンドからのみ追加できます。');
-      const requestHash = await sha256(jsonBytes({ draft: duplicate && !duplicate.requestHashVersion ? draft : withoutHistory(draft), ...(duplicate && !duplicate.requestHashVersion ? {} : { historyIds: suppliedHistoryIds }), reason: options.reason, assets: (options.assets ?? []).map(asset => ({ contentHash: asset.contentHash, mediaType: asset.mediaType, path: asset.assetPath ?? null })), compensatesOperationId: options.compensatesOperationId ?? null }));
+      const requestHash = await sha256(jsonBytes({ draft: duplicate && !duplicate.requestHashVersion ? draft : withoutHistory(draft), ...(duplicate && !duplicate.requestHashVersion ? {} : { historyIds: suppliedHistoryIds }), reason: options.reason, assets: (options.assets ?? []).map(asset => ({ contentHash: asset.contentHash, mediaType: asset.mediaType, path: asset.assetPath ?? null })), compensatesOperationId: options.compensatesOperationId ?? null, ...(options.worldPin ? { worldPins: pinnedWorlds } : {}) }));
       measure('hash');
       if (duplicate) return this.duplicateResult(duplicate, requestHash, draft.projectId);
       if (!previous && draft.history.length) throw new StorageError('OPERATION_CONFLICT', '既存履歴の復元には専用読み込みを使用してください。');
@@ -513,6 +538,14 @@ export class ScenarioStore {
         if (replay) return this.duplicateResult(replay, requestHash, candidate.projectId);
         const header = await this.db.projects.get(candidate.projectId);
         if (previous ? !header || header.revision !== previous.revision : !!header) throw new StorageError('REVISION_CONFLICT', '保存中に現在版が変わりました。変更を比較して再試行してください。', candidate.projectId);
+        if (Object.keys(pinnedWorlds).length || addedSnapshots.length) await this.guardWorldRegistry([candidate, ...Object.values(pinnedWorlds)]);
+        for (const [id, world] of Object.entries(pinnedWorlds)) {
+          const existingWorld = await this.db.worlds.get(id);
+          const existingSnapshot = existingWorld?.project.snapshots.find(snapshot => snapshot.id === id);
+          if (existingWorld && !sameJson(existingSnapshot, world.snapshots[0])) throw new StorageError('IMMUTABLE_SNAPSHOT', '保存中に共通世界の固定版が変わりました。', id);
+          await this.writeAssets([], world, false);
+          if (!existingWorld) await this.db.worlds.add({ id, project: world });
+        }
         await this.writeAssets(assets, candidate, false);
         written = await this.writeContent(candidate, previous, operationId, historyIds);
         this.faultInjector?.('after-content');
@@ -528,7 +561,7 @@ export class ScenarioStore {
       measure('database'); milliseconds.total = performance.now() - started;
       if (result.project === candidate) this.rememberProject(candidate, operationId, historyIds);
       try { this.onSaveMetrics?.({ operationId, projectId: candidate.projectId, milliseconds, written, historyRead: previous === cachedBefore ? 0 : previous?.history.length ?? 0 }); } catch { /* Diagnostics never change a committed save's result. */ }
-      return { ...result, project: editingHistory || options.includeHistory === false ? this.editingCopy(result.project) : projectCopy(result.project) };
+      return { ...result, project: editingHistory || options.includeHistory === false ? this.editingCopy(result.project, result.project === candidate ? historyIds : result.project.history.map(command => command.operationId)) : projectCopy(result.project) };
     } catch (error) { throw saveError(error); }
   }
 
@@ -644,7 +677,7 @@ export class ScenarioStore {
 
   async createRestorePoint(projectId: string, reason: string): Promise<RestorePoint> {
     return this.db.transaction('rw', this.writeTables, async () => {
-      const project = await this.readProject(projectId);
+      const read = await this.readProject(projectId), project = read?.project;
       if (!project) throw new StorageError('NOT_FOUND', '復元点を作る作品が見つかりません。');
       await this.writeAssets([], project, true);
       const point = { id: newId(), projectId, createdAt: new Date().toISOString(), reason, project, assetHashes: attachmentMetadata(project).map(item => item.contentHash) };
@@ -746,12 +779,13 @@ export class ScenarioStore {
       project = validated(project, worldContents);
       // New recovery retains the original content revisions/history; the local import audit is separate.
       const point: RestorePoint | undefined = preview.target ? { id: newId(), projectId: preview.target.projectId, createdAt: now, reason: `専用ファイル${options.mode}の前の復元点`, project: preview.target, assetHashes: attachmentMetadata(preview.target).map(item => item.contentHash) } : undefined;
-      return await this.db.transaction('rw', this.writeTables, async () => {
+      const result = await this.db.transaction('rw', this.writeTables, async () => {
         checkCancelled(options.signal);
         if (await this.db.importLogs.get(operationId) || await this.db.outbox.get(operationId) || await this.db.commands.get(operationId)) throw new StorageError('OPERATION_CONFLICT', 'この読み込み操作IDは既に使われています。');
         const header = await this.db.projects.get(project.projectId);
         if (preview.target ? !header || header.revision !== preview.target.revision : !!header) throw new StorageError('REVISION_CONFLICT', '読み込みの確定前に対象作品が変わりました。');
         if (options.mode === 'replace' && await this.db.outbox.where('projectId').equals(project.projectId).count()) throw new StorageError('PENDING_CHANGES', '確定前に未送信の変更が増えました。');
+        await this.guardWorldRegistry([project, ...worlds.map(world => world.project)]);
         if (point) { await this.writeAssets([], point.project, true); await this.db.restorePoints.add(point); }
         await this.writeAssets(assets, project, prepared.manifest.assetMode === 'embedded');
         for (const world of worlds) {
@@ -773,6 +807,8 @@ export class ScenarioStore {
         this.faultInjector?.('after-outbox'); checkCancelled(options.signal); this.faultInjector?.('before-commit');
         return { project, operationId, localSaved: true as const, pendingSync: true as const, mode: options.mode, ...(idMap ? { idMap } : {}), ...(point ? { restorePointId: point.id } : {}), warnings: prepared.warnings };
       });
+      this.invalidateProjectCache(project.projectId);
+      return result;
     } catch (error) { throw saveError(error); }
   }
 }

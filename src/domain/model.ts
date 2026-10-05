@@ -1,6 +1,7 @@
+import { resolvePinnedWorlds } from './pinnedWorlds';
 import { FORMAT_VERSION } from './types';
 import type { Alias, CalendarDefinition, Condition, Entity, EntityDataMap, EntityKind, Expression, ID, PresentationConditionResult, ProjectContent, ProjectData, Relation, RelationTypeDefinition, RichText, RuntimeState, TimeSpec, TypedValue, ValidationIssue, ValidationResult, Validity } from './types';
-import { GREGORIAN_CALENDAR, compareTicks, isTick, parseTick, validateCalendar, validateEventTimes } from './time';
+import { GREGORIAN_CALENDAR, compareTicks, isTick, parseTick, validateCalendar, validateEventTimes, sameCalendarDefinition } from './time';
 import { validateTemplateAssignments, validateTemplateDefinition } from './templates';
 
 export const KIND_LABELS: Record<EntityKind, string> = {
@@ -20,6 +21,10 @@ export const RELATION_TYPES: RelationTypeDefinition[] = [
   { key: 'requires', label: '前提', fromKinds: ENTITY_KINDS, toKinds: ENTITY_KINDS, allowSelf: false, allowSymmetric: false },
   { key: 'foreshadow_payoff', label: '手掛かり→回収', fromKinds: ['disclosure'], toKinds: ['disclosure'], allowSelf: false, allowSymmetric: false },
   { key: 'parent_of', label: '親子', fromKinds: ['character'], toKinds: ['character'], allowSelf: false, allowSymmetric: false },
+  { key: 'event_foreshadow', label: '出来事の予告', fromKinds: ['event'], toKinds: ['event'], allowSelf: false, allowSymmetric: false },
+  { key: 'event_payoff', label: '出来事の回収', fromKinds: ['event'], toKinds: ['event'], allowSelf: false, allowSymmetric: false },
+  { key: 'mentor_of', label: '師弟', fromKinds: ['character'], toKinds: ['character'], allowSelf: false, allowSymmetric: false },
+  { key: 'bloodline', label: '血統', fromKinds: ['character'], toKinds: ['character'], allowSelf: false, allowSymmetric: false },
   { key: 'related', label: '関連', fromKinds: ENTITY_KINDS, toKinds: ENTITY_KINDS, allowSelf: false, allowSymmetric: true },
   { key: 'reference', label: '参照', fromKinds: ENTITY_KINDS, toKinds: ENTITY_KINDS, allowSelf: true, allowSymmetric: false },
 ];
@@ -662,10 +667,16 @@ function validateActiveRecordNamespace(project: ProjectContent, worlds: ProjectC
     const referenceIndex = project.worldReferences.findIndex(reference => reference.projectId === world.projectId);
     return { content: world, location: `${path}.worldReferences[${referenceIndex}]` };
   })];
+  const calendars = new Map<string, CalendarDefinition>();
   for (const [index, { content, location }] of contexts.entries()) {
     if (index > 0) {
       if (activeProjects.has(content.projectId)) addIssue(issues, location, '同じ作品・世界の複数の内容が現在の参照範囲に含まれています。固定版を一つにしてください。', 'REFERENCE_INVALID');
       activeProjects.add(content.projectId);
+    }
+    for (const [calendarIndex, calendar] of content.calendars.entries()) {
+      const previous = calendars.get(calendar.id);
+      if (previous && !sameCalendarDefinition(previous, calendar)) addIssue(issues, `${location}.calendars[${calendarIndex}].id`, '同じ暦IDに異なる定義があります。固定版の日時を読み替えず、暦IDを明示して対応付けてください。', 'REFERENCE_INVALID');
+      calendars.set(calendar.id, calendar);
     }
     for (const [collection, records] of [['entities', content.entities], ['relations', content.relations]] as const) records.forEach((record, recordIndex) => {
       const recordPath = `${location}.${collection}[${recordIndex}]`;
@@ -696,9 +707,9 @@ function validateContent(input: unknown, path: string, options: ProjectValidatio
   if (issues.length) return { ok: false, issues: issues.slice(0, 256) };
   const project = input as unknown as ProjectContent;
   const allowedWorldIds = new Set(project.worldReferences.map(reference => reference.projectId));
-  const worlds = options.worldSnapshots
-    ? project.worldReferences.flatMap(reference => { const world = options.worldSnapshots?.[reference.immutableSnapshotId]; return world?.projectId === reference.projectId ? [world] : []; })
-    : (options.worlds ?? []).filter(world => allowedWorldIds.has(world.projectId));
+  const closure = options.worldSnapshots ? resolvePinnedWorlds(project, options.worldSnapshots) : undefined;
+  if (closure) for (const message of closure.errors) addIssue(issues, `${path}.worldReferences`, message, 'REFERENCE_INVALID');
+  const worlds = closure?.worlds ?? (options.worlds ?? []).filter(world => allowedWorldIds.has(world.projectId));
   if (entities.length + relations.length + worlds.reduce((count, world) => count + world.entities.length + world.relations.length, 0) > 100_000) addIssue(issues, path, '参照世界を含むレコード数が100,000件を超えています。', 'IMPORT_LIMIT');
   // Validate before constructing maps: a world record must never overwrite a local ID.
   // Each historical content calls this independently with its own pinned worlds.
@@ -724,22 +735,24 @@ function validateContent(input: unknown, path: string, options: ProjectValidatio
     if (entity.kind === 'flow_node' && entity.data.trigger?.id) projectionIds.add(entity.data.trigger.id);
     if (entity.kind === 'projection_profile') for (const publicFields of Object.values(entity.data.publicTexts ?? {})) for (const field of Object.values(publicFields)) if (Array.isArray(field)) for (const block of field) if (isObject(block) && typeof block.id === 'string') projectionIds.add(block.id);
   }
-  const knownVersions = new Set([...snapshotIds, project.projectId, ...allEntities.filter(entity => entity.kind === 'snapshot').map(entity => entity.id), ...project.worldReferences.map(world => world.immutableSnapshotId)]);
-  const knownProjects = new Set([project.projectId, ...project.worldReferences.map(world => world.projectId)]);
+  const worldVersionDependencies = worlds.flatMap(world => [...world.entities.flatMap(collectReferences), ...world.relations.flatMap(collectRelationReferences)])
+    .filter(reference => reference.scope === 'snapshot' && options.worldSnapshots?.[reference.id] && worlds.some(world => world.projectId === options.worldSnapshots?.[reference.id].projectId)).map(reference => reference.id);
+  const knownVersions = new Set([...snapshotIds, ...worldVersionDependencies, project.projectId, ...allEntities.filter(entity => entity.kind === 'snapshot').map(entity => entity.id), ...(closure?.references ?? project.worldReferences).map(world => world.immutableSnapshotId)]);
+  const knownProjects = new Set([project.projectId, ...(closure?.references ?? project.worldReferences).map(world => world.projectId)]);
   type ReferenceIndex = { entities: Map<ID, Entity>; relations: Map<ID, Relation>; blocks: Map<ID, { entityId: ID; text: string }>; calendars: Set<string>; projects: Set<ID> };
   const currentIndex: ReferenceIndex = { entities: entityMap, relations: relationMap, blocks, calendars: allCalendarIds, projects: knownProjects }, versionIndexes = new Map<ID, ReferenceIndex>();
   function versionIndex(versionId: ID): ReferenceIndex | undefined {
     if (versionId === project.projectId) return currentIndex;
     const cached = versionIndexes.get(versionId); if (cached) return cached;
     const content = versionContents.get(versionId) ?? options.worldSnapshots?.[versionId]; if (!content) return undefined;
-    const pinnedWorlds = options.worldSnapshots
-      ? content.worldReferences.flatMap(reference => { const world = options.worldSnapshots?.[reference.immutableSnapshotId]; return world?.projectId === reference.projectId ? [world] : []; })
-      : (options.worlds ?? []).filter(world => content.worldReferences.some(reference => reference.projectId === world.projectId));
+    const versionClosure = options.worldSnapshots ? resolvePinnedWorlds(content, options.worldSnapshots) : undefined;
+    if (versionClosure) for (const message of versionClosure.errors) addIssue(issues, `${path}.versions.${versionId}.worldReferences`, message, 'REFERENCE_INVALID');
+    const pinnedWorlds = versionClosure?.worlds ?? (options.worlds ?? []).filter(world => content.worldReferences.some(reference => reference.projectId === world.projectId));
     const before = issues.length; validateActiveRecordNamespace(content, pinnedWorlds, `${path}.versions.${versionId}`, issues);
     if (issues.length !== before) return undefined;
     const records = [...content.entities, ...pinnedWorlds.flatMap(world => world.entities)], versionBlocks = new Map<ID, { entityId: ID; text: string }>();
     for (const record of records) if (isObject(record)) collectContentIds(record.data, record.id, versionBlocks, new Map(), [], 'version');
-    const index = { entities: new Map(records.filter(record => isObject(record)).map(record => [record.id, record])), relations: new Map([...content.relations, ...pinnedWorlds.flatMap(world => world.relations)].filter(record => isObject(record)).map(record => [record.id, record])), blocks: versionBlocks, calendars: new Set([...content.calendars, ...pinnedWorlds.flatMap(world => world.calendars)].map(calendar => calendar.id)), projects: new Set([content.projectId, ...content.worldReferences.map(reference => reference.projectId)]) };
+    const index = { entities: new Map(records.filter(record => isObject(record)).map(record => [record.id, record])), relations: new Map([...content.relations, ...pinnedWorlds.flatMap(world => world.relations)].filter(record => isObject(record)).map(record => [record.id, record])), blocks: versionBlocks, calendars: new Set([...content.calendars, ...pinnedWorlds.flatMap(world => world.calendars)].map(calendar => calendar.id)), projects: new Set([content.projectId, ...pinnedWorlds.map(world => world.projectId)]) };
     versionIndexes.set(versionId, index); return index;
   }
   function inspect(reference: DomainReference, prefix = '', index = currentIndex): void {
@@ -931,7 +944,7 @@ function validateCrossEntityRules(project: ProjectContent, entityMap: Map<ID, En
   cycleIssues(project.entities.filter(entity => entity.kind === 'production_task' && !entity.deletedAt), entity => entity.kind === 'production_task' ? entity.data.dependsOn ?? [] : [], issues, path, '制作依存');
   cycleIssues(project.entities.filter(entity => entity.kind === 'variable' && !entity.deletedAt), entity => entity.kind === 'variable' && entity.data.derived ? expressionReferences(entity.data.derived) : [], issues, path, '算出状態');
   cycleIssues(project.entities.filter(entity => entity.kind === 'flow_graph' && !entity.deletedAt), entity => entity.kind === 'flow_graph' ? entity.data.nodeIds.flatMap(nodeId => { const node = entityMap.get(nodeId); return node?.kind === 'flow_node' && node.data.childGraphId ? [node.data.childGraphId] : []; }) : [], issues, path, '分岐図の呼出階層');
-  issues.push(...validateEventTimes(project.entities.filter((entity): entity is Entity<'event'> => entity.kind === 'event' && !entity.deletedAt)));
+  issues.push(...validateEventTimes([...entityMap.values()].filter((entity): entity is Entity<'event'> => entity.kind === 'event' && !entity.deletedAt)));
   const automaticPriority = new Map<string, ID>();
   for (const entity of project.entities) if (entity.kind === 'flow_edge' && entity.data.edgeType === 'automatic' && !entity.deletedAt) {
     const priorityKey = `${entity.data.fromId}/${entity.data.priority ?? 0}`;

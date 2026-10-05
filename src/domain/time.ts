@@ -102,36 +102,74 @@ export function formatCalendarTick(tick: Tick, calendar: CalendarDefinition = GR
 }
 export interface ResolvedTime { status: 'resolved'; earliest: Tick; latest: Tick; endEarliest: Tick; endLatest: Tick; calendarId: string; mode: TimeSpec['mode'] }
 export type TimeResolution = ResolvedTime | { status: 'unknown' | 'conflict'; reason: string; path: ID[] };
-export function resolveTime(time: TimeSpec, events: Entity<'event'>[] = [], chain: ID[] = []): TimeResolution {
+function absoluteResolution(time: Exclude<TimeSpec, { mode: 'relative' }>, path: ID[]): TimeResolution {
   try {
-    if (time.mode === 'unknown') return { status: 'unknown', reason: time.reason || '日時が未定です。', path: chain };
+    if (time.mode === 'unknown') return { status: 'unknown', reason: time.reason || '日時が未定です。', path };
     if (time.mode === 'instant') { parseTick(time.at); return { status: 'resolved', earliest: time.at, latest: time.at, endEarliest: time.at, endLatest: time.at, calendarId: time.calendarId, mode: time.mode }; }
     if (time.mode === 'interval') {
-      if (compareTicks(time.start, time.end) >= 0) return { status: 'conflict', reason: '期間は開始より後に終了してください。', path: chain };
+      if (compareTicks(time.start, time.end) >= 0) return { status: 'conflict', reason: '期間は開始より後に終了してください。', path };
       return { status: 'resolved', earliest: time.start, latest: time.start, endEarliest: time.end, endLatest: time.end, calendarId: time.calendarId, mode: time.mode };
     }
-    if (time.mode === 'uncertain') {
-      if (compareTicks(time.earliest, time.latest) > 0) return { status: 'conflict', reason: '概算範囲が逆転しています。', path: chain };
-      return { status: 'resolved', earliest: time.earliest, latest: time.latest, endEarliest: time.earliest, endLatest: time.latest, calendarId: time.calendarId, mode: time.mode };
+    if (compareTicks(time.earliest, time.latest) > 0) return { status: 'conflict', reason: '概算範囲が逆転しています。', path };
+    return { status: 'resolved', earliest: time.earliest, latest: time.latest, endEarliest: time.earliest, endLatest: time.latest, calendarId: time.calendarId, mode: time.mode };
+  } catch (error) { return { status: 'conflict', reason: error instanceof Error ? error.message : '日時を解決できません。', path }; }
+}
+function relativeValue(time: Extract<TimeSpec, { mode: 'relative' }>, anchor: TimeResolution, path: () => ID[], prefixUnknown: boolean): TimeResolution {
+  try {
+    if (compareTicks(time.minOffset, time.maxOffset) > 0) return { status: 'conflict', reason: '相対日時の範囲が逆転しています。', path: path() };
+    if (anchor.status !== 'resolved') return prefixUnknown ? { ...anchor, path: [...path(), ...anchor.path].slice(0, 64) } : anchor;
+    const earliest = addTicks(time.anchorPoint === 'start' ? anchor.earliest : anchor.endEarliest, time.minOffset), latest = addTicks(time.anchorPoint === 'start' ? anchor.latest : anchor.endLatest, time.maxOffset);
+    return { status: 'resolved', earliest, latest, endEarliest: earliest, endLatest: latest, calendarId: anchor.calendarId, mode: 'relative' };
+  } catch (error) { return { status: 'conflict', reason: error instanceof Error ? error.message : '日時を解決できません。', path: path() }; }
+}
+/** One relative-time evaluator shared by validation, previews and character lifetimes. */
+export function resolveRelativeTime(time: Extract<TimeSpec, { mode: 'relative' }>, anchor: TimeResolution, path: ID[] = []): TimeResolution {
+  return relativeValue(time, anchor, () => path, true);
+}
+function eventIndex(events: Entity<'event'>[]): Map<ID, Entity<'event'>> { const index = new Map<ID, Entity<'event'>>(); for (const event of events) if (!event.deletedAt && !index.has(event.id)) index.set(event.id, event); return index; }
+/** Public arbitrary-TimeSpec wrapper. The supplied chain remains a set of forbidden ancestor IDs. */
+export function resolveTime(time: TimeSpec, events: Entity<'event'>[] = [], chain: ID[] = []): TimeResolution {
+  if (time.mode !== 'relative') return absoluteResolution(time, chain);
+  const index = eventIndex(events), path = [...chain], visited = new Set(chain), frames: { time: Extract<TimeSpec, { mode: 'relative' }>; pathLength: number }[] = [];
+  let cursor: TimeSpec = time;
+  while (cursor.mode === 'relative') {
+    if (visited.has(cursor.anchorEventId)) return { status: 'conflict', reason: '相対日時の参照が循環しています。', path: [...path, cursor.anchorEventId] };
+    try { if (compareTicks(cursor.minOffset, cursor.maxOffset) > 0) return { status: 'conflict', reason: '相対日時の範囲が逆転しています。', path: [...path] }; } catch (error) { return { status: 'conflict', reason: error instanceof Error ? error.message : '日時を解決できません。', path: [...path] }; }
+    const anchor = index.get(cursor.anchorEventId); if (!anchor) return { status: 'unknown', reason: '基準となる出来事がありません。', path: [...path, cursor.anchorEventId] };
+    frames.push({ time: cursor, pathLength: path.length }); visited.add(anchor.id); path.push(anchor.id); cursor = anchor.data.time;
+  }
+  let resolved = absoluteResolution(cursor, path);
+  for (let i = frames.length - 1; i >= 0 && resolved.status === 'resolved'; i--) { const frame = frames[i]; resolved = relativeValue(frame.time, resolved, () => path.slice(0, frame.pathLength), false); }
+  return resolved;
+}
+/** Indexed and iterative O(events + anchors). Diagnostic paths are bounded for cyclic imported graphs. */
+export function resolveEventTimes(events: Entity<'event'>[]): Map<ID, TimeResolution> {
+  const index = eventIndex(events), resolved = new Map<ID, TimeResolution>();
+  for (const event of index.values()) {
+    if (resolved.has(event.id)) continue;
+    const path: ID[] = [], visiting = new Map<ID, number>(); let cursor = event.id;
+    while (!resolved.has(cursor)) {
+      const current = index.get(cursor); if (!current) { resolved.set(cursor, { status: 'unknown', reason: '基準となる出来事がありません。', path: [cursor] }); break; }
+      const cycleStart = visiting.get(cursor);
+      if (cycleStart !== undefined) { const cycle = path.slice(cycleStart); for (let i = 0; i < cycle.length; i++) resolved.set(cycle[i], { status: 'conflict', reason: '相対日時の参照が循環しています。', path: Array.from({ length: Math.min(cycle.length + 1, 64) }, (_, offset) => cycle[(i + offset) % cycle.length]) }); break; }
+      if (current.data.time.mode !== 'relative') { resolved.set(cursor, absoluteResolution(current.data.time, [cursor])); break; }
+      const relative = current.data.time;
+      // Cycles take precedence when an anchor already appears in this path, matching resolveTime.
+      if (!visiting.has(relative.anchorEventId) && relative.anchorEventId !== cursor) try { if (compareTicks(relative.minOffset, relative.maxOffset) > 0) { resolved.set(cursor, { status: 'conflict', reason: '相対日時の範囲が逆転しています。', path: [cursor] }); break; } } catch (error) { resolved.set(cursor, { status: 'conflict', reason: error instanceof Error ? error.message : '日時を解決できません。', path: [cursor] }); break; }
+      visiting.set(cursor, path.length); path.push(cursor); cursor = relative.anchorEventId;
     }
-    if (chain.includes(time.anchorEventId)) return { status: 'conflict', reason: '相対日時の参照が循環しています。', path: [...chain, time.anchorEventId] };
-    if (compareTicks(time.minOffset, time.maxOffset) > 0) return { status: 'conflict', reason: '相対日時の範囲が逆転しています。', path: chain };
-    const anchor = events.find(event => event.id === time.anchorEventId && !event.deletedAt);
-    if (!anchor) return { status: 'unknown', reason: '基準となる出来事がありません。', path: [...chain, time.anchorEventId] };
-    const resolved = resolveTime(anchor.data.time, events, [...chain, time.anchorEventId]);
-    if (resolved.status !== 'resolved') return resolved;
-    const earliest = addTicks(time.anchorPoint === 'start' ? resolved.earliest : resolved.endEarliest, time.minOffset), latest = addTicks(time.anchorPoint === 'start' ? resolved.latest : resolved.endLatest, time.maxOffset);
-    return { status: 'resolved', earliest, latest, endEarliest: earliest, endLatest: latest, calendarId: resolved.calendarId, mode: time.mode };
-  } catch (error) { return { status: 'conflict', reason: error instanceof Error ? error.message : '日時を解決できません。', path: chain }; }
+    for (let i = path.length - 1; i >= 0; i--) { const id = path[i], current = index.get(id)!; if (!resolved.has(id) && current.data.time.mode === 'relative') resolved.set(id, resolveRelativeTime(current.data.time, resolved.get(current.data.time.anchorEventId)!, [id])); }
+  }
+  return resolved;
 }
 export function validateEventTimes(events: Entity<'event'>[]): ValidationIssue[] {
-  const issues: ValidationIssue[] = [];
-  for (const event of events) {
-    const time = resolveTime(event.data.time, events, [event.id]);
+  const issues: ValidationIssue[] = [], index = eventIndex(events), times = resolveEventTimes(events);
+  for (const event of index.values()) {
+    const time = times.get(event.id)!;
     if (time.status === 'conflict') issues.push({ code: 'TIME_CONSTRAINT_CONFLICT', path: `entities.${event.id}.data.time`, message: time.reason });
     for (const constraint of event.data.constraints ?? []) {
-      const target = events.find(candidate => candidate.id === constraint.targetEventId); if (!target || time.status !== 'resolved') continue;
-      const other = resolveTime(target.data.time, events, [target.id]); if (other.status !== 'resolved') continue;
+      const target = index.get(constraint.targetEventId); if (!target || time.status !== 'resolved') continue;
+      const other = times.get(target.id)!; if (other.status !== 'resolved') continue;
       let conflict = time.calendarId !== other.calendarId;
       if (constraint.type === 'before') conflict ||= time.mode === 'interval' ? compareTicks(time.endEarliest, other.latest) > 0 : compareTicks(time.endEarliest, other.latest) >= 0;
       else if (constraint.type === 'same_start') conflict ||= compareTicks(time.earliest, other.latest) > 0 || compareTicks(other.earliest, time.latest) > 0;
@@ -143,16 +181,25 @@ export function validateEventTimes(events: Entity<'event'>[]): ValidationIssue[]
     }
   }
   // Cyclic dependency constraints cannot be applied even while their dates are unknown.
-  const index = new Map(events.map(event => [event.id, event])), colors = new Map<ID, number>();
-  for (const event of events) {
+  const colors = new Map<ID, number>(), dependencies = new Map<ID, ID[]>();
+  for (const event of index.values()) { dependencies.set(event.id, (event.data.constraints ?? []).map(constraint => constraint.targetEventId)); }
+  for (const event of index.values()) if (event.data.time.mode === 'relative' && index.has(event.data.time.anchorEventId)) dependencies.get(event.data.time.anchorEventId)!.push(event.id);
+  for (const event of index.values()) {
     if (colors.get(event.id)) continue;
-    const stack: { id: ID; targets: ID[]; cursor: number }[] = [{ id: event.id, targets: (event.data.constraints ?? []).map(constraint => constraint.targetEventId), cursor: 0 }]; colors.set(event.id, 1);
+    const stack: { id: ID; targets: ID[]; cursor: number }[] = [{ id: event.id, targets: dependencies.get(event.id)!, cursor: 0 }]; colors.set(event.id, 1);
     while (stack.length) {
       const current = stack[stack.length - 1]; if (current.cursor === current.targets.length) { colors.set(current.id, 2); stack.pop(); continue; }
       const targetId = current.targets[current.cursor++], target = index.get(targetId); if (!target) continue;
       if (colors.get(targetId) === 1) issues.push({ code: 'TIME_CONSTRAINT_CONFLICT', path: `entities.${current.id}.data.constraints`, message: '日時制約の依存が循環しています。' });
-      else if (!colors.has(targetId)) { colors.set(targetId, 1); stack.push({ id: targetId, targets: (target.data.constraints ?? []).map(constraint => constraint.targetEventId), cursor: 0 }); }
+      else if (!colors.has(targetId)) { colors.set(targetId, 1); stack.push({ id: targetId, targets: dependencies.get(target.id)!, cursor: 0 }); }
     }
   }
   return issues;
+}
+
+/** Shared IDs are safe only when the complete calendar definition is unchanged. */
+export function sameCalendarDefinition(left: CalendarDefinition, right: CalendarDefinition): boolean {
+  if (left.id !== right.id || left.kind !== right.kind || left.name !== right.name || left.originLabel !== right.originLabel || left.ticksPerDay !== right.ticksPerDay) return false;
+  if (left.kind === 'gregorian' || right.kind === 'gregorian') return left.kind === right.kind;
+  return left.years.length === right.years.length && left.years.every((year, i) => year.months.length === right.years[i].months.length && year.months.every((month, j) => month.name === right.years[i].months[j].name && month.days === right.years[i].months[j].days));
 }

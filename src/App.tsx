@@ -1,9 +1,13 @@
 import { reconcileSavedDrafts, updateJsonBuffer } from './ui/draftState';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import type { ContentAnchor, Entity, EntityKind, ProjectData, ProjectSnapshot, Relation } from './domain/types';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { ContentAnchor, Entity, EntityKind, ProjectData, ProjectSnapshot, Relation, Tick } from './domain/types';
 import { createDemoProject, createEntity, createProject, KIND_LABELS, newId, collectReferences } from './domain/model';
 import { remapEditedTextReferences, remapEditedTextRelationReferences } from './domain/text';
 import { deletionImpact } from './domain/maintenance';
+import { WorldPanel } from './ui/WorldPanel';
+import { effectiveWorldContent } from './domain/world';
+import { resolvePinnedWorlds } from './domain/pinnedWorlds';
+import { adoptedWorldEntityIds, mergeWorldSources } from './domain/worldSources';
 import { addChangeReviews } from './domain/changeReviews';
 import { scenarioStore, type AssetInput } from './storage';
 import { EmptyState, Icon, Modal, normalizeSearch, downloadBytes, safeFileName, type IconName, STATUS_LABELS } from './ui/components';
@@ -41,8 +45,15 @@ export default function App() {
   const [structureTab, setStructureTab] = useState('chapters');
   const [workTab, setWorkTab] = useState('backup');
   const [timelineTab, setTimelineTab] = useState('timeline');
+  const [worldRequestedSection, setWorldRequestedSection] = useState<'histories' | 'maps'>();
+  const [worldRegistry, setWorldRegistry] = useState<Record<string, ProjectData>>({});
+  const [worldTick, setWorldTick] = useState<Tick | null>();
+  const [worldCheckpoint, setWorldCheckpoint] = useState('');
+  const [worldPlace, setWorldPlace] = useState<string | null>(null);
+  const worldSources = useMemo(() => mergeWorldSources(projects, worldRegistry), [projects, worldRegistry]);
   const [kind, setKind] = useState<EntityKind>('character');
   const [pinnedAnchor, setPinnedAnchor] = useState<ContentAnchor | null>(null);
+  const [pinnedSourceProject, setPinnedSourceProject] = useState<ProjectData | null>(null);
   const [navigationTarget, setNavigationTarget] = useState<{ anchor: ContentAnchor; fieldPath?: string } | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [drafts, setDrafts] = useState<Record<string, Entity>>({});
@@ -67,7 +78,23 @@ export default function App() {
   const activeIdRef = useRef(activeId);
   activeIdRef.current = activeId;
   const project = projects.find(p => p.projectId === activeId) || null;
+  const selected = selectedId && (drafts[(project?.projectId ?? "") + ":" + selectedId] || project?.entities.find(e => e.id === selectedId));
   if (project && (!projectRef.current || projectRef.current.projectId !== project.projectId || BigInt(project.revision) > BigInt(projectRef.current.revision))) projectRef.current = project;
+  const fixedWorldContents = useMemo(() => Object.fromEntries([...worldSources.flatMap(source => source.snapshots.map(snapshot => [snapshot.id, snapshot.content])), ...Object.values(worldRegistry).flatMap(source => source.snapshots.map(snapshot => [snapshot.id, snapshot.content]))]), [worldSources, worldRegistry]);
+  const referenceProject = useMemo(() => {
+    if (!project) return undefined;
+    const effective = effectiveWorldContent(project, worldSources);
+    const worldSnapshots = resolvePinnedWorlds(project, fixedWorldContents).references.flatMap(reference => worldSources.find(source => source.projectId === reference.projectId)?.snapshots.filter(snapshot => snapshot.id === reference.immutableSnapshotId) ?? []);
+    return { ...project, ...effective, snapshots: [...project.snapshots, ...worldSnapshots] };
+  }, [project, worldSources, fixedWorldContents]);
+  const borrowedSelection = useMemo(() => {
+    if (!project || !selectedId || selected) return undefined;
+    for (const reference of resolvePinnedWorlds(project, fixedWorldContents).references) {
+      const source = worldSources.find(world => world.projectId === reference.projectId), snapshot = source?.snapshots.find(value => value.id === reference.immutableSnapshotId && value.contentHash === reference.contentHash);
+      if (source && (snapshot?.content.entities.some(entity => entity.id === selectedId) || snapshot?.content.relations.some(relation => relation.id === selectedId))) return { source, anchor: { entityId: selectedId, sourceVersionId: reference.immutableSnapshotId } };
+    }
+    return undefined;
+  }, [project, selectedId, selected, fixedWorldContents, worldSources]);
   const queue = useRef<Promise<unknown>>(Promise.resolve());
   const previousScroll = useRef(0);
   const editorHistory = useRef<string[]>([]);
@@ -75,6 +102,7 @@ export default function App() {
   useEffect(() => {
     let live = true;
     void scenarioStore.listProjectsForEditing().then(found => { if (!live) return; setProjects(found); const last = readPreference('scenario-last-project'); if (found.some(p => p.projectId === last)) { setActiveId(last); setLibrary(false); } }).catch(e => { if (live) setError((e as Error).message || '端末内の作品を読み込めませんでした。'); }).finally(() => { if (live) setLoading(false); });
+    void scenarioStore.listWorldSnapshots().then(found => { if (live) setWorldRegistry(found); }).catch(e => { if (live) setError((e as Error).message); });
     return () => { live = false; };
   }, []);
   useEffect(() => { setPreference('scenario-theme', theme); const media = window.matchMedia('(prefers-color-scheme: dark)'); const update = () => document.documentElement.dataset.theme = theme === 'system' ? media.matches ? 'dark' : 'light' : theme; update(); media.addEventListener('change', update); return () => media.removeEventListener('change', update); }, [theme]);
@@ -82,9 +110,9 @@ export default function App() {
   useEffect(() => { const handler = (e: BeforeUnloadEvent) => { if (Object.keys(drafts).length || Object.keys(jsonBuffers).length) { e.preventDefault(); e.returnValue = ''; } }; window.addEventListener('beforeunload', handler); return () => window.removeEventListener('beforeunload', handler); }, [drafts, jsonBuffers]);
 
   const restoreView = useCallback((next: WorkspacePreferences, selected: string | null) => {
-    setHiddenPages(next.hiddenPages ?? []); setPage(next.hiddenPages?.includes(next.page) ? 'work' : next.page); setStructureTab(next.structureTab); setWorkTab(next.workTab); setTimelineTab(next.timelineTab); setKind(next.kind); setSearchKind(next.searchKind); setStatusFilter(next.statusFilter); setQuery(next.query); setSelectedId(selected); editorHistory.current = [];
+    setWorldTick(next.worldTick); setWorldCheckpoint(next.worldCheckpoint ?? ''); setWorldPlace(next.worldPlace ?? null); setHiddenPages(next.hiddenPages ?? []); setPage(next.hiddenPages?.includes(next.page) ? 'work' : next.page); setStructureTab(next.structureTab); setWorkTab(next.workTab); setTimelineTab(next.timelineTab); setKind(next.kind); setSearchKind(next.searchKind); setStatusFilter(next.statusFilter); setQuery(next.query); setSelectedId(selected); editorHistory.current = [];
   }, []);
-  const navigation = useWorkspaceView(library ? null : activeId, { page, structureTab, workTab, timelineTab, kind, searchKind, statusFilter, query, hiddenPages, scrollY: 0 } as WorkspacePreferences, selectedId, restoreView);
+  const navigation = useWorkspaceView(library ? null : activeId, { page, structureTab, workTab, timelineTab, kind, searchKind, statusFilter, query, hiddenPages, worldTick, worldCheckpoint, worldPlace, scrollY: 0 } as WorkspacePreferences, selectedId, restoreView);
 
   const applyProject = useCallback((updated: ProjectData) => {
     if (activeIdRef.current === updated.projectId || !activeIdRef.current) projectRef.current = updated;
@@ -103,6 +131,15 @@ export default function App() {
     if (latest?.projectId === candidate.projectId && latest.revision !== candidate.revision) throw new Error('別の変更が保存されました。この画面の入力を保持し、現在版を確認して再試行してください。');
     return persist(candidate, reason, assets);
   });
+  const pinWorld = (world: ProjectData, snapshotId: string, candidate: ProjectData) => enqueue(async () => {
+    const latest = projectRef.current;
+    if (!latest || latest.projectId !== candidate.projectId || latest.revision !== candidate.revision) throw new Error('差分確認後に作品が変わりました。入力を保持して、固定版の差分を再確認してください。');
+    const dependencies = { ...worldRegistry };
+    for (const source of worldSources) for (const snapshot of source.snapshots) dependencies[snapshot.id] ??= source;
+    const result = await scenarioStore.saveProject(addChangeReviews(latest, candidate), { reason: '確認した共通世界の固定版・採用設定を保存', includeHistory: false, worldPin: { world, snapshotId, dependencies } });
+    applyProject(result.project); setWorldRegistry(await scenarioStore.listWorldSnapshots()); return result.project;
+  });
+  const changeWorldPoint = (at: Tick | null, checkpointId: string) => { setWorldTick(at); setWorldCheckpoint(checkpointId); };
   const saveEntity = (entity: Entity) => enqueue(async () => {
     const latest = projectRef.current;
     if (!latest || latest.projectId !== entity.projectId) throw new Error('この入力の作品を開いてから保存してください。');
@@ -145,14 +182,25 @@ export default function App() {
     await saveEntity({ ...entity, deletedAt: new Date().toISOString(), deletionOperationId: newId() });
   };
 
-  const openProject = (target: ProjectData) => { projectRef.current = target; setActiveId(target.projectId); activeIdRef.current = target.projectId; setPreference('scenario-last-project', target.projectId); setLibrary(false); setSelectedId(null); setPinnedAnchor(null); setNavigationTarget(null); editorHistory.current = []; setMenuOpen(false); setError(''); setNotice(''); };
+  const openProject = (target: ProjectData) => { void scenarioStore.listWorldSnapshots().then(setWorldRegistry).catch(e => setError((e as Error).message)); projectRef.current = target; setActiveId(target.projectId); activeIdRef.current = target.projectId; setPreference('scenario-last-project', target.projectId); setLibrary(false); setSelectedId(null); setPinnedAnchor(null); setPinnedSourceProject(null); setWorldTick(undefined); setWorldCheckpoint(''); setWorldPlace(null); setWorldRequestedSection(undefined); setNavigationTarget(null); editorHistory.current = []; setMenuOpen(false); setError(''); setNotice(''); };
   const created = async (demo = false) => {
     setBusy(true); setError('');
     try { const candidate = demo ? createDemoProject() : createProject(newName.trim()); const saved = await persist(candidate, demo ? 'サンプル作品を作成' : '作品を作成'); openProject(saved); setNewName(''); }
     catch (e) { setError((e as Error).message); }
     finally { setBusy(false); }
   };
-  const openEntity = (id: string) => {
+  const openEntity = (id: string, originProjectId?: string, sourceVersionId?: string) => {
+    if (sourceVersionId) { const source = worldSources.find(world => (!originProjectId || world.projectId === originProjectId) && world.snapshots.some(snapshot => snapshot.id === sourceVersionId)); const snapshot = source?.snapshots.find(value => value.id === sourceVersionId); if (source && (snapshot?.content.entities.some(entity => entity.id === id) || snapshot?.content.relations.some(relation => relation.id === id))) { setSelectedId(id); setNavigationTarget(null); setPinnedSourceProject(source); setPinnedAnchor({ entityId: id, sourceVersionId }); return; } }
+    if (project && (!project.entities.some(entity => entity.id === id) || originProjectId && originProjectId !== project.projectId)) {
+      for (const reference of resolvePinnedWorlds(project, fixedWorldContents).references) {
+        if (originProjectId && reference.projectId !== originProjectId) continue;
+        const source = worldSources.find(world => world.projectId === reference.projectId);
+        const snapshot = source?.snapshots.find(value => value.id === reference.immutableSnapshotId && value.contentHash === reference.contentHash);
+        if (source && (snapshot?.content.entities.some(entity => entity.id === id) || snapshot?.content.relations.some(relation => relation.id === id))) { setSelectedId(id); setNavigationTarget(null); setPinnedSourceProject(source); setPinnedAnchor({ entityId: id, sourceVersionId: snapshot.id }); return; }
+      }
+      if (originProjectId) { setError('参照先の固定版が見つかりません。世界版の選択を確認してください。'); return; }
+    }
+
     if (selectedId && selectedId !== id) editorHistory.current.push(selectedId);
     if (!selectedId) previousScroll.current = window.scrollY;
     setSelectedId(id); setNavigationTarget(null); navigation.recordRecent(id);
@@ -160,7 +208,7 @@ export default function App() {
     if (window.innerWidth < 768) window.scrollTo(0, 0);
   };
   const openTarget = (anchor: ContentAnchor, fieldPath?: string) => {
-    if (anchor.sourceVersionId && anchor.sourceVersionId !== project?.projectId) { setPinnedAnchor(anchor); return; }
+    if (anchor.sourceVersionId && anchor.sourceVersionId !== project?.projectId) { setPinnedSourceProject(project?.snapshots.some(snapshot => snapshot.id === anchor.sourceVersionId) ? null : worldSources.find(source => source.snapshots.some(snapshot => snapshot.id === anchor.sourceVersionId)) ?? null); setPinnedAnchor(anchor); return; }
     const line = anchor.lineId && project?.entities.find(entity => entity.id === anchor.lineId && entity.kind === 'dialogue_line');
     openEntity(line ? line.id : anchor.entityId); setNavigationTarget({ anchor, fieldPath });
   };
@@ -169,7 +217,6 @@ export default function App() {
   const add = (targetKind: EntityKind = kind, initial: Record<string, unknown> = {}) => { setNewKind(targetKind); setNewEntityName(''); setAddData(initial); setAddOpen(true); };
   const beginEntity = () => { if (!project) return; const entity = createEntity(project.projectId, newKind, newEntityName, addData); setDrafts(previous => ({ ...previous, [entity.projectId + ":" + entity.id]: entity })); setAddOpen(false); editorHistory.current = []; openEntity(entity.id); };
   const onDraft = useCallback((entity: Entity, dirty: boolean) => setDrafts(previous => { if (dirty) return previous[entity.projectId + ":" + entity.id] === entity ? previous : { ...previous, [entity.projectId + ":" + entity.id]: entity }; if (!((entity.projectId + ":" + entity.id) in previous)) return previous; const next = { ...previous }; delete next[entity.projectId + ":" + entity.id]; return next; }), []);
-  const selected = selectedId && (drafts[(project?.projectId ?? "") + ":" + selectedId] || project?.entities.find(e => e.id === selectedId));
   const currentNav = NAV.find(n => n.key === page)!;
   const activeEntities = project?.entities.filter(e => !e.deletedAt) || [];
   const draftCount = new Set([...Object.values(drafts).filter(e => e.projectId === activeId).map(e => e.id), ...Object.keys(jsonBuffers).filter(key => key.startsWith(activeId + ":")).map(key => key.slice((activeId ?? "").length + 1))]).size;
@@ -186,14 +233,14 @@ export default function App() {
         {error && <div className="error-notice" role="alert">{error}</div>}{notice && <div className="success-notice" role="status">{notice}</div>}
         {page === 'structure' && <div className="section-tabs" role="tablist" aria-label="構成の表示">{STRUCTURE_TABS.map(([key, label]) => <button key={key} role="tab" aria-selected={structureTab === key} className={structureTab === key ? 'active' : ''} onClick={() => { setStructureTab(key); setSelectedId(null); editorHistory.current = []; }}>{label}</button>)}</div>}
         {page === 'work' && <div className="section-tabs" role="tablist" aria-label="作品の管理">{WORK_TABS.map(([key, label]) => <button key={key} role="tab" aria-selected={workTab === key} className={workTab === key ? 'active' : ''} onClick={() => { setWorkTab(key); setSelectedId(null); }}>{label}</button>)}</div>}
-        {page === 'timeline' && <div className="section-tabs" role="tablist" aria-label="年表と関係">{[['timeline', '世界内年表'], ['relations', '関係表・図']].map(([key, label]) => <button role="tab" aria-selected={timelineTab === key} className={timelineTab === key ? 'active' : ''} key={key} onClick={() => setTimelineTab(key)}>{label}</button>)}</div>}
+        {page === 'timeline' && <div className="section-tabs" role="tablist" aria-label="年表と関係">{[['timeline', '世界内年表'], ['relations', '関係表・図'], ['world', '世界・地図・履歴']].map(([key, label]) => <button role="tab" aria-selected={timelineTab === key} className={timelineTab === key ? 'active' : ''} key={key} onClick={() => { setWorldRequestedSection(undefined); setTimelineTab(key); }}>{label}</button>)}</div>}
         {page === 'materials' && <div className="materials-filter"><div className="filter-pills">{[['character', '人物'], ['group', 'グループ'], ['place', '場所'], ['item', '物品'], ['lore', '設定'], ['note', 'メモ']].map(([key, label]) => <button type="button" key={key} className={kind === key ? 'active' : ''} onClick={() => { setKind(key as EntityKind); setSelectedId(null); }}>{label}<span>{activeEntities.filter(e => e.kind === key).length}</span></button>)}</div><KindPicker value={kind} onChange={value => { setKind(value as EntityKind); setSelectedId(null); }}/></div>}
         <details className="navigation-marks"><summary>最近開いた情報・お気に入り</summary>
           {selectedId && <button type="button" className="button secondary small" onClick={() => navigation.toggleFavorite(selectedId)}>{navigation.marks.favoriteIds.includes(selectedId) ? 'お気に入りから外す' : 'お気に入りに登録'}</button>}
           {([['お気に入り', navigation.marks.favoriteIds], ['最近開いた情報', navigation.marks.recentIds]] as const).map(([title, ids]) => <section key={title}><h2>{title}</h2>{ids.map(id => project.entities.find(entity => entity.id === id && !entity.deletedAt)).filter((entity): entity is Entity => !!entity).map(entity => <button type="button" className="reference-link" key={entity.id} onClick={() => openEntity(entity.id)}>{labelOf(entity)} <small>{KIND_LABELS[entity.kind]}</small></button>)}</section>)}
         </details>
         <div className="workspace-layout"><div className="workspace-list">
-          {page === 'timeline' && (timelineTab === 'timeline' ? <Timeline key={project.projectId} project={project} selectedId={selectedId} onSelect={openEntity} onAdd={() => add('event')}/> : <Relationships project={project} onOpen={openEntity} onSave={saveRelation}/>)}
+          {page === 'timeline' && (timelineTab === 'timeline' ? <Timeline key={project.projectId} project={project} selectedId={selectedId} onSelect={openEntity} onAdd={() => add('event')} onSaveProject={saveProject} referenceEntities={effectiveWorldContent(project, worldSources).entities.filter(entity => entity.projectId !== project.projectId)} referenceRelations={effectiveWorldContent(project, worldSources).relations.filter(relation => relation.projectId !== project.projectId)} adoptedReferenceIds={adoptedWorldEntityIds(project)} referenceCalendars={effectiveWorldContent(project, worldSources).calendars} placeFilterId={worldPlace} worldTick={worldTick} checkpointId={worldCheckpoint} onViewPointChange={changeWorldPoint} onShowMap={(placeId, eventId) => { setWorldRequestedSection('maps'); setWorldPlace(placeId); if (eventId) setSelectedId(eventId); setTimelineTab('world'); }} onShowRelationships={(id, at) => { setSelectedId(id); setWorldTick(at); setTimelineTab('relations'); }} onShowWorldHistory={(id, at) => { setSelectedId(id); setWorldTick(at); setWorldPlace(null); setWorldRequestedSection('histories'); setTimelineTab('world'); }}/> : timelineTab === 'world' ? <WorldPanel key={project.projectId} project={project} worlds={worldSources} onSaveProject={saveProject} onOpen={openEntity} selectedPlaceId={worldPlace} selectedEntityId={selectedId} requestedSection={worldRequestedSection} worldTick={worldTick} checkpointId={worldCheckpoint} onViewPointChange={changeWorldPoint} onPinWorld={pinWorld} onShowTimeline={(placeId, eventId) => { setWorldPlace(placeId ?? null); if (eventId) setSelectedId(eventId); setTimelineTab('timeline'); }} onShowEntityTimeline={(id, at) => { setSelectedId(id); setWorldTick(at); setWorldPlace(null); setTimelineTab('timeline'); }}/> : <Relationships project={project} referenceEntities={effectiveWorldContent(project, worldSources).entities.filter(entity => entity.projectId !== project.projectId)} referenceRelations={effectiveWorldContent(project, worldSources).relations.filter(relation => relation.projectId !== project.projectId)} referenceCalendars={effectiveWorldContent(project, worldSources).calendars} onOpen={openEntity} onSave={saveRelation} onSaveProject={saveProject} selectedId={selectedId} worldTick={worldTick} checkpointId={worldCheckpoint} onViewPointChange={changeWorldPoint} onShowTimeline={(id, at) => { setSelectedId(id); setWorldTick(at); setWorldPlace(null); setTimelineTab('timeline'); }}/>)}
           {page === 'materials' && <><div className="list-heading"><h2>{KIND_LABELS[kind]}</h2><span>{activeEntities.filter(e => e.kind === kind).length}件</span></div><EntityCards key={kind} entities={activeEntities.filter(e => e.kind === kind)} project={project} selectedId={selectedId} onSelect={openEntity} onAdd={() => add(kind)}/></>}
           {page === 'structure' && structureTab === 'chapters' && <ChapterList project={project} selectedId={selectedId} onSelect={openEntity} onAdd={add} onSave={saveEntity}/>}
           {page === 'structure' && structureTab === 'branch' && <BranchList project={project} selectedId={selectedId} onSelect={openEntity} onAdd={add}/>}
@@ -206,8 +253,8 @@ export default function App() {
           {page === 'work' && workTab === 'export' && <ExportPanel project={project} onSave={saveEntity} onOpen={openEntity}/>}
           {page === 'work' && workTab === 'history' && <HistoryPanel project={project} onUpdated={applyProject} onOpen={openEntity}/>}
           {page === 'work' && workTab === 'settings' && <><details className="settings-card"><summary>この端末で使う画面</summary><p>画面を隠しても作品のデータは保持します。ここで再表示できます。</p>{NAV.filter(item => item.key !== 'work').map(item => <label className="check-label" key={item.key}><input type="checkbox" checked={!hiddenPages.includes(item.key)} onChange={event => setHiddenPages(previous => event.target.checked ? previous.filter(key => key !== item.key) : [...previous, item.key])}/>{item.label}</label>)}</details><ProjectInfo key={project.projectId} project={project} onSaveProject={saveProject} onSaveEntities={saveMany} onOpen={openEntity} theme={theme} setTheme={setTheme}/></>}
-        </div>{selected && <EntityEditor key={project.projectId + ":" + selected.id} entity={selected} project={project} isNew={!project.entities.some(e => e.id === selected.id)} hasUnsavedDraft={!!drafts[project.projectId + ":" + selected.id]} onSave={saveEntity} onClose={closeEntity} onDraft={onDraft} jsonBuffers={jsonBuffers[project.projectId + ":" + selected.id] || {}} onJsonBuffer={(field, raw, expectedRaw) => setJsonBuffers(previous => updateJsonBuffer(previous, project.projectId + ":" + selected.id, field, raw, expectedRaw))} onArchive={archiveEntity} onOpen={openEntity} onSaveMany={saveMany} onSaveProject={saveProject} onOpenTarget={openTarget} navigationTarget={navigationTarget}/>}{selectedId && !selected && <aside className="detail-panel"><EmptyState title="対象を開けませんでした">対象が削除・変更された可能性があります。変更履歴から確認できます。</EmptyState><button className="button secondary" onClick={() => { setSelectedId(null); setPage('work'); setWorkTab('history'); }}>履歴を開く</button></aside>}</div>
+        </div>{selected && <EntityEditor key={project.projectId + ":" + selected.id} entity={selected} project={project} referenceProject={referenceProject} isNew={!project.entities.some(e => e.id === selected.id)} hasUnsavedDraft={!!drafts[project.projectId + ":" + selected.id]} onSave={saveEntity} onClose={closeEntity} onDraft={onDraft} jsonBuffers={jsonBuffers[project.projectId + ":" + selected.id] || {}} onJsonBuffer={(field, raw, expectedRaw) => setJsonBuffers(previous => updateJsonBuffer(previous, project.projectId + ":" + selected.id, field, raw, expectedRaw))} onArchive={archiveEntity} onOpen={openEntity} onSaveMany={saveMany} onSaveProject={saveProject} onOpenTarget={openTarget} navigationTarget={navigationTarget}/>}{borrowedSelection && <aside className="detail-panel" aria-label="共通世界の固定情報"><div className="detail-actions"><button className="button secondary" onClick={closeEntity}>詳細を閉じる</button></div><p className="field-hint">参照する世界の固定版を表示しています。</p><SnapshotAnchorPreview project={borrowedSelection.source} anchor={borrowedSelection.anchor} worldSnapshots={fixedWorldContents}/></aside>}{selectedId && !selected && !borrowedSelection && <aside className="detail-panel"><EmptyState title="対象を開けませんでした">対象が削除・変更された可能性があります。変更履歴から確認できます。</EmptyState><button className="button secondary" onClick={() => { setSelectedId(null); setPage('work'); setWorkTab('history'); }}>履歴を開く</button></aside>}</div>
       </main><footer className="workspace-footer"><span>端末内の作品 · 版 {project.revision}</span><span>{activeEntities.length}件の情報 · {project.relations.filter(r => !r.deletedAt).length}件の関係</span></footer>
-    </div>{recoverOpen && <Modal title="未保存の入力" onClose={() => setRecoverOpen(false)}><p>この作業中に保持している入力です。保存済みの作品にまだ反映されていません。</p>{unsavedIds.map(id => { const entity=drafts[project.projectId + ":" + id] || project.entities.find(e=>e.id===id); if(!entity)return null; return <div className="unsaved-entry" key={id}><button className="reference-link" onClick={()=>{setRecoverOpen(false);openEntity(id);}}><Icon name="note" size={16}/>{labelOf(entity)}<small>入力へ戻る</small></button><button className="text-button" onClick={()=>downloadBytes(JSON.stringify({entity,invalidJsonInput:jsonBuffers[project.projectId + ":" + id] || {}},null,2),`${safeFileName(entity.name)}-未保存入力.json`)}><Icon name="download" size={16}/>一時ファイルへ保存</button></div>;})}</Modal>}{pinnedAnchor && <Modal title="固定版の参照先" wide onClose={() => setPinnedAnchor(null)}><SnapshotAnchorPreview project={project} anchor={pinnedAnchor}/></Modal>}{addOpen && <Modal title="情報を追加" onClose={() => setAddOpen(false)}><form onSubmit={e => { e.preventDefault(); beginEntity(); }}><div className="form-field"><label>情報の種類</label><KindPicker value={newKind} onChange={value => { setNewKind(value as EntityKind); setAddData({}); }}/></div><div className="form-field"><label htmlFor="new-entity-name">名前</label><input id="new-entity-name" autoFocus value={newEntityName} onChange={e => setNewEntityName(e.target.value)} placeholder={`${KIND_LABELS[newKind]}の名前`}/></div><p className="field-hint">必須の参照先がある種類は、次の画面で詳細を入力して保存できます。</p><div className="modal-actions"><button type="button" className="button secondary" onClick={() => setAddOpen(false)}>中止</button><button type="submit" className="button primary">編集を始める<Icon name="arrow" size={16}/></button></div></form></Modal>}
+    </div>{recoverOpen && <Modal title="未保存の入力" onClose={() => setRecoverOpen(false)}><p>この作業中に保持している入力です。保存済みの作品にまだ反映されていません。</p>{unsavedIds.map(id => { const entity=drafts[project.projectId + ":" + id] || project.entities.find(e=>e.id===id); if(!entity)return null; return <div className="unsaved-entry" key={id}><button className="reference-link" onClick={()=>{setRecoverOpen(false);openEntity(id);}}><Icon name="note" size={16}/>{labelOf(entity)}<small>入力へ戻る</small></button><button className="text-button" onClick={()=>downloadBytes(JSON.stringify({entity,invalidJsonInput:jsonBuffers[project.projectId + ":" + id] || {}},null,2),`${safeFileName(entity.name)}-未保存入力.json`)}><Icon name="download" size={16}/>一時ファイルへ保存</button></div>;})}</Modal>}{pinnedAnchor && <Modal title="固定版の参照先" wide onClose={() => setPinnedAnchor(null)}><SnapshotAnchorPreview project={pinnedSourceProject ?? project} anchor={pinnedAnchor} worldSnapshots={fixedWorldContents}/>{pinnedSourceProject && <p className="field-hint">この作品が参照する不変の世界版です。世界作品の現在の編集とは区別して表示しています。</p>}</Modal>}{addOpen && <Modal title="情報を追加" onClose={() => setAddOpen(false)}><form onSubmit={e => { e.preventDefault(); beginEntity(); }}><div className="form-field"><label>情報の種類</label><KindPicker value={newKind} onChange={value => { setNewKind(value as EntityKind); setAddData({}); }}/></div><div className="form-field"><label htmlFor="new-entity-name">名前</label><input id="new-entity-name" autoFocus value={newEntityName} onChange={e => setNewEntityName(e.target.value)} placeholder={`${KIND_LABELS[newKind]}の名前`}/></div><p className="field-hint">必須の参照先がある種類は、次の画面で詳細を入力して保存できます。</p><div className="modal-actions"><button type="button" className="button secondary" onClick={() => setAddOpen(false)}>中止</button><button type="submit" className="button primary">編集を始める<Icon name="arrow" size={16}/></button></div></form></Modal>}
   </div>;
 }
