@@ -1,0 +1,51 @@
+name: Publish verified release
+on:
+  workflow_dispatch:
+    inputs:
+      evidence_run_id:
+        description: 同じcommitの完成版受入証拠artifactを持つActions run ID
+        required: true
+        type: string
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: pages
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-evidence
+          run-id: ${{ inputs.evidence_run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: release-evidence
+      - run: python3 scripts/check_release.py --evidence release-evidence/release-evidence.json
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: node -e 'require("fs").appendFileSync(process.env.GITHUB_ENV, "CHROMIUM_PATH=" + require("playwright").chromium.executablePath() + "\n")'
+      - run: npm test
+      - run: npm run build
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/deploy-pages@v4
+        id: deployment

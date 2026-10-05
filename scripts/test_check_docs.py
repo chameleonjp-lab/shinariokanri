@@ -14,7 +14,7 @@ class DocumentCheckerTests(unittest.TestCase):
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name) / "repo"
         source = Path(__file__).resolve().parents[1]
-        shutil.copytree(source, self.root, ignore=shutil.ignore_patterns(".git", "__pycache__"))
+        shutil.copytree(source, self.root, ignore=shutil.ignore_patterns(".git", "__pycache__", "node_modules", "dist", "test-results", "playwright-report"))
 
     def change(self, name, mutation):
         path = self.root / name
@@ -26,6 +26,12 @@ class DocumentCheckerTests(unittest.TestCase):
         self.assertTrue(any(fragment in e for e in validate(self.root)), fragment)
 
     def test_intact_documents_pass(self):
+        self.assertEqual(validate(self.root), [])
+
+    def test_generated_dependency_documents_are_not_repository_sources(self):
+        dependency = self.root / "node_modules" / "example"
+        dependency.mkdir(parents=True)
+        (dependency / "README.md").write_text("[upstream](missing.md)\n")
         self.assertEqual(validate(self.root), [])
 
     def test_omitted_proposal_fails(self):

@@ -149,3 +149,23 @@ RuntimeStateは `contentVersionId, variableValues, itemInstances, assertions, se
 端末内はIndexedDBでentity、relation、document blocks、command history、outbox、viewState、asset bytesを分け、projectIdとkind/参照先/検索キーを索引にする。サーバーはproject_idを必ず持ち、membership(project_id,user_id)等の検索対象に索引を用意する。参照が同じ作品または明示した世界snapshotに属するかをサーバー側でも検証する。型付き項目と関係を一つの非検証JSONへ押し込まない。
 
 DBの物理DDL、完全schema、索引の実測選択はWP01/WP17の成果物。本PRは物理DBを作成しない。SQLの検証と実装時の参照は[設計判断](../decisions/ARCHITECTURE_DECISIONS.md)に示す。
+
+## 実装時に具体化した投影と保存snapshot（形式1.0.0）
+
+WP01/WP18で、秘密を含む元テキストを自動的に安全化したと仮定しないよう、`projection_profile.data` の公開用入力を具体化する。対象はREQ-N08/N19/N20、AT-E05/E07。元データの作者メモ/秘密ID/別名/素材名をそのまま閲覧者へ渡さず、作者が明示した公開名と公開文から投影する。未指定または整合不成立なら公開出力を拒否する。自由文の秘密を機械が完全検出したという保証ではない。
+
+追加の任意フィールド:
+
+- `namePolicy` は単一NamePolicyに加え、`{defaultPolicy?,byEntityId?}` を許す。個別IDごとに公開名/別名/除外を指定する。
+- `publicTitle`, `publicVersionLabel` は作品名/作者版ラベルの公開用表記。`publicTexts` は対象ID→公開フィールドのmap。原本文を暗黙に採用しない。
+- `allowedFields` はkindごとの公開フィールド集合、`allowedRelationIds` は許可する独立関係ID集合。未知のフィールドや任意の作者payloadを許可する拡張ではない。
+- `publicIds` は対象ID→公開UUID対応、`idPolicy` は `remap / preserve`。公開IDは投影内の全参照へ一貫して適用する。作者用対応mapを公開ファイルに含めない。runtimeの不変番号は明示した公開IDで維持する。
+- `publicValues` は対象変数/契約ID→列挙値の公開表記map。条件と初期値へ同じ対応を適用し、秘密のenum表記を漏らさない。
+- `includedStatuses` は公開対象状態集合。没案/作者別案を公開するための許可とはしない。`approvedAttachmentIds` は再配布が許された素材の明示集合。素材bytesの取得/権限は別に検査する。
+- `sourceVersionId` は参照元版。出力時は現在revisionまたは不変snapshotを一つ明示選択し、旧版を現在本文で代用しない。
+
+作品の `snapshots` 配列は `id,versionLabel,contentHash,createdAt,content` を持つ。`content` はその版の作品ヘッダー・entities・relations・views・固定世界参照を保持し、historyとsnapshotsを再帰的に含めない。hashは正規化JSONのSHA-256。snapshot作成後の内容変更/削除を保存層が拒否し、改訂は新IDのsnapshotを追加する。snapshot entityのメタデータだけを保存して旧本文を復元できたと扱わない。
+
+実行可能型とschemaは `src/domain`、保存と復元の検査は `src/storage` に置く。これらの追加は未実行受入を合格へ変更するものではない。
+
+試読中の本文と実行状態は開始時の作品版を使う。現在の編集稿から経路を記録するときは、その開始版の不変snapshotとcheckpoint/traceを一つの保存処理で追加し、実行状態と全遷移の `contentVersionId` をそのsnapshot IDへ結ぶ。記録保存による現在revisionの増加や、その後の本文編集で過去の経路を現在稿へ付け替えない。`checkpoint.data.contentRevision` と `trace.data.contentRevision` は編集稿の版を識別する任意フィールドで、不変snapshotを持たない旧記録の版不一致を検出する。

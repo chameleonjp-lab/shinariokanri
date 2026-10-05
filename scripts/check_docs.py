@@ -241,6 +241,8 @@ def validate(root: Path) -> list[str]:
 
     # All local markdown links must resolve inside this repository.
     for md in sorted(root.rglob("*.md")):
+        if any(part in {"node_modules", "dist", ".git", "test-results", "playwright-report"} for part in md.relative_to(root).parts):
+            continue
         if ".git" in md.relative_to(root).parts:
             continue
         content = md.read_text(encoding="utf-8")
@@ -270,7 +272,7 @@ def main():
         return 1
     print("DOCUMENT VALIDATION PASSED: 104 requirements, 60 proposals, 24 work packages, 116 planned cases, 48 original + 10 technical sources.")
     print("Checked: IDs, scope, sources, two-way traceability, acyclic dependencies, document/registry consistency, file hashes, fixture structure, local links.")
-    print("Application, full JSON Schema, archive import/export, security, performance and real-device tests: NOT RUN.")
+    print("This document checker does not run application, schema, archive, security, performance or real-device acceptance tests. See docs/implementation/PROGRESS.md for separate implementation evidence.")
     return 0
 
 

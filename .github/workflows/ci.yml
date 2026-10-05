@@ -1,0 +1,31 @@
+name: Validate implementation
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: python3 scripts/check_docs.py
+      - run: python3 -m unittest discover -s scripts -p 'test_check_*.py' -v
+      - run: npx playwright install --with-deps chromium firefox webkit
+      - run: node -e 'require("fs").appendFileSync(process.env.GITHUB_ENV, "CHROMIUM_PATH=" + require("playwright").chromium.executablePath() + "\n")'
+      - run: npm test
+      - run: npm run build
+      - run: BROWSER_ENGINES=all npm run test:e2e
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: browser-evidence
+          path: |
+            playwright-report/
+            test-results/
