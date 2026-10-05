@@ -1,0 +1,2 @@
+# shinariokanri
+シナリオ管理
