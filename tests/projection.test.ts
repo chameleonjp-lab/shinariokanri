@@ -43,6 +43,25 @@ function fixture() {
 }
 
 describe('public projection boundary', () => {
+  it('excludes detached annotation quotes, readings, private targets and unresolved link destinations', () => {
+    const { project, profile, scene, hidden, publicBody } = fixture();
+    publicBody[0].unresolvedAnnotations = [
+      { kind: 'ruby', originalText: 'SECRET_ORIGINAL_QUOTE', reading: 'SECRET_ORIGINAL_READING', reason: 'SECRET_AUTHOR_REASON' },
+      { kind: 'link', originalText: 'SECRET_ORIGINAL_LINK', reason: 'SECRET_AUTHOR_REASON', target: { entityId: hidden.id } },
+    ];
+    publicBody[0].links = [{ start: 3, end: 4, target: { entityId: scene.id, positionStatus: 'unresolved', positionReason: 'SECRET_POSITION_REASON', quotedText: 'SECRET_POSITION_QUOTE' } }];
+    profile.data.publicTexts![scene.id].body = publicBody;
+    const result = createProjection(project, profile.id);
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error(JSON.stringify(result.issues));
+    const output = JSON.stringify(result.projection);
+    expect(output).not.toContain('SECRET');
+    expect(output).not.toContain('unresolvedAnnotations');
+    expect(output).not.toContain('quotedText');
+    expect(output).not.toContain(hidden.id);
+    expect(createProjection(project, profile.id, { strictReferences: true }).ok).toBe(false);
+  });
+
   it('regenerates names, links, maps, family relations and search without source secrets or IDs', () => {
     const { project, profile, character, hidden, scene, event, map } = fixture();
     const before = JSON.stringify(project);

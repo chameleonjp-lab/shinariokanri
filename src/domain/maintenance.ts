@@ -28,7 +28,7 @@ export function previewMerge(project: ProjectData, plan: MergePlan) {
  if(plan.sourceId===plan.survivorId)throw new Error('VALIDATION_FAILED: 統合元と残す対象は別のIDです。');
  const source=project.entities.find(e=>e.id===plan.sourceId&&!e.deletedAt),survivor=project.entities.find(e=>e.id===plan.survivorId&&!e.deletedAt);
  if(!source||!survivor||source.kind!==survivor.kind)throw new Error('VALIDATION_FAILED: 同じ種類の既存項目を選んでください。');
- const next=structuredClone(project);
+ const next={...structuredClone({...project,history:[]}),history:project.history};
  const selected=next.entities.find(e=>e.id===survivor.id)!;
  const sourceData=source.data as unknown as Record<string,unknown>,targetData=selected.data as unknown as Record<string,unknown>;
  const changes:{field:string;from:unknown;to:unknown}[]=[];

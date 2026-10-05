@@ -16,9 +16,12 @@ export type TypedValue =
   | { type: 'unknown'; value: null; reason: string };
 export type CustomValue = string | number | boolean | null | { type: 'ref'; value: ID } | { type: 'date'; value: string };
 export interface Ruby { start: number; end: number; text: string }
-export interface ContentAnchor { entityId: ID; blockId?: ID | null; lineId?: ID | null; start?: number | null; end?: number | null; sourceVersionId?: ID | null }
+export interface ContentAnchor { entityId: ID; blockId?: ID | null; lineId?: ID | null; start?: number | null; end?: number | null; sourceVersionId?: ID | null; positionStatus?: 'unresolved'; positionReason?: string; quotedText?: string }
 export interface TextLink { start: number; end: number; target: ContentAnchor }
-export interface Block { id: ID; kind: 'paragraph' | 'heading' | 'list_item' | 'quote'; text: string; ruby?: Ruby[]; links?: TextLink[] }
+export type UnresolvedTextAnnotation =
+  | { kind: 'ruby'; originalText: string; reason: string; reading: string }
+  | { kind: 'link'; originalText: string; reason: string; target: ContentAnchor };
+export interface Block { id: ID; kind: 'paragraph' | 'heading' | 'list_item' | 'quote'; text: string; ruby?: Ruby[]; links?: TextLink[]; unresolvedAnnotations?: UnresolvedTextAnnotation[] }
 export type RichText = Block[];
 export type TimeSpec =
   | { mode: 'instant'; at: Tick; calendarId: string }
@@ -68,7 +71,8 @@ export interface RuntimeState {
   seenIds: ID[]; visitCounts: Record<ID, number>; onceTriggers: string[]; rngSeed: string; rngPosition: number;
   callStack: RuntimeCallFrame[]; presentationPosition: ID | null; loopNumber: number; provenance: 'full_play' | 'partial' | 'imported' | 'stub';
 }
-export interface TraceStep { nodeId: ID; edgeIds: ID[]; before: RuntimeState; after: RuntimeState; operation?: 'advance' | 'stub'; occurrenceId?: string; worldTick?: Tick; externalMode?: 'stub' | 'actual' | 'mixed'; externalValues?: Record<ID, TypedValue> }
+export interface PresentationConditionResult { targetId: ID; value: TruthValue; reasons: string[] }
+export interface TraceStep { nodeId: ID; edgeIds: ID[]; before: RuntimeState; after: RuntimeState; conditionResults?: PresentationConditionResult[] | null; operation?: 'advance' | 'stub'; occurrenceId?: string; worldTick?: Tick; externalMode?: 'stub' | 'actual' | 'mixed'; externalValues?: Record<ID, TypedValue> }
 export interface CoverageCount { checked: number; total: number; excluded?: number; unknown?: number }
 export interface Coverage { scenes: CoverageCount; dialogue: CoverageCount; choices: CoverageCount; conditionTrue: CoverageCount; conditionFalse: CoverageCount; declaredTests: CoverageCount }
 export interface MapPin { id: ID; placeId: ID; x: number; y: number; label?: string }
@@ -110,7 +114,7 @@ export interface EffectData { operation: 'set' | 'add' | 'grant' | 'consume' | '
 export interface AssertionData { subjectId: ID; predicate: string; value: TypedValue | ID; truthKind: 'author_truth' | 'testimony' | 'belief' | 'hypothesis'; holderId?: ID | null; sourceIds?: ID[] | null; evidenceLocation?: ContentAnchor | null; validity?: Validity | null; reason?: string | null }
 export interface ForeshadowData { question: RichText; intent: RichText; resolutionPolicy: ResolutionPolicy; truthAssertionIds?: ID[] | null; clueIds?: ID[] | null; payoffIds?: ID[] | null; requiredInfo?: ID[] | null; deadline?: TargetScope | null; exceptions?: ScenarioException[] | null }
 export interface DisclosureData { foreshadowId: ID; anchor: ContentAnchor; stage: 'hint' | 'suspicion' | 'reinforce' | 'reveal' | 'alternative'; role: 'clue' | 'payoff'; condition?: Condition | null; knowledgeEffects?: ID[] | null; targetScope?: TargetScope | null }
-export interface CheckpointData { contentVersionId: ID; runtimeState: RuntimeState; contentRevision?: Revision | null; origin?: 'full_play' | 'partial' | 'imported' | null; traceId?: ID | null }
+export interface CheckpointData { contentVersionId: ID; runtimeState: RuntimeState; presentationResults?: PresentationConditionResult[] | null; contentRevision?: Revision | null; origin?: 'full_play' | 'partial' | 'imported' | null; traceId?: ID | null }
 export interface TraceData { contentVersionId: ID; startCheckpointId: ID; steps: TraceStep[]; contentRevision?: Revision | null; initialExternalValues?: Record<ID, TypedValue> | null; seed?: string | null; engineVersion?: string | null; externalMode?: 'stub' | 'actual' | 'mixed' | null; coverage?: Coverage | null }
 export interface AttachmentData { mediaType: string; contentHash: string; byteSize: number; assetPath: string; displayName?: string | null; provenanceId?: ID | null; licenseNote?: string | null; stage?: 'reference' | 'temporary' | 'final' | null; revisionHistory?: ID[] | null }
 export interface SourceData { sourceType: 'web' | 'file' | 'book' | 'observation'; locator: string; accessedAt?: RealTime | null; excerptLocation?: string | null; interpretation?: RichText | null; attachmentId?: ID | null; redistributionAllowed?: boolean | null }

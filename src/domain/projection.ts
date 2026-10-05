@@ -279,6 +279,7 @@ export function createProjection(project: ProjectData, profileId: string, option
   };
   const anchorValue = (value: unknown, entity: SourceRecord, field: string): PublicValue | undefined => {
     const input = object(value); if (!input) { fail('VALIDATION_FAILED', '本文位置が不正です。', entity.id, field); return undefined; }
+    if (input.positionStatus === 'unresolved') { if (options.strictReferences) fail('REFERENCE_INVALID', '公開する本文位置の再リンクが必要です。', entity.id, field); else omit(entity.id, '位置不明の本文参照を除外', field); return undefined; }
     const targetId = reference(input.entityId, entity, field, true); if (!targetId) return undefined;
     const output: Record<string, PublicValue> = { entityId: targetId };
     for (const key of ['blockId', 'lineId']) if (input[key] != null) {
@@ -298,6 +299,7 @@ export function createProjection(project: ProjectData, profileId: string, option
       const block = object(raw);
       if (!block || typeof block.id !== 'string' || !idMap[block.id] || !BLOCK_KINDS.has(String(block.kind)) || typeof block.text !== 'string') { fail('VALIDATION_FAILED', '公開文の段落が不正です。', entity.id, field); continue; }
       const projected: Record<string, PublicValue> = { id: idMap[block.id], kind: String(block.kind), text: block.text };
+      if (Array.isArray(block.unresolvedAnnotations) && block.unresolvedAnnotations.length) omit(entity.id, '再リンク待ちの本文注記を除外', field);
       const length = [...block.text].length;
       const validRange = (range: ObjectValue): boolean => integer(range.start) && integer(range.end) && range.start >= 0 && range.end > range.start && range.end <= length;
       if (Array.isArray(block.ruby)) {
@@ -311,6 +313,7 @@ export function createProjection(project: ProjectData, profileId: string, option
           const range = object(rawLink);
           if (!range || !validRange(range)) { fail('VALIDATION_FAILED', '公開文のリンク範囲が不正です。', entity.id, field); continue; }
           const target = object(range.target) ?? range;
+          if (target.positionStatus === 'unresolved') { if (options.strictReferences) fail('REFERENCE_INVALID', '公開文のリンク先位置の再リンクが必要です。', entity.id, field); else omit(entity.id, '位置不明のリンクを除外', field); continue; }
           const targetId = reference(target.targetId ?? target.entityId, entity, `${field}.links`);
           if (!targetId) continue;
           const link: Record<string, PublicValue> = { start: range.start as number, end: range.end as number, targetId };

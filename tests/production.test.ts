@@ -1,4 +1,4 @@
-import {describe,it,expect} from 'vitest';
+import {describe,it,expect,vi} from 'vitest';
 import {createProject,createEntity,textToRichText} from '../src/domain/model';
 import {dialogueContentHash,reconcileDeliverables,productionCounts} from '../src/domain/production';
 describe('production identity and review state',()=>{
@@ -17,6 +17,24 @@ describe('production identity and review state',()=>{
   const result=await reconcileDeliverables(p,changed);
   expect(result.entities.filter(e=>e.kind==='localization'||e.kind==='recording').map(e=>e.data.stage)).toEqual(['needs_review','needs_review']);
   expect(translation.data.stage).toBe('reviewed');expect(recording.data.sourceHash).toBe(hash);
+ });
+ it('detects cue changes without hashing or cloning unchanged history',async()=>{
+  const p=createProject('演出');
+  const cue=createEntity(p.projectId,'cue','効果',{cueType:'sound',anchor:{entityId:p.projectId}});
+  const line=createEntity(p.projectId,'dialogue_line','台詞',{text:textToRichText('声'),cueIds:[cue.id]});
+  const recording=createEntity(p.projectId,'recording','音声',{sourceLineId:line.id,language:'ja',stage:'reviewed'});
+  p.entities.push(cue,line,recording);
+  const changed=structuredClone(p);const edited=changed.entities.find(e=>e.id===cue.id)!;
+  edited.name='名前だけ変更';
+  const digest=vi.spyOn(crypto.subtle,'digest');
+  const rename=await reconcileDeliverables(p,changed);
+  expect(rename.entities.find(e=>e.id===recording.id)).toBe(changed.entities.find(e=>e.id===recording.id));
+  expect(rename.history).toBe(changed.history);
+  if(edited.kind==='cue')edited.data.expression='新しい効果';
+  const result=await reconcileDeliverables(p,changed);
+  expect(result.entities.find(e=>e.id===recording.id)?.data).toMatchObject({stage:'needs_review'});
+  expect(recording.data.stage).toBe('reviewed');
+  expect(digest).not.toHaveBeenCalled();digest.mockRestore();
  });
  it('counts common scenes once for production and per visit for a route',()=>{
   const p=createProject('合流');const scene=createEntity(p.projectId,'scene','共通場面');p.entities.push(scene);

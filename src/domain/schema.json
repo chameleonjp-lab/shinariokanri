@@ -315,6 +315,40 @@
                             "type": "null"
                           }
                         ]
+                      },
+                      "positionStatus": {
+                        "anyOf": [
+                          {
+                            "enum": [
+                              "unresolved"
+                            ]
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "positionReason": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "quotedText": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "minLength": 0
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
                       }
                     },
                     "required": [
@@ -647,6 +681,40 @@
                               "type": "null"
                             }
                           ]
+                        },
+                        "positionStatus": {
+                          "anyOf": [
+                            {
+                              "enum": [
+                                "unresolved"
+                              ]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "positionReason": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "quotedText": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "minLength": 0
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
                         }
                       },
                       "required": [
@@ -661,6 +729,175 @@
                     "target"
                   ],
                   "additionalProperties": false
+                },
+                "maxItems": 100000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "unresolvedAnnotations": {
+            "anyOf": [
+              {
+                "type": "array",
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "kind": {
+                          "enum": [
+                            "ruby"
+                          ]
+                        },
+                        "originalText": {
+                          "type": "string",
+                          "minLength": 0
+                        },
+                        "reason": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "reading": {
+                          "type": "string",
+                          "minLength": 0
+                        }
+                      },
+                      "required": [
+                        "kind",
+                        "originalText",
+                        "reason",
+                        "reading"
+                      ],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "kind": {
+                          "enum": [
+                            "link"
+                          ]
+                        },
+                        "originalText": {
+                          "type": "string",
+                          "minLength": 0
+                        },
+                        "reason": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "target": {
+                          "type": "object",
+                          "properties": {
+                            "entityId": {
+                              "$ref": "#/$defs/ID"
+                            },
+                            "blockId": {
+                              "anyOf": [
+                                {
+                                  "$ref": "#/$defs/ID"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "lineId": {
+                              "anyOf": [
+                                {
+                                  "$ref": "#/$defs/ID"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "start": {
+                              "anyOf": [
+                                {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 9007199254740991
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "end": {
+                              "anyOf": [
+                                {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 9007199254740991
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "sourceVersionId": {
+                              "anyOf": [
+                                {
+                                  "$ref": "#/$defs/ID"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "positionStatus": {
+                              "anyOf": [
+                                {
+                                  "enum": [
+                                    "unresolved"
+                                  ]
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "positionReason": {
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "minLength": 1
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "quotedText": {
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "minLength": 0
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            }
+                          },
+                          "required": [
+                            "entityId"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "required": [
+                        "kind",
+                        "originalText",
+                        "reason",
+                        "target"
+                      ],
+                      "additionalProperties": false
+                    }
+                  ]
                 },
                 "maxItems": 100000
               },
@@ -2030,6 +2267,40 @@
                           "type": "null"
                         }
                       ]
+                    },
+                    "positionStatus": {
+                      "anyOf": [
+                        {
+                          "enum": [
+                            "unresolved"
+                          ]
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "positionReason": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "quotedText": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "minLength": 0
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
                     }
                   },
                   "required": [
@@ -2568,6 +2839,40 @@
                                     "anyOf": [
                                       {
                                         "$ref": "#/$defs/ID"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "positionStatus": {
+                                    "anyOf": [
+                                      {
+                                        "enum": [
+                                          "unresolved"
+                                        ]
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "positionReason": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string",
+                                        "minLength": 1
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "quotedText": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string",
+                                        "minLength": 0
                                       },
                                       {
                                         "type": "null"
@@ -3412,6 +3717,40 @@
                                     "anyOf": [
                                       {
                                         "$ref": "#/$defs/ID"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "positionStatus": {
+                                    "anyOf": [
+                                      {
+                                        "enum": [
+                                          "unresolved"
+                                        ]
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "positionReason": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string",
+                                        "minLength": 1
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "quotedText": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string",
+                                        "minLength": 0
                                       },
                                       {
                                         "type": "null"
@@ -4496,6 +4835,40 @@
                               "anyOf": [
                                 {
                                   "$ref": "#/$defs/ID"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "positionStatus": {
+                              "anyOf": [
+                                {
+                                  "enum": [
+                                    "unresolved"
+                                  ]
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "positionReason": {
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "minLength": 1
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "quotedText": {
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "minLength": 0
                                 },
                                 {
                                   "type": "null"
@@ -5931,6 +6304,40 @@
                                         "type": "null"
                                       }
                                     ]
+                                  },
+                                  "positionStatus": {
+                                    "anyOf": [
+                                      {
+                                        "enum": [
+                                          "unresolved"
+                                        ]
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "positionReason": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string",
+                                        "minLength": 1
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "quotedText": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string",
+                                        "minLength": 0
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
                                   }
                                 },
                                 "required": [
@@ -6721,6 +7128,40 @@
                           "type": "null"
                         }
                       ]
+                    },
+                    "positionStatus": {
+                      "anyOf": [
+                        {
+                          "enum": [
+                            "unresolved"
+                          ]
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "positionReason": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "quotedText": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "minLength": 0
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
                     }
                   },
                   "required": [
@@ -6841,6 +7282,40 @@
                               "anyOf": [
                                 {
                                   "$ref": "#/$defs/ID"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "positionStatus": {
+                              "anyOf": [
+                                {
+                                  "enum": [
+                                    "unresolved"
+                                  ]
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "positionReason": {
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "minLength": 1
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "quotedText": {
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "minLength": 0
                                 },
                                 {
                                   "type": "null"
@@ -7310,6 +7785,40 @@
                                         "type": "null"
                                       }
                                     ]
+                                  },
+                                  "positionStatus": {
+                                    "anyOf": [
+                                      {
+                                        "enum": [
+                                          "unresolved"
+                                        ]
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "positionReason": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string",
+                                        "minLength": 1
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "quotedText": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string",
+                                        "minLength": 0
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
                                   }
                                 },
                                 "required": [
@@ -7529,6 +8038,40 @@
                   "anyOf": [
                     {
                       "$ref": "#/$defs/ID"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "positionStatus": {
+                  "anyOf": [
+                    {
+                      "enum": [
+                        "unresolved"
+                      ]
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "positionReason": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "quotedText": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "minLength": 0
                     },
                     {
                       "type": "null"
@@ -7990,6 +8533,46 @@
                 "provenance"
               ],
               "additionalProperties": false
+            },
+            "presentationResults": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "targetId": {
+                        "$ref": "#/$defs/ID"
+                      },
+                      "value": {
+                        "enum": [
+                          "true",
+                          "false",
+                          "unknown"
+                        ]
+                      },
+                      "reasons": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "minLength": 0
+                        },
+                        "maxItems": 100000
+                      }
+                    },
+                    "required": [
+                      "targetId",
+                      "value",
+                      "reasons"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "maxItems": 100000
+                },
+                {
+                  "type": "null"
+                }
+              ]
             },
             "contentRevision": {
               "anyOf": [
@@ -8621,6 +9204,46 @@
                       "provenance"
                     ],
                     "additionalProperties": false
+                  },
+                  "conditionResults": {
+                    "anyOf": [
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "targetId": {
+                              "$ref": "#/$defs/ID"
+                            },
+                            "value": {
+                              "enum": [
+                                "true",
+                                "false",
+                                "unknown"
+                              ]
+                            },
+                            "reasons": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "minLength": 0
+                              },
+                              "maxItems": 100000
+                            }
+                          },
+                          "required": [
+                            "targetId",
+                            "value",
+                            "reasons"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "maxItems": 100000
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
                   },
                   "operation": {
                     "anyOf": [
@@ -9602,6 +10225,40 @@
                       "type": "null"
                     }
                   ]
+                },
+                "positionStatus": {
+                  "anyOf": [
+                    {
+                      "enum": [
+                        "unresolved"
+                      ]
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "positionReason": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "quotedText": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "minLength": 0
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
                 }
               },
               "required": [
@@ -9862,6 +10519,40 @@
                   "anyOf": [
                     {
                       "$ref": "#/$defs/ID"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "positionStatus": {
+                  "anyOf": [
+                    {
+                      "enum": [
+                        "unresolved"
+                      ]
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "positionReason": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "quotedText": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "minLength": 0
                     },
                     {
                       "type": "null"
@@ -10573,6 +11264,40 @@
                                   "type": "null"
                                 }
                               ]
+                            },
+                            "positionStatus": {
+                              "anyOf": [
+                                {
+                                  "enum": [
+                                    "unresolved"
+                                  ]
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "positionReason": {
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "minLength": 1
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "quotedText": {
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "minLength": 0
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
                             }
                           },
                           "required": [
@@ -10767,6 +11492,40 @@
                                     "anyOf": [
                                       {
                                         "$ref": "#/$defs/ID"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "positionStatus": {
+                                    "anyOf": [
+                                      {
+                                        "enum": [
+                                          "unresolved"
+                                        ]
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "positionReason": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string",
+                                        "minLength": 1
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "quotedText": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string",
+                                        "minLength": 0
                                       },
                                       {
                                         "type": "null"
@@ -11304,6 +12063,40 @@
                               "anyOf": [
                                 {
                                   "$ref": "#/$defs/ID"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "positionStatus": {
+                              "anyOf": [
+                                {
+                                  "enum": [
+                                    "unresolved"
+                                  ]
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "positionReason": {
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "minLength": 1
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "quotedText": {
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "minLength": 0
                                 },
                                 {
                                   "type": "null"
@@ -12029,6 +12822,40 @@
                       "anyOf": [
                         {
                           "$ref": "#/$defs/ID"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "positionStatus": {
+                      "anyOf": [
+                        {
+                          "enum": [
+                            "unresolved"
+                          ]
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "positionReason": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "quotedText": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "minLength": 0
                         },
                         {
                           "type": "null"
@@ -13392,6 +14219,40 @@
                               "type": "null"
                             }
                           ]
+                        },
+                        "positionStatus": {
+                          "anyOf": [
+                            {
+                              "enum": [
+                                "unresolved"
+                              ]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "positionReason": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "quotedText": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "minLength": 0
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
                         }
                       },
                       "required": [
@@ -13625,6 +14486,40 @@
                                     "anyOf": [
                                       {
                                         "$ref": "#/$defs/ID"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "positionStatus": {
+                                    "anyOf": [
+                                      {
+                                        "enum": [
+                                          "unresolved"
+                                        ]
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "positionReason": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string",
+                                        "minLength": 1
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "quotedText": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string",
+                                        "minLength": 0
                                       },
                                       {
                                         "type": "null"
@@ -15170,6 +16065,40 @@
                                 "type": "null"
                               }
                             ]
+                          },
+                          "positionStatus": {
+                            "anyOf": [
+                              {
+                                "enum": [
+                                  "unresolved"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "positionReason": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "quotedText": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "minLength": 0
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
                           }
                         },
                         "required": [
@@ -15685,6 +16614,40 @@
                             "anyOf": [
                               {
                                 "$ref": "#/$defs/ID"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "positionStatus": {
+                            "anyOf": [
+                              {
+                                "enum": [
+                                  "unresolved"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "positionReason": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "quotedText": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "minLength": 0
                               },
                               {
                                 "type": "null"
