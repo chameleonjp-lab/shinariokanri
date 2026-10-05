@@ -134,6 +134,14 @@ function RichTextEditor({ value, onChange, label, rows, placeholder, project, en
   const text = fieldText(value);
   useEffect(() => { if (!composing.current) setRaw(text); }, [text]);
   const selection = (element: HTMLTextAreaElement): TextReplacement => ({ start: Array.from(element.value.slice(0, element.selectionStart)).length, end: Array.from(element.value.slice(0, element.selectionEnd)).length });
+  // React's synthetic before-input event does not cover every native insertion
+  // path (notably Firefox insertText). Capture the actual pre-edit range.
+  useEffect(() => {
+    const element = textarea.current; if (!element) return;
+    const capture = () => { if (!composing.current) beforeInput.current = selection(element); };
+    element.addEventListener('beforeinput', capture);
+    return () => element.removeEventListener('beforeinput', capture);
+  }, []);
   const editorId = `rich-text-editor-${entity.id}-${fieldKey}`;
   let blockStart = 0;
   const blockAnchors = blocks.map(block => {
@@ -173,7 +181,6 @@ function RichTextEditor({ value, onChange, label, rows, placeholder, project, en
     onKeyDown={e => { if (!composing.current) beforeInput.current = selection(e.currentTarget); }}
     onPaste={e => { if (!composing.current) beforeInput.current = selection(e.currentTarget); }}
     onCut={e => { if (!composing.current) beforeInput.current = selection(e.currentTarget); }}
-    onBeforeInput={e => { if (!composing.current) beforeInput.current = selection(e.currentTarget); }}
     onCompositionStart={e => { beforeInput.current = selection(e.currentTarget); composing.current = true; }}
     onCompositionEnd={e => { composing.current = false; change(e.currentTarget.value); }}
     onChange={e => change(e.target.value, (e.nativeEvent as InputEvent).inputType)}/>
