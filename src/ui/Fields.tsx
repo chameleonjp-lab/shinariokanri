@@ -1,11 +1,16 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import type { Comparator, Entity, ProjectData, RichText } from '../domain/types';
+import type { Comparator, ContentAnchor, Entity, EntityKind, ProjectData, RichText } from '../domain/types';
 import { KIND_LABELS, validateCondition } from '../domain/model';
+import { referenceChoices } from '../domain/referenceChoices';
 import { editRichText, type TextReplacement } from '../domain/text';
 import { conditionInputError, defaultComparisonValue, switchComparisonOperator, type ComparisonCondition } from '../domain/conditionDraft';
 import { conditionToText } from '../domain/conditions';
 import { Icon, fieldText } from './components';
 import type { FieldSpec } from './fieldSpecs';
+import { StructuredDataField } from './StructuredDataField';
+import { TextAnnotations } from './TextAnnotations';
+import type { TextLinkReference } from '../domain/linkCandidates';
+import { resolveUnresolvedAnnotation } from '../domain/linkCandidates';
 
 export function dataOf(entity: Entity): Record<string, any> { return entity.data as unknown as Record<string, any>; }
 export function labelOf(entity?: Entity) { return entity?.name || (entity ? KIND_LABELS[entity.kind] : '未指定'); }
@@ -26,8 +31,8 @@ export function JsonField({ value, onChange, onValid, label = 'JSON', rawOverrid
 }
 
 export function RefSelect({ value, onChange, project, kinds, excludeId, label = '参照先' }: { value: unknown; onChange: (id: string | undefined) => void; project: ProjectData; kinds?: string[]; excludeId?: string; label?: string }) {
-  const choices = project.entities.filter(e => !e.deletedAt && e.id !== excludeId && (!kinds?.length || kinds.includes(e.kind)));
-  return <select aria-label={label} value={typeof value === 'string' ? value : ''} onChange={e => onChange(e.target.value || undefined)}><option value="">選択してください</option>{choices.map(e => <option key={e.id} value={e.id}>{labelOf(e)} · {KIND_LABELS[e.kind]}{dataOf(e).reading ? `（${dataOf(e).reading}）` : ''}</option>)}</select>;
+  const choices = referenceChoices(project, kinds?.length === 1 && kinds[0] === 'snapshot' ? 'snapshot' : 'entity', kinds as EntityKind[] | undefined).filter(choice => choice.id !== excludeId);
+  return <select aria-label={label} value={typeof value === 'string' ? value : ''} onChange={e => onChange(e.target.value || undefined)}><option value="">選択してください</option>{typeof value === 'string' && value && !choices.some(choice => choice.id === value) && <option value={value}>現在の参照を確認 · {value}</option>}{choices.map(choice => <option key={choice.id} value={choice.id}>{choice.label} · {choice.id.slice(-6)}</option>)}</select>;
 }
 
 export function RefList({ value, onChange, project, kinds, excludeId }: { value: unknown; onChange: (ids: string[]) => void; project: ProjectData; kinds?: string[]; excludeId?: string }) {
@@ -120,7 +125,7 @@ export function ParticipantsEditor({ value, onChange, project }: { value: unknow
   return <div className="participant-editor">{participants.map((p, i) => <div className="participant-row" key={i}><RefSelect project={project} kinds={['character']} value={p.characterId} label={`参加者${i + 1}`} onChange={id => onChange(participants.map((v, j) => i === j ? { ...v, characterId: id || '' } : v))}/><select aria-label={`参加者${i + 1}の役割`} value={p.role} onChange={e => onChange(participants.map((v, j) => i === j ? { ...v, role: e.target.value } : v))}>{[['actor', '当事者'], ['witness', '目撃者'], ['mentioned', '言及される'], ['informed', '情報を得る'], ['custom', '独自の役割']].map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select><button type="button" className="icon-button small" aria-label={`参加者${i + 1}を外す`} onClick={() => onChange(participants.filter((_, j) => i !== j))}><Icon name="close" size={16}/></button></div>)}<button type="button" className="text-button" onClick={() => onChange([...participants, { characterId: '', role: 'actor' }])}><Icon name="plus" size={16}/>参加者を追加</button><span className="field-hint">参加・目撃・知識取得を別の役割として記録します。</span></div>;
 }
 
-function RichTextEditor({ value, onChange, label, rows, placeholder }: { value: unknown; onChange: (value: RichText) => void; label: string; rows: number; placeholder: string }) {
+function RichTextEditor({ value, onChange, label, rows, placeholder, project, entity, fieldKey, onOpenTarget, onOpenReferences, onOpenReference }: { value: unknown; onChange: (value: RichText) => void; label: string; rows: number; placeholder: string; project: ProjectData; entity: Entity; fieldKey: string; onOpenTarget?: (anchor: ContentAnchor, sourceAnchor?: ContentAnchor) => void; onOpenReferences?: (targetEntityId: string) => void; onOpenReference?: (reference: TextLinkReference) => void }) {
   const blocks = Array.isArray(value) ? value as RichText : [];
   const [raw, setRaw] = useState(fieldText(value));
   const [selectionError, setSelectionError] = useState('');
@@ -129,6 +134,13 @@ function RichTextEditor({ value, onChange, label, rows, placeholder }: { value: 
   const text = fieldText(value);
   useEffect(() => { if (!composing.current) setRaw(text); }, [text]);
   const selection = (element: HTMLTextAreaElement): TextReplacement => ({ start: Array.from(element.value.slice(0, element.selectionStart)).length, end: Array.from(element.value.slice(0, element.selectionEnd)).length });
+  const editorId = `rich-text-editor-${entity.id}-${fieldKey}`;
+  let blockStart = 0;
+  const blockAnchors = blocks.map(block => {
+    const anchor = { id: block.id, start: blockStart };
+    blockStart += Array.from(block.text).length + 1;
+    return anchor;
+  });
   const change = (next: string, inputType?: string) => {
     setRaw(next);
     if (composing.current) return;
@@ -150,16 +162,14 @@ function RichTextEditor({ value, onChange, label, rows, placeholder }: { value: 
     const range = selection(element), chars = Array.from(raw), prefix = chars.slice(0, range.start).join(''), selected = chars.slice(range.start, range.end).join('');
     if (!selected || selected.includes('\n')) { setSelectionError('本文で一つの段落の文字を選択してから、再リンクしてください。'); return; }
     const blockIndex = prefix.split('\n').length - 1, offset = Array.from(prefix.split('\n').at(-1) ?? '').length;
-    const next = structuredClone(blocks), annotation = next[owner].unresolvedAnnotations?.[annotationIndex], target = next[blockIndex];
+    const annotation = blocks[owner].unresolvedAnnotations?.[annotationIndex], target = blocks[blockIndex];
     if (!annotation || !target) return;
     const mark = { start: offset, end: offset + Array.from(selected).length };
-    if (annotation.kind === 'ruby') target.ruby = [...(target.ruby ?? []), { ...mark, text: annotation.reading }];
-    else target.links = [...(target.links ?? []), { ...mark, target: annotation.target }];
-    next[owner].unresolvedAnnotations = next[owner].unresolvedAnnotations!.filter((_, i) => i !== annotationIndex);
-    if (!next[owner].unresolvedAnnotations?.length) delete next[owner].unresolvedAnnotations;
-    setSelectionError(''); onChange(next);
+    const result = resolveUnresolvedAnnotation(blocks, blocks[owner].id, annotationIndex, target.id, mark.start, mark.end);
+    if (!result.ok) { setSelectionError(result.reason); return; }
+    setSelectionError(''); onChange(result.value);
   };
-  return <><textarea ref={textarea} aria-label={label} rows={rows} value={raw} placeholder={placeholder}
+  return <div className="rich-text-editor"><textarea ref={textarea} id={editorId} data-rich-text-editor="true" aria-label={label} rows={rows} value={raw} placeholder={placeholder}
     onKeyDown={e => { if (!composing.current) beforeInput.current = selection(e.currentTarget); }}
     onPaste={e => { if (!composing.current) beforeInput.current = selection(e.currentTarget); }}
     onCut={e => { if (!composing.current) beforeInput.current = selection(e.currentTarget); }}
@@ -167,14 +177,16 @@ function RichTextEditor({ value, onChange, label, rows, placeholder }: { value: 
     onCompositionStart={e => { beforeInput.current = selection(e.currentTarget); composing.current = true; }}
     onCompositionEnd={e => { composing.current = false; change(e.currentTarget.value); }}
     onChange={e => change(e.target.value, (e.nativeEvent as InputEvent).inputType)}/>
+    <div className="rich-text-block-anchors" aria-hidden="true">{blockAnchors.map(block => <span key={block.id} data-block-id={block.id} data-editor-id={editorId} data-block-start={block.start}/>)}</div>
     {blocks.map((block, i) => block.unresolvedAnnotations?.map((annotation, j) => <div className="field-error" key={`${block.id}-${j}`} role="status"><strong>{annotation.kind === 'ruby' ? 'ルビ' : 'リンク'}の再リンク待ち：「{annotation.originalText}」</strong><p>{annotation.reason}</p><button type="button" className="text-button" onClick={() => relink(i, j)}>選択範囲に再リンク</button></div>))}
     {selectionError && <span className="field-error" role="alert">{selectionError}</span>}
-  </>;
+    {fieldKey !== 'authorNotes' && <TextAnnotations value={blocks} project={project} sourceEntityId={entity.id} fieldLabel={label} onChange={onChange} onOpenTarget={onOpenTarget} onOpenReferences={onOpenReferences} onOpenReference={onOpenReference}/>}
+  </div>;
 }
 
-export function DataField({ field, value, onChange, project, entity, onValid, rawOverride, onInvalidRaw }: { field: FieldSpec; value: unknown; onChange: (v: unknown) => void; project: ProjectData; entity: Entity; onValid: (valid: boolean) => void; rawOverride?: string; onInvalidRaw?: (raw: string | undefined) => void }) {
+export function DataField({ field, value, onChange, project, entity, onValid, rawOverride, onInvalidRaw, onOpenTarget, onOpenReferences, onOpenReference }: { field: FieldSpec; value: unknown; onChange: (v: unknown) => void; project: ProjectData; entity: Entity; onValid: (valid: boolean) => void; rawOverride?: string; onInvalidRaw?: (raw: string | undefined) => void; onOpenTarget?: (anchor: ContentAnchor, sourceAnchor?: ContentAnchor) => void; onOpenReferences?: (targetEntityId: string) => void; onOpenReference?: (reference: TextLinkReference) => void }) {
   let input: ReactNode;
-  if (field.type === 'rich') input = <RichTextEditor label={field.label} rows={field.key === 'body' || field.key === 'text' ? 9 : 3} value={value} onChange={onChange} placeholder={field.key === 'authorNotes' ? '読者には公開しない制作メモ' : 'あとから詳しく書くこともできます'}/>;
+  if (field.type === 'rich') input = <RichTextEditor label={field.label} rows={field.key === 'body' || field.key === 'text' ? 9 : 3} value={value} onChange={onChange} project={project} entity={entity} fieldKey={field.key} onOpenTarget={onOpenTarget} onOpenReferences={onOpenReferences} onOpenReference={onOpenReference} placeholder={field.key === 'authorNotes' ? '読者には公開しない制作メモ' : 'あとから詳しく書くこともできます'}/>;
   else if (field.type === 'enum') input = <select aria-label={field.label} value={typeof value === 'string' ? value : ''} onChange={e => onChange(e.target.value)}><option value="">選択してください</option>{field.options?.map(([v, label]) => <option key={v} value={v}>{label}</option>)}</select>;
   else if (field.type === 'ref' && entity.kind === 'flow_edge' && field.key === 'toId') {
     const unfinished = typeof value === 'object' && value !== null && 'unresolved' in value;
@@ -189,12 +201,18 @@ export function DataField({ field, value, onChange, project, entity, onValid, ra
   else if (field.type === 'participants') input = <ParticipantsEditor value={value} project={project} onChange={onChange}/>;
   else if (field.type === 'json' && ['anchor', 'evidenceLocation'].includes(field.key)) {
     const anchor = value && typeof value === 'object' ? value as any : { entityId: '' };
-    const target = project.entities.find(e => e.id === anchor.entityId);
-    const blocks = target ? ['body', 'text', 'summary', 'description'].flatMap(key => Array.isArray(dataOf(target)[key]) ? dataOf(target)[key].map((block: any, i: number) => ({ id: block.id, text: `${key === 'body' ? '本文' : key === 'summary' ? '要約' : '文章'} ${i + 1} · ${block.text.slice(0, 30)}` })) : []) : [];
+    const pinned = anchor.sourceVersionId ? project.snapshots.find(snapshot => snapshot.id === anchor.sourceVersionId) : undefined;
+    const sourceEntities = anchor.sourceVersionId && anchor.sourceVersionId !== project.projectId ? pinned?.content.entities ?? [] : project.entities;
+    const sourceProject = { ...project, entities: sourceEntities };
+    const target = sourceEntities.find(e => e.id === anchor.entityId);
+    const lines = sourceEntities.filter(e => e.kind === 'dialogue_line' && !e.deletedAt && (e.id === anchor.entityId || target?.kind === 'scene'));
+    const line = lines.find(e => e.id === anchor.lineId);
+    const textTarget = line ?? target;
+    const blocks = textTarget ? ['body', 'text', 'summary', 'description'].flatMap(key => Array.isArray(dataOf(textTarget)[key]) ? dataOf(textTarget)[key].map((block: any, i: number) => ({ id: block.id, text: `${key === 'body' ? '本文' : key === 'summary' ? '要約' : '文章'} ${i + 1} · ${block.text.slice(0, 30)}` })) : []) : [];
     const resolved = { ...anchor }; delete resolved.positionStatus; delete resolved.positionReason; delete resolved.quotedText;
-    input = <div className="anchor-editor">{anchor.positionStatus === 'unresolved' && <p className="field-error" role="status">位置不明・再リンク待ち：「{anchor.quotedText}」 {anchor.positionReason}</p>}<RefSelect project={project} value={anchor.entityId} label="提示する場面・情報" onChange={id => onChange(id ? { entityId: id } : undefined)}/><select aria-label="本文の段落" value={anchor.blockId || ''} onChange={e => onChange({ ...resolved, blockId: e.target.value || undefined })}><option value="">対象全体（段落を限定しない）</option>{blocks.map(block => <option key={block.id} value={block.id}>{block.text}</option>)}</select><div className="form-row"><label className="nested-label">開始位置（任意）<input type="number" min="0" value={anchor.start ?? ''} onChange={e => onChange({ ...resolved, start: e.target.value === '' ? undefined : Number(e.target.value) })}/></label><label className="nested-label">終了位置（任意）<input type="number" min="0" value={anchor.end ?? ''} onChange={e => onChange({ ...resolved, end: e.target.value === '' ? undefined : Number(e.target.value) })}/></label></div><span className="field-hint">文字の位置はUnicodeコードポイントで数えます。</span></div>;
+    input = <div className="anchor-editor">{anchor.positionStatus === 'unresolved' && <p className="field-error" role="status">位置不明・再リンク待ち：「{anchor.quotedText}」 {anchor.positionReason}</p>}<label className="nested-label">参照する版<select aria-label="参照する版" value={anchor.sourceVersionId ?? ''} onChange={event => onChange({ entityId: anchor.entityId, ...(event.target.value ? { sourceVersionId: event.target.value } : {}) })}><option value="">現在版（本文の編集に追従）</option>{anchor.sourceVersionId === project.projectId && <option value={project.projectId}>現在版（作品ID指定）</option>}{project.snapshots.map(snapshot => <option key={snapshot.id} value={snapshot.id}>{snapshot.versionLabel} · 固定版</option>)}{anchor.sourceVersionId && anchor.sourceVersionId !== project.projectId && !pinned && <option value={anchor.sourceVersionId}>保存された参照版を確認</option>}</select></label>{anchor.sourceVersionId && anchor.sourceVersionId !== project.projectId && <p className="field-hint">参照先の固定版を表示しています。現在版の本文変更は、この位置へ適用しません。</p>}<RefSelect project={sourceProject} value={anchor.entityId} label="提示する場面・情報" onChange={id => onChange(id ? { entityId: id, ...(anchor.sourceVersionId ? { sourceVersionId: anchor.sourceVersionId } : {}) } : undefined)}/>{lines.length > 0 && <label className="nested-label">台詞<select aria-label="参照する台詞" value={anchor.lineId ?? ''} onChange={event => onChange({ entityId: anchor.entityId, ...(anchor.sourceVersionId ? { sourceVersionId: anchor.sourceVersionId } : {}), ...(event.target.value ? { lineId: event.target.value } : {}) })}><option value="">対象の本文</option>{lines.map(line => <option key={line.id} value={line.id}>{labelOf(line)} · {line.id.slice(-6)}</option>)}</select></label>}<select aria-label="本文の段落" value={anchor.blockId || ''} onChange={e => onChange({ ...resolved, blockId: e.target.value || undefined })}><option value="">対象全体（段落を限定しない）</option>{blocks.map(block => <option key={block.id} value={block.id}>{block.text}</option>)}</select><div className="form-row"><label className="nested-label">開始位置（任意）<input type="number" min="0" value={anchor.start ?? ''} onChange={e => onChange({ ...resolved, start: e.target.value === '' ? undefined : Number(e.target.value) })}/></label><label className="nested-label">終了位置（任意）<input type="number" min="0" value={anchor.end ?? ''} onChange={e => onChange({ ...resolved, end: e.target.value === '' ? undefined : Number(e.target.value) })}/></label></div><span className="field-hint">文字の位置はUnicodeコードポイントで数えます。</span></div>;
   }
-  else if (field.type === 'json') input = <JsonField label={field.label} value={value} onChange={onChange} onValid={onValid} rawOverride={rawOverride} onInvalidRaw={onInvalidRaw}/>;
+  else if (field.type === 'json') input = <StructuredDataField label={field.label} value={value} onChange={onChange} onValid={onValid} project={project} entity={entity} entityKind={entity.kind} fieldKey={field.key} rawOverride={rawOverride} onInvalidRaw={onInvalidRaw}/>;
   else if (field.type === 'boolean') input = <label className="check-label"><input type="checkbox" checked={value === true} onChange={e => onChange(e.target.checked)}/>{field.label}</label>;
   else if (field.type === 'number') input = <input aria-label={field.label} type="number" min={field.min} max={field.max} value={typeof value === 'number' ? value : ''} onChange={e => onChange(e.target.value === '' ? undefined : Number(e.target.value))}/>;
   else if (field.type === 'date') input = <input aria-label={field.label} type="date" value={typeof value === 'string' ? value : (value as any)?.date || ''} onChange={e => onChange(e.target.value ? { date: e.target.value, timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone } : undefined)}/>;

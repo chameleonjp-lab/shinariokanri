@@ -180,8 +180,8 @@ export function editRichText(before: RichText, nextText: string, replacement?: T
   return after;
 }
 
-export function transformAnchor(anchor: ContentAnchor, entityId: string, before: RichText, transform: TextTransform): ContentAnchor {
-  if (anchor.entityId !== entityId || anchor.sourceVersionId || anchor.positionStatus === 'unresolved') return anchor;
+export function transformAnchor(anchor: ContentAnchor, entityId: string, before: RichText, transform: TextTransform, currentVersionId?: string): ContentAnchor {
+  if (anchor.entityId !== entityId || (anchor.sourceVersionId && anchor.sourceVersionId !== currentVersionId) || anchor.positionStatus === 'unresolved') return anchor;
   const oldBlock = before.find(block => block.id === anchor.blockId);
   if (!oldBlock && anchor.lineId !== entityId) return anchor;
   const hasRange = typeof anchor.start === 'number' && typeof anchor.end === 'number';
@@ -229,7 +229,7 @@ function editedTextRemapper(beforeEntity: Entity, afterEntity: Entity): ((value:
     if (!value || typeof value !== 'object') return value;
     const object = value as Record<string, unknown>;
     let result = value;
-    if (typeof object.entityId === 'string') for (const edit of edits) result = transformAnchor(result as ContentAnchor, beforeEntity.id, edit.before, edit.transform);
+    if (typeof object.entityId === 'string') for (const edit of edits) result = transformAnchor(result as ContentAnchor, beforeEntity.id, edit.before, edit.transform, beforeEntity.projectId);
     const next = result as Record<string, unknown>, changes = Object.entries(next).map(([key, child]) => [key, walk(child)] as const);
     return changes.some(([key, child]) => child !== next[key]) ? Object.fromEntries(changes) : result;
   };

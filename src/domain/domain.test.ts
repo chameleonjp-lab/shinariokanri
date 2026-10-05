@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import Ajv2020 from 'ajv/dist/2020.js';
-import type { Condition, EffectData, Entity, EntityDataMap, EntityKind, ProjectData, TypedValue } from './types';
+import type { Condition, EffectData, Entity, EntityDataMap, EntityKind, ProjectData, Query, TypedValue } from './types';
 import { ENTITY_KINDS, KIND_LABELS, collectReferences, createDemoProject, createEntity, createProject, emptyRuntimeState, newId, rewriteEntityReferences, toJsonSchema, validateCondition, validateEntity, validateProject } from './model';
 import { DomainValidationError, applyEffectsAtomic, conditionToText, evaluateCondition, evaluateExpression, initializeRuntimeState } from './conditions';
 import { MAX_TICK, GREGORIAN_CALENDAR, addTicks, calendarDateToTick, compareTicks, formatRelativeTick, isTick, resolveTime, tickToCalendarDate, tickToScreen, validateCalendar } from './time';
@@ -184,13 +184,21 @@ describe('versioned entity and reference contracts', () => {
   it('compiles the actual JSON Schema and accepts all-kind/condition/query fixtures while rejecting unknown payloads', () => {
     const ajv = new Ajv2020({ strict: true, allowUnionTypes: true, validateFormats: false });
     const validate = ajv.compile(toJsonSchema()), fixture = allKindsFixture();
+    fixture.entities[0]!.retainIfUnreferenced = true;
     const variable = fixture.entities.find((entity): entity is Entity<'variable'> => entity.kind === 'variable')!;
     const edge = fixture.entities.find((entity): entity is Entity<'flow_edge'> => entity.kind === 'flow_edge')!;
     edge.data.condition = { op: 'all', children: [{ op: 'any', children: [{ op: 'constant', value: true }, { op: 'constant', value: false }] }, { op: 'compare', variableId: variable.id, comparator: 'in', value: [{ type: 'boolean', value: true }, { type: 'boolean', value: false }] }] };
     const collection = fixture.entities.find((entity): entity is Entity<'collection'> => entity.kind === 'collection')!;
-    collection.data.mode = 'dynamic'; collection.data.query = { op: 'all', children: [{ op: 'any', children: [{ op: 'kind', value: 'character' }, { op: 'text', value: '門' }] }] };
+    const chapter = fixture.entities.find((entity): entity is Entity<'chapter'> => entity.kind === 'chapter')!;
+    collection.data.mode = 'dynamic'; collection.data.query = { op: 'all', children: [
+      { op: 'any', children: [{ op: 'kind', value: 'character' }, { op: 'text', value: '門' }] },
+      { op: 'chapter', chapterId: chapter.id },
+      { op: 'foreshadow', role: 'payoff', stage: 'reveal' },
+    ] };
     expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
     expect(validate(createDemoProject()), JSON.stringify(validate.errors)).toBe(true);
+    collection.data.query = { op: 'foreshadow' } as unknown as Query;
+    expect(validate(fixture)).toBe(false);
     (fixture.entities[0].data as unknown as Record<string, unknown>).unknownField = true;
     expect(validate(fixture)).toBe(false);
   });

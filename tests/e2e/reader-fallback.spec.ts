@@ -21,11 +21,14 @@ test('幅390pxの手動試読で候補がない場合の代替進行を確認・
   const merge = page.locator('.branch-node').filter({ hasText: '同じ門へ合流' });
   await merge.getByRole('button', { name: '選択 同じ門へ合流', exact: true }).click();
   const nodeEditor = page.locator('.detail-panel');
-  const fallback = nodeEditor.getByLabel('進行できない場合の行き先');
+  const fallback = nodeEditor.getByLabel('進行できない場合の行き先', { exact: true });
   const fallbackId = await fallback.locator('option').filter({ hasText: '町へ戻る' }).getAttribute('value');
   expect(fallbackId).toBeTruthy();
   await fallback.selectOption(fallbackId!);
-  await nodeEditor.getByLabel('トリガー').fill(JSON.stringify({ event: 'manual', eventKey: '代替の確認', repeat: 'repeatable' }));
+  await nodeEditor.getByLabel('トリガー', { exact: true }).selectOption('value');
+  await nodeEditor.getByLabel('起動イベント', { exact: true }).selectOption({ label: '手動実行' });
+  await nodeEditor.getByLabel('イベントキー', { exact: true }).fill('代替の確認');
+  await nodeEditor.getByLabel('繰り返し', { exact: true }).selectOption({ label: '繰り返す' });
   await expect(nodeEditor.locator('.editor-save-state')).toContainText('端末内保存済み');
   await closeEditor(page);
 

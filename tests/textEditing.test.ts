@@ -248,3 +248,13 @@ describe('RG-R01 Unicode text annotations and content anchors', () => {
     }
   });
 });
+
+it('remaps explicit current-version Unicode anchors while retaining historical anchors', () => {
+  const { project, scene, body, disclosure } = fixture('アオ😀が歩く。');
+  disclosure.data.anchor.sourceVersionId = project.projectId;
+  const historical = createEntity(project.projectId, 'disclosure', '', { ...disclosure.data, anchor: { ...disclosure.data.anchor, sourceVersionId: newId() } });
+  const changed = { ...scene, data: { ...scene.data, body: editRichText(body, '昨日、アオ😀が歩く。', { start: 0, end: 0 }) } };
+  const result = remapEditedTextReferences([changed, disclosure, historical], scene, changed);
+  expect((result[1] as Entity<'disclosure'>).data.anchor).toMatchObject({ start: 3, end: 5, sourceVersionId: project.projectId });
+  expect((result[2] as Entity<'disclosure'>).data.anchor).toEqual(historical.data.anchor);
+});
