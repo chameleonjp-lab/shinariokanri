@@ -220,7 +220,7 @@ export function DataField({ field, value, onChange, project, entity, onValid, ra
   return <div className={`form-field field-${field.type}`} data-field={field.key}>{field.type !== 'boolean' && <label>{field.label}</label>}{input}{field.hint && <span className="field-hint">{field.hint}</span>}</div>;
 }
 
-export function RichTextView({ value, vertical = false, onOpen }: { value: unknown; vertical?: boolean; onOpen?: (id: string) => void }) {
+export function RichTextView({ value, vertical = false, onOpen, onOpenTarget }: { value: unknown; vertical?: boolean; onOpen?: (id: string) => void; onOpenTarget?: (anchor: ContentAnchor) => void }) {
   const blocks = Array.isArray(value) ? value as any[] : [];
   const inline = (block: any) => {
     const chars = Array.from(String(block.text || ''));
@@ -230,7 +230,7 @@ export function RichTextView({ value, vertical = false, onOpen }: { value: unkno
     const marks = [...grouped.values()].sort((a, b) => a.start - b.start);
     const output: ReactNode[] = [];
     let cursor = 0;
-    marks.forEach((mark, i) => { if (mark.start < cursor || mark.end > chars.length || mark.end <= mark.start) return; output.push(chars.slice(cursor, mark.start).join('')); const text = chars.slice(mark.start, mark.end).join(''); const ruby = mark.reading === undefined ? text : <ruby key={i}>{text}<rt>{mark.reading}</rt></ruby>; output.push(mark.target ? <button className="inline-link" key={i} onClick={() => onOpen?.(mark.target?.entityId)} type="button">{ruby}</button> : ruby); cursor = mark.end; });
+    marks.forEach((mark, i) => { if (mark.start < cursor || mark.end > chars.length || mark.end <= mark.start) return; output.push(chars.slice(cursor, mark.start).join('')); const text = chars.slice(mark.start, mark.end).join(''); const ruby = mark.reading === undefined ? text : <ruby key={i}>{text}<rt>{mark.reading}</rt></ruby>; output.push(mark.target ? <button className="inline-link" key={i} onClick={() => onOpenTarget ? onOpenTarget(mark.target) : onOpen?.(mark.target?.entityId)} type="button">{ruby}</button> : ruby); cursor = mark.end; });
     output.push(chars.slice(cursor).join(''));
     return output;
   };

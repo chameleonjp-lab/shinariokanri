@@ -4,6 +4,10 @@ import type { Block, CommandRecord, ContentState, Entity, ProjectContent, Projec
 import { collectReferences, ID_PATTERN, newId, rewriteEntityReferences, rewriteRelationReferences, validateCurrentProject, validateProject, type DomainReference } from '../domain/model';
 import { remapEditedTextReferences, remapEditedTextRelationReferences } from '../domain/text';
 import { reconcileDeliverables } from '../domain/production';
+import { addChangeReviews } from '../domain/changeReviews';
+import { validateProjectIntegrity } from '../domain/projectRecordValidation';
+import { sealAuthorAlternative } from '../domain/authorAlternativeIntegrity';
+import { appendAlternativeVersion, applyAlternativeChanges, projectContent } from '../domain/writingWorkspace';
 import { assetPath, attachmentMetadata, exportScenario, referencedWorlds, validateAsset, verifySnapshotHashes, verifyWorlds, worldSnapshotContents, type PreparedScenario } from './archive';
 import { checkCancelled, saveError, StorageError } from './errors';
 import { canonicalJson, equalJson, jsonBytes, sha256 } from './json';
@@ -64,7 +68,7 @@ export interface ImportOptions {
   mode: ImportMode; targetProjectId?: string; baseRevision?: string; operationId?: string; signal?: AbortSignal;
   resolutions?: Record<string, 'existing' | 'incoming'>;
 }
-export interface ImportConflict { id: string; kind: 'project' | 'entity' | 'relation' | 'snapshot' | 'view'; existing: unknown; incoming: unknown }
+export interface ImportConflict { id: string; kind: 'project' | 'entity' | 'relation' | 'snapshot' | 'view' | 'alternative'; existing: unknown; incoming: unknown }
 export interface ImportResult extends SaveResult { mode: ImportMode; idMap?: Record<string, string>; restorePointId?: string; warnings: string[] }
 
 class ScenarioDatabase extends Dexie {
@@ -135,7 +139,14 @@ function applyContentDelta(before: ContentState, patch: ContentDelta): ContentSt
 }
 const increment = (revision: string): string => (BigInt(revision) + 1n).toString();
 const withoutHistory = ({ history: _history, ...content }: ProjectData): ContentState => content;
-const blankBefore = (project: ProjectData): ContentState => ({ ...withoutHistory(project), entities: [], relations: [], snapshots: [], views: [], revision: '0' });
+const blankBefore = (project: ProjectData): ContentState => {
+  const before = { ...withoutHistory(project), entities: [], relations: [], snapshots: [], views: [], revision: '0' };
+  // Keep the established optional-field shape for legacy projects, but never
+  // borrow branch evidence from the new image into the blank initial state.
+  if (project.authorAlternatives?.length) before.authorAlternatives = [];
+  else delete before.authorAlternatives;
+  return before;
+};
 
 function validated(input: unknown, worldSnapshots: Record<string, ProjectContent> = {}): ProjectData {
   const result = validateProject(input, { worldSnapshots });
@@ -151,6 +162,10 @@ function validatedCurrent(input: ProjectData, worldSnapshots: Record<string, Pro
     throw error;
   }
   return input;
+}
+async function validateDurableIntegrity(project: ProjectData, worldSnapshots: Record<string, ProjectContent> = {}, requireReceiptHistory = project.history.length > 0): Promise<void> {
+  const issues = await validateProjectIntegrity(project, { worldSnapshots }, requireReceiptHistory);
+  if (issues.length) throw Object.assign(new StorageError('VALIDATION_FAILED', issues.map(issue => `${issue.path}: ${issue.message}`).join('\n')), { issues });
 }
 
 function withoutRevision(record: TargetRecord): unknown {
@@ -183,6 +198,96 @@ function protectSnapshots(before: ProjectData, after: ProjectData): void {
     const next = after.entities.find(item => item.id === entity.id);
     if (!next || !equalJson(entity, next)) throw new StorageError('IMMUTABLE_SNAPSHOT', '不変snapshotは変更や削除ができません。', entity.id);
   }
+}
+
+function assertAppendOnlyArray<T>(previous: readonly T[], next: readonly T[], label: string): boolean {
+  const common = Math.min(previous.length, next.length);
+  for (let index = 0; index < common; index++) if (!sameJson(previous[index], next[index])) throw new StorageError('VALIDATION_FAILED', `${label}の既存記録は変更できません。`);
+  return next.length < previous.length;
+}
+
+async function preserveAlternativeHistory(previous: ProjectData, candidate: ProjectData): Promise<void> {
+  const old = new Map((previous.authorAlternatives ?? []).map(alternative => [alternative.id, alternative]));
+  const incoming = new Map((candidate.authorAlternatives ?? []).map(alternative => [alternative.id, alternative]));
+  const merged = [];
+  for (const prior of old.values()) {
+    const next = incoming.get(prior.id);
+    if (!next) {
+      merged.push(await sealAuthorAlternative({ ...copy(prior), status: 'rejected', updatedAt: new Date().toISOString() }));
+      continue;
+    }
+    if (next.projectId !== prior.projectId || next.baseRevision !== prior.baseRevision || (next.sourceSnapshotId ?? null) !== (prior.sourceSnapshotId ?? null)
+      || next.createdAt !== prior.createdAt || !sameJson(next.baseContent, prior.baseContent) || next.baseContentHash !== prior.baseContentHash) {
+      throw new StorageError('VALIDATION_FAILED', '別案の分岐元と識別情報は変更できません。', prior.id);
+    }
+    const rollbackVersions = assertAppendOnlyArray(prior.versions, next.versions, '別案の版');
+    const rollbackReceipts = assertAppendOnlyArray(prior.applyReceipts, next.applyReceipts, '正本採用履歴');
+    let versionSource = next.versions.find(version => version.id === next.headVersionId);
+    if (!versionSource) throw new StorageError('VALIDATION_FAILED', '別案の現在版が見つかりません。', prior.id);
+    const needsMerge = rollbackVersions || rollbackReceipts || next.headVersionId !== next.versions.at(-1)?.id;
+    if (!needsMerge) { merged.push(next); continue; }
+    let restored = { ...copy(next), versions: rollbackVersions ? copy(prior.versions) : copy(next.versions), applyReceipts: rollbackReceipts ? copy(prior.applyReceipts) : copy(next.applyReceipts) };
+    if (rollbackVersions || restored.headVersionId !== restored.versions.at(-1)?.id) {
+      const content = versionSource.content, structurePlan = versionSource.structurePlan;
+      const lastCreated = Date.parse(restored.versions.at(-1)?.createdAt ?? '');
+      const restoredAt = new Date(Math.max(Date.now(), Number.isFinite(lastCreated) ? lastCreated + 1 : 0)).toISOString();
+      restored = appendAlternativeVersion(restored, content, `「${versionSource.label}」から復元`, restoredAt, newId(), structurePlan);
+    }
+    merged.push(await sealAuthorAlternative(restored));
+  }
+  for (const next of incoming.values()) if (!old.has(next.id)) merged.push(next);
+  candidate.authorAlternatives = merged;
+}
+
+function verifyAlternativeApplicationInput(previous: ProjectData, draft: ProjectData): void {
+  const priorById = new Map((previous.authorAlternatives ?? []).map(alternative => [alternative.id, alternative]));
+  const added: Array<{ alternativeId: string; receipt: NonNullable<ProjectData['authorAlternatives']>[number]['applyReceipts'][number] }> = [];
+  for (const alternative of draft.authorAlternatives ?? []) {
+    const prior = priorById.get(alternative.id), oldReceiptIds = new Set(prior?.applyReceipts.map(receipt => receipt.id) ?? []);
+    for (const receipt of alternative.applyReceipts) if (!oldReceiptIds.has(receipt.id)) added.push({ alternativeId: alternative.id, receipt });
+  }
+  if (!added.length) return;
+  if (added.length !== 1) throw new StorageError('VALIDATION_FAILED', '一回の保存では一件の作者別案採用を記録してください。');
+  const { alternativeId, receipt } = added[0]!, prior = priorById.get(alternativeId);
+  if (!prior || receipt.alternativeVersionId !== prior.headVersionId || receipt.fromCanonicalRevision !== previous.revision || receipt.appliedRevision !== increment(previous.revision)) throw new StorageError('VALIDATION_FAILED', '採用記録の正本版または別案版が保存元と一致しません。', alternativeId);
+  let expected;
+  try { expected = applyAlternativeChanges(previous, prior, [], new Set(receipt.selectedChangeKeys ?? []), receipt.createdAt, receipt.id); }
+  catch (error) { throw new StorageError('VALIDATION_FAILED', error instanceof Error ? error.message : '採用差分を再計算できません。', alternativeId); }
+  const { appliedRevision: _appliedRevision, ...receiptWithoutRevision } = receipt;
+  if (!sameJson(receiptWithoutRevision, expected.receipt)) throw new StorageError('VALIDATION_FAILED', '作者別案の採用差分が現在の正本・選択元版と一致しません。', alternativeId);
+
+  // App persistence may add deterministic review records derived from this exact
+  // adoption. Permit those records only, while comparing all authored content and
+  // the semantic body of each generated review.
+  const reviewMarker = 'semantic-change-review/v1';
+  const generatedKey = (entity: Entity): string | undefined => entity.kind === 'review'
+    && entity.customValues['changeReview.generatedBy'] === reviewMarker
+    && typeof entity.customValues['changeReview.key'] === 'string'
+    ? entity.customValues['changeReview.key'] as string : undefined;
+  const priorKeys = new Set(previous.entities.flatMap(entity => generatedKey(entity) ?? []));
+  const expectedWithReviews = addChangeReviews(previous, expected.project);
+  const newReviews = (project: ProjectData) => project.entities.filter(entity => { const key = generatedKey(entity); return key !== undefined && !priorKeys.has(key); });
+  const normalizeReview = (entity: Entity) => {
+    const normalized = copy(entity) as unknown as Record<string, unknown>;
+    delete normalized.id; delete normalized.createdAt; delete normalized.updatedAt;
+    if (normalized.kind === 'review') {
+      const data = normalized.data as Record<string, unknown>;
+      if (Array.isArray(data.body)) data.body = data.body.map(item => {
+        const block = { ...(item as Record<string, unknown>) }; delete block.id; return block;
+      });
+    }
+    return normalized;
+  };
+  const expectedReviews = newReviews(expectedWithReviews).sort((a, b) => (generatedKey(a) ?? '').localeCompare(generatedKey(b) ?? ''));
+  const actualReviews = newReviews(draft).sort((a, b) => (generatedKey(a) ?? '').localeCompare(generatedKey(b) ?? ''));
+  const withoutNewReviews = (project: ProjectData, reviews: Entity[]) => {
+    const newIds = new Set(reviews.map(entity => entity.id));
+    return { ...projectContent(project), entities: project.entities.filter(entity => !newIds.has(entity.id)) };
+  };
+  const exactAuthoredContent = sameJson(withoutNewReviews(expectedWithReviews, expectedReviews), withoutNewReviews(draft, actualReviews));
+  const exactGeneratedReviews = expectedReviews.length === actualReviews.length
+    && expectedReviews.every((entity, index) => sameJson(normalizeReview(entity), normalizeReview(actualReviews[index]!)));
+  if (!exactAuthoredContent || !exactGeneratedReviews) throw new StorageError('VALIDATION_FAILED', '作者別案の採用差分が現在の正本・選択元版と一致しません。', alternativeId);
 }
 
 function extractBlocks(entity: Entity): { record: unknown; blocks: StoredBlock[] } {
@@ -351,7 +456,7 @@ export class ScenarioStore {
       let { project } = read;
       if (project !== this.cachedProjects.get(projectId)) {
         const worlds = await this.validationWorlds();
-        validated(project, worldSnapshotContents(worlds)); verifyWorlds([project], worlds); await verifySnapshotHashes([project]);
+        validated(project, worldSnapshotContents(worlds)); verifyWorlds([project], worlds); await verifySnapshotHashes([project]); await validateDurableIntegrity(project, worldSnapshotContents(worlds));
         project = this.rememberProject(project, read.contentHeadOperationId, read.historyIds, readEpoch);
       }
       return projectCopy(project);
@@ -372,7 +477,7 @@ export class ScenarioStore {
       if (project !== this.cachedProjects.get(projectId)) {
         const worlds = await this.validationWorlds();
         validated({ ...project, history: [] }, worldSnapshotContents(worlds));
-        verifyWorlds([{ ...project, history: [] }], worlds); await verifySnapshotHashes([{ ...project, history: [] }]);
+        verifyWorlds([{ ...project, history: [] }], worlds); await verifySnapshotHashes([{ ...project, history: [] }]); await validateDurableIntegrity(project, worldSnapshotContents(worlds), false);
         project = this.rememberProject(project, read.contentHeadOperationId, read.historyIds, readEpoch);
       }
       return this.editingCopy(project, read.historyIds);
@@ -501,9 +606,11 @@ export class ScenarioStore {
       if (!previous && draft.history.length) throw new StorageError('OPERATION_CONFLICT', '既存履歴の復元には専用読み込みを使用してください。');
       if (!ID_PATTERN.test(operationId) || options.compensatesOperationId && !ID_PATTERN.test(options.compensatesOperationId)) throw new StorageError('VALIDATION_FAILED', '操作IDは安定したUUIDで指定してください。');
       if (typeof options.reason !== 'string' || !options.reason.trim() || new TextEncoder().encode(options.reason).byteLength > 1024 * 1024) throw new StorageError('VALIDATION_FAILED', '変更の理由を1 MiB以内で指定してください。');
+      if (previous) verifyAlternativeApplicationInput(previous, draft);
       let candidate = { ...draft, entities: normalizeRecords(previous?.entities ?? [], draft.entities, operationId, now), relations: normalizeRecords(previous?.relations ?? [], draft.relations, operationId, now), revision: increment(draft.revision) };
       if (previous) {
         protectSnapshots(previous, candidate);
+        await preserveAlternativeHistory(previous, candidate);
         const snapshots = new Map(previous.snapshots.map(snapshot => [snapshot.id, snapshot]));
         candidate.snapshots = candidate.snapshots.map(snapshot => snapshots.get(snapshot.id) ?? snapshot);
         candidate = await reconcileDeliverables(previous, candidate);
@@ -525,6 +632,7 @@ export class ScenarioStore {
       const command: CommandRecord = { operationId, projectId: candidate.projectId, baseRevision: draft.revision, revision: candidate.revision, targetIds: changes.map(change => change.targetId), reason: options.reason, createdAt: now, before, after, ...(options.compensatesOperationId ? { compensatesOperationId: options.compensatesOperationId } : {}) };
       freeze(command);
       candidate.history = freeze(editingHistory ? [] : [...(previous?.history ?? []), command]);
+      await validateDurableIntegrity(candidate, worldContents, !editingHistory);
       const historyIds = [...previousHistoryIds, operationId];
       const parentOperationId = this.contentHeads.get(candidate.projectId);
       const checkpoint = !parentOperationId || previousHistoryIds.length % 64 === 0;
@@ -759,6 +867,7 @@ export class ScenarioStore {
       const assetInputs = prepared.assets.map(asset => ({ contentHash: asset.contentHash, bytes: asset.bytes, mediaType: asset.mediaType, assetPath: asset.path }));
       const assets = await this.checkedAssets(assetInputs);
       await verifySnapshotHashes([project]);
+      await validateDurableIntegrity(project, worldContents);
       const worlds = Object.entries(prepared.worlds).map(([id, world]) => ({ id, project: validated(world, worldContents) }));
       const now = new Date().toISOString(), before = preview.target ? withoutHistory(preview.target) : blankBefore(project);
       let command: CommandRecord;
@@ -777,6 +886,7 @@ export class ScenarioStore {
       command = { operationId, projectId: project.projectId, baseRevision: preview.target?.revision ?? '0', revision: project.revision, targetIds: changes.map(change => change.targetId), createdAt: now, reason: `専用ファイルを${options.mode}で復元`, before: copy(before), after: copy(withoutHistory(project)), ...(idMap ? { idMap } : {}) };
       if (preview.target || options.mode === 'clone') project.history = [...project.history, command];
       project = validated(project, worldContents);
+      await validateDurableIntegrity(project, worldContents);
       // New recovery retains the original content revisions/history; the local import audit is separate.
       const point: RestorePoint | undefined = preview.target ? { id: newId(), projectId: preview.target.projectId, createdAt: now, reason: `専用ファイル${options.mode}の前の復元点`, project: preview.target, assetHashes: attachmentMetadata(preview.target).map(item => item.contentHash) } : undefined;
       const result = await this.db.transaction('rw', this.writeTables, async () => {
@@ -870,39 +980,151 @@ export async function cloneProject(input: ProjectData): Promise<{ project: Proje
     }
   };
   collect(input);
+  const originalEntities = new Map<string, Entity>(), originalRelations = new Map<string, Relation>();
+  const collectOwners = (value: unknown) => {
+    if (Array.isArray(value)) { value.forEach(collectOwners); return; }
+    if (!value || typeof value !== 'object') return;
+    const record = value as Record<string, unknown>;
+    if (typeof record.id === 'string' && 'kind' in record && 'data' in record && 'projectId' in record) originalEntities.set(record.id, record as unknown as Entity);
+    if (typeof record.id === 'string' && 'relationType' in record && 'fromId' in record && 'toId' in record) originalRelations.set(record.id, record as unknown as Relation);
+    Object.values(record).forEach(collectOwners);
+  };
+  collectOwners(input);
+  const readPath = (value: unknown, path: string[]): unknown => path.reduce<unknown>((current, segment) => current && typeof current === 'object' ? (current as Record<string, unknown>)[segment] : undefined, value);
+  const writePath = (value: Record<string, unknown>, path: string[], item: unknown): void => {
+    let cursor = value;
+    for (const segment of path.slice(0, -1)) {
+      if (!cursor[segment] || typeof cursor[segment] !== 'object') cursor[segment] = {};
+      cursor = cursor[segment] as Record<string, unknown>;
+    }
+    if (path.length) cursor[path[path.length - 1]!] = structuredClone(item);
+  };
+  const rewriteDeclarations = (value: unknown): void => {
+    if (Array.isArray(value)) { value.forEach(rewriteDeclarations); return; }
+    if (!value || typeof value !== 'object') return;
+    const record = value as Record<string, unknown>;
+    if (typeof record.id === 'string') record.id = idMap[record.id] ?? record.id;
+    if (typeof record.instanceId === 'string' && 'quantity' in record && 'consumed' in record) record.instanceId = idMap[record.instanceId] ?? record.instanceId;
+    if (record.mode === 'anonymize' && typeof record.publicId === 'string') record.publicId = idMap[record.publicId] ?? record.publicId;
+    if (record.publicIds && typeof record.publicIds === 'object') for (const [key, id] of Object.entries(record.publicIds)) if (typeof id === 'string') (record.publicIds as Record<string, string>)[key] = idMap[id] ?? id;
+    for (const item of Object.values(record)) rewriteDeclarations(item);
+  };
   const rewrite = (value: unknown, key = '', parent?: Record<string, unknown>): unknown => {
     if (typeof value === 'string') {
       if (key === 'onceTriggers') return value.replace(/[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/g, id => idMap[id] ?? id);
+      if (key === 'key' && parent && typeof parent.scope === 'string' && Array.isArray(parent.path)) return [parent.scope, typeof parent.itemId === 'string' ? idMap[parent.itemId] ?? parent.itemId : '', ...parent.path.map(part => String(part))].map(part => encodeURIComponent(part)).join(':');
       return (/(?:Id|Ids)$/.test(key) || ['id', 'operationId'].includes(key) || key === 'value' && parent?.type === 'ref') && idMap[value] ? idMap[value] : value;
     }
+    if (key === 'path' && Array.isArray(value)) return [...value];
+    if (key === 'assignments' && value && typeof value === 'object' && !Array.isArray(value)) return Object.fromEntries(Object.entries(value as Record<string, unknown>).map(([beat, sceneId]) => [beat, typeof sceneId === 'string' ? idMap[sceneId] ?? sceneId : sceneId]));
     if (Array.isArray(value)) return value.map(item => rewrite(item, key, parent));
     if (value && typeof value === 'object') {
+      const source = value as Record<string, unknown>;
+      if (['entity', 'relation', 'project', 'presentation'].includes(String(source.scope)) && Array.isArray(source.path) && source.before && source.after && 'present' in (source.before as object) && 'present' in (source.after as object)) {
+        const scope = String(source.scope), path = source.path as string[], oldItemId = typeof source.itemId === 'string' ? source.itemId : undefined;
+        const itemId = oldItemId ? idMap[oldItemId] ?? oldItemId : undefined;
+        const mappedPath = [...path];
+        const remapValue = (raw: unknown): unknown => {
+          if (scope === 'entity' && oldItemId && originalEntities.has(oldItemId) && path.length) {
+            const owner = structuredClone(originalEntities.get(oldItemId)!);
+            writePath(owner as unknown as Record<string, unknown>, path, raw);
+            const rewrittenOwner = rewriteEntityReferences(owner, idMap);
+            rewrittenOwner.id = idMap[owner.id] ?? owner.id; rewrittenOwner.projectId = idMap[owner.projectId] ?? owner.projectId;
+            if (rewrittenOwner.deletionOperationId) rewrittenOwner.deletionOperationId = idMap[rewrittenOwner.deletionOperationId] ?? rewrittenOwner.deletionOperationId;
+            rewriteDeclarations(rewrittenOwner.data);
+            return readPath(rewrittenOwner, path);
+          }
+          if (scope === 'relation' && oldItemId && originalRelations.has(oldItemId) && path.length) {
+            const owner = structuredClone(originalRelations.get(oldItemId)!);
+            writePath(owner as unknown as Record<string, unknown>, path, raw);
+            const rewrittenOwner = rewriteRelationReferences(owner, idMap);
+            rewrittenOwner.id = idMap[owner.id] ?? owner.id; rewrittenOwner.projectId = idMap[owner.projectId] ?? owner.projectId;
+            return readPath(rewrittenOwner, path);
+          }
+          if (scope === 'project' && path[0] === 'worldReferences') return structuredClone(raw);
+          if (scope === 'presentation' && raw && typeof raw === 'object' && !Array.isArray(raw)) {
+            const presentation = structuredClone(raw) as Record<string, unknown>;
+            if (Array.isArray(presentation.chapterOrder)) presentation.chapterOrder = presentation.chapterOrder.map(id => typeof id === 'string' ? idMap[id] ?? id : id);
+            return rewrite(presentation);
+          }
+          const leaf = path.at(-1) ?? '';
+          return rewrite(raw, leaf);
+        };
+        const remapSide = (side: unknown) => {
+          const snapshot = structuredClone(side) as Record<string, unknown>;
+          if (snapshot.present === true) snapshot.value = remapValue(snapshot.value);
+          return snapshot;
+        };
+        const patch: Record<string, unknown> = { ...source, ...(itemId ? { itemId } : {}), path: mappedPath, before: remapSide(source.before), after: remapSide(source.after) };
+        patch.key = [scope, itemId ?? '', ...mappedPath].map(part => encodeURIComponent(part)).join(':');
+        return patch;
+      }
       const keyedByReference = ['variableValues', 'visitCounts', 'publicTexts', 'publicIds', 'byEntityId'].includes(key);
       const rewritten = Object.fromEntries(Object.entries(value).map(([name, item]) => [keyedByReference ? idMap[name] ?? name : name, key === 'idMap' && typeof item === 'string' ? idMap[item] ?? item : rewrite(item, name, value as Record<string, unknown>)]));
       if ('kind' in rewritten && 'data' in rewritten && 'projectId' in rewritten) return rewriteEntityReferences(rewritten as Entity, idMap);
       if ('relationType' in rewritten && 'fromId' in rewritten && 'toId' in rewritten) return rewriteRelationReferences(rewritten as unknown as Relation, idMap);
+      if (Array.isArray(rewritten.patches) && Array.isArray(rewritten.selectedChangeKeys)) rewritten.selectedChangeKeys = rewritten.patches.map((patch: { key: string }) => patch.key).sort();
       return rewritten;
     }
     return value;
   };
   const project = rewrite(input) as ProjectData;
-  const refresh = async (value: unknown): Promise<void> => {
-    if (Array.isArray(value)) { for (const item of value) await refresh(item); return; }
+  const snapshots = new Map<string, Array<Record<string, unknown>>>();
+  const collectSnapshots = (value: unknown): void => {
+    if (Array.isArray(value)) { value.forEach(collectSnapshots); return; }
     if (!value || typeof value !== 'object') return;
     const record = value as Record<string, unknown>;
-    for (const item of Object.values(record)) await refresh(item);
-    if (record.content && typeof record.content === 'object' && 'versionLabel' in record && 'contentHash' in record) record.contentHash = await sha256(jsonBytes(record.content));
+    if (typeof record.id === 'string' && record.content && typeof record.content === 'object' && 'versionLabel' in record && 'contentHash' in record) {
+      const copies = snapshots.get(record.id) ?? []; copies.push(record); snapshots.set(record.id, copies);
+    }
+    Object.values(record).forEach(collectSnapshots);
   };
-  await refresh(project);
+  collectSnapshots(project);
+  const snapshotHashes = new Map<string, string>(), activeSnapshots = new Set<string>();
+  const hashSnapshot = async (id: string): Promise<string> => {
+    const cached = snapshotHashes.get(id); if (cached) return cached;
+    const copies = snapshots.get(id); if (!copies?.length) throw new StorageError('HASH_MISMATCH', '参照したsnapshotがclone後に見つかりません。', id);
+    if (activeSnapshots.has(id)) throw new StorageError('HASH_MISMATCH', 'snapshotの内容hashに循環があります。', id);
+    activeSnapshots.add(id);
+    for (const copy of copies) {
+      const content = copy.content as ProjectContent;
+      for (const entity of content.entities) if (entity.kind === 'snapshot' && snapshots.has(entity.id)) entity.data.contentHash = await hashSnapshot(entity.id);
+    }
+    const hash = await sha256(jsonBytes(copies[0]!.content));
+    for (const copy of copies) copy.contentHash = hash;
+    snapshotHashes.set(id, hash); activeSnapshots.delete(id); return hash;
+  };
+  for (const id of snapshots.keys()) await hashSnapshot(id);
+  const refreshSnapshotReferences = (value: unknown): void => {
+    if (Array.isArray(value)) { value.forEach(refreshSnapshotReferences); return; }
+    if (!value || typeof value !== 'object') return;
+    const record = value as Record<string, unknown>;
+    if (record.kind === 'snapshot' && typeof record.id === 'string' && record.data && typeof record.data === 'object') {
+      const contentHash = snapshotHashes.get(record.id);
+      if (contentHash) (record.data as Record<string, unknown>).contentHash = contentHash;
+    }
+    Object.values(record).forEach(refreshSnapshotReferences);
+  };
+  refreshSnapshotReferences(project);
+  const resealed = new Set<object>();
+  const resealRetainedBranches = async (value: unknown): Promise<void> => {
+    if (Array.isArray(value)) { for (const item of value) await resealRetainedBranches(item); return; }
+    if (!value || typeof value !== 'object' || resealed.has(value)) return;
+    resealed.add(value);
+    const record = value as Record<string, unknown>;
+    if (Array.isArray(record.authorAlternatives)) record.authorAlternatives = await Promise.all((record.authorAlternatives as ProjectData['authorAlternatives'] ?? []).map(sealAuthorAlternative));
+    for (const item of Object.values(record)) await resealRetainedBranches(item);
+  };
+  await resealRetainedBranches(project);
   return { project, idMap };
 }
 
 export function mergeConflicts(existing: ProjectData, incoming: ProjectData): ImportConflict[] {
   const conflicts: ImportConflict[] = [];
   for (const field of ['name', 'calendarId', 'mainStart', 'calendars', 'worldReferences'] as const) if (!equalJson(existing[field], incoming[field])) conflicts.push({ id: `project.${field}`, kind: 'project', existing: existing[field], incoming: incoming[field] });
-  for (const [field, kind] of [['entities', 'entity'], ['relations', 'relation'], ['snapshots', 'snapshot'], ['views', 'view']] as const) {
-    const map = new Map<string, unknown>(existing[field].map(item => [item.id, item]));
-    for (const item of incoming[field]) if (map.has(item.id) && !equalJson(map.get(item.id), item)) conflicts.push({ id: item.id, kind, existing: map.get(item.id), incoming: item });
+  for (const [field, kind] of [['entities', 'entity'], ['relations', 'relation'], ['snapshots', 'snapshot'], ['views', 'view'], ['authorAlternatives', 'alternative']] as const) {
+    const map = new Map<string, unknown>((existing[field] ?? []).map(item => [item.id, item]));
+    for (const item of incoming[field] ?? []) if (map.has(item.id) && !equalJson(map.get(item.id), item)) conflicts.push({ id: item.id, kind, existing: map.get(item.id), incoming: item });
   }
   return conflicts;
 }
@@ -911,12 +1133,13 @@ function mergeProjects(existing: ProjectData, incoming: ProjectData, resolutions
   for (const conflict of conflicts) {
     if (!resolutions[conflict.id]) throw new StorageError('IMPORT_CONFLICT', '同じID・異なる内容の競合があります。採用する内容を選択してください。', conflict.id);
     if (conflict.kind === 'snapshot' && resolutions[conflict.id] !== 'existing') throw new StorageError('IMMUTABLE_SNAPSHOT', '既存snapshotは別の内容へ置き換えられません。', conflict.id);
+    if (conflict.kind === 'alternative' && resolutions[conflict.id] !== 'existing') throw new StorageError('IMPORT_CONFLICT', '保存済み作者別案のIDへ別の履歴を上書きできません。', conflict.id);
   }
   const next = copy(existing);
   for (const field of ['name', 'calendarId', 'mainStart', 'calendars', 'worldReferences'] as const) if (resolutions[`project.${field}`] === 'incoming') (next as unknown as Record<string, unknown>)[field] = copy(incoming[field]);
-  for (const field of ['entities', 'relations', 'snapshots', 'views'] as const) {
-    const map = new Map<string, unknown>(existing[field].map(item => [item.id, item]));
-    for (const item of incoming[field]) if (!map.has(item.id) || resolutions[item.id] === 'incoming') map.set(item.id, copy(item));
+  for (const field of ['entities', 'relations', 'snapshots', 'views', 'authorAlternatives'] as const) {
+    const map = new Map<string, unknown>((existing[field] ?? []).map(item => [item.id, item]));
+    for (const item of incoming[field] ?? []) if (!map.has(item.id) || resolutions[item.id] === 'incoming') map.set(item.id, copy(item));
     (next as unknown as Record<string, unknown>)[field] = [...map.values()];
   }
   return next;

@@ -121,7 +121,8 @@ function versionContent(project: ProjectData, version: ID): ProjectData | undefi
   return snapshot ? { ...snapshot.content, snapshots: project.snapshots, history: [] } : undefined;
 }
 function captureContent(project: ProjectData): ProjectData {
-  const captured = { ...clone({ ...project, history: [], snapshots: [] }), snapshots: project.snapshots };
+  const { authorAlternatives: _authorAlternatives, ...branchFree } = project;
+  const captured = { ...clone({ ...branchFree, history: [], snapshots: [] }), snapshots: project.snapshots };
   const index: ContentIndex = { byId: new Map(), activeByKind: new Map(), edgesFrom: new Map() };
   for (const entity of captured.entities) {
     if (entity.deletedAt) continue;
@@ -772,7 +773,7 @@ export function trialRecordData(project: ProjectData, session: TrialSession, che
 
 /** Prepare snapshot content and its evidence for one transaction. IDs and timestamps belong to the caller. */
 export function pinTrialRecord(session: TrialSession, ids: { checkpointId: ID; snapshotId: ID }): { checkpoint: CheckpointData; trace: TraceData; content: ProjectContent } {
-  const { history: _history, snapshots: _snapshots, ...content } = session.content;
+  const { history: _history, snapshots: _snapshots, authorAlternatives: _authorAlternatives, ...content } = session.content;
   return { ...trialRecordData(session.content, session, ids.checkpointId, ids.snapshotId), content: clone(content) };
 }
 

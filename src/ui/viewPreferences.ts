@@ -5,7 +5,7 @@ import type { EntityKind, Status, ViewState } from '../domain/types';
 export type WorkspacePage = 'timeline' | 'structure' | 'materials' | 'search' | 'work';
 export type WorkspacePreferences = {
   page: WorkspacePage;
-  structureTab: 'chapters' | 'branch' | 'state' | 'foreshadow' | 'reader' | 'production';
+  structureTab: 'chapters' | 'alternatives' | 'chapterReading' | 'branch' | 'state' | 'foreshadow' | 'reader' | 'production';
   workTab: 'backup' | 'export' | 'history' | 'settings';
   timelineTab: 'timeline' | 'relations' | 'world';
   kind: EntityKind;
@@ -25,7 +25,7 @@ export const WORKSPACE_PREFERENCE_KEYS = {
 } as const;
 
 const PAGE_VALUES: readonly WorkspacePage[] = ['timeline', 'structure', 'materials', 'search', 'work'];
-const STRUCTURE_TABS: readonly WorkspacePreferences['structureTab'][] = ['chapters', 'branch', 'state', 'foreshadow', 'reader', 'production'];
+const STRUCTURE_TABS: readonly WorkspacePreferences['structureTab'][] = ['chapters', 'alternatives', 'chapterReading', 'branch', 'state', 'foreshadow', 'reader', 'production'];
 const WORK_TABS: readonly WorkspacePreferences['workTab'][] = ['backup', 'export', 'history', 'settings'];
 const TIMELINE_TABS: readonly WorkspacePreferences['timelineTab'][] = ['timeline', 'relations', 'world'];
 const STATUS_VALUES: readonly Status[] = ['confirmed', 'provisional', 'needs_review', 'rejected', 'alternate'];

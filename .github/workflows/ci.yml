@@ -24,6 +24,12 @@ jobs:
       - run: npm run build
       - run: BROWSER_ENGINES=all npm run test:e2e
       - run: RB03_ENGINES=chromium,firefox,webkit node tests/browser/run-rb03-components.mjs
+      - run: |
+          for engine in chromium firefox webkit; do
+            RB04_ENGINE="$engine" RB04_OUTPUT_DIR=test-results/rb04 node tests/browser/rb04-author-regressions.mjs
+          done
+      - run: npx playwright test -c tests/rb04/playwright.config.ts --project=chromium --output=test-results/rb04-writing-chromium
+      - run: npx playwright test -c tests/rb04/playwright.config.ts --project=webkit --output=test-results/rb04-writing-webkit
       - uses: actions/upload-artifact@v4
         if: always()
         with:

@@ -142,7 +142,7 @@ type Field = { schema: Schema; required?: boolean; nullable?: boolean };
 export type Schema =
   | { type: 'text'; min?: number; max?: number; maxBytes?: number }
   | { type: 'number'; integer?: boolean; min?: number; max?: number }
-  | { type: 'boolean' | 'id' | 'tick' | 'revision' | 'datetime' | 'date' | 'hash' | 'safe_path' | 'custom' | 'typed' | 'time' | 'condition' | 'expression' | 'name_policy' }
+  | { type: 'boolean' | 'id' | 'tick' | 'revision' | 'datetime' | 'date' | 'hash' | 'safe_path' | 'custom' | 'typed' | 'time' | 'condition' | 'expression' | 'name_policy' | 'json' }
   | { type: 'enum'; values: readonly (string | boolean | null)[] }
   | { type: 'ref'; kinds?: EntityKind[]; scope?: DomainReference['scope'] }
   | { type: 'richtext'; max?: number }
@@ -185,6 +185,8 @@ const runtimeAssertion = obj({ assertionId: req(ref('assertion')), holderId: opt
 const presentationResult = obj({ targetId: req(ref('flow_node', 'flow_edge', 'disclosure')), value: req(en('true', 'false', 'unknown')), reasons: req(arr(txt())) });
 const callFrame = obj({ graphId: req(ref('flow_graph')), returnNodeId: req(ref('flow_node')), parameters: req(record(typed, key)) });
 const runtime = obj({ contentVersionId: req(scopedRef('snapshot')), variableValues: req(record(typed, ref('variable'))), itemInstances: req(arr(runtimeItem)), assertions: req(arr(runtimeAssertion)), seenIds: req(arr(scopedRef('presentation'), true)), visitCounts: req(record(num(0, undefined, true), ref())), onceTriggers: req(arr(txt(1), true)), rngSeed: req(txt(1)), rngPosition: req(num(0, undefined, true)), callStack: req(arr(callFrame)), presentationPosition: opt(ref('flow_node')), loopNumber: req(num(0, undefined, true)), provenance: req(en('full_play', 'partial', 'imported', 'stub')) });
+const readingOccurrence = obj({ entityId: req(ref('scene')), occurrenceId: req(txt(1, 256)), before: req(runtime), after: req(runtime), conditionResults: req(arr(presentationResult)), externalValues: opt(record(typed, ref('external_contract'))), worldTick: opt(tick) });
+const readingPath = obj({ chapterIds: req(refs('chapter')), sceneIds: req(arr(ref('scene'))), occurrences: req(arr(readingOccurrence)) });
 const coverageCount = obj({ checked: req(num(0, undefined, true)), total: req(num(0, undefined, true)), excluded: opt(num(0, undefined, true)), unknown: opt(num(0, undefined, true)) });
 const coverage = obj(Object.fromEntries(['scenes', 'dialogue', 'choices', 'conditionTrue', 'conditionFalse', 'declaredTests'].map(field => [field, req(coverageCount)])));
 const fieldDefinition = obj({ key: req(key), label: req(txt(1, 128)), type: req(en('text', 'number', 'boolean', 'enum', 'date', 'ref')), required: req(bool), nullable: req(bool), default: { schema: { type: 'custom' }, required: true, nullable: true }, allowedValues: opt(arr(txt(), true)), targetKinds: opt(arr(en(...ENTITY_KINDS), true)), help: opt(txt()) });
@@ -217,7 +219,7 @@ export const ENTITY_SCHEMAS: Record<EntityKind, Schema> = {
   foreshadow: obj({ question: req(rich), intent: req(rich), resolutionPolicy: req(en('this_work', 'sequel', 'intentional_open', 'red_herring', 'undecided', 'rejected')), truthAssertionIds: opt(refs('assertion')), clueIds: opt(refs('disclosure')), payoffIds: opt(refs('disclosure')), requiredInfo: opt(refs('disclosure', 'assertion')), deadline: opt(targetScope), exceptions: opt(arr(exception)) }),
   disclosure: obj({ foreshadowId: req(ref('foreshadow')), anchor: req(anchor), stage: req(en('hint', 'suspicion', 'reinforce', 'reveal', 'alternative')), role: req(en('clue', 'payoff')), condition: opt(cond), knowledgeEffects: opt(refs('effect')), targetScope: opt(targetScope) }),
   checkpoint: obj({ contentVersionId: req(scopedRef('snapshot')), runtimeState: req(runtime), presentationResults: opt(arr(presentationResult)), contentRevision: opt({ type: 'revision' }), origin: opt(en('full_play', 'partial', 'imported')), traceId: opt(ref('trace')) }),
-  trace: obj({ contentVersionId: req(scopedRef('snapshot')), startCheckpointId: req(ref('checkpoint')), steps: req(arr(obj({ nodeId: req(ref('flow_node')), edgeIds: req(refs('flow_edge')), before: req(runtime), after: req(runtime), conditionResults: opt(arr(presentationResult)), operation: opt(en('advance', 'stub')), occurrenceId: opt(txt()), worldTick: opt(tick), externalMode: opt(en('stub', 'actual', 'mixed')), externalValues: opt(record(typed, ref('external_contract'))) }))), contentRevision: opt({ type: 'revision' }), initialExternalValues: opt(record(typed, ref('external_contract'))), seed: opt(txt()), engineVersion: opt(txt()), externalMode: opt(en('stub', 'actual', 'mixed')), coverage: opt(coverage) }),
+  trace: obj({ contentVersionId: req(scopedRef('snapshot')), startCheckpointId: req(ref('checkpoint')), steps: req(arr(obj({ nodeId: req(ref('flow_node')), edgeIds: req(refs('flow_edge')), before: req(runtime), after: req(runtime), conditionResults: opt(arr(presentationResult)), operation: opt(en('advance', 'stub')), occurrenceId: opt(txt()), worldTick: opt(tick), externalMode: opt(en('stub', 'actual', 'mixed')), externalValues: opt(record(typed, ref('external_contract'))) }))), contentRevision: opt({ type: 'revision' }), initialExternalValues: opt(record(typed, ref('external_contract'))), seed: opt(txt()), engineVersion: opt(txt()), externalMode: opt(en('stub', 'actual', 'mixed')), coverage: opt(coverage), mode: opt(en('flow', 'chapters', null)), readingPath: opt(union(readingPath, en(null))) }),
   attachment: obj({ mediaType: req(txt(1, 128)), contentHash: req({ type: 'hash' }), byteSize: req(num(0, 32 * 1024 * 1024, true)), assetPath: req({ type: 'safe_path' }), displayName: opt(txt()), provenanceId: opt(ref('source')), licenseNote: opt(txt()), stage: opt(en('reference', 'temporary', 'final')), revisionHistory: opt(refs('attachment')) }),
   source: obj({ sourceType: req(en('web', 'file', 'book', 'observation')), locator: req(txt(1)), accessedAt: opt({ type: 'datetime' }), excerptLocation: opt(txt()), interpretation: opt(rich), attachmentId: opt(ref('attachment')), redistributionAllowed: opt(bool) }),
   cue: obj({ anchor: req(anchor), cueType: req(txt(1, 128)), attachmentId: opt(ref('attachment')), speakerId: opt(ref('character')), expression: opt(txt()), waitMs: opt(num(0, undefined, true)), camera: opt({ type: 'custom' }), mediaTime: opt(num(0, undefined, true)), stage: opt(short) }),
@@ -328,6 +330,24 @@ function walk(schema: Schema, value: unknown, path: string, issues: ValidationIs
   if (depth > 32) { addIssue(issues, path, '構造の深さが上限32を超えています。', 'IMPORT_LIMIT'); return; }
   const fail = (message: string): void => addIssue(issues, path, message);
   switch (schema.type) {
+    case 'json': {
+      const visit = (item: unknown, itemPath: string, level: number, seen: Set<object>): void => {
+        if (level > 100) { addIssue(issues, itemPath, 'JSON階層の上限を超えています。', 'IMPORT_LIMIT'); return; }
+        if (item === null || typeof item === 'string' || typeof item === 'boolean') return;
+        if (typeof item === 'number' && Number.isFinite(item)) return;
+        if (!item || typeof item !== 'object' || seen.has(item)) { addIssue(issues, itemPath, '通常のJSON値を指定してください。'); return; }
+        seen.add(item);
+        if (Array.isArray(item)) item.forEach((child, index) => visit(child, `${itemPath}[${index}]`, level + 1, seen));
+        else if (Object.getPrototypeOf(item) === Object.prototype || Object.getPrototypeOf(item) === null) {
+          for (const [key, child] of Object.entries(item)) {
+            if (['__proto__', 'prototype', 'constructor'].includes(key)) addIssue(issues, `${itemPath}.${key}`, '予約済みのキーは使えません。');
+            else visit(child, `${itemPath}.${key}`, level + 1, seen);
+          }
+        } else addIssue(issues, itemPath, '通常のJSONオブジェクトを指定してください。');
+        seen.delete(item);
+      };
+      visit(value, path, 0, new Set()); return;
+    }
     case 'text': {
       if (typeof value !== 'string') { fail('文字列を入力してください。'); return; }
       if (!validUnicode(value)) fail('文字列に不正なUnicodeがあります。');
@@ -656,7 +676,9 @@ export interface ProjectValidationOptions { worlds?: ProjectContent[]; worldSnap
 const worldReferenceSchema = obj({ projectId: req(idSchema), immutableSnapshotId: req(idSchema), contentHash: req({ type: 'hash' }) });
 const viewSchema = obj({ id: req(idSchema), name: req(txt(1, 128)), view: req(txt(1)), entityIds: req(refs()), settings: req(record(union(txt(), num(), bool, en(null)), key)) });
 const projectHeaderFields: Record<string, Field> = { projectId: req(idSchema), name: req(txt(1, 128)), formatVersion: req(en(FORMAT_VERSION)), revision: req({ type: 'revision' }), calendarId: req(txt(1)), mainStart: req(tick), worldReferences: req(arr(worldReferenceSchema)) };
-const projectKeys = [...Object.keys(projectHeaderFields), 'calendars', 'entities', 'relations', 'views'];
+const projectContentKeys = [...Object.keys(projectHeaderFields), 'calendars', 'entities', 'relations', 'views'];
+const projectKeys = [...projectContentKeys, 'authorAlternatives'];
+const alternativesSchema: Schema = arr({ type: 'json' }, false, 0, 100);
 function validateActiveRecordNamespace(project: ProjectContent, worlds: ProjectContent[], path: string, issues: ValidationIssue[]): void {
   const pinnedProjects = new Set<ID>(), activeProjects = new Set<ID>([project.projectId]), ids = new Set<ID>();
   project.worldReferences.forEach((reference, index) => {
@@ -690,7 +712,7 @@ interface ValidationReuse { previous: ProjectData; references: WeakMap<Entity, D
 function validateContent(input: unknown, path: string, options: ProjectValidationOptions, snapshotIds: Set<ID>, versionContents: Map<ID, ProjectContent> = new Map(), reuse?: ValidationReuse): ValidationResult<ProjectContent> {
   const issues: ValidationIssue[] = [];
   if (!isObject(input)) return { ok: false, issues: [{ code: 'VALIDATION_FAILED', path, message: '作品はオブジェクトです。' }] };
-  for (const field of Object.keys(input)) if (!projectKeys.includes(field)) addIssue(issues, `${path}.${field}`, '作品に未知の項目があります。');
+  for (const field of Object.keys(input)) if (!projectContentKeys.includes(field)) addIssue(issues, `${path}.${field}`, '作品に未知の項目があります。');
   const header = Object.fromEntries(Object.keys(projectHeaderFields).filter(field => Object.hasOwn(input, field)).map(field => [field, input[field]]));
   walk(obj(projectHeaderFields), header, path, issues, []);
   if (input.formatVersion !== FORMAT_VERSION) addIssue(issues, `${path}.formatVersion`, '対応していない形式版です。', 'FORMAT_UNSUPPORTED');
@@ -786,7 +808,7 @@ function validateContent(input: unknown, path: string, options: ProjectValidatio
       const anchorVersion = isObject(parent) && typeof parent.entityId === 'string' && typeof parent.sourceVersionId === 'string' ? parent.sourceVersionId
         : entity.kind === 'review' && reference.path.startsWith('data.target.') ? entity.data.targetVersionId : undefined;
       const usesVersion = entity.kind === 'checkpoint' && (reference.path.startsWith('data.runtimeState.') || reference.path.startsWith('data.presentationResults['))
-        || entity.kind === 'trace' && (reference.path.startsWith('data.steps[') || reference.path.startsWith('data.initialExternalValues.'));
+        || entity.kind === 'trace' && (reference.path.startsWith('data.steps[') || reference.path.startsWith('data.initialExternalValues.') || reference.path.startsWith('data.readingPath.'));
       if (anchorVersion || usesVersion && (entity.kind === 'checkpoint' || entity.kind === 'trace')) {
         const version = anchorVersion ?? ((entity.kind === 'checkpoint' || entity.kind === 'trace') ? entity.data.contentVersionId : project.projectId), index = versionIndex(version);
         if (!index) { addIssue(issues, anchorVersion ? entity.kind === 'review' ? `${prefix}.data.targetVersionId` : `${prefix}.${parts.slice(0, -1).join('.')}.sourceVersionId` : `${prefix}.data.contentVersionId`, '参照する固定版の本文がありません。', 'REFERENCE_INVALID'); continue; }
@@ -931,9 +953,19 @@ function validateCrossEntityRules(project: ProjectContent, entityMap: Map<ID, En
         if (version) issues.push(...validateInitialPresentationResults({ ...entity.data.runtimeState, provenance: entity.data.origin ?? 'partial' }, entity.data.presentationResults, [...version.entities.values()], `${location}.data.presentationResults`));
       }
     }
-    if (entity.kind === 'trace') entity.data.steps.forEach((step, index) => {
-      for (const [field, state] of [['before', step.before], ['after', step.after]] as const) { const result = validateRuntimeState(state, `${location}.data.steps[${index}].${field}`); if (!result.ok) issues.push(...result.issues); }
-    });
+    if (entity.kind === 'trace') {
+      const trace = entity.data as typeof entity.data & { mode?: 'flow' | 'chapters' | null; readingPath?: import('./types').ReadingPath | null };
+      if (trace.mode === 'chapters') {
+        if (!trace.readingPath) addIssue(issues, `${location}.data.readingPath`, '章読み通しには提示経路が必要です。');
+        if (trace.steps.length) addIssue(issues, `${location}.data.steps`, '章読み通しとフロー遷移を混在させられません。');
+      } else if (trace.readingPath != null) addIssue(issues, `${location}.data.readingPath`, '提示経路はmode:chaptersの記録に指定してください。');
+      trace.steps.forEach((step, index) => {
+        for (const [field, state] of [['before', step.before], ['after', step.after]] as const) { const result = validateRuntimeState(state, `${location}.data.steps[${index}].${field}`); if (!result.ok) issues.push(...result.issues); }
+      });
+      trace.readingPath?.occurrences.forEach((occurrence, index) => {
+        for (const [field, state] of [['before', occurrence.before], ['after', occurrence.after]] as const) { const result = validateRuntimeState(state, `${location}.data.readingPath.occurrences[${index}].${field}`); if (!result.ok) issues.push(...result.issues); }
+      });
+    }
   });
   for (const kind of ['place', 'group', 'flow_graph', 'map'] as const) cycleIssues(project.entities.filter(entity => entity.kind === kind && !entity.deletedAt), entity => {
     if (entity.kind === 'place' || entity.kind === 'group') return entity.data.parentId ? [entity.data.parentId] : [];
@@ -1001,7 +1033,8 @@ export function validateProject(input: unknown, options: ProjectValidationOption
   if (!Array.isArray(input.snapshots)) addIssue(issues, 'project.snapshots', '必須の配列です。');
   if (!Array.isArray(input.history)) addIssue(issues, 'project.history', '必須の配列です。');
   const snapshotIds = new Set<ID>((Array.isArray(input.snapshots) ? input.snapshots : []).flatMap(snapshot => isObject(snapshot) && typeof snapshot.id === 'string' ? [snapshot.id] : []));
-  const content = Object.fromEntries(projectKeys.filter(field => Object.hasOwn(input, field)).map(field => [field, input[field]]));
+  if (Object.hasOwn(input, 'authorAlternatives')) walk(alternativesSchema, input.authorAlternatives, 'project.authorAlternatives', issues, []);
+  const content = Object.fromEntries(projectContentKeys.filter(field => Object.hasOwn(input, field)).map(field => [field, input[field]]));
   const validated = validateContent(content, 'project', options, snapshotIds, snapshotContentMap(input.snapshots)); if (!validated.ok) issues.push(...validated.issues);
   if (issues.length) return { ok: false, issues: issues.slice(0, 256) };
   const project = input as unknown as ProjectData;
@@ -1019,7 +1052,8 @@ export function validateProject(input: unknown, options: ProjectValidationOption
       if (!isObject(raw[field])) { addIssue(issues, `${path}.${field}`, '変更前後の内容を保持してください。'); continue; }
       const state = raw[field] as Record<string, unknown>;
       if (!Array.isArray(state.snapshots)) addIssue(issues, `${path}.${field}.snapshots`, '復元に必要な公開版配列が必要です。');
-      const historical = Object.fromEntries(Object.entries(state).filter(([key]) => key !== 'snapshots'));
+      if (Object.hasOwn(state, 'authorAlternatives')) walk(alternativesSchema, state.authorAlternatives, `${path}.${field}.authorAlternatives`, issues, []);
+      const historical = Object.fromEntries(Object.entries(state).filter(([key]) => key !== 'snapshots' && key !== 'authorAlternatives'));
       const historicalIds = new Set<ID>((Array.isArray(state.snapshots) ? state.snapshots : []).flatMap(item => isObject(item) && typeof item.id === 'string' ? [item.id] : []));
       const result = validateContent(historical, `${path}.${field}`, options, historicalIds, snapshotContentMap(state.snapshots)); if (!result.ok) issues.push(...result.issues);
       else if (result.value.projectId !== project.projectId) addIssue(issues, `${path}.${field}.projectId`, '履歴の内容が別の作品に属しています。');
@@ -1033,9 +1067,10 @@ export function validateCurrentProject(input: ProjectData, options: ProjectValid
   const issues: ValidationIssue[] = [];
   for (const field of Object.keys(input)) if (![...projectKeys, 'snapshots', 'history'].includes(field)) addIssue(issues, `project.${field}`, '作品に未知の項目があります。');
   if (!Array.isArray(input.snapshots) || !Array.isArray(input.history)) addIssue(issues, 'project', '公開版と履歴の配列が必要です。');
+  if (Object.hasOwn(input, 'authorAlternatives')) walk(alternativesSchema, input.authorAlternatives, 'project.authorAlternatives', issues, []);
   if (issues.length) return { ok: false, issues };
   const ids = new Set(input.snapshots.map(snapshot => snapshot.id));
-  const content = Object.fromEntries(projectKeys.filter(field => Object.hasOwn(input, field)).map(field => [field, (input as unknown as Record<string, unknown>)[field]]));
+  const content = Object.fromEntries(projectContentKeys.filter(field => Object.hasOwn(input, field)).map(field => [field, (input as unknown as Record<string, unknown>)[field]]));
   const result = validateContent(content, 'project', options, ids, snapshotContentMap(input.snapshots), reuse);
   return result.ok ? { ok: true, value: input } : result;
 }
@@ -1070,6 +1105,7 @@ export function toJsonSchema(): JsonSchema {
       case 'text': return { type: 'string', ...(schema.min != null ? { minLength: schema.min } : {}), ...(schema.max != null ? { maxLength: schema.max } : {}) };
       case 'number': return { type: schema.integer ? 'integer' : 'number', ...(schema.min != null ? { minimum: schema.min } : schema.integer ? { minimum: Number.MIN_SAFE_INTEGER } : {}), ...(schema.max != null ? { maximum: schema.max } : schema.integer ? { maximum: Number.MAX_SAFE_INTEGER } : {}) };
       case 'boolean': return { type: 'boolean' };
+      case 'json': return {};
       case 'enum': return { enum: schema.values };
       case 'id': return reference('ID');
       case 'ref': return { ...(schema.scope === 'calendar' ? { type: 'string', minLength: 1 } : reference('ID')), ...(schema.kinds || schema.scope ? { $comment: JSON.stringify({ ...(schema.kinds ? { targetKinds: schema.kinds } : {}), ...(schema.scope ? { referenceScope: schema.scope } : {}) }) } : {}) };
@@ -1123,13 +1159,22 @@ export function toJsonSchema(): JsonSchema {
     Entity: { oneOf: ENTITY_KINDS.map(kind => reference(`Entity_${kind}`)) },
   };
   for (const kind of ENTITY_KINDS) defs[`Entity_${kind}`] = convert(entitySchema(kind));
+  const arbitraryValue = {};
+  const valueSnapshot = { type: 'object', properties: { present: { type: 'boolean' }, value: arbitraryValue }, required: ['present'], additionalProperties: false };
+  defs.AlternativePatch = { type: 'object', properties: { key: { type: 'string', minLength: 1 }, scope: { enum: ['project', 'entity', 'relation', 'presentation'] }, itemId: reference('ID'), path: { type: 'array', items: { type: 'string' } }, label: { type: 'string' }, before: valueSnapshot, after: valueSnapshot }, required: ['key', 'scope', 'path', 'label', 'before', 'after'], additionalProperties: false };
+  defs.AlternativeApplyReceipt = { type: 'object', properties: { id: reference('ID'), createdAt: { type: 'string', format: 'date-time' }, alternativeVersionId: reference('ID'), sourceSnapshotId: { anyOf: [reference('ID'), { type: 'null' }] }, selectedChangeKeys: { type: 'array', items: { type: 'string' }, minItems: 1, uniqueItems: true }, fromCanonicalRevision: reference('Revision'), appliedRevision: reference('Revision'), patches: { type: 'array', items: reference('AlternativePatch'), minItems: 1 } }, required: ['id', 'createdAt', 'alternativeVersionId', 'sourceSnapshotId', 'selectedChangeKeys', 'fromCanonicalRevision', 'appliedRevision', 'patches'], additionalProperties: false };
+  defs.StructurePlan = { type: 'object', properties: { chapterId: reference('ID'), templateId: { type: 'string', minLength: 1 }, beatLabels: { type: 'array', items: { type: 'string', minLength: 1 }, maxItems: 100 }, assignments: { type: 'object', additionalProperties: reference('ID') } }, required: ['chapterId', 'templateId', 'beatLabels', 'assignments'], additionalProperties: false };
+  defs.AlternativeVersion = { type: 'object', properties: { id: reference('ID'), parentVersionId: { anyOf: [reference('ID'), { type: 'null' }] }, label: { type: 'string', minLength: 1 }, createdAt: { type: 'string', format: 'date-time' }, content: reference('ProjectContent'), contentHash: { type: 'string', pattern: '^[0-9a-f]{64}$' }, structurePlan: reference('StructurePlan') }, required: ['id', 'parentVersionId', 'label', 'createdAt', 'content', 'contentHash'], additionalProperties: false };
+  defs.AuthorAlternative = { type: 'object', properties: { id: reference('ID'), projectId: reference('ID'), name: { type: 'string', minLength: 1 }, status: { enum: ['active', 'provisional', 'needs_review', 'rejected', 'accepted'] }, baseRevision: reference('Revision'), sourceSnapshotId: { anyOf: [reference('ID'), { type: 'null' }] }, baseContent: reference('ProjectContent'), baseContentHash: { type: 'string', pattern: '^[0-9a-f]{64}$' }, versions: { type: 'array', items: reference('AlternativeVersion'), minItems: 1, maxItems: 500 }, headVersionId: reference('ID'), applyReceipts: { type: 'array', items: reference('AlternativeApplyReceipt') }, integrityHash: { type: 'string', pattern: '^[0-9a-f]{64}$' }, createdAt: { type: 'string', format: 'date-time' }, updatedAt: { type: 'string', format: 'date-time' } }, required: ['id', 'projectId', 'name', 'status', 'baseRevision', 'sourceSnapshotId', 'baseContent', 'baseContentHash', 'versions', 'headVersionId', 'applyReceipts', 'integrityHash', 'createdAt', 'updatedAt'], additionalProperties: false };
+  const traceSchema = defs.Entity_trace as JsonSchema;
+  traceSchema.allOf = [{ if: { properties: { data: { type: 'object', properties: { mode: { const: 'chapters' } }, required: ['mode'] } }, required: ['data'] }, then: { properties: { data: { type: 'object', properties: { readingPath: { not: { type: 'null' } }, steps: { type: 'array', maxItems: 0 } }, required: ['readingPath'] } }, required: ['data'] }, else: { properties: { data: { type: 'object', properties: { readingPath: { type: 'null' } } } }, required: ['data'] } }];
   const content = convert(obj({ ...projectHeaderFields, calendars: req(arr(calendar)), entities: req(arr(ref())), relations: req(arr(relationSchema)), views: req(arr(viewSchema)) }));
   const contentProperties = content.properties as Record<string, JsonSchema>; contentProperties.entities = { type: 'array', items: reference('Entity'), maxItems: 100_000 };
   defs.ProjectContent = content;
   defs.ProjectSnapshot = convert(obj({ id: req(idSchema), versionLabel: req(txt(1, 128)), contentHash: req({ type: 'hash' }), createdAt: req({ type: 'datetime' }) }));
   (defs.ProjectSnapshot.properties as Record<string, JsonSchema>).content = reference('ProjectContent'); (defs.ProjectSnapshot.required as string[]).push('content');
-  defs.ContentState = { ...content, properties: { ...contentProperties, snapshots: { type: 'array', items: reference('ProjectSnapshot') } }, required: [...content.required as string[], 'snapshots'] };
+  defs.ContentState = { ...content, properties: { ...contentProperties, snapshots: { type: 'array', items: reference('ProjectSnapshot') }, authorAlternatives: { type: 'array', items: reference('AuthorAlternative'), maxItems: 100 } }, required: [...content.required as string[], 'snapshots'] };
   defs.CommandRecord = convert(obj({ operationId: req(idSchema), projectId: req(idSchema), baseRevision: req({ type: 'revision' }), revision: req({ type: 'revision' }), targetIds: req(arr(idSchema, true)), reason: req(txt()), createdAt: req({ type: 'datetime' }), compensatesOperationId: opt(idSchema), idMap: opt(record(idSchema, idSchema)) }));
   Object.assign(defs.CommandRecord.properties as Record<string, JsonSchema>, { before: reference('ContentState'), after: reference('ContentState') }); (defs.CommandRecord.required as string[]).push('before', 'after');
-  return { $schema: 'https://json-schema.org/draft/2020-12/schema', $id: `https://shinariokanri.local/schema/project-${FORMAT_VERSION}.json`, title: 'Scenario project 1.0.0', description: 'Structural contract. validateProject additionally checks references, scopes, cycles, ranges, Unicode spans, comparison types and effect inputs. UTF-8 byte limits and SHA-256 integrity require executable validators.', ...content, properties: { ...contentProperties, snapshots: { type: 'array', items: reference('ProjectSnapshot') }, history: { type: 'array', items: reference('CommandRecord') } }, required: [...content.required as string[], 'snapshots', 'history'], $defs: defs };
+  return { $schema: 'https://json-schema.org/draft/2020-12/schema', $id: `https://shinariokanri.local/schema/project-${FORMAT_VERSION}.json`, title: 'Scenario project 1.0.0', description: 'Structural contract. validateProject additionally checks references, scopes, cycles, ranges, Unicode spans, comparison types and effect inputs. UTF-8 byte limits and SHA-256 integrity require executable validators.', ...content, properties: { ...contentProperties, snapshots: { type: 'array', items: reference('ProjectSnapshot') }, history: { type: 'array', items: reference('CommandRecord') }, authorAlternatives: { type: 'array', items: reference('AuthorAlternative'), maxItems: 100 } }, required: [...content.required as string[], 'snapshots', 'history'], $defs: defs };
 }

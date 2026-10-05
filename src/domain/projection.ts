@@ -134,7 +134,11 @@ export function createProjection(project: ProjectData, profileId: string, option
   const selected: SourceRecord[] = [];
   const names = new Map<string, string>();
   const explicitPublicIds = new Map<string, string>();
-  for (const id of Array.isArray(includedIds) ? includedIds : []) {
+  const included = new Set<string>(Array.isArray(includedIds) ? includedIds : []);
+  // Selection is a set; the chosen content version owns the presentation order.
+  const orderedIds = [...source.keys()].filter(id => included.has(id));
+  for (const id of included) if (!source.has(id)) orderedIds.push(id);
+  for (const id of orderedIds) {
     const entity = source.get(id);
     if (!entity || entity.projectId !== project.projectId) { fail('REFERENCE_INVALID', '作品内にない情報が公開範囲に含まれています。', id); continue; }
     if (scopeIds && !scopeIds.has(id)) { omit(id, '指定した章またはグラフの範囲外'); continue; }
