@@ -34,3 +34,5 @@ RB03_ENGINES=chromium,firefox,webkit node tests/browser/run-rb03-components.mjs
 最終の追加修正では、本編の参加者とグループで使う借用人物IDを採用表示へ加えた。明示的な空の採用集合でも、本編で使う人物のレーンを失わず、未参照の人物は表示しない。変更後の単体2件と最終CIで確認する。
 
 初回CI [37359011362](https://github.com/chameleonjp-lab/shinariokanri/actions/runs/37359011362)は494単体と3ブラウザーの通常画面96件が合格した。追加部品試験では、共有時点の更新後、入力欄の表示更新前に検査する待機不足が出た。待機条件へ共有時点と入力表示の両方の更新完了を含め、局所Chromiumの3スクリプトを再実行して合格。修正後の3ブラウザーCIを別に確認する。
+
+最終CI [37360463566](https://github.com/chameleonjp-lab/shinariokanri/actions/runs/37360463566)（head `69b1d75333321652479e619680f77014bf158b3f`）は494単体、3ブラウザー通常画面96件、各ブラウザーの部品回帰・年表・世界参照の計9スクリプトが合格した。PR #6はmain `c2bdca1dce81f746473a9bd7a3a441ad103c6eb5`へ取り込み済み。この実行は計画の116受入ケースや実端末・完成版公開の代替ではない。

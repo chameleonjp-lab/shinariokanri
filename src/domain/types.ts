@@ -73,6 +73,8 @@ export interface RuntimeState {
 }
 export interface PresentationConditionResult { targetId: ID; value: TruthValue; reasons: string[] }
 export interface TraceStep { nodeId: ID; edgeIds: ID[]; before: RuntimeState; after: RuntimeState; conditionResults?: PresentationConditionResult[] | null; operation?: 'advance' | 'stub'; occurrenceId?: string; worldTick?: Tick; externalMode?: 'stub' | 'actual' | 'mixed'; externalValues?: Record<ID, TypedValue> }
+export interface PresentationOccurrence { entityId: ID; occurrenceId: string; before: RuntimeState; after: RuntimeState; conditionResults: PresentationConditionResult[]; externalValues?: Record<ID, TypedValue>; worldTick?: Tick }
+export interface ReadingPath { chapterIds: ID[]; sceneIds: ID[]; occurrences: PresentationOccurrence[] }
 export interface CoverageCount { checked: number; total: number; excluded?: number; unknown?: number }
 export interface Coverage { scenes: CoverageCount; dialogue: CoverageCount; choices: CoverageCount; conditionTrue: CoverageCount; conditionFalse: CoverageCount; declaredTests: CoverageCount }
 export interface MapPin { id: ID; placeId: ID; x: number; y: number; label?: string }
@@ -125,7 +127,7 @@ export interface AssertionData { subjectId: ID; predicate: string; value: TypedV
 export interface ForeshadowData { question: RichText; intent: RichText; resolutionPolicy: ResolutionPolicy; truthAssertionIds?: ID[] | null; clueIds?: ID[] | null; payoffIds?: ID[] | null; requiredInfo?: ID[] | null; deadline?: TargetScope | null; exceptions?: ScenarioException[] | null }
 export interface DisclosureData { foreshadowId: ID; anchor: ContentAnchor; stage: 'hint' | 'suspicion' | 'reinforce' | 'reveal' | 'alternative'; role: 'clue' | 'payoff'; condition?: Condition | null; knowledgeEffects?: ID[] | null; targetScope?: TargetScope | null }
 export interface CheckpointData { contentVersionId: ID; runtimeState: RuntimeState; presentationResults?: PresentationConditionResult[] | null; contentRevision?: Revision | null; origin?: 'full_play' | 'partial' | 'imported' | null; traceId?: ID | null }
-export interface TraceData { contentVersionId: ID; startCheckpointId: ID; steps: TraceStep[]; contentRevision?: Revision | null; initialExternalValues?: Record<ID, TypedValue> | null; seed?: string | null; engineVersion?: string | null; externalMode?: 'stub' | 'actual' | 'mixed' | null; coverage?: Coverage | null }
+export interface TraceData { contentVersionId: ID; startCheckpointId: ID; steps: TraceStep[]; contentRevision?: Revision | null; initialExternalValues?: Record<ID, TypedValue> | null; seed?: string | null; engineVersion?: string | null; externalMode?: 'stub' | 'actual' | 'mixed' | null; coverage?: Coverage | null; mode?: 'flow' | 'chapters' | null; readingPath?: ReadingPath | null }
 export interface AttachmentData { mediaType: string; contentHash: string; byteSize: number; assetPath: string; displayName?: string | null; provenanceId?: ID | null; licenseNote?: string | null; stage?: 'reference' | 'temporary' | 'final' | null; revisionHistory?: ID[] | null }
 export interface SourceData { sourceType: 'web' | 'file' | 'book' | 'observation'; locator: string; accessedAt?: RealTime | null; excerptLocation?: string | null; interpretation?: RichText | null; attachmentId?: ID | null; redistributionAllowed?: boolean | null }
 export interface CueData { anchor: ContentAnchor; cueType: string; attachmentId?: ID | null; speakerId?: ID | null; expression?: string | null; waitMs?: MediaTime | null; camera?: CustomValue | null; mediaTime?: MediaTime | null; stage?: string | null }
@@ -174,14 +176,27 @@ export interface ViewState { userId: string; deviceClass: 'phone' | 'tablet' | '
 export interface ProjectData {
   projectId: ID; name: string; formatVersion: typeof FORMAT_VERSION; revision: Revision; calendarId: string; mainStart: Tick;
   calendars: CalendarDefinition[]; worldReferences: WorldReference[]; entities: Entity[]; relations: Relation[];
-  snapshots: ProjectSnapshot[]; history: CommandRecord[]; views: SavedView[];
+  snapshots: ProjectSnapshot[]; history: CommandRecord[]; views: SavedView[]; authorAlternatives?: AuthorAlternative[];
 }
-export type ProjectContent = Omit<ProjectData, 'history' | 'snapshots'>;
+export type ProjectContent = Omit<ProjectData, 'history' | 'snapshots' | 'authorAlternatives'>;
 export interface ProjectSnapshot { id: ID; versionLabel: string; contentHash: string; createdAt: RealTime; content: ProjectContent }
 export type ContentState = Omit<ProjectData, 'history'>;
 export interface CommandRecord { operationId: ID; projectId: ID; baseRevision: Revision; revision: Revision; targetIds: ID[]; reason: string; createdAt: RealTime; before: ContentState; after: ContentState; compensatesOperationId?: ID; idMap?: Record<ID, ID> }
+/** Branch snapshots live with ProjectData/ContentState and never recurse into immutable ProjectContent. */
+export interface StructurePlan { chapterId: ID; templateId: string; beatLabels: string[]; assignments: Record<string, ID> }
+export interface AlternativeVersion { id: ID; parentVersionId: ID | null; label: string; createdAt: RealTime; content: ProjectContent; contentHash?: string; structurePlan?: StructurePlan }
+export interface AlternativeApplyReceipt {
+  id: ID; createdAt: RealTime; alternativeVersionId?: ID; sourceSnapshotId?: ID | null; selectedChangeKeys?: string[];
+  fromCanonicalRevision: Revision; appliedRevision?: Revision;
+  patches: Array<{ key: string; scope: 'project' | 'entity' | 'relation' | 'presentation'; itemId?: ID; path: string[]; label: string; before: { present: boolean; value?: unknown }; after: { present: boolean; value?: unknown } }>;
+}
+export interface AuthorAlternative {
+  id: ID; projectId: ID; name: string; status: 'active' | 'provisional' | 'needs_review' | 'rejected' | 'accepted';
+  baseRevision: Revision; sourceSnapshotId?: ID | null; baseContent: ProjectContent; baseContentHash?: string;
+  versions: AlternativeVersion[]; headVersionId: ID; applyReceipts: AlternativeApplyReceipt[]; integrityHash?: string; createdAt: RealTime; updatedAt: RealTime;
+}
 export type DomainErrorCode = 'VALIDATION_FAILED' | 'REFERENCE_INVALID' | 'TIME_CONSTRAINT_CONFLICT' | 'CONDITION_UNKNOWN' | 'TRANSITION_BLOCKED' | 'LOCAL_SAVE_FAILED' | 'QUOTA_EXCEEDED' | 'SYNC_CONFLICT' | 'AUTH_REQUIRED' | 'FORBIDDEN' | 'FORMAT_UNSUPPORTED' | 'INTEGRITY_FAILED' | 'IMPORT_LIMIT' | 'ANALYSIS_LIMIT' | 'EXPORT_UNSUPPORTED';
 export interface ValidationIssue { code: DomainErrorCode; path: string; message: string }
 export type ValidationResult<T> = { ok: true; value: T } | { ok: false; issues: ValidationIssue[] };
-export interface RuntimeContext { state: RuntimeState; variables?: Entity<'variable'>[]; entities?: Entity[]; externalValues?: Record<ID, TypedValue> }
+export interface RuntimeContext { state: RuntimeState; variables?: Entity<'variable'>[]; entities?: Entity[]; referenceEntities?: Entity[]; externalValues?: Record<ID, TypedValue> }
 export interface ConditionResult { value: TruthValue; reasons: string[] }

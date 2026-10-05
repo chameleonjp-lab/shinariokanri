@@ -65,7 +65,7 @@ function evaluate(condition: Condition, context: RuntimeContext, stack: ID[]): C
       return result(quantity >= condition.quantity ? 'true' : 'false');
     }
     case 'known': {
-      if (context.entities && (!context.entities.some(entity => entity.id === condition.assertionId && entity.kind === 'assertion' && !entity.deletedAt) || !context.entities.some(entity => entity.id === condition.holderId && entity.kind === 'character' && !entity.deletedAt))) return result('unknown', ['認識の対象または人物が定義されていません。']);
+      if (context.entities && (!context.entities.some(entity => entity.id === condition.assertionId && entity.kind === 'assertion' && !entity.deletedAt) || ![...context.entities, ...(context.referenceEntities ?? [])].some(entity => entity.id === condition.holderId && entity.kind === 'character' && !entity.deletedAt))) return result('unknown', ['認識の対象または人物が定義されていません。']);
       const knowledge = context.state.assertions.find(assertion => assertion.assertionId === condition.assertionId && assertion.holderId === condition.holderId);
       return knowledge ? result(knowledge.truth, knowledge.truth === 'unknown' ? ['人物の認識が未確定です。'] : []) : result('false');
     }

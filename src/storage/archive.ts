@@ -1,6 +1,7 @@
 import { Inflate, zipSync } from 'fflate';
 import type { ProjectContent, ProjectData, WorldReference } from '../domain/types';
 import { newId, validateProject } from '../domain/model';
+import { validateProjectIntegrity } from '../domain/projectRecordValidation';
 import { checkCancelled, StorageError } from './errors';
 import { ARCHIVE_LIMITS, FORMAT_VERSION, equalJson, jsonBytes, parseStrictJson, resolveLimits, safeArchivePath, sha256,
   type ArchiveLimits, type LimitOverrides } from './json';
@@ -238,6 +239,10 @@ function checkedProject(value: unknown, path: string, limits: ArchiveLimits, wor
   enforceFieldLimits(project, path, limits);
   return project;
 }
+async function checkedProjectIntegrity(project: ProjectData, path: string, worldSnapshots: Record<string, ProjectContent> = {}): Promise<void> {
+  const issues = await validateProjectIntegrity(project, { worldSnapshots }, true);
+  if (issues.length) throw new StorageError('VALIDATION_FAILED', issues.map(issue => `${issue.path}: ${issue.message}`).join('\n'), path);
+}
 
 function enforceFieldLimits(value: unknown, path: string, limits: ArchiveLimits): void {
   if (typeof value === 'string') {
@@ -373,6 +378,8 @@ export async function inspectScenarioData(bytes: Uint8Array, options: InspectOpt
   }
   verifyWorlds([project, ...Object.values(worlds)], worlds);
   await verifySnapshotHashes([project, ...Object.values(worlds)]);
+  await checkedProjectIntegrity(project, 'data/project.json', worldContents);
+  for (const [id, world] of Object.entries(worlds)) await checkedProjectIntegrity(world, `worlds/${id}.json`, worldContents);
   const attachments = new Map(allAttachmentMetadata([project, ...Object.values(worlds)]).map(item => [item.assetPath, item]));
   const assets: ArchiveAsset[] = [];
   for (const file of manifest.files.filter(item => item.role === 'asset')) {
@@ -420,11 +427,13 @@ export async function exportScenario(input: ProjectData, options: ExportOptions 
   const project = checkedProject(input, 'data/project.json', ARCHIVE_LIMITS, worldContents);
   const selected = options.snapshotId ? project.snapshots.find(item => item.id === options.snapshotId) : undefined;
   if (selected) {
-    const { history: _history, snapshots: _snapshots, ...content } = project;
+    const { history: _history, snapshots: _snapshots, authorAlternatives: _authorAlternatives, ...content } = project;
     if (!equalJson(content, selected.content)) throw new StorageError('OPERATION_CONFLICT', '指定した版と書き出す内容が一致しません。対象snapshotの内容を選び直してください。', options.snapshotId);
   }
   verifyWorlds([project, ...Object.values(worlds)], worlds);
   await verifySnapshotHashes([project, ...Object.values(worlds)]);
+  await checkedProjectIntegrity(project, 'data/project.json', worldContents);
+  for (const [id, world] of Object.entries(worlds)) await checkedProjectIntegrity(world, `worlds/${id}.json`, worldContents);
   const recordCount = [project, ...Object.values(worlds)].reduce((sum, source) => sum + source.entities.length + source.relations.length, 0);
   if (recordCount > ARCHIVE_LIMITS.records) throw new StorageError('LIMIT_EXCEEDED', '参照世界を含むentityとrelationの件数が上限を超えています。');
   const mode = options.assetMode ?? 'embedded';

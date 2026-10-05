@@ -9,14 +9,18 @@ export type StorageErrorCode =
 
 /** Errors retain a code and an affected path so the UI can keep the draft and explain recovery. */
 export class StorageError extends Error {
+  readonly code: StorageErrorCode;
+  readonly path?: string;
   constructor(
-    public readonly code: StorageErrorCode,
+    code: StorageErrorCode,
     message: string,
-    public readonly path?: string,
+    path?: string,
     options?: ErrorOptions,
   ) {
     super(message, options);
     this.name = 'StorageError';
+    this.code = code;
+    this.path = path;
   }
 }
 

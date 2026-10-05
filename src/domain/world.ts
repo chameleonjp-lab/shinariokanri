@@ -116,7 +116,7 @@ function mergePinnedContent(project: ProjectContent, snapshots: ProjectSnapshot[
 }
 /** Follow frozen references transitively. Current editing drafts never replace pinned content. */
 export function effectiveWorldContent(project: ProjectData, worlds: ProjectData[]): ProjectContent {
-  const { history: _history, snapshots: _snapshots, ...content } = project;
+  const { history: _history, snapshots: _snapshots, authorAlternatives: _authorAlternatives, ...content } = project;
   return mergePinnedContent(content, pinnedClosure(project.worldReferences, pinnedSnapshotIndex(worlds)).snapshots);
 }
 
@@ -160,7 +160,7 @@ export async function previewWorldVersion(project: ProjectData, world: ProjectDa
   return { candidate, reference, differences, affectedIds: [...affectedIds], brokenReferenceIds: [...broken], canApply: broken.size === 0 };
 }
 export async function createWorldSnapshot(project: ProjectData, label: string): Promise<ProjectData> {
-  const { history: _history, snapshots: _snapshots, ...content } = structuredClone(project);
+  const { history: _history, snapshots: _snapshots, authorAlternatives: _authorAlternatives, ...content } = structuredClone(project);
   const id = newId(), contentHash = await sha256(jsonBytes(content)), versionLabel = label.trim() || `世界版 ${project.revision}`;
   const snapshot: ProjectSnapshot = { id, contentHash, versionLabel, createdAt: new Date().toISOString(), content };
   const metadata = { ...createEntity(project.projectId, 'snapshot', versionLabel, { versionLabel, contentHash, immutable: true }), id };

@@ -132,8 +132,17 @@ function RichTextEditor({ value, onChange, label, rows, placeholder, project, en
   const composing = useRef(false), textarea = useRef<HTMLTextAreaElement>(null), beforeInput = useRef<TextReplacement | undefined>(undefined);
   const history = useRef<RichText[]>([]);
   const text = fieldText(value);
-  useEffect(() => { if (!composing.current) setRaw(text); }, [text]);
+  const propagatedText = useRef(text);
+  useEffect(() => { if (!composing.current) { setRaw(text); propagatedText.current = text; } }, [text]);
   const selection = (element: HTMLTextAreaElement): TextReplacement => ({ start: Array.from(element.value.slice(0, element.selectionStart)).length, end: Array.from(element.value.slice(0, element.selectionEnd)).length });
+  // React's synthetic before-input event does not cover every native insertion
+  // path (notably Firefox insertText). Capture the actual pre-edit range.
+  useEffect(() => {
+    const element = textarea.current; if (!element) return;
+    const capture = () => { if (!composing.current) beforeInput.current = selection(element); };
+    element.addEventListener('beforeinput', capture);
+    return () => element.removeEventListener('beforeinput', capture);
+  }, []);
   const editorId = `rich-text-editor-${entity.id}-${fieldKey}`;
   let blockStart = 0;
   const blockAnchors = blocks.map(block => {
@@ -144,6 +153,10 @@ function RichTextEditor({ value, onChange, label, rows, placeholder, project, en
   const change = (next: string, inputType?: string) => {
     setRaw(next);
     if (composing.current) return;
+    // Composition end and the following input may report the same final edit
+    // before the controlled value rerenders. Apply its origin mapping only once.
+    if (next === propagatedText.current) { beforeInput.current = undefined; return; }
+    propagatedText.current = next;
     if (inputType === 'historyUndo' || inputType === 'historyRedo') {
       for (let i = history.current.length - 1; i >= 0; i--) if (fieldText(history.current[i]) === next) { history.current.push(structuredClone(blocks)); onChange(structuredClone(history.current[i])); return; }
     }
@@ -173,7 +186,6 @@ function RichTextEditor({ value, onChange, label, rows, placeholder, project, en
     onKeyDown={e => { if (!composing.current) beforeInput.current = selection(e.currentTarget); }}
     onPaste={e => { if (!composing.current) beforeInput.current = selection(e.currentTarget); }}
     onCut={e => { if (!composing.current) beforeInput.current = selection(e.currentTarget); }}
-    onBeforeInput={e => { if (!composing.current) beforeInput.current = selection(e.currentTarget); }}
     onCompositionStart={e => { beforeInput.current = selection(e.currentTarget); composing.current = true; }}
     onCompositionEnd={e => { composing.current = false; change(e.currentTarget.value); }}
     onChange={e => change(e.target.value, (e.nativeEvent as InputEvent).inputType)}/>
@@ -220,7 +232,7 @@ export function DataField({ field, value, onChange, project, entity, onValid, ra
   return <div className={`form-field field-${field.type}`} data-field={field.key}>{field.type !== 'boolean' && <label>{field.label}</label>}{input}{field.hint && <span className="field-hint">{field.hint}</span>}</div>;
 }
 
-export function RichTextView({ value, vertical = false, onOpen }: { value: unknown; vertical?: boolean; onOpen?: (id: string) => void }) {
+export function RichTextView({ value, vertical = false, onOpen, onOpenTarget }: { value: unknown; vertical?: boolean; onOpen?: (id: string) => void; onOpenTarget?: (anchor: ContentAnchor) => void }) {
   const blocks = Array.isArray(value) ? value as any[] : [];
   const inline = (block: any) => {
     const chars = Array.from(String(block.text || ''));
@@ -230,7 +242,7 @@ export function RichTextView({ value, vertical = false, onOpen }: { value: unkno
     const marks = [...grouped.values()].sort((a, b) => a.start - b.start);
     const output: ReactNode[] = [];
     let cursor = 0;
-    marks.forEach((mark, i) => { if (mark.start < cursor || mark.end > chars.length || mark.end <= mark.start) return; output.push(chars.slice(cursor, mark.start).join('')); const text = chars.slice(mark.start, mark.end).join(''); const ruby = mark.reading === undefined ? text : <ruby key={i}>{text}<rt>{mark.reading}</rt></ruby>; output.push(mark.target ? <button className="inline-link" key={i} onClick={() => onOpen?.(mark.target?.entityId)} type="button">{ruby}</button> : ruby); cursor = mark.end; });
+    marks.forEach((mark, i) => { if (mark.start < cursor || mark.end > chars.length || mark.end <= mark.start) return; output.push(chars.slice(cursor, mark.start).join('')); const text = chars.slice(mark.start, mark.end).join(''); const ruby = mark.reading === undefined ? text : <ruby key={i}>{text}<rt>{mark.reading}</rt></ruby>; output.push(mark.target ? <button className="inline-link" key={i} onClick={() => onOpenTarget ? onOpenTarget(mark.target) : onOpen?.(mark.target?.entityId)} type="button">{ruby}</button> : ruby); cursor = mark.end; });
     output.push(chars.slice(cursor).join(''));
     return output;
   };
