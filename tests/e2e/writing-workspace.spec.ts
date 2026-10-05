@@ -107,6 +107,11 @@ test('章試読は固定版の本文を提示して開始状態と経路を通�
   // Reload succeeds only when durable chapter records and their captured snapshot validate together.
   await writing(page, '章の試読');
   await expect(page.getByLabel('読む作品の版', { exact: true }).locator('option')).toHaveCount(3);
+  await page.getByRole('region', { name: '保存した章読み通しの再開', exact: true }).getByRole('button', { name: /章読み通し経路/ }).click();
+  await expect(page.getByText('保存した章読み通しを再実行し、提示順と状態を検証しました。', { exact: true })).toBeVisible();
+  await expect(page.locator('.chapter-reading-presented')).toContainText('固定版の本文😀門');
+  await page.getByRole('tab', { name: '試読・検査', exact: true }).click();
+  await expect(page.locator('.saved-traces')).toHaveCount(0);
 });
 
 test('参照値を変えた別案の採用を通常保存し、確認依頼と採用記録を再読込・完全保存する', async ({ page }) => {

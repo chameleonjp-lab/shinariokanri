@@ -16,7 +16,7 @@
 
 ## 局所検証と範囲
 
-`tests/browser/rb04-author-regressions.mjs` は実際のReact部品を使い、保存完了時期を制御した注入ホストで入力保持、競合、Unicode位置、固定版の表示、本文リンクの版・ブロック・文字位置の保持を検査する。Chromiumと実WebKitで11群の厳密な検査が通過した。native保存や通常Appの合格結果とは分ける。
+`tests/browser/rb04-author-regressions.mjs` は実際のReact部品を使い、保存完了時期を制御した注入ホストで入力保持、競合、Unicode位置、固定版の表示、本文リンクの版・ブロック・文字位置の保持を検査する。Chromiumと実WebKitで12群の厳密な検査が通過した。native保存や通常Appの合格結果とは分ける。
 
 `tests/rb04/workspace.spec.ts` の4ケースは構成・通読・別案・雛形の部品操作を検査する。`tests/e2e/writing-workspace.spec.ts` は通常Appからnative保存・再読込・完全保存・別案を含む複製復元、参照値と本文の採用、章と場面の並べ替え・移動・筋からの除外、固定版の章読み通しを検査する。結合結果と検査対象のhashは[結合検証](INTEGRATION.md)に保持する。
 

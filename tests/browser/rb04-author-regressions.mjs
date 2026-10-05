@@ -143,6 +143,31 @@ window.mountReadingLinks = async () => {
   reactRoot.unmount(); reactRoot = createRoot(document.getElementById('root'));
   reactRoot.render(React.createElement(ChapterReadingView, { project, onOpenEntity: id => window.openedReadingEntity = id, onOpenTarget: anchor => window.openedReadingLink = anchor }));
 };
+window.mountPendingReading = async () => {
+  const project = createProject('Pending reading operations');
+  const first = createEntity(project.projectId, 'scene', 'First pending scene', { body: textToRichText('First') });
+  const second = createEntity(project.projectId, 'scene', 'Second pending scene', { body: textToRichText('Second') });
+  const chapter = createEntity(project.projectId, 'chapter', 'Pending chapter', { sceneIds: [first.id, second.id] });
+  first.data.chapterId = second.data.chapterId = chapter.id;
+  project.entities = [chapter, first, second];
+  const fixed = await createWorldSnapshot(project, 'Pending capture edition');
+  window.pendingReading = { valid: validateProject(fixed).ok, firstId: first.id, secondId: second.id, snapshotId: fixed.snapshots[0].id, digestCalls: 0, saveCalls: 0, savedRecord: null };
+  const originalDigest = crypto.subtle.digest.bind(crypto.subtle);
+  window.armReadingCapture = () => {
+    crypto.subtle.digest = async (...args) => {
+      window.pendingReading.digestCalls++;
+      await new Promise(resolve => window.completeReadingCapture = resolve);
+      crypto.subtle.digest = originalDigest;
+      return originalDigest(...args);
+    };
+  };
+  reactRoot.unmount(); reactRoot = createRoot(document.getElementById('root'));
+  reactRoot.render(React.createElement(ChapterReadingView, { project: fixed, onSaveMany: async (entities, reason, assets, snapshots) => {
+    window.pendingReading.saveCalls++;
+    window.pendingReading.savedRecord = structuredClone({ entities, reason, snapshots });
+    await new Promise(resolve => window.completeReadingSave = resolve);
+  } }));
+};
 window.mount('failure', true);
 `;
 
@@ -342,6 +367,66 @@ try {
     assert.deepEqual(await page.evaluate(() => window.openedReadingLink), { ...fixture.ordinary, ...(fixed ? { sourceVersionId: fixture.readingEditionId } : {}) }, 'An unpinned target must retain its block/span and inherit the chosen reading edition.');
   }
   checks.push('reading-inline-targets-preserve-explicit-edition-and-inherit-fixed-edition-with-block-and-span');
+  await page.evaluate(() => window.mountPendingReading());
+  const pendingFixture = await page.evaluate(() => window.pendingReading);
+  assert.equal(pendingFixture.valid, true, 'Pending operations must use valid content and a real hashed snapshot.');
+  const readingNext = page.getByRole('button', { name: '次の場面を提示', exact: true });
+  const readingBack = page.getByRole('button', { name: '一場面戻る', exact: true });
+  const readingVersion = page.getByLabel('読む作品の版', { exact: true });
+  const presented = page.locator('.chapter-reading-presented');
+  await page.getByRole('button', { name: '記録付き読書を始める', exact: true }).click();
+  await readingNext.click();
+  await expect(presented).toHaveAttribute('data-presented-scene-id', pendingFixture.firstId);
+  await readingVersion.selectOption(pendingFixture.snapshotId);
+  await page.getByRole('button', { name: '自分で経路を作る', exact: true }).click();
+  await page.getByLabel('経路に加える場面', { exact: true }).selectOption(pendingFixture.firstId);
+  await page.getByRole('button', { name: '経路の末尾に加える', exact: true }).click();
+  await page.getByLabel('経路に加える場面', { exact: true }).selectOption(pendingFixture.secondId);
+  await page.getByRole('button', { name: '経路の末尾に加える', exact: true }).click();
+  const assertPendingControls = async () => {
+    await expect(readingNext).toBeDisabled(); await expect(readingBack).toBeDisabled(); await expect(readingVersion).toBeDisabled();
+    await expect(page.getByRole('button', { name: '読み直す', exact: true })).toBeDisabled();
+    await expect(page.getByRole('button', { name: '選んだ章の順', exact: true })).toBeDisabled();
+    await expect(page.getByRole('button', { name: '自分で経路を作る', exact: true })).toBeDisabled();
+    await expect(page.getByLabel('経路に加える場面', { exact: true })).toBeDisabled();
+    await expect(page.getByRole('button', { name: '経路の末尾に加える', exact: true })).toBeDisabled();
+    for (const control of await page.locator('.reading-route-draft button').all()) await expect(control).toBeDisabled();
+  };
+  await page.evaluate(() => {
+    window.armReadingCapture();
+    const restart = [...document.querySelectorAll('button')].find(button => button.textContent === '読み直す');
+    restart.click(); restart.click();
+    [...document.querySelectorAll('button')].find(button => button.textContent === '次の場面を提示').click();
+    [...document.querySelectorAll('button')].find(button => button.textContent === '一場面戻る').click();
+  });
+  await page.waitForFunction(() => typeof window.completeReadingCapture === 'function');
+  await assertPendingControls();
+  assert.equal(await page.evaluate(() => window.pendingReading.digestCalls), 1, 'Same-turn duplicate starts must capture one edition.');
+  await expect(presented).toHaveAttribute('data-presented-scene-id', pendingFixture.firstId);
+  await page.evaluate(() => window.completeReadingCapture());
+  await expect(readingNext).toBeEnabled(); await expect(presented).toHaveCount(0);
+  await readingNext.click();
+  await expect(presented).toHaveAttribute('data-presented-scene-id', pendingFixture.firstId);
+  await page.evaluate(() => {
+    const save = [...document.querySelectorAll('button')].find(button => button.textContent === '開始状態と経路を保存');
+    save.click(); save.click();
+    [...document.querySelectorAll('button')].find(button => button.textContent === '次の場面を提示').click();
+    [...document.querySelectorAll('button')].find(button => button.textContent === '一場面戻る').click();
+  });
+  await page.waitForFunction(() => typeof window.completeReadingSave === 'function');
+  await assertPendingControls();
+  await expect(presented).toHaveAttribute('data-presented-scene-id', pendingFixture.firstId);
+  const savedPending = await page.evaluate(() => window.pendingReading);
+  assert.equal(savedPending.saveCalls, 1, 'Same-turn duplicate saves must issue one host command.');
+  assert.equal(savedPending.savedRecord.entities.find(entity => entity.kind === 'trace').data.readingPath.occurrences.length, 1, 'The saved evidence must contain exactly the presented scene.');
+  await page.evaluate(() => window.completeReadingSave());
+  await expect(readingNext).toBeEnabled();
+  await expect(presented).toHaveAttribute('data-presented-scene-id', pendingFixture.firstId);
+  await readingNext.click(); await expect(presented).toHaveAttribute('data-presented-scene-id', pendingFixture.secondId);
+  await readingBack.click(); await expect(presented).toHaveAttribute('data-presented-scene-id', pendingFixture.firstId);
+  await page.getByRole('button', { name: '選んだ章の順', exact: true }).click();
+  await expect(page.locator('.reading-chapter-picker input')).toBeEnabled();
+  checks.push('chapter-capture-and-save-serialize-same-turn-operations-and-freeze-progression-route-and-edition');
   assert.deepEqual(pageErrors, [], 'Browser fixture must have no uncaught application errors.');
 } catch (error) {
   failure = error instanceof Error ? error.stack : String(error);
