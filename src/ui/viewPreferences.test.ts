@@ -92,3 +92,11 @@ describe('per-device workspace preferences', () => {
     });
   });
 });
+
+it('restores a shared world viewpoint while rejecting malformed saved IDs and ticks', () => {
+  const id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+  expect(restoreWorkspacePreferences({ filters: { 'workspace.timelineTab': 'world', 'world.tick': '-999999999999999999999999', 'world.checkpoint': id, 'world.place': id } })).toMatchObject({ timelineTab: 'world', worldTick: '-999999999999999999999999', worldCheckpoint: id, worldPlace: id });
+  expect(restoreWorkspacePreferences({ filters: { 'world.tick': '?', 'world.checkpoint': 'bad', 'world.place': 'bad' } }).worldTick).toBeNull();
+  expect(restoreWorkspacePreferences({ filters: { 'world.tick': '1.5', 'world.checkpoint': 'bad' } }).worldTick).toBeUndefined();
+  expect(restoreWorkspacePreferences({ filters: { 'world.checkpoint': 'bad' } }).worldCheckpoint).toBeUndefined();
+});

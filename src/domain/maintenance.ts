@@ -34,7 +34,7 @@ const BLOCK_KINDS = new Set(['paragraph', 'heading', 'list_item', 'quote']);
 
 function pathParts(path: string): string[] { return path.replace(/\[(\d+)\]/g, '.$1').split('.').filter(Boolean); }
 
-function immutableReferenceVersion(record: Entity | Relation, reference: DomainReference): ID | undefined {
+export function immutableReferenceVersion(record: Entity | Relation, reference: DomainReference): ID | undefined {
  if (reference.scope === 'snapshot' && reference.id !== record.projectId) return reference.id;
  if ('kind' in record && record.kind === 'projection_profile' && record.data.sourceVersionId && record.data.sourceVersionId !== record.projectId && reference.path.startsWith('data.')) return record.data.sourceVersionId;
  if ('kind' in record && record.kind === 'review' && record.data.targetVersionId !== record.projectId && (reference.path === 'data.target' || reference.path.startsWith('data.target.'))) return record.data.targetVersionId;

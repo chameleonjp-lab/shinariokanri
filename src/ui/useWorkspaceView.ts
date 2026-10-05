@@ -50,7 +50,7 @@ export function useWorkspaceView(projectId: string | null, preferences: Workspac
       previous.current = view; void scenarioStore.saveViewState(projectId, view).catch(() => undefined);
     }, 200);
     return () => { window.clearTimeout(timer); window.removeEventListener('pagehide', mirror); };
-  }, [projectId, ready, device, preferences.page, preferences.structureTab, preferences.workTab, preferences.timelineTab, preferences.kind, preferences.searchKind, preferences.statusFilter, preferences.query, preferences.hiddenPages?.join(','), selectedId, scrollY]);
+  }, [projectId, ready, device, preferences.page, preferences.structureTab, preferences.workTab, preferences.timelineTab, preferences.kind, preferences.searchKind, preferences.statusFilter, preferences.query, preferences.hiddenPages?.join(','), preferences.worldTick, preferences.worldCheckpoint, preferences.worldPlace, selectedId, scrollY]);
   const changeMarks = (next: EntityNavigationMarks) => { setMarks(next); if (projectId) { try { localStorage.setItem(workspaceMarksStorageKey(userId.current, projectId), serializeEntityNavigationMarks(next)); } catch { /* Optional navigation preferences. */ } } };
   return { marks, recordRecent: (id: string) => changeMarks(recordRecentEntity(marks, id)), toggleFavorite: (id: string) => changeMarks(toggleFavoriteEntity(marks, id)) };
 }

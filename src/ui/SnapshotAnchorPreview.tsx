@@ -1,10 +1,19 @@
-import type { ContentAnchor, ProjectData, RichText } from '../domain/types';
+import { RELATION_LABELS } from '../domain/model';
+import { resolvePinnedWorlds } from '../domain/pinnedWorlds';
+import type { ContentAnchor, ProjectContent, ProjectData, RichText } from '../domain/types';
 import { FIELD_SPECS } from './fieldSpecs';
 import { labelOf, RichTextView } from './Fields';
 
-export function SnapshotAnchorPreview({ project, anchor }: { project: ProjectData; anchor: ContentAnchor }) {
+export function SnapshotAnchorPreview({ project, anchor, worldSnapshots = {} }: { project: ProjectData; anchor: ContentAnchor; worldSnapshots?: Record<string, ProjectContent> }) {
   const snapshot = project.snapshots.find(candidate => candidate.id === anchor.sourceVersionId);
   const entity = snapshot?.content.entities.find(candidate => candidate.id === (anchor.lineId ?? anchor.entityId));
+  const relation = snapshot?.content.relations.find(candidate => candidate.id === anchor.entityId);
+  if (snapshot && relation && !entity) {
+    const closure = resolvePinnedWorlds(snapshot.content, worldSnapshots);
+    if (closure.errors.length) return <p role="alert">固定版の依存参照を解決できません：{closure.errors.join('、')}</p>;
+    const index = new Map([snapshot.content, ...closure.worlds].flatMap(content => content.entities.map(value => [value.id, value] as const)));
+    return <section aria-label="固定版の参照先"><h2>{RELATION_LABELS[relation.relationType] ?? relation.relationType}</h2><p>固定版: {snapshot.versionLabel} · 保存日時: {snapshot.createdAt}</p><p>{labelOf(index.get(relation.fromId))} {relation.direction === 'symmetric' ? '↔' : '→'} {labelOf(index.get(relation.toId))}</p><p>採用状態: {relation.status}</p><p>根拠: {relation.evidenceIds.map(id => labelOf(index.get(id))).join('、') || '未登録'}</p><details><summary>時期と条件を確認</summary><pre>{JSON.stringify(relation.validity, null, 2)}</pre></details></section>;
+  }
   if (!snapshot || !entity) return <p role="alert">参照先の固定版または情報が見つかりません。現在版へ推測して移動せず、完全保存ファイルを確認してください。</p>;
   const fields = FIELD_SPECS[entity.kind].filter(field => field.type === 'rich');
   const data = entity.data as unknown as Record<string, unknown>;

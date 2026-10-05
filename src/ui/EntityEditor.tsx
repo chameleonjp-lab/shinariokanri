@@ -19,9 +19,10 @@ const EDITOR_TABS = [['main', '要約'], ['body', '本文'], ['notes', '作者�
 
 export interface EditorFailure extends Error { issues?: { path: string; message: string }[] }
 
-export function EntityEditor({ entity, project, isNew, hasUnsavedDraft, onSave, onSaveMany, onSaveProject, onClose, onDraft, onArchive, onOpen, onOpenTarget, navigationTarget, jsonBuffers, onJsonBuffer }: {
+export function EntityEditor({ entity, project, referenceProject, isNew, hasUnsavedDraft, onSave, onSaveMany, onSaveProject, onClose, onDraft, onArchive, onOpen, onOpenTarget, navigationTarget, jsonBuffers, onJsonBuffer }: {
   entity: Entity;
   project: ProjectData;
+  referenceProject?: ProjectData;
   isNew: boolean;
   hasUnsavedDraft: boolean;
   onSave: (entity: Entity) => Promise<Entity>;
@@ -36,6 +37,7 @@ export function EntityEditor({ entity, project, isNew, hasUnsavedDraft, onSave, 
   jsonBuffers: Record<string, string>;
   onJsonBuffer: (field: string, raw: string | undefined, expectedRaw?: string) => void;
 }) {
+  const formProject = referenceProject ?? project;
   const [draft, setDraft] = useState(entity);
   const [dirty, setDirty] = useState(isNew || hasUnsavedDraft);
   const [saving, setSaving] = useState(false);
@@ -235,10 +237,10 @@ export function EntityEditor({ entity, project, isNew, hasUnsavedDraft, onSave, 
       {hasTextTabs && visibleTabs.length > 0 && <div className="editor-tabs" role="tablist" aria-label="編集内容">{visibleTabs.map(([key, label]) => <button key={key} type="button" role="tab" aria-selected={tab === key} className={tab === key ? 'active' : ''} onClick={() => setTab(key)}>{label}</button>)}</div>}
       {tab === 'preview' && hasTextTabs && visibleTabs.length > 0 ? <div className="editor-preview"><label className="check-label"><input type="checkbox" checked={vertical} onChange={e => setVertical(e.target.checked)}/>縦書きで確認</label><RichTextView value={dataOf(draft).body} vertical={vertical} onOpen={onOpen}/></div> : shownFields.map(field => draft.kind === 'template' && field.key === 'fields'
         ? <TemplateFieldsEditor key={field.key} template={draft.data} project={project} onChange={data => change({ ...draft, data })} onValid={valid => markValid('_templateFields', valid)}/>
-        : <DataField key={field.key} field={field} entity={draft} value={dataOf(draft)[field.key]} project={project} onChange={value => changeData(field.key, value)} rawOverride={jsonBuffers[field.key]} onInvalidRaw={raw => onJsonBuffer(field.key, raw)} onValid={valid => markValid(field.key, valid)} onOpenTarget={(anchor: ContentAnchor, sourceAnchor?: ContentAnchor) => followTextTarget(anchor, sourceAnchor, field.key)} onOpenReferences={showReverseReferences} onOpenReference={openTextReference}/>)}
+        : <DataField key={field.key} field={field} entity={draft} value={dataOf(draft)[field.key]} project={formProject} onChange={value => changeData(field.key, value)} rawOverride={jsonBuffers[field.key]} onInvalidRaw={raw => onJsonBuffer(field.key, raw)} onValid={valid => markValid(field.key, valid)} onOpenTarget={(anchor: ContentAnchor, sourceAnchor?: ContentAnchor) => followTextTarget(anchor, sourceAnchor, field.key)} onOpenReferences={showReverseReferences} onOpenReference={openTextReference}/>)}
       <FieldVisibilityControls fields={displayFields} customFields={assignedTemplate?.data.fields ?? []} tabs={hasTextTabs ? EDITOR_TABS : []} preferences={display} onChange={changeDisplay}/>
       <TemplateChooser entity={draft} project={project} onChange={change}/>
-      <CustomFieldsEditor entity={draft} project={project} hidden={display.hiddenFields} onChange={change} onValid={valid => markValid('_customFields', valid)}/>
+      <CustomFieldsEditor entity={draft} project={formProject} hidden={display.hiddenFields} onChange={change} onValid={valid => markValid('_customFields', valid)}/>
       {draft.kind === 'note' && !isNew && !dirty && !saving && onSaveMany && onSaveProject && <NotesTools project={project} note={draft} onSaveMany={onSaveMany} onSaveProject={onSaveProject} onOpen={onOpen} captureDraft={jsonBuffers._noteCapture} onCaptureDraft={(raw, expectedRaw) => onJsonBuffer('_noteCapture', raw, expectedRaw)}/>}
       {draft.visibility === "projection" && <div className="form-field"><label>公開投影プロファイル</label><RefSelect project={project} kinds={["projection_profile"]} value={draft.projectionProfileId} label="公開投影プロファイル" onChange={id => change({...draft,projectionProfileId:id || null})}/></div>}
       <details className="advanced-details"><summary>詳細データ・ルビ・本文リンクを編集</summary><p className="field-hint">全フィールドをJSONで編集できます。保存前に型と参照先を検査します。本文のブロックIDは維持してください。</p><JsonField label="詳細データ" validate={v => !v || typeof v !== "object" || Array.isArray(v) ? "詳細データはJSONのオブジェクト（{}）で入力してください。" : undefined} rawOverride={jsonBuffers._data} onInvalidRaw={raw => onJsonBuffer("_data", raw)} value={draft.data} onChange={data => { if (data && typeof data === 'object' && !Array.isArray(data)) change({ ...draft, data } as Entity); }} onValid={valid => setInvalidJson(previous => valid ? previous.filter(k => k !== '_data') : previous.includes('_data') ? previous : [...previous, '_data'])}/></details>

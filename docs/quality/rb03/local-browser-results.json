@@ -1,0 +1,176 @@
+{
+  "scope": "Local isolated production-component evidence; native App transactions and Firefox CI reported separately",
+  "runner": {
+    "startedAt": "2026-10-05T18:45:05.686Z",
+    "finishedAt": "2026-10-05T18:46:08.622Z",
+    "engines": [
+      "chromium",
+      "webkit"
+    ],
+    "port": 5214,
+    "results": [
+      {
+        "engine": "chromium",
+        "script": "rb03-component-regressions.mjs",
+        "exitCode": 0,
+        "log": "rb03-component-regressions-chromium.log"
+      },
+      {
+        "engine": "chromium",
+        "script": "rb03-timeline-smoke.mjs",
+        "exitCode": 0,
+        "log": "rb03-timeline-smoke-chromium.log"
+      },
+      {
+        "engine": "chromium",
+        "script": "rb03-world-smoke.mjs",
+        "exitCode": 0,
+        "log": "rb03-world-smoke-chromium.log"
+      },
+      {
+        "engine": "webkit",
+        "script": "rb03-component-regressions.mjs",
+        "exitCode": 0,
+        "log": "rb03-component-regressions-webkit.log"
+      },
+      {
+        "engine": "webkit",
+        "script": "rb03-timeline-smoke.mjs",
+        "exitCode": 0,
+        "log": "rb03-timeline-smoke-webkit.log"
+      },
+      {
+        "engine": "webkit",
+        "script": "rb03-world-smoke.mjs",
+        "exitCode": 0,
+        "log": "rb03-world-smoke-webkit.log"
+      }
+    ]
+  },
+  "reports": {
+    "regressions-chromium.json": {
+      "generatedAt": "2026-10-05T18:45:16.531Z",
+      "engine": "chromium",
+      "fixtureScope": "isolated production components; native App transactions tested separately",
+      "checks": [
+        "Date format clicks/toggles retain invalid and partial calendar drafts; deferred save disables mutation/close; rejection retains draft; retry commits the reviewed tick.",
+        "Deferred calendar save protects ordinary fields and preserves the draft after failure.",
+        "Rotation retains shared time, manual center and implicit defaults while restoring each device layout; named views update shared time.",
+        "Fixed-world events are reachable and read-only, explicit empty adoption hides foreign person lanes, and local links retain immutable endpoints without copying entities.",
+        "Requested history overrides a persisted map tab, manual tabs remain usable, prop changes navigate, and borrowed public-alias settings are disabled with source-world guidance."
+      ],
+      "errors": []
+    },
+    "regressions-webkit.json": {
+      "generatedAt": "2026-10-05T18:45:50.555Z",
+      "engine": "webkit",
+      "fixtureScope": "isolated production components; native App transactions tested separately",
+      "checks": [
+        "Date format clicks/toggles retain invalid and partial calendar drafts; deferred save disables mutation/close; rejection retains draft; retry commits the reviewed tick.",
+        "Deferred calendar save protects ordinary fields and preserves the draft after failure.",
+        "Rotation retains shared time, manual center and implicit defaults while restoring each device layout; named views update shared time.",
+        "Fixed-world events are reachable and read-only, explicit empty adoption hides foreign person lanes, and local links retain immutable endpoints without copying entities.",
+        "Requested history overrides a persisted map tab, manual tabs remain usable, prop changes navigate, and borrowed public-alias settings are disabled with source-world guidance."
+      ],
+      "errors": []
+    },
+    "timeline-chromium.json": {
+      "engine": "chromium",
+      "time": "2026-10-05T18:45:22.620Z",
+      "widths": [
+        320,
+        390,
+        768,
+        1024
+      ],
+      "checks": [
+        "overlap 250 beyond old cap",
+        "sticky label after horizontal scroll",
+        "fixed collision blocked",
+        "approved atomic movement",
+        "atomic undo",
+        "same relation ID editing",
+        "group tap reorder",
+        "selected target reveal",
+        "no page overflow",
+        "no page errors"
+      ],
+      "errors": []
+    },
+    "timeline-webkit.json": {
+      "engine": "webkit",
+      "time": "2026-10-05T18:45:58.597Z",
+      "widths": [
+        320,
+        390,
+        768,
+        1024
+      ],
+      "checks": [
+        "overlap 250 beyond old cap",
+        "sticky label after horizontal scroll",
+        "fixed collision blocked",
+        "approved atomic movement",
+        "atomic undo",
+        "same relation ID editing",
+        "group tap reorder",
+        "selected target reveal",
+        "no page overflow",
+        "no page errors"
+      ],
+      "errors": []
+    },
+    "world-chromium.json": {
+      "time": "2026-10-05T18:45:28.846Z",
+      "results": [
+        {
+          "engine": "chromium",
+          "checks": [
+            "life/history candidates",
+            "invalid custom birthday blocked and corrected",
+            "map without image",
+            "pin coordinate validation/save",
+            "map-to-timeline same place ID",
+            "map parent cycle refused with draft preserved",
+            "family keyboard/tap placement",
+            "same relation ID validity edit",
+            "named graph view save",
+            "time-based public name no real-name fallback",
+            "canonical alias policy",
+            "frozen world adoption without copying sources",
+            "repeating calendar ordinary form",
+            "travel evidence candidates",
+            "320/390/768/1024 no page overflow"
+          ],
+          "errors": []
+        }
+      ]
+    },
+    "world-webkit.json": {
+      "time": "2026-10-05T18:46:08.582Z",
+      "results": [
+        {
+          "engine": "webkit",
+          "checks": [
+            "life/history candidates",
+            "invalid custom birthday blocked and corrected",
+            "map without image",
+            "pin coordinate validation/save",
+            "map-to-timeline same place ID",
+            "map parent cycle refused with draft preserved",
+            "family keyboard/tap placement",
+            "same relation ID validity edit",
+            "named graph view save",
+            "time-based public name no real-name fallback",
+            "canonical alias policy",
+            "frozen world adoption without copying sources",
+            "repeating calendar ordinary form",
+            "travel evidence candidates",
+            "320/390/768/1024 no page overflow"
+          ],
+          "errors": []
+        }
+      ]
+    }
+  }
+}

@@ -23,6 +23,7 @@ jobs:
       - run: npm test
       - run: npm run build
       - run: BROWSER_ENGINES=all npm run test:e2e
+      - run: RB03_ENGINES=chromium,firefox,webkit node tests/browser/run-rb03-components.mjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
