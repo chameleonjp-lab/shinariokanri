@@ -18,7 +18,7 @@
 
 ## Firefoxの挿入位置の追加検証
 
-最終候補e546のCIでは単体541件・ビルド・通常画面108件（3ブラウザー）・RB03部品検査が通過した。RB04の部品検査はChromium12群が通過し、Firefoxで重複した段落の先頭挿入が元のブロックIDを保持できなかった。Reactの合成before-inputイベントが拾わない挿入経路でも編集前の位置を取得できるよう、本文編集にnative beforeinput listenerを使う。修正後Chromium・実WebKitの各12群が通過した。修正後Firefoxと最終全画面の結果は後続CIで確認する。
+最終候補e546のCIでは単体541件・ビルド・通常画面108件（3ブラウザー）・RB03部品検査が通過した。RB04の部品検査はChromium12群が通過し、Firefoxで重複した段落の先頭挿入が元のブロックIDを保持できなかった。本文編集にnative beforeinput listenerを使い、文字確定と後続inputが同じ編集を二度通知しても元の位置対応を一度だけ適用する。ローカルFirefoxの設定保存先を許可された一時ディレクトリへ向けることで実ブラウザーでも再現・検証でき、修正後Chromium・Firefox・実WebKitの各12群が通過した。関連単体14件・production buildも通過した。最終全画面の結果は後続CIで確認する。
 
 ## 独立レビュー
 

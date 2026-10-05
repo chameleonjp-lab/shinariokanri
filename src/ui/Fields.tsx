@@ -132,7 +132,8 @@ function RichTextEditor({ value, onChange, label, rows, placeholder, project, en
   const composing = useRef(false), textarea = useRef<HTMLTextAreaElement>(null), beforeInput = useRef<TextReplacement | undefined>(undefined);
   const history = useRef<RichText[]>([]);
   const text = fieldText(value);
-  useEffect(() => { if (!composing.current) setRaw(text); }, [text]);
+  const propagatedText = useRef(text);
+  useEffect(() => { if (!composing.current) { setRaw(text); propagatedText.current = text; } }, [text]);
   const selection = (element: HTMLTextAreaElement): TextReplacement => ({ start: Array.from(element.value.slice(0, element.selectionStart)).length, end: Array.from(element.value.slice(0, element.selectionEnd)).length });
   // React's synthetic before-input event does not cover every native insertion
   // path (notably Firefox insertText). Capture the actual pre-edit range.
@@ -152,6 +153,10 @@ function RichTextEditor({ value, onChange, label, rows, placeholder, project, en
   const change = (next: string, inputType?: string) => {
     setRaw(next);
     if (composing.current) return;
+    // Composition end and the following input may report the same final edit
+    // before the controlled value rerenders. Apply its origin mapping only once.
+    if (next === propagatedText.current) { beforeInput.current = undefined; return; }
+    propagatedText.current = next;
     if (inputType === 'historyUndo' || inputType === 'historyRedo') {
       for (let i = history.current.length - 1; i >= 0; i--) if (fieldText(history.current[i]) === next) { history.current.push(structuredClone(blocks)); onChange(structuredClone(history.current[i])); return; }
     }
