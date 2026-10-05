@@ -15,22 +15,30 @@ export async function dialogueContentHash(project: ProjectData, line: Entity<'di
 }
 /** Called on the candidate before commit: all changed deliverables join the same transaction. */
 export async function reconcileDeliverables(before: ProjectData, candidate: ProjectData): Promise<ProjectData> {
- const next=structuredClone(candidate);
+ const previous=new Map(before.entities.map(entity=>[entity.id,entity]));
+ const current=new Map(candidate.entities.map(entity=>[entity.id,entity]));
  const changed=new Set<ID>();
- const lines=next.entities.filter((e):e is Entity<'dialogue_line'>=>e.kind==='dialogue_line'&&!e.deletedAt);
- for(const line of lines) {
-  const old=before.entities.find((e):e is Entity<'dialogue_line'>=>e.id===line.id&&e.kind==='dialogue_line'&&!e.deletedAt);
-  if(!old || await dialogueContentHash(before,old)!==await dialogueContentHash(next,line)) changed.add(line.id);
+ const changedData=new Set<ID>();
+ for(const [id,entity] of current) {
+  const old=previous.get(id);
+  if(!old||Boolean(old.deletedAt)!==Boolean(entity.deletedAt)||stable(old.data)!==stable(entity.data))changedData.add(id);
  }
- for(const old of before.entities) if(old.kind==='dialogue_line'&&!old.deletedAt&&!lines.some(line=>line.id===old.id))changed.add(old.id);
- for(const entity of next.entities) {
-  if(entity.deletedAt)continue;
-  if((entity.kind==='localization'||entity.kind==='recording')&&changed.has(entity.data.sourceLineId))entity.data.stage='needs_review';
-  if(entity.kind==='media_variant'&&(entity.data.sourceIds??[]).some(id=>{
-   const a=before.entities.find(e=>e.id===id),b=next.entities.find(e=>e.id===id);
-   return !a||!b||stable(a.data)!==stable(b.data)||Boolean(a.deletedAt)!==Boolean(b.deletedAt);
-  }))entity.data.needsReview=true;
+ for(const id of previous.keys())if(!current.has(id))changedData.add(id);
+ const content=(line:Entity<'dialogue_line'>, index:Map<ID,Entity>)=>stable({text:line.data.text.map(block=>({kind:block.kind,text:block.text,ruby:block.ruby??[]})),speakerId:line.data.speakerId??null,cues:(line.data.cueIds??[]).map(id=>{const cue=index.get(id);if(!cue||cue.kind!=='cue'||cue.deletedAt)throw new Error('REFERENCE_INVALID: 台詞の演出参照が見つかりません。');return cue.data;})});
+ for(const entity of candidate.entities) {
+  if(entity.kind!=='dialogue_line'||entity.deletedAt)continue;
+  const old=previous.get(entity.id);
+  if(!old||old.kind!=='dialogue_line'||old.deletedAt)changed.add(entity.id);
+  else if((changedData.has(entity.id)||(entity.data.cueIds??[]).some(id=>changedData.has(id)))&&content(old,previous)!==content(entity,current))changed.add(entity.id);
  }
+ for(const old of before.entities)if(old.kind==='dialogue_line'&&!old.deletedAt){const line=current.get(old.id);if(!line||line.deletedAt||line.kind!=='dialogue_line')changed.add(old.id);}
+ const entities=candidate.entities.map(entity=>{
+  if(entity.deletedAt)return entity;
+  if((entity.kind==='localization'||entity.kind==='recording')&&changed.has(entity.data.sourceLineId)&&entity.data.stage!=='needs_review')return {...entity,data:{...entity.data,stage:'needs_review' as const}} as Entity;
+  if(entity.kind==='media_variant'&&(entity.data.sourceIds??[]).some(id=>changedData.has(id))&&!entity.data.needsReview)return {...entity,data:{...entity.data,needsReview:true}} as Entity;
+  return entity;
+ });
+ const next={...candidate,entities};
  return next;
 }
 export function productionCounts(project: ProjectData, routeSceneIds: readonly ID[] = []) {

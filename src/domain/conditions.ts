@@ -228,6 +228,7 @@ export function applyEffectsAtomic(state: RuntimeState, effects: (Entity<'effect
   const working = structuredClone(state);
   try {
     for (const [index, input] of effects.entries()) {
+      if ('data' in input && (input.status === 'rejected' || input.deletedAt)) throw new DomainValidationError([issue(input.status === 'rejected' ? '不採用の効果は実行できません。' : '削除済みの効果は実行できません。', `effects[${index}]`, 'REFERENCE_INVALID')]);
       const effect = 'data' in input ? input.data : input, effectId = 'id' in input ? input.id : undefined;
       const checkedEffect = validateEffectData(effect, `effects[${index}]`); if (!checkedEffect.ok) throw new DomainValidationError(checkedEffect.issues);
       const condition = evaluateCondition(effect.condition, { ...context, state: working });

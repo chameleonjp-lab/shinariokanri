@@ -1,12 +1,12 @@
-import type { CheckpointData, Condition, Entity, EntityKind, Expression, ID, ProjectContent, ProjectData, RuntimeState, TraceData, Trigger, TypedValue } from './types';
-import { emptyRuntimeState, getEntitiesByKind, getEntity as getAuthorEntity, validateProject } from './model';
+import type { CheckpointData, Condition, Entity, EntityKind, Expression, ID, PresentationConditionResult, ProjectContent, ProjectData, RuntimeState, TraceData, Trigger, TypedValue } from './types';
+import { emptyRuntimeState, getEntitiesByKind, getEntity as getAuthorEntity, validateInitialPresentationResults, validateProject } from './model';
 import { applyEffectsAtomic, evaluateCondition, initializeRuntimeState } from './conditions';
 import { isTick, resolveTime } from './time';
 
 export type TrialStatus = 'ready' | 'terminal' | 'blocked' | 'unknown' | 'error';
 export interface RuntimeIssue { code: string; message: string; path: string }
 export interface RuntimeDiff { path: string; before: unknown; after: unknown; edgeIds?: ID[] }
-export interface ConditionObservation { targetId: ID; value: 'true' | 'false' | 'unknown'; reasons: string[] }
+export type ConditionObservation = PresentationConditionResult;
 export interface TrialChoice {
   edgeId: ID;
   label: string;
@@ -60,6 +60,8 @@ export interface TrialSession {
   status: TrialStatus;
   contentRevision: string;
   startState: RuntimeState;
+  /** Disclosure conditions captured before the initial presentation's effects. */
+  startConditionResults: ConditionObservation[];
   startCheckpointId?: ID;
   history: TrialHistoryEntry[];
   trace: TrialTraceStep[];
@@ -76,6 +78,8 @@ export interface TrialStartOptions {
   seed?: string;
   contentVersionId?: ID;
   stub?: TrialStubValues;
+  /** Recorded initial presentation evidence when resuming a captured trial. */
+  presentationResults?: ConditionObservation[];
 }
 
 const clone = <T>(value: T): T => structuredClone(value);
@@ -195,7 +199,10 @@ function present(project: ProjectData, state: RuntimeState, nodeId: ID, external
   const conditions: ConditionObservation[] = [];
   const disclosures: Entity<'disclosure'>[] = [];
   // All disclosure candidates read the same arrival snapshot, before any knowledge effect.
-  for (const disclosure of activeKind(project, 'disclosure')) if (anchorIsPresented(project, next, disclosure.data.anchor)) {
+  for (const disclosure of activeKind(project, 'disclosure')) {
+    const anchor = disclosure.data.anchor;
+    if (anchor.positionStatus === 'unresolved' && (anchor.entityId === nodeId || anchor.entityId === sceneId)) return { ok: false, issues: [issue('CONDITION_UNKNOWN', '提示位置が不明です。本文へ再リンクしてください。', `${disclosure.id}.anchor`)] };
+    if (!anchorIsPresented(project, next, anchor)) continue;
     const result = evalAt(project, next, disclosure.data.condition, externalValues);
     conditions.push({ targetId: disclosure.id, ...result });
     if (result.value === 'unknown') return { ok: false, issues: [issue('CONDITION_UNKNOWN', result.reasons.join('、') || 'この場面の開示条件が未確認です。', `${disclosure.id}.condition`)] };
@@ -209,7 +216,7 @@ function present(project: ProjectData, state: RuntimeState, nodeId: ID, external
   const effects: Entity<'effect'>[] = [];
   for (const disclosure of withEffects) for (const id of disclosure.data.knowledgeEffects ?? []) {
     const effect = getEntity(project, id);
-    if (!effect || effect.kind !== 'effect' || effect.status === 'rejected') return { ok: false, issues: [issue('REFERENCE_INVALID', '開示に指定した知識効果が存在しません。', `${disclosure.id}.knowledgeEffects`)] };
+    if (!effect || effect.kind !== 'effect' || effect.deletedAt || effect.status === 'rejected') return { ok: false, issues: [issue('REFERENCE_INVALID', effect?.status === 'rejected' ? '開示に不採用の知識効果が指定されています。' : '開示に指定した知識効果が存在しないか、削除済みです。', `${disclosure.id}.knowledgeEffects`)] };
     effects.push(effect);
   }
   const applied = applyEffectsAtomic(next, effects, { state: next, variables: variables(project), entities: project.entities, externalValues });
@@ -281,7 +288,7 @@ export function startTrial(project: ProjectData, options: TrialStartOptions = {}
   try { return startTrialInternal(project, options); }
   catch (error) {
     const state = options.state ? clone(options.state) : emptyRuntimeState(options.contentVersionId ?? project.projectId);
-    return { content: captureContent(project), state, nodeId: state.presentationPosition, contentRevision: project.revision, startState: clone(state), status: 'error', history: [], trace: [], issues: errorIssues(error), lastDiff: [], externalValues: {}, startExternalValues: {} };
+    return { content: captureContent(project), state, nodeId: state.presentationPosition, contentRevision: project.revision, startState: clone(state), startConditionResults: [], status: 'error', history: [], trace: [], issues: errorIssues(error), lastDiff: [], externalValues: {}, startExternalValues: {} };
   }
 }
 function startTrialInternal(project: ProjectData, options: TrialStartOptions = {}): TrialSession {
@@ -290,6 +297,7 @@ function startTrialInternal(project: ProjectData, options: TrialStartOptions = {
   const content = versionContent(project, version);
   if (content) project = content;
   let state = initializeRuntimeState(project, version);
+  let startConditionResults = clone(options.presentationResults ?? []);
   let checkpointId: ID | undefined;
   let presentationIssues: RuntimeIssue[] | undefined;
   let pendingPresentation: ID | undefined;
@@ -302,14 +310,17 @@ function startTrialInternal(project: ProjectData, options: TrialStartOptions = {
       failure = issue('VALIDATION_FAILED', '開始状態と作品版が違います。移行または再作成が必要です。', `${checkpoint.id}.contentVersionId`);
     } else {
       state = clone(checkpoint.data.runtimeState);
+      startConditionResults = clone(checkpoint.data.presentationResults ?? []);
       state.provenance = checkpoint.data.origin ?? 'partial';
       checkpointId = checkpoint.id;
+      if (checkpoint.data.presentationResults != null) failure = validateInitialPresentationResults(state, checkpoint.data.presentationResults, project.entities, `${checkpoint.id}.presentationResults`)[0];
     }
   } else if (options.state) {
     if (options.state.contentVersionId !== version) {
       failure = issue('VALIDATION_FAILED', '指定した開始状態と作品版が違います。', 'state.contentVersionId');
     } else {
       state = clone(options.state);
+      if (options.presentationResults != null) failure = validateInitialPresentationResults(state, options.presentationResults, project.entities)[0];
       if (state.provenance === 'full_play') state.provenance = 'partial';
     }
   }
@@ -323,7 +334,7 @@ function startTrialInternal(project: ProjectData, options: TrialStartOptions = {
     if ((checkpointId || options.state) && state.presentationPosition && entry !== state.presentationPosition && state.provenance !== 'stub') state.provenance = 'partial';
     if (!(checkpointId || options.state) || entry !== state.presentationPosition || ((state.visitCounts[entry] ?? 0) === 0 && !state.seenIds.includes(entry))) {
       const arrival = present(project, state, entry);
-      if (arrival.ok) state = arrival.state;
+      if (arrival.ok) { state = arrival.state; startConditionResults = arrival.conditions; }
       else { presentationIssues = arrival.issues; pendingPresentation = entry; state = { ...state, presentationPosition: entry }; }
     } else state.presentationPosition = entry;
     if (options.entryId && options.entryId !== declaredEntry(project) && !checkpointId) state.provenance = 'partial';
@@ -331,14 +342,14 @@ function startTrialInternal(project: ProjectData, options: TrialStartOptions = {
   const session: TrialSession = {
     content: captureContent(project),
     state, nodeId: state.presentationPosition, contentRevision: project.revision,
-    startState: clone(state), startCheckpointId: checkpointId,
+    startState: clone(state), startConditionResults, startCheckpointId: checkpointId,
     status: 'ready', history: [], trace: [], issues: [], lastDiff: [], externalValues: {}, startExternalValues: {},
     pendingPresentation,
   };
   if (failure) return resultSession(session, 'error', [failure]);
   if (options.stub) {
     const stub = setTrialStubValues(project, session, options.stub);
-    return { ...stub, history: [], trace: [], startState: clone(stub.state), startExternalValues: clone(stub.externalValues) };
+    return { ...stub, history: [], trace: [], startState: clone(stub.state), startConditionResults: stub.trace.at(-1)?.conditionResults.length ? clone(stub.trace.at(-1)!.conditionResults) : startConditionResults, startExternalValues: clone(stub.externalValues) };
   }
   if (presentationIssues) return resultSession(session, presentationIssues.some(value => value.code === 'CONDITION_UNKNOWN') ? 'unknown' : 'error', presentationIssues);
   return inspect(project, session);
@@ -526,7 +537,7 @@ function stepTrialInternal(project: ProjectData, session: TrialSession, request:
   const effects: Entity<'effect'>[] = [];
   for (const edge of selected) for (const effectId of edge.data.effectIds ?? []) {
     const effect = getEntity(project, effectId);
-    if (!effect || effect.kind !== 'effect' || effect.deletedAt) return resultSession(session, 'error', [issue('REFERENCE_INVALID', '分岐に存在しない効果が指定されています。', `${edge.id}.effectIds`)]);
+    if (!effect || effect.kind !== 'effect' || effect.deletedAt || effect.status === 'rejected') return resultSession(session, 'error', [issue('REFERENCE_INVALID', effect?.status === 'rejected' ? '分岐に不採用の効果が指定されています。' : '分岐に指定した効果が存在しないか、削除済みです。', `${edge.id}.effectIds`)]);
     effects.push(effect);
   }
   const applied = applyEffectsAtomic(next, effects, { state: next, variables: variables(project), entities: project.entities, externalValues: session.externalValues });
@@ -673,13 +684,14 @@ function coverageFromEvidence(project: ProjectData, seen: Set<ID>, traversed: Se
 export function replayTrial(project: ProjectData, recorded: TrialSession): TrialSession {
   const content = versionContent(project, recorded.state.contentVersionId);
   if (!content || recorded.contentRevision !== content.revision) return resultSession(recorded, 'error', [issue('VALIDATION_FAILED', '記録後に作品が変更されました。再確認が必要です。', 'contentRevision')]);
-  let replay = startTrial(project, { state: recorded.startState, contentVersionId: recorded.startState.contentVersionId });
+  let replay = startTrial(project, { state: recorded.startState, contentVersionId: recorded.startState.contentVersionId, ...(recorded.startConditionResults.length ? { presentationResults: recorded.startConditionResults } : {}) });
   replay.state.provenance = recorded.startState.provenance;
   replay.startState.provenance = recorded.startState.provenance;
   replay.externalValues = clone(recorded.startExternalValues);
   replay.startExternalValues = clone(recorded.startExternalValues);
   for (const step of recorded.trace) {
     replay = stepTrial(project, replay, step.request);
+    if (replay.status === 'error') return replay;
     if (!sameRuntimeValue(replay.state, step.after)) return resultSession(replay, 'error', [issue('VALIDATION_FAILED', '経路記録と再実行の状態が一致しません。', step.fromId)]);
   }
   return replay;
@@ -710,6 +722,8 @@ export function replaySavedTrace(project: ProjectData, traceId: ID): TrialSessio
       request.worldTick = step.worldTick;
     }
     replay = stepTrial(project, replay, request);
+    if (replay.status === 'error') return replay;
+    if (step.conditionResults && !sameRuntimeValue(replay.trace.at(-1)?.conditionResults, step.conditionResults)) return resultSession(replay, 'error', [issue('VALIDATION_FAILED', '保存した提示時の条件結果と再実行が一致しません。', `${traceId}.steps[${index}].conditionResults`)]);
     if (!sameRuntimeValue(replay.state, step.after)) return resultSession(replay, 'error', [issue('VALIDATION_FAILED', '保存した経路と再実行の状態が一致しません。', `${traceId}.steps[${index}].after`)]);
   }
   return replay;
@@ -727,6 +741,7 @@ export function trialRecordData(project: ProjectData, session: TrialSession, che
   return {
     checkpoint: {
       contentVersionId: version, contentRevision: session.contentRevision, runtimeState: stateForRecord(session.startState),
+      ...(session.startConditionResults.length ? { presentationResults: clone(session.startConditionResults) } : {}),
       origin: session.startState.provenance === 'stub' ? 'partial' : session.startState.provenance,
     },
     trace: {
@@ -736,6 +751,7 @@ export function trialRecordData(project: ProjectData, session: TrialSession, che
       externalMode: session.state.provenance === 'stub' ? 'stub' : null,
       steps: session.trace.map(step => ({
         nodeId: step.fromId, edgeIds: [...step.edgeIds], before: stateForRecord(step.before), after: stateForRecord(step.after),
+        conditionResults: clone(step.conditionResults),
         operation: step.request.stub ? 'stub' : 'advance',
         externalValues: clone(step.externalValuesAfter),
         ...(step.request.worldTick ? { worldTick: step.request.worldTick } : {}),
@@ -775,7 +791,8 @@ export interface AnalysisFinding {
   edgePath?: ID[][];
 }
 
-function anchorIsPresented(project: ProjectData, state: RuntimeState, anchor: { entityId: ID; blockId?: ID | null; lineId?: ID | null }): boolean {
+function anchorIsPresented(project: ProjectData, state: RuntimeState, anchor: Entity<'disclosure'>['data']['anchor']): boolean {
+  if (anchor.positionStatus === 'unresolved') return false;
   const node = findNode(project, state.presentationPosition);
   if (!node || !state.seenIds.includes(node.id)) return false;
   if (anchor.entityId !== node.id && anchor.entityId !== node.data.sceneId) return false;
@@ -785,6 +802,7 @@ function anchorIsPresented(project: ProjectData, state: RuntimeState, anchor: { 
 }
 
 function anchorPrecedes(project: ProjectData, state: RuntimeState, left: Entity<'disclosure'>['data']['anchor'], right: Entity<'disclosure'>['data']['anchor']): boolean | undefined {
+  if (left.positionStatus === 'unresolved' || right.positionStatus === 'unresolved') return undefined;
   const node = findNode(project, state.presentationPosition);
   const scene = node?.data.sceneId ? getEntity(project, node.data.sceneId) : undefined;
   const blocks = scene?.kind === 'scene' ? scene.data.body : [];
@@ -809,22 +827,40 @@ function checkTrialForeshadowsInternal(project: ProjectData, session: TrialSessi
   project = getTrialContent(project, session);
   const findings: AnalysisFinding[] = [];
   const disclosures = activeKind(project, 'disclosure');
-  const states = [{ state: session.startState, external: session.startExternalValues }, ...session.trace.filter(step => !step.request.stub || !sameRuntimeValue(step.before.visitCounts, step.after.visitCounts)).map(step => ({ state: step.after, external: step.externalValuesAfter }))];
+  const states: { state: RuntimeState; conditions: ConditionObservation[]; edgeIds?: ID[] }[] = [
+    { state: session.startState, conditions: session.startConditionResults },
+    ...session.trace.filter(step => !step.request.stub || !sameRuntimeValue(step.before.visitCounts, step.after.visitCounts)).map(step => ({ state: step.after, conditions: step.conditionResults, edgeIds: step.request.stub ? undefined : step.edgeIds })),
+  ];
   const seen = new Set<ID>();
-  const uncertain = new Set<ID>();
+  const uncertain = new Set<ID>(disclosures.filter(disclosure => disclosure.data.anchor.positionStatus === 'unresolved').map(disclosure => disclosure.id));
   const found = new Set<ID>();
   const path: ID[] = [];
-  for (const { state, external } of states) {
-    if (state.presentationPosition) path.push(state.presentationPosition);
+  const edgePath: ID[][] = [];
+  const visitedTargets = new Set([session.nodeId, session.startState.presentationPosition, ...session.trace.map(step => step.toId)].flatMap(id => { const node = findNode(project, id); return node ? [node.id, ...(node.data.sceneId ? [node.data.sceneId] : [])] : []; }));
+  for (const disclosure of disclosures) if (disclosure.data.anchor.positionStatus === 'unresolved' && visitedTargets.has(disclosure.data.anchor.entityId)) findings.push({ status: 'unknown', code: 'CONDITION_UNKNOWN', message: '提示位置が不明です。本文へ再リンクしてから伏線を確認してください。', targetId: disclosure.id, path: session.nodeId ? [session.nodeId] : [], startState: clone(session.startState) });
+  for (const { state, conditions, edgeIds } of states) {
+    // A pending initial disclosure is not a presentation until its arrival commits.
+    if (!state.presentationPosition || !state.seenIds.includes(state.presentationPosition)) continue;
+    path.push(state.presentationPosition);
+    if (edgeIds) edgePath.push([...edgeIds]);
+    const recorded = new Map((conditions ?? []).map(condition => [condition.targetId, condition]));
+    // Legacy checkpoints have no observations. Only recorded presentation IDs can
+    // establish a disclosure; never re-evaluate its condition using later values.
+    const presentationCondition = (id: ID): ConditionObservation => recorded.get(id)
+      ?? { targetId: id, value: state.seenIds.includes(id) ? 'true' : 'false', reasons: [] };
     for (const id of state.seenIds) {
       const disclosure = disclosures.find(disclosure => disclosure.id === id);
+      if (disclosure?.data.anchor.positionStatus === 'unresolved') { uncertain.add(id); continue; }
       if (!disclosure || !anchorIsPresented(project, state, disclosure.data.anchor)) seen.add(id);
     }
     const currentClues = disclosures.filter(disclosure => disclosure.data.role === 'clue' && anchorIsPresented(project, state, disclosure.data.anchor))
-      .map(disclosure => ({ disclosure, condition: evalAt(project, state, disclosure.data.condition, external) }));
+      .map(disclosure => ({ disclosure, condition: presentationCondition(disclosure.id) }));
     for (const payoff of disclosures.filter(disclosure => disclosure.data.role === 'payoff')) {
-      if (!anchorIsPresented(project, state, payoff.data.anchor) || found.has(payoff.id)) continue;
-      const condition = evalAt(project, state, payoff.data.condition, external);
+      if (!anchorIsPresented(project, state, payoff.data.anchor) || !state.seenIds.includes(payoff.id) || found.has(payoff.id)) continue;
+      // A supplied false observation cannot erase an actual presentation ID,
+      // including evidence from legacy checkpoints without initial observations.
+      const observedCondition = presentationCondition(payoff.id);
+      const condition = observedCondition.value === 'false' ? { ...observedCondition, value: 'true' as const } : observedCondition;
       if (condition.value === 'false') continue;
       found.add(payoff.id);
       const foreshadow = getEntity(project, payoff.data.foreshadowId);
@@ -851,7 +887,7 @@ function checkTrialForeshadowsInternal(project: ProjectData, session: TrialSessi
           : unknown ? '回収前の必須情報について未確認の値または途中開始・仮値があり、確認が必要です。'
           : '回収へ至るこの経路で、作者が必須にした情報の提示が不足しています。',
         targetId: foreshadow.id, payoffId: payoff.id, missingInfoIds: missing,
-        path: [...path], edgePath: session.trace.filter(step => !step.request.stub).slice(0, path.length - 1).map(step => [...step.edgeIds]), startState: clone(session.startState),
+        path: [...path], edgePath: edgePath.map(ids => [...ids]), startState: clone(session.startState),
       });
     }
     for (const { disclosure, condition } of currentClues) {

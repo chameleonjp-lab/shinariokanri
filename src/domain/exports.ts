@@ -223,7 +223,9 @@ function validateRuntimeExport(project: ProjectData, projection: PublicProjectio
   for (const field of ['supportedNodeTypes', 'supportedConditions', 'supportedEffects', 'externalContracts', 'assetTypes'] as const) if (!Array.isArray(profile[field]) || profile[field].some(value => !GENERIC_RUNTIME_PROFILE[field].includes(value))) fail('対応先の機能一覧に未対応の種類が含まれています。', undefined, field);
   const included = new Set(Object.keys(idMap));
   issues.push(...stableIdIssues(idMap, policy));
-  for (const disclosure of presentationDisclosures(project, idMap)) if (disclosure.data.knowledgeEffects?.length) {
+  for (const disclosure of presentationDisclosures(project, idMap)) {
+    if (disclosure.data.anchor.positionStatus === 'unresolved') fail('提示位置が不明な開示があります。本文へ再リンクしてから実行用出力を作成してください。', disclosure.id, 'anchor');
+    if (!disclosure.data.knowledgeEffects?.length) continue;
     const emitted = projection.entities.find(entity => entity.id === idMap[disclosure.id]);
     const effects = emitted?.data.knowledgeEffects;
     if (!emitted || !Array.isArray(effects) || effects.length !== disclosure.data.knowledgeEffects.length || disclosure.data.knowledgeEffects.some((id, index) => !idMap[id] || effects[index] !== idMap[id])) fail('提示時に状態を変える開示と効果が公開範囲から除かれています。制作の動作を保持できないため出力を停止しました。', disclosure.id, 'knowledgeEffects');
@@ -431,6 +433,7 @@ function validatePlayableSubset(project: ProjectData, projection: PublicProjecti
   for (const edge of byKind(projection, 'flow_edge')) if (edge.data.edgeType === 'call_return') fail('呼び出しから戻る分岐は、持ち出す簡易試遊では未対応です。', 'edgeType');
   if (byKind(projection, 'cue').length || byKind(projection, 'storyboard_frame').length) fail('演出・収録を再生する処理は、持ち出す簡易試遊では未対応です。');
   const dependencies = new Set(presentationDisclosures(project, idMap).map(entity => entity.id));
+  for (const disclosure of presentationDisclosures(project, idMap)) if (disclosure.data.anchor.positionStatus === 'unresolved') fail('提示位置が不明な開示があります。本文へ再リンクしてから簡易試遊を作成してください。', 'anchor', disclosure.id);
   for (const entity of project.entities) if (entity.kind === 'disclosure' && !entity.deletedAt && entity.status !== 'rejected' && entity.data.knowledgeEffects?.length && (has(idMap, entity.id) || dependencies.has(entity.id))) {
     // An excluded disclosure can still change a selected scene's state on arrival.
     // The portable interpreter does not implement those arrival effects.

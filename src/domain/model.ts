@@ -1,5 +1,5 @@
 import { FORMAT_VERSION } from './types';
-import type { Alias, CalendarDefinition, Condition, CustomValue, Entity, EntityDataMap, EntityKind, Expression, ID, ProjectContent, ProjectData, Relation, RelationTypeDefinition, RichText, RuntimeState, TimeSpec, TypedValue, ValidationIssue, ValidationResult, Validity } from './types';
+import type { Alias, CalendarDefinition, Condition, CustomValue, Entity, EntityDataMap, EntityKind, Expression, ID, PresentationConditionResult, ProjectContent, ProjectData, Relation, RelationTypeDefinition, RichText, RuntimeState, TimeSpec, TypedValue, ValidationIssue, ValidationResult, Validity } from './types';
 import { GREGORIAN_CALENDAR, compareTicks, isTick, parseTick, validateCalendar, validateEventTimes } from './time';
 
 export const KIND_LABELS: Record<EntityKind, string> = {
@@ -161,7 +161,8 @@ const rich: Schema = { type: 'richtext' }, summary: Schema = { type: 'richtext',
 const cond: Schema = { type: 'condition' }, time: Schema = { type: 'time' };
 const record = (value: Schema, recordKey?: Schema): Schema => ({ type: 'record', value, key: recordKey });
 const union = (...choices: Schema[]): Schema => ({ type: 'union', choices });
-const anchor = obj({ entityId: req(ref()), blockId: opt(scopedRef('block')), lineId: opt(ref('dialogue_line')), start: opt(num(0, undefined, true)), end: opt(num(0, undefined, true)), sourceVersionId: opt(scopedRef('snapshot')) });
+const anchor = obj({ entityId: req(ref()), blockId: opt(scopedRef('block')), lineId: opt(ref('dialogue_line')), start: opt(num(0, undefined, true)), end: opt(num(0, undefined, true)), sourceVersionId: opt(scopedRef('snapshot')), positionStatus: opt(en('unresolved')), positionReason: opt(txt(1)), quotedText: opt(txt()) });
+const unresolvedTextAnnotation = union(obj({ kind: req(en('ruby')), originalText: req(txt()), reason: req(txt(1)), reading: req(txt()) }), obj({ kind: req(en('link')), originalText: req(txt()), reason: req(txt(1)), target: req(anchor) }));
 const nullableValidity = obj({ worldRange: { schema: obj({ start: { schema: tick, required: true, nullable: true }, end: { schema: tick, required: true, nullable: true } }), required: true, nullable: true }, routeCondition: { schema: cond, required: true, nullable: true }, presentationAnchor: { schema: anchor, required: true, nullable: true } });
 const targetScope = obj({ projectId: req(scopedRef('project')), graphId: opt(ref('flow_graph')), chapterId: opt(ref('chapter')), routeCondition: opt(cond), targetSnapshotId: opt(scopedRef('snapshot')) });
 const alias = obj({ id: req(idSchema), text: req(txt(1, 128)), reading: req(short), validity: req(nullableValidity), audienceHolderIds: req(refs('character')), isPublicDefault: req(bool) });
@@ -174,6 +175,7 @@ const reuse = obj({ mode: req(en('reference', 'clone', 'override')), sourceId: r
 const unresolved = obj({ unresolved: req(obj({ label: req(txt()), reason: req(txt(1)) })) });
 const runtimeItem = obj({ instanceId: req(idSchema), typeId: req(ref('item')), quantity: req(num(0, undefined, true)), ownerId: opt(ref('character', 'group')), locationId: opt(ref('place')), consumed: req(bool), reason: opt(txt()) });
 const runtimeAssertion = obj({ assertionId: req(ref('assertion')), holderId: opt(ref('character')), truth: req(en('true', 'false', 'unknown')), sourceEffectId: opt(ref('effect')) });
+const presentationResult = obj({ targetId: req(ref('flow_node', 'flow_edge', 'disclosure')), value: req(en('true', 'false', 'unknown')), reasons: req(arr(txt())) });
 const callFrame = obj({ graphId: req(ref('flow_graph')), returnNodeId: req(ref('flow_node')), parameters: req(record(typed, key)) });
 const runtime = obj({ contentVersionId: req(scopedRef('snapshot')), variableValues: req(record(typed, ref('variable'))), itemInstances: req(arr(runtimeItem)), assertions: req(arr(runtimeAssertion)), seenIds: req(arr(scopedRef('presentation'), true)), visitCounts: req(record(num(0, undefined, true), ref())), onceTriggers: req(arr(txt(1), true)), rngSeed: req(txt(1)), rngPosition: req(num(0, undefined, true)), callStack: req(arr(callFrame)), presentationPosition: opt(ref('flow_node')), loopNumber: req(num(0, undefined, true)), provenance: req(en('full_play', 'partial', 'imported', 'stub')) });
 const coverageCount = obj({ checked: req(num(0, undefined, true)), total: req(num(0, undefined, true)), excluded: opt(num(0, undefined, true)), unknown: opt(num(0, undefined, true)) });
@@ -207,8 +209,8 @@ export const ENTITY_SCHEMAS: Record<EntityKind, Schema> = {
   assertion: obj({ subjectId: req(ref()), predicate: req(txt(1, 128)), value: req(union(typed, ref())), truthKind: req(en('author_truth', 'testimony', 'belief', 'hypothesis')), holderId: opt(ref('character')), sourceIds: opt(refs('source', 'assertion', 'event', 'scene', 'dialogue_line')), evidenceLocation: opt(anchor), validity: opt(nullableValidity), reason: opt(txt()) }),
   foreshadow: obj({ question: req(rich), intent: req(rich), resolutionPolicy: req(en('this_work', 'sequel', 'intentional_open', 'red_herring', 'undecided', 'rejected')), truthAssertionIds: opt(refs('assertion')), clueIds: opt(refs('disclosure')), payoffIds: opt(refs('disclosure')), requiredInfo: opt(refs('disclosure', 'assertion')), deadline: opt(targetScope), exceptions: opt(arr(exception)) }),
   disclosure: obj({ foreshadowId: req(ref('foreshadow')), anchor: req(anchor), stage: req(en('hint', 'suspicion', 'reinforce', 'reveal', 'alternative')), role: req(en('clue', 'payoff')), condition: opt(cond), knowledgeEffects: opt(refs('effect')), targetScope: opt(targetScope) }),
-  checkpoint: obj({ contentVersionId: req(scopedRef('snapshot')), runtimeState: req(runtime), contentRevision: opt({ type: 'revision' }), origin: opt(en('full_play', 'partial', 'imported')), traceId: opt(ref('trace')) }),
-  trace: obj({ contentVersionId: req(scopedRef('snapshot')), startCheckpointId: req(ref('checkpoint')), steps: req(arr(obj({ nodeId: req(ref('flow_node')), edgeIds: req(refs('flow_edge')), before: req(runtime), after: req(runtime), operation: opt(en('advance', 'stub')), occurrenceId: opt(txt()), worldTick: opt(tick), externalMode: opt(en('stub', 'actual', 'mixed')), externalValues: opt(record(typed, ref('external_contract'))) }))), contentRevision: opt({ type: 'revision' }), initialExternalValues: opt(record(typed, ref('external_contract'))), seed: opt(txt()), engineVersion: opt(txt()), externalMode: opt(en('stub', 'actual', 'mixed')), coverage: opt(coverage) }),
+  checkpoint: obj({ contentVersionId: req(scopedRef('snapshot')), runtimeState: req(runtime), presentationResults: opt(arr(presentationResult)), contentRevision: opt({ type: 'revision' }), origin: opt(en('full_play', 'partial', 'imported')), traceId: opt(ref('trace')) }),
+  trace: obj({ contentVersionId: req(scopedRef('snapshot')), startCheckpointId: req(ref('checkpoint')), steps: req(arr(obj({ nodeId: req(ref('flow_node')), edgeIds: req(refs('flow_edge')), before: req(runtime), after: req(runtime), conditionResults: opt(arr(presentationResult)), operation: opt(en('advance', 'stub')), occurrenceId: opt(txt()), worldTick: opt(tick), externalMode: opt(en('stub', 'actual', 'mixed')), externalValues: opt(record(typed, ref('external_contract'))) }))), contentRevision: opt({ type: 'revision' }), initialExternalValues: opt(record(typed, ref('external_contract'))), seed: opt(txt()), engineVersion: opt(txt()), externalMode: opt(en('stub', 'actual', 'mixed')), coverage: opt(coverage) }),
   attachment: obj({ mediaType: req(txt(1, 128)), contentHash: req({ type: 'hash' }), byteSize: req(num(0, 32 * 1024 * 1024, true)), assetPath: req({ type: 'safe_path' }), displayName: opt(txt()), provenanceId: opt(ref('source')), licenseNote: opt(txt()), stage: opt(en('reference', 'temporary', 'final')), revisionHistory: opt(refs('attachment')) }),
   source: obj({ sourceType: req(en('web', 'file', 'book', 'observation')), locator: req(txt(1)), accessedAt: opt({ type: 'datetime' }), excerptLocation: opt(txt()), interpretation: opt(rich), attachmentId: opt(ref('attachment')), redistributionAllowed: opt(bool) }),
   cue: obj({ anchor: req(anchor), cueType: req(txt(1, 128)), attachmentId: opt(ref('attachment')), speakerId: opt(ref('character')), expression: opt(txt()), waitMs: opt(num(0, undefined, true)), camera: opt({ type: 'custom' }), mediaTime: opt(num(0, undefined, true)), stage: opt(short) }),
@@ -402,7 +404,7 @@ function walk(schema: Schema, value: unknown, path: string, issues: ValidationIs
       return;
     case 'richtext': {
       const span = { start: req(num(0, undefined, true)), end: req(num(0, undefined, true)) };
-      const blockSchema = obj({ id: req(idSchema), kind: req(en('paragraph', 'heading', 'list_item', 'quote')), text: req(txt()), ruby: opt(arr(obj({ ...span, text: req(txt()) }))), links: opt(arr(obj({ ...span, target: req(anchor) }))) });
+      const blockSchema = obj({ id: req(idSchema), kind: req(en('paragraph', 'heading', 'list_item', 'quote')), text: req(txt()), ruby: opt(arr(obj({ ...span, text: req(txt()) }))), links: opt(arr(obj({ ...span, target: req(anchor) }))), unresolvedAnnotations: opt(arr(unresolvedTextAnnotation)) });
       walk(arr(blockSchema), value, path, issues, references, depth + 1, ast);
       if (!Array.isArray(value)) return;
       let bytes = 0, chars = 0; const blockIds = new Set<string>();
@@ -410,6 +412,7 @@ function walk(schema: Schema, value: unknown, path: string, issues: ValidationIs
         if (!isObject(block) || typeof block.text !== 'string') return;
         bytes += utf8Bytes(block.text); chars += [...block.text].length;
         if (typeof block.id === 'string') { if (blockIds.has(block.id)) addIssue(issues, `${path}[${i}].id`, '段落IDが重複しています。'); blockIds.add(block.id); }
+        if (Array.isArray(block.unresolvedAnnotations)) for (const annotation of block.unresolvedAnnotations) if (isObject(annotation)) for (const field of ['originalText', 'reason', 'reading']) if (typeof annotation[field] === 'string') bytes += utf8Bytes(annotation[field] as string);
         for (const field of ['ruby', 'links']) if (Array.isArray(block[field])) (block[field] as unknown[]).forEach((range, j) => {
           if (!isObject(range)) return;
           if (typeof range.start === 'number' && typeof range.end === 'number' && (range.start >= range.end || range.end > [...(block.text as string)].length)) addIssue(issues, `${path}[${i}].${field}[${j}]`, '文字範囲はコードポイントで数え、本文内の半開区間を指定してください。');
@@ -465,6 +468,31 @@ export function validateRuntimeState(input: unknown, path = 'runtimeState'): Val
   });
   result.value.assertions.forEach((assertion, i) => { const key = `${assertion.assertionId}/${assertion.holderId}`; if (assertions.has(key)) addIssue(issues, `${path}.assertions[${i}]`, '同じ人物・事実の認識が重複しています。'); assertions.add(key); });
   return issues.length ? { ok: false, issues } : result;
+}
+/** Optional legacy evidence may be absent; supplied initial evidence must be complete and consistent. */
+export function validateInitialPresentationResults(state: RuntimeState, input: unknown, entities: readonly Entity[], path = 'presentationResults'): ValidationIssue[] {
+  const checked = simpleValidate<PresentationConditionResult[]>(arr(presentationResult), input, path);
+  if (!checked.ok) return checked.issues;
+  const issues: ValidationIssue[] = [], seen = new Set(state.seenIds), observed = new Set<ID>();
+  const node = entities.find((entity): entity is Entity<'flow_node'> => entity.kind === 'flow_node' && entity.id === state.presentationPosition && !entity.deletedAt && entity.status !== 'rejected');
+  const eligible = entities.filter((entity): entity is Entity<'disclosure'> => {
+    if (entity.kind !== 'disclosure' || entity.deletedAt || entity.status === 'rejected' || !node || !seen.has(node.id)) return false;
+    const anchor = entity.data.anchor;
+    return anchor.positionStatus !== 'unresolved' && (anchor.entityId === node.id || anchor.entityId === node.data.sceneId)
+      && (!anchor.blockId || seen.has(anchor.blockId)) && (!anchor.lineId || seen.has(anchor.lineId));
+  });
+  const targets = new Set(eligible.map(disclosure => disclosure.id));
+  checked.value.forEach((result, index) => {
+    const location = `${path}[${index}]`;
+    if (observed.has(result.targetId)) addIssue(issues, `${location}.targetId`, '初期提示の条件結果が重複しています。');
+    observed.add(result.targetId);
+    if (!targets.has(result.targetId)) addIssue(issues, `${location}.targetId`, '初期提示の対象ではない開示の条件結果です。', 'REFERENCE_INVALID');
+    if (result.value === 'unknown') addIssue(issues, `${location}.value`, '未確認の開示条件では初期提示を完了できません。');
+    if (result.value === 'true' && !seen.has(result.targetId)) addIssue(issues, `${location}.value`, '提示した条件結果と既読の証跡が一致しません。');
+    if (result.value === 'false' && seen.has(result.targetId) && state.provenance === 'full_play') addIssue(issues, `${location}.value`, '提示済みの開示を初期条件のfalseで取り消すことはできません。');
+  });
+  for (const disclosure of eligible) if (!observed.has(disclosure.id)) addIssue(issues, path, '初期提示の開示条件結果が不足しています。');
+  return issues;
 }
 export function validateEffectData(input: unknown, path = 'effect'): ValidationResult<EntityDataMap['effect']> { return simpleValidate(ENTITY_SCHEMAS.effect, input, path); }
 export function validateEntity(input: unknown, path = 'entity'): ValidationResult<Entity> {
@@ -643,7 +671,8 @@ function validateActiveRecordNamespace(project: ProjectContent, worlds: ProjectC
     });
   }
 }
-function validateContent(input: unknown, path: string, options: ProjectValidationOptions, snapshotIds: Set<ID>, versionContents: Map<ID, ProjectContent> = new Map()): ValidationResult<ProjectContent> {
+interface ValidationReuse { previous: ProjectData; references: WeakMap<Entity, DomainReference[]> }
+function validateContent(input: unknown, path: string, options: ProjectValidationOptions, snapshotIds: Set<ID>, versionContents: Map<ID, ProjectContent> = new Map(), reuse?: ValidationReuse): ValidationResult<ProjectContent> {
   const issues: ValidationIssue[] = [];
   if (!isObject(input)) return { ok: false, issues: [{ code: 'VALIDATION_FAILED', path, message: '作品はオブジェクトです。' }] };
   for (const field of Object.keys(input)) if (!projectKeys.includes(field)) addIssue(issues, `${path}.${field}`, '作品に未知の項目があります。');
@@ -655,8 +684,9 @@ function validateContent(input: unknown, path: string, options: ProjectValidatio
   if (issues.length) return { ok: false, issues };
   const entities = input.entities as unknown[], relations = input.relations as unknown[], calendars = input.calendars as unknown[];
   if (entities.length + relations.length > 100_000) return { ok: false, issues: [{ code: 'IMPORT_LIMIT', path, message: 'entityとrelationの合計は100,000件までです。' }] };
-  entities.forEach((entity, i) => { const result = validateEntity(entity, `${path}.entities[${i}]`); if (!result.ok) issues.push(...result.issues); });
-  relations.forEach((relation, i) => { const result = validateRelation(relation, `${path}.relations[${i}]`); if (!result.ok) issues.push(...result.issues); });
+  const previousEntities = new Map(reuse?.previous.entities.map(entity => [entity.id, entity])), previousRelations = new Map(reuse?.previous.relations.map(relation => [relation.id, relation]));
+  entities.forEach((entity, i) => { if (reuse && isObject(entity) && previousEntities.get(entity.id as ID) === entity) return; const result = validateEntity(entity, `${path}.entities[${i}]`); if (!result.ok) issues.push(...result.issues); });
+  relations.forEach((relation, i) => { if (reuse && isObject(relation) && Object.is(previousRelations.get(relation.id as ID), relation)) return; const result = validateRelation(relation, `${path}.relations[${i}]`); if (!result.ok) issues.push(...result.issues); });
   calendars.forEach((calendar, i) => { const result = validateCalendar(calendar, `${path}.calendars[${i}]`); if (!result.ok) issues.push(...result.issues); });
   const viewRefs: DomainReference[] = []; walk(arr(viewSchema), input.views, `${path}.views`, issues, viewRefs);
   if (issues.length) return { ok: false, issues: issues.slice(0, 256) };
@@ -726,13 +756,19 @@ function validateContent(input: unknown, path: string, options: ProjectValidatio
     else if (reference.scope === 'alias') exists = aliases.has(reference.id);
     if (!exists) addIssue(issues, location, '参照先が存在しないか、指定した作品・共通世界の範囲外です。', 'REFERENCE_INVALID');
   }
+  const referencesFor = (entity: Entity): DomainReference[] => {
+    if (!reuse || previousEntities.get(entity.id) !== entity) return collectReferences(entity);
+    const cached = reuse.references.get(entity);
+    if (cached) return cached;
+    const references = collectReferences(entity); reuse.references.set(entity, references); return references;
+  };
   project.entities.forEach((entity, i) => {
     const prefix = `${path}.entities[${i}]`;
-    for (const reference of collectReferences(entity)) {
+    for (const reference of referencesFor(entity)) {
       const parts = pathParts(reference.path), parent = parts.slice(0, -1).reduce<unknown>((object, field) => object && typeof object === 'object' ? (object as Record<string, unknown>)[field] : undefined, entity);
       const anchorVersion = isObject(parent) && typeof parent.entityId === 'string' && typeof parent.sourceVersionId === 'string' ? parent.sourceVersionId
         : entity.kind === 'review' && reference.path.startsWith('data.target.') ? entity.data.targetVersionId : undefined;
-      const usesVersion = entity.kind === 'checkpoint' && reference.path.startsWith('data.runtimeState.')
+      const usesVersion = entity.kind === 'checkpoint' && (reference.path.startsWith('data.runtimeState.') || reference.path.startsWith('data.presentationResults['))
         || entity.kind === 'trace' && (reference.path.startsWith('data.steps[') || reference.path.startsWith('data.initialExternalValues.'));
       if (anchorVersion || usesVersion && (entity.kind === 'checkpoint' || entity.kind === 'trace')) {
         const version = anchorVersion ?? ((entity.kind === 'checkpoint' || entity.kind === 'trace') ? entity.data.contentVersionId : project.projectId), index = versionIndex(version);
@@ -756,7 +792,13 @@ function validateContent(input: unknown, path: string, options: ProjectValidatio
     if (relation.deletedAt && !relation.deletionOperationId) addIssue(issues, `${location}.deletionOperationId`, '削除には操作IDが必要です。');
     validateNestedRanges(relation.validity, `${location}.validity`, issues);
   });
-  validateCrossEntityRules(project, entityMap, aliases, knownVersions, blocks, issues, path, options, versionIndex);
+  let affectedIds: Set<ID> | undefined;
+  if (reuse && JSON.stringify(project.worldReferences) === JSON.stringify(reuse.previous.worldReferences) && JSON.stringify(project.calendars) === JSON.stringify(reuse.previous.calendars)) {
+    affectedIds = new Set([...project.entities.filter(entity => previousEntities.get(entity.id) !== entity).map(entity => entity.id), ...project.relations.filter(relation => previousRelations.get(relation.id) !== relation).map(relation => relation.id)]);
+    for (const id of previousEntities.keys()) if (!entityMap.has(id)) affectedIds.add(id);
+    for (const id of previousRelations.keys()) if (!relationMap.has(id)) affectedIds.add(id);
+  }
+  validateCrossEntityRules(project, entityMap, aliases, knownVersions, blocks, issues, path, options, versionIndex, affectedIds ? entity => previousEntities.get(entity.id) !== entity || referencesFor(entity).some(reference => affectedIds!.has(reference.id)) : undefined);
   return issues.length ? { ok: false, issues: issues.slice(0, 256) } : { ok: true, value: project };
 }
 function collectContentIds(value: unknown, owner: ID, blocks: Map<ID, { entityId: ID; text: string }>, aliases: Map<ID, { entityId: ID; alias: Alias }>, issues: ValidationIssue[], path: string, depth = 0): void {
@@ -792,7 +834,7 @@ function cycleIssues(nodes: Entity[], edges: (entity: Entity) => ID[], issues: V
   }
 }
 type AnchorIndex = { entities: Map<ID, Entity>; blocks: Map<ID, { entityId: ID; text: string }> };
-function validateCrossEntityRules(project: ProjectContent, entityMap: Map<ID, Entity>, aliases: Map<ID, { entityId: ID; alias: Alias }>, knownVersions: Set<ID>, blocks: Map<ID, { entityId: ID; text: string }>, issues: ValidationIssue[], path: string, options: ProjectValidationOptions, resolveVersion: (version: ID) => AnchorIndex | undefined): void {
+function validateCrossEntityRules(project: ProjectContent, entityMap: Map<ID, Entity>, aliases: Map<ID, { entityId: ID; alias: Alias }>, knownVersions: Set<ID>, blocks: Map<ID, { entityId: ID; text: string }>, issues: ValidationIssue[], path: string, options: ProjectValidationOptions, resolveVersion: (version: ID) => AnchorIndex | undefined, affected?: (entity: Entity) => boolean): void {
   const keys = new Map<string, ID>(), translationKeys = new Set<string>();
   project.entities.forEach((entity, i) => {
     const location = `${path}.entities[${i}]`;
@@ -805,6 +847,10 @@ function validateCrossEntityRules(project: ProjectContent, entityMap: Map<ID, En
       const unique = `${entity.data.sourceLineId}/${entity.data.language}/${entity.data.sourceHash}`;
       if (translationKeys.has(unique)) addIssue(issues, location, '同じ台詞・言語・原文版の翻訳が重複しています。'); translationKeys.add(unique);
     }
+    // Namespace/key uniqueness, reference existence and graph-wide checks always run.
+    // Value/anchor rules only need unchanged records when one of their dependencies changed.
+    // Checkpoint/trace evidence also depends on the eligible record set, including newly added IDs.
+    if (affected && !affected(entity) && entity.kind !== 'checkpoint' && entity.kind !== 'trace') return;
     if (entity.kind === 'item' && entity.data.itemMode === 'instance') {
       const type = entity.data.typeId ? entityMap.get(entity.data.typeId) : undefined;
       if (type?.kind === 'item' && type.data.itemMode !== 'type') addIssue(issues, `${location}.data.typeId`, '個体のtypeIdは物品種類を参照してください。', 'REFERENCE_INVALID');
@@ -857,7 +903,13 @@ function validateCrossEntityRules(project: ProjectContent, entityMap: Map<ID, En
       }
     }
     if (entity.kind === 'checkpoint' && (!knownVersions.has(entity.data.runtimeState.contentVersionId) || entity.data.runtimeState.contentVersionId !== entity.data.contentVersionId)) addIssue(issues, `${location}.data.runtimeState.contentVersionId`, '途中開始の状態と対象版が一致しません。');
-    if (entity.kind === 'checkpoint') { const result = validateRuntimeState(entity.data.runtimeState, `${location}.data.runtimeState`); if (!result.ok) issues.push(...result.issues); }
+    if (entity.kind === 'checkpoint') {
+      const result = validateRuntimeState(entity.data.runtimeState, `${location}.data.runtimeState`); if (!result.ok) issues.push(...result.issues);
+      if (entity.data.presentationResults != null) {
+        const version = resolveVersion(entity.data.contentVersionId);
+        if (version) issues.push(...validateInitialPresentationResults({ ...entity.data.runtimeState, provenance: entity.data.origin ?? 'partial' }, entity.data.presentationResults, [...version.entities.values()], `${location}.data.presentationResults`));
+      }
+    }
     if (entity.kind === 'trace') entity.data.steps.forEach((step, index) => {
       for (const [field, state] of [['before', step.before], ['after', step.after]] as const) { const result = validateRuntimeState(state, `${location}.data.steps[${index}].${field}`); if (!result.ok) issues.push(...result.issues); }
     });
@@ -900,6 +952,8 @@ function validateAnchors(value: unknown, path: string, entities: Map<ID, Entity>
   if (Array.isArray(value)) { value.forEach((child, i) => validateAnchors(child, `${path}[${i}]`, entities, blocks, issues, depth + 1, resolveVersion, defaultVersion)); return; }
   const object = value as Record<string, unknown>;
   if (typeof object.entityId === 'string') {
+    if (object.positionStatus === 'unresolved' && (!object.positionReason || object.start != null || object.end != null)) addIssue(issues, path, '位置不明には理由を付け、確定した文字範囲を外してください。');
+    if (object.positionStatus !== 'unresolved' && (object.positionReason != null || object.quotedText != null)) addIssue(issues, path, '位置不明の理由・引用は位置不明状態と一緒に保存してください。');
     const version = typeof object.sourceVersionId === 'string' ? object.sourceVersionId : defaultVersion, index = version && resolveVersion ? resolveVersion(version) : undefined;
     const entityIndex = index?.entities ?? entities, blockIndex = index?.blocks ?? blocks;
     let targetText: string | undefined;
@@ -952,6 +1006,17 @@ export function validateProject(input: unknown, options: ProjectValidationOption
     }
   });
   return issues.length ? { ok: false, issues: issues.slice(0, 256) } : { ok: true, value: project };
+}
+/** Current content for an edit of previously verified storage. Imports still use validateProject. */
+export function validateCurrentProject(input: ProjectData, options: ProjectValidationOptions = {}, reuse?: ValidationReuse): ValidationResult<ProjectData> {
+  const issues: ValidationIssue[] = [];
+  for (const field of Object.keys(input)) if (![...projectKeys, 'snapshots', 'history'].includes(field)) addIssue(issues, `project.${field}`, '作品に未知の項目があります。');
+  if (!Array.isArray(input.snapshots) || !Array.isArray(input.history)) addIssue(issues, 'project', '公開版と履歴の配列が必要です。');
+  if (issues.length) return { ok: false, issues };
+  const ids = new Set(input.snapshots.map(snapshot => snapshot.id));
+  const content = Object.fromEntries(projectKeys.filter(field => Object.hasOwn(input, field)).map(field => [field, (input as unknown as Record<string, unknown>)[field]]));
+  const result = validateContent(content, 'project', options, ids, snapshotContentMap(input.snapshots), reuse);
+  return result.ok ? { ok: true, value: input } : result;
 }
 function validateSnapshotCollection(snapshots: unknown[], path: string, projectId: ID, options: ProjectValidationOptions, issues: ValidationIssue[]): void {
   const ids = new Set<ID>(snapshots.flatMap(snapshot => isObject(snapshot) && typeof snapshot.id === 'string' ? [snapshot.id] : [])), duplicates = new Set<ID>(), contents = snapshotContentMap(snapshots);
@@ -1015,7 +1080,7 @@ export function toJsonSchema(): JsonSchema {
   const compareDefinition = conditionalDefinitions[4] as { properties: Record<string, unknown> }; compareDefinition.properties.comparator = { enum: ['eq', 'ne', 'lt', 'le', 'gt', 'ge'] };
   const inDefinition = conditionalDefinitions.at(-1) as { properties: Record<string, unknown> }; inDefinition.properties.comparator = { const: 'in' };
   const span = { start: req(num(0, undefined, true)), end: req(num(0, undefined, true)) };
-  const block = obj({ id: req(idSchema), kind: req(en('paragraph', 'heading', 'list_item', 'quote')), text: req(txt()), ruby: opt(arr(obj({ ...span, text: req(txt()) }))), links: opt(arr(obj({ ...span, target: req(anchor) }))) });
+  const block = obj({ id: req(idSchema), kind: req(en('paragraph', 'heading', 'list_item', 'quote')), text: req(txt()), ruby: opt(arr(obj({ ...span, text: req(txt()) }))), links: opt(arr(obj({ ...span, target: req(anchor) }))), unresolvedAnnotations: opt(arr(unresolvedTextAnnotation)) });
   const calendarCommon = { id: req(txt(1)), name: req(txt(1)), originLabel: req(txt()), ticksPerDay: req(tick) };
   const calendar = union(obj({ ...calendarCommon, kind: req(en('gregorian')) }), obj({ ...calendarCommon, kind: req(en('repeating')), years: req(arr(obj({ months: req(arr(obj({ name: req(txt(1)), days: req(num(1, 400, true)) }), false, 1, 24)) }), false, 1, 400)) }));
   const defs: Record<string, JsonSchema> = {
