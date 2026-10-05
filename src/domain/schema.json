@@ -182,16 +182,19 @@
             "$ref": "#/$defs/ID"
           },
           "projectId": {
-            "$ref": "#/$defs/ID"
+            "$ref": "#/$defs/ID",
+            "$comment": "{\"referenceScope\":\"project\"}"
           },
           "revision": {
             "$ref": "#/$defs/Revision"
           },
           "fromId": {
-            "$ref": "#/$defs/ID"
+            "$ref": "#/$defs/ID",
+            "$comment": "{\"referenceScope\":\"entity\"}"
           },
           "toId": {
-            "$ref": "#/$defs/ID"
+            "$ref": "#/$defs/ID",
+            "$comment": "{\"referenceScope\":\"entity\"}"
           },
           "relationType": {
             "type": "string",
@@ -260,12 +263,14 @@
                     "type": "object",
                     "properties": {
                       "entityId": {
-                        "$ref": "#/$defs/ID"
+                        "$ref": "#/$defs/ID",
+                        "$comment": "{\"referenceScope\":\"entity\"}"
                       },
                       "blockId": {
                         "anyOf": [
                           {
-                            "$ref": "#/$defs/ID"
+                            "$ref": "#/$defs/ID",
+                            "$comment": "{\"referenceScope\":\"block\"}"
                           },
                           {
                             "type": "null"
@@ -275,7 +280,8 @@
                       "lineId": {
                         "anyOf": [
                           {
-                            "$ref": "#/$defs/ID"
+                            "$ref": "#/$defs/ID",
+                            "$comment": "{\"targetKinds\":[\"dialogue_line\"],\"referenceScope\":\"entity\"}"
                           },
                           {
                             "type": "null"
@@ -309,7 +315,8 @@
                       "sourceVersionId": {
                         "anyOf": [
                           {
-                            "$ref": "#/$defs/ID"
+                            "$ref": "#/$defs/ID",
+                            "$comment": "{\"referenceScope\":\"snapshot\"}"
                           },
                           {
                             "type": "null"
@@ -372,7 +379,8 @@
           "evidenceIds": {
             "type": "array",
             "items": {
-              "$ref": "#/$defs/ID"
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"referenceScope\":\"entity\"}"
             },
             "maxItems": 100000,
             "uniqueItems": true
@@ -396,7 +404,8 @@
           "projectionProfileId": {
             "anyOf": [
               {
-                "$ref": "#/$defs/ID"
+                "$ref": "#/$defs/ID",
+                "$comment": "{\"targetKinds\":[\"projection_profile\"],\"referenceScope\":\"entity\"}"
               },
               {
                 "type": "null"
@@ -463,7 +472,8 @@
           "entityIds": {
             "type": "array",
             "items": {
-              "$ref": "#/$defs/ID"
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"referenceScope\":\"entity\"}"
             },
             "maxItems": 100000,
             "uniqueItems": true
@@ -626,12 +636,14 @@
                       "type": "object",
                       "properties": {
                         "entityId": {
-                          "$ref": "#/$defs/ID"
+                          "$ref": "#/$defs/ID",
+                          "$comment": "{\"referenceScope\":\"entity\"}"
                         },
                         "blockId": {
                           "anyOf": [
                             {
-                              "$ref": "#/$defs/ID"
+                              "$ref": "#/$defs/ID",
+                              "$comment": "{\"referenceScope\":\"block\"}"
                             },
                             {
                               "type": "null"
@@ -641,7 +653,8 @@
                         "lineId": {
                           "anyOf": [
                             {
-                              "$ref": "#/$defs/ID"
+                              "$ref": "#/$defs/ID",
+                              "$comment": "{\"targetKinds\":[\"dialogue_line\"],\"referenceScope\":\"entity\"}"
                             },
                             {
                               "type": "null"
@@ -675,7 +688,8 @@
                         "sourceVersionId": {
                           "anyOf": [
                             {
-                              "$ref": "#/$defs/ID"
+                              "$ref": "#/$defs/ID",
+                              "$comment": "{\"referenceScope\":\"snapshot\"}"
                             },
                             {
                               "type": "null"
@@ -792,12 +806,14 @@
                           "type": "object",
                           "properties": {
                             "entityId": {
-                              "$ref": "#/$defs/ID"
+                              "$ref": "#/$defs/ID",
+                              "$comment": "{\"referenceScope\":\"entity\"}"
                             },
                             "blockId": {
                               "anyOf": [
                                 {
-                                  "$ref": "#/$defs/ID"
+                                  "$ref": "#/$defs/ID",
+                                  "$comment": "{\"referenceScope\":\"block\"}"
                                 },
                                 {
                                   "type": "null"
@@ -807,7 +823,8 @@
                             "lineId": {
                               "anyOf": [
                                 {
-                                  "$ref": "#/$defs/ID"
+                                  "$ref": "#/$defs/ID",
+                                  "$comment": "{\"targetKinds\":[\"dialogue_line\"],\"referenceScope\":\"entity\"}"
                                 },
                                 {
                                   "type": "null"
@@ -841,7 +858,8 @@
                             "sourceVersionId": {
                               "anyOf": [
                                 {
-                                  "$ref": "#/$defs/ID"
+                                  "$ref": "#/$defs/ID",
+                                  "$comment": "{\"referenceScope\":\"snapshot\"}"
                                 },
                                 {
                                   "type": "null"
@@ -935,7 +953,8 @@
               ]
             },
             "value": {
-              "$ref": "#/$defs/ID"
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"referenceScope\":\"entity\"}"
             }
           },
           "required": [
@@ -1034,7 +1053,8 @@
               ]
             },
             "value": {
-              "$ref": "#/$defs/ID"
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"referenceScope\":\"entity\"}"
             }
           },
           "required": [
@@ -1085,7 +1105,8 @@
             },
             "calendarId": {
               "type": "string",
-              "minLength": 1
+              "minLength": 1,
+              "$comment": "{\"referenceScope\":\"calendar\"}"
             }
           },
           "required": [
@@ -1111,7 +1132,8 @@
             },
             "calendarId": {
               "type": "string",
-              "minLength": 1
+              "minLength": 1,
+              "$comment": "{\"referenceScope\":\"calendar\"}"
             }
           },
           "required": [
@@ -1138,7 +1160,8 @@
             },
             "calendarId": {
               "type": "string",
-              "minLength": 1
+              "minLength": 1,
+              "$comment": "{\"referenceScope\":\"calendar\"}"
             },
             "precision": {
               "type": "string",
@@ -1163,7 +1186,8 @@
               ]
             },
             "anchorEventId": {
-              "$ref": "#/$defs/ID"
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"event\"],\"referenceScope\":\"entity\"}"
             },
             "anchorPoint": {
               "enum": [
@@ -1291,7 +1315,8 @@
               "const": "compare"
             },
             "variableId": {
-              "$ref": "#/$defs/ID"
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"variable\"],\"referenceScope\":\"entity\"}"
             },
             "comparator": {
               "enum": [
@@ -1322,7 +1347,8 @@
               "const": "item"
             },
             "itemId": {
-              "$ref": "#/$defs/ID"
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"item\"],\"referenceScope\":\"entity\"}"
             },
             "quantity": {
               "type": "integer",
@@ -1344,10 +1370,12 @@
               "const": "known"
             },
             "assertionId": {
-              "$ref": "#/$defs/ID"
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"assertion\"],\"referenceScope\":\"entity\"}"
             },
             "holderId": {
-              "$ref": "#/$defs/ID"
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"character\"],\"referenceScope\":\"entity\"}"
             }
           },
           "required": [
@@ -1364,7 +1392,8 @@
               "const": "visited"
             },
             "entityId": {
-              "$ref": "#/$defs/ID"
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"referenceScope\":\"entity\"}"
             },
             "count": {
               "type": "integer",
@@ -1386,7 +1415,8 @@
               "const": "external"
             },
             "contractId": {
-              "$ref": "#/$defs/ID"
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"external_contract\"],\"referenceScope\":\"entity\"}"
             }
           },
           "required": [
@@ -1404,7 +1434,8 @@
               ]
             },
             "variableId": {
-              "$ref": "#/$defs/ID"
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"variable\"],\"referenceScope\":\"entity\"}"
             },
             "comparator": {
               "const": "in"
@@ -1460,7 +1491,8 @@
               ]
             },
             "variableId": {
-              "$ref": "#/$defs/ID"
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"variable\"],\"referenceScope\":\"entity\"}"
             }
           },
           "required": [
@@ -1580,7 +1612,8 @@
               ]
             },
             "aliasId": {
-              "$ref": "#/$defs/ID"
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"referenceScope\":\"alias\"}"
             }
           },
           "required": [
@@ -1663,7 +1696,8 @@
                           ]
                         },
                         "aliasId": {
-                          "$ref": "#/$defs/ID"
+                          "$ref": "#/$defs/ID",
+                          "$comment": "{\"referenceScope\":\"alias\"}"
                         }
                       },
                       "required": [
@@ -1752,7 +1786,8 @@
                             ]
                           },
                           "aliasId": {
-                            "$ref": "#/$defs/ID"
+                            "$ref": "#/$defs/ID",
+                            "$comment": "{\"referenceScope\":\"alias\"}"
                           }
                         },
                         "required": [
@@ -1822,7 +1857,8 @@
                     ]
                   },
                   "propertyNames": {
-                    "$ref": "#/$defs/ID"
+                    "$ref": "#/$defs/ID",
+                    "$comment": "{\"referenceScope\":\"entity\"}"
                   }
                 },
                 {
@@ -1986,7 +2022,8 @@
               "const": "participant"
             },
             "characterId": {
-              "$ref": "#/$defs/ID"
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"character\"],\"referenceScope\":\"entity\"}"
             }
           },
           "required": [
@@ -2015,6 +2052,98 @@
             "value"
           ],
           "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "chapter"
+            },
+            "chapterId": {
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"chapter\"],\"referenceScope\":\"entity\"}"
+            }
+          },
+          "required": [
+            "op",
+            "chapterId"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "foreshadow"
+            },
+            "foreshadowId": {
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"foreshadow\"],\"referenceScope\":\"entity\"}"
+            },
+            "resolutionPolicy": {
+              "enum": [
+                "this_work",
+                "sequel",
+                "intentional_open",
+                "red_herring",
+                "undecided",
+                "rejected"
+              ]
+            },
+            "role": {
+              "enum": [
+                "clue",
+                "payoff"
+              ]
+            },
+            "stage": {
+              "enum": [
+                "hint",
+                "suspicion",
+                "reinforce",
+                "reveal",
+                "alternative"
+              ]
+            }
+          },
+          "required": [
+            "op"
+          ],
+          "additionalProperties": false,
+          "anyOf": [
+            {
+              "properties": {
+                "foreshadowId": {}
+              },
+              "required": [
+                "foreshadowId"
+              ]
+            },
+            {
+              "properties": {
+                "resolutionPolicy": {}
+              },
+              "required": [
+                "resolutionPolicy"
+              ]
+            },
+            {
+              "properties": {
+                "role": {}
+              },
+              "required": [
+                "role"
+              ]
+            },
+            {
+              "properties": {
+                "stage": {}
+              },
+              "required": [
+                "stage"
+              ]
+            }
+          ]
         }
       ]
     },
@@ -2134,16 +2263,19 @@
           "$ref": "#/$defs/ID"
         },
         "projectId": {
-          "$ref": "#/$defs/ID"
+          "$ref": "#/$defs/ID",
+          "$comment": "{\"referenceScope\":\"project\"}"
         },
         "revision": {
           "$ref": "#/$defs/Revision"
         },
         "fromId": {
-          "$ref": "#/$defs/ID"
+          "$ref": "#/$defs/ID",
+          "$comment": "{\"referenceScope\":\"entity\"}"
         },
         "toId": {
-          "$ref": "#/$defs/ID"
+          "$ref": "#/$defs/ID",
+          "$comment": "{\"referenceScope\":\"entity\"}"
         },
         "relationType": {
           "type": "string",
@@ -2212,12 +2344,14 @@
                   "type": "object",
                   "properties": {
                     "entityId": {
-                      "$ref": "#/$defs/ID"
+                      "$ref": "#/$defs/ID",
+                      "$comment": "{\"referenceScope\":\"entity\"}"
                     },
                     "blockId": {
                       "anyOf": [
                         {
-                          "$ref": "#/$defs/ID"
+                          "$ref": "#/$defs/ID",
+                          "$comment": "{\"referenceScope\":\"block\"}"
                         },
                         {
                           "type": "null"
@@ -2227,7 +2361,8 @@
                     "lineId": {
                       "anyOf": [
                         {
-                          "$ref": "#/$defs/ID"
+                          "$ref": "#/$defs/ID",
+                          "$comment": "{\"targetKinds\":[\"dialogue_line\"],\"referenceScope\":\"entity\"}"
                         },
                         {
                           "type": "null"
@@ -2261,7 +2396,8 @@
                     "sourceVersionId": {
                       "anyOf": [
                         {
-                          "$ref": "#/$defs/ID"
+                          "$ref": "#/$defs/ID",
+                          "$comment": "{\"referenceScope\":\"snapshot\"}"
                         },
                         {
                           "type": "null"
@@ -2324,7 +2460,8 @@
         "evidenceIds": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/ID"
+            "$ref": "#/$defs/ID",
+            "$comment": "{\"referenceScope\":\"entity\"}"
           },
           "maxItems": 100000,
           "uniqueItems": true
@@ -2348,7 +2485,8 @@
         "projectionProfileId": {
           "anyOf": [
             {
-              "$ref": "#/$defs/ID"
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"projection_profile\"],\"referenceScope\":\"entity\"}"
             },
             {
               "type": "null"
@@ -2432,7 +2570,8 @@
         "entityIds": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/ID"
+            "$ref": "#/$defs/ID",
+            "$comment": "{\"referenceScope\":\"entity\"}"
           },
           "maxItems": 100000,
           "uniqueItems": true
@@ -2614,7 +2753,8 @@
           "$ref": "#/$defs/ID"
         },
         "projectId": {
-          "$ref": "#/$defs/ID"
+          "$ref": "#/$defs/ID",
+          "$comment": "{\"referenceScope\":\"project\"}"
         },
         "kind": {
           "enum": [
@@ -2645,10 +2785,32 @@
             "projection"
           ]
         },
+        "retainIfUnreferenced": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "projectionProfileId": {
           "anyOf": [
             {
-              "$ref": "#/$defs/ID"
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"projection_profile\"],\"referenceScope\":\"entity\"}"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "templateId": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"template\"],\"referenceScope\":\"entity\"}"
             },
             {
               "type": "null"
@@ -2789,12 +2951,14 @@
                                 "type": "object",
                                 "properties": {
                                   "entityId": {
-                                    "$ref": "#/$defs/ID"
+                                    "$ref": "#/$defs/ID",
+                                    "$comment": "{\"referenceScope\":\"entity\"}"
                                   },
                                   "blockId": {
                                     "anyOf": [
                                       {
-                                        "$ref": "#/$defs/ID"
+                                        "$ref": "#/$defs/ID",
+                                        "$comment": "{\"referenceScope\":\"block\"}"
                                       },
                                       {
                                         "type": "null"
@@ -2804,7 +2968,8 @@
                                   "lineId": {
                                     "anyOf": [
                                       {
-                                        "$ref": "#/$defs/ID"
+                                        "$ref": "#/$defs/ID",
+                                        "$comment": "{\"targetKinds\":[\"dialogue_line\"],\"referenceScope\":\"entity\"}"
                                       },
                                       {
                                         "type": "null"
@@ -2838,7 +3003,8 @@
                                   "sourceVersionId": {
                                     "anyOf": [
                                       {
-                                        "$ref": "#/$defs/ID"
+                                        "$ref": "#/$defs/ID",
+                                        "$comment": "{\"referenceScope\":\"snapshot\"}"
                                       },
                                       {
                                         "type": "null"
@@ -2901,7 +3067,8 @@
                       "audienceHolderIds": {
                         "type": "array",
                         "items": {
-                          "$ref": "#/$defs/ID"
+                          "$ref": "#/$defs/ID",
+                          "$comment": "{\"targetKinds\":[\"character\"],\"referenceScope\":\"entity\"}"
                         },
                         "maxItems": 100000,
                         "uniqueItems": true
@@ -2982,7 +3149,8 @@
                 {
                   "type": "array",
                   "items": {
-                    "$ref": "#/$defs/ID"
+                    "$ref": "#/$defs/ID",
+                    "$comment": "{\"targetKinds\":[\"goal\"],\"referenceScope\":\"entity\"}"
                   },
                   "maxItems": 100000,
                   "uniqueItems": true
@@ -2997,7 +3165,8 @@
                 {
                   "type": "array",
                   "items": {
-                    "$ref": "#/$defs/ID"
+                    "$ref": "#/$defs/ID",
+                    "$comment": "{\"targetKinds\":[\"voice_rule\"],\"referenceScope\":\"entity\"}"
                   },
                   "maxItems": 100000,
                   "uniqueItems": true
@@ -3034,7 +3203,8 @@
           "$ref": "#/$defs/ID"
         },
         "projectId": {
-          "$ref": "#/$defs/ID"
+          "$ref": "#/$defs/ID",
+          "$comment": "{\"referenceScope\":\"project\"}"
         },
         "kind": {
           "enum": [
@@ -3065,10 +3235,32 @@
             "projection"
           ]
         },
+        "retainIfUnreferenced": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "projectionProfileId": {
           "anyOf": [
             {
-              "$ref": "#/$defs/ID"
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"projection_profile\"],\"referenceScope\":\"entity\"}"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "templateId": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"template\"],\"referenceScope\":\"entity\"}"
             },
             {
               "type": "null"
@@ -3134,7 +3326,8 @@
                 {
                   "type": "array",
                   "items": {
-                    "$ref": "#/$defs/ID"
+                    "$ref": "#/$defs/ID",
+                    "$comment": "{\"referenceScope\":\"entity\"}"
                   },
                   "maxItems": 100000,
                   "uniqueItems": true
@@ -3147,7 +3340,8 @@
             "parentId": {
               "anyOf": [
                 {
-                  "$ref": "#/$defs/ID"
+                  "$ref": "#/$defs/ID",
+                  "$comment": "{\"targetKinds\":[\"group\"],\"referenceScope\":\"entity\"}"
                 },
                 {
                   "type": "null"
@@ -3193,7 +3387,8 @@
           "$ref": "#/$defs/ID"
         },
         "projectId": {
-          "$ref": "#/$defs/ID"
+          "$ref": "#/$defs/ID",
+          "$comment": "{\"referenceScope\":\"project\"}"
         },
         "kind": {
           "enum": [
@@ -3224,10 +3419,32 @@
             "projection"
           ]
         },
+        "retainIfUnreferenced": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "projectionProfileId": {
           "anyOf": [
             {
-              "$ref": "#/$defs/ID"
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"projection_profile\"],\"referenceScope\":\"entity\"}"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "templateId": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"template\"],\"referenceScope\":\"entity\"}"
             },
             {
               "type": "null"
@@ -3301,7 +3518,8 @@
                     "type": "object",
                     "properties": {
                       "characterId": {
-                        "$ref": "#/$defs/ID"
+                        "$ref": "#/$defs/ID",
+                        "$comment": "{\"targetKinds\":[\"character\"],\"referenceScope\":\"entity\"}"
                       },
                       "role": {
                         "enum": [
@@ -3317,7 +3535,8 @@
                           {
                             "type": "array",
                             "items": {
-                              "$ref": "#/$defs/ID"
+                              "$ref": "#/$defs/ID",
+                              "$comment": "{\"referenceScope\":\"entity\"}"
                             },
                             "maxItems": 100000,
                             "uniqueItems": true
@@ -3332,7 +3551,8 @@
                           {
                             "type": "array",
                             "items": {
-                              "$ref": "#/$defs/ID"
+                              "$ref": "#/$defs/ID",
+                              "$comment": "{\"targetKinds\":[\"effect\"],\"referenceScope\":\"entity\"}"
                             },
                             "maxItems": 100000,
                             "uniqueItems": true
@@ -3359,7 +3579,8 @@
             "locationId": {
               "anyOf": [
                 {
-                  "$ref": "#/$defs/ID"
+                  "$ref": "#/$defs/ID",
+                  "$comment": "{\"targetKinds\":[\"place\"],\"referenceScope\":\"entity\"}"
                 },
                 {
                   "type": "null"
@@ -3371,7 +3592,8 @@
                 {
                   "type": "array",
                   "items": {
-                    "$ref": "#/$defs/ID"
+                    "$ref": "#/$defs/ID",
+                    "$comment": "{\"targetKinds\":[\"item\"],\"referenceScope\":\"entity\"}"
                   },
                   "maxItems": 100000,
                   "uniqueItems": true
@@ -3407,7 +3629,8 @@
                             ]
                           },
                           "targetEventId": {
-                            "$ref": "#/$defs/ID"
+                            "$ref": "#/$defs/ID",
+                            "$comment": "{\"targetKinds\":[\"event\"],\"referenceScope\":\"entity\"}"
                           }
                         },
                         "required": [
@@ -3425,7 +3648,8 @@
                             ]
                           },
                           "targetEventId": {
-                            "$ref": "#/$defs/ID"
+                            "$ref": "#/$defs/ID",
+                            "$comment": "{\"targetKinds\":[\"event\"],\"referenceScope\":\"entity\"}"
                           },
                           "minimumTicks": {
                             "$ref": "#/$defs/Tick"
@@ -3482,7 +3706,8 @@
           "$ref": "#/$defs/ID"
         },
         "projectId": {
-          "$ref": "#/$defs/ID"
+          "$ref": "#/$defs/ID",
+          "$comment": "{\"referenceScope\":\"project\"}"
         },
         "kind": {
           "enum": [
@@ -3513,10 +3738,32 @@
             "projection"
           ]
         },
+        "retainIfUnreferenced": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "projectionProfileId": {
           "anyOf": [
             {
-              "$ref": "#/$defs/ID"
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"projection_profile\"],\"referenceScope\":\"entity\"}"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "templateId": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"template\"],\"referenceScope\":\"entity\"}"
             },
             {
               "type": "null"
@@ -3572,7 +3819,8 @@
             "parentId": {
               "anyOf": [
                 {
-                  "$ref": "#/$defs/ID"
+                  "$ref": "#/$defs/ID",
+                  "$comment": "{\"targetKinds\":[\"place\"],\"referenceScope\":\"entity\"}"
                 },
                 {
                   "type": "null"
@@ -3667,12 +3915,14 @@
                                 "type": "object",
                                 "properties": {
                                   "entityId": {
-                                    "$ref": "#/$defs/ID"
+                                    "$ref": "#/$defs/ID",
+                                    "$comment": "{\"referenceScope\":\"entity\"}"
                                   },
                                   "blockId": {
                                     "anyOf": [
                                       {
-                                        "$ref": "#/$defs/ID"
+                                        "$ref": "#/$defs/ID",
+                                        "$comment": "{\"referenceScope\":\"block\"}"
                                       },
                                       {
                                         "type": "null"
@@ -3682,7 +3932,8 @@
                                   "lineId": {
                                     "anyOf": [
                                       {
-                                        "$ref": "#/$defs/ID"
+                                        "$ref": "#/$defs/ID",
+                                        "$comment": "{\"targetKinds\":[\"dialogue_line\"],\"referenceScope\":\"entity\"}"
                                       },
                                       {
                                         "type": "null"
@@ -3716,7 +3967,8 @@
                                   "sourceVersionId": {
                                     "anyOf": [
                                       {
-                                        "$ref": "#/$defs/ID"
+                                        "$ref": "#/$defs/ID",
+                                        "$comment": "{\"referenceScope\":\"snapshot\"}"
                                       },
                                       {
                                         "type": "null"
@@ -3779,7 +4031,8 @@
                       "audienceHolderIds": {
                         "type": "array",
                         "items": {
-                          "$ref": "#/$defs/ID"
+                          "$ref": "#/$defs/ID",
+                          "$comment": "{\"targetKinds\":[\"character\"],\"referenceScope\":\"entity\"}"
                         },
                         "maxItems": 100000,
                         "uniqueItems": true
@@ -3820,7 +4073,8 @@
                 {
                   "type": "array",
                   "items": {
-                    "$ref": "#/$defs/ID"
+                    "$ref": "#/$defs/ID",
+                    "$comment": "{\"targetKinds\":[\"map\"],\"referenceScope\":\"entity\"}"
                   },
                   "maxItems": 100000,
                   "uniqueItems": true
@@ -3835,7 +4089,8 @@
                 {
                   "type": "array",
                   "items": {
-                    "$ref": "#/$defs/ID"
+                    "$ref": "#/$defs/ID",
+                    "$comment": "{\"targetKinds\":[\"assertion\"],\"referenceScope\":\"entity\"}"
                   },
                   "maxItems": 100000,
                   "uniqueItems": true
@@ -3872,7 +4127,8 @@
           "$ref": "#/$defs/ID"
         },
         "projectId": {
-          "$ref": "#/$defs/ID"
+          "$ref": "#/$defs/ID",
+          "$comment": "{\"referenceScope\":\"project\"}"
         },
         "kind": {
           "enum": [
@@ -3903,10 +4159,32 @@
             "projection"
           ]
         },
+        "retainIfUnreferenced": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "projectionProfileId": {
           "anyOf": [
             {
-              "$ref": "#/$defs/ID"
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"projection_profile\"],\"referenceScope\":\"entity\"}"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "templateId": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"template\"],\"referenceScope\":\"entity\"}"
             },
             {
               "type": "null"
@@ -3968,7 +4246,8 @@
             "typeId": {
               "anyOf": [
                 {
-                  "$ref": "#/$defs/ID"
+                  "$ref": "#/$defs/ID",
+                  "$comment": "{\"targetKinds\":[\"item\"],\"referenceScope\":\"entity\"}"
                 },
                 {
                   "type": "null"
@@ -4000,7 +4279,8 @@
                 {
                   "type": "array",
                   "items": {
-                    "$ref": "#/$defs/ID"
+                    "$ref": "#/$defs/ID",
+                    "$comment": "{\"targetKinds\":[\"assertion\"],\"referenceScope\":\"entity\"}"
                   },
                   "maxItems": 100000,
                   "uniqueItems": true
@@ -4039,7 +4319,8 @@
           "$ref": "#/$defs/ID"
         },
         "projectId": {
-          "$ref": "#/$defs/ID"
+          "$ref": "#/$defs/ID",
+          "$comment": "{\"referenceScope\":\"project\"}"
         },
         "kind": {
           "enum": [
@@ -4070,10 +4351,32 @@
             "projection"
           ]
         },
+        "retainIfUnreferenced": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "projectionProfileId": {
           "anyOf": [
             {
-              "$ref": "#/$defs/ID"
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"projection_profile\"],\"referenceScope\":\"entity\"}"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "templateId": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"template\"],\"referenceScope\":\"entity\"}"
             },
             {
               "type": "null"
@@ -4134,7 +4437,8 @@
                 {
                   "type": "array",
                   "items": {
-                    "$ref": "#/$defs/ID"
+                    "$ref": "#/$defs/ID",
+                    "$comment": "{\"targetKinds\":[\"attachment\"],\"referenceScope\":\"entity\"}"
                   },
                   "maxItems": 100000,
                   "uniqueItems": true
@@ -4149,7 +4453,8 @@
                 {
                   "type": "array",
                   "items": {
-                    "$ref": "#/$defs/ID"
+                    "$ref": "#/$defs/ID",
+                    "$comment": "{\"referenceScope\":\"entity\"}"
                   },
                   "maxItems": 100000,
                   "uniqueItems": true
@@ -4162,7 +4467,8 @@
             "originNoteId": {
               "anyOf": [
                 {
-                  "$ref": "#/$defs/ID"
+                  "$ref": "#/$defs/ID",
+                  "$comment": "{\"targetKinds\":[\"note\"],\"referenceScope\":\"entity\"}"
                 },
                 {
                   "type": "null"
@@ -4198,7 +4504,8 @@
           "$ref": "#/$defs/ID"
         },
         "projectId": {
-          "$ref": "#/$defs/ID"
+          "$ref": "#/$defs/ID",
+          "$comment": "{\"referenceScope\":\"project\"}"
         },
         "kind": {
           "enum": [
@@ -4229,10 +4536,32 @@
             "projection"
           ]
         },
+        "retainIfUnreferenced": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "projectionProfileId": {
           "anyOf": [
             {
-              "$ref": "#/$defs/ID"
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"projection_profile\"],\"referenceScope\":\"entity\"}"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "templateId": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"template\"],\"referenceScope\":\"entity\"}"
             },
             {
               "type": "null"
@@ -4288,7 +4617,8 @@
             "sceneIds": {
               "type": "array",
               "items": {
-                "$ref": "#/$defs/ID"
+                "$ref": "#/$defs/ID",
+                "$comment": "{\"targetKinds\":[\"scene\"],\"referenceScope\":\"entity\"}"
               },
               "maxItems": 100000,
               "uniqueItems": true
@@ -4354,7 +4684,8 @@
           "$ref": "#/$defs/ID"
         },
         "projectId": {
-          "$ref": "#/$defs/ID"
+          "$ref": "#/$defs/ID",
+          "$comment": "{\"referenceScope\":\"project\"}"
         },
         "kind": {
           "enum": [
@@ -4385,10 +4716,32 @@
             "projection"
           ]
         },
+        "retainIfUnreferenced": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "projectionProfileId": {
           "anyOf": [
             {
-              "$ref": "#/$defs/ID"
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"projection_profile\"],\"referenceScope\":\"entity\"}"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "templateId": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"template\"],\"referenceScope\":\"entity\"}"
             },
             {
               "type": "null"
@@ -4453,7 +4806,8 @@
             "eventIds": {
               "type": "array",
               "items": {
-                "$ref": "#/$defs/ID"
+                "$ref": "#/$defs/ID",
+                "$comment": "{\"targetKinds\":[\"event\"],\"referenceScope\":\"entity\"}"
               },
               "maxItems": 100000,
               "uniqueItems": true
@@ -4461,7 +4815,8 @@
             "chapterId": {
               "anyOf": [
                 {
-                  "$ref": "#/$defs/ID"
+                  "$ref": "#/$defs/ID",
+                  "$comment": "{\"targetKinds\":[\"chapter\"],\"referenceScope\":\"entity\"}"
                 },
                 {
                   "type": "null"
@@ -4473,7 +4828,8 @@
                 {
                   "type": "array",
                   "items": {
-                    "$ref": "#/$defs/ID"
+                    "$ref": "#/$defs/ID",
+                    "$comment": "{\"targetKinds\":[\"group\"],\"referenceScope\":\"entity\"}"
                   },
                   "maxItems": 100000,
                   "uniqueItems": true
@@ -4486,7 +4842,8 @@
             "povId": {
               "anyOf": [
                 {
-                  "$ref": "#/$defs/ID"
+                  "$ref": "#/$defs/ID",
+                  "$comment": "{\"targetKinds\":[\"character\"],\"referenceScope\":\"entity\"}"
                 },
                 {
                   "type": "null"
@@ -4562,7 +4919,8 @@
                 {
                   "type": "array",
                   "items": {
-                    "$ref": "#/$defs/ID"
+                    "$ref": "#/$defs/ID",
+                    "$comment": "{\"referenceScope\":\"block\"}"
                   },
                   "maxItems": 100000,
                   "uniqueItems": true
@@ -4604,7 +4962,8 @@
           "$ref": "#/$defs/ID"
         },
         "projectId": {
-          "$ref": "#/$defs/ID"
+          "$ref": "#/$defs/ID",
+          "$comment": "{\"referenceScope\":\"project\"}"
         },
         "kind": {
           "enum": [
@@ -4635,10 +4994,32 @@
             "projection"
           ]
         },
+        "retainIfUnreferenced": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "projectionProfileId": {
           "anyOf": [
             {
-              "$ref": "#/$defs/ID"
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"projection_profile\"],\"referenceScope\":\"entity\"}"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "templateId": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"template\"],\"referenceScope\":\"entity\"}"
             },
             {
               "type": "null"
@@ -4692,7 +5073,8 @@
           "type": "object",
           "properties": {
             "ownerId": {
-              "$ref": "#/$defs/ID"
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"character\",\"group\"],\"referenceScope\":\"entity\"}"
             },
             "description": {
               "$ref": "#/$defs/RichText"
@@ -4702,7 +5084,8 @@
                 {
                   "type": "array",
                   "items": {
-                    "$ref": "#/$defs/ID"
+                    "$ref": "#/$defs/ID",
+                    "$comment": "{\"targetKinds\":[\"assertion\"],\"referenceScope\":\"entity\"}"
                   },
                   "maxItems": 100000,
                   "uniqueItems": true
@@ -4717,7 +5100,8 @@
                 {
                   "type": "array",
                   "items": {
-                    "$ref": "#/$defs/ID"
+                    "$ref": "#/$defs/ID",
+                    "$comment": "{\"targetKinds\":[\"scene\"],\"referenceScope\":\"entity\"}"
                   },
                   "maxItems": 100000,
                   "uniqueItems": true
@@ -4785,12 +5169,14 @@
                           "type": "object",
                           "properties": {
                             "entityId": {
-                              "$ref": "#/$defs/ID"
+                              "$ref": "#/$defs/ID",
+                              "$comment": "{\"referenceScope\":\"entity\"}"
                             },
                             "blockId": {
                               "anyOf": [
                                 {
-                                  "$ref": "#/$defs/ID"
+                                  "$ref": "#/$defs/ID",
+                                  "$comment": "{\"referenceScope\":\"block\"}"
                                 },
                                 {
                                   "type": "null"
@@ -4800,7 +5186,8 @@
                             "lineId": {
                               "anyOf": [
                                 {
-                                  "$ref": "#/$defs/ID"
+                                  "$ref": "#/$defs/ID",
+                                  "$comment": "{\"targetKinds\":[\"dialogue_line\"],\"referenceScope\":\"entity\"}"
                                 },
                                 {
                                   "type": "null"
@@ -4834,7 +5221,8 @@
                             "sourceVersionId": {
                               "anyOf": [
                                 {
-                                  "$ref": "#/$defs/ID"
+                                  "$ref": "#/$defs/ID",
+                                  "$comment": "{\"referenceScope\":\"snapshot\"}"
                                 },
                                 {
                                   "type": "null"
@@ -4929,7 +5317,8 @@
           "$ref": "#/$defs/ID"
         },
         "projectId": {
-          "$ref": "#/$defs/ID"
+          "$ref": "#/$defs/ID",
+          "$comment": "{\"referenceScope\":\"project\"}"
         },
         "kind": {
           "enum": [
@@ -4960,10 +5349,32 @@
             "projection"
           ]
         },
+        "retainIfUnreferenced": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "projectionProfileId": {
           "anyOf": [
             {
-              "$ref": "#/$defs/ID"
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"projection_profile\"],\"referenceScope\":\"entity\"}"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "templateId": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"template\"],\"referenceScope\":\"entity\"}"
             },
             {
               "type": "null"
@@ -5030,7 +5441,8 @@
             "sceneId": {
               "anyOf": [
                 {
-                  "$ref": "#/$defs/ID"
+                  "$ref": "#/$defs/ID",
+                  "$comment": "{\"targetKinds\":[\"scene\"],\"referenceScope\":\"entity\"}"
                 },
                 {
                   "type": "null"
@@ -5040,7 +5452,8 @@
             "childGraphId": {
               "anyOf": [
                 {
-                  "$ref": "#/$defs/ID"
+                  "$ref": "#/$defs/ID",
+                  "$comment": "{\"targetKinds\":[\"flow_graph\"],\"referenceScope\":\"entity\"}"
                 },
                 {
                   "type": "null"
@@ -5158,7 +5571,8 @@
             "fallbackId": {
               "anyOf": [
                 {
-                  "$ref": "#/$defs/ID"
+                  "$ref": "#/$defs/ID",
+                  "$comment": "{\"targetKinds\":[\"flow_node\"],\"referenceScope\":\"entity\"}"
                 },
                 {
                   "type": "null"
@@ -5178,10 +5592,12 @@
                       ]
                     },
                     "sourceId": {
-                      "$ref": "#/$defs/ID"
+                      "$ref": "#/$defs/ID",
+                      "$comment": "{\"referenceScope\":\"entity\"}"
                     },
                     "pinnedSnapshotId": {
-                      "$ref": "#/$defs/ID"
+                      "$ref": "#/$defs/ID",
+                      "$comment": "{\"referenceScope\":\"snapshot\"}"
                     },
                     "overrideFields": {
                       "type": "array",
@@ -5235,7 +5651,8 @@
           "$ref": "#/$defs/ID"
         },
         "projectId": {
-          "$ref": "#/$defs/ID"
+          "$ref": "#/$defs/ID",
+          "$comment": "{\"referenceScope\":\"project\"}"
         },
         "kind": {
           "enum": [
@@ -5266,10 +5683,32 @@
             "projection"
           ]
         },
+        "retainIfUnreferenced": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "projectionProfileId": {
           "anyOf": [
             {
-              "$ref": "#/$defs/ID"
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"projection_profile\"],\"referenceScope\":\"entity\"}"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "templateId": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"template\"],\"referenceScope\":\"entity\"}"
             },
             {
               "type": "null"
@@ -5323,12 +5762,14 @@
           "type": "object",
           "properties": {
             "fromId": {
-              "$ref": "#/$defs/ID"
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"flow_node\"],\"referenceScope\":\"entity\"}"
             },
             "toId": {
               "anyOf": [
                 {
-                  "$ref": "#/$defs/ID"
+                  "$ref": "#/$defs/ID",
+                  "$comment": "{\"targetKinds\":[\"flow_node\"],\"referenceScope\":\"entity\"}"
                 },
                 {
                   "type": "object",
@@ -5392,7 +5833,8 @@
                 {
                   "type": "array",
                   "items": {
-                    "$ref": "#/$defs/ID"
+                    "$ref": "#/$defs/ID",
+                    "$comment": "{\"targetKinds\":[\"effect\"],\"referenceScope\":\"entity\"}"
                   },
                   "maxItems": 100000,
                   "uniqueItems": true
@@ -5417,7 +5859,8 @@
             "choiceLineId": {
               "anyOf": [
                 {
-                  "$ref": "#/$defs/ID"
+                  "$ref": "#/$defs/ID",
+                  "$comment": "{\"targetKinds\":[\"dialogue_line\"],\"referenceScope\":\"entity\"}"
                 },
                 {
                   "type": "null"
@@ -5455,7 +5898,8 @@
           "$ref": "#/$defs/ID"
         },
         "projectId": {
-          "$ref": "#/$defs/ID"
+          "$ref": "#/$defs/ID",
+          "$comment": "{\"referenceScope\":\"project\"}"
         },
         "kind": {
           "enum": [
@@ -5486,10 +5930,32 @@
             "projection"
           ]
         },
+        "retainIfUnreferenced": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "projectionProfileId": {
           "anyOf": [
             {
-              "$ref": "#/$defs/ID"
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"projection_profile\"],\"referenceScope\":\"entity\"}"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "templateId": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"template\"],\"referenceScope\":\"entity\"}"
             },
             {
               "type": "null"
@@ -5545,7 +6011,8 @@
             "nodeIds": {
               "type": "array",
               "items": {
-                "$ref": "#/$defs/ID"
+                "$ref": "#/$defs/ID",
+                "$comment": "{\"targetKinds\":[\"flow_node\"],\"referenceScope\":\"entity\"}"
               },
               "maxItems": 100000,
               "uniqueItems": true
@@ -5553,7 +6020,8 @@
             "edgeIds": {
               "type": "array",
               "items": {
-                "$ref": "#/$defs/ID"
+                "$ref": "#/$defs/ID",
+                "$comment": "{\"targetKinds\":[\"flow_edge\"],\"referenceScope\":\"entity\"}"
               },
               "maxItems": 100000,
               "uniqueItems": true
@@ -5561,7 +6029,8 @@
             "entryIds": {
               "type": "array",
               "items": {
-                "$ref": "#/$defs/ID"
+                "$ref": "#/$defs/ID",
+                "$comment": "{\"targetKinds\":[\"flow_node\"],\"referenceScope\":\"entity\"}"
               },
               "maxItems": 100000,
               "uniqueItems": true
@@ -5569,7 +6038,8 @@
             "exitIds": {
               "type": "array",
               "items": {
-                "$ref": "#/$defs/ID"
+                "$ref": "#/$defs/ID",
+                "$comment": "{\"targetKinds\":[\"flow_node\"],\"referenceScope\":\"entity\"}"
               },
               "maxItems": 100000,
               "uniqueItems": true
@@ -5577,7 +6047,8 @@
             "parentGraphId": {
               "anyOf": [
                 {
-                  "$ref": "#/$defs/ID"
+                  "$ref": "#/$defs/ID",
+                  "$comment": "{\"targetKinds\":[\"flow_graph\"],\"referenceScope\":\"entity\"}"
                 },
                 {
                   "type": "null"
@@ -5659,7 +6130,8 @@
           "$ref": "#/$defs/ID"
         },
         "projectId": {
-          "$ref": "#/$defs/ID"
+          "$ref": "#/$defs/ID",
+          "$comment": "{\"referenceScope\":\"project\"}"
         },
         "kind": {
           "enum": [
@@ -5690,10 +6162,32 @@
             "projection"
           ]
         },
+        "retainIfUnreferenced": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "projectionProfileId": {
           "anyOf": [
             {
-              "$ref": "#/$defs/ID"
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"projection_profile\"],\"referenceScope\":\"entity\"}"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "templateId": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"template\"],\"referenceScope\":\"entity\"}"
             },
             {
               "type": "null"
@@ -5752,7 +6246,8 @@
             "speakerId": {
               "anyOf": [
                 {
-                  "$ref": "#/$defs/ID"
+                  "$ref": "#/$defs/ID",
+                  "$comment": "{\"targetKinds\":[\"character\"],\"referenceScope\":\"entity\"}"
                 },
                 {
                   "type": "null"
@@ -5762,7 +6257,8 @@
             "choiceEdgeId": {
               "anyOf": [
                 {
-                  "$ref": "#/$defs/ID"
+                  "$ref": "#/$defs/ID",
+                  "$comment": "{\"targetKinds\":[\"flow_edge\"],\"referenceScope\":\"entity\"}"
                 },
                 {
                   "type": "null"
@@ -5774,7 +6270,8 @@
                 {
                   "type": "array",
                   "items": {
-                    "$ref": "#/$defs/ID"
+                    "$ref": "#/$defs/ID",
+                    "$comment": "{\"targetKinds\":[\"cue\"],\"referenceScope\":\"entity\"}"
                   },
                   "maxItems": 100000,
                   "uniqueItems": true
@@ -5789,7 +6286,8 @@
                 {
                   "type": "array",
                   "items": {
-                    "$ref": "#/$defs/ID"
+                    "$ref": "#/$defs/ID",
+                    "$comment": "{\"targetKinds\":[\"dialogue_line\"],\"referenceScope\":\"entity\"}"
                   },
                   "maxItems": 100000,
                   "uniqueItems": true
@@ -5828,7 +6326,8 @@
           "$ref": "#/$defs/ID"
         },
         "projectId": {
-          "$ref": "#/$defs/ID"
+          "$ref": "#/$defs/ID",
+          "$comment": "{\"referenceScope\":\"project\"}"
         },
         "kind": {
           "enum": [
@@ -5859,10 +6358,32 @@
             "projection"
           ]
         },
+        "retainIfUnreferenced": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "projectionProfileId": {
           "anyOf": [
             {
-              "$ref": "#/$defs/ID"
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"projection_profile\"],\"referenceScope\":\"entity\"}"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "templateId": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"template\"],\"referenceScope\":\"entity\"}"
             },
             {
               "type": "null"
@@ -5921,7 +6442,8 @@
               "maxLength": 128
             },
             "stateVariableId": {
-              "$ref": "#/$defs/ID"
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"variable\"],\"referenceScope\":\"entity\"}"
             },
             "description": {
               "anyOf": [
@@ -5938,7 +6460,8 @@
                 {
                   "type": "array",
                   "items": {
-                    "$ref": "#/$defs/ID"
+                    "$ref": "#/$defs/ID",
+                    "$comment": "{\"targetKinds\":[\"flow_graph\"],\"referenceScope\":\"entity\"}"
                   },
                   "maxItems": 100000,
                   "uniqueItems": true
@@ -6001,7 +6524,8 @@
                 {
                   "type": "array",
                   "items": {
-                    "$ref": "#/$defs/ID"
+                    "$ref": "#/$defs/ID",
+                    "$comment": "{\"targetKinds\":[\"gameplay_spec\"],\"referenceScope\":\"entity\"}"
                   },
                   "maxItems": 100000,
                   "uniqueItems": true
@@ -6041,7 +6565,8 @@
           "$ref": "#/$defs/ID"
         },
         "projectId": {
-          "$ref": "#/$defs/ID"
+          "$ref": "#/$defs/ID",
+          "$comment": "{\"referenceScope\":\"project\"}"
         },
         "kind": {
           "enum": [
@@ -6072,10 +6597,32 @@
             "projection"
           ]
         },
+        "retainIfUnreferenced": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "projectionProfileId": {
           "anyOf": [
             {
-              "$ref": "#/$defs/ID"
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"projection_profile\"],\"referenceScope\":\"entity\"}"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "templateId": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"template\"],\"referenceScope\":\"entity\"}"
             },
             {
               "type": "null"
@@ -6136,7 +6683,8 @@
                 {
                   "type": "array",
                   "items": {
-                    "$ref": "#/$defs/ID"
+                    "$ref": "#/$defs/ID",
+                    "$comment": "{\"targetKinds\":[\"assertion\"],\"referenceScope\":\"entity\"}"
                   },
                   "maxItems": 100000,
                   "uniqueItems": true
@@ -6151,7 +6699,8 @@
                 {
                   "type": "array",
                   "items": {
-                    "$ref": "#/$defs/ID"
+                    "$ref": "#/$defs/ID",
+                    "$comment": "{\"targetKinds\":[\"source\"],\"referenceScope\":\"entity\"}"
                   },
                   "maxItems": 100000,
                   "uniqueItems": true
@@ -6249,12 +6798,14 @@
                                 "type": "object",
                                 "properties": {
                                   "entityId": {
-                                    "$ref": "#/$defs/ID"
+                                    "$ref": "#/$defs/ID",
+                                    "$comment": "{\"referenceScope\":\"entity\"}"
                                   },
                                   "blockId": {
                                     "anyOf": [
                                       {
-                                        "$ref": "#/$defs/ID"
+                                        "$ref": "#/$defs/ID",
+                                        "$comment": "{\"referenceScope\":\"block\"}"
                                       },
                                       {
                                         "type": "null"
@@ -6264,7 +6815,8 @@
                                   "lineId": {
                                     "anyOf": [
                                       {
-                                        "$ref": "#/$defs/ID"
+                                        "$ref": "#/$defs/ID",
+                                        "$comment": "{\"targetKinds\":[\"dialogue_line\"],\"referenceScope\":\"entity\"}"
                                       },
                                       {
                                         "type": "null"
@@ -6298,7 +6850,8 @@
                                   "sourceVersionId": {
                                     "anyOf": [
                                       {
-                                        "$ref": "#/$defs/ID"
+                                        "$ref": "#/$defs/ID",
+                                        "$comment": "{\"referenceScope\":\"snapshot\"}"
                                       },
                                       {
                                         "type": "null"
@@ -6361,7 +6914,8 @@
                       "audienceHolderIds": {
                         "type": "array",
                         "items": {
-                          "$ref": "#/$defs/ID"
+                          "$ref": "#/$defs/ID",
+                          "$comment": "{\"targetKinds\":[\"character\"],\"referenceScope\":\"entity\"}"
                         },
                         "maxItems": 100000,
                         "uniqueItems": true
@@ -6416,7 +6970,8 @@
           "$ref": "#/$defs/ID"
         },
         "projectId": {
-          "$ref": "#/$defs/ID"
+          "$ref": "#/$defs/ID",
+          "$comment": "{\"referenceScope\":\"project\"}"
         },
         "kind": {
           "enum": [
@@ -6447,10 +7002,32 @@
             "projection"
           ]
         },
+        "retainIfUnreferenced": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "projectionProfileId": {
           "anyOf": [
             {
-              "$ref": "#/$defs/ID"
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"projection_profile\"],\"referenceScope\":\"entity\"}"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "templateId": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"template\"],\"referenceScope\":\"entity\"}"
             },
             {
               "type": "null"
@@ -6594,7 +7171,8 @@
             "ownerId": {
               "anyOf": [
                 {
-                  "$ref": "#/$defs/ID"
+                  "$ref": "#/$defs/ID",
+                  "$comment": "{\"targetKinds\":[\"character\"],\"referenceScope\":\"entity\"}"
                 },
                 {
                   "type": "null"
@@ -6614,7 +7192,8 @@
             "externalContractId": {
               "anyOf": [
                 {
-                  "$ref": "#/$defs/ID"
+                  "$ref": "#/$defs/ID",
+                  "$comment": "{\"targetKinds\":[\"external_contract\"],\"referenceScope\":\"entity\"}"
                 },
                 {
                   "type": "null"
@@ -6756,7 +7335,8 @@
           "$ref": "#/$defs/ID"
         },
         "projectId": {
-          "$ref": "#/$defs/ID"
+          "$ref": "#/$defs/ID",
+          "$comment": "{\"referenceScope\":\"project\"}"
         },
         "kind": {
           "enum": [
@@ -6787,10 +7367,32 @@
             "projection"
           ]
         },
+        "retainIfUnreferenced": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "projectionProfileId": {
           "anyOf": [
             {
-              "$ref": "#/$defs/ID"
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"projection_profile\"],\"referenceScope\":\"entity\"}"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "templateId": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"template\"],\"referenceScope\":\"entity\"}"
             },
             {
               "type": "null"
@@ -6856,7 +7458,8 @@
               ]
             },
             "targetId": {
-              "$ref": "#/$defs/ID"
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"referenceScope\":\"entity\"}"
             },
             "value": {
               "anyOf": [
@@ -6881,7 +7484,8 @@
             "instanceId": {
               "anyOf": [
                 {
-                  "$ref": "#/$defs/ID"
+                  "$ref": "#/$defs/ID",
+                  "$comment": "{\"targetKinds\":[\"item\"],\"referenceScope\":\"entity\"}"
                 },
                 {
                   "type": "null"
@@ -6929,7 +7533,8 @@
           "$ref": "#/$defs/ID"
         },
         "projectId": {
-          "$ref": "#/$defs/ID"
+          "$ref": "#/$defs/ID",
+          "$comment": "{\"referenceScope\":\"project\"}"
         },
         "kind": {
           "enum": [
@@ -6960,10 +7565,32 @@
             "projection"
           ]
         },
+        "retainIfUnreferenced": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "projectionProfileId": {
           "anyOf": [
             {
-              "$ref": "#/$defs/ID"
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"projection_profile\"],\"referenceScope\":\"entity\"}"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "templateId": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"template\"],\"referenceScope\":\"entity\"}"
             },
             {
               "type": "null"
@@ -7017,7 +7644,8 @@
           "type": "object",
           "properties": {
             "subjectId": {
-              "$ref": "#/$defs/ID"
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"referenceScope\":\"entity\"}"
             },
             "predicate": {
               "type": "string",
@@ -7030,7 +7658,8 @@
                   "$ref": "#/$defs/TypedValue"
                 },
                 {
-                  "$ref": "#/$defs/ID"
+                  "$ref": "#/$defs/ID",
+                  "$comment": "{\"referenceScope\":\"entity\"}"
                 }
               ]
             },
@@ -7045,7 +7674,8 @@
             "holderId": {
               "anyOf": [
                 {
-                  "$ref": "#/$defs/ID"
+                  "$ref": "#/$defs/ID",
+                  "$comment": "{\"targetKinds\":[\"character\"],\"referenceScope\":\"entity\"}"
                 },
                 {
                   "type": "null"
@@ -7057,7 +7687,8 @@
                 {
                   "type": "array",
                   "items": {
-                    "$ref": "#/$defs/ID"
+                    "$ref": "#/$defs/ID",
+                    "$comment": "{\"targetKinds\":[\"source\",\"assertion\",\"event\",\"scene\",\"dialogue_line\"],\"referenceScope\":\"entity\"}"
                   },
                   "maxItems": 100000,
                   "uniqueItems": true
@@ -7073,12 +7704,14 @@
                   "type": "object",
                   "properties": {
                     "entityId": {
-                      "$ref": "#/$defs/ID"
+                      "$ref": "#/$defs/ID",
+                      "$comment": "{\"referenceScope\":\"entity\"}"
                     },
                     "blockId": {
                       "anyOf": [
                         {
-                          "$ref": "#/$defs/ID"
+                          "$ref": "#/$defs/ID",
+                          "$comment": "{\"referenceScope\":\"block\"}"
                         },
                         {
                           "type": "null"
@@ -7088,7 +7721,8 @@
                     "lineId": {
                       "anyOf": [
                         {
-                          "$ref": "#/$defs/ID"
+                          "$ref": "#/$defs/ID",
+                          "$comment": "{\"targetKinds\":[\"dialogue_line\"],\"referenceScope\":\"entity\"}"
                         },
                         {
                           "type": "null"
@@ -7122,7 +7756,8 @@
                     "sourceVersionId": {
                       "anyOf": [
                         {
-                          "$ref": "#/$defs/ID"
+                          "$ref": "#/$defs/ID",
+                          "$comment": "{\"referenceScope\":\"snapshot\"}"
                         },
                         {
                           "type": "null"
@@ -7232,12 +7867,14 @@
                           "type": "object",
                           "properties": {
                             "entityId": {
-                              "$ref": "#/$defs/ID"
+                              "$ref": "#/$defs/ID",
+                              "$comment": "{\"referenceScope\":\"entity\"}"
                             },
                             "blockId": {
                               "anyOf": [
                                 {
-                                  "$ref": "#/$defs/ID"
+                                  "$ref": "#/$defs/ID",
+                                  "$comment": "{\"referenceScope\":\"block\"}"
                                 },
                                 {
                                   "type": "null"
@@ -7247,7 +7884,8 @@
                             "lineId": {
                               "anyOf": [
                                 {
-                                  "$ref": "#/$defs/ID"
+                                  "$ref": "#/$defs/ID",
+                                  "$comment": "{\"targetKinds\":[\"dialogue_line\"],\"referenceScope\":\"entity\"}"
                                 },
                                 {
                                   "type": "null"
@@ -7281,7 +7919,8 @@
                             "sourceVersionId": {
                               "anyOf": [
                                 {
-                                  "$ref": "#/$defs/ID"
+                                  "$ref": "#/$defs/ID",
+                                  "$comment": "{\"referenceScope\":\"snapshot\"}"
                                 },
                                 {
                                   "type": "null"
@@ -7389,7 +8028,8 @@
           "$ref": "#/$defs/ID"
         },
         "projectId": {
-          "$ref": "#/$defs/ID"
+          "$ref": "#/$defs/ID",
+          "$comment": "{\"referenceScope\":\"project\"}"
         },
         "kind": {
           "enum": [
@@ -7420,10 +8060,32 @@
             "projection"
           ]
         },
+        "retainIfUnreferenced": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "projectionProfileId": {
           "anyOf": [
             {
-              "$ref": "#/$defs/ID"
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"projection_profile\"],\"referenceScope\":\"entity\"}"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "templateId": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"template\"],\"referenceScope\":\"entity\"}"
             },
             {
               "type": "null"
@@ -7497,7 +8159,8 @@
                 {
                   "type": "array",
                   "items": {
-                    "$ref": "#/$defs/ID"
+                    "$ref": "#/$defs/ID",
+                    "$comment": "{\"targetKinds\":[\"assertion\"],\"referenceScope\":\"entity\"}"
                   },
                   "maxItems": 100000,
                   "uniqueItems": true
@@ -7512,7 +8175,8 @@
                 {
                   "type": "array",
                   "items": {
-                    "$ref": "#/$defs/ID"
+                    "$ref": "#/$defs/ID",
+                    "$comment": "{\"targetKinds\":[\"disclosure\"],\"referenceScope\":\"entity\"}"
                   },
                   "maxItems": 100000,
                   "uniqueItems": true
@@ -7527,7 +8191,8 @@
                 {
                   "type": "array",
                   "items": {
-                    "$ref": "#/$defs/ID"
+                    "$ref": "#/$defs/ID",
+                    "$comment": "{\"targetKinds\":[\"disclosure\"],\"referenceScope\":\"entity\"}"
                   },
                   "maxItems": 100000,
                   "uniqueItems": true
@@ -7542,7 +8207,8 @@
                 {
                   "type": "array",
                   "items": {
-                    "$ref": "#/$defs/ID"
+                    "$ref": "#/$defs/ID",
+                    "$comment": "{\"targetKinds\":[\"disclosure\",\"assertion\"],\"referenceScope\":\"entity\"}"
                   },
                   "maxItems": 100000,
                   "uniqueItems": true
@@ -7558,12 +8224,14 @@
                   "type": "object",
                   "properties": {
                     "projectId": {
-                      "$ref": "#/$defs/ID"
+                      "$ref": "#/$defs/ID",
+                      "$comment": "{\"referenceScope\":\"project\"}"
                     },
                     "graphId": {
                       "anyOf": [
                         {
-                          "$ref": "#/$defs/ID"
+                          "$ref": "#/$defs/ID",
+                          "$comment": "{\"targetKinds\":[\"flow_graph\"],\"referenceScope\":\"entity\"}"
                         },
                         {
                           "type": "null"
@@ -7573,7 +8241,8 @@
                     "chapterId": {
                       "anyOf": [
                         {
-                          "$ref": "#/$defs/ID"
+                          "$ref": "#/$defs/ID",
+                          "$comment": "{\"targetKinds\":[\"chapter\"],\"referenceScope\":\"entity\"}"
                         },
                         {
                           "type": "null"
@@ -7593,7 +8262,8 @@
                     "targetSnapshotId": {
                       "anyOf": [
                         {
-                          "$ref": "#/$defs/ID"
+                          "$ref": "#/$defs/ID",
+                          "$comment": "{\"referenceScope\":\"snapshot\"}"
                         },
                         {
                           "type": "null"
@@ -7626,12 +8296,14 @@
                         "type": "object",
                         "properties": {
                           "projectId": {
-                            "$ref": "#/$defs/ID"
+                            "$ref": "#/$defs/ID",
+                            "$comment": "{\"referenceScope\":\"project\"}"
                           },
                           "graphId": {
                             "anyOf": [
                               {
-                                "$ref": "#/$defs/ID"
+                                "$ref": "#/$defs/ID",
+                                "$comment": "{\"targetKinds\":[\"flow_graph\"],\"referenceScope\":\"entity\"}"
                               },
                               {
                                 "type": "null"
@@ -7641,7 +8313,8 @@
                           "chapterId": {
                             "anyOf": [
                               {
-                                "$ref": "#/$defs/ID"
+                                "$ref": "#/$defs/ID",
+                                "$comment": "{\"targetKinds\":[\"chapter\"],\"referenceScope\":\"entity\"}"
                               },
                               {
                                 "type": "null"
@@ -7661,7 +8334,8 @@
                           "targetSnapshotId": {
                             "anyOf": [
                               {
-                                "$ref": "#/$defs/ID"
+                                "$ref": "#/$defs/ID",
+                                "$comment": "{\"referenceScope\":\"snapshot\"}"
                               },
                               {
                                 "type": "null"
@@ -7730,12 +8404,14 @@
                                 "type": "object",
                                 "properties": {
                                   "entityId": {
-                                    "$ref": "#/$defs/ID"
+                                    "$ref": "#/$defs/ID",
+                                    "$comment": "{\"referenceScope\":\"entity\"}"
                                   },
                                   "blockId": {
                                     "anyOf": [
                                       {
-                                        "$ref": "#/$defs/ID"
+                                        "$ref": "#/$defs/ID",
+                                        "$comment": "{\"referenceScope\":\"block\"}"
                                       },
                                       {
                                         "type": "null"
@@ -7745,7 +8421,8 @@
                                   "lineId": {
                                     "anyOf": [
                                       {
-                                        "$ref": "#/$defs/ID"
+                                        "$ref": "#/$defs/ID",
+                                        "$comment": "{\"targetKinds\":[\"dialogue_line\"],\"referenceScope\":\"entity\"}"
                                       },
                                       {
                                         "type": "null"
@@ -7779,7 +8456,8 @@
                                   "sourceVersionId": {
                                     "anyOf": [
                                       {
-                                        "$ref": "#/$defs/ID"
+                                        "$ref": "#/$defs/ID",
+                                        "$comment": "{\"referenceScope\":\"snapshot\"}"
                                       },
                                       {
                                         "type": "null"
@@ -7842,7 +8520,8 @@
                       "evidenceIds": {
                         "type": "array",
                         "items": {
-                          "$ref": "#/$defs/ID"
+                          "$ref": "#/$defs/ID",
+                          "$comment": "{\"referenceScope\":\"entity\"}"
                         },
                         "maxItems": 100000,
                         "uniqueItems": true
@@ -7894,7 +8573,8 @@
           "$ref": "#/$defs/ID"
         },
         "projectId": {
-          "$ref": "#/$defs/ID"
+          "$ref": "#/$defs/ID",
+          "$comment": "{\"referenceScope\":\"project\"}"
         },
         "kind": {
           "enum": [
@@ -7925,10 +8605,32 @@
             "projection"
           ]
         },
+        "retainIfUnreferenced": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "projectionProfileId": {
           "anyOf": [
             {
-              "$ref": "#/$defs/ID"
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"projection_profile\"],\"referenceScope\":\"entity\"}"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "templateId": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"template\"],\"referenceScope\":\"entity\"}"
             },
             {
               "type": "null"
@@ -7982,18 +8684,21 @@
           "type": "object",
           "properties": {
             "foreshadowId": {
-              "$ref": "#/$defs/ID"
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"foreshadow\"],\"referenceScope\":\"entity\"}"
             },
             "anchor": {
               "type": "object",
               "properties": {
                 "entityId": {
-                  "$ref": "#/$defs/ID"
+                  "$ref": "#/$defs/ID",
+                  "$comment": "{\"referenceScope\":\"entity\"}"
                 },
                 "blockId": {
                   "anyOf": [
                     {
-                      "$ref": "#/$defs/ID"
+                      "$ref": "#/$defs/ID",
+                      "$comment": "{\"referenceScope\":\"block\"}"
                     },
                     {
                       "type": "null"
@@ -8003,7 +8708,8 @@
                 "lineId": {
                   "anyOf": [
                     {
-                      "$ref": "#/$defs/ID"
+                      "$ref": "#/$defs/ID",
+                      "$comment": "{\"targetKinds\":[\"dialogue_line\"],\"referenceScope\":\"entity\"}"
                     },
                     {
                       "type": "null"
@@ -8037,7 +8743,8 @@
                 "sourceVersionId": {
                   "anyOf": [
                     {
-                      "$ref": "#/$defs/ID"
+                      "$ref": "#/$defs/ID",
+                      "$comment": "{\"referenceScope\":\"snapshot\"}"
                     },
                     {
                       "type": "null"
@@ -8114,7 +8821,8 @@
                 {
                   "type": "array",
                   "items": {
-                    "$ref": "#/$defs/ID"
+                    "$ref": "#/$defs/ID",
+                    "$comment": "{\"targetKinds\":[\"effect\"],\"referenceScope\":\"entity\"}"
                   },
                   "maxItems": 100000,
                   "uniqueItems": true
@@ -8130,12 +8838,14 @@
                   "type": "object",
                   "properties": {
                     "projectId": {
-                      "$ref": "#/$defs/ID"
+                      "$ref": "#/$defs/ID",
+                      "$comment": "{\"referenceScope\":\"project\"}"
                     },
                     "graphId": {
                       "anyOf": [
                         {
-                          "$ref": "#/$defs/ID"
+                          "$ref": "#/$defs/ID",
+                          "$comment": "{\"targetKinds\":[\"flow_graph\"],\"referenceScope\":\"entity\"}"
                         },
                         {
                           "type": "null"
@@ -8145,7 +8855,8 @@
                     "chapterId": {
                       "anyOf": [
                         {
-                          "$ref": "#/$defs/ID"
+                          "$ref": "#/$defs/ID",
+                          "$comment": "{\"targetKinds\":[\"chapter\"],\"referenceScope\":\"entity\"}"
                         },
                         {
                           "type": "null"
@@ -8165,7 +8876,8 @@
                     "targetSnapshotId": {
                       "anyOf": [
                         {
-                          "$ref": "#/$defs/ID"
+                          "$ref": "#/$defs/ID",
+                          "$comment": "{\"referenceScope\":\"snapshot\"}"
                         },
                         {
                           "type": "null"
@@ -8215,7 +8927,8 @@
           "$ref": "#/$defs/ID"
         },
         "projectId": {
-          "$ref": "#/$defs/ID"
+          "$ref": "#/$defs/ID",
+          "$comment": "{\"referenceScope\":\"project\"}"
         },
         "kind": {
           "enum": [
@@ -8246,10 +8959,32 @@
             "projection"
           ]
         },
+        "retainIfUnreferenced": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "projectionProfileId": {
           "anyOf": [
             {
-              "$ref": "#/$defs/ID"
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"projection_profile\"],\"referenceScope\":\"entity\"}"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "templateId": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"template\"],\"referenceScope\":\"entity\"}"
             },
             {
               "type": "null"
@@ -8303,13 +9038,15 @@
           "type": "object",
           "properties": {
             "contentVersionId": {
-              "$ref": "#/$defs/ID"
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"referenceScope\":\"snapshot\"}"
             },
             "runtimeState": {
               "type": "object",
               "properties": {
                 "contentVersionId": {
-                  "$ref": "#/$defs/ID"
+                  "$ref": "#/$defs/ID",
+                  "$comment": "{\"referenceScope\":\"snapshot\"}"
                 },
                 "variableValues": {
                   "type": "object",
@@ -8317,7 +9054,8 @@
                     "$ref": "#/$defs/TypedValue"
                   },
                   "propertyNames": {
-                    "$ref": "#/$defs/ID"
+                    "$ref": "#/$defs/ID",
+                    "$comment": "{\"targetKinds\":[\"variable\"],\"referenceScope\":\"entity\"}"
                   }
                 },
                 "itemInstances": {
@@ -8329,7 +9067,8 @@
                         "$ref": "#/$defs/ID"
                       },
                       "typeId": {
-                        "$ref": "#/$defs/ID"
+                        "$ref": "#/$defs/ID",
+                        "$comment": "{\"targetKinds\":[\"item\"],\"referenceScope\":\"entity\"}"
                       },
                       "quantity": {
                         "type": "integer",
@@ -8339,7 +9078,8 @@
                       "ownerId": {
                         "anyOf": [
                           {
-                            "$ref": "#/$defs/ID"
+                            "$ref": "#/$defs/ID",
+                            "$comment": "{\"targetKinds\":[\"character\",\"group\"],\"referenceScope\":\"entity\"}"
                           },
                           {
                             "type": "null"
@@ -8349,7 +9089,8 @@
                       "locationId": {
                         "anyOf": [
                           {
-                            "$ref": "#/$defs/ID"
+                            "$ref": "#/$defs/ID",
+                            "$comment": "{\"targetKinds\":[\"place\"],\"referenceScope\":\"entity\"}"
                           },
                           {
                             "type": "null"
@@ -8387,12 +9128,14 @@
                     "type": "object",
                     "properties": {
                       "assertionId": {
-                        "$ref": "#/$defs/ID"
+                        "$ref": "#/$defs/ID",
+                        "$comment": "{\"targetKinds\":[\"assertion\"],\"referenceScope\":\"entity\"}"
                       },
                       "holderId": {
                         "anyOf": [
                           {
-                            "$ref": "#/$defs/ID"
+                            "$ref": "#/$defs/ID",
+                            "$comment": "{\"targetKinds\":[\"character\"],\"referenceScope\":\"entity\"}"
                           },
                           {
                             "type": "null"
@@ -8409,7 +9152,8 @@
                       "sourceEffectId": {
                         "anyOf": [
                           {
-                            "$ref": "#/$defs/ID"
+                            "$ref": "#/$defs/ID",
+                            "$comment": "{\"targetKinds\":[\"effect\"],\"referenceScope\":\"entity\"}"
                           },
                           {
                             "type": "null"
@@ -8428,7 +9172,8 @@
                 "seenIds": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/$defs/ID"
+                    "$ref": "#/$defs/ID",
+                    "$comment": "{\"referenceScope\":\"presentation\"}"
                   },
                   "maxItems": 100000,
                   "uniqueItems": true
@@ -8441,7 +9186,8 @@
                     "maximum": 9007199254740991
                   },
                   "propertyNames": {
-                    "$ref": "#/$defs/ID"
+                    "$ref": "#/$defs/ID",
+                    "$comment": "{\"referenceScope\":\"entity\"}"
                   }
                 },
                 "onceTriggers": {
@@ -8468,10 +9214,12 @@
                     "type": "object",
                     "properties": {
                       "graphId": {
-                        "$ref": "#/$defs/ID"
+                        "$ref": "#/$defs/ID",
+                        "$comment": "{\"targetKinds\":[\"flow_graph\"],\"referenceScope\":\"entity\"}"
                       },
                       "returnNodeId": {
-                        "$ref": "#/$defs/ID"
+                        "$ref": "#/$defs/ID",
+                        "$comment": "{\"targetKinds\":[\"flow_node\"],\"referenceScope\":\"entity\"}"
                       },
                       "parameters": {
                         "type": "object",
@@ -8497,7 +9245,8 @@
                 "presentationPosition": {
                   "anyOf": [
                     {
-                      "$ref": "#/$defs/ID"
+                      "$ref": "#/$defs/ID",
+                      "$comment": "{\"targetKinds\":[\"flow_node\"],\"referenceScope\":\"entity\"}"
                     },
                     {
                       "type": "null"
@@ -8542,7 +9291,8 @@
                     "type": "object",
                     "properties": {
                       "targetId": {
-                        "$ref": "#/$defs/ID"
+                        "$ref": "#/$defs/ID",
+                        "$comment": "{\"targetKinds\":[\"flow_node\",\"flow_edge\",\"disclosure\"],\"referenceScope\":\"entity\"}"
                       },
                       "value": {
                         "enum": [
@@ -8601,7 +9351,8 @@
             "traceId": {
               "anyOf": [
                 {
-                  "$ref": "#/$defs/ID"
+                  "$ref": "#/$defs/ID",
+                  "$comment": "{\"targetKinds\":[\"trace\"],\"referenceScope\":\"entity\"}"
                 },
                 {
                   "type": "null"
@@ -8638,7 +9389,8 @@
           "$ref": "#/$defs/ID"
         },
         "projectId": {
-          "$ref": "#/$defs/ID"
+          "$ref": "#/$defs/ID",
+          "$comment": "{\"referenceScope\":\"project\"}"
         },
         "kind": {
           "enum": [
@@ -8669,10 +9421,32 @@
             "projection"
           ]
         },
+        "retainIfUnreferenced": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "projectionProfileId": {
           "anyOf": [
             {
-              "$ref": "#/$defs/ID"
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"projection_profile\"],\"referenceScope\":\"entity\"}"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "templateId": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"template\"],\"referenceScope\":\"entity\"}"
             },
             {
               "type": "null"
@@ -8726,10 +9500,12 @@
           "type": "object",
           "properties": {
             "contentVersionId": {
-              "$ref": "#/$defs/ID"
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"referenceScope\":\"snapshot\"}"
             },
             "startCheckpointId": {
-              "$ref": "#/$defs/ID"
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"checkpoint\"],\"referenceScope\":\"entity\"}"
             },
             "steps": {
               "type": "array",
@@ -8737,12 +9513,14 @@
                 "type": "object",
                 "properties": {
                   "nodeId": {
-                    "$ref": "#/$defs/ID"
+                    "$ref": "#/$defs/ID",
+                    "$comment": "{\"targetKinds\":[\"flow_node\"],\"referenceScope\":\"entity\"}"
                   },
                   "edgeIds": {
                     "type": "array",
                     "items": {
-                      "$ref": "#/$defs/ID"
+                      "$ref": "#/$defs/ID",
+                      "$comment": "{\"targetKinds\":[\"flow_edge\"],\"referenceScope\":\"entity\"}"
                     },
                     "maxItems": 100000,
                     "uniqueItems": true
@@ -8751,7 +9529,8 @@
                     "type": "object",
                     "properties": {
                       "contentVersionId": {
-                        "$ref": "#/$defs/ID"
+                        "$ref": "#/$defs/ID",
+                        "$comment": "{\"referenceScope\":\"snapshot\"}"
                       },
                       "variableValues": {
                         "type": "object",
@@ -8759,7 +9538,8 @@
                           "$ref": "#/$defs/TypedValue"
                         },
                         "propertyNames": {
-                          "$ref": "#/$defs/ID"
+                          "$ref": "#/$defs/ID",
+                          "$comment": "{\"targetKinds\":[\"variable\"],\"referenceScope\":\"entity\"}"
                         }
                       },
                       "itemInstances": {
@@ -8771,7 +9551,8 @@
                               "$ref": "#/$defs/ID"
                             },
                             "typeId": {
-                              "$ref": "#/$defs/ID"
+                              "$ref": "#/$defs/ID",
+                              "$comment": "{\"targetKinds\":[\"item\"],\"referenceScope\":\"entity\"}"
                             },
                             "quantity": {
                               "type": "integer",
@@ -8781,7 +9562,8 @@
                             "ownerId": {
                               "anyOf": [
                                 {
-                                  "$ref": "#/$defs/ID"
+                                  "$ref": "#/$defs/ID",
+                                  "$comment": "{\"targetKinds\":[\"character\",\"group\"],\"referenceScope\":\"entity\"}"
                                 },
                                 {
                                   "type": "null"
@@ -8791,7 +9573,8 @@
                             "locationId": {
                               "anyOf": [
                                 {
-                                  "$ref": "#/$defs/ID"
+                                  "$ref": "#/$defs/ID",
+                                  "$comment": "{\"targetKinds\":[\"place\"],\"referenceScope\":\"entity\"}"
                                 },
                                 {
                                   "type": "null"
@@ -8829,12 +9612,14 @@
                           "type": "object",
                           "properties": {
                             "assertionId": {
-                              "$ref": "#/$defs/ID"
+                              "$ref": "#/$defs/ID",
+                              "$comment": "{\"targetKinds\":[\"assertion\"],\"referenceScope\":\"entity\"}"
                             },
                             "holderId": {
                               "anyOf": [
                                 {
-                                  "$ref": "#/$defs/ID"
+                                  "$ref": "#/$defs/ID",
+                                  "$comment": "{\"targetKinds\":[\"character\"],\"referenceScope\":\"entity\"}"
                                 },
                                 {
                                   "type": "null"
@@ -8851,7 +9636,8 @@
                             "sourceEffectId": {
                               "anyOf": [
                                 {
-                                  "$ref": "#/$defs/ID"
+                                  "$ref": "#/$defs/ID",
+                                  "$comment": "{\"targetKinds\":[\"effect\"],\"referenceScope\":\"entity\"}"
                                 },
                                 {
                                   "type": "null"
@@ -8870,7 +9656,8 @@
                       "seenIds": {
                         "type": "array",
                         "items": {
-                          "$ref": "#/$defs/ID"
+                          "$ref": "#/$defs/ID",
+                          "$comment": "{\"referenceScope\":\"presentation\"}"
                         },
                         "maxItems": 100000,
                         "uniqueItems": true
@@ -8883,7 +9670,8 @@
                           "maximum": 9007199254740991
                         },
                         "propertyNames": {
-                          "$ref": "#/$defs/ID"
+                          "$ref": "#/$defs/ID",
+                          "$comment": "{\"referenceScope\":\"entity\"}"
                         }
                       },
                       "onceTriggers": {
@@ -8910,10 +9698,12 @@
                           "type": "object",
                           "properties": {
                             "graphId": {
-                              "$ref": "#/$defs/ID"
+                              "$ref": "#/$defs/ID",
+                              "$comment": "{\"targetKinds\":[\"flow_graph\"],\"referenceScope\":\"entity\"}"
                             },
                             "returnNodeId": {
-                              "$ref": "#/$defs/ID"
+                              "$ref": "#/$defs/ID",
+                              "$comment": "{\"targetKinds\":[\"flow_node\"],\"referenceScope\":\"entity\"}"
                             },
                             "parameters": {
                               "type": "object",
@@ -8939,7 +9729,8 @@
                       "presentationPosition": {
                         "anyOf": [
                           {
-                            "$ref": "#/$defs/ID"
+                            "$ref": "#/$defs/ID",
+                            "$comment": "{\"targetKinds\":[\"flow_node\"],\"referenceScope\":\"entity\"}"
                           },
                           {
                             "type": "null"
@@ -8980,7 +9771,8 @@
                     "type": "object",
                     "properties": {
                       "contentVersionId": {
-                        "$ref": "#/$defs/ID"
+                        "$ref": "#/$defs/ID",
+                        "$comment": "{\"referenceScope\":\"snapshot\"}"
                       },
                       "variableValues": {
                         "type": "object",
@@ -8988,7 +9780,8 @@
                           "$ref": "#/$defs/TypedValue"
                         },
                         "propertyNames": {
-                          "$ref": "#/$defs/ID"
+                          "$ref": "#/$defs/ID",
+                          "$comment": "{\"targetKinds\":[\"variable\"],\"referenceScope\":\"entity\"}"
                         }
                       },
                       "itemInstances": {
@@ -9000,7 +9793,8 @@
                               "$ref": "#/$defs/ID"
                             },
                             "typeId": {
-                              "$ref": "#/$defs/ID"
+                              "$ref": "#/$defs/ID",
+                              "$comment": "{\"targetKinds\":[\"item\"],\"referenceScope\":\"entity\"}"
                             },
                             "quantity": {
                               "type": "integer",
@@ -9010,7 +9804,8 @@
                             "ownerId": {
                               "anyOf": [
                                 {
-                                  "$ref": "#/$defs/ID"
+                                  "$ref": "#/$defs/ID",
+                                  "$comment": "{\"targetKinds\":[\"character\",\"group\"],\"referenceScope\":\"entity\"}"
                                 },
                                 {
                                   "type": "null"
@@ -9020,7 +9815,8 @@
                             "locationId": {
                               "anyOf": [
                                 {
-                                  "$ref": "#/$defs/ID"
+                                  "$ref": "#/$defs/ID",
+                                  "$comment": "{\"targetKinds\":[\"place\"],\"referenceScope\":\"entity\"}"
                                 },
                                 {
                                   "type": "null"
@@ -9058,12 +9854,14 @@
                           "type": "object",
                           "properties": {
                             "assertionId": {
-                              "$ref": "#/$defs/ID"
+                              "$ref": "#/$defs/ID",
+                              "$comment": "{\"targetKinds\":[\"assertion\"],\"referenceScope\":\"entity\"}"
                             },
                             "holderId": {
                               "anyOf": [
                                 {
-                                  "$ref": "#/$defs/ID"
+                                  "$ref": "#/$defs/ID",
+                                  "$comment": "{\"targetKinds\":[\"character\"],\"referenceScope\":\"entity\"}"
                                 },
                                 {
                                   "type": "null"
@@ -9080,7 +9878,8 @@
                             "sourceEffectId": {
                               "anyOf": [
                                 {
-                                  "$ref": "#/$defs/ID"
+                                  "$ref": "#/$defs/ID",
+                                  "$comment": "{\"targetKinds\":[\"effect\"],\"referenceScope\":\"entity\"}"
                                 },
                                 {
                                   "type": "null"
@@ -9099,7 +9898,8 @@
                       "seenIds": {
                         "type": "array",
                         "items": {
-                          "$ref": "#/$defs/ID"
+                          "$ref": "#/$defs/ID",
+                          "$comment": "{\"referenceScope\":\"presentation\"}"
                         },
                         "maxItems": 100000,
                         "uniqueItems": true
@@ -9112,7 +9912,8 @@
                           "maximum": 9007199254740991
                         },
                         "propertyNames": {
-                          "$ref": "#/$defs/ID"
+                          "$ref": "#/$defs/ID",
+                          "$comment": "{\"referenceScope\":\"entity\"}"
                         }
                       },
                       "onceTriggers": {
@@ -9139,10 +9940,12 @@
                           "type": "object",
                           "properties": {
                             "graphId": {
-                              "$ref": "#/$defs/ID"
+                              "$ref": "#/$defs/ID",
+                              "$comment": "{\"targetKinds\":[\"flow_graph\"],\"referenceScope\":\"entity\"}"
                             },
                             "returnNodeId": {
-                              "$ref": "#/$defs/ID"
+                              "$ref": "#/$defs/ID",
+                              "$comment": "{\"targetKinds\":[\"flow_node\"],\"referenceScope\":\"entity\"}"
                             },
                             "parameters": {
                               "type": "object",
@@ -9168,7 +9971,8 @@
                       "presentationPosition": {
                         "anyOf": [
                           {
-                            "$ref": "#/$defs/ID"
+                            "$ref": "#/$defs/ID",
+                            "$comment": "{\"targetKinds\":[\"flow_node\"],\"referenceScope\":\"entity\"}"
                           },
                           {
                             "type": "null"
@@ -9213,7 +10017,8 @@
                           "type": "object",
                           "properties": {
                             "targetId": {
-                              "$ref": "#/$defs/ID"
+                              "$ref": "#/$defs/ID",
+                              "$comment": "{\"targetKinds\":[\"flow_node\",\"flow_edge\",\"disclosure\"],\"referenceScope\":\"entity\"}"
                             },
                             "value": {
                               "enum": [
@@ -9301,7 +10106,8 @@
                           "$ref": "#/$defs/TypedValue"
                         },
                         "propertyNames": {
-                          "$ref": "#/$defs/ID"
+                          "$ref": "#/$defs/ID",
+                          "$comment": "{\"targetKinds\":[\"external_contract\"],\"referenceScope\":\"entity\"}"
                         }
                       },
                       {
@@ -9338,7 +10144,8 @@
                     "$ref": "#/$defs/TypedValue"
                   },
                   "propertyNames": {
-                    "$ref": "#/$defs/ID"
+                    "$ref": "#/$defs/ID",
+                    "$comment": "{\"targetKinds\":[\"external_contract\"],\"referenceScope\":\"entity\"}"
                   }
                 },
                 {
@@ -9698,7 +10505,8 @@
           "$ref": "#/$defs/ID"
         },
         "projectId": {
-          "$ref": "#/$defs/ID"
+          "$ref": "#/$defs/ID",
+          "$comment": "{\"referenceScope\":\"project\"}"
         },
         "kind": {
           "enum": [
@@ -9729,10 +10537,32 @@
             "projection"
           ]
         },
+        "retainIfUnreferenced": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "projectionProfileId": {
           "anyOf": [
             {
-              "$ref": "#/$defs/ID"
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"projection_profile\"],\"referenceScope\":\"entity\"}"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "templateId": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"template\"],\"referenceScope\":\"entity\"}"
             },
             {
               "type": "null"
@@ -9818,7 +10648,8 @@
             "provenanceId": {
               "anyOf": [
                 {
-                  "$ref": "#/$defs/ID"
+                  "$ref": "#/$defs/ID",
+                  "$comment": "{\"targetKinds\":[\"source\"],\"referenceScope\":\"entity\"}"
                 },
                 {
                   "type": "null"
@@ -9855,7 +10686,8 @@
                 {
                   "type": "array",
                   "items": {
-                    "$ref": "#/$defs/ID"
+                    "$ref": "#/$defs/ID",
+                    "$comment": "{\"targetKinds\":[\"attachment\"],\"referenceScope\":\"entity\"}"
                   },
                   "maxItems": 100000,
                   "uniqueItems": true
@@ -9897,7 +10729,8 @@
           "$ref": "#/$defs/ID"
         },
         "projectId": {
-          "$ref": "#/$defs/ID"
+          "$ref": "#/$defs/ID",
+          "$comment": "{\"referenceScope\":\"project\"}"
         },
         "kind": {
           "enum": [
@@ -9928,10 +10761,32 @@
             "projection"
           ]
         },
+        "retainIfUnreferenced": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "projectionProfileId": {
           "anyOf": [
             {
-              "$ref": "#/$defs/ID"
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"projection_profile\"],\"referenceScope\":\"entity\"}"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "templateId": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"template\"],\"referenceScope\":\"entity\"}"
             },
             {
               "type": "null"
@@ -10032,7 +10887,8 @@
             "attachmentId": {
               "anyOf": [
                 {
-                  "$ref": "#/$defs/ID"
+                  "$ref": "#/$defs/ID",
+                  "$comment": "{\"targetKinds\":[\"attachment\"],\"referenceScope\":\"entity\"}"
                 },
                 {
                   "type": "null"
@@ -10079,7 +10935,8 @@
           "$ref": "#/$defs/ID"
         },
         "projectId": {
-          "$ref": "#/$defs/ID"
+          "$ref": "#/$defs/ID",
+          "$comment": "{\"referenceScope\":\"project\"}"
         },
         "kind": {
           "enum": [
@@ -10110,10 +10967,32 @@
             "projection"
           ]
         },
+        "retainIfUnreferenced": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "projectionProfileId": {
           "anyOf": [
             {
-              "$ref": "#/$defs/ID"
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"projection_profile\"],\"referenceScope\":\"entity\"}"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "templateId": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"template\"],\"referenceScope\":\"entity\"}"
             },
             {
               "type": "null"
@@ -10170,12 +11049,14 @@
               "type": "object",
               "properties": {
                 "entityId": {
-                  "$ref": "#/$defs/ID"
+                  "$ref": "#/$defs/ID",
+                  "$comment": "{\"referenceScope\":\"entity\"}"
                 },
                 "blockId": {
                   "anyOf": [
                     {
-                      "$ref": "#/$defs/ID"
+                      "$ref": "#/$defs/ID",
+                      "$comment": "{\"referenceScope\":\"block\"}"
                     },
                     {
                       "type": "null"
@@ -10185,7 +11066,8 @@
                 "lineId": {
                   "anyOf": [
                     {
-                      "$ref": "#/$defs/ID"
+                      "$ref": "#/$defs/ID",
+                      "$comment": "{\"targetKinds\":[\"dialogue_line\"],\"referenceScope\":\"entity\"}"
                     },
                     {
                       "type": "null"
@@ -10219,7 +11101,8 @@
                 "sourceVersionId": {
                   "anyOf": [
                     {
-                      "$ref": "#/$defs/ID"
+                      "$ref": "#/$defs/ID",
+                      "$comment": "{\"referenceScope\":\"snapshot\"}"
                     },
                     {
                       "type": "null"
@@ -10274,7 +11157,8 @@
             "attachmentId": {
               "anyOf": [
                 {
-                  "$ref": "#/$defs/ID"
+                  "$ref": "#/$defs/ID",
+                  "$comment": "{\"targetKinds\":[\"attachment\"],\"referenceScope\":\"entity\"}"
                 },
                 {
                   "type": "null"
@@ -10284,7 +11168,8 @@
             "speakerId": {
               "anyOf": [
                 {
-                  "$ref": "#/$defs/ID"
+                  "$ref": "#/$defs/ID",
+                  "$comment": "{\"targetKinds\":[\"character\"],\"referenceScope\":\"entity\"}"
                 },
                 {
                   "type": "null"
@@ -10378,7 +11263,8 @@
           "$ref": "#/$defs/ID"
         },
         "projectId": {
-          "$ref": "#/$defs/ID"
+          "$ref": "#/$defs/ID",
+          "$comment": "{\"referenceScope\":\"project\"}"
         },
         "kind": {
           "enum": [
@@ -10409,10 +11295,32 @@
             "projection"
           ]
         },
+        "retainIfUnreferenced": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "projectionProfileId": {
           "anyOf": [
             {
-              "$ref": "#/$defs/ID"
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"projection_profile\"],\"referenceScope\":\"entity\"}"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "templateId": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"template\"],\"referenceScope\":\"entity\"}"
             },
             {
               "type": "null"
@@ -10469,12 +11377,14 @@
               "type": "object",
               "properties": {
                 "entityId": {
-                  "$ref": "#/$defs/ID"
+                  "$ref": "#/$defs/ID",
+                  "$comment": "{\"referenceScope\":\"entity\"}"
                 },
                 "blockId": {
                   "anyOf": [
                     {
-                      "$ref": "#/$defs/ID"
+                      "$ref": "#/$defs/ID",
+                      "$comment": "{\"referenceScope\":\"block\"}"
                     },
                     {
                       "type": "null"
@@ -10484,7 +11394,8 @@
                 "lineId": {
                   "anyOf": [
                     {
-                      "$ref": "#/$defs/ID"
+                      "$ref": "#/$defs/ID",
+                      "$comment": "{\"targetKinds\":[\"dialogue_line\"],\"referenceScope\":\"entity\"}"
                     },
                     {
                       "type": "null"
@@ -10518,7 +11429,8 @@
                 "sourceVersionId": {
                   "anyOf": [
                     {
-                      "$ref": "#/$defs/ID"
+                      "$ref": "#/$defs/ID",
+                      "$comment": "{\"referenceScope\":\"snapshot\"}"
                     },
                     {
                       "type": "null"
@@ -10585,7 +11497,8 @@
             "referenceAssetId": {
               "anyOf": [
                 {
-                  "$ref": "#/$defs/ID"
+                  "$ref": "#/$defs/ID",
+                  "$comment": "{\"targetKinds\":[\"attachment\"],\"referenceScope\":\"entity\"}"
                 },
                 {
                   "type": "null"
@@ -10595,7 +11508,8 @@
             "finalAssetId": {
               "anyOf": [
                 {
-                  "$ref": "#/$defs/ID"
+                  "$ref": "#/$defs/ID",
+                  "$comment": "{\"targetKinds\":[\"attachment\"],\"referenceScope\":\"entity\"}"
                 },
                 {
                   "type": "null"
@@ -10607,7 +11521,8 @@
                 {
                   "type": "array",
                   "items": {
-                    "$ref": "#/$defs/ID"
+                    "$ref": "#/$defs/ID",
+                    "$comment": "{\"targetKinds\":[\"cue\"],\"referenceScope\":\"entity\"}"
                   },
                   "maxItems": 100000,
                   "uniqueItems": true
@@ -10657,7 +11572,8 @@
           "$ref": "#/$defs/ID"
         },
         "projectId": {
-          "$ref": "#/$defs/ID"
+          "$ref": "#/$defs/ID",
+          "$comment": "{\"referenceScope\":\"project\"}"
         },
         "kind": {
           "enum": [
@@ -10688,10 +11604,32 @@
             "projection"
           ]
         },
+        "retainIfUnreferenced": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "projectionProfileId": {
           "anyOf": [
             {
-              "$ref": "#/$defs/ID"
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"projection_profile\"],\"referenceScope\":\"entity\"}"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "templateId": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"template\"],\"referenceScope\":\"entity\"}"
             },
             {
               "type": "null"
@@ -10745,7 +11683,8 @@
           "type": "object",
           "properties": {
             "sourceLineId": {
-              "$ref": "#/$defs/ID"
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"dialogue_line\"],\"referenceScope\":\"entity\"}"
             },
             "language": {
               "type": "string",
@@ -10776,7 +11715,8 @@
             "reviewedBy": {
               "anyOf": [
                 {
-                  "$ref": "#/$defs/ID"
+                  "$ref": "#/$defs/ID",
+                  "$comment": "{\"referenceScope\":\"identity\"}"
                 },
                 {
                   "type": "null"
@@ -10788,7 +11728,8 @@
                 {
                   "type": "array",
                   "items": {
-                    "$ref": "#/$defs/ID"
+                    "$ref": "#/$defs/ID",
+                    "$comment": "{\"targetKinds\":[\"recording\"],\"referenceScope\":\"entity\"}"
                   },
                   "maxItems": 100000,
                   "uniqueItems": true
@@ -10830,7 +11771,8 @@
           "$ref": "#/$defs/ID"
         },
         "projectId": {
-          "$ref": "#/$defs/ID"
+          "$ref": "#/$defs/ID",
+          "$comment": "{\"referenceScope\":\"project\"}"
         },
         "kind": {
           "enum": [
@@ -10861,10 +11803,32 @@
             "projection"
           ]
         },
+        "retainIfUnreferenced": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "projectionProfileId": {
           "anyOf": [
             {
-              "$ref": "#/$defs/ID"
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"projection_profile\"],\"referenceScope\":\"entity\"}"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "templateId": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"template\"],\"referenceScope\":\"entity\"}"
             },
             {
               "type": "null"
@@ -10918,7 +11882,8 @@
           "type": "object",
           "properties": {
             "sourceLineId": {
-              "$ref": "#/$defs/ID"
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"dialogue_line\"],\"referenceScope\":\"entity\"}"
             },
             "language": {
               "type": "string",
@@ -10932,7 +11897,8 @@
             "translationId": {
               "anyOf": [
                 {
-                  "$ref": "#/$defs/ID"
+                  "$ref": "#/$defs/ID",
+                  "$comment": "{\"targetKinds\":[\"localization\"],\"referenceScope\":\"entity\"}"
                 },
                 {
                   "type": "null"
@@ -10942,7 +11908,8 @@
             "attachmentId": {
               "anyOf": [
                 {
-                  "$ref": "#/$defs/ID"
+                  "$ref": "#/$defs/ID",
+                  "$comment": "{\"targetKinds\":[\"attachment\"],\"referenceScope\":\"entity\"}"
                 },
                 {
                   "type": "null"
@@ -10977,7 +11944,8 @@
             "reviewedBy": {
               "anyOf": [
                 {
-                  "$ref": "#/$defs/ID"
+                  "$ref": "#/$defs/ID",
+                  "$comment": "{\"referenceScope\":\"identity\"}"
                 },
                 {
                   "type": "null"
@@ -11015,7 +11983,8 @@
           "$ref": "#/$defs/ID"
         },
         "projectId": {
-          "$ref": "#/$defs/ID"
+          "$ref": "#/$defs/ID",
+          "$comment": "{\"referenceScope\":\"project\"}"
         },
         "kind": {
           "enum": [
@@ -11046,10 +12015,32 @@
             "projection"
           ]
         },
+        "retainIfUnreferenced": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "projectionProfileId": {
           "anyOf": [
             {
-              "$ref": "#/$defs/ID"
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"projection_profile\"],\"referenceScope\":\"entity\"}"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "templateId": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"template\"],\"referenceScope\":\"entity\"}"
             },
             {
               "type": "null"
@@ -11209,12 +12200,14 @@
                           "type": "object",
                           "properties": {
                             "entityId": {
-                              "$ref": "#/$defs/ID"
+                              "$ref": "#/$defs/ID",
+                              "$comment": "{\"referenceScope\":\"entity\"}"
                             },
                             "blockId": {
                               "anyOf": [
                                 {
-                                  "$ref": "#/$defs/ID"
+                                  "$ref": "#/$defs/ID",
+                                  "$comment": "{\"referenceScope\":\"block\"}"
                                 },
                                 {
                                   "type": "null"
@@ -11224,7 +12217,8 @@
                             "lineId": {
                               "anyOf": [
                                 {
-                                  "$ref": "#/$defs/ID"
+                                  "$ref": "#/$defs/ID",
+                                  "$comment": "{\"targetKinds\":[\"dialogue_line\"],\"referenceScope\":\"entity\"}"
                                 },
                                 {
                                   "type": "null"
@@ -11258,7 +12252,8 @@
                             "sourceVersionId": {
                               "anyOf": [
                                 {
-                                  "$ref": "#/$defs/ID"
+                                  "$ref": "#/$defs/ID",
+                                  "$comment": "{\"referenceScope\":\"snapshot\"}"
                                 },
                                 {
                                   "type": "null"
@@ -11338,12 +12333,14 @@
                         "type": "object",
                         "properties": {
                           "projectId": {
-                            "$ref": "#/$defs/ID"
+                            "$ref": "#/$defs/ID",
+                            "$comment": "{\"referenceScope\":\"project\"}"
                           },
                           "graphId": {
                             "anyOf": [
                               {
-                                "$ref": "#/$defs/ID"
+                                "$ref": "#/$defs/ID",
+                                "$comment": "{\"targetKinds\":[\"flow_graph\"],\"referenceScope\":\"entity\"}"
                               },
                               {
                                 "type": "null"
@@ -11353,7 +12350,8 @@
                           "chapterId": {
                             "anyOf": [
                               {
-                                "$ref": "#/$defs/ID"
+                                "$ref": "#/$defs/ID",
+                                "$comment": "{\"targetKinds\":[\"chapter\"],\"referenceScope\":\"entity\"}"
                               },
                               {
                                 "type": "null"
@@ -11373,7 +12371,8 @@
                           "targetSnapshotId": {
                             "anyOf": [
                               {
-                                "$ref": "#/$defs/ID"
+                                "$ref": "#/$defs/ID",
+                                "$comment": "{\"referenceScope\":\"snapshot\"}"
                               },
                               {
                                 "type": "null"
@@ -11442,12 +12441,14 @@
                                 "type": "object",
                                 "properties": {
                                   "entityId": {
-                                    "$ref": "#/$defs/ID"
+                                    "$ref": "#/$defs/ID",
+                                    "$comment": "{\"referenceScope\":\"entity\"}"
                                   },
                                   "blockId": {
                                     "anyOf": [
                                       {
-                                        "$ref": "#/$defs/ID"
+                                        "$ref": "#/$defs/ID",
+                                        "$comment": "{\"referenceScope\":\"block\"}"
                                       },
                                       {
                                         "type": "null"
@@ -11457,7 +12458,8 @@
                                   "lineId": {
                                     "anyOf": [
                                       {
-                                        "$ref": "#/$defs/ID"
+                                        "$ref": "#/$defs/ID",
+                                        "$comment": "{\"targetKinds\":[\"dialogue_line\"],\"referenceScope\":\"entity\"}"
                                       },
                                       {
                                         "type": "null"
@@ -11491,7 +12493,8 @@
                                   "sourceVersionId": {
                                     "anyOf": [
                                       {
-                                        "$ref": "#/$defs/ID"
+                                        "$ref": "#/$defs/ID",
+                                        "$comment": "{\"referenceScope\":\"snapshot\"}"
                                       },
                                       {
                                         "type": "null"
@@ -11554,7 +12557,8 @@
                       "evidenceIds": {
                         "type": "array",
                         "items": {
-                          "$ref": "#/$defs/ID"
+                          "$ref": "#/$defs/ID",
+                          "$comment": "{\"referenceScope\":\"entity\"}"
                         },
                         "maxItems": 100000,
                         "uniqueItems": true
@@ -11578,7 +12582,8 @@
             "voiceOwnerId": {
               "anyOf": [
                 {
-                  "$ref": "#/$defs/ID"
+                  "$ref": "#/$defs/ID",
+                  "$comment": "{\"targetKinds\":[\"character\"],\"referenceScope\":\"entity\"}"
                 },
                 {
                   "type": "null"
@@ -11615,7 +12620,8 @@
           "$ref": "#/$defs/ID"
         },
         "projectId": {
-          "$ref": "#/$defs/ID"
+          "$ref": "#/$defs/ID",
+          "$comment": "{\"referenceScope\":\"project\"}"
         },
         "kind": {
           "enum": [
@@ -11646,10 +12652,32 @@
             "projection"
           ]
         },
+        "retainIfUnreferenced": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "projectionProfileId": {
           "anyOf": [
             {
-              "$ref": "#/$defs/ID"
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"projection_profile\"],\"referenceScope\":\"entity\"}"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "templateId": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"template\"],\"referenceScope\":\"entity\"}"
             },
             {
               "type": "null"
@@ -11703,7 +12731,8 @@
           "type": "object",
           "properties": {
             "placeId": {
-              "$ref": "#/$defs/ID"
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"place\"],\"referenceScope\":\"entity\"}"
             },
             "coordinateSystem": {
               "enum": [
@@ -11713,7 +12742,8 @@
             "attachmentId": {
               "anyOf": [
                 {
-                  "$ref": "#/$defs/ID"
+                  "$ref": "#/$defs/ID",
+                  "$comment": "{\"targetKinds\":[\"attachment\"],\"referenceScope\":\"entity\"}"
                 },
                 {
                   "type": "null"
@@ -11723,7 +12753,8 @@
             "parentMapId": {
               "anyOf": [
                 {
-                  "$ref": "#/$defs/ID"
+                  "$ref": "#/$defs/ID",
+                  "$comment": "{\"targetKinds\":[\"map\"],\"referenceScope\":\"entity\"}"
                 },
                 {
                   "type": "null"
@@ -11741,7 +12772,8 @@
                         "$ref": "#/$defs/ID"
                       },
                       "placeId": {
-                        "$ref": "#/$defs/ID"
+                        "$ref": "#/$defs/ID",
+                        "$comment": "{\"targetKinds\":[\"place\"],\"referenceScope\":\"entity\"}"
                       },
                       "x": {
                         "type": "number",
@@ -11810,7 +12842,8 @@
           "$ref": "#/$defs/ID"
         },
         "projectId": {
-          "$ref": "#/$defs/ID"
+          "$ref": "#/$defs/ID",
+          "$comment": "{\"referenceScope\":\"project\"}"
         },
         "kind": {
           "enum": [
@@ -11841,10 +12874,32 @@
             "projection"
           ]
         },
+        "retainIfUnreferenced": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "projectionProfileId": {
           "anyOf": [
             {
-              "$ref": "#/$defs/ID"
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"projection_profile\"],\"referenceScope\":\"entity\"}"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "templateId": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"template\"],\"referenceScope\":\"entity\"}"
             },
             {
               "type": "null"
@@ -11898,10 +12953,12 @@
           "type": "object",
           "properties": {
             "fromPlaceId": {
-              "$ref": "#/$defs/ID"
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"place\"],\"referenceScope\":\"entity\"}"
             },
             "toPlaceId": {
-              "$ref": "#/$defs/ID"
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"place\"],\"referenceScope\":\"entity\"}"
             },
             "direction": {
               "enum": [
@@ -11945,7 +13002,8 @@
                 {
                   "type": "array",
                   "items": {
-                    "$ref": "#/$defs/ID"
+                    "$ref": "#/$defs/ID",
+                    "$comment": "{\"referenceScope\":\"entity\"}"
                   },
                   "maxItems": 100000,
                   "uniqueItems": true
@@ -12013,12 +13071,14 @@
                           "type": "object",
                           "properties": {
                             "entityId": {
-                              "$ref": "#/$defs/ID"
+                              "$ref": "#/$defs/ID",
+                              "$comment": "{\"referenceScope\":\"entity\"}"
                             },
                             "blockId": {
                               "anyOf": [
                                 {
-                                  "$ref": "#/$defs/ID"
+                                  "$ref": "#/$defs/ID",
+                                  "$comment": "{\"referenceScope\":\"block\"}"
                                 },
                                 {
                                   "type": "null"
@@ -12028,7 +13088,8 @@
                             "lineId": {
                               "anyOf": [
                                 {
-                                  "$ref": "#/$defs/ID"
+                                  "$ref": "#/$defs/ID",
+                                  "$comment": "{\"targetKinds\":[\"dialogue_line\"],\"referenceScope\":\"entity\"}"
                                 },
                                 {
                                   "type": "null"
@@ -12062,7 +13123,8 @@
                             "sourceVersionId": {
                               "anyOf": [
                                 {
-                                  "$ref": "#/$defs/ID"
+                                  "$ref": "#/$defs/ID",
+                                  "$comment": "{\"referenceScope\":\"snapshot\"}"
                                 },
                                 {
                                   "type": "null"
@@ -12158,7 +13220,8 @@
           "$ref": "#/$defs/ID"
         },
         "projectId": {
-          "$ref": "#/$defs/ID"
+          "$ref": "#/$defs/ID",
+          "$comment": "{\"referenceScope\":\"project\"}"
         },
         "kind": {
           "enum": [
@@ -12189,10 +13252,32 @@
             "projection"
           ]
         },
+        "retainIfUnreferenced": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "projectionProfileId": {
           "anyOf": [
             {
-              "$ref": "#/$defs/ID"
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"projection_profile\"],\"referenceScope\":\"entity\"}"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "templateId": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"template\"],\"referenceScope\":\"entity\"}"
             },
             {
               "type": "null"
@@ -12501,7 +13586,8 @@
           "$ref": "#/$defs/ID"
         },
         "projectId": {
-          "$ref": "#/$defs/ID"
+          "$ref": "#/$defs/ID",
+          "$comment": "{\"referenceScope\":\"project\"}"
         },
         "kind": {
           "enum": [
@@ -12532,10 +13618,32 @@
             "projection"
           ]
         },
+        "retainIfUnreferenced": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "projectionProfileId": {
           "anyOf": [
             {
-              "$ref": "#/$defs/ID"
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"projection_profile\"],\"referenceScope\":\"entity\"}"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "templateId": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"template\"],\"referenceScope\":\"entity\"}"
             },
             {
               "type": "null"
@@ -12609,7 +13717,8 @@
                 {
                   "type": "array",
                   "items": {
-                    "$ref": "#/$defs/ID"
+                    "$ref": "#/$defs/ID",
+                    "$comment": "{\"referenceScope\":\"entity\"}"
                   },
                   "maxItems": 100000,
                   "uniqueItems": true
@@ -12679,7 +13788,8 @@
           "$ref": "#/$defs/ID"
         },
         "projectId": {
-          "$ref": "#/$defs/ID"
+          "$ref": "#/$defs/ID",
+          "$comment": "{\"referenceScope\":\"project\"}"
         },
         "kind": {
           "enum": [
@@ -12710,10 +13820,32 @@
             "projection"
           ]
         },
+        "retainIfUnreferenced": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "projectionProfileId": {
           "anyOf": [
             {
-              "$ref": "#/$defs/ID"
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"projection_profile\"],\"referenceScope\":\"entity\"}"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "templateId": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"template\"],\"referenceScope\":\"entity\"}"
             },
             {
               "type": "null"
@@ -12772,12 +13904,14 @@
                   "type": "object",
                   "properties": {
                     "entityId": {
-                      "$ref": "#/$defs/ID"
+                      "$ref": "#/$defs/ID",
+                      "$comment": "{\"referenceScope\":\"entity\"}"
                     },
                     "blockId": {
                       "anyOf": [
                         {
-                          "$ref": "#/$defs/ID"
+                          "$ref": "#/$defs/ID",
+                          "$comment": "{\"referenceScope\":\"block\"}"
                         },
                         {
                           "type": "null"
@@ -12787,7 +13921,8 @@
                     "lineId": {
                       "anyOf": [
                         {
-                          "$ref": "#/$defs/ID"
+                          "$ref": "#/$defs/ID",
+                          "$comment": "{\"targetKinds\":[\"dialogue_line\"],\"referenceScope\":\"entity\"}"
                         },
                         {
                           "type": "null"
@@ -12821,7 +13956,8 @@
                     "sourceVersionId": {
                       "anyOf": [
                         {
-                          "$ref": "#/$defs/ID"
+                          "$ref": "#/$defs/ID",
+                          "$comment": "{\"referenceScope\":\"snapshot\"}"
                         },
                         {
                           "type": "null"
@@ -12869,12 +14005,14 @@
                   "additionalProperties": false
                 },
                 {
-                  "$ref": "#/$defs/ID"
+                  "$ref": "#/$defs/ID",
+                  "$comment": "{\"referenceScope\":\"entity\"}"
                 }
               ]
             },
             "targetVersionId": {
-              "$ref": "#/$defs/ID"
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"referenceScope\":\"snapshot\"}"
             },
             "body": {
               "$ref": "#/$defs/RichText"
@@ -12889,7 +14027,8 @@
             "assigneeId": {
               "anyOf": [
                 {
-                  "$ref": "#/$defs/ID"
+                  "$ref": "#/$defs/ID",
+                  "$comment": "{\"referenceScope\":\"identity\"}"
                 },
                 {
                   "type": "null"
@@ -12949,7 +14088,8 @@
           "$ref": "#/$defs/ID"
         },
         "projectId": {
-          "$ref": "#/$defs/ID"
+          "$ref": "#/$defs/ID",
+          "$comment": "{\"referenceScope\":\"project\"}"
         },
         "kind": {
           "enum": [
@@ -12980,10 +14120,32 @@
             "projection"
           ]
         },
+        "retainIfUnreferenced": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "projectionProfileId": {
           "anyOf": [
             {
-              "$ref": "#/$defs/ID"
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"projection_profile\"],\"referenceScope\":\"entity\"}"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "templateId": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"template\"],\"referenceScope\":\"entity\"}"
             },
             {
               "type": "null"
@@ -13056,7 +14218,8 @@
                 {
                   "type": "array",
                   "items": {
-                    "$ref": "#/$defs/ID"
+                    "$ref": "#/$defs/ID",
+                    "$comment": "{\"referenceScope\":\"entity\"}"
                   },
                   "maxItems": 100000,
                   "uniqueItems": true
@@ -13071,7 +14234,8 @@
                 {
                   "type": "array",
                   "items": {
-                    "$ref": "#/$defs/ID"
+                    "$ref": "#/$defs/ID",
+                    "$comment": "{\"targetKinds\":[\"decision\"],\"referenceScope\":\"entity\"}"
                   },
                   "maxItems": 100000,
                   "uniqueItems": true
@@ -13114,7 +14278,8 @@
           "$ref": "#/$defs/ID"
         },
         "projectId": {
-          "$ref": "#/$defs/ID"
+          "$ref": "#/$defs/ID",
+          "$comment": "{\"referenceScope\":\"project\"}"
         },
         "kind": {
           "enum": [
@@ -13145,10 +14310,32 @@
             "projection"
           ]
         },
+        "retainIfUnreferenced": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "projectionProfileId": {
           "anyOf": [
             {
-              "$ref": "#/$defs/ID"
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"projection_profile\"],\"referenceScope\":\"entity\"}"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "templateId": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"template\"],\"referenceScope\":\"entity\"}"
             },
             {
               "type": "null"
@@ -13209,7 +14396,8 @@
               "$ref": "#/$defs/RichText"
             },
             "targetVersionId": {
-              "$ref": "#/$defs/ID"
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"referenceScope\":\"snapshot\"}"
             },
             "outcome": {
               "enum": [
@@ -13252,7 +14440,8 @@
                 {
                   "type": "array",
                   "items": {
-                    "$ref": "#/$defs/ID"
+                    "$ref": "#/$defs/ID",
+                    "$comment": "{\"targetKinds\":[\"review\"],\"referenceScope\":\"entity\"}"
                   },
                   "maxItems": 100000,
                   "uniqueItems": true
@@ -13294,7 +14483,8 @@
           "$ref": "#/$defs/ID"
         },
         "projectId": {
-          "$ref": "#/$defs/ID"
+          "$ref": "#/$defs/ID",
+          "$comment": "{\"referenceScope\":\"project\"}"
         },
         "kind": {
           "enum": [
@@ -13325,10 +14515,32 @@
             "projection"
           ]
         },
+        "retainIfUnreferenced": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "projectionProfileId": {
           "anyOf": [
             {
-              "$ref": "#/$defs/ID"
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"projection_profile\"],\"referenceScope\":\"entity\"}"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "templateId": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"template\"],\"referenceScope\":\"entity\"}"
             },
             {
               "type": "null"
@@ -13382,7 +14594,8 @@
           "type": "object",
           "properties": {
             "sceneId": {
-              "$ref": "#/$defs/ID"
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"scene\"],\"referenceScope\":\"entity\"}"
             },
             "action": {
               "$ref": "#/$defs/RichText"
@@ -13421,7 +14634,8 @@
             "questId": {
               "anyOf": [
                 {
-                  "$ref": "#/$defs/ID"
+                  "$ref": "#/$defs/ID",
+                  "$comment": "{\"targetKinds\":[\"quest\"],\"referenceScope\":\"entity\"}"
                 },
                 {
                   "type": "null"
@@ -13433,7 +14647,8 @@
                 {
                   "type": "array",
                   "items": {
-                    "$ref": "#/$defs/ID"
+                    "$ref": "#/$defs/ID",
+                    "$comment": "{\"targetKinds\":[\"production_task\"],\"referenceScope\":\"entity\"}"
                   },
                   "maxItems": 100000,
                   "uniqueItems": true
@@ -13484,7 +14699,8 @@
           "$ref": "#/$defs/ID"
         },
         "projectId": {
-          "$ref": "#/$defs/ID"
+          "$ref": "#/$defs/ID",
+          "$comment": "{\"referenceScope\":\"project\"}"
         },
         "kind": {
           "enum": [
@@ -13515,10 +14731,32 @@
             "projection"
           ]
         },
+        "retainIfUnreferenced": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "projectionProfileId": {
           "anyOf": [
             {
-              "$ref": "#/$defs/ID"
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"projection_profile\"],\"referenceScope\":\"entity\"}"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "templateId": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"template\"],\"referenceScope\":\"entity\"}"
             },
             {
               "type": "null"
@@ -13574,7 +14812,8 @@
             "targetIds": {
               "type": "array",
               "items": {
-                "$ref": "#/$defs/ID"
+                "$ref": "#/$defs/ID",
+                "$comment": "{\"referenceScope\":\"entity\"}"
               },
               "maxItems": 100000,
               "uniqueItems": true
@@ -13601,7 +14840,8 @@
             "assigneeId": {
               "anyOf": [
                 {
-                  "$ref": "#/$defs/ID"
+                  "$ref": "#/$defs/ID",
+                  "$comment": "{\"referenceScope\":\"identity\"}"
                 },
                 {
                   "type": "null"
@@ -13639,7 +14879,8 @@
                 {
                   "type": "array",
                   "items": {
-                    "$ref": "#/$defs/ID"
+                    "$ref": "#/$defs/ID",
+                    "$comment": "{\"targetKinds\":[\"production_task\"],\"referenceScope\":\"entity\"}"
                   },
                   "maxItems": 100000,
                   "uniqueItems": true
@@ -13706,12 +14947,14 @@
                       "type": "object",
                       "properties": {
                         "projectId": {
-                          "$ref": "#/$defs/ID"
+                          "$ref": "#/$defs/ID",
+                          "$comment": "{\"referenceScope\":\"project\"}"
                         },
                         "graphId": {
                           "anyOf": [
                             {
-                              "$ref": "#/$defs/ID"
+                              "$ref": "#/$defs/ID",
+                              "$comment": "{\"targetKinds\":[\"flow_graph\"],\"referenceScope\":\"entity\"}"
                             },
                             {
                               "type": "null"
@@ -13721,7 +14964,8 @@
                         "chapterId": {
                           "anyOf": [
                             {
-                              "$ref": "#/$defs/ID"
+                              "$ref": "#/$defs/ID",
+                              "$comment": "{\"targetKinds\":[\"chapter\"],\"referenceScope\":\"entity\"}"
                             },
                             {
                               "type": "null"
@@ -13741,7 +14985,8 @@
                         "targetSnapshotId": {
                           "anyOf": [
                             {
-                              "$ref": "#/$defs/ID"
+                              "$ref": "#/$defs/ID",
+                              "$comment": "{\"referenceScope\":\"snapshot\"}"
                             },
                             {
                               "type": "null"
@@ -13831,7 +15076,8 @@
           "$ref": "#/$defs/ID"
         },
         "projectId": {
-          "$ref": "#/$defs/ID"
+          "$ref": "#/$defs/ID",
+          "$comment": "{\"referenceScope\":\"project\"}"
         },
         "kind": {
           "enum": [
@@ -13862,10 +15108,32 @@
             "projection"
           ]
         },
+        "retainIfUnreferenced": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "projectionProfileId": {
           "anyOf": [
             {
-              "$ref": "#/$defs/ID"
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"projection_profile\"],\"referenceScope\":\"entity\"}"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "templateId": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"template\"],\"referenceScope\":\"entity\"}"
             },
             {
               "type": "null"
@@ -13929,7 +15197,8 @@
               ]
             },
             "baseSnapshotId": {
-              "$ref": "#/$defs/ID"
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"referenceScope\":\"snapshot\"}"
             },
             "body": {
               "anyOf": [
@@ -13956,7 +15225,8 @@
             "projectionProfileId": {
               "anyOf": [
                 {
-                  "$ref": "#/$defs/ID"
+                  "$ref": "#/$defs/ID",
+                  "$comment": "{\"targetKinds\":[\"projection_profile\"],\"referenceScope\":\"entity\"}"
                 },
                 {
                   "type": "null"
@@ -13968,7 +15238,8 @@
                 {
                   "type": "array",
                   "items": {
-                    "$ref": "#/$defs/ID"
+                    "$ref": "#/$defs/ID",
+                    "$comment": "{\"referenceScope\":\"entity\"}"
                   },
                   "maxItems": 100000,
                   "uniqueItems": true
@@ -14018,7 +15289,8 @@
           "$ref": "#/$defs/ID"
         },
         "projectId": {
-          "$ref": "#/$defs/ID"
+          "$ref": "#/$defs/ID",
+          "$comment": "{\"referenceScope\":\"project\"}"
         },
         "kind": {
           "enum": [
@@ -14049,10 +15321,32 @@
             "projection"
           ]
         },
+        "retainIfUnreferenced": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "projectionProfileId": {
           "anyOf": [
             {
-              "$ref": "#/$defs/ID"
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"projection_profile\"],\"referenceScope\":\"entity\"}"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "templateId": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"template\"],\"referenceScope\":\"entity\"}"
             },
             {
               "type": "null"
@@ -14106,7 +15400,8 @@
           "type": "object",
           "properties": {
             "characterId": {
-              "$ref": "#/$defs/ID"
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"character\"],\"referenceScope\":\"entity\"}"
             },
             "validity": {
               "type": "object",
@@ -14164,12 +15459,14 @@
                       "type": "object",
                       "properties": {
                         "entityId": {
-                          "$ref": "#/$defs/ID"
+                          "$ref": "#/$defs/ID",
+                          "$comment": "{\"referenceScope\":\"entity\"}"
                         },
                         "blockId": {
                           "anyOf": [
                             {
-                              "$ref": "#/$defs/ID"
+                              "$ref": "#/$defs/ID",
+                              "$comment": "{\"referenceScope\":\"block\"}"
                             },
                             {
                               "type": "null"
@@ -14179,7 +15476,8 @@
                         "lineId": {
                           "anyOf": [
                             {
-                              "$ref": "#/$defs/ID"
+                              "$ref": "#/$defs/ID",
+                              "$comment": "{\"targetKinds\":[\"dialogue_line\"],\"referenceScope\":\"entity\"}"
                             },
                             {
                               "type": "null"
@@ -14213,7 +15511,8 @@
                         "sourceVersionId": {
                           "anyOf": [
                             {
-                              "$ref": "#/$defs/ID"
+                              "$ref": "#/$defs/ID",
+                              "$comment": "{\"referenceScope\":\"snapshot\"}"
                             },
                             {
                               "type": "null"
@@ -14332,12 +15631,14 @@
                         "type": "object",
                         "properties": {
                           "projectId": {
-                            "$ref": "#/$defs/ID"
+                            "$ref": "#/$defs/ID",
+                            "$comment": "{\"referenceScope\":\"project\"}"
                           },
                           "graphId": {
                             "anyOf": [
                               {
-                                "$ref": "#/$defs/ID"
+                                "$ref": "#/$defs/ID",
+                                "$comment": "{\"targetKinds\":[\"flow_graph\"],\"referenceScope\":\"entity\"}"
                               },
                               {
                                 "type": "null"
@@ -14347,7 +15648,8 @@
                           "chapterId": {
                             "anyOf": [
                               {
-                                "$ref": "#/$defs/ID"
+                                "$ref": "#/$defs/ID",
+                                "$comment": "{\"targetKinds\":[\"chapter\"],\"referenceScope\":\"entity\"}"
                               },
                               {
                                 "type": "null"
@@ -14367,7 +15669,8 @@
                           "targetSnapshotId": {
                             "anyOf": [
                               {
-                                "$ref": "#/$defs/ID"
+                                "$ref": "#/$defs/ID",
+                                "$comment": "{\"referenceScope\":\"snapshot\"}"
                               },
                               {
                                 "type": "null"
@@ -14436,12 +15739,14 @@
                                 "type": "object",
                                 "properties": {
                                   "entityId": {
-                                    "$ref": "#/$defs/ID"
+                                    "$ref": "#/$defs/ID",
+                                    "$comment": "{\"referenceScope\":\"entity\"}"
                                   },
                                   "blockId": {
                                     "anyOf": [
                                       {
-                                        "$ref": "#/$defs/ID"
+                                        "$ref": "#/$defs/ID",
+                                        "$comment": "{\"referenceScope\":\"block\"}"
                                       },
                                       {
                                         "type": "null"
@@ -14451,7 +15756,8 @@
                                   "lineId": {
                                     "anyOf": [
                                       {
-                                        "$ref": "#/$defs/ID"
+                                        "$ref": "#/$defs/ID",
+                                        "$comment": "{\"targetKinds\":[\"dialogue_line\"],\"referenceScope\":\"entity\"}"
                                       },
                                       {
                                         "type": "null"
@@ -14485,7 +15791,8 @@
                                   "sourceVersionId": {
                                     "anyOf": [
                                       {
-                                        "$ref": "#/$defs/ID"
+                                        "$ref": "#/$defs/ID",
+                                        "$comment": "{\"referenceScope\":\"snapshot\"}"
                                       },
                                       {
                                         "type": "null"
@@ -14548,7 +15855,8 @@
                       "evidenceIds": {
                         "type": "array",
                         "items": {
-                          "$ref": "#/$defs/ID"
+                          "$ref": "#/$defs/ID",
+                          "$comment": "{\"referenceScope\":\"entity\"}"
                         },
                         "maxItems": 100000,
                         "uniqueItems": true
@@ -14599,7 +15907,8 @@
           "$ref": "#/$defs/ID"
         },
         "projectId": {
-          "$ref": "#/$defs/ID"
+          "$ref": "#/$defs/ID",
+          "$comment": "{\"referenceScope\":\"project\"}"
         },
         "kind": {
           "enum": [
@@ -14630,10 +15939,32 @@
             "projection"
           ]
         },
+        "retainIfUnreferenced": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "projectionProfileId": {
           "anyOf": [
             {
-              "$ref": "#/$defs/ID"
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"projection_profile\"],\"referenceScope\":\"entity\"}"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "templateId": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"template\"],\"referenceScope\":\"entity\"}"
             },
             {
               "type": "null"
@@ -14742,7 +16073,8 @@
                 {
                   "type": "array",
                   "items": {
-                    "$ref": "#/$defs/ID"
+                    "$ref": "#/$defs/ID",
+                    "$comment": "{\"targetKinds\":[\"projection_profile\"],\"referenceScope\":\"entity\"}"
                   },
                   "maxItems": 100000,
                   "uniqueItems": true
@@ -14797,7 +16129,8 @@
           "$ref": "#/$defs/ID"
         },
         "projectId": {
-          "$ref": "#/$defs/ID"
+          "$ref": "#/$defs/ID",
+          "$comment": "{\"referenceScope\":\"project\"}"
         },
         "kind": {
           "enum": [
@@ -14828,10 +16161,32 @@
             "projection"
           ]
         },
+        "retainIfUnreferenced": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "projectionProfileId": {
           "anyOf": [
             {
-              "$ref": "#/$defs/ID"
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"projection_profile\"],\"referenceScope\":\"entity\"}"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "templateId": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"template\"],\"referenceScope\":\"entity\"}"
             },
             {
               "type": "null"
@@ -14903,7 +16258,8 @@
                 {
                   "type": "array",
                   "items": {
-                    "$ref": "#/$defs/ID"
+                    "$ref": "#/$defs/ID",
+                    "$comment": "{\"referenceScope\":\"snapshot\"}"
                   },
                   "maxItems": 100000,
                   "uniqueItems": true
@@ -14930,7 +16286,8 @@
                 {
                   "type": "array",
                   "items": {
-                    "$ref": "#/$defs/ID"
+                    "$ref": "#/$defs/ID",
+                    "$comment": "{\"referenceScope\":\"snapshot\"}"
                   },
                   "maxItems": 100000,
                   "uniqueItems": true
@@ -14971,7 +16328,8 @@
           "$ref": "#/$defs/ID"
         },
         "projectId": {
-          "$ref": "#/$defs/ID"
+          "$ref": "#/$defs/ID",
+          "$comment": "{\"referenceScope\":\"project\"}"
         },
         "kind": {
           "enum": [
@@ -15002,10 +16360,32 @@
             "projection"
           ]
         },
+        "retainIfUnreferenced": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "projectionProfileId": {
           "anyOf": [
             {
-              "$ref": "#/$defs/ID"
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"projection_profile\"],\"referenceScope\":\"entity\"}"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "templateId": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ID",
+              "$comment": "{\"targetKinds\":[\"template\"],\"referenceScope\":\"entity\"}"
             },
             {
               "type": "null"
@@ -15066,7 +16446,8 @@
             "includedIds": {
               "type": "array",
               "items": {
-                "$ref": "#/$defs/ID"
+                "$ref": "#/$defs/ID",
+                "$comment": "{\"referenceScope\":\"entity\"}"
               },
               "maxItems": 100000,
               "uniqueItems": true
@@ -15155,12 +16536,14 @@
                   "type": "object",
                   "properties": {
                     "projectId": {
-                      "$ref": "#/$defs/ID"
+                      "$ref": "#/$defs/ID",
+                      "$comment": "{\"referenceScope\":\"project\"}"
                     },
                     "graphId": {
                       "anyOf": [
                         {
-                          "$ref": "#/$defs/ID"
+                          "$ref": "#/$defs/ID",
+                          "$comment": "{\"targetKinds\":[\"flow_graph\"],\"referenceScope\":\"entity\"}"
                         },
                         {
                           "type": "null"
@@ -15170,7 +16553,8 @@
                     "chapterId": {
                       "anyOf": [
                         {
-                          "$ref": "#/$defs/ID"
+                          "$ref": "#/$defs/ID",
+                          "$comment": "{\"targetKinds\":[\"chapter\"],\"referenceScope\":\"entity\"}"
                         },
                         {
                           "type": "null"
@@ -15190,7 +16574,8 @@
                     "targetSnapshotId": {
                       "anyOf": [
                         {
-                          "$ref": "#/$defs/ID"
+                          "$ref": "#/$defs/ID",
+                          "$comment": "{\"referenceScope\":\"snapshot\"}"
                         },
                         {
                           "type": "null"
@@ -15529,7 +16914,8 @@
                     "additionalProperties": false
                   },
                   "propertyNames": {
-                    "$ref": "#/$defs/ID"
+                    "$ref": "#/$defs/ID",
+                    "$comment": "{\"referenceScope\":\"record\"}"
                   }
                 },
                 {
@@ -15608,7 +16994,8 @@
                 {
                   "type": "array",
                   "items": {
-                    "$ref": "#/$defs/ID"
+                    "$ref": "#/$defs/ID",
+                    "$comment": "{\"referenceScope\":\"relation\"}"
                   },
                   "maxItems": 100000,
                   "uniqueItems": true
@@ -15639,7 +17026,8 @@
                     "$ref": "#/$defs/ID"
                   },
                   "propertyNames": {
-                    "$ref": "#/$defs/ID"
+                    "$ref": "#/$defs/ID",
+                    "$comment": "{\"referenceScope\":\"projection_record\"}"
                   }
                 },
                 {
@@ -15650,7 +17038,8 @@
             "sourceVersionId": {
               "anyOf": [
                 {
-                  "$ref": "#/$defs/ID"
+                  "$ref": "#/$defs/ID",
+                  "$comment": "{\"referenceScope\":\"snapshot\"}"
                 },
                 {
                   "type": "null"
@@ -15673,7 +17062,8 @@
                     }
                   },
                   "propertyNames": {
-                    "$ref": "#/$defs/ID"
+                    "$ref": "#/$defs/ID",
+                    "$comment": "{\"targetKinds\":[\"variable\",\"external_contract\",\"assertion\"],\"referenceScope\":\"entity\"}"
                   }
                 },
                 {
@@ -15718,7 +17108,8 @@
                 {
                   "type": "array",
                   "items": {
-                    "$ref": "#/$defs/ID"
+                    "$ref": "#/$defs/ID",
+                    "$comment": "{\"targetKinds\":[\"attachment\"],\"referenceScope\":\"entity\"}"
                   },
                   "maxItems": 100000,
                   "uniqueItems": true
@@ -15932,16 +17323,19 @@
                 "$ref": "#/$defs/ID"
               },
               "projectId": {
-                "$ref": "#/$defs/ID"
+                "$ref": "#/$defs/ID",
+                "$comment": "{\"referenceScope\":\"project\"}"
               },
               "revision": {
                 "$ref": "#/$defs/Revision"
               },
               "fromId": {
-                "$ref": "#/$defs/ID"
+                "$ref": "#/$defs/ID",
+                "$comment": "{\"referenceScope\":\"entity\"}"
               },
               "toId": {
-                "$ref": "#/$defs/ID"
+                "$ref": "#/$defs/ID",
+                "$comment": "{\"referenceScope\":\"entity\"}"
               },
               "relationType": {
                 "type": "string",
@@ -16010,12 +17404,14 @@
                         "type": "object",
                         "properties": {
                           "entityId": {
-                            "$ref": "#/$defs/ID"
+                            "$ref": "#/$defs/ID",
+                            "$comment": "{\"referenceScope\":\"entity\"}"
                           },
                           "blockId": {
                             "anyOf": [
                               {
-                                "$ref": "#/$defs/ID"
+                                "$ref": "#/$defs/ID",
+                                "$comment": "{\"referenceScope\":\"block\"}"
                               },
                               {
                                 "type": "null"
@@ -16025,7 +17421,8 @@
                           "lineId": {
                             "anyOf": [
                               {
-                                "$ref": "#/$defs/ID"
+                                "$ref": "#/$defs/ID",
+                                "$comment": "{\"targetKinds\":[\"dialogue_line\"],\"referenceScope\":\"entity\"}"
                               },
                               {
                                 "type": "null"
@@ -16059,7 +17456,8 @@
                           "sourceVersionId": {
                             "anyOf": [
                               {
-                                "$ref": "#/$defs/ID"
+                                "$ref": "#/$defs/ID",
+                                "$comment": "{\"referenceScope\":\"snapshot\"}"
                               },
                               {
                                 "type": "null"
@@ -16122,7 +17520,8 @@
               "evidenceIds": {
                 "type": "array",
                 "items": {
-                  "$ref": "#/$defs/ID"
+                  "$ref": "#/$defs/ID",
+                  "$comment": "{\"referenceScope\":\"entity\"}"
                 },
                 "maxItems": 100000,
                 "uniqueItems": true
@@ -16146,7 +17545,8 @@
               "projectionProfileId": {
                 "anyOf": [
                   {
-                    "$ref": "#/$defs/ID"
+                    "$ref": "#/$defs/ID",
+                    "$comment": "{\"targetKinds\":[\"projection_profile\"],\"referenceScope\":\"entity\"}"
                   },
                   {
                     "type": "null"
@@ -16213,7 +17613,8 @@
               "entityIds": {
                 "type": "array",
                 "items": {
-                  "$ref": "#/$defs/ID"
+                  "$ref": "#/$defs/ID",
+                  "$comment": "{\"referenceScope\":\"entity\"}"
                 },
                 "maxItems": 100000,
                 "uniqueItems": true
@@ -16486,16 +17887,19 @@
                 "$ref": "#/$defs/ID"
               },
               "projectId": {
-                "$ref": "#/$defs/ID"
+                "$ref": "#/$defs/ID",
+                "$comment": "{\"referenceScope\":\"project\"}"
               },
               "revision": {
                 "$ref": "#/$defs/Revision"
               },
               "fromId": {
-                "$ref": "#/$defs/ID"
+                "$ref": "#/$defs/ID",
+                "$comment": "{\"referenceScope\":\"entity\"}"
               },
               "toId": {
-                "$ref": "#/$defs/ID"
+                "$ref": "#/$defs/ID",
+                "$comment": "{\"referenceScope\":\"entity\"}"
               },
               "relationType": {
                 "type": "string",
@@ -16564,12 +17968,14 @@
                         "type": "object",
                         "properties": {
                           "entityId": {
-                            "$ref": "#/$defs/ID"
+                            "$ref": "#/$defs/ID",
+                            "$comment": "{\"referenceScope\":\"entity\"}"
                           },
                           "blockId": {
                             "anyOf": [
                               {
-                                "$ref": "#/$defs/ID"
+                                "$ref": "#/$defs/ID",
+                                "$comment": "{\"referenceScope\":\"block\"}"
                               },
                               {
                                 "type": "null"
@@ -16579,7 +17985,8 @@
                           "lineId": {
                             "anyOf": [
                               {
-                                "$ref": "#/$defs/ID"
+                                "$ref": "#/$defs/ID",
+                                "$comment": "{\"targetKinds\":[\"dialogue_line\"],\"referenceScope\":\"entity\"}"
                               },
                               {
                                 "type": "null"
@@ -16613,7 +18020,8 @@
                           "sourceVersionId": {
                             "anyOf": [
                               {
-                                "$ref": "#/$defs/ID"
+                                "$ref": "#/$defs/ID",
+                                "$comment": "{\"referenceScope\":\"snapshot\"}"
                               },
                               {
                                 "type": "null"
@@ -16676,7 +18084,8 @@
               "evidenceIds": {
                 "type": "array",
                 "items": {
-                  "$ref": "#/$defs/ID"
+                  "$ref": "#/$defs/ID",
+                  "$comment": "{\"referenceScope\":\"entity\"}"
                 },
                 "maxItems": 100000,
                 "uniqueItems": true
@@ -16700,7 +18109,8 @@
               "projectionProfileId": {
                 "anyOf": [
                   {
-                    "$ref": "#/$defs/ID"
+                    "$ref": "#/$defs/ID",
+                    "$comment": "{\"targetKinds\":[\"projection_profile\"],\"referenceScope\":\"entity\"}"
                   },
                   {
                     "type": "null"
@@ -16767,7 +18177,8 @@
               "entityIds": {
                 "type": "array",
                 "items": {
-                  "$ref": "#/$defs/ID"
+                  "$ref": "#/$defs/ID",
+                  "$comment": "{\"referenceScope\":\"entity\"}"
                 },
                 "maxItems": 100000,
                 "uniqueItems": true

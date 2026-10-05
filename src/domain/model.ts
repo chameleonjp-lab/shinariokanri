@@ -1,6 +1,7 @@
 import { FORMAT_VERSION } from './types';
-import type { Alias, CalendarDefinition, Condition, CustomValue, Entity, EntityDataMap, EntityKind, Expression, ID, PresentationConditionResult, ProjectContent, ProjectData, Relation, RelationTypeDefinition, RichText, RuntimeState, TimeSpec, TypedValue, ValidationIssue, ValidationResult, Validity } from './types';
+import type { Alias, CalendarDefinition, Condition, Entity, EntityDataMap, EntityKind, Expression, ID, PresentationConditionResult, ProjectContent, ProjectData, Relation, RelationTypeDefinition, RichText, RuntimeState, TimeSpec, TypedValue, ValidationIssue, ValidationResult, Validity } from './types';
 import { GREGORIAN_CALENDAR, compareTicks, isTick, parseTick, validateCalendar, validateEventTimes } from './time';
+import { validateTemplateAssignments, validateTemplateDefinition } from './templates';
 
 export const KIND_LABELS: Record<EntityKind, string> = {
   character: '人物', group: 'グループ', event: '出来事', place: '場所', item: '物品', note: 'メモ', chapter: '章', scene: '場面', goal: '目標',
@@ -157,6 +158,7 @@ const refs = (...kinds: EntityKind[]): Schema => arr(ref(...kinds), true);
 const obj = (fields: Record<string, Field>): Schema => ({ type: 'object', fields });
 const req = (schema: Schema): Field => ({ schema, required: true });
 const opt = (schema: Schema): Field => ({ schema, nullable: true });
+const optionalValue = (schema: Schema): Field => ({ schema, nullable: false });
 const rich: Schema = { type: 'richtext' }, summary: Schema = { type: 'richtext', max: 2048 };
 const cond: Schema = { type: 'condition' }, time: Schema = { type: 'time' };
 const record = (value: Schema, recordKey?: Schema): Schema => ({ type: 'record', value, key: recordKey });
@@ -291,6 +293,14 @@ function querySchema(value: Record<string, unknown>): Schema | undefined {
     case 'status': return obj({ op: req(en('status')), value: req(en(...STATUSES)) });
     case 'participant': return obj({ op: req(en('participant')), characterId: req(ref('character')) });
     case 'production': return obj({ op: req(en('production')), value: req(en('todo', 'doing', 'done', 'needs_review')) });
+    case 'chapter': return obj({ op: req(en('chapter')), chapterId: req(ref('chapter')) });
+    case 'foreshadow': return obj({
+      op: req(en('foreshadow')),
+      foreshadowId: optionalValue(ref('foreshadow')),
+      resolutionPolicy: optionalValue(en('this_work', 'sequel', 'intentional_open', 'red_herring', 'undecided', 'rejected')),
+      role: optionalValue(en('clue', 'payoff')),
+      stage: optionalValue(en('hint', 'suspicion', 'reinforce', 'reveal', 'alternative')),
+    });
     default: return undefined;
   }
 }
@@ -446,12 +456,18 @@ function walk(schema: Schema, value: unknown, path: string, issues: ValidationIs
       if (!isObject(value)) { fail('型付きのオブジェクトを指定してください。'); return; }
       const definition = schema.type === 'query' ? querySchema(value) : namePolicySchema(value);
       if (!definition) { fail('未知の規則です。'); return; }
-      walk(definition, value, path, issues, references, depth + 1, ast); return;
+      const before = issues.length;
+      walk(definition, value, path, issues, references, depth + 1, ast);
+      if (schema.type === 'query' && value.op === 'foreshadow' && issues.length === before
+        && !['foreshadowId', 'resolutionPolicy', 'role', 'stage'].some(field => value[field] !== undefined && value[field] !== null)) {
+        addIssue(issues, path, '伏線検索には対象・回収方針・開示役割・段階のいずれかを指定してください。');
+      }
+      return;
     }
   }
 }
 
-const commonFields: Record<string, Field> = { id: req(idSchema), projectId: req(scopedRef('project')), kind: req(en(...ENTITY_KINDS)), revision: req({ type: 'revision' }), name: req(short), status: req(en(...STATUSES)), visibility: req(en('private', 'team', 'projection')), projectionProfileId: opt(ref('projection_profile')), createdAt: req({ type: 'datetime' }), updatedAt: req({ type: 'datetime' }), deletedAt: opt({ type: 'datetime' }), deletionOperationId: opt(idSchema), customValues: req(record({ type: 'custom' }, key)) };
+const commonFields: Record<string, Field> = { id: req(idSchema), projectId: req(scopedRef('project')), kind: req(en(...ENTITY_KINDS)), revision: req({ type: 'revision' }), name: req(short), status: req(en(...STATUSES)), visibility: req(en('private', 'team', 'projection')), retainIfUnreferenced: opt(bool), projectionProfileId: opt(ref('projection_profile')), templateId: opt(ref('template')), createdAt: req({ type: 'datetime' }), updatedAt: req({ type: 'datetime' }), deletedAt: opt({ type: 'datetime' }), deletionOperationId: opt(idSchema), customValues: req(record({ type: 'custom' }, key)) };
 const relationSchema = obj({ id: req(idSchema), projectId: req(scopedRef('project')), revision: req({ type: 'revision' }), fromId: req(ref()), toId: req(ref()), relationType: req(txt(1, 128)), direction: req(en('forward', 'symmetric')), validity: req(nullableValidity), evidenceIds: req(refs()), status: req(en(...STATUSES)), visibility: req(en('private', 'team', 'projection')), projectionProfileId: opt(ref('projection_profile')), deletedAt: opt({ type: 'datetime' }), deletionOperationId: opt(idSchema) });
 function entitySchema(kind: EntityKind): Schema { return obj({ ...commonFields, kind: req(en(kind)), data: req(ENTITY_SCHEMAS[kind]) }); }
 function simpleValidate<T>(schema: Schema, value: unknown, path: string): ValidationResult<T> { const issues: ValidationIssue[] = []; walk(schema, value, path, issues, []); return issues.length ? { ok: false, issues } : { ok: true, value: value as T }; }
@@ -576,12 +592,7 @@ function validateLocalRules(entity: Entity, path: string, issues: ValidationIssu
       if (entity.data.mode === 'fixed' && !Array.isArray(entity.data.memberIds)) issue('data.memberIds', '固定一覧にはID配列が必要です。');
       break;
     case 'template': {
-      const keys = new Set<string>(), standard = ENTITY_SCHEMAS[entity.data.targetKind];
-      entity.data.fields.forEach((field, i) => {
-        if (keys.has(field.key) || Object.hasOwn(commonFields, field.key) || (standard.type === 'object' && Object.hasOwn(standard.fields, field.key))) issue(`data.fields[${i}].key`, 'キーが重複または標準項目と衝突しています。'); keys.add(field.key);
-        if (field.default === null) { if (!field.nullable) issue(`data.fields[${i}].default`, 'null不可の項目にnull初期値は設定できません。'); }
-        else if (!customMatches(field.type, field.default, field.allowedValues)) issue(`data.fields[${i}].default`, '雛形の初期値が宣言型と一致しません。');
-      });
+      issues.push(...validateTemplateDefinition(entity.data, `${path}.data`));
       break;
     }
     case 'production_task':
@@ -596,13 +607,6 @@ function validateLocalRules(entity: Entity, path: string, issues: ValidationIssu
     case 'localization': case 'recording': if (!/^[a-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$/.test(entity.data.language)) issue('data.language', '言語コードを指定してください（例: ja、en-US）。'); break;
   }
   validateNestedRanges(entity.data, `${path}.data`, issues);
-}
-function customMatches(type: string, value: CustomValue, allowedValues?: string[] | null): boolean {
-  if (type === 'text') return typeof value === 'string';
-  if (type === 'number') return typeof value === 'number' && Number.isFinite(value);
-  if (type === 'boolean') return typeof value === 'boolean';
-  if (type === 'enum') return typeof value === 'string' && !!allowedValues?.includes(value);
-  return isObject(value) && value.type === type;
 }
 function validateNestedRanges(value: unknown, path: string, issues: ValidationIssue[], depth = 0): void {
   if (depth > 32 || !value || typeof value !== 'object') return;
@@ -836,6 +840,9 @@ function cycleIssues(nodes: Entity[], edges: (entity: Entity) => ID[], issues: V
 type AnchorIndex = { entities: Map<ID, Entity>; blocks: Map<ID, { entityId: ID; text: string }> };
 function validateCrossEntityRules(project: ProjectContent, entityMap: Map<ID, Entity>, aliases: Map<ID, { entityId: ID; alias: Alias }>, knownVersions: Set<ID>, blocks: Map<ID, { entityId: ID; text: string }>, issues: ValidationIssue[], path: string, options: ProjectValidationOptions, resolveVersion: (version: ID) => AnchorIndex | undefined, affected?: (entity: Entity) => boolean): void {
   const keys = new Map<string, ID>(), translationKeys = new Set<string>();
+  // Assignments also depend on a template's whole field set, including new fields.
+  // Keep this check identical in full imports and incremental local saves.
+  if (project.entities.some(entity => !!entity.templateId && !entity.deletedAt)) issues.push(...validateTemplateAssignments(project, path, [...entityMap.values()]));
   project.entities.forEach((entity, i) => {
     const location = `${path}.entities[${i}]`;
     if (entity.deletedAt) return;
@@ -851,6 +858,7 @@ function validateCrossEntityRules(project: ProjectContent, entityMap: Map<ID, En
     // Value/anchor rules only need unchanged records when one of their dependencies changed.
     // Checkpoint/trace evidence also depends on the eligible record set, including newly added IDs.
     if (affected && !affected(entity) && entity.kind !== 'checkpoint' && entity.kind !== 'trace') return;
+    if (entity.kind === 'template') issues.push(...validateTemplateDefinition(entity.data, `${location}.data`, entityMap));
     if (entity.kind === 'item' && entity.data.itemMode === 'instance') {
       const type = entity.data.typeId ? entityMap.get(entity.data.typeId) : undefined;
       if (type?.kind === 'item' && type.data.itemMode !== 'type') addIssue(issues, `${location}.data.typeId`, '個体のtypeIdは物品種類を参照してください。', 'REFERENCE_INVALID');
@@ -1051,7 +1059,7 @@ export function toJsonSchema(): JsonSchema {
       case 'boolean': return { type: 'boolean' };
       case 'enum': return { enum: schema.values };
       case 'id': return reference('ID');
-      case 'ref': return schema.scope === 'calendar' ? { type: 'string', minLength: 1 } : reference('ID');
+      case 'ref': return { ...(schema.scope === 'calendar' ? { type: 'string', minLength: 1 } : reference('ID')), ...(schema.kinds || schema.scope ? { $comment: JSON.stringify({ ...(schema.kinds ? { targetKinds: schema.kinds } : {}), ...(schema.scope ? { referenceScope: schema.scope } : {}) }) } : {}) };
       case 'tick': return reference('Tick');
       case 'revision': return reference('Revision');
       case 'datetime': return { type: 'string', format: 'date-time', pattern: '^\\d{4}-\\d{2}-\\d{2}T(?:[01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](?:\\.\\d+)?(?:Z|\\+00:00)$' };
@@ -1090,8 +1098,13 @@ export function toJsonSchema(): JsonSchema {
     TimeSpec: { oneOf: ['instant', 'interval', 'uncertain', 'relative', 'unknown'].map(mode => convert(timeSchema({ mode })!)) },
     Condition: { oneOf: conditionalDefinitions }, Expression: { anyOf: [reference('Condition'), ...['value', 'variable', 'add', 'subtract', 'multiply', 'if'].map(op => convert(expressionSchema({ op })!))] },
     NamePolicy: { anyOf: [...['alias', 'replace', 'exclude', 'anonymize'].map(mode => convert(namePolicySchema({ mode })!)), convert(namePolicySchema({})!)] },
-    Query: { oneOf: ['all', 'any', 'kind', 'text', 'status', 'participant', 'production'].map(op => {
-      const definition = convert(querySchema({ op })!); (definition.properties as Record<string, JsonSchema>).op = { const: op }; return definition;
+    Query: { oneOf: ['all', 'any', 'kind', 'text', 'status', 'participant', 'production', 'chapter', 'foreshadow'].map(op => {
+      const definition = convert(querySchema({ op })!); (definition.properties as Record<string, JsonSchema>).op = { const: op };
+      // Ajv strictRequired checks required keys against properties declared in
+      // the same subschema. The value constraints live on the query branch,
+      // so repeat an unconstrained declaration here solely for that check.
+      if (op === 'foreshadow') definition.anyOf = ['foreshadowId', 'resolutionPolicy', 'role', 'stage'].map(field => ({ properties: { [field]: {} }, required: [field] }));
+      return definition;
     }) },
     Calendar: convert(calendar), Relation: convert(relationSchema), WorldReference: convert(worldReferenceSchema), SavedView: convert(viewSchema),
     Entity: { oneOf: ENTITY_KINDS.map(kind => reference(`Entity_${kind}`)) },

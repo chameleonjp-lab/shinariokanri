@@ -1,3 +1,5 @@
+import { ENTITY_KINDS, KIND_LABELS } from '../domain/model';
+
 export interface FieldSpec {
   key: string;
   label: string;
@@ -51,9 +53,9 @@ export const FIELD_SPECS: Record<string, FieldSpec[]> = {
   terminology: [text('canonical', '標準表記'), text('reading', '読み'), text('language', '言語コード'), rich('usageNotes', '用法'), json('variants', '表記の候補'), ref('voiceOwnerId', '口調の対象', 'character')],
   map: [ref('placeId', '地図の場所', 'place'), select('coordinateSystem', '座標系', [['normalized', '0〜1の正規化座標']]), ref('attachmentId', '画像', 'attachment'), ref('parentMapId', '親の地図', 'map'), json('pins', '場所のピン')],
   travel_route: [ref('fromPlaceId', '出発地', 'place'), ref('toPlaceId', '目的地', 'place'), select('direction', '移動の向き', [['one_way', '一方向'], ['two_way', '双方向']]), text('method', '移動方法'), text('minimumTicks', '最短時間（tick）'), text('maximumTicks', '最長時間（tick）'), refs('evidence', '根拠'), json('validity', '時点・経路')],
-  template: [text('targetKind', '対象のkind'), text('description', '説明'), json('fields', '型付きの入力項目'), json('defaults', '初期値')],
+  template: [select('targetKind', '対象の情報の種類', ENTITY_KINDS.map(kind => [kind, KIND_LABELS[kind]])), text('description', '説明'), json('fields', '型付きの入力項目')],
   collection: [select('mode', '一覧の方式', [['fixed', '固定した選択'], ['dynamic', '条件で絞り込み']]), refs('memberIds', '固定した対象'), json('query', '検索条件'), json('sort', '並び順')],
-  review: [ref('target', '確認対象'), ref('targetVersionId', '対象版', 'snapshot'), rich('body', '指摘'), text('quotedText', '元の文章'), rich('resolution', '対応内容'), select('stage', '確認工程', [['open', '未対応'], ['fixed', '修正済み'], ['verified', '確認済み']])],
+  review: [json('target', '確認対象'), ref('targetVersionId', '対象版', 'snapshot'), rich('body', '指摘'), text('quotedText', '元の文章'), rich('resolution', '対応内容'), select('stage', '確認工程', [['open', '未対応'], ['fixed', '修正済み'], ['verified', '確認済み']])],
   creative_brief: [rich('targetAudience', '対象の読者・プレイヤー'), rich('experience', '体験'), rich('theme', 'テーマ'), rich('tone', '雰囲気'), rich('scope', '作品の範囲'), refs('deliverableIds', '成果物'), refs('decisionIds', '企画判断', 'decision')],
   decision: [text('subject', '判断の対象'), rich('reason', '判断理由'), ref('targetVersionId', '対象版', 'snapshot'), select('outcome', '判断', [['accepted', '採用'], ['rejected', '不採用'], ['deferred', '保留']]), text('priority', '優先度'), refs('reviewIds', 'レビュー', 'review')],
   gameplay_spec: [ref('sceneId', '場面', 'scene'), rich('action', 'プレイ行動'), text('mechanic', '仕組み'), rich('tutorial', '説明・導入'), { key: 'reward', label: '報酬', type: 'typed' }, ref('questId', 'クエスト', 'quest'), refs('taskIds', '制作タスク', 'production_task'), text('intentionalDifference', '原案との意図した違い')],
@@ -62,7 +64,7 @@ export const FIELD_SPECS: Record<string, FieldSpec[]> = {
   voice_rule: [ref('characterId', '人物', 'character'), text('firstPerson', '一人称'), text('addressing', '呼びかけ'), text('phrasing', '言い回し'), rich('examples', '例文'), json('validity', '有効な時点・経路'), json('exceptions', '理由付きの例外')],
   external_contract: [text('key', '一意のキー'), select('owner', '値の管理元', [['tool', 'このツール'], ['game', 'ゲーム']]), text('inputType', '入力型'), text('outputType', '出力型'), select('missingPolicy', '未取得の場合', [['unknown', '不明にする'], ['block', '進行を止める']]), rich('description', '契約の説明'), json('stubValues', '宣言した仮値'), text('version', '契約版')],
   snapshot: [text('versionLabel', '版の名称'), text('contentHash', '内容のSHA-256'), { key: 'immutable', label: '確定した不変版', type: 'boolean' }, refs('parentVersionIds', '元の版', 'snapshot')],
-  projection_profile: [text('audience', '出力対象者'), text('publicTitle', '公開用の作品名'), refs('includedIds', '公開する対象'), json('allowedKinds', '公開するkind'), json('namePolicy', '公開用の名前', 'byEntityId に対象IDと {mode: "replace", replacement: "公開名"} を指定します。'), json('publicTexts', '公開用の本文', '対象IDごとに body / summary / text の公開文を指定します。'), json('excludedFields', '出力から除く項目'), { key: 'includeAuthorNotes', label: '作者メモを含める', type: 'boolean' }],
+  projection_profile: [text('audience', '出力対象者'), text('publicTitle', '公開用の作品名'), refs('includedIds', '公開する対象'), json('allowedKinds', '公開するkind'), json('namePolicy', '公開用の名前', 'byEntityId に対象IDと {mode: "replace", replacement: "公開名"} を指定します。'), json('publicTexts', '公開用の本文', '対象IDごとに body / summary / text の公開文を指定します。'), json('publicValues', '公開用の値'), json('excludedFields', '出力から除く項目'), { key: 'includeAuthorNotes', label: '作者メモを含める', type: 'boolean' }],
 };
 
 export const DATA_GROUPS: { label: string; kinds: string[] }[] = [

@@ -80,7 +80,17 @@ export interface FieldDefinition {
   key: string; label: string; type: 'text' | 'number' | 'boolean' | 'enum' | 'date' | 'ref'; required: boolean; nullable: boolean;
   default: CustomValue; allowedValues?: string[]; targetKinds?: EntityKind[]; help?: string;
 }
-export type Query = { op: 'all' | 'any'; children: Query[] } | { op: 'kind'; value: EntityKind } | { op: 'text'; value: string } | { op: 'status'; value: Status } | { op: 'participant'; characterId: ID } | { op: 'production'; value: ProductionProgress };
+export type Query =
+  | { op: 'all' | 'any'; children: Query[] }
+  | { op: 'kind'; value: EntityKind }
+  | { op: 'text'; value: string }
+  | { op: 'status'; value: Status }
+  | { op: 'participant'; characterId: ID }
+  | { op: 'production'; value: ProductionProgress }
+  /** Matches a chapter and scenes directly assigned to it. Compose with kind/text/status in all/any. */
+  | { op: 'chapter'; chapterId: ID }
+  /** Matches a foreshadow, its qualifying disclosures, and the explicit scene/anchor target. */
+  | { op: 'foreshadow'; foreshadowId?: ID; resolutionPolicy?: ResolutionPolicy; role?: 'clue' | 'payoff'; stage?: DisclosureData['stage'] };
 export interface Sort { field: 'name' | 'createdAt' | 'updatedAt' | 'kind'; direction: 'asc' | 'desc' }
 export interface Estimate { value?: number; range?: { min: number; max: number }; unit: string; assumptions: string[]; scope: TargetScope; unknownCount: number; source: string; speed?: number }
 export interface RealDate { date: string; timeZone: string }
@@ -150,7 +160,8 @@ export interface EntityDataMap {
 export type EntityKind = keyof EntityDataMap;
 export type Entity<K extends EntityKind = EntityKind> = K extends EntityKind ? {
   id: ID; projectId: ID; kind: K; revision: Revision; name: string; status: Status; visibility: Visibility;
-  projectionProfileId?: ID | null; createdAt: RealTime; updatedAt: RealTime; deletedAt?: RealTime | null; deletionOperationId?: ID | null;
+  retainIfUnreferenced?: boolean | null;
+  projectionProfileId?: ID | null; templateId?: ID | null; createdAt: RealTime; updatedAt: RealTime; deletedAt?: RealTime | null; deletionOperationId?: ID | null;
   customValues: Record<string, CustomValue>; data: EntityDataMap[K];
 } : never;
 export interface Relation { id: ID; projectId: ID; revision: Revision; fromId: ID; toId: ID; relationType: string; direction: 'forward' | 'symmetric'; validity: Validity; evidenceIds: ID[]; status: Status; visibility: Visibility; projectionProfileId?: ID | null; deletedAt?: RealTime | null; deletionOperationId?: ID | null }
