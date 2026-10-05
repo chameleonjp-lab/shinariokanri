@@ -16,6 +16,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: python3 scripts/check_docs.py
+      - run: python3 scripts/check_completion_plan.py
       - run: python3 -m unittest discover -s scripts -p 'test_check_*.py' -v
       - run: npx playwright install --with-deps chromium firefox webkit
       - run: node -e 'require("fs").appendFileSync(process.env.GITHUB_ENV, "CHROMIUM_PATH=" + require("playwright").chromium.executablePath() + "\n")'
