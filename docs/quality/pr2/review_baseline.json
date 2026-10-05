@@ -1,0 +1,2005 @@
+{
+  "repository": "chameleonjp-lab/shinariokanri",
+  "date": "2026-10-05",
+  "main_commit": "ec0eaab51eba96a75eeccc9f2e9c585263a747f8",
+  "tree_sha": "100b2886c0578d44430e0afebcaf99184fc92d63",
+  "review_head": "be4c53fbe1e814b3ce66f9f1e331009c8cfe750d",
+  "review_pr": 2,
+  "verified_file_count": 103,
+  "contract_sha256": {
+    "docs/data/requirements.json": "df11649ab7ec25c31ae2aad6aacdca98d7324aba2e701352f9a78136c3bed0dc",
+    "docs/data/acceptance_cases.json": "e1e4b06a3bb1cd79fc590239ab6350103323335f2e1ee87a2e6a283755834c4f",
+    "docs/data/work_packages.json": "8125d35075c856c1e267b9c48a3ba610a632e60ac7d498dba32f5759a4fda95f",
+    "docs/spec/REQUIREMENTS.md": "60f305b028f31d0b553bec6d0d4940d76c6219748ac9696e6f90e6350f9b61cf",
+    "docs/spec/DATA_MODEL.md": "1aa5a8a6ffebf354e4089164987de32fdd3cf81c342834f287dfbdb213f4b389",
+    "docs/spec/BEHAVIOR_CONTRACT.md": "685feaf6de80b9b424460d0ce9e422247d773053089232a9be8c993e33e42d5f",
+    "docs/spec/UI_UX.md": "46be9bb0b4c131c7c3c8892432f967a8f2bd0a394ffde5c90aa508ec047fdea4",
+    "docs/spec/SYNC_SECURITY.md": "fc91c8f866f5117aee82cc4df6ce3711315379f396c91ff6a6e056b97257a5ed",
+    "docs/spec/FILE_FORMAT.md": "8301bfc044ce6d22e5b2ebd7afd24c67a0b5174353789a8ae4aac12927241386",
+    "docs/spec/NONFUNCTIONAL_REQUIREMENTS.md": "b67a3ceafaf2bb897c1877bcd2c81670bfcc58dc2911043e1e61c67986a2c491",
+    "docs/plan/TRACEABILITY.md": "b5e36e645bdea46a77ec07bbca8509974651e599da3b9bdbaf2ec58545aa00e4"
+  },
+  "assessment_counts": {
+    "主要動作あり": 19,
+    "部分実装": 61,
+    "登録・土台のみ": 20,
+    "実機等未検証": 4
+  },
+  "full_acceptance_declared": false,
+  "assessments": [
+    {
+      "id": "REQ-B01",
+      "title": "作品の作成と情報の登録",
+      "status": "主要動作あり",
+      "implemented": "作品と共通資料の登録・編集・アーカイブ、名前から登録、入力保持を実装。人物保存・再読込を画面で確認。",
+      "missing": "全種類の操作と、参照付きアーカイブの全組合せは受入未完了。",
+      "paths": [
+        "src/App.tsx",
+        "src/ui/EntityEditor.tsx",
+        "src/storage/store.ts"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-B02",
+      "title": "共通の出来事と人物別の出来事",
+      "status": "主要動作あり",
+      "implemented": "共通レーンと参加人物レーン、両方への表示を同じevent IDで構成。参加役割を明示入力する。",
+      "missing": "全レーンの端末別・重なり別の受入証拠は不足。",
+      "paths": [
+        "src/ui/Timeline.tsx",
+        "src/ui/Fields.tsx"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-B03",
+      "title": "グループと人物レーン",
+      "status": "部分実装",
+      "implemented": "グループ追加・改名・折りたたみと複数グループから人物参照がある。",
+      "missing": "グループ順の編集、階層・多重参照を含む一連の画面操作が不足。",
+      "paths": [
+        "src/ui/Timeline.tsx",
+        "src/ui/fieldSpecs.ts"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-B04",
+      "title": "人物ラベルを固定して横移動",
+      "status": "主要動作あり",
+      "implemented": "年表専用のスクロール領域とsticky人物ラベルを実装。",
+      "missing": "実iPad・iPhoneの横移動、選択維持、ソフトキーボードとの結合は未検証。",
+      "paths": [
+        "src/ui/Timeline.tsx",
+        "src/styles.css"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-B05",
+      "title": "年表の表示単位",
+      "status": "部分実装",
+      "implemented": "tick・時・日・30日幅・365日幅と拡大縮小を提供。",
+      "missing": "独自単位はない。月・年は明示した固定幅で、独自暦に合わせた月年の表示切替ではない。",
+      "paths": [
+        "src/ui/Timeline.tsx",
+        "src/domain/time.ts"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-B06",
+      "title": "過去への延長と本編開始",
+      "status": "主要動作あり",
+      "implemented": "負・巨大tick、期間移動、独立した本編開始を実装。基準変更は出来事tickを変更しない。",
+      "missing": "実端末で極端な範囲を含む通し操作の受入は未完了。",
+      "paths": [
+        "src/ui/Timeline.tsx",
+        "src/ui/WorkPage.tsx",
+        "src/domain/time.ts"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-B07",
+      "title": "出来事間の意味付き矢印",
+      "status": "部分実装",
+      "implemented": "型付き関係の始点・終点・方向・根拠を表と別の関係図で編集できる。",
+      "missing": "年表上に出来事間の線を重ねる操作と連動表示はない。図の線自体からの編集も未実装。",
+      "paths": [
+        "src/ui/Lists.tsx",
+        "src/ui/Timeline.tsx",
+        "src/domain/model.ts"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-B08",
+      "title": "出来事の関係者とメモ",
+      "status": "主要動作あり",
+      "implemented": "出来事の参加者・役割・場所・物品・作者メモを個別に持つ。参加を知識へ自動変換しない。",
+      "missing": "全役割の複合操作は受入未完了。",
+      "paths": [
+        "src/ui/fieldSpecs.ts",
+        "src/ui/Fields.tsx",
+        "src/domain/conditions.ts"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-B09",
+      "title": "人物関係図との連携",
+      "status": "部分実装",
+      "implemented": "作品共通の関係表・図と人物詳細の参照元一覧が同じIDを使う。",
+      "missing": "人物を中心にした専用関係図、年表と図の範囲・選択の連動が不足。",
+      "paths": [
+        "src/ui/Lists.tsx",
+        "src/ui/EntityEditor.tsx"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-B10",
+      "title": "名前からのリンクと逆参照",
+      "status": "部分実装",
+      "implemented": "本文内のIDリンクと逆参照を保存・表示できる。",
+      "missing": "リンクは主にJSONで入力。移動先の段落位置を使わずentity IDだけ開く。文章編集で位置がずれる。",
+      "paths": [
+        "src/ui/Fields.tsx",
+        "src/ui/EntityEditor.tsx",
+        "src/App.tsx"
+      ],
+      "findings": [
+        "R01"
+      ]
+    },
+    {
+      "id": "REQ-B11",
+      "title": "場所と物品の一覧",
+      "status": "主要動作あり",
+      "implemented": "場所・物品の独立した一覧、説明、参照元と種類/個体の区別がある。物品効果の原子検査もある。",
+      "missing": "世界時点での所有履歴表示はB18側の未完了事項。",
+      "paths": [
+        "src/ui/fieldSpecs.ts",
+        "src/domain/conditions.ts",
+        "src/ui/EntityEditor.tsx"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-B12",
+      "title": "専用ファイルへの出力と読み込み",
+      "status": "部分実装",
+      "implemented": ".scenario ZIPのmanifest、hash、事前検査、確認、復元を実装。空のブラウザー領域への復元を再確認。",
+      "missing": "全種類・共通世界・公開版・履歴・添付の総合往復、履歴増加後の出力上限、過去版移行は未完了。",
+      "paths": [
+        "src/storage/archive.ts",
+        "src/storage/store.ts",
+        "src/ui/WorkPage.tsx"
+      ],
+      "findings": [
+        "R06"
+      ]
+    },
+    {
+      "id": "REQ-B13",
+      "title": "世界の出来事と提示順の分離",
+      "status": "主要動作あり",
+      "implemented": "event世界日時とchapter/sceneの順序・event参照を別に持つ。章内の場面並べ替えがある。",
+      "missing": "複雑な回想・章変更と開示評価の総合受入は未完了。",
+      "paths": [
+        "src/ui/Lists.tsx",
+        "src/App.tsx",
+        "src/domain/types.ts"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-B14",
+      "title": "分岐・合流と条件・効果",
+      "status": "部分実装",
+      "implemented": "条件・効果・合流・終端、原子的な試読処理がある。",
+      "missing": "「含まれる」の保存と手動選択のfallback操作に不具合。不採用効果も実行される。",
+      "paths": [
+        "src/domain/runtime.ts",
+        "src/ui/Fields.tsx",
+        "src/ui/Reader.tsx"
+      ],
+      "findings": [
+        "R03",
+        "R04",
+        "R05"
+      ]
+    },
+    {
+      "id": "REQ-B15",
+      "title": "状態とフラグの管理",
+      "status": "主要動作あり",
+      "implemented": "状態の型・初期値・範囲、三値条件評価を共通処理へ分離。未知を偽にしない。",
+      "missing": "条件編集全体の受入と算出状態等の画面統合は未完了。",
+      "paths": [
+        "src/domain/conditions.ts",
+        "src/domain/model.ts",
+        "src/ui/Fields.tsx"
+      ],
+      "findings": [
+        "R05"
+      ]
+    },
+    {
+      "id": "REQ-B16",
+      "title": "試し読みと操作の巻き戻し",
+      "status": "部分実装",
+      "implemented": "分岐試読、全状態の巻戻、抽選の復元、開始内容の固定がある。",
+      "missing": "手動選択でfallbackへ進む画面操作が欠ける。章順だけでの連続試読も不足。",
+      "paths": [
+        "src/domain/runtime.ts",
+        "src/ui/Reader.tsx"
+      ],
+      "findings": [
+        "R04"
+      ]
+    },
+    {
+      "id": "REQ-B17",
+      "title": "真実・人物の認識・プレイヤーの認識",
+      "status": "部分実装",
+      "implemented": "真実・証言・信念・仮説とholder、知識効果、プレイヤーのseenを分離。",
+      "missing": "人物別の認識と読者提示を時点・経路で並べる表示、嘘・誤解の発言候補検査が不足。",
+      "paths": [
+        "src/domain/types.ts",
+        "src/domain/conditions.ts",
+        "src/ui/Reader.tsx"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-B18",
+      "title": "関係・所属・位置・所有の変化",
+      "status": "登録・土台のみ",
+      "implemented": "関係のvalidity、所有・移動の型とruntimeの物品更新がある。",
+      "missing": "時点/経路を選んで所属・関係・現在地・所有の候補を切り替える作品側の表示は未実装。",
+      "paths": [
+        "src/domain/types.ts",
+        "src/domain/conditions.ts",
+        "src/ui/Lists.tsx"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-B19",
+      "title": "伏線と回収の管理",
+      "status": "部分実装",
+      "implemented": "伏線を独立登録し、手掛かり/回収を結び、通った経路の不足候補を表示。",
+      "missing": "提示時と異なる状態で再評価する不具合。作品・経路・期限別の未回収一覧と全経路検査が不足。",
+      "paths": [
+        "src/domain/runtime.ts",
+        "src/ui/Reader.tsx",
+        "src/ui/fieldSpecs.ts"
+      ],
+      "findings": [
+        "R02"
+      ]
+    },
+    {
+      "id": "REQ-B20",
+      "title": "人物の目的と変化",
+      "status": "部分実装",
+      "implemented": "人物の目標と場面の目標・葛藤・結果を登録できる。",
+      "missing": "提示順・世界時点から人物の変化を横断して確認する表示は不足。",
+      "paths": [
+        "src/ui/fieldSpecs.ts",
+        "src/domain/types.ts"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-B21",
+      "title": "不確かな日時と独自暦",
+      "status": "部分実装",
+      "implemented": "瞬間・期間・不確定・未定・相対日時、標準/繰返し暦の変換と循環拒否を実装。",
+      "missing": "独自暦の通常入力はJSON。年表の暦単位・年齢・制約連動の全受入は未完了。",
+      "paths": [
+        "src/domain/time.ts",
+        "src/ui/Fields.tsx",
+        "src/ui/WorkPage.tsx"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-B22",
+      "title": "クエスト・会話・設定資料",
+      "status": "部分実装",
+      "implemented": "quest、会話、lore、状態・分岐への参照と遷移検査の土台がある。",
+      "missing": "クエストや会話をまとめて構築・試読する専用操作、全種類の未完成一覧が不足。",
+      "paths": [
+        "src/ui/fieldSpecs.ts",
+        "src/domain/conditions.ts",
+        "src/ui/Lists.tsx"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-B23",
+      "title": "安定ID・保存・取り消し・履歴",
+      "status": "主要動作あり",
+      "implemented": "安定ID、IndexedDBの原子保存、補償undo、単体/版復元を実装。故障注入試験が通る。",
+      "missing": "全障害・ブラウザー再起動・長時間・大量履歴の受入は未完了。",
+      "paths": [
+        "src/storage/store.ts",
+        "src/storage/storage.test.ts",
+        "src/ui/WorkPage.tsx"
+      ],
+      "findings": [
+        "R06"
+      ]
+    },
+    {
+      "id": "REQ-B24",
+      "title": "検索・絞り込み・確認候補・タッチ操作",
+      "status": "部分実装",
+      "implemented": "日本語正規化検索、種類/状態絞込、参照検査、上限付き分岐解析と一覧代替がある。",
+      "missing": "索引、意味上の矛盾候補、保存検索の再適用・一括編集、全操作の実端末受入が不足。",
+      "paths": [
+        "src/App.tsx",
+        "src/domain/runtime.ts",
+        "src/ui/components.tsx"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-F01",
+      "title": "思いつきを一時置きする",
+      "status": "部分実装",
+      "implemented": "短文メモ、attachment参照、変換元/変換先IDの登録欄がある。",
+      "missing": "音声メモの録音と人物/場面/伏線への変換操作は未実装。",
+      "paths": [
+        "src/ui/fieldSpecs.ts",
+        "src/ui/WorkPage.tsx"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-F02",
+      "title": "入力項目と雛形を変える",
+      "status": "登録・土台のみ",
+      "implemented": "templateと型付きcustomValuesのschema・JSON入力を用意。",
+      "missing": "作品別フォームへの雛形適用、項目非表示、既存値への影響を確認する通常操作がない。",
+      "paths": [
+        "src/domain/model.ts",
+        "src/ui/EntityEditor.tsx",
+        "src/ui/fieldSpecs.ts"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-F03",
+      "title": "人物以外の筋で並べる",
+      "status": "登録・土台のみ",
+      "implemented": "plot_threadグループとscene.threadIdsを持つ。",
+      "missing": "年表の縦軸を場所・章・筋などへ切り替える表示はない。",
+      "paths": [
+        "src/ui/fieldSpecs.ts",
+        "src/ui/Timeline.tsx"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-F04",
+      "title": "場面の役割を記録する",
+      "status": "主要動作あり",
+      "implemented": "視点、目標、葛藤、結果、新情報、緊張度などを任意入力できる。",
+      "missing": "未入力を含めた実端末での全項目受入は未完了。",
+      "paths": [
+        "src/ui/fieldSpecs.ts",
+        "src/domain/model.ts"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-F05",
+      "title": "構成の雛形と盛り上がりを見る",
+      "status": "登録・土台のみ",
+      "implemented": "構成の役割、緊張度・重要度、templateの保存形式を持つ。",
+      "missing": "構成雛形の適用と差分確認、進行順に沿う盛り上がりの図・集計がない。",
+      "paths": [
+        "src/ui/fieldSpecs.ts",
+        "src/ui/Lists.tsx"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-F06",
+      "title": "要約と本文を行き来する",
+      "status": "部分実装",
+      "implemented": "要約/本文/作者メモを分離し、本文確認と縦書き・ルビ表示、reader出力がある。",
+      "missing": "章順の通読、通常操作でのルビ付与・リンク作成、編集時の位置追従が不足。",
+      "paths": [
+        "src/ui/EntityEditor.tsx",
+        "src/ui/Fields.tsx",
+        "src/domain/exports.ts"
+      ],
+      "findings": [
+        "R01"
+      ]
+    },
+    {
+      "id": "REQ-F07",
+      "title": "年齢と生涯を表示する",
+      "status": "登録・土台のみ",
+      "implemented": "人物のbirth/deathと独自暦の計算部品を持つ。",
+      "missing": "選択時点の年齢・存命・所属、回想・復活の例外をまとめる表示がない。",
+      "paths": [
+        "src/ui/fieldSpecs.ts",
+        "src/domain/time.ts"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-F08",
+      "title": "時間差と前後関係を守る",
+      "status": "登録・土台のみ",
+      "implemented": "相対日時と日時制約の型・整合検査がある。",
+      "missing": "変更前の連動先、固定日時との衝突、連動移動の選択・原子確定と取消の画面がない。",
+      "paths": [
+        "src/domain/time.ts",
+        "src/ui/fieldSpecs.ts"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-F09",
+      "title": "一つの世界を複数作品で使う",
+      "status": "登録・土台のみ",
+      "implemented": "固定された共通世界参照の型、保存・ZIP検証処理を持つ。",
+      "missing": "作品側で世界版を選択・更新し、影響先を一覧にする通常操作がない。",
+      "paths": [
+        "src/domain/types.ts",
+        "src/storage/archive.ts",
+        "src/storage/store.ts"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-F10",
+      "title": "地図と年表を連動する",
+      "status": "登録・土台のみ",
+      "implemented": "map、場所、親地図、ピン座標の型と入力欄がある。",
+      "missing": "地図の描画、ピン選択、年表との往復・絞込操作がない。",
+      "paths": [
+        "src/ui/fieldSpecs.ts",
+        "src/domain/model.ts"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-F11",
+      "title": "移動と場所の変化を記録する",
+      "status": "登録・土台のみ",
+      "implemented": "移動経路、場所階層、時間幅・validityを登録できる。",
+      "missing": "移動所要時間の確認候補と、破壊・再建・支配・改名の時点別表示がない。",
+      "paths": [
+        "src/ui/fieldSpecs.ts",
+        "src/domain/types.ts"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-F12",
+      "title": "家系・別名・正体を扱う",
+      "status": "部分実装",
+      "implemented": "親子などの関係型、別名/認識者の型、作者指定の公開名投影がある。",
+      "missing": "家系専用表示、時期/認識者による表示名選択、実サーバーを含む正体漏れ受入が不足。",
+      "paths": [
+        "src/domain/model.ts",
+        "src/domain/projection.ts",
+        "src/ui/Lists.tsx"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-F13",
+      "title": "図を章・場面・会話へ分ける",
+      "status": "部分実装",
+      "implemented": "親子flow_graph、入口/出口、呼出スタックの試読処理がある。",
+      "missing": "画面は平坦なノード一覧。章→場面→会話の図の掘下げ、上位での未完了件数表示が不足。",
+      "paths": [
+        "src/domain/runtime.ts",
+        "src/ui/Lists.tsx"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-F14",
+      "title": "発生のきっかけと条件を分ける",
+      "status": "主要動作あり",
+      "implemented": "明示trigger、once/repeat、deadline、同一occurrenceの重複防止を実装し試験済み。",
+      "missing": "trigger入力はJSON中心。全端末での構築・期限エラー操作は未完了。",
+      "paths": [
+        "src/domain/runtime.ts",
+        "tests/runtime.test.ts",
+        "src/ui/Reader.tsx"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-F15",
+      "title": "途中状態から試し読みする",
+      "status": "部分実装",
+      "implemented": "checkpoint/開始状態の固定、版不一致拒否、不足値のunknown、巻戻を実装。",
+      "missing": "途中開始状態を文章や選択で組み立てる操作と版移行が不足。runtimeStateはJSON入力。",
+      "paths": [
+        "src/domain/runtime.ts",
+        "src/ui/Reader.tsx",
+        "src/ui/fieldSpecs.ts"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-F16",
+      "title": "選択前後と別の道を比べる",
+      "status": "部分実装",
+      "implemented": "直前の状態差分、diffRuntimeStates、合流時の状態保持がある。",
+      "missing": "二つの保存経路を選んで状態を並べて比較し、変更元へ移動する画面がない。",
+      "paths": [
+        "src/domain/runtime.ts",
+        "src/ui/Reader.tsx"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-F17",
+      "title": "確認した経路を保存する",
+      "status": "部分実装",
+      "implemented": "固定snapshotの経路保存/再実行、種類別coverage、版変更の再確認表示がある。",
+      "missing": "宣言した回帰経路集合の管理、台詞と場面の提示連携、変更後の影響一覧が不足。",
+      "paths": [
+        "src/domain/runtime.ts",
+        "src/ui/Reader.tsx"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-F18",
+      "title": "条件と行き止まりを検査する",
+      "status": "主要動作あり",
+      "implemented": "参照・進行不可・未到達候補、証人経路、外部unknown・無制限ループ・上限を実装。",
+      "missing": "大規模・全入口/版の総合受入は未完了。これだけで伏線の全経路評価にはならない。",
+      "paths": [
+        "src/domain/runtime.ts",
+        "tests/runtime.test.ts"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-F19",
+      "title": "共通の会話や場面を再利用する",
+      "status": "登録・土台のみ",
+      "implemented": "reuseのreference/clone/override型を保存し、未対応の参照/上書き試読は停止する。",
+      "missing": "共通場面の固定版解決、独立複製、フィールド上書き、適用版と影響の操作がない。",
+      "paths": [
+        "src/domain/runtime.ts",
+        "src/ui/fieldSpecs.ts"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-F20",
+      "title": "短い反応と周回を扱う",
+      "status": "部分実装",
+      "implemented": "訪問条件、抽選種/位置、Backの再現、周回と全初期化、across_runs持越しがある。",
+      "missing": "短い反応の系列を作る専用操作と場面/章scopeの自動reset結合が不足。",
+      "paths": [
+        "src/domain/runtime.ts",
+        "src/ui/Reader.tsx"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-F21",
+      "title": "台詞に変わらない番号を付ける",
+      "status": "部分実装",
+      "implemented": "台詞/選択肢の固定ID、原文hash、コピーと編集の基本データ契約がある。",
+      "missing": "台詞の分割/統合操作と元→新ID対応履歴がない。本文内注記の位置追従も不具合。",
+      "paths": [
+        "src/domain/production.ts",
+        "src/domain/types.ts",
+        "src/ui/Fields.tsx"
+      ],
+      "findings": [
+        "R01"
+      ]
+    },
+    {
+      "id": "REQ-F22",
+      "title": "演出と必要な素材を結ぶ",
+      "status": "登録・土台のみ",
+      "implemented": "cue、話者、表情、素材、待機ms、仮/確定素材を保存・確認できる。",
+      "missing": "本文と連動する演出表示、足りない素材と仮素材の横断一覧、素材差替えの全影響が不足。",
+      "paths": [
+        "src/ui/fieldSpecs.ts",
+        "src/ui/AssetPreview.tsx"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-F23",
+      "title": "翻訳と音声の見直しを管理する",
+      "status": "部分実装",
+      "implemented": "翻訳/収録の原台詞参照・言語・hash・工程、原文変更時needs_review、localization出力がある。",
+      "missing": "分割履歴、担当/確認者別の操作、原文hashを通常操作で確認・承認する導線が不足。",
+      "paths": [
+        "src/domain/production.ts",
+        "src/domain/exports.ts",
+        "src/ui/fieldSpecs.ts"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-F24",
+      "title": "目的に応じて書き出す",
+      "status": "部分実装",
+      "implemented": "完全保存・reader・runtime JSON・翻訳・相談・簡易試遊ZIPを実装。未対応機能を拒否する。",
+      "missing": "簡易試遊には物品/知識/外部値/呼出等の制限あり。全profileの総合互換受入は未完了。",
+      "paths": [
+        "src/domain/exports.ts",
+        "docs/implementation/EXPORT_COMPATIBILITY.md"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-F25",
+      "title": "採用状態と別案を記録する",
+      "status": "部分実装",
+      "implemented": "確定/仮/確認待ち/不採用/別案の状態、不変snapshotと出力除外がある。",
+      "missing": "作者別案の分離・比較・正本選択の画面が不足。不採用effectは試読で実行される。",
+      "paths": [
+        "src/ui/EntityEditor.tsx",
+        "src/domain/projection.ts",
+        "src/domain/runtime.ts"
+      ],
+      "findings": [
+        "R03"
+      ]
+    },
+    {
+      "id": "REQ-F26",
+      "title": "変更で見直す箇所を示す",
+      "status": "部分実装",
+      "implemented": "ID逆参照、削除影響・統合preview、翻訳/収録/媒体への変更確認待ちがある。",
+      "missing": "設定・条件・伏線・素材を含む意味上の見直し候補一覧と理由付けの通常操作が不足。",
+      "paths": [
+        "src/domain/maintenance.ts",
+        "src/domain/production.ts",
+        "src/ui/EntityEditor.tsx"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-F27",
+      "title": "未リンクの名前と参照元を探す",
+      "status": "登録・土台のみ",
+      "implemented": "型付きのIDリンクとcollectReferencesによる逆参照がある。",
+      "missing": "本文の名前/別名から候補を作り、同名を選ぶ操作と候補除外の保存がない。",
+      "paths": [
+        "src/domain/model.ts",
+        "src/ui/Fields.tsx",
+        "src/ui/EntityEditor.tsx"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-F28",
+      "title": "資料と設定の根拠を残す",
+      "status": "部分実装",
+      "implemented": "安全な画像/音声/PDF添付、Web URL、出所/解釈/参照箇所の登録がある。PDFは埋込実行しない。",
+      "missing": "動画や全資料形式の追加・確認、取得日や再配布に関する全画面連携は未完了。",
+      "paths": [
+        "src/domain/attachments.ts",
+        "src/ui/AssetPreview.tsx",
+        "src/ui/fieldSpecs.ts"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-F29",
+      "title": "指摘と次の作業を場面に結ぶ",
+      "status": "部分実装",
+      "implemented": "reviewレコードの対象版、引用、本文、工程、対応内容の型と入力がある。",
+      "missing": "関係線からの指摘導線、対象段落削除後の位置追跡、共有レビューと作業への接続が不足。",
+      "paths": [
+        "src/ui/fieldSpecs.ts",
+        "src/domain/model.ts"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-F30",
+      "title": "秘密を隠して確認してもらう",
+      "status": "部分実装",
+      "implemented": "作者指定の公開名/文章・ID変換・allowlist投影と限定範囲出力がある。",
+      "missing": "実Auth/membership/RLS/Storageと閲覧/指摘/編集/管理の共有画面はない。直接APIの漏れ試験も未実行。",
+      "paths": [
+        "src/domain/projection.ts",
+        "src/sync/README.md",
+        "src/ui/WorkPage.tsx"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-F31",
+      "title": "画面の広さに合わせて編集する",
+      "status": "部分実装",
+      "implemented": "幅別ナビ、一覧/詳細切替、広い画面の一覧＋詳細を実装。5幅の画面試験が通る。",
+      "missing": "実iPad分割・縦横回転・ソフトキーボード時の全編集は未検証。",
+      "paths": [
+        "src/styles.css",
+        "src/App.tsx",
+        "tests/e2e/editor.spec.ts"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-F32",
+      "title": "指・マウス・キーボードに対応する",
+      "status": "部分実装",
+      "implemented": "通常ボタン/入力と順序の上下ボタン、関係表からの始点/終点選択がある。",
+      "missing": "ドラッグ併用、まとめて編集、図の整列/配置操作、全キーボード操作と文字拡大の受入が不足。",
+      "paths": [
+        "src/ui/Lists.tsx",
+        "src/ui/Fields.tsx",
+        "src/styles.css"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-F33",
+      "title": "表示と作業の続きへ戻る",
+      "status": "登録・土台のみ",
+      "implemented": "最終作品/配色のlocalStorage、saved view格納API、検索条件のcollection作成を持つ。",
+      "missing": "保存検索の再適用、お気に入り、最近開いた対象、選択/図配置/範囲の再開をUIで使っていない。",
+      "paths": [
+        "src/App.tsx",
+        "src/storage/store.ts",
+        "src/ui/fieldSpecs.ts"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-F34",
+      "title": "通信なしの編集と同期を区別する",
+      "status": "部分実装",
+      "implemented": "端末内保存とoutboxを分離し、offlineキャッシュ再開を検査。UIは接続先未設定と表示する。",
+      "missing": "実端末間の送信/競合/解決/同期済み表示と認証がない。outboxの準備操作への自動変換も未接続。",
+      "paths": [
+        "src/storage/store.ts",
+        "src/sync/README.md",
+        "src/App.tsx"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-F35",
+      "title": "履歴とファイルを確実に持ち出す",
+      "status": "部分実装",
+      "implemented": "素材入り保存、検査preview、新規/複製/置換/同作品統合、単体/全体復元を実装。",
+      "missing": "別作品mergeのID対応、過去形式移行、全失敗系と長い履歴の復元受入が不足。",
+      "paths": [
+        "src/storage/store.ts",
+        "src/storage/archive.ts",
+        "src/ui/WorkPage.tsx"
+      ],
+      "findings": [
+        "R06"
+      ]
+    },
+    {
+      "id": "REQ-F36",
+      "title": "相談用に必要な情報だけ集める",
+      "status": "部分実装",
+      "implemented": "相談用範囲/前後値出力とcreateConsultationProposalの別案生成関数を持つ。",
+      "missing": "提案文章の取り込みと正本との差分比較はUIへ未接続。外部AIへの自動送信はない。",
+      "paths": [
+        "src/domain/exports.ts",
+        "src/ui/WorkPage.tsx"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-F37",
+      "title": "状態の意味と初期値を登録する",
+      "status": "部分実装",
+      "implemented": "表示名/キー/説明/型/初期値/許容値、人物/quest参照と検査がある。",
+      "missing": "同義語/反対語を値へまとめる候補、全辞書操作の受入は不足。",
+      "paths": [
+        "src/ui/fieldSpecs.ts",
+        "src/domain/conditions.ts",
+        "src/domain/model.ts"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-F38",
+      "title": "有効範囲・初期化・算出を決める",
+      "status": "部分実装",
+      "implemented": "scope、derived/resetRules型、派生値評価/循環拒否、周回/全resetの別操作を持つ。",
+      "missing": "scene/chapter終了でresetRulesを適用するruntime接続がない。持越し対象一覧や式の通常編集が不足。",
+      "paths": [
+        "src/domain/runtime.ts",
+        "src/domain/conditions.ts",
+        "src/ui/fieldSpecs.ts"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-F39",
+      "title": "読む箇所・変更箇所・理由を追う",
+      "status": "部分実装",
+      "implemented": "逆参照、試読trace、値差分と変更の保存がある。",
+      "missing": "状態の読む/書く/初期化する一覧を分ける画面と未使用/外部利用保持の整理導線がない。",
+      "paths": [
+        "src/ui/EntityEditor.tsx",
+        "src/domain/runtime.ts",
+        "src/domain/maintenance.ts"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-F40",
+      "title": "条件を組み立て、成立理由を見る",
+      "status": "部分実装",
+      "implemented": "AND/OR/NOT、自然文の括弧、三値評価、優先順・進行規則・fallbackの入力がある。",
+      "missing": "in演算の値入力が壊れる。manual_choiceのfallbackを試読画面から実行できない。",
+      "paths": [
+        "src/ui/Fields.tsx",
+        "src/ui/Reader.tsx",
+        "src/domain/conditions.ts"
+      ],
+      "findings": [
+        "R04",
+        "R05"
+      ]
+    },
+    {
+      "id": "REQ-F41",
+      "title": "状態が変わる順番を定義する",
+      "status": "部分実装",
+      "implemented": "状態/questのtransitionRules、禁止遷移拒否、reset/理由付き例外、原子effectを実装。",
+      "missing": "遷移表の通常操作、相互排他状態・経路/期限付き例外の全実行連携が不足。",
+      "paths": [
+        "src/domain/conditions.ts",
+        "src/ui/fieldSpecs.ts"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-F42",
+      "title": "ゲーム側との受け渡しを定める",
+      "status": "部分実装",
+      "implemented": "external_contractの管理元/型/欠損方針、stub入力と証跡区分、汎用runtime JSONがある。",
+      "missing": "実ゲームadapterと実測結果の接続・対応版検証は未実装。",
+      "paths": [
+        "src/domain/exports.ts",
+        "src/domain/runtime.ts",
+        "src/ui/Reader.tsx"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-F43",
+      "title": "伏線を独立した項目として持つ",
+      "status": "主要動作あり",
+      "implemented": "独立foreshadow、複数clue/payoff/truth/requiredInfoと提示位置を登録できる。",
+      "missing": "場面削除/複数伏線を含む全操作受入は未完了。提示評価の不具合はF45に記載。",
+      "paths": [
+        "src/ui/fieldSpecs.ts",
+        "src/domain/types.ts"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-F44",
+      "title": "体験順に開示の段階を確認する",
+      "status": "部分実装",
+      "implemented": "hint/suspicion/reinforce/reveal/alternativeを本文位置と経路のseenへ結ぶ。",
+      "missing": "章順での評価、人物認識と読者の並列表、並べ替え時の再確認待ちが不足。提示条件の再評価に不具合。",
+      "paths": [
+        "src/domain/runtime.ts",
+        "src/ui/Reader.tsx"
+      ],
+      "findings": [
+        "R02"
+      ]
+    },
+    {
+      "id": "REQ-F45",
+      "title": "手掛かりを見られる道を調べる",
+      "status": "部分実装",
+      "implemented": "通った経路に限り必須提示不足を根拠経路付きで示す。",
+      "missing": "全経路のanalyzeFlowへ伏線検査を結合していない。提示後の状態で再評価し不足を見逃す。",
+      "paths": [
+        "src/domain/runtime.ts",
+        "src/ui/Reader.tsx"
+      ],
+      "findings": [
+        "R02"
+      ]
+    },
+    {
+      "id": "REQ-F46",
+      "title": "知識・証言・誤解の出所を残す",
+      "status": "部分実装",
+      "implemented": "truthKind、holder、source/evidence/validityと明示知識効果の型を分離。",
+      "missing": "知識取得の出所・時点と嘘/誤解の発言を表示・確認する専用機能が不足。",
+      "paths": [
+        "src/domain/types.ts",
+        "src/domain/conditions.ts",
+        "src/ui/fieldSpecs.ts"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-F47",
+      "title": "未回収の意図と期限を記録する",
+      "status": "部分実装",
+      "implemented": "回収方針の区別とdeadline/exceptions入力、intentional候補区分がある。",
+      "missing": "作品/分岐/続編の期限評価、回収先変更の確認待ちと集計が不足。",
+      "paths": [
+        "src/domain/runtime.ts",
+        "src/ui/fieldSpecs.ts"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-F48",
+      "title": "人物の声と用語の基準を持つ",
+      "status": "登録・土台のみ",
+      "implemented": "voice_ruleとterminologyの一人称/用法/読み/例外/validityを保存できる。",
+      "missing": "本文・字幕・翻訳の表記/口調の候補検査と期間適用がない。",
+      "paths": [
+        "src/ui/fieldSpecs.ts",
+        "src/domain/types.ts"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-F49",
+      "title": "企画の基準と判断理由を残す",
+      "status": "主要動作あり",
+      "implemented": "企画の対象/体験/主題/範囲と判断の対象版/理由/結果を独立レコードで持つ。",
+      "missing": "企画と制作の横断画面、全参照操作の受入は未完了。",
+      "paths": [
+        "src/ui/fieldSpecs.ts",
+        "src/domain/model.ts"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-F50",
+      "title": "物語とプレイヤーの行動を結ぶ",
+      "status": "登録・土台のみ",
+      "implemented": "gameplay_specに行動/仕組み/導入/報酬/quest/task/意図差分を記録。",
+      "missing": "場面の物語とプレイ行動を並べる専用表示、実装との確認候補と受渡しが不足。",
+      "paths": [
+        "src/ui/fieldSpecs.ts",
+        "src/domain/types.ts"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-F51",
+      "title": "制作日程と依存する作業を持つ",
+      "status": "部分実装",
+      "implemented": "工程別task、進捗board、実期限/依存/見積型、循環検査がある。",
+      "missing": "担当/先行素材の一連操作、依存を可視化して期限の不整合を扱う機能が不足。",
+      "paths": [
+        "src/ui/Lists.tsx",
+        "src/domain/model.ts",
+        "src/ui/fieldSpecs.ts"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-F52",
+      "title": "制作量と一経路の量を分ける",
+      "status": "部分実装",
+      "implemented": "固有scene集合と経路出現数を分けるproductionCountsがありboardは固有対象数を表示。",
+      "missing": "台詞・素材・再利用量、読書/プレイ時間と速度仮定、見積の範囲をまとめる集計画面がない。",
+      "paths": [
+        "src/domain/production.ts",
+        "src/ui/Lists.tsx"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-F53",
+      "title": "本文と絵コンテ・演出を並べる",
+      "status": "登録・土台のみ",
+      "implemented": "storyboard/cueのanchor、参照/完成素材、ms時刻を世界tickと別に保存。",
+      "missing": "本文と絵コンテ/演出を並べる表示、素材差替えの確認待ち・timecode編集が不足。",
+      "paths": [
+        "src/ui/fieldSpecs.ts",
+        "src/domain/types.ts"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-F54",
+      "title": "媒体ごとの派生内容を管理する",
+      "status": "部分実装",
+      "implemented": "media_variantの媒体/元snapshot/本文/範囲と元データ変更時needsReviewがある。",
+      "missing": "公開予定日等の通常入力、公開済み媒体との差分比較、共通世界版の選択が不足。",
+      "paths": [
+        "src/domain/production.ts",
+        "src/ui/fieldSpecs.ts"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-F55",
+      "title": "共通の情報と意味付きの関係を持つ",
+      "status": "主要動作あり",
+      "implemented": "共通entity IDと意味/方向/時期/経路/根拠付きRelation、型/自己/対称関係検査がある。",
+      "missing": "派生参照を図へ戻す操作と、validityの表示切替は不足。",
+      "paths": [
+        "src/domain/model.ts",
+        "src/ui/Lists.tsx"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-F56",
+      "title": "項目の型と入力規則を定める",
+      "status": "部分実装",
+      "implemented": "標準項目の型、schema/参照/キー一意、custom/templateの検査を持つ。",
+      "missing": "雛形変更の影響を確認して一括適用する通常操作はない。",
+      "paths": [
+        "src/domain/model.ts",
+        "src/ui/EntityEditor.tsx"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-F57",
+      "title": "日本語の索引と用語集を作る",
+      "status": "部分実装",
+      "implemented": "NFKC・大小文字・かな正規化検索、読み/別名の保存がある。",
+      "missing": "五十音/分類の作者索引、表記揺れ辞書、段落/台詞位置への検索移動がない。",
+      "paths": [
+        "src/ui/components.tsx",
+        "src/App.tsx",
+        "src/ui/fieldSpecs.ts"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-F58",
+      "title": "一覧・カード・図を同じ情報で使う",
+      "status": "部分実装",
+      "implemented": "カード/年表/関係表/図、種類＋状態＋文字列検索と検索条件レコード作成がある。",
+      "missing": "保存条件の再実行、人物参加等の関連条件検索、固定/動的一覧の実際の表示、一括編集previewが不足。",
+      "paths": [
+        "src/App.tsx",
+        "src/ui/Lists.tsx",
+        "src/ui/fieldSpecs.ts"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-F59",
+      "title": "線の意味を選んで可視化する",
+      "status": "部分実装",
+      "implemented": "手入力Relationの種類別filter、矢印/文字/表の代替を実装。",
+      "missing": "一段/二段、階層、経路/時点、進行/参照/制作依存など派生図と隠れた範囲の表示がない。",
+      "paths": [
+        "src/ui/Lists.tsx",
+        "src/ui/Timeline.tsx"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-F60",
+      "title": "重複・未参照・変更待ちを整理する",
+      "status": "登録・土台のみ",
+      "implemented": "重複候補/未参照抽出、統合previewと参照書換えの純粋関数がある。",
+      "missing": "通常画面からの候補一覧、項目選択、統合確定・取消、保持指定が未接続。",
+      "paths": [
+        "src/domain/maintenance.ts",
+        "src/App.tsx"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-N01",
+      "title": "全端末での編集",
+      "status": "部分実装",
+      "implemented": "320px以上の幅別レイアウトと通常編集/復元の入口がある。5幅で基本画面を確認。",
+      "missing": "スマートフォン単独の本文/条件/線/履歴/ファイル全編集受入は未完了。fallbackとinの不具合あり。",
+      "paths": [
+        "src/styles.css",
+        "tests/e2e/editor.spec.ts",
+        "src/ui/Reader.tsx"
+      ],
+      "findings": [
+        "R04",
+        "R05"
+      ]
+    },
+    {
+      "id": "REQ-N02",
+      "title": "対応ブラウザーと実端末",
+      "status": "実機等未検証",
+      "implemented": "CIでChromium/Firefox/WebKit各11件。今回Chromiumの元11件を再実行。",
+      "missing": "実iPhone Safari/Chrome、実iPad分割、macOS Safari/Edgeの実OS・ブラウザー版付き証拠がない。",
+      "paths": [
+        "playwright.config.ts",
+        "tests/e2e/editor.spec.ts",
+        "docs/implementation/PROGRESS.md"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-N03",
+      "title": "アクセシビリティ",
+      "status": "実機等未検証",
+      "implemented": "初期画面axe、ラベル、focus、関係表代替、native dialogがある。",
+      "missing": "全画面のWCAG2.2 AA、VoiceOver/NVDA、200%拡大とタッチ代替の手動受入がない。",
+      "paths": [
+        "tests/e2e/editor.spec.ts",
+        "src/ui/components.tsx",
+        "src/styles.css"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-N04",
+      "title": "標準データの応答目標",
+      "status": "実機等未検証",
+      "implemented": "Standard/Largeのseed付き生成器がある。今回は標準の保存観測を追加。",
+      "missing": "所定実端末30回p95、起動/検索/描画/保存の全目標は未検証。全履歴検査・全件再保存のコストに懸念。",
+      "paths": [
+        "src/testing/performanceFixture.ts",
+        "src/storage/store.ts",
+        "src/domain/production.ts"
+      ],
+      "findings": [
+        "R06"
+      ]
+    },
+    {
+      "id": "REQ-N05",
+      "title": "大規模データと処理の中断",
+      "status": "部分実装",
+      "implemented": "entityカード60件、年表レーン200件の分割、worker読み込み、解析進捗/取消と上限がある。",
+      "missing": "関係図/ノード/未定日時は全件描画。Large初回表示、保存/出力の進捗・取消とUI応答受入が不足。",
+      "paths": [
+        "src/ui/Lists.tsx",
+        "src/ui/Timeline.tsx",
+        "src/storage/archive.ts",
+        "src/domain/runtime.ts"
+      ],
+      "findings": [
+        "R06"
+      ]
+    },
+    {
+      "id": "REQ-N06",
+      "title": "保存と移行の原子性",
+      "status": "部分実装",
+      "implemented": "本体/履歴/outbox/素材の同一DB transactionと故障注入rollbackを実装。",
+      "missing": "過去形式からの移行復元点と実ブラウザー全障害注入・長時間受入が不足。",
+      "paths": [
+        "src/storage/store.ts",
+        "src/storage/storage.test.ts"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-N07",
+      "title": "同期の競合と再送",
+      "status": "登録・土台のみ",
+      "implemented": "三方向merge、冪等ack、未解決競合停止、アカウント境界を契約試験。",
+      "missing": "実DB・認証・二端末同期・依存outbox rebaseと解決UIは未接続。メモリ試験を実同期の証拠にできない。",
+      "paths": [
+        "src/sync/README.md",
+        "src/sync/outbox.ts",
+        "tests/sync.test.ts"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-N08",
+      "title": "権限と秘密の投影",
+      "status": "登録・土台のみ",
+      "implemented": "公開投影のallowlistとID変換、名前/本文指定、契約membership検査がある。",
+      "missing": "サーバーAuth/RLS/private Storage、直接API、検索/素材/件数の実権限試験は存在しない。",
+      "paths": [
+        "src/domain/projection.ts",
+        "src/sync/testing.ts",
+        "src/sync/README.md"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-N09",
+      "title": "読み込みの制限と検証",
+      "status": "主要動作あり",
+      "implemented": "版/hash/安全パス/strict JSON/容量/参照を事前検査し原子的import。拒否試験と往復が通る。",
+      "missing": "全上限直前/直後、全種混在の総合受入は未完了。",
+      "paths": [
+        "src/storage/archive.ts",
+        "src/storage/json.ts",
+        "src/storage/storage.test.ts"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-N10",
+      "title": "入力と添付の安全な表示",
+      "status": "主要動作あり",
+      "implemented": "React文字列、HTML/Markdown escape、安全URL、能動添付拒否、PDF非埋込、非eval条件がある。",
+      "missing": "全素材形式・巨大入力・全ブラウザーでの総合安全受入は未完了。",
+      "paths": [
+        "src/domain/attachments.ts",
+        "src/ui/AssetPreview.tsx",
+        "src/domain/exports.ts"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-N11",
+      "title": "通信なしでの継続",
+      "status": "部分実装",
+      "implemented": "production service workerで取得済みshellをキャッシュ。配信停止後の再開/完全出力のE2Eを再確認。",
+      "missing": "実端末の機内モード、更新/未取得素材/長時間編集の組合せは未完了。",
+      "paths": [
+        "scripts/build/service-worker.mjs",
+        "src/main.tsx",
+        "tests/e2e/editor.spec.ts"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-N12",
+      "title": "再現可能な確認記録",
+      "status": "主要動作あり",
+      "implemented": "固定版/開始状態/trace/条件結果/RNG/stub区分と再生を実装し試験。",
+      "missing": "実ゲームactual証跡、全版変更・checkpoint移行は未完了。",
+      "paths": [
+        "src/domain/runtime.ts",
+        "tests/runtime.test.ts"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-N13",
+      "title": "日本語と時間の正確性",
+      "status": "部分実装",
+      "implemented": "UTF-8、Unicode検査、IME中保存停止、絵文字、整数tickと実日付の別型がある。",
+      "missing": "実日本語IME/ルビ入力は未検証。文字編集後のルビ・リンク位置がずれる。",
+      "paths": [
+        "src/ui/EntityEditor.tsx",
+        "src/ui/Fields.tsx",
+        "src/domain/time.ts"
+      ],
+      "findings": [
+        "R01"
+      ]
+    },
+    {
+      "id": "REQ-N14",
+      "title": "復元手順の完了",
+      "status": "部分実装",
+      "implemented": "利用ガイド、完全保存と空領域復元、履歴・snapshot復元処理がある。",
+      "missing": "全情報/素材/旧公開版を含む復元訓練、端末喪失/大量履歴を含む実ユーザー手順は未完了。",
+      "paths": [
+        "docs/implementation/USER_GUIDE.md",
+        "src/storage/store.ts",
+        "tests/e2e/editor.spec.ts"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-N15",
+      "title": "診断とプライバシー",
+      "status": "登録・土台のみ",
+      "implemented": "本文やstackを受け取らないcreateDiagnostic関数と試験がある。外部自動送信は見当たらない。",
+      "missing": "実エラーへの診断記録・環境情報収集・任意持出しのUIへ未接続。",
+      "paths": [
+        "src/diagnostics.ts",
+        "tests/diagnostics.test.ts",
+        "src/App.tsx"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-N16",
+      "title": "拡張性と検証可能性",
+      "status": "主要動作あり",
+      "implemented": "時間/状態/runtime/投影/保存をUIから分離し、固定データ255件が今回も通る。",
+      "missing": "モジュール分離だけで全UIとの同一規則は保証されず、今回の統合不具合が残る。",
+      "paths": [
+        "src/domain/conditions.ts",
+        "src/domain/time.ts",
+        "src/domain/projection.ts",
+        "vitest.config.ts"
+      ],
+      "findings": [
+        "R02",
+        "R03",
+        "R04",
+        "R05"
+      ]
+    },
+    {
+      "id": "REQ-N17",
+      "title": "公開構成と費用の明示",
+      "status": "実機等未検証",
+      "implemented": "基底パス、build-info、公開証拠gate、手動release workflowを用意。公開は保留。",
+      "missing": "完成commitの証拠、実同期/保存/送信の上限・現行費用、公開後直リンク検証はない。",
+      "paths": [
+        ".github/workflows/release.yml",
+        "scripts/check_release.py",
+        "docs/implementation/RELEASE.md"
+      ],
+      "findings": []
+    },
+    {
+      "id": "REQ-N18",
+      "title": "失敗時の説明と入力保持",
+      "status": "部分実装",
+      "implemented": "保存/不正JSONの入力保持、近傍エラー、手動再試行・一時持出しを画面試験で再確認。",
+      "missing": "relation/全共通操作/通信失敗の受入は不足。inの不適合は利用者が入力で直せない。",
+      "paths": [
+        "src/ui/EntityEditor.tsx",
+        "src/App.tsx",
+        "tests/e2e/editor.spec.ts"
+      ],
+      "findings": [
+        "R05"
+      ]
+    },
+    {
+      "id": "REQ-N19",
+      "title": "正本と公開版の保護",
+      "status": "部分実装",
+      "implemented": "不変snapshotと保護、固定版出力、作者メモ・不採用/別案の投影除外がある。",
+      "missing": "作者別案・正本を選択して比較/採用する製品操作が不足。不採用効果の試読実行も不整合。",
+      "paths": [
+        "src/storage/store.ts",
+        "src/domain/exports.ts",
+        "src/domain/projection.ts",
+        "src/domain/runtime.ts"
+      ],
+      "findings": [
+        "R03"
+      ]
+    },
+    {
+      "id": "REQ-N20",
+      "title": "持ち出しと互換性",
+      "status": "部分実装",
+      "implemented": "専用形式/汎用runtime等の仕様版と対象版、除外preview、互換性文書、未対応拒否を実装。",
+      "missing": "全profile総合検証と実ゲームengine adapterはない。すべてのengineへの対応ではない。",
+      "paths": [
+        "src/domain/exports.ts",
+        "docs/implementation/EXPORT_COMPATIBILITY.md"
+      ],
+      "findings": []
+    }
+  ],
+  "findings": [
+    {
+      "id": "R02",
+      "priority": "優先1",
+      "title": "提示済みの回収が、効果適用後の再評価で検査から消える",
+      "kind": "誤判定・見逃し",
+      "requirement_ids": [
+        "REQ-B19",
+        "REQ-F44",
+        "REQ-F45",
+        "AT-E04"
+      ],
+      "trigger": "回収の条件を「開示可能=true」とし、その回収の知識効果で開示可能をfalseにする。必須手掛かりを飛ばして回収へ進む。",
+      "expected": "実際に提示された回収を評価し、必須手掛かりの不足とその経路を表示する。",
+      "observed": "提示処理は回収をseenIdsへ登録し、conditionResultsにtrueを残す。それでもcheckTrialForeshadowsは適用後のstateで条件を再評価し、falseの回収をcontinueで飛ばす。結果はfindings=[]となり、画面は不足候補なしと表示する。",
+      "proof": "domain-probes.json P02。validateProject成功、payoffWasPresented=true、clueWasPresented=false、findings=[]。通常の副作用付き開示でも起こる。",
+      "code": [
+        [
+          "src/domain/runtime.ts",
+          197
+        ],
+        [
+          "src/domain/runtime.ts",
+          826
+        ],
+        [
+          "src/ui/Reader.tsx",
+          88
+        ]
+      ],
+      "fix": "提示時のconditionResultsとseenIdsを証跡として検査する。効果適用後の状態を使って「提示された事実」を判定し直さない。",
+      "accept": "同じ回収を、効果が条件値を変える場合/変えない場合の両方で再実行し、必須手掛かりを飛ばした経路では同じ不足が出ること。初期提示と巻戻/記録再生も確認。"
+    },
+    {
+      "id": "R03",
+      "priority": "優先1",
+      "title": "「不採用」の効果が、有効な分岐から実行される",
+      "kind": "試読状態の誤更新",
+      "requirement_ids": [
+        "REQ-B14",
+        "REQ-F25",
+        "REQ-N19"
+      ],
+      "trigger": "有効なflow_edgeが参照するset効果を「不採用」にし、その選択肢を試読する。",
+      "expected": "不採用の効果を通常の有効な効果として実行しない。不採用参照を説明付きで停止するなど、原子処理として一貫して扱う。",
+      "observed": "captureContentのbyIdにはrejectedの情報も入る。分岐実行時はeffectの存在・kind・deletedAtだけを確認し、statusを確認しない。今回false→trueに更新され、終端まで進んだ。開示効果側にはrejected拒否があり、実行経路によって規則も異なる。",
+      "proof": "domain-probes.json P03。保存検査成功、effectStatus=rejected、trialStatus=terminal、variable.value=true。",
+      "code": [
+        [
+          "src/domain/runtime.ts",
+          122
+        ],
+        [
+          "src/domain/runtime.ts",
+          528
+        ],
+        [
+          "src/domain/runtime.ts",
+          211
+        ]
+      ],
+      "fix": "分岐から集める効果にも採用状態の検査を適用する。効果群の途中まで実行せず、未対応の参照を原子的に停止する。",
+      "accept": "不採用効果を含む単体/複数効果、all_match、巻戻、記録再生で、変数/物品/知識/RNGが更新されないこと。公開出力の除外規則とも一致させる。"
+    },
+    {
+      "id": "R01",
+      "priority": "優先2",
+      "title": "本文を編集すると、人物リンク・ルビが別の文字へずれる",
+      "kind": "注記・参照位置の破損",
+      "requirement_ids": [
+        "REQ-B10",
+        "REQ-F06",
+        "REQ-F21",
+        "REQ-N13"
+      ],
+      "trigger": "「アオが歩く。」の0〜2文字へ人物リンクと「あお」のルビを付け、本文欄で「昨日、アオが歩く。」へ編集する。",
+      "expected": "リンクとルビが「アオ」へ追従する。重なる編集で対応を決められない場合は再リンク待ちを説明する。",
+      "observed": "richTextWithTextは既存blockを展開してtextだけ差し替えるためstart/endは0〜2のまま残る。検査は成功し、「昨日」に人物リンクとルビが付く。入力時の文字数超過ではなく、範囲内で黙って意味が変わる。",
+      "proof": "domain-probes.json P01。validateProject=true、originalLinkedText=アオ、afterLinkedText=昨日。通常の本文textareaはこの関数を使う。",
+      "code": [
+        [
+          "src/ui/Fields.tsx",
+          35
+        ],
+        [
+          "src/ui/Fields.tsx",
+          43
+        ],
+        [
+          "src/ui/Fields.tsx",
+          112
+        ]
+      ],
+      "fix": "Unicodeコードポイント単位の編集差分で注記位置を変換する。注記内の変更・段落分割/統合は、無効化/対応履歴/再選択を明示する。",
+      "accept": "前方の追加/削除、注記内部の変更、絵文字、複数段落の移動/分割/統合を通常本文欄で行い、リンク・ルビ・伏線anchorが正しい箇所を指すこと。"
+    },
+    {
+      "id": "R04",
+      "priority": "優先2",
+      "title": "代替の進行先があっても、試読画面から進めない",
+      "kind": "操作不能",
+      "requirement_ids": [
+        "REQ-B14",
+        "REQ-B16",
+        "REQ-F40",
+        "REQ-N01"
+      ],
+      "trigger": "manual_choiceで全選択肢をfalseにし、有効なfallbackIdを設定して試読する。",
+      "expected": "進行規則に従ってfallbackへ進む操作があり、状態と経路も記録される。",
+      "observed": "runtimeはreadyとなりstepTrial({},)で終端まで進める。画面はmanual_choice側でfalseの無効ボタンしか表示しない。「進行規則に従って次へ」は別policyにだけ表示される。今回進行用の有効ボタンは0、周回/初期化しか使えなかった。",
+      "proof": "domain-probes.json P04、fallback-ui.log、ui-probes.json P04-UI。390px幅のChromiumで操作を再現。",
+      "code": [
+        [
+          "src/ui/Reader.tsx",
+          85
+        ],
+        [
+          "src/domain/runtime.ts",
+          502
+        ]
+      ],
+      "fix": "gate不成立/真候補ゼロ時はmanual_choiceでも代替進行を表示し、stepTrialへ選択肢なしで渡す。未知候補がある場合の停止規則を維持する。",
+      "accept": "全false、gate=false、fallbackなし、unknown混在、通常の真候補あり、trigger付きの組合せで進行・停止・説明を確認。Backと経路保存も確認。"
+    },
+    {
+      "id": "R05",
+      "priority": "優先2",
+      "title": "条件の「含まれる」を選ぶと、保存できない",
+      "kind": "入力UIとschemaの不一致",
+      "requirement_ids": [
+        "REQ-B14",
+        "REQ-B15",
+        "REQ-F40",
+        "REQ-N18"
+      ],
+      "trigger": "サンプルの「鍵で門を開く」の比較演算を「含まれる（in）」へ変更し、保存する。",
+      "expected": "比較値の配列を選択/追加でき、同じASTとして保存・試読できる。",
+      "observed": "演算だけinへ切り替え、値は単一TypedValueのまま。TypedFieldにも配列を編集する仕組みがない。保存は「配列を指定してください。」で停止する。正しい配列をJSONで作っても通常の入力・自然文表示が配列に対応していない。",
+      "proof": "review-ui.logのP07、画面操作による再現。operator=inで保存エラーを確認。",
+      "code": [
+        [
+          "src/ui/Fields.tsx",
+          79
+        ],
+        [
+          "src/ui/Fields.tsx",
+          66
+        ],
+        [
+          "src/domain/conditions.ts",
+          59
+        ]
+      ],
+      "fix": "in専用の型付き値リストを編集する。演算の切替時に既存値を明示変換し、自然文も配列を表示する。型に合わない比較を選ばせない。",
+      "accept": "boolean/integer/enumの単値↔in切替、複数値、未知値、保存→再読込→試読をJSON入力なしで完了できること。"
+    },
+    {
+      "id": "R06",
+      "priority": "優先1",
+      "title": "標準8,800件では、作品設定の保存に15秒以上かかる",
+      "kind": "性能懸念を実観測",
+      "requirement_ids": [
+        "REQ-N04",
+        "REQ-N05",
+        "REQ-B23"
+      ],
+      "trigger": "提供されているStandard生成器の8,800件（人物100/出来事1,000/場面500/台詞5,000/関係2,000/状態100/伏線100、添付0bytes）を復元し、作品名だけを2回保存する。",
+      "expected": "仕様はStandard一操作の保存p95≤1,000msを目標とし、端末条件付き30回測定を求める。少量の変更で全履歴・全本文の処理が増え続けない設計が必要。",
+      "observed": "Linux headless Chromium 153・実IndexedDBで、保存ボタン操作開始から成功通知まで15,232msと15,921msだった。作品名だけの変更でも全体コピー/検査、台詞hash照合、全件delete/bulkPut、before/afterの履歴を扱う。",
+      "proof": "browser-performance.json、browser-fixture.json、browser-perf.log、performance.spec.ts。2件のUI経路観測であり、実iPhone/iPadの30回p95や保存コマンド内部だけの計測ではない。Node＋fake-indexeddbでは初回15.368秒、二度目は観測上限150秒で未完了。この模擬DB値を実機へ一般化しない。",
+      "code": [
+        [
+          "src/storage/store.ts",
+          188
+        ],
+        [
+          "src/storage/store.ts",
+          249
+        ],
+        [
+          "src/storage/store.ts",
+          279
+        ],
+        [
+          "src/storage/store.ts",
+          305
+        ],
+        [
+          "src/domain/production.ts",
+          22
+        ]
+      ],
+      "fix": "変更レコード中心の保存・依存範囲の検査/hash再計算、既存不変履歴の検証済み状態・読み込みの分離を検討する。完全保存の復元性・原子性を保つ。重い処理は進捗/取消も用意する。",
+      "accept": "所定の実端末とStandard/Largeを用い30回p95を記録。履歴増加後・2時間編集・容量制限・完全保存からの復元を含め、削減した処理で整合性が変わらないこと。"
+    }
+  ],
+  "integration_assessments": [
+    {
+      "id": "AT-E01",
+      "title": "スマートフォンだけで基本編集",
+      "requirement_ids": [
+        "REQ-B01",
+        "REQ-B04",
+        "REQ-B07",
+        "REQ-B12",
+        "REQ-F31",
+        "REQ-F32",
+        "REQ-N01"
+      ],
+      "package_id": "WP23",
+      "given": "iPhone縦画面と空作品",
+      "when": "人物2名、共通/個人出来事、場所、線、括弧付き条件を作成して専用ファイルを書き出し読み戻す",
+      "then": "PCを使わずIDと内容が一致し再編集できる",
+      "negative_or_edge": "入力中のキーボード、横画面、取消、Filesのキャンセルでも入力を失わない",
+      "result": "not_run",
+      "review_status": "部分確認",
+      "review_note": "幅別基本画面・人物保存・ZIP復元はあるが、実iPhone単独の全編集通しは未実行。R04/R05のUI不具合も残る。"
+    },
+    {
+      "id": "AT-E02",
+      "title": "世界時間・回想・基準点",
+      "requirement_ids": [
+        "REQ-B05",
+        "REQ-B06",
+        "REQ-B13",
+        "REQ-B21",
+        "REQ-F44"
+      ],
+      "package_id": "WP23",
+      "given": "世界tick -10の出来事を後章で回想する作品",
+      "when": "表示単位、本編基準点、回想章順をそれぞれ変更する",
+      "then": "世界tickは不変、相対表示と開示順だけが所定に変わる",
+      "negative_or_edge": "暦の存在しない日付と相対制約循環は拒否される",
+      "result": "not_run",
+      "review_status": "部分確認",
+      "review_note": "tick/相対日時と章順の分離はある。回想・本編基準変更・開示再評価までの通し画面受入は未実行。"
+    },
+    {
+      "id": "AT-E03",
+      "title": "分岐・合流・状態・巻き戻し",
+      "requirement_ids": [
+        "REQ-B14",
+        "REQ-B15",
+        "REQ-B16",
+        "REQ-F16",
+        "REQ-F38",
+        "REQ-F40",
+        "REQ-F41"
+      ],
+      "package_id": "WP23",
+      "given": "鍵取得/未取得が同じ合流先へ続く固定作品",
+      "when": "二経路を実行し戻す、禁止遷移を含む一括効果を選ぶ",
+      "then": "合流後も鍵差が残り、戻すと全状態が復元され、不正効果は全体拒否となる",
+      "negative_or_edge": "未知の値は偽にされず、有効選択肢ゼロは意図した終端と区別される",
+      "result": "not_run",
+      "review_status": "部分確認",
+      "review_note": "合流の状態保持、原子効果と巻戻の部品試験は通る。不採用効果とfallbackの結合でR03/R04を再現。"
+    },
+    {
+      "id": "AT-E04",
+      "title": "伏線の提示と人物の誤解",
+      "requirement_ids": [
+        "REQ-B17",
+        "REQ-B19",
+        "REQ-F43",
+        "REQ-F45",
+        "REQ-F46",
+        "REQ-F47"
+      ],
+      "package_id": "WP23",
+      "given": "必須手掛かりを飛ばせる経路と嘘の証言と続編の謎",
+      "when": "真相へ行く二経路を解析する",
+      "then": "手掛かり欠落の証人経路を示し、人物の認識と真実を区別し続編謎を別集計する",
+      "negative_or_edge": "理解したと判定せず、外部条件を含む経路は未確認とする",
+      "result": "not_run",
+      "review_status": "不足・不具合再現",
+      "review_note": "通った経路の伏線チェックはあるが、R02で欠落を見逃す。全経路解析に伏線は未結合。人物の嘘/誤解・続編集計も未完了。"
+    },
+    {
+      "id": "AT-E05",
+      "title": "公開範囲と正体の漏れ",
+      "requirement_ids": [
+        "REQ-F12",
+        "REQ-F30",
+        "REQ-F57",
+        "REQ-N08"
+      ],
+      "package_id": "WP23",
+      "given": "非公開の本名と家系と添付がある限定共有snapshot",
+      "when": "閲覧者が本文、検索、索引、図、リンク、素材、直接APIを調べる",
+      "then": "許可した別名だけが出て秘密のID・名前・関係・件数・ファイル名が取得できない",
+      "negative_or_edge": "IDやproject_idを差替えたアクセスと権限撤回後の新規取得は拒否する",
+      "result": "not_run",
+      "review_status": "未検証・実基盤なし",
+      "review_note": "投影の部品試験がある。実共有snapshot・API・RLS・Storage・索引を非メンバーから調べる環境がない。"
+    },
+    {
+      "id": "AT-E06",
+      "title": "二端末の競合と削除",
+      "requirement_ids": [
+        "REQ-F34",
+        "REQ-N06",
+        "REQ-N07"
+      ],
+      "package_id": "WP23",
+      "given": "共通revisionを取得した二端末",
+      "when": "両方オフラインで同じ本文を編集、片方削除、重複と順逆で送信する",
+      "then": "双方と共通元を比較でき、解決後は同じ結果、二重効果と勝手な復活はない",
+      "negative_or_edge": "容量不足と認証失効時にも未送信を失わず、同期済みと表示しない",
+      "result": "not_run",
+      "review_status": "未実装・実基盤なし",
+      "review_note": "契約用メモリサーバーはある。実認証と二端末通信断/削除/競合/解決の受入は実行できない。"
+    },
+    {
+      "id": "AT-E07",
+      "title": "専用ファイルの往復と拒否",
+      "requirement_ids": [
+        "REQ-B12",
+        "REQ-F35",
+        "REQ-F55",
+        "REQ-F56",
+        "REQ-N09",
+        "REQ-N14"
+      ],
+      "package_id": "WP23",
+      "given": "全entity種・未知日時・巨大tick・素材を含む作品",
+      "when": "空環境へ全情報往復し、別途ハッシュ不一致/参照切れ/危険パス/未対応版を投入する",
+      "then": "正規化した保存情報が一致し、不正ファイルは既存作品を一切変えない",
+      "negative_or_edge": "安全上限直前・直後、添付重複、ID衝突を確認する",
+      "result": "not_run",
+      "review_status": "部分確認",
+      "review_note": "完全ZIPの検査/往復/拒否、空のブラウザー領域復元はある。全種類・世界・素材・版・巨大tickを同時に往復する総合受入は未完了。"
+    },
+    {
+      "id": "AT-E08",
+      "title": "翻訳・音声・台詞分割",
+      "requirement_ids": [
+        "REQ-F21",
+        "REQ-F23",
+        "REQ-F48"
+      ],
+      "package_id": "WP23",
+      "given": "原文と翻訳と音声が確認済みの台詞",
+      "when": "改名/並替え、原文編集、分割、差戻しを行う",
+      "then": "音声取り違えがなく内容変更時だけ見直し対象となり分割対応履歴を追える",
+      "negative_or_edge": "取消や単体復元も新revisionとなり古い成果物を自動確認済みにしない",
+      "result": "not_run",
+      "review_status": "不足",
+      "review_note": "原文変更の翻訳/収録needs_reviewはある。台詞分割/統合と元→新ID対応履歴がなく、ケース全体は未達。"
+    },
+    {
+      "id": "AT-E09",
+      "title": "制作量と公開済み媒体版",
+      "requirement_ids": [
+        "REQ-F09",
+        "REQ-F51",
+        "REQ-F52",
+        "REQ-F54"
+      ],
+      "package_id": "WP23",
+      "given": "二経路で再利用する場面と公開済み小説版",
+      "when": "世界設定改訂と制作集計、場面の日付変更を行う",
+      "then": "固有制作数は一回、体験量は各経路で算出し、小説旧版と実期限は不変",
+      "negative_or_edge": "未設定速度の所要時間は不明とし、執筆済でも実装未完了を抽出する",
+      "result": "not_run",
+      "review_status": "部分確認",
+      "review_note": "固有数/経路数の関数と媒体needsReviewはある。共通世界改訂・旧公開小説との比較・媒体別集計の通しは未完了。"
+    },
+    {
+      "id": "AT-E10",
+      "title": "解析の上限・仮実の区別",
+      "requirement_ids": [
+        "REQ-F17",
+        "REQ-F18",
+        "REQ-F20",
+        "REQ-F42",
+        "REQ-N05",
+        "REQ-N12"
+      ],
+      "package_id": "WP23",
+      "given": "抽選・無制限ループ・外部戦闘を含む作品",
+      "when": "同じ記録を再実行して探索上限まで解析する",
+      "then": "抽選は再現され、未確認の範囲と分母を示し、仮戦闘結果と実ゲーム結果を別に記録する",
+      "negative_or_edge": "対象版の変更で再確認待ちになり、打切りを到達不能の証明としない",
+      "result": "not_run",
+      "review_status": "部分確認",
+      "review_note": "抽選/巻戻/探索上限/仮値区分は部品試験済み。実ゲーム応答、全scope、作品変更後の回帰管理は未完了。"
+    },
+    {
+      "id": "AT-E11",
+      "title": "表示代替・支援技術・性能",
+      "requirement_ids": [
+        "REQ-F31",
+        "REQ-F32",
+        "REQ-F59",
+        "REQ-N02",
+        "REQ-N03",
+        "REQ-N04"
+      ],
+      "package_id": "WP23",
+      "given": "標準/大規模データと対象ブラウザー表",
+      "when": "キーボード、VoiceOver、200%拡大、狭い幅、図の一覧代替、指定性能を測定する",
+      "then": "全操作へ到達でき所定環境の測定結果と証拠を残す",
+      "negative_or_edge": "色依存・ドラッグ専用・焦点喪失・IME破壊・全件DOM描画を検出する",
+      "result": "not_run",
+      "review_status": "未検証・性能懸念",
+      "review_note": "基本幅と初期axeは通る。VoiceOver/NVDA、200%拡大、実端末の30回p95がない。R06では標準保存の15秒台を観測。"
+    },
+    {
+      "id": "AT-E12",
+      "title": "保存失敗とアプリ更新からの復帰",
+      "requirement_ids": [
+        "REQ-B23",
+        "REQ-F34",
+        "REQ-F35",
+        "REQ-N06",
+        "REQ-N11",
+        "REQ-N18"
+      ],
+      "package_id": "WP23",
+      "given": "キャッシュ済みアプリと未送信作品",
+      "when": "機内モード、保存容量不足、途中更新、移行失敗、専用出力からの再開を行う",
+      "then": "失敗と未保存を明示し、更新は安全地点で適用し、書き出しと復元で再開できる",
+      "negative_or_edge": "初回未取得・未取得素材・保存先取消を成功と扱わない",
+      "result": "not_run",
+      "review_status": "部分確認",
+      "review_note": "配信停止時キャッシュ再開とDB故障注入はある。実容量不足/途中更新/旧形式移行/長時間の総合復帰は未完了。"
+    }
+  ],
+  "historical_verification": {
+    "target_head": "be4c53fbe1e814b3ce66f9f1e331009c8cfe750d",
+    "main_merge": "ec0eaab51eba96a75eeccc9f2e9c585263a747f8",
+    "source_blob_hash_mismatches": 0,
+    "files_verified": 103,
+    "original_vitest": {
+      "passed": 255,
+      "total": 255
+    },
+    "python_tests": {
+      "passed": 15,
+      "total": 15
+    },
+    "build": "passed",
+    "ci": {
+      "run_id": 37305825674,
+      "job_id": 111749145323,
+      "vitest_passed": 255,
+      "e2e_passed": 33,
+      "engines": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "url": "https://github.com/chameleonjp-lab/shinariokanri/actions/runs/37305825674"
+    },
+    "local_original_e2e": {
+      "chromium_passed": 11,
+      "total": 11
+    },
+    "additional_observations": [
+      "P01",
+      "P02",
+      "P03",
+      "P04",
+      "P05",
+      "P07",
+      "P04-UI",
+      "timeline"
+    ],
+    "not_run": [
+      "full_116_acceptance",
+      "real_iPhone_iPad_PC",
+      "VoiceOver_NVDA",
+      "live_Auth_RLS_Storage_sync",
+      "Large_p95",
+      "two_hour_edit",
+      "old_format_migration"
+    ],
+    "browser_performance": {
+      "environment": "Linux headless Chromium 153, real IndexedDB, desktop 1280x720; two samples, not p95",
+      "samples": [
+        15232,
+        15921
+      ]
+    },
+    "performance_fixture": {
+      "seed": "review-pr2-browser-standard",
+      "hash": "2d38bebb82a381878839f860ece96a3af01d176caf61fc443080d86cb0ae6ba9",
+      "records": 8800,
+      "jsonBytes": 6258972
+    },
+    "mock_database_performance": {
+      "environment": "Node + fake-indexeddb; not real-device p95",
+      "seed": "review-pr2-standard",
+      "fixtureHash": "2fa26b0e242a1765c87b14e584d91069c852613898ddf6f7a0e7bc3f8bf32701",
+      "records": 8800,
+      "saveMs": [
+        15368
+      ],
+      "projectJsonBytes": [
+        12861799
+      ],
+      "validationMs": 2573,
+      "valid": true,
+      "phase": "second-save"
+    },
+    "font_limit": "No Japanese font in local headless environment; no product glyph-quality finding is made.",
+    "full_acceptance_completed": false
+  },
+  "observed_domain_probes": {
+    "P01": {
+      "valid": true,
+      "originalLinkedText": "アオ",
+      "afterLinkedText": "昨日",
+      "after": [
+        {
+          "id": "6fe14844-7552-4556-8ee6-996a27fab4c6",
+          "kind": "paragraph",
+          "text": "昨日、アオが歩く。",
+          "links": [
+            {
+              "start": 0,
+              "end": 2,
+              "target": {
+                "entityId": "257020ab-6267-4990-8979-9d99958f040c"
+              }
+            }
+          ],
+          "ruby": [
+            {
+              "start": 0,
+              "end": 2,
+              "text": "あお"
+            }
+          ]
+        }
+      ]
+    },
+    "P02": {
+      "valid": true,
+      "status": "ready",
+      "payoffWasPresented": true,
+      "clueWasPresented": false,
+      "conditionObservations": [
+        {
+          "targetId": "02cc2c71-d06d-428b-b5d9-fdacb87a1b5a",
+          "value": "true",
+          "reasons": []
+        },
+        {
+          "targetId": "bf93836e-c94b-43d9-b516-01f44ac2f055",
+          "value": "true",
+          "reasons": []
+        }
+      ],
+      "findings": []
+    },
+    "P03": {
+      "valid": true,
+      "effectStatus": "rejected",
+      "trialStatus": "terminal",
+      "value": {
+        "type": "boolean",
+        "value": true
+      }
+    },
+    "P04": {
+      "valid": true,
+      "initialStatus": "ready",
+      "choices": [
+        {
+          "edgeId": "90138fd8-e96b-48de-aaff-74541e4ee466",
+          "label": "成立しない選択",
+          "toId": "6746c8a9-7d4c-4b56-88f0-fbec076b8011",
+          "result": "false",
+          "reasons": [],
+          "priority": 0
+        }
+      ],
+      "advancedStatus": "terminal"
+    },
+    "P05": {
+      "valid": true,
+      "generalStatus": "passed_for_checked_scope",
+      "generalCodes": [
+        "TERMINAL"
+      ],
+      "manualForeshadowCodes": [
+        "REQUIRED_INFO_MISSING"
+      ]
+    }
+  },
+  "observed_ui_probes": {
+    "timeline": {
+      "arrowElements": 0
+    },
+    "P07": {
+      "operator": "in",
+      "errors": [
+        "保存できませんでした配列を指定してください。配列を指定してください。入力を一時ファイルに保存"
+      ]
+    },
+    "P04-UI": {
+      "trialState": "試読中",
+      "choiceDisabled": true,
+      "advanceControlCount": 0,
+      "enabledButtons": [
+        "次の周回",
+        "すべて初期化"
+      ]
+    }
+  },
+  "observation_notice": "前回レビューの固定版の観測。今回のアプリ試験結果・修正合格・104要件全体の受入合格ではない。"
+}
