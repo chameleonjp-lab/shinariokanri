@@ -75,6 +75,8 @@ test('短い文章メモの未保存入力を詳細パネルの閉じ直し後�
 test('録音許可の拒否を説明し、文章と画像メモを保存ファイルまで保持する', async ({ page }) => {
   await page.addInitScript(() => {
     // Explicit denial fixture verifies the ordinary UI's failure path.
+    if (!navigator.mediaDevices) Object.defineProperty(navigator, 'mediaDevices', { value: {} });
+    if (typeof MediaRecorder === 'undefined') Object.defineProperty(window, 'MediaRecorder', { value: class { constructor() { throw new Error('denial fixture must not create a recorder'); } } });
     Object.defineProperty(navigator.mediaDevices, 'getUserMedia', { value: async () => { throw new DOMException('denied', 'NotAllowedError'); } });
   });
   await create(page); await add(page, 'note', '画像と文章の受け皿');
