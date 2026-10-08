@@ -247,7 +247,7 @@ function validateRuntimeExport(project: ProjectData, projection: PublicProjectio
     };
     for (const field of required[entity.kind] ?? []) if (!has(projected.data, field)) fail('制作に必要な項目が公開範囲から除かれています。', entity.id, field);
     // Omitting an optional author field is safe; omitting a present behavior field is not.
-    const behaviorFields = new Set(['condition', 'gate', 'trigger', 'executionPolicy', 'fallbackId', 'effectIds', 'knowledgeEffects', 'sceneId', 'childGraphId', 'parentGraphId', 'choiceLineId', 'blockIds', 'priority', 'initial', 'allowed', 'ownerId', 'externalContractId', 'transitionRules', 'value', 'instanceId', 'cueIds', 'stateVariableId']);
+    const behaviorFields = new Set(['condition', 'gate', 'trigger', 'executionPolicy', 'fallbackId', 'effectIds', 'knowledgeEffects', 'sceneId', 'childGraphId', 'parentGraphId', 'choiceLineId', 'dialogueLineIds', 'blockIds', 'priority', 'initial', 'allowed', 'ownerId', 'externalContractId', 'transitionRules', 'value', 'instanceId', 'cueIds', 'stateVariableId']);
     for (const [field, value] of Object.entries(data)) if (behaviorFields.has(field) && value != null && !(Array.isArray(value) && !value.length) && !has(projected.data, field)) fail('分岐や状態の動作を変える項目を除外できません。', entity.id, field);
     if (entity.kind === 'flow_node') {
       if (!profile.supportedNodeTypes.includes(entity.data.nodeType)) fail('このノード種類を対応先で表せません。', entity.id, 'nodeType');

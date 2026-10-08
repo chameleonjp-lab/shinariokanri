@@ -23,7 +23,7 @@ export async function replaySavedTraceVerified(project: ProjectData, traceId: ID
   return replaySavedTrace(input.source, traceId, input.referenceEntities);
 }
 export async function analyzeFlowVerified(project: ProjectData, options: AnalysisOptions = {}, worldSnapshots: Record<ID, ProjectContent> = {}) {
-  const requested = { ...options, ...(options.state ? { state: structuredClone(options.state) } : {}), ...(options.stub ? { stub: structuredClone(options.stub) } : {}), ...(options.presentationResults ? { presentationResults: structuredClone(options.presentationResults) } : {}) };
+  const requested = { ...options, ...(options.state ? { state: structuredClone(options.state) } : {}), ...(options.presentationState ? { presentationState: structuredClone(options.presentationState) } : {}), ...(options.stub ? { stub: structuredClone(options.stub) } : {}), ...(options.presentationResults ? { presentationResults: structuredClone(options.presentationResults) } : {}) };
   const input = await captured(project, requested.contentVersionId ?? project.projectId, worldSnapshots);
   return analyzeFlowAsync(input.source, { ...requested, referenceEntities: input.referenceEntities, worldSnapshots: input.registry });
 }

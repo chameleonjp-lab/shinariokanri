@@ -139,6 +139,19 @@ export function conditionToText(condition: Condition, names: Record<ID, string> 
 }
 
 export type EffectsResult = { ok: true; state: RuntimeState } | { ok: false; state: RuntimeState; issues: ValidationIssue[] };
+/** Exclusions are checked on the final working state so an atomic swap remains possible. */
+export function runtimeExclusionIssues(context: RuntimeContext): ValidationIssue[] {
+  const issues: ValidationIssue[] = [];
+  for (const variable of defs(context)) for (const [index, rule] of (variable.data.exclusions ?? []).entries()) {
+    const result = evaluateCondition({ op: 'all', children: [{ op: 'compare', variableId: variable.id, comparator: 'eq', value: rule.value }, { op: 'compare', variableId: rule.variableId, comparator: 'eq', value: rule.otherValue }] }, context);
+    if (result.value === 'false') continue;
+    const exceptions = (rule.exceptions ?? []).map(exception => evaluateScenarioException(exception, context));
+    if (result.value === 'true' && exceptions.some(exception => exception.value === 'true')) continue;
+    const unknown = result.value === 'unknown' || exceptions.some(exception => exception.value === 'unknown');
+    issues.push(issue(unknown ? `相互排他を評価できません。${rule.reason}` : `相互排他に反する状態です。${rule.reason}`, `${variable.id}.exclusions[${index}]`, unknown ? 'CONDITION_UNKNOWN' : 'TRANSITION_BLOCKED'));
+  }
+  return issues;
+}
 function sameValue(a: TypedValue, b: TypedValue): boolean { return a.type === b.type && a.value === b.value; }
 function transitionAllowed(variable: Entity<'variable'>, before: TypedValue, after: TypedValue, effect: EffectData, context: RuntimeContext): void {
   if (effect.operation === 'reset' || sameValue(before, after)) return;
@@ -250,6 +263,7 @@ export function applyEffectsAtomic(state: RuntimeState, effects: (Entity<'effect
       instanceIds.add(item.instanceId);
     }
     for (const variable of defs(context)) if (variable.data.derived) working.variableValues[variable.id] = variableValue(variable.id, { ...context, state: working }, []);
+    const exclusions = runtimeExclusionIssues({ ...context, state: working }); if (exclusions.length) throw new DomainValidationError(exclusions);
     return { ok: true, state: working };
   } catch (error) {
     return { ok: false, state, issues: error instanceof DomainValidationError ? error.issues : [issue(error instanceof Error ? error.message : '効果を適用できません。', 'effects')] };
@@ -258,10 +272,10 @@ export function applyEffectsAtomic(state: RuntimeState, effects: (Entity<'effect
 
 /** Lifecycle resets are explicit effects with the same validation and atomicity as a choice. */
 export function resetRuntimeLifecycle(state: RuntimeState, events: ResetRule['on'][], context: RuntimeContext): EffectsResult {
-  let working = structuredClone(state);
+  if (!events.length) return { ok: true, state: structuredClone(state) };
+  const working = structuredClone(state), effects: EffectData[] = [];
   const causes: NonNullable<RuntimeState['resetCauses']> = [];
   for (const on of events) {
-    const effects: EffectData[] = [];
     for (const variable of defs(context)) {
       if (variable.data.derived || variable.data.externalContractId) continue;
       const rule = variable.data.resetRules?.find(rule => rule.on === on);
@@ -270,11 +284,11 @@ export function resetRuntimeLifecycle(state: RuntimeState, events: ResetRule['on
       const value = rule?.value ?? variable.data.initial;
       effects.push({ operation: 'reset', targetId: variable.id, value });
       causes.push({ variableId: variable.id, on, before: structuredClone(working.variableValues[variable.id] ?? { type: 'unknown', value: null, reason: '途中開始時の値が未指定です。' }), after: structuredClone(value), reason: rule?.reason || (rule ? '宣言した初期化規則' : `有効範囲 ${variable.data.scope} の初期化`) });
+      working.variableValues[variable.id] = structuredClone(value);
     }
-    const applied = applyEffectsAtomic(working, effects, { ...context, state: working });
-    if (!applied.ok) return { ...applied, state };
-    working = applied.state;
   }
-  if (events.length && (causes.length || state.resetCauses)) working.resetCauses = causes;
-  return { ok: true, state: working };
+  const applied = applyEffectsAtomic(state, effects, context);
+  if (!applied.ok) return applied;
+  if (events.length && (causes.length || state.resetCauses)) applied.state.resetCauses = causes;
+  return applied;
 }

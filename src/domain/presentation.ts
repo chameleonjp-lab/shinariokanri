@@ -1,6 +1,6 @@
 import type { CheckpointData, ContentAnchor, Entity, ID, PresentationConditionResult, ProjectContent, ProjectData, RuntimeState, TraceData, TypedValue, ValidationIssue } from './types';
 import { validateRuntimeState } from './model';
-import { applyEffectsAtomic, DomainValidationError, evaluateCondition, initializeRuntimeState, resetRuntimeLifecycle } from './conditions';
+import { applyEffectsAtomic, DomainValidationError, evaluateCondition, initializeRuntimeState, resetRuntimeLifecycle, runtimeExclusionIssues } from './conditions';
 import { buildChapterReadingSequence } from './writingWorkspace';
 import { captureRuntimeContent, capturedVersionIssue } from './runtimeVersions';
 import type { PresentationOccurrence, ReadingPath, RuntimeTraceExtensions } from './runtimeContracts';
@@ -10,10 +10,11 @@ import { resolvePinnedWorlds } from './pinnedWorlds';
 import type { ProjectValidationOptions } from './model';
 import { adoptedRecord } from './adoption';
 import { evaluateTargetScope } from './stateRules';
+import { declaredRegressionPaths, regressionPathCoverage } from './regressionPaths';
 import { isTick } from './time';
 
 export interface PresentationTarget { nodeId?: ID; sceneId?: ID; worldTick?: string; externalValues?: Record<ID, TypedValue>; referenceEntities?: Entity[] }
-export type ContentPresentation = { ok: true; state: RuntimeState; conditions: PresentationConditionResult[] } | { ok: false; issues: ValidationIssue[] };
+export type ContentPresentation = { ok: true; state: RuntimeState; observationState: RuntimeState; conditions: PresentationConditionResult[] } | { ok: false; issues: ValidationIssue[] };
 const active = <K extends Entity['kind']>(project: ProjectData, kind: K): Entity<K>[] => project.entities.filter((entity): entity is Entity<K> => entity.kind === kind && adoptedRecord(entity));
 const problem = (path: string, message: string, code: ValidationIssue['code'] = 'REFERENCE_INVALID'): ContentPresentation => ({ ok: false, issues: [{ code, path, message }] });
 
@@ -62,6 +63,8 @@ export function presentContent(project: ProjectData, state: RuntimeState, target
     if (!node && !sceneId) return problem('presentation', '提示する場面または分岐を指定してください。');
     const scene = sceneId ? active(project, 'scene').find(item => item.id === sceneId) : undefined;
     if (sceneId && !scene) return problem('presentation.sceneId', '提示する場面が存在しないか、削除・不採用です。');
+    const initialIssues = runtimeExclusionIssues({ state, entities: project.entities, referenceEntities: target.referenceEntities, externalValues: target.externalValues, ruleContext: presentationRuleContext(project, { ...target, sceneId }) });
+    if (initialIssues.length) return { ok: false, issues: initialIssues };
     const resolved = { ...target, sceneId }, next = structuredClone(state), seen = new Set(next.seenIds);
     if (node) { next.presentationPosition = node.id; next.visitCounts[node.id] = (next.visitCounts[node.id] ?? 0) + 1; seen.add(node.id); }
     if (scene) {
@@ -71,7 +74,7 @@ export function presentContent(project: ProjectData, state: RuntimeState, target
       for (const lineId of (scene.data as Entity<'scene'>['data'] & { dialogueLineIds?: ID[] | null }).dialogueLineIds ?? []) {
         const line = active(project, 'dialogue_line').find(item => item.id === lineId);
         if (!line) return problem(`${scene.id}.dialogueLineIds`, '提示する台詞が存在しないか、削除・不採用です。');
-        seen.add(line.id); for (const block of line.data.text) seen.add(block.id);
+        seen.add(line.id); next.visitCounts[line.id] = (next.visitCounts[line.id] ?? 0) + 1; for (const block of line.data.text) seen.add(block.id);
       }
     }
     if (node) for (const edge of active(project, 'flow_edge').filter(item => item.data.fromId === node.id)) if (edge.data.choiceLineId) seen.add(edge.data.choiceLineId);
@@ -105,19 +108,21 @@ export function presentContent(project: ProjectData, state: RuntimeState, target
     }
     const applied = applyEffectsAtomic(next, effects, context); if (!applied.ok) return applied;
     applied.state.seenIds = [...new Set([...applied.state.seenIds, ...disclosures.map(disclosure => disclosure.id)])];
-    return { ok: true, state: applied.state, conditions };
+    return { ok: true, state: applied.state, observationState: structuredClone(next), conditions };
   } catch (error) { return { ok: false, issues: error instanceof DomainValidationError ? error.issues : [{ code: 'VALIDATION_FAILED', path: 'presentation', message: error instanceof Error ? error.message : '提示を検証できません。' }] }; }
 }
 
 export interface ChapterReadingOptions { chapterIds?: ID[]; sceneIds?: ID[]; contentVersionId?: ID; state?: RuntimeState; worldTick?: string; externalValues?: Record<ID, TypedValue>; worldSnapshots?: Record<ID, ProjectContent> }
 export interface ChapterReadingSession {
   content: ProjectData; contentVersionId: ID; contentRevision: string; contentHash?: string;
+  declarationProject?: ProjectData;
   startState: RuntimeState; state: RuntimeState; chapterIds: ID[]; sceneIds: ID[];
   occurrences: PresentationOccurrence[]; externalValues: Record<ID, TypedValue>; referenceEntities: Entity[];
   worldTick?: string;
   status: 'ready' | 'terminal' | 'unknown' | 'error'; issues: ValidationIssue[];
 }
 export async function startChapterReading(project: ProjectData, options: ChapterReadingOptions = {}): Promise<ChapterReadingSession> {
+  const declarationProject = structuredClone({ ...project, history: [], snapshots: [], authorAlternatives: undefined, entities: project.entities.filter(entity => ['collection', 'trace', 'checkpoint'].includes(entity.kind)) });
   const worldTick = options.worldTick;
   if (worldTick !== undefined && !isTick(worldTick)) throw new DomainValidationError([{ code: 'VALIDATION_FAILED', path: 'worldTick', message: '提示時点には整数の世界内tickを入力してください。' }]);
   const worldSnapshots = options.worldSnapshots ? structuredClone(options.worldSnapshots) : {};
@@ -135,19 +140,19 @@ export async function startChapterReading(project: ProjectData, options: Chapter
   state.contentVersionId = version; state.presentationPosition = null; state.provenance = 'partial';
   const validated = validateRuntimeState(state); if (!validated.ok) throw new DomainValidationError(validated.issues);
   const chapterIds = chapterIdsOption ? [...chapterIdsOption] : [...new Set(sequence.flatMap(entry => entry.chapterId ? [entry.chapterId] : []))];
-  return { content, contentVersionId: version, contentRevision: content.revision, contentHash: project.snapshots.find(item => item.id === version)?.contentHash, startState: structuredClone(state), state, worldTick, chapterIds, sceneIds: sequence.map(entry => entry.scene.id), occurrences: [], externalValues, referenceEntities: structuredClone(closure.worlds.flatMap(world => world.entities)), status: sequence.length ? 'ready' : 'terminal', issues: [] };
+  return { content, declarationProject, contentVersionId: version, contentRevision: content.revision, contentHash: project.snapshots.find(item => item.id === version)?.contentHash, startState: structuredClone(state), state, worldTick, chapterIds, sceneIds: sequence.map(entry => entry.scene.id), occurrences: [], externalValues, referenceEntities: structuredClone(closure.worlds.flatMap(world => world.entities)), status: sequence.length ? 'ready' : 'terminal', issues: [] };
 }
 export function presentChapterOccurrence(content: ProjectData, state: RuntimeState, target: PresentationTarget & { previousSceneId?: ID; last?: boolean }): ContentPresentation {
   const { sceneId, previousSceneId } = target;
   const from = presentationRuleContext(content, { sceneId: previousSceneId }), to = presentationRuleContext(content, { sceneId });
   const events: ('scene_end' | 'chapter_end')[] = previousSceneId && previousSceneId !== sceneId ? ['scene_end'] : [];
   if (from.chapterId && from.chapterId !== to.chapterId) events.push('chapter_end');
-  const reset = resetRuntimeLifecycle({ ...state, ...(state.resetCauses ? { resetCauses: [] } : {}) }, events, { state, entities: content.entities, referenceEntities: target.referenceEntities, externalValues: target.externalValues });
+  const reset = resetRuntimeLifecycle({ ...state, ...(state.resetCauses ? { resetCauses: [] } : {}) }, events, { state, entities: content.entities, referenceEntities: target.referenceEntities, externalValues: target.externalValues, ruleContext: presentationRuleContext(content, { sceneId: target.previousSceneId, worldTick: target.worldTick }) });
   if (!reset.ok) return reset;
   const result = presentContent(content, reset.state, target);
   if (!result.ok) return result;
   if (target.last) {
-    const ended = resetRuntimeLifecycle(result.state, ['scene_end', 'chapter_end', 'run_end'], { state: result.state, entities: content.entities, referenceEntities: target.referenceEntities, externalValues: target.externalValues });
+    const ended = resetRuntimeLifecycle(result.state, ['scene_end', 'chapter_end', 'run_end'], { state: result.state, entities: content.entities, referenceEntities: target.referenceEntities, externalValues: target.externalValues, ruleContext: presentationRuleContext(content, target) });
     if (!ended.ok) return ended;
     result.state = ended.state;
     if (reset.state.resetCauses || ended.state.resetCauses) result.state.resetCauses = [...(reset.state.resetCauses ?? []), ...(ended.state.resetCauses ?? [])];
@@ -160,7 +165,7 @@ export function presentNextChapterScene(project: ProjectData, session: ChapterRe
   const sceneId = session.sceneIds[session.occurrences.length]; if (!sceneId) return session;
   const result = presentChapterOccurrence(session.content, session.state, { sceneId, worldTick: session.worldTick, previousSceneId: session.occurrences.at(-1)?.entityId, last: session.occurrences.length + 1 === session.sceneIds.length, externalValues: session.externalValues, referenceEntities: session.referenceEntities });
   if (!result.ok) return { ...session, status: result.issues.some(issue => issue.code === 'CONDITION_UNKNOWN') ? 'unknown' : 'error', issues: result.issues };
-  const occurrence: PresentationOccurrence = { entityId: sceneId, occurrenceId: `${sceneId}:${session.occurrences.length + 1}`, before: structuredClone(session.state), after: result.state, conditionResults: result.conditions, externalValues: structuredClone(session.externalValues) };
+  const occurrence: PresentationOccurrence = { entityId: sceneId, occurrenceId: `${sceneId}:${session.occurrences.length + 1}`, before: structuredClone(session.state), after: result.state, presentationState: result.observationState, conditionResults: result.conditions, externalValues: structuredClone(session.externalValues) };
   const occurrences = [...session.occurrences, occurrence];
   return { ...session, state: result.state, occurrences, status: occurrences.length === session.sceneIds.length ? 'terminal' : 'ready', issues: [] };
 }
@@ -169,9 +174,9 @@ export function backChapterReading(session: ChapterReadingSession): ChapterReadi
   return { ...session, state: structuredClone(previous.before), occurrences: session.occurrences.slice(0, -1), status: 'ready', issues: [] };
 }
 export interface ChapterReadingRecord { checkpoint: CheckpointData; trace: TraceData & RuntimeTraceExtensions; content: ProjectContent }
-export function pinChapterReadingRecord(session: ChapterReadingSession, ids: { checkpointId: ID; snapshotId: ID }): ChapterReadingRecord {
+export function pinChapterReadingRecord(session: ChapterReadingSession, ids: { checkpointId: ID; snapshotId: ID }, declarationProject: ProjectData = session.declarationProject ?? session.content): ChapterReadingRecord {
   const stateForRecord = (state: RuntimeState) => ({ ...structuredClone(state), contentVersionId: ids.snapshotId });
-  const readingPath: ReadingPath = { chapterIds: [...session.chapterIds], sceneIds: [...session.sceneIds], occurrences: session.occurrences.map(occurrence => ({ ...structuredClone(occurrence), before: stateForRecord(occurrence.before), after: stateForRecord(occurrence.after) })) };
+  const readingPath: ReadingPath = { chapterIds: [...session.chapterIds], sceneIds: [...session.sceneIds], occurrences: session.occurrences.map(occurrence => ({ ...structuredClone(occurrence), before: stateForRecord(occurrence.before), after: stateForRecord(occurrence.after), ...(occurrence.presentationState ? { presentationState: stateForRecord(occurrence.presentationState) } : {}) })) };
   const { snapshots: _snapshots, history: _history, authorAlternatives: _authorAlternatives, ...content } = session.content;
   const dialogue = active(session.content, 'dialogue_line'), scenes = active(session.content, 'scene');
   const pathTargets = new Set([...session.sceneIds, ...scenes.filter(scene => session.sceneIds.includes(scene.id)).flatMap(scene => (scene.data as Entity<'scene'>['data'] & { dialogueLineIds?: ID[] | null }).dialogueLineIds ?? [])]);
@@ -180,11 +185,11 @@ export function pinChapterReadingRecord(session: ChapterReadingSession, ids: { c
   return {
     content: structuredClone(content),
     checkpoint: { contentVersionId: ids.snapshotId, contentRevision: session.contentRevision, runtimeState: stateForRecord(session.startState), origin: 'partial' },
-    trace: { contentVersionId: ids.snapshotId, contentRevision: session.contentRevision, startCheckpointId: ids.checkpointId, seed: session.startState.rngSeed, engineVersion: '1.0.0', ...(session.worldTick !== undefined ? { initialWorldTick: session.worldTick } : {}), initialExternalValues: structuredClone(session.externalValues), externalMode: Object.keys(session.externalValues).length ? 'stub' : null, steps: [], mode: 'chapters', readingPath, coverage: {
+    trace: { ...(declaredRegressionPaths(declarationProject).ids.length ? { regressionDeclarations: { projectRevision: declarationProject.revision, traceIds: declaredRegressionPaths(declarationProject).ids } } : {}), contentVersionId: ids.snapshotId, contentRevision: session.contentRevision, startCheckpointId: ids.checkpointId, seed: session.startState.rngSeed, engineVersion: '1.0.0', ...(session.worldTick !== undefined ? { initialWorldTick: session.worldTick } : {}), initialExternalValues: structuredClone(session.externalValues), externalMode: Object.keys(session.externalValues).length ? 'stub' : null, steps: [], mode: 'chapters', readingPath, coverage: {
       scenes: { checked: new Set(session.occurrences.map(occurrence => occurrence.entityId)).size, total: scenes.length },
       dialogue: { checked: dialogue.filter(line => session.state.seenIds.includes(line.id)).length, total: dialogue.length }, choices: { checked: 0, total: 0 },
       conditionTrue: { checked: new Set(observations.filter(result => result.value === 'true').map(result => result.targetId)).size, total: disclosed.length },
-      conditionFalse: { checked: new Set(observations.filter(result => result.value === 'false').map(result => result.targetId)).size, total: disclosed.length }, declaredTests: { checked: 0, total: 0 },
+      conditionFalse: { checked: new Set(observations.filter(result => result.value === 'false').map(result => result.targetId)).size, total: disclosed.length }, declaredTests: regressionPathCoverage(declarationProject, { contentVersionId: session.contentVersionId, mode: 'chapters', steps: [], readingPath: { ...readingPath, occurrences: readingPath.occurrences.map(occurrence => ({ ...occurrence, before: { ...occurrence.before, contentVersionId: session.contentVersionId }, after: { ...occurrence.after, contentVersionId: session.contentVersionId }, ...(occurrence.presentationState ? { presentationState: { ...occurrence.presentationState, contentVersionId: session.contentVersionId } } : {}) })) } }, session.startState),
     } },
   };
 }
@@ -200,7 +205,12 @@ export async function replayChapterReading(project: ProjectData, trace: TraceDat
     seen.add(occurrence.occurrenceId);
     session = presentNextChapterScene(project, session);
     const observed = session.occurrences.at(-1);
+    if (occurrence.presentationState && (!observed?.presentationState || canonicalJson(observed.presentationState) !== canonicalJson(occurrence.presentationState))) throw new DomainValidationError([{ code: 'INTEGRITY_FAILED', path: `readingPath.occurrences[${index}].presentationState`, message: '提示前の観測状態と再実行が一致しません。' }]);
     if (!observed || canonicalJson(observed.after) !== canonicalJson(occurrence.after) || canonicalJson(observed.conditionResults) !== canonicalJson(occurrence.conditionResults)) throw new DomainValidationError([{ code: 'INTEGRITY_FAILED', path: `readingPath.occurrences[${index}]`, message: '記録された提示根拠と再実行が一致しません。' }]);
+    // This is an opaque, captured occurrence identity, not a reference to the
+    // scene embedded in its historical text. Cloning remaps entityId separately.
+    // Keep it only after the independently executed states and observations match.
+    observed.occurrenceId = occurrence.occurrenceId;
   }
   return session;
 }

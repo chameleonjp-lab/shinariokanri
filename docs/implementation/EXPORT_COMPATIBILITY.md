@@ -1,5 +1,7 @@
 # 現在の出力範囲（完成版の互換性表ではない）
 
+RB05追加で `variable.exclusions`、`foreshadow.alternativeInfo`、`scene.dialogueLineIds`、台詞の主張・意図、回帰collection、提示前状態と母数の由来を任意項目として追加した。完全保存・履歴・cloneは型付きID対応を保持し、追加欄がない旧章／分岐記録も再生する。runtime出力は排他・代替・主張等の未対応項目を明示拒否する。公開範囲外の台詞をsceneから省略して実行内容を変える出力は生成しない。
+
 2026-10-08補修で、作者用完全形式1.0.0に `effect/transition.exceptionDetails`、試読状態の任意 `resetCauses`、経路の任意 `initialWorldTick` を追加した。strict schema、型による参照収集・clone、履歴と完全保存へ同時に反映する。一般の `effect.reason` は例外許可にならない。旧形式の良好な章・分岐経路fixtureを変更せず検査し、原因がない旧状態へ空配列を挿入しない。実行条件を変える明示例外の公開runtime出力は未対応として拒否し、黙って削除しない。借用世界情報は正本へ複製せず、hash付き固定版を完全保存・復元で使用する。
 
 | 目的 | 出力 | 作者情報・素材 | 現在の制限 |

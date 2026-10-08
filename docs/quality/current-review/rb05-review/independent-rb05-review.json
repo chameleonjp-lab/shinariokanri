@@ -1,0 +1,441 @@
+{
+  "kind": "independent_incremental_RB05_review",
+  "reviewed_at_utc": "2026-10-08T03:28:18.655077+00:00",
+  "completion_decision": "not_complete",
+  "scope": "uncommitted feat/rb05-state-exploration additions; no product code edits by reviewer",
+  "base_commit": "f077c9ec916a8a78acf4d6bd2d6e9cb92db60dc6",
+  "base_tree": "6ed21260c5e6b65f69c4dbd9c6f64cde784b1fbd",
+  "product_correction_commit": "773e7554f381c8e3a7c93e142350f181328f014e",
+  "candidate": {
+    "snapshot": "independent-rb05-20261008-1",
+    "commit": null,
+    "tree": null,
+    "source_files": 140,
+    "source_manifest": "evidence/candidate-1-source-hashes.json",
+    "note": "Later shared-workspace edits are not results on this immutable candidate."
+  },
+  "original_counts": {
+    "requirements": 104,
+    "acceptance_cases": 116,
+    "work_packages": 24,
+    "regression_groups": 6,
+    "completion_batches": 10
+  },
+  "original_RB05_requirement_count": 26,
+  "original_RB05_acceptance_ids": [
+    "AT-B14",
+    "AT-B15",
+    "AT-B16",
+    "AT-B17",
+    "AT-B19",
+    "AT-B22",
+    "AT-E02",
+    "AT-E03",
+    "AT-E04",
+    "AT-E10",
+    "AT-F13",
+    "AT-F14",
+    "AT-F15",
+    "AT-F16",
+    "AT-F17",
+    "AT-F18",
+    "AT-F19",
+    "AT-F20",
+    "AT-F37",
+    "AT-F38",
+    "AT-F39",
+    "AT-F40",
+    "AT-F41",
+    "AT-F43",
+    "AT-F44",
+    "AT-F45",
+    "AT-F46",
+    "AT-F47",
+    "AT-N05",
+    "AT-N12"
+  ],
+  "original_whole_acceptance_status": "not_run",
+  "original_conditions_changed": 0,
+  "original_contracts_file": "original-rb05-contracts.json",
+  "environment": {
+    "node": "v24.19.0",
+    "vitest": "5.0.3",
+    "os": "Debian GNU/Linux 13.6 (trixie), Linux 6.18.44 x86_64",
+    "storage_test_runtime": "fake-indexeddb; complete-file parser/execution is real product code",
+    "browser": "not_run_for_this_RB05_stage"
+  },
+  "executed": [
+    {
+      "kind": "submitted_increment_tests",
+      "passed": 5,
+      "failed": 0,
+      "log": "evidence/candidate-1-submitted-tests.log",
+      "whole_requirement_credit": false
+    },
+    {
+      "kind": "independent_expected_original_contract_tests",
+      "passed": 2,
+      "failed": 7,
+      "distinct_open_findings": 6,
+      "log": "evidence/candidate-1-independent.log",
+      "source": "evidence/independent-rb05-regressions.ts",
+      "whole_requirement_credit": false
+    }
+  ],
+  "findings": [
+    {
+      "id": "R5A01",
+      "related_tests": [
+        "R5A01",
+        "R5A02"
+      ],
+      "severity": "high",
+      "classification": "integration_gap_exposed_by_persistent_exclusion_rule",
+      "title": "有効な排他例外が終了時のresetで実行文脈を失う",
+      "requirements": [
+        "REQ-B15",
+        "REQ-B16",
+        "REQ-F38",
+        "REQ-F41"
+      ],
+      "review_items": [
+        "RV12"
+      ],
+      "files": [
+        "src/domain/runtime.ts",
+        "src/domain/presentation.ts",
+        "src/domain/conditions.ts"
+      ],
+      "expected": "世界tick5、対象作品・経路・確定根拠を持つ期限0..10の排他例外は、場面/章/run境界を含む正常試読で同じ規則として成立する。期限外/未知は拒否する。",
+      "actual": "flow開始readyからedge進行がerror。最終章提示はunknown。resetRuntimeLifecycleの呼出しにruleContext/worldTick/externalValuesが欠ける。",
+      "steps": "R5A01/02の正常project fixtureを開始tick5で読んで終端/最終提示へ進む。",
+      "status": "open_in_candidate_1",
+      "source_hashes": [
+        {
+          "file": "src/domain/runtime.ts",
+          "sha256": "113c971074e7a5bc82982e4c0b31e8a4403f981609ae1613bbac8b7f8047874e"
+        },
+        {
+          "file": "src/domain/presentation.ts",
+          "sha256": "aff9f8aa4240630ab041fe582e3f667eba71fc03fa7d485a3147e4a67899613e"
+        },
+        {
+          "file": "src/domain/conditions.ts",
+          "sha256": "416c18a70c5bf094478483f823c1f412ae7017242c1b3a1efaac34d1c426ae5d"
+        }
+      ],
+      "fixtures": [
+        {
+          "project": "evidence/fixtures/R5A01-project.json",
+          "observation": "evidence/fixtures/R5A01-observation.json"
+        },
+        {
+          "project": "evidence/fixtures/R5A02-project.json",
+          "observation": "evidence/fixtures/R5A02-observation.json"
+        }
+      ]
+    },
+    {
+      "id": "R5A03",
+      "severity": "high",
+      "classification": "new_foreshadow_exception_evaluation_gap",
+      "title": "提示効果後の値で伏線例外を再評価し必須不足を隠す",
+      "requirements": [
+        "REQ-B19",
+        "REQ-F44",
+        "REQ-F45",
+        "REQ-F47"
+      ],
+      "review_items": [
+        "RV13",
+        "RV10"
+      ],
+      "files": [
+        "src/domain/runtime.ts"
+      ],
+      "expected": "提示時falseだったroute条件の例外は、同じ提示のknowledgeEffectでtrueになっても、その回収前の必須情報不足を消さない。",
+      "actual": "payoffでfalse→trueを適用後、checkTrialForeshadowsがafter stateのrouteConditionを評価し、必須clue未提示でもfinding=[]。",
+      "steps": "開始sceneのpayoffにflag=trueのknowledgeEffectを置く。flag=trueを対象経路にした期限内例外を宣言し、未到達clueを必須にする。",
+      "status": "open_in_candidate_1",
+      "source_hashes": [
+        {
+          "file": "src/domain/runtime.ts",
+          "sha256": "113c971074e7a5bc82982e4c0b31e8a4403f981609ae1613bbac8b7f8047874e"
+        }
+      ],
+      "fixtures": [
+        {
+          "project": "evidence/fixtures/R5A03-project.json",
+          "observation": "evidence/fixtures/R5A03-observation.json"
+        }
+      ]
+    },
+    {
+      "id": "R5A04",
+      "severity": "medium",
+      "classification": "existing_state_dedup_gap_exposed_by_presentation_exploration",
+      "title": "提示条件の訪問閾値を探索状態に含めず有限経路を未知にする",
+      "requirements": [
+        "REQ-F18",
+        "REQ-F20",
+        "REQ-F45"
+      ],
+      "review_items": [
+        "RV12",
+        "RV13"
+      ],
+      "files": [
+        "src/domain/runtime.ts"
+      ],
+      "expected": "visited(scene)>=3の開示で終了flagが立つ有限経路は、宣言閾値まで区別して探索し終端の証人を得る。",
+      "actual": "手動stepでは3訪問後にterminal。analyzeFlowは2訪問で同状態と判断しUNBOUNDED_LOOP、終端未到達候補。visitThresholdsがdisclosure条件を走査しない。",
+      "steps": "3回目にclueのknowledgeEffectがflag=trueを適用し、trueのときだけ終端へ進む流れを解析する。",
+      "status": "open_in_candidate_1",
+      "source_hashes": [
+        {
+          "file": "src/domain/runtime.ts",
+          "sha256": "113c971074e7a5bc82982e4c0b31e8a4403f981609ae1613bbac8b7f8047874e"
+        }
+      ],
+      "fixtures": [
+        {
+          "project": "evidence/fixtures/R5A04-project.json",
+          "observation": "evidence/fixtures/R5A04-observation.json"
+        }
+      ]
+    },
+    {
+      "id": "R5A05",
+      "severity": "high",
+      "classification": "declared_test_false_positive",
+      "title": "stub宣言とstub開始状態の一致を無区別のcheckedへ加算する",
+      "requirements": [
+        "REQ-F15",
+        "REQ-F17"
+      ],
+      "review_items": [
+        "RV14"
+      ],
+      "files": [
+        "src/domain/regressionPaths.ts",
+        "src/domain/runtime.ts"
+      ],
+      "expected": "stub/partial/actualの証拠を別集計し、stub同士の一致をfull-playの確認数にしない。",
+      "actual": "stub checkpointと同じstub traceを宣言するとregressionPathCoverage.checked=1,total=1。戻り値に開始由来/stub別の集計がない。",
+      "steps": "typed stub状態から経路を保存し、そのcheckpoint/traceをregression collectionへ宣言して同じ記録を照合する。",
+      "status": "open_in_candidate_1",
+      "source_hashes": [
+        {
+          "file": "src/domain/regressionPaths.ts",
+          "sha256": "34cb12a6ff5a9bc17671aa59d9e253cc5a028d02274fac2f6ee8099300682a0c"
+        },
+        {
+          "file": "src/domain/runtime.ts",
+          "sha256": "113c971074e7a5bc82982e4c0b31e8a4403f981609ae1613bbac8b7f8047874e"
+        }
+      ],
+      "fixtures": [
+        {
+          "project": "evidence/fixtures/R5A05-project.json",
+          "observation": "evidence/fixtures/R5A05-observation.json"
+        }
+      ]
+    },
+    {
+      "id": "R5A06",
+      "severity": "high",
+      "classification": "normal_fixed_save_denominator_gap",
+      "title": "固定版再生後の通常再保存で宣言母数が0/0へ戻る",
+      "requirements": [
+        "REQ-F17"
+      ],
+      "review_items": [
+        "RV14"
+      ],
+      "files": [
+        "src/domain/runtime.ts",
+        "src/domain/presentation.ts",
+        "src/ui/Reader.tsx"
+      ],
+      "expected": "現在管理する宣言経路集合の母数を保持し、対象版/旧版/不明を区別して保存する。",
+      "actual": "trace固定保存→現projectに集合追加→旧版trace再生→pinTrialRecordでdeclaredTests={checked:0,total:0,unknown:0}。live projectで同じhelperを呼ぶと1/1。pinが集合を含まないsession.contentを母数に使う。",
+      "steps": "R5A06の固定snapshotを作成し、集合を後から保存してそのtraceを再生、再保存する。",
+      "status": "open_in_candidate_1",
+      "source_hashes": [
+        {
+          "file": "src/domain/runtime.ts",
+          "sha256": "113c971074e7a5bc82982e4c0b31e8a4403f981609ae1613bbac8b7f8047874e"
+        },
+        {
+          "file": "src/domain/presentation.ts",
+          "sha256": "aff9f8aa4240630ab041fe582e3f667eba71fc03fa7d485a3147e4a67899613e"
+        },
+        {
+          "file": "src/ui/Reader.tsx",
+          "sha256": "3893431bbe698120c99fc8cd86a81a2fcbf9331c3e9add9d68bf811a13222bdc"
+        }
+      ],
+      "fixtures": [
+        {
+          "project": "evidence/fixtures/R5A06-project.json",
+          "observation": "evidence/fixtures/R5A06-observation.json"
+        }
+      ]
+    },
+    {
+      "id": "R5A07",
+      "severity": "medium",
+      "classification": "pre_existing_limit_contract_gap_not_new_regression",
+      "title": "指定API上限が仕様の最大100000/10000/30000を超える",
+      "requirements": [
+        "REQ-F18",
+        "REQ-N05"
+      ],
+      "review_items": [
+        "RV13"
+      ],
+      "files": [
+        "src/domain/runtime.ts"
+      ],
+      "expected": "最大100000状態、10000遷移、30000msの上限を維持し、増大要求を拒否または上限へ制限する。",
+      "actual": "maxStates100001/maxTransitions10001/maxMs30001がそのままresult.limitsに採用される。UI既定値は仕様どおりでありAPIの既存不足。",
+      "steps": "analyzeFlowへ最大を超える安全整数optionを指定してresult.limitsを確認する。",
+      "status": "open_in_candidate_1",
+      "source_hashes": [
+        {
+          "file": "src/domain/runtime.ts",
+          "sha256": "113c971074e7a5bc82982e4c0b31e8a4403f981609ae1613bbac8b7f8047874e"
+        }
+      ],
+      "fixtures": [
+        {
+          "project": "evidence/fixtures/R5A07-project.json",
+          "observation": "evidence/fixtures/R5A07-observation.json"
+        }
+      ]
+    }
+  ],
+  "positive_results": [
+    {
+      "id": "R5P01",
+      "result": "passed",
+      "behavior": "New exclusions, alternativeInfo, claimAssertionIds, intention/reason and collection IDs survive native complete-file restore and independent clone; cloned fixed trace replays terminal."
+    },
+    {
+      "id": "R5P02",
+      "result": "passed",
+      "behavior": "Existing executable exporters explicitly reject unsupported exclusions for runtime_json and playable_preview. No silent drop was observed."
+    }
+  ],
+  "remaining_unimplemented_or_unverified": [
+    "RV11 chapter/scene/dialogue hierarchy, reuse reference/override runtime and influence UI remain incomplete by parent scope.",
+    "Declared-set UI exposes selected trace count but no displayed verified numerator/denominator separated by version, start provenance, stub/actual.",
+    "stateUsage is integrated for local content only; references in pinned borrowed definitions and full update-origin navigation still need integration verification.",
+    "Optional assertion intention schema/UI preserves annotation but recognition/author truth/testimony/belief comparison, source navigation and lie/misunderstanding diagnostics are not completed by this increment.",
+    "Full original RB05 normal/edge AT, usual App atomic saves/failed saves/reload, all original 116 and other RB batches are not completed by these targeted checks.",
+    "Physical devices, support technology, prescribed Standard/Large performance and actual dedicated sync API/Auth/Storage remain separate environment conditions."
+  ],
+  "reexecution": {
+    "command": "npx vitest run tests/independent-rb05-review.test.ts --reporter=verbose",
+    "setup": "Use the immutable reviewed source manifest, copy independent-rb05-regressions.ts to tests/independent-rb05-review.test.ts, install the repository lockfile dependencies. Fixture observations are written under /tmp.",
+    "expectations": "Tests assert correct outcomes. Their failure records a discrepancy; success of an observation test is never a repaired acceptance result."
+  },
+  "artifact_hashes": [
+    {
+      "file": "evidence/candidate-1-independent.log",
+      "sha256": "84e1a82b68adb7ccaff686a87fb1fca64571c271f634e78ff9b61db557fb29df"
+    },
+    {
+      "file": "evidence/candidate-1-source-hashes.json",
+      "sha256": "199e7d8efaf99e8739c24b3a765e177c525656f5a8ca7b86ccbe8251312915a4"
+    },
+    {
+      "file": "evidence/candidate-1-submitted-tests.log",
+      "sha256": "a764b168979ee3037ecaea3c0c310036f03f139c7eaa152b13ae5b4bd3c2b042"
+    },
+    {
+      "file": "evidence/fixtures/R5A01-observation.json",
+      "sha256": "c853ba9e14a942f1ba31db4c93e0fa51ad8c300f28cb7d98038d615b13bf2efb"
+    },
+    {
+      "file": "evidence/fixtures/R5A01-project.json",
+      "sha256": "87876d1fba69383f1b9bc0dd5d70effd0f4a5bb9cbd52918191ff3164738e5a2"
+    },
+    {
+      "file": "evidence/fixtures/R5A02-observation.json",
+      "sha256": "6bb310e43fa2bbdd6d7cc83d3e9d4418b24ea676ee67b43f37049397f827f9a8"
+    },
+    {
+      "file": "evidence/fixtures/R5A02-project.json",
+      "sha256": "74a9d9775a682d740f8800bfcb2fa6dcfa2140f25f287321218bece45ee6f738"
+    },
+    {
+      "file": "evidence/fixtures/R5A03-observation.json",
+      "sha256": "bf3f36d9f61c54a785bb4c12e585d6ba073c97a02971f366cd12f304cae1cf79"
+    },
+    {
+      "file": "evidence/fixtures/R5A03-project.json",
+      "sha256": "0230f6621a369545b7c36ced66376f33ef437b5fa4da86b24de83576604ed9a8"
+    },
+    {
+      "file": "evidence/fixtures/R5A04-observation.json",
+      "sha256": "3b1772fbfea7c3c966b5e9de87c823dc44457d85375551f17973a602f59c68f7"
+    },
+    {
+      "file": "evidence/fixtures/R5A04-project.json",
+      "sha256": "1b650b04020a5b8ecc4476bc92b13ebf8996ebac37399b4dcbdbf280b759028e"
+    },
+    {
+      "file": "evidence/fixtures/R5A05-observation.json",
+      "sha256": "3bf8b5c5b4904e4f413ea2b13cb9c298717772851c773c28a04acc6d4a14f801"
+    },
+    {
+      "file": "evidence/fixtures/R5A05-project.json",
+      "sha256": "01ad0dc09fabaf3a894ef6a29e457ce3221d0a7c7a18d207298a08f4b3f4d03f"
+    },
+    {
+      "file": "evidence/fixtures/R5A06-observation.json",
+      "sha256": "b731385602bfde178a82aacac27682600bbcd6c642bdfbc25d202f354b77d73f"
+    },
+    {
+      "file": "evidence/fixtures/R5A06-project.json",
+      "sha256": "304fe68a61dc49b868d6667cfbf3f0c4c58f34d43809c93a07956104d6eda077"
+    },
+    {
+      "file": "evidence/fixtures/R5A07-observation.json",
+      "sha256": "d736a6b8d4d65d60d801266246c0e89567bb50006ac127382ff8dc8f365217a0"
+    },
+    {
+      "file": "evidence/fixtures/R5A07-project.json",
+      "sha256": "f49984648f1d00469a84733259b8515e645b304084abcb7f50e9645ba6cfa841"
+    },
+    {
+      "file": "evidence/fixtures/R5P01-observation.json",
+      "sha256": "77b3cdd3311cc6bef633a5b87052326bf205c6113b99ca7a7e2d87772b8395d5"
+    },
+    {
+      "file": "evidence/fixtures/R5P01-project.json",
+      "sha256": "0639ac21c3da55f6011a0925ec578b02bd614a12103731e46ebca9d23986afdf"
+    },
+    {
+      "file": "evidence/fixtures/R5P02-observation.json",
+      "sha256": "980d44750dc32646be0e784545f2595a8e554d61cb0af58e680db1cd55d3fe55"
+    },
+    {
+      "file": "evidence/fixtures/R5P02-project.json",
+      "sha256": "16092bd82ddff060583e8a544adefe5a7db15beea185654837b7699a04057891"
+    },
+    {
+      "file": "evidence/independent-rb05-regressions.ts",
+      "sha256": "9ef4de4d32e45ac755209723d90a5d17e2138a51cf08316335fe8882479a8635"
+    },
+    {
+      "file": "evidence/submitted-rb05-state-exploration.test.ts",
+      "sha256": "c9420d6513df02794684d581f0b3d1269b5422ee9d8ce7e966d7ee0a8b6b7cbd"
+    },
+    {
+      "file": "original-rb05-contracts.json",
+      "sha256": "a5b542bbd02849e3f843b317f0ff51fe38b68ffaf28c4eeda00b78179dfa89f0"
+    }
+  ]
+}

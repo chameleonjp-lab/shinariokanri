@@ -1,0 +1,396 @@
+{
+  "kind": "independent_RB05_candidate_2_reverification",
+  "reviewed_at_utc": "2026-10-08T03:45:16.909691+00:00",
+  "completion_decision": "not_complete",
+  "candidate": {
+    "snapshot": "independent-rb05-20261008-2",
+    "commit": null,
+    "tree": null,
+    "source_files": 142,
+    "source_manifest": "evidence/candidate-2/source-hashes.json",
+    "note": "Immutable candidate source copied before reinspection; later working-tree edits require their own verification."
+  },
+  "base_commit": "f077c9ec916a8a78acf4d6bd2d6e9cb92db60dc6",
+  "original_contracts_file": "original-rb05-contracts.json",
+  "original_whole_acceptance_status": "not_run",
+  "original_conditions_changed": 0,
+  "candidate_1_evidence": "independent-rb05-review.json",
+  "candidate_1_evidence_changed": false,
+  "resolved_previous_findings": [
+    "R5A01",
+    "R5A03",
+    "R5A04",
+    "R5A05",
+    "R5A06",
+    "R5A07"
+  ],
+  "note_R5A01": "R5A02 is the chapter companion test of the same R5A01 finding and passed too.",
+  "environment": {
+    "node": "v24.19.0",
+    "vitest": "5.0.3",
+    "os": "Debian GNU/Linux 13.6 (trixie), Linux 6.18.44 x86_64",
+    "storage_runtime": "fake IndexedDB plus actual native archive and runtime code",
+    "browser": "not_run_in_independent_candidate_2_review"
+  },
+  "executed": [
+    {
+      "kind": "independent_previous_correct_expected_contracts",
+      "passed": 9,
+      "failed": 0,
+      "log": "evidence/candidate-2/original-and-submitted.log"
+    },
+    {
+      "kind": "submitted_review_copy",
+      "passed": 9,
+      "failed": 0,
+      "log": "evidence/candidate-2/original-and-submitted.log",
+      "duplicate_of": "independent_previous_correct_expected_contracts; not additional acceptance cases"
+    },
+    {
+      "kind": "submitted_increment_cases_and_durability",
+      "passed": 6,
+      "failed": 0,
+      "log": "evidence/candidate-2/original-and-submitted.log"
+    },
+    {
+      "kind": "independent_new_persistence_and_evidence_boundaries",
+      "passed": 3,
+      "failed": 6,
+      "distinct_findings": 4,
+      "log": "evidence/candidate-2/persistence-boundaries.log",
+      "source": "evidence/candidate-2/independent-persistence-boundaries.ts"
+    },
+    {
+      "kind": "unchanged_historical_baseline_native_files",
+      "passed": 2,
+      "failed": 0,
+      "log": "evidence/candidate-2/historical-trace.log",
+      "fixtures": "../evidence/legacy/ generated on 3099c9d; files unchanged"
+    }
+  ],
+  "findings": [
+    {
+      "id": "R5B01",
+      "test_ids": [
+        "R5B01 actual",
+        "R5B01 mixed"
+      ],
+      "severity": "high",
+      "requirements": [
+        "REQ-F17",
+        "REQ-F15"
+      ],
+      "review_items": [
+        "RV14",
+        "RV23"
+      ],
+      "files": [
+        "src/domain/regressionPaths.ts"
+      ],
+      "title": "candidate側のactual/mixedを主checkedへ加算する",
+      "expected": "受領実証拠が接続されるまでactual/mixedの候補を主checkedへ加算しない。",
+      "actual": "declared側が内部traceで同じ開始/stepsならcandidate.externalModeをactual/mixedにしてもchecked=1。宣言側modeのみを条件にしている。",
+      "status": "open_in_candidate_2",
+      "source_hashes": [
+        {
+          "file": "src/domain/regressionPaths.ts",
+          "sha256": "3af86f3267dad00fda85641c2b8fb502b05040af4fa647cdb87ab41f3b3c09bb"
+        }
+      ]
+    },
+    {
+      "id": "R5B02",
+      "test_ids": [
+        "R5B02"
+      ],
+      "severity": "high",
+      "requirements": [
+        "REQ-F15",
+        "REQ-B16",
+        "REQ-N19"
+      ],
+      "review_items": [
+        "RV12"
+      ],
+      "files": [
+        "src/domain/runtime.ts",
+        "src/domain/model.ts"
+      ],
+      "title": "宣言入口以外の途中開始を保存すると観測由来の不一致になる",
+      "expected": "途中開始のstateとpresentationStateの由来をpartialとして保持し、保存と再生を続ける。",
+      "actual": "state.provenance=partialへ変更する一方、startPresentationState=full_playのまま。pinしたcheckpointはvalidateProjectで由来不一致の拒否になる。",
+      "status": "open_in_candidate_2",
+      "source_hashes": [
+        {
+          "file": "src/domain/runtime.ts",
+          "sha256": "36a64ef441f024adbd1578211ae71502b18f784a926282462fb079cb242113a8"
+        },
+        {
+          "file": "src/domain/model.ts",
+          "sha256": "c3599c938a5bfb13ac1888c865f52107eae8c6971b438502be80d6c5cfeeaf20"
+        }
+      ]
+    },
+    {
+      "id": "R5B03",
+      "test_ids": [
+        "R5B03",
+        "R5B04"
+      ],
+      "severity": "high",
+      "requirements": [
+        "REQ-B16",
+        "REQ-F17",
+        "REQ-F44"
+      ],
+      "review_items": [
+        "RV10",
+        "RV13",
+        "RV14"
+      ],
+      "files": [
+        "src/domain/presentation.ts",
+        "src/domain/model.ts"
+      ],
+      "title": "章の観測状態が保存・再生検証へつながらない",
+      "expected": "章のoccurrenceでも効果前observationStateをpresentationStateに捕捉し、pin時の対象版変更と再生時の一致確認を行う。",
+      "actual": "presentNextChapterSceneはoccurrenceにpresentationStateを付けず、章再生は偽のoptional presentationStateを受理する。",
+      "status": "open_in_candidate_2",
+      "source_hashes": [
+        {
+          "file": "src/domain/presentation.ts",
+          "sha256": "4b8904ee9c17dc703fbda92077c9d284ad78dd8907ca8679eef755011ebc3077"
+        },
+        {
+          "file": "src/domain/model.ts",
+          "sha256": "c3599c938a5bfb13ac1888c865f52107eae8c6971b438502be80d6c5cfeeaf20"
+        }
+      ]
+    },
+    {
+      "id": "R5B06",
+      "test_ids": [
+        "R5B06"
+      ],
+      "severity": "high",
+      "requirements": [
+        "REQ-F15",
+        "REQ-F17",
+        "REQ-N19"
+      ],
+      "review_items": [
+        "RV12",
+        "RV14"
+      ],
+      "files": [
+        "src/domain/runtime.ts"
+      ],
+      "title": "stub開始の保存版再生がcheckpoint.originで由来を失う",
+      "expected": "明示stubを使った開始はstubとして保存再生し、full_playへ換算しない。",
+      "actual": "stub開始はready、pin後project検証は成功。再生はcheckpoint.origin=partialがruntimeState.provenance=stubを上書きし、最初のstep.beforeと不一致でerror。",
+      "status": "open_in_candidate_2",
+      "source_hashes": [
+        {
+          "file": "src/domain/runtime.ts",
+          "sha256": "36a64ef441f024adbd1578211ae71502b18f784a926282462fb079cb242113a8"
+        }
+      ]
+    }
+  ],
+  "positive_new_results": [
+    {
+      "id": "R5P03",
+      "behavior": "flow replay rejects a modified pre-presentation state and does not mutate canonical input",
+      "status": "passed"
+    },
+    {
+      "id": "R5P04",
+      "behavior": "initial before-effects state survives native restore and clone, so an after-effects exception cannot erase missing clue diagnostics",
+      "status": "passed"
+    },
+    {
+      "id": "R5B05",
+      "behavior": "runtime output refuses a scene dialogue dependency outside its public range, including partial selection",
+      "status": "passed"
+    }
+  ],
+  "remaining_conditions": "Original 26 RB05 requirements and all 116 AT remain whole-case not_run. RV11 reference/override and hierarchy, complete provenance/mode UI, claims/recognition scope, usual App atomic saves and external environments remain independent completion conditions.",
+  "artifact_hashes": [
+    {
+      "file": "evidence/candidate-2/fixtures/boundary-R5B01-actual-observation.json",
+      "sha256": "2245a7b0d9c7ce8c79c2537470995143636bd451fc81c6b6624f0c2b73f872eb"
+    },
+    {
+      "file": "evidence/candidate-2/fixtures/boundary-R5B01-actual-project.json",
+      "sha256": "f0eb87482bf0c03c8935f4353fb35a68b3eb771ac6c15af5ab570e8bcebc4c1e"
+    },
+    {
+      "file": "evidence/candidate-2/fixtures/boundary-R5B01-mixed-observation.json",
+      "sha256": "f733e97cd244393ab4acc4a9c3b310adfc1cbeaafe193c64bbc3b13110731d86"
+    },
+    {
+      "file": "evidence/candidate-2/fixtures/boundary-R5B01-mixed-project.json",
+      "sha256": "7e5b951a56c0ad070f43dc4c976d1699e383313da2b98e0d541dfddcc4734e69"
+    },
+    {
+      "file": "evidence/candidate-2/fixtures/boundary-R5B02-observation.json",
+      "sha256": "1336cdd41969d282b85705383d68806ac256dd99ef885b5e4986f1bfb8127e6e"
+    },
+    {
+      "file": "evidence/candidate-2/fixtures/boundary-R5B02-project.json",
+      "sha256": "6266b5628f4d4a50e943df7dfd13cb8ed19e2f0d10918ff842b9c919b2776cb6"
+    },
+    {
+      "file": "evidence/candidate-2/fixtures/boundary-R5B03-observation.json",
+      "sha256": "45e40cc43e6f18a098005723208b96f0f78ee20422acde95c216540d1e4e4d45"
+    },
+    {
+      "file": "evidence/candidate-2/fixtures/boundary-R5B03-project.json",
+      "sha256": "9305713839374fb4d440dd3eb0e5febbf4d3cfc2663f099b8697c152aa837457"
+    },
+    {
+      "file": "evidence/candidate-2/fixtures/boundary-R5B04-observation.json",
+      "sha256": "e02fb3036084d5a26e0ebc138a2b3af52eb1481bc31338f0d03a25e230235b79"
+    },
+    {
+      "file": "evidence/candidate-2/fixtures/boundary-R5B04-project.json",
+      "sha256": "ba4569c71b7cd9712d948f19e95d066ed493d5c26dcad332955b2881acc33536"
+    },
+    {
+      "file": "evidence/candidate-2/fixtures/boundary-R5B05-observation.json",
+      "sha256": "62996d03e4233027b758fa663388aa9c5d6d97a1da2656fb4372a10f61f38769"
+    },
+    {
+      "file": "evidence/candidate-2/fixtures/boundary-R5B05-project.json",
+      "sha256": "ba46f78d2148907e6fd5db81b34d6dd9396388f428457da01e52b22dc54ec1c7"
+    },
+    {
+      "file": "evidence/candidate-2/fixtures/boundary-R5B06-observation.json",
+      "sha256": "9801e678b3d621bed2ab88040b47ea309dd8b30f736eba5041a13b63deaa0525"
+    },
+    {
+      "file": "evidence/candidate-2/fixtures/boundary-R5B06-project.json",
+      "sha256": "2415de588ab7d6e347f55a090b6e37105fb8b73f4dfc620e6780597924f09172"
+    },
+    {
+      "file": "evidence/candidate-2/fixtures/boundary-R5P03-observation.json",
+      "sha256": "fad292287b999b17aa9e9b44419578024ae04ff04fa87554cfa9ae8838827c5f"
+    },
+    {
+      "file": "evidence/candidate-2/fixtures/boundary-R5P03-project.json",
+      "sha256": "601725e42c2747bc5b78c0baa170b499bd90e4bf8cd96bb5c8d7602a57b2e4ad"
+    },
+    {
+      "file": "evidence/candidate-2/fixtures/boundary-R5P04-observation.json",
+      "sha256": "6ab04ecf8059c0aad1398d5c4c2af96f178c7df58d8ff7bbb9afc824129625e3"
+    },
+    {
+      "file": "evidence/candidate-2/fixtures/boundary-R5P04-project.json",
+      "sha256": "80f585b0c38663bae4d47c86e101e902f9dc15b08c2d4e5d9a18951c9b736722"
+    },
+    {
+      "file": "evidence/candidate-2/fixtures/original-R5A01-observation.json",
+      "sha256": "efe7aceec09ea3ad8cc331796cd6fc7cbb6d764f820455b3cc70bc9e43bd57a9"
+    },
+    {
+      "file": "evidence/candidate-2/fixtures/original-R5A01-project.json",
+      "sha256": "f47d4d10283150143ad6fd86ce11ff55453f2ff206e58cc3a73f7cdd51efc57e"
+    },
+    {
+      "file": "evidence/candidate-2/fixtures/original-R5A02-observation.json",
+      "sha256": "7e2b860e3730958c8619fe84d52ffd8589fdd1bcc322d88cca7db21b06891181"
+    },
+    {
+      "file": "evidence/candidate-2/fixtures/original-R5A02-project.json",
+      "sha256": "47e89312b3da0cf00420f6effff40801ad50e8eb20cd5908670d97b7bacbbac0"
+    },
+    {
+      "file": "evidence/candidate-2/fixtures/original-R5A03-observation.json",
+      "sha256": "2146c655912763fcd6ac5856504c6aae83b623bfaff9c85a2ab38f6fd829192e"
+    },
+    {
+      "file": "evidence/candidate-2/fixtures/original-R5A03-project.json",
+      "sha256": "7739c6b1a91b7cbacc0e7ad93a022d154a0e5516790408701480fcfcdee038eb"
+    },
+    {
+      "file": "evidence/candidate-2/fixtures/original-R5A04-observation.json",
+      "sha256": "fec1011edc208a63a0941712611e591e6fcbddd78fba1c765eda6315a04fe403"
+    },
+    {
+      "file": "evidence/candidate-2/fixtures/original-R5A04-project.json",
+      "sha256": "ca987d39e3e7420aee9f4b8be5a9cac47e58c39a589eecdb51a23dd62febc659"
+    },
+    {
+      "file": "evidence/candidate-2/fixtures/original-R5A05-observation.json",
+      "sha256": "af36bae9ff8384a23fb26e9c25930b0fed9cdcf5353b0013d4d1996b1f0dbfac"
+    },
+    {
+      "file": "evidence/candidate-2/fixtures/original-R5A05-project.json",
+      "sha256": "f81f45923a3f33b9bba34bfb48ed6b6be1f82d3e9f3bf59aabc7e642c8e690a4"
+    },
+    {
+      "file": "evidence/candidate-2/fixtures/original-R5A06-observation.json",
+      "sha256": "ce41de3e1dc50dec0704769dfd05ff071d5dd11d586232eaad174b9b4899ed40"
+    },
+    {
+      "file": "evidence/candidate-2/fixtures/original-R5A06-project.json",
+      "sha256": "7a18f7727f77ffa3fe624adfcd32ca2fae945813b36a790f843f8c776448234d"
+    },
+    {
+      "file": "evidence/candidate-2/fixtures/original-R5A07-observation.json",
+      "sha256": "c258bf8f67369d6af652e30fada66adb53ddfa6015eef8c0dc36fdef0e99024b"
+    },
+    {
+      "file": "evidence/candidate-2/fixtures/original-R5A07-project.json",
+      "sha256": "80d099d69745c872c3550b8763499bbee40864b94e38c4b2cf9b235fa3f0be49"
+    },
+    {
+      "file": "evidence/candidate-2/fixtures/original-R5P01-observation.json",
+      "sha256": "77b3cdd3311cc6bef633a5b87052326bf205c6113b99ca7a7e2d87772b8395d5"
+    },
+    {
+      "file": "evidence/candidate-2/fixtures/original-R5P01-project.json",
+      "sha256": "c2573f0bf9b08aba6625cbead9b75b65b5318b6461c3e57489f2c45b6c6e1381"
+    },
+    {
+      "file": "evidence/candidate-2/fixtures/original-R5P02-observation.json",
+      "sha256": "8b742581fe65c86779169250635136b2d435373535856a56debbf08d62c33836"
+    },
+    {
+      "file": "evidence/candidate-2/fixtures/original-R5P02-project.json",
+      "sha256": "7b355a550a57530c5f3be62bf639c8744cd1d4d39351ebc5237028c732904fa0"
+    },
+    {
+      "file": "evidence/candidate-2/historical-trace.log",
+      "sha256": "e9bc05231c57a9d398ec54e0499ed78b69d99f5659ca1437c7658e11fb30c89d"
+    },
+    {
+      "file": "evidence/candidate-2/independent-historical-trace.ts",
+      "sha256": "0f477a99c972cff712a0c50d45db2525620374913730bfaee341cf0387f22d18"
+    },
+    {
+      "file": "evidence/candidate-2/independent-original-contracts.ts",
+      "sha256": "ade86f094a5435dfa94925a401b4b1985923cb21a3f9488f39bbb8003163f754"
+    },
+    {
+      "file": "evidence/candidate-2/independent-persistence-boundaries.ts",
+      "sha256": "a3324a503a3207bd3891ec8053a23f0a86447cf027022439c53bac5183e60e2c"
+    },
+    {
+      "file": "evidence/candidate-2/original-and-submitted.log",
+      "sha256": "0f6374ed2bdd8718c08bf47596ad20a6281d1dafd0dcea1ab4d31f0d92bc188e"
+    },
+    {
+      "file": "evidence/candidate-2/persistence-boundaries.log",
+      "sha256": "41ed5e0ce28c066ebb3baebd3251a35f59161f52a56b9a254c5d30f588735026"
+    },
+    {
+      "file": "evidence/candidate-2/source-hashes.json",
+      "sha256": "20d34f31af9eabeb3f2d9b3b289a063495ee3361e3d67915216d4cfea3681843"
+    },
+    {
+      "file": "original-rb05-contracts.json",
+      "sha256": "a5b542bbd02849e3f843b317f0ff51fe38b68ffaf28c4eeda00b78179dfa89f0"
+    }
+  ]
+}

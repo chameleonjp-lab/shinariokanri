@@ -1,0 +1,125 @@
+
+ RUN  v5.0.3 /tmp/shinariokanri-independent-rb05-20261008-1
+
+ × tests/independent-rb05-review.test.ts > Independent RB05 original-contract review; not whole AT credit > R5A01 valid finite exclusion permission remains usable across flow lifecycle boundaries 26ms
+   → 相互排他を評価できません。Mutually exclusive by default: expected 'error' to be 'terminal' // Object.is equality
+ × tests/independent-rb05-review.test.ts > Independent RB05 original-contract review; not whole AT credit > R5A02 valid finite exclusion permission remains usable at final chapter presentation 9ms
+   → 相互排他を評価できません。Exclusive: expected 'unknown' to be 'terminal' // Object.is equality
+ × tests/independent-rb05-review.test.ts > Independent RB05 original-contract review; not whole AT credit > R5A03 changed state from payoff knowledge effect cannot retroactively grant a presentation exception 13ms
+   → expected false to be true // Object.is equality
+ × tests/independent-rb05-review.test.ts > Independent RB05 original-contract review; not whole AT credit > R5A04 finite presentation visited threshold is explored before state deduplication 9ms
+   → expected true to be false // Object.is equality
+ × tests/independent-rb05-review.test.ts > Independent RB05 original-contract review; not whole AT credit > R5A05 matching a declared stub checkpoint does not become full-play declared-test evidence 7ms
+   → expected 1 to be +0 // Object.is equality
+ × tests/independent-rb05-review.test.ts > Independent RB05 original-contract review; not whole AT credit > R5A06 saving a replayed fixed path retains the live declared-set denominator 15ms
+   → expected +0 to be 1 // Object.is equality
+ × tests/independent-rb05-review.test.ts > Independent RB05 original-contract review; not whole AT credit > R5A07 callers cannot raise the stated maximum exploration budgets 5ms
+   → expected false to be true // Object.is equality
+ ✓ tests/independent-rb05-review.test.ts > Independent RB05 original-contract review; not whole AT credit > R5P01 exclusion/alternative/dialogue intention/declaration IDs survive full-file restore and independent clone 100ms
+ ✓ tests/independent-rb05-review.test.ts > Independent RB05 original-contract review; not whole AT credit > R5P02 existing executable exporters reject an unsupported exclusion instead of silently dropping it 15ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 7 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/independent-rb05-review.test.ts > Independent RB05 original-contract review; not whole AT credit > R5A01 valid finite exclusion permission remains usable across flow lifecycle boundaries
+AssertionError: 相互排他を評価できません。Mutually exclusive by default: expected 'error' to be 'terminal' // Object.is equality
+
+Expected: "terminal"
+Received: "error"
+
+ ❯ tests/independent-rb05-review.test.ts:48:69
+     46|     const result=stepTrial(p,initial,{edgeId:e.id,worldTick:'5'});
+     47|     record('R5A01',p,{expected:'terminal',actual:result.status,issues:…
+     48|     expect(result.status,result.issues.map(i=>i.message).join(';')).to…
+       |                                                                     ^
+     49|   });
+     50|   it('R5A02 valid finite exclusion permission remains usable at final …
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/7]⎯
+
+ FAIL  tests/independent-rb05-review.test.ts > Independent RB05 original-contract review; not whole AT credit > R5A02 valid finite exclusion permission remains usable at final chapter presentation
+AssertionError: 相互排他を評価できません。Exclusive: expected 'unknown' to be 'terminal' // Object.is equality
+
+Expected: "terminal"
+Received: "unknown"
+
+ ❯ tests/independent-rb05-review.test.ts:54:213
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/7]⎯
+
+ FAIL  tests/independent-rb05-review.test.ts > Independent RB05 original-contract review; not whole AT credit > R5A03 changed state from payoff knowledge effect cannot retroactively grant a presentation exception
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ tests/independent-rb05-review.test.ts:67:125
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/7]⎯
+
+ FAIL  tests/independent-rb05-review.test.ts > Independent RB05 original-contract review; not whole AT credit > R5A04 finite presentation visited threshold is explored before state deduplication
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/independent-rb05-review.test.ts:78:239
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/7]⎯
+
+ FAIL  tests/independent-rb05-review.test.ts > Independent RB05 original-contract review; not whole AT credit > R5A05 matching a declared stub checkpoint does not become full-play declared-test evidence
+AssertionError: expected 1 to be +0 // Object.is equality
+
+- Expected
++ Received
+
+- 0
++ 1
+
+ ❯ tests/independent-rb05-review.test.ts:87:335
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/7]⎯
+
+ FAIL  tests/independent-rb05-review.test.ts > Independent RB05 original-contract review; not whole AT credit > R5A06 saving a replayed fixed path retains the live declared-set denominator
+AssertionError: expected +0 to be 1 // Object.is equality
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ tests/independent-rb05-review.test.ts:94:321
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/7]⎯
+
+ FAIL  tests/independent-rb05-review.test.ts > Independent RB05 original-contract review; not whole AT credit > R5A07 callers cannot raise the stated maximum exploration budgets
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ tests/independent-rb05-review.test.ts:101:30
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/7]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  7 failed | 2 passed (9)
+   Start at  03:28:55
+   Duration  1.42s (transform 57%, import 25%, tests 18%)
+

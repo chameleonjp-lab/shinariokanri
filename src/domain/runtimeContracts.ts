@@ -1,14 +1,8 @@
-import type { Condition, ID, PresentationConditionResult, RuntimeState, ScenarioException, TargetScope, Tick, Transition, TypedValue, Validity } from './types';
+import type { Condition, ID, PresentationConditionResult, RuntimeExclusion, RuntimeState, ScenarioException, TargetScope, Tick, Transition, TypedValue, Validity } from './types';
+export type { RuntimeExclusion } from './types';
 
 /** A scoped exception is an authored rule, never a free-text effect override. */
 export interface ScopedTransition extends Transition { exceptionDetails?: ScenarioException | null }
-export interface RuntimeExclusion {
-  variableId: ID;
-  value: TypedValue;
-  otherValue: TypedValue;
-  reason: string;
-  exceptions?: ScenarioException[] | null;
-}
 export interface RuntimeRuleContext {
   projectId: ID;
   contentVersionId: ID;
@@ -23,6 +17,7 @@ export interface PresentationOccurrence {
   occurrenceId: string;
   before: RuntimeState;
   after: RuntimeState;
+  presentationState?: RuntimeState | null;
   conditionResults: PresentationConditionResult[];
   externalValues?: Record<ID, TypedValue>;
   worldTick?: Tick;
