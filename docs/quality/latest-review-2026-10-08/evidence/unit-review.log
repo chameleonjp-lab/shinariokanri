@@ -1,0 +1,48 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> shinariokanri@0.1.0 test
+> vitest run
+
+
+ RUN  v5.0.3 /workspace/scratch/1df20553ac89/shinariokanri
+
+ ❯ tests/exports.test.ts (21 tests | 2 failed) 296ms
+   ❯ purpose-specific export (21)
+     × runs the exported HTML in Chromium, renders active text safely, and restores the complete state 43ms
+     × rolls back every exported effect when a later effect violates an integer bound 19ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/exports.test.ts > purpose-specific export > runs the exported HTML in Chromium, renders active text safely, and restores the complete state
+Error: browserType.launch: Failed to launch chromium because executable doesn't exist at /usr/bin/chromium
+ ❯ tests/exports.test.ts:288:36
+    286|     if (!result.ok) throw new Error(JSON.stringify(result.issues));
+    287|     const files = unzipSync(result.artifact.bytes!);
+    288|     const browser = await chromium.launch({ executablePath: process.en…
+       |                                    ^
+    289|     try {
+    290|       const page = await browser.newPage();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  tests/exports.test.ts > purpose-specific export > rolls back every exported effect when a later effect violates an integer bound
+Error: browserType.launch: Failed to launch chromium because executable doesn't exist at /usr/bin/chromium
+ ❯ tests/exports.test.ts:319:36
+    317|     if (!result.ok) throw new Error(JSON.stringify(result.issues));
+    318|     const files = unzipSync(result.artifact.bytes!);
+    319|     const browser = await chromium.launch({ executablePath: process.en…
+       |                                    ^
+    320|     try {
+    321|       const page = await browser.newPage(); await page.setContent(strF…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed | 51 passed (52)
+      Tests  2 failed | 539 passed (541)
+   Start at  17:27:17
+   Duration  10.75s (tests 70%, transform 16%, import 13%, worker 1%)
+
+    Isolate  52 workers spawned · ~148ms startup each (spawn + environment, per file)
+             at least ~949ms faster with isolate: false — reuses workers across files instead of one per file
+

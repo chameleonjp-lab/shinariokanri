@@ -1,0 +1,4365 @@
+{
+  "review_date": "2026-10-08",
+  "repository": "https://github.com/chameleonjp-lab/shinariokanri",
+  "branch": "main",
+  "commit": "0474856124129a6237f4f37bc4b79e0ca985b335",
+  "tree": "9ddebf40d080a6530217bd7a1662523ce725463d",
+  "latest_merged_pr": 7,
+  "latest_ci": {
+    "url": "https://github.com/chameleonjp-lab/shinariokanri/actions/runs/37376768805",
+    "conclusion": "success",
+    "commit": "0474856124129a6237f4f37bc4b79e0ca985b335"
+  },
+  "rb04_source_manifest": {
+    "checked": 44,
+    "mismatches": 0
+  },
+  "requirements": [
+    {
+      "id": "REQ-B01",
+      "title": "作品の作成と情報の登録",
+      "provenance": "元の依頼に必要な基盤",
+      "decision_status": "previously_adopted",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP04",
+      "shall": "作品を作成し、人物・出来事・場所・物品・メモを追加・編集・アーカイブできること。名前だけで登録して詳細を後から補えること。",
+      "failure_behavior": "必須項目や参照先が不正な変更は保存せず、入力途中の文章と修正箇所を保持する",
+      "acceptance_ids": [
+        "AT-B01"
+      ],
+      "source_refs": [],
+      "batch_id": "RB02",
+      "review_status": "実装あり・最終受入未確認",
+      "implemented_at_review": "作品・人物・出来事・場所・物品・メモの共通登録、編集、アーカイブ、名前からの登録がある。",
+      "remaining_at_review": "全種類・参照付き削除・失敗時再開の最終受入が残る。",
+      "review_finding_ids": [],
+      "review_code_paths": [
+        "src/App.tsx",
+        "src/ui/EntityEditor.tsx",
+        "src/storage/store.ts"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-B02",
+      "title": "共通の出来事と人物別の出来事",
+      "provenance": "元の依頼",
+      "decision_status": "previously_adopted",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP07",
+      "shall": "横軸を世界内時間、縦軸をグループと人物にした年表を持つこと。共通出来事は共通レーンへ、人物別出来事は対象人物のレーンへ表示すること。",
+      "failure_behavior": "共通レーンへの表示だけでは全員を関係者や知識の保有者に登録しない",
+      "acceptance_ids": [
+        "AT-B02"
+      ],
+      "source_refs": [],
+      "batch_id": "RB03",
+      "review_status": "実装あり・最終受入未確認",
+      "implemented_at_review": "世界時間を横軸、グループと人物を縦軸にした年表。共通／参加者のレーンを分ける。",
+      "remaining_at_review": "実端末と大規模データでの全操作・性能受入が残る。",
+      "review_finding_ids": [],
+      "review_code_paths": [
+        "src/ui/Timeline.tsx",
+        "src/ui/Fields.tsx"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-B03",
+      "title": "グループと人物レーン",
+      "provenance": "元の依頼",
+      "decision_status": "previously_adopted",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP07",
+      "shall": "グループを追加・改名・並べ替え・折りたたみでき、人物を複数グループから参照できること。",
+      "failure_behavior": "グループ削除では人物を連鎖削除せず、表示への影響を確認する",
+      "acceptance_ids": [
+        "AT-B03"
+      ],
+      "source_refs": [],
+      "batch_id": "RB03",
+      "review_status": "実装あり・最終受入未確認",
+      "implemented_at_review": "グループの階層、並べ替え、折りたたみ、多重参照を年表へ接続。",
+      "remaining_at_review": "大規模・タッチ・キーボードの最終受入が残る。",
+      "review_finding_ids": [],
+      "review_code_paths": [
+        "src/ui/Timeline.tsx",
+        "src/ui/fieldSpecs.ts"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-B04",
+      "title": "人物ラベルを固定して横移動",
+      "provenance": "元の依頼",
+      "decision_status": "previously_adopted",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP07",
+      "shall": "年表の横移動中も人物名とグループ名を固定し、時間方向の位置と選択を保持すること。",
+      "failure_behavior": "ページ全体の横ずれや、編集欄のスクロールとの取り違えが起きない",
+      "acceptance_ids": [
+        "AT-B04"
+      ],
+      "source_refs": [],
+      "batch_id": "RB03",
+      "review_status": "実装あり・最終受入未確認",
+      "implemented_at_review": "固定ラベル、期間移動、選択／表示位置の端末別保持を実装。",
+      "remaining_at_review": "実端末、回転、分割表示での保存位置の継続確認が残る。",
+      "review_finding_ids": [],
+      "review_code_paths": [
+        "src/ui/Timeline.tsx",
+        "src/styles.css"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-B05",
+      "title": "年表の表示単位",
+      "provenance": "元の依頼",
+      "decision_status": "previously_adopted",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP06",
+      "shall": "時刻・日・月・年・独自単位を表示上で切り替え、表示範囲を拡大・縮小できること。",
+      "failure_behavior": "現在の暦に存在しない単位は理由付きで選択不可とし、暗黙の換算をしない",
+      "acceptance_ids": [
+        "AT-B05"
+      ],
+      "source_refs": [],
+      "batch_id": "RB03",
+      "review_status": "挙動差あり",
+      "implemented_at_review": "暦に応じた表示単位、期間、拡大縮小、対応しない単位の理由表示がある。",
+      "remaining_at_review": "暦変更の確認後に版が進んでも再確認なしで保存できる。",
+      "review_finding_ids": [
+        "RV09"
+      ],
+      "review_code_paths": [
+        "src/ui/Timeline.tsx",
+        "src/domain/time.ts",
+        "src/ui/WorldCalendars.tsx",
+        "src/ui/WorldTimeImpactPreview.tsx",
+        "src/domain/timeEditing.ts",
+        "src/App.tsx"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-B06",
+      "title": "過去への延長と本編開始",
+      "provenance": "元の依頼",
+      "decision_status": "previously_adopted",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP06",
+      "shall": "負の世界時間を含めて過去へ延長でき、本編開始を独立した基準点として設定できること。",
+      "failure_behavior": "本編開始を動かしただけで全出来事を移動しない",
+      "acceptance_ids": [
+        "AT-B06"
+      ],
+      "source_refs": [],
+      "batch_id": "RB03",
+      "review_status": "挙動差あり",
+      "implemented_at_review": "負の整数tick、本編開始とイベント日時の分離、期間移動がある。",
+      "remaining_at_review": "本編開始を含む作品設定の入力は画面を離れると失われる。",
+      "review_finding_ids": [
+        "RV08"
+      ],
+      "review_code_paths": [
+        "src/ui/Timeline.tsx",
+        "src/ui/WorkPage.tsx",
+        "src/domain/time.ts",
+        "src/App.tsx",
+        "src/ui/draftState.ts"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-B07",
+      "title": "出来事間の意味付き矢印",
+      "provenance": "元の依頼",
+      "decision_status": "previously_adopted",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP08",
+      "shall": "因果・前提・伏線・回収など種類と向きを持つ関係線を作成・編集し、元情報へ移動できること。",
+      "failure_behavior": "存在しない終点や型の異なる関係を保存せず理由を示す",
+      "acceptance_ids": [
+        "AT-B07"
+      ],
+      "source_refs": [],
+      "batch_id": "RB03",
+      "review_status": "挙動差あり",
+      "implemented_at_review": "意味・方向・根拠を持つ年表矢印、一覧での編集、元情報への移動がある。",
+      "remaining_at_review": "没の独立関係が有効な線として評価される。",
+      "review_finding_ids": [
+        "RV03"
+      ],
+      "review_code_paths": [
+        "src/ui/Lists.tsx",
+        "src/ui/Timeline.tsx",
+        "src/domain/model.ts",
+        "src/domain/world.ts",
+        "src/domain/relationGraph.ts",
+        "src/ui/WorldHistories.tsx",
+        "src/ui/Relationships.tsx"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-B08",
+      "title": "出来事の関係者とメモ",
+      "provenance": "元の依頼",
+      "decision_status": "previously_adopted",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP04",
+      "shall": "出来事ごとに関係者・役割・場所・物品・作者メモを関連付けること。",
+      "failure_behavior": "登場、目撃、伝聞、知識取得を同じ関係として扱わない",
+      "acceptance_ids": [
+        "AT-B08"
+      ],
+      "source_refs": [],
+      "batch_id": "RB02",
+      "review_status": "実装あり・最終受入未確認",
+      "implemented_at_review": "参加者の役割、場所、物品、作者メモを通常フォームで関連付けられる。",
+      "remaining_at_review": "参照付き全組合せ、取消、端末再開の最終受入が残る。",
+      "review_finding_ids": [],
+      "review_code_paths": [
+        "src/ui/fieldSpecs.ts",
+        "src/ui/Fields.tsx",
+        "src/domain/conditions.ts"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-B09",
+      "title": "人物関係図との連携",
+      "provenance": "元の依頼",
+      "decision_status": "previously_adopted",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP08",
+      "shall": "人物別と作品全体の関係図を持ち、図・年表・詳細から同じ人物と関係を参照すること。",
+      "failure_behavior": "図上の配置変更は人物の所属・時期・関係を変更しない",
+      "acceptance_ids": [
+        "AT-B09"
+      ],
+      "source_refs": [],
+      "batch_id": "RB03",
+      "review_status": "挙動差あり",
+      "implemented_at_review": "人物中心／作品全体の図、表、意味・一段／二段・時点／経路による表示がある。",
+      "remaining_at_review": "没の関係線を現在の有効関係と区別する必要がある。",
+      "review_finding_ids": [
+        "RV03"
+      ],
+      "review_code_paths": [
+        "src/ui/Lists.tsx",
+        "src/ui/EntityEditor.tsx",
+        "src/domain/world.ts",
+        "src/domain/relationGraph.ts",
+        "src/ui/WorldHistories.tsx",
+        "src/ui/Relationships.tsx"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-B10",
+      "title": "名前からのリンクと逆参照",
+      "provenance": "元の依頼",
+      "decision_status": "previously_adopted",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP05",
+      "shall": "本文・メモの確定リンクから人物等と段落へ移動し、対象から利用箇所へ戻れること。",
+      "failure_behavior": "同名や一般語を自動で一人へ確定しない",
+      "acceptance_ids": [
+        "AT-B10"
+      ],
+      "source_refs": [],
+      "batch_id": "RB02",
+      "review_status": "挙動差あり",
+      "implemented_at_review": "本文選択からリンク、逆参照、段落位置、固定版参照、位置追従を実装。",
+      "remaining_at_review": "分岐試読の本文リンクは版・ブロック・文字範囲を落としてentity IDだけ渡す。",
+      "review_finding_ids": [
+        "RV06"
+      ],
+      "review_code_paths": [
+        "src/ui/Fields.tsx",
+        "src/ui/EntityEditor.tsx",
+        "src/App.tsx",
+        "src/ui/Reader.tsx",
+        "src/ui/WritingWorkspace.tsx"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-B11",
+      "title": "場所と物品の一覧",
+      "provenance": "元の依頼",
+      "decision_status": "previously_adopted",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP04",
+      "shall": "人物とは別に場所と物品の一覧・詳細・メモ・参照元を持つこと。",
+      "failure_behavior": "物品の種類と個体を区別し、一つの個体の複製で所有を二重化しない",
+      "acceptance_ids": [
+        "AT-B11"
+      ],
+      "source_refs": [],
+      "batch_id": "RB02",
+      "review_status": "実装あり・最終受入未確認",
+      "implemented_at_review": "場所／物品の一覧、詳細、メモ、参照元、地図／世界履歴への導線がある。",
+      "remaining_at_review": "全操作・全端末の最終受入が残る。",
+      "review_finding_ids": [],
+      "review_code_paths": [
+        "src/ui/fieldSpecs.ts",
+        "src/domain/conditions.ts",
+        "src/ui/EntityEditor.tsx"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-B12",
+      "title": "専用ファイルへの出力と読み込み",
+      "provenance": "元の依頼",
+      "decision_status": "previously_adopted",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP16",
+      "shall": "完全な作品を版付き専用ファイルへ出力し、事前検査・確認を経て読み戻せること。",
+      "failure_behavior": "破損・未対応版・危険なパス・参照不整合は既存作品を変更せず拒否する",
+      "acceptance_ids": [
+        "AT-B12"
+      ],
+      "source_refs": [],
+      "batch_id": "RB06",
+      "review_status": "残作業あり",
+      "implemented_at_review": "素材・履歴・固定世界・別案を含む版付き.scenarioと事前検査、同一作品復元がある。",
+      "remaining_at_review": "作品間の明示ID対応統合、旧形式移行、全情報の空環境復元受入が残る。",
+      "review_finding_ids": [
+        "RV16"
+      ],
+      "review_code_paths": [
+        "src/storage/archive.ts",
+        "src/storage/store.ts",
+        "src/ui/WorkPage.tsx",
+        "src/storage/importMapping.ts"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-B13",
+      "title": "世界の出来事と提示順の分離",
+      "provenance": "以前から採用済みの拡張",
+      "decision_status": "previously_adopted",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP10",
+      "shall": "世界の出来事と章・場面・提示順を別情報にし、一つの出来事を複数場面から参照すること。",
+      "failure_behavior": "場面の並べ替えを出来事の日付変更として保存しない",
+      "acceptance_ids": [
+        "AT-B13"
+      ],
+      "source_refs": [],
+      "batch_id": "RB04",
+      "review_status": "挙動差あり",
+      "implemented_at_review": "世界の出来事と章／場面／提示順を分離し、共通場面IDを使う。",
+      "remaining_at_review": "章順と分岐で開示の対象範囲評価が異なる。後続の全経路確認と結合が必要。",
+      "review_finding_ids": [
+        "RV10",
+        "RV13"
+      ],
+      "review_code_paths": [
+        "src/ui/Lists.tsx",
+        "src/App.tsx",
+        "src/domain/types.ts",
+        "src/domain/runtime.ts",
+        "src/domain/presentation.ts",
+        "src/domain/runtimeContracts.ts",
+        "src/ui/Reader.tsx"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-B14",
+      "title": "分岐・合流と条件・効果",
+      "provenance": "以前から採用済みの拡張",
+      "decision_status": "previously_adopted",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP12",
+      "shall": "選択肢・条件・効果・合流・意図した終端を編集できること。条件と効果の実行規則は動作契約に従うこと。",
+      "failure_behavior": "選択肢ゼロや不正な効果は終端と区別し、途中までの更新を残さない",
+      "acceptance_ids": [
+        "AT-B14"
+      ],
+      "source_refs": [],
+      "batch_id": "RB05",
+      "review_status": "残作業あり",
+      "implemented_at_review": "選択／自動／合流／意図した終端、条件と原子effect、fallbackの試読がある。",
+      "remaining_at_review": "階層図の掘り下げ、固定参照／部分上書き再利用、全失敗系受入が残る。",
+      "review_finding_ids": [
+        "RV11"
+      ],
+      "review_code_paths": [
+        "src/domain/runtime.ts",
+        "src/ui/Fields.tsx",
+        "src/ui/Reader.tsx",
+        "src/ui/Lists.tsx",
+        "src/domain/types.ts"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-B15",
+      "title": "状態とフラグの管理",
+      "provenance": "以前から採用済みの拡張",
+      "decision_status": "previously_adopted",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP11",
+      "shall": "状態の型・初期値・条件・更新を作品内で管理し、未定義と偽を区別すること。",
+      "failure_behavior": "未定義の値を暗黙に偽またはゼロにせず未確認と表示する",
+      "acceptance_ids": [
+        "AT-B15"
+      ],
+      "source_refs": [],
+      "batch_id": "RB05",
+      "review_status": "挙動差あり",
+      "implemented_at_review": "boolean／integer／enum、初期値、三値条件、算出式、許容遷移を扱う。",
+      "remaining_at_review": "宣言resetが実行されず、自由なeffect理由だけで禁止遷移を回避できる。相互排他の結合も残る。",
+      "review_finding_ids": [
+        "RV01",
+        "RV02",
+        "RV12"
+      ],
+      "review_code_paths": [
+        "src/domain/conditions.ts",
+        "src/domain/model.ts",
+        "src/ui/Fields.tsx",
+        "src/domain/runtime.ts",
+        "src/domain/runtimeContracts.ts",
+        "src/ui/Reader.tsx",
+        "src/ui/fieldSpecs.ts"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-B16",
+      "title": "試し読みと操作の巻き戻し",
+      "provenance": "以前から採用済みの拡張",
+      "decision_status": "previously_adopted",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP13",
+      "shall": "提示順または分岐を試し読みし、選択を戻すと対応する状態も戻せること。",
+      "failure_behavior": "試し読みの操作で作者の正本や公開版を上書きしない",
+      "acceptance_ids": [
+        "AT-B16"
+      ],
+      "source_refs": [],
+      "batch_id": "RB05",
+      "review_status": "挙動差あり",
+      "implemented_at_review": "章と分岐の試読、全RuntimeStateの巻戻、保存版の再実行がある。",
+      "remaining_at_review": "旧版開始ボタン、分岐保存中の進行、対象外開示の実行に不一致がある。",
+      "review_finding_ids": [
+        "RV05",
+        "RV07",
+        "RV10"
+      ],
+      "review_code_paths": [
+        "src/domain/runtime.ts",
+        "src/ui/Reader.tsx",
+        "src/ui/WritingWorkspace.tsx",
+        "src/domain/presentation.ts",
+        "src/domain/runtimeContracts.ts"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-B17",
+      "title": "真実・人物の認識・プレイヤーの認識",
+      "provenance": "以前から採用済みの拡張",
+      "decision_status": "previously_adopted",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP15",
+      "shall": "作者が定める真実、証言、人物の認識、プレイヤーへの提示を分けて記録すること。",
+      "failure_behavior": "同じ場面に居るだけで真相を全員へ伝播しない",
+      "acceptance_ids": [
+        "AT-B17"
+      ],
+      "source_refs": [],
+      "batch_id": "RB05",
+      "review_status": "挙動差あり",
+      "implemented_at_review": "作者の真実、証言、belief、hypothesis、holder、提示時効果を別データにする。",
+      "remaining_at_review": "没の作者真実が現在の真実へ混ざる。章／経路の認識比較と発言確認の結合が残る。",
+      "review_finding_ids": [
+        "RV03",
+        "RV15"
+      ],
+      "review_code_paths": [
+        "src/domain/types.ts",
+        "src/domain/conditions.ts",
+        "src/ui/Reader.tsx",
+        "src/domain/world.ts",
+        "src/domain/relationGraph.ts",
+        "src/ui/WorldHistories.tsx",
+        "src/ui/Relationships.tsx",
+        "src/domain/runtimeContracts.ts"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-B18",
+      "title": "関係・所属・位置・所有の変化",
+      "provenance": "以前から採用済みの拡張",
+      "decision_status": "previously_adopted",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP09",
+      "shall": "関係・所属・場所・物品の所有を世界時点と経路の範囲に応じて表示すること。",
+      "failure_behavior": "順序や経路が不明な場合は複数候補または不明とし唯一の状態を作らない",
+      "acceptance_ids": [
+        "AT-B18"
+      ],
+      "source_refs": [],
+      "batch_id": "RB03",
+      "review_status": "挙動差あり",
+      "implemented_at_review": "時点／経路の三値評価、居場所、所属、所有、場所の変化を表示。",
+      "remaining_at_review": "不採用assertionが有効な状態候補として扱われる。",
+      "review_finding_ids": [
+        "RV03"
+      ],
+      "review_code_paths": [
+        "src/domain/types.ts",
+        "src/domain/conditions.ts",
+        "src/ui/Lists.tsx",
+        "src/domain/world.ts",
+        "src/domain/relationGraph.ts",
+        "src/ui/WorldHistories.tsx",
+        "src/ui/Relationships.tsx"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-B19",
+      "title": "伏線と回収の管理",
+      "provenance": "以前から採用済みの拡張",
+      "decision_status": "previously_adopted",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP15",
+      "shall": "伏線・手掛かり・回収の関連と状態を記録し、未回収を対象作品と経路に応じて一覧化すること。",
+      "failure_behavior": "プレイヤーに提示しただけで理解・推理済みと判定しない",
+      "acceptance_ids": [
+        "AT-B19"
+      ],
+      "source_refs": [],
+      "batch_id": "RB05",
+      "review_status": "残作業あり",
+      "implemented_at_review": "独立伏線、複数手掛かり／回収、提示順での経路内不足候補がある。",
+      "remaining_at_review": "全入口探索との結合、未到達回収、対象／期限／代替説明を含む一覧が残る。",
+      "review_finding_ids": [
+        "RV13"
+      ],
+      "review_code_paths": [
+        "src/domain/runtime.ts",
+        "src/ui/Reader.tsx",
+        "src/ui/fieldSpecs.ts",
+        "src/domain/runtimeContracts.ts"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-B20",
+      "title": "人物の目的と変化",
+      "provenance": "以前から採用済みの拡張",
+      "decision_status": "previously_adopted",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP10",
+      "shall": "人物の目的・葛藤・変化を場面と関連付け、提示順と時点から確認できること。",
+      "failure_behavior": "役割を未入力の場面を作成不能にしない",
+      "acceptance_ids": [
+        "AT-B20"
+      ],
+      "source_refs": [],
+      "batch_id": "RB04",
+      "review_status": "挙動差あり",
+      "implemented_at_review": "人物の目的・変化を場面、提示順、世界時点から表示。",
+      "remaining_at_review": "没設定の影響除外、経路の認識表示、全組合せの最終受入が残る。",
+      "review_finding_ids": [
+        "RV03",
+        "RV15"
+      ],
+      "review_code_paths": [
+        "src/ui/fieldSpecs.ts",
+        "src/domain/types.ts",
+        "src/domain/world.ts",
+        "src/domain/relationGraph.ts",
+        "src/ui/WorldHistories.tsx",
+        "src/ui/Relationships.tsx",
+        "src/domain/runtimeContracts.ts",
+        "src/ui/Reader.tsx"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-B21",
+      "title": "不確かな日時と独自暦",
+      "provenance": "以前から採用済みの拡張",
+      "decision_status": "previously_adopted",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP06",
+      "shall": "確定・期間・概算・未定・相対日時を扱い、独自暦で一貫して表示すること。",
+      "failure_behavior": "循環する相対制約や存在しない日付は拒否または未解決とし、日時を捏造しない",
+      "acceptance_ids": [
+        "AT-B21"
+      ],
+      "source_refs": [],
+      "batch_id": "RB03",
+      "review_status": "挙動差あり",
+      "implemented_at_review": "確定／期間／概算／未定／相対日時と繰返し独自暦、差分確認を実装。",
+      "remaining_at_review": "暦確認時のrevisionを固定して、更新後に再確認させる必要がある。",
+      "review_finding_ids": [
+        "RV09"
+      ],
+      "review_code_paths": [
+        "src/domain/time.ts",
+        "src/ui/Fields.tsx",
+        "src/ui/WorkPage.tsx",
+        "src/ui/WorldCalendars.tsx",
+        "src/ui/WorldTimeImpactPreview.tsx",
+        "src/domain/timeEditing.ts",
+        "src/App.tsx"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-B22",
+      "title": "クエスト・会話・設定資料",
+      "provenance": "以前から採用済みの拡張",
+      "decision_status": "previously_adopted",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP12",
+      "shall": "クエスト、会話、世界設定を場面・人物・条件へ結び付け、未完了箇所を一覧にできること。",
+      "failure_behavior": "クエストの完了と本文・実装の完成を一つの状態に統合しない",
+      "acceptance_ids": [
+        "AT-B22"
+      ],
+      "source_refs": [],
+      "batch_id": "RB05",
+      "review_status": "残作業あり",
+      "implemented_at_review": "クエスト、会話、世界設定の型と参照フォーム、クエスト遷移の評価がある。",
+      "remaining_at_review": "クエスト／会話の運用導線、短い反応、再利用、未完了の階層集計の結合が残る。",
+      "review_finding_ids": [
+        "RV11",
+        "RV12"
+      ],
+      "review_code_paths": [
+        "src/ui/fieldSpecs.ts",
+        "src/domain/conditions.ts",
+        "src/ui/Lists.tsx",
+        "src/domain/runtime.ts",
+        "src/domain/types.ts",
+        "src/domain/runtimeContracts.ts",
+        "src/domain/model.ts",
+        "src/ui/Reader.tsx"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-B23",
+      "title": "安定ID・保存・取り消し・履歴",
+      "provenance": "以前から採用済みの拡張",
+      "decision_status": "previously_adopted",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP03",
+      "shall": "改名・並べ替えで変わらないIDを使用し、端末内保存・取り消し・履歴・版の復元を提供すること。",
+      "failure_behavior": "容量不足や書き込み失敗を保存済みと表示せず、元データを失わせない",
+      "acceptance_ids": [
+        "AT-B23"
+      ],
+      "source_refs": [],
+      "batch_id": "RB06",
+      "review_status": "残作業あり",
+      "implemented_at_review": "安定ID、変更行保存、原子履歴／outbox、補償undo、対象復元がある。",
+      "remaining_at_review": "通常履歴画面は最新50件のみで、古い対象版を選ぶ導線がない。移行／長時間受入も残る。",
+      "review_finding_ids": [
+        "RV16",
+        "RV17"
+      ],
+      "review_code_paths": [
+        "src/storage/store.ts",
+        "src/storage/storage.test.ts",
+        "src/ui/WorkPage.tsx",
+        "src/storage/importMapping.ts",
+        "src/storage/archive.ts"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-B24",
+      "title": "検索・絞り込み・確認候補・タッチ操作",
+      "provenance": "以前から採用済みの拡張",
+      "decision_status": "previously_adopted",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP05",
+      "shall": "全文検索と複合絞り込みを持ち、参照切れや矛盾候補を根拠付きで提示すること。全編集にはタッチと一覧での操作方法を用意すること。",
+      "failure_behavior": "根拠が不足する候補を確定不具合と断定せず、色だけで意味を伝えない",
+      "acceptance_ids": [
+        "AT-B24"
+      ],
+      "source_refs": [],
+      "batch_id": "RB02",
+      "review_status": "残作業あり",
+      "implemented_at_review": "全文・複合検索、保存一覧、索引、参照／統合影響、図の一覧代替がある。",
+      "remaining_at_review": "階層分岐、同期競合等を含む全編集のタッチ代替と最終受入が残る。",
+      "review_finding_ids": [
+        "RV11",
+        "RV25",
+        "RV29"
+      ],
+      "review_code_paths": [
+        "src/App.tsx",
+        "src/domain/runtime.ts",
+        "src/ui/components.tsx",
+        "src/ui/Lists.tsx",
+        "src/domain/types.ts",
+        "src/sync/README.md",
+        "src/sync/outbox.ts",
+        "src/sync/adapter.ts",
+        "src/storage/store.ts"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-F01",
+      "title": "思いつきを一時置きする",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP04",
+      "shall": "作品内の受け皿へ、短い文章・画像・音声メモを保存する。あとから人物、場面、伏線へ変換し、元のメモも参照できること。",
+      "failure_behavior": "録音を拒否した端末でも文章を保存できる。変換は元メモを消さず、元と変換先のIDを結ぶ。",
+      "acceptance_ids": [
+        "AT-F01"
+      ],
+      "source_refs": [
+        "S13",
+        "S22"
+      ],
+      "source_feature_id": "F01",
+      "batch_id": "RB02",
+      "review_status": "実装あり・最終受入未確認",
+      "implemented_at_review": "文章・画像・音声メモ、録音の代替、人物／場面／伏線への変換と元参照がある。",
+      "remaining_at_review": "実端末のマイク許可／拒否、容量不足、再起動の受入が残る。",
+      "review_finding_ids": [
+        "RV29"
+      ],
+      "review_code_paths": [
+        "src/ui/fieldSpecs.ts",
+        "src/ui/WorkPage.tsx"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-F02",
+      "title": "入力項目と雛形を変える",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP04",
+      "shall": "人物や場面の項目を作品ごとに追加する。必須にする項目、説明文、初期値を選べる。使わない項目や画面を隠すこと。",
+      "failure_behavior": "必須項目の追加や型変更は既存値の影響を事前表示する。不適合値を黙って削除・変換しない。",
+      "acceptance_ids": [
+        "AT-F02"
+      ],
+      "source_refs": [
+        "S06",
+        "S12",
+        "S19"
+      ],
+      "source_feature_id": "F02",
+      "batch_id": "RB02",
+      "review_status": "挙動差あり",
+      "implemented_at_review": "作品別雛形、型付き追加項目、必須／初期値／説明、画面の非表示がある。",
+      "remaining_at_review": "設定画面の未保存入力保持と、全型変更／再開受入が残る。",
+      "review_finding_ids": [
+        "RV08"
+      ],
+      "review_code_paths": [
+        "src/domain/model.ts",
+        "src/ui/EntityEditor.tsx",
+        "src/ui/fieldSpecs.ts",
+        "src/ui/WorkPage.tsx",
+        "src/App.tsx",
+        "src/ui/draftState.ts"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-F03",
+      "title": "人物以外の筋で並べる",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP10",
+      "shall": "縦軸を人物、組織、場所、章、恋愛や戦争などの物語の筋へ切り替える。一つの場面を複数の筋から参照すること。",
+      "failure_behavior": "筋から外しても本文を消さない。表示レーンと実際の参加関係は別に保持する。",
+      "acceptance_ids": [
+        "AT-F03"
+      ],
+      "source_refs": [
+        "S02",
+        "S12"
+      ],
+      "source_feature_id": "F03",
+      "batch_id": "RB04",
+      "review_status": "残作業あり",
+      "implemented_at_review": "人物・組織・場所・章・筋に構成の軸を切替え、同じ場面を参照。",
+      "remaining_at_review": "大規模の構成表示を分割する必要がある。",
+      "review_finding_ids": [
+        "RV27"
+      ],
+      "review_code_paths": [
+        "src/ui/fieldSpecs.ts",
+        "src/ui/Timeline.tsx",
+        "src/ui/Lists.tsx",
+        "src/ui/WritingWorkspace.tsx",
+        "src/ui/Fields.tsx",
+        "src/ui/Reader.tsx"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-F04",
+      "title": "場面の役割を記録する",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP10",
+      "shall": "視点、人物の目標、対立、結果、新しく分かること、前後で変わることを短く記録する。役割のない場面も許容すること。",
+      "failure_behavior": "未記入を許し、作者が定めた役割を評価の正解として自動判定しない。",
+      "acceptance_ids": [
+        "AT-F04"
+      ],
+      "source_refs": [
+        "S12"
+      ],
+      "source_feature_id": "F04",
+      "batch_id": "RB04",
+      "review_status": "実装あり・最終受入未確認",
+      "implemented_at_review": "視点、目標、対立、結果、新情報、変化を入力でき、空欄も保持。",
+      "remaining_at_review": "全媒体／全経路での運用と最終受入が残る。",
+      "review_finding_ids": [],
+      "review_code_paths": [
+        "src/ui/fieldSpecs.ts",
+        "src/domain/model.ts"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-F05",
+      "title": "構成の雛形と盛り上がりを見る",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP10",
+      "shall": "物語の構成を雛形から選び、自由に変更する。場面の緊張度や重要度を自分で付け、選んだ進行順で偏りを確認すること。",
+      "failure_behavior": "雛形適用は別案または差分確認を経る。緊張度の未入力をゼロと集計せず算出母数を示す。",
+      "acceptance_ids": [
+        "AT-F05"
+      ],
+      "source_refs": [
+        "S12",
+        "S13"
+      ],
+      "source_feature_id": "F05",
+      "batch_id": "RB04",
+      "review_status": "実装あり・最終受入未確認",
+      "implemented_at_review": "構成雛形、自由変更、適用差分、緊張度と重要度の表示がある。",
+      "remaining_at_review": "全端末、未知値、長い選択順での最終受入が残る。",
+      "review_finding_ids": [
+        "RV29"
+      ],
+      "review_code_paths": [
+        "src/ui/fieldSpecs.ts",
+        "src/ui/Lists.tsx"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-F06",
+      "title": "要約と本文を行き来する",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP10",
+      "shall": "カードには要約、執筆画面には本文を出す。章や選んだ道を通して読む。要約、本文、作者メモを分け、小説用にはルビ・縦書きの確認表示も用意すること。",
+      "failure_behavior": "要約の更新は本文を上書きしない。公開用読み物へ作者メモを混ぜず、ルビと縦書きでも元の段落IDを保つ。",
+      "acceptance_ids": [
+        "AT-F06"
+      ],
+      "source_refs": [
+        "S06",
+        "S23",
+        "S27"
+      ],
+      "source_feature_id": "F06",
+      "batch_id": "RB04",
+      "review_status": "挙動差あり",
+      "implemented_at_review": "要約／本文／作者メモの分離、ルビ、縦書き、章順と選択順の通読がある。",
+      "remaining_at_review": "分岐本文リンクの固定版／位置欠落と、章／分岐提示規則の不一致が残る。",
+      "review_finding_ids": [
+        "RV06",
+        "RV10"
+      ],
+      "review_code_paths": [
+        "src/ui/EntityEditor.tsx",
+        "src/ui/Fields.tsx",
+        "src/domain/exports.ts",
+        "src/ui/Reader.tsx",
+        "src/ui/WritingWorkspace.tsx",
+        "src/App.tsx",
+        "src/domain/runtime.ts",
+        "src/domain/presentation.ts",
+        "src/domain/runtimeContracts.ts"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-F07",
+      "title": "年齢と生涯を表示する",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP06",
+      "shall": "生年月日、寿命、状態の変化を出来事と結ぶ。年表で選んだ時点の年齢、存命、所属を表示する。独自暦で計算すること。",
+      "failure_behavior": "生年月日や暦の対応が未定なら年齢は範囲または不明とする。回想・復活の例外を時期と経路付きで記録する。",
+      "acceptance_ids": [
+        "AT-F07"
+      ],
+      "source_refs": [
+        "S03",
+        "S19"
+      ],
+      "source_feature_id": "F07",
+      "batch_id": "RB03",
+      "review_status": "挙動差あり",
+      "implemented_at_review": "独自暦の年齢／生涯、所属、回想／復活の根拠を時点で確認できる。",
+      "remaining_at_review": "現在地／所属等の評価へ没assertionが混ざる。実端末の年表往復受入も残る。",
+      "review_finding_ids": [
+        "RV03"
+      ],
+      "review_code_paths": [
+        "src/ui/fieldSpecs.ts",
+        "src/domain/time.ts",
+        "src/domain/world.ts",
+        "src/domain/relationGraph.ts",
+        "src/ui/WorldHistories.tsx",
+        "src/ui/Relationships.tsx"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-F08",
+      "title": "時間差と前後関係を守る",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP06",
+      "shall": "「先に起こる」「終了後から何日以上」「同時に始まる」を登録する。日付変更前に連動先を見せ、移動か指摘だけか選ぶこと。",
+      "failure_behavior": "循環制約・固定日時との衝突は影響一覧を示す。承認された可動日時だけを一括変更し、取消時は全変更を戻す。",
+      "acceptance_ids": [
+        "AT-F08"
+      ],
+      "source_refs": [
+        "S04"
+      ],
+      "source_feature_id": "F08",
+      "batch_id": "RB03",
+      "review_status": "挙動差あり",
+      "implemented_at_review": "相対／先行／同時／時間差、日時変更の連動差分、固定衝突、取消がある。",
+      "remaining_at_review": "関連する暦規則変更の承認は基底revisionを固定していない。",
+      "review_finding_ids": [
+        "RV09"
+      ],
+      "review_code_paths": [
+        "src/domain/time.ts",
+        "src/ui/fieldSpecs.ts",
+        "src/ui/WorldCalendars.tsx",
+        "src/ui/WorldTimeImpactPreview.tsx",
+        "src/domain/timeEditing.ts",
+        "src/App.tsx"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-F09",
+      "title": "一つの世界を複数作品で使う",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP09",
+      "shall": "共通設定を参照しながら、作品ごとの開始時期、採用設定、登場人物、章を管理する。改訂した設定の影響先を一覧にすること。",
+      "failure_behavior": "共通設定の公開版は不変とし作品が参照する版を固定する。続編の改訂を旧作へ自動適用しない。",
+      "acceptance_ids": [
+        "AT-F09"
+      ],
+      "source_refs": [
+        "S12"
+      ],
+      "source_feature_id": "F09",
+      "batch_id": "RB03",
+      "review_status": "挙動差あり",
+      "implemented_at_review": "世界の不変版・hash・採用設定・推移依存を保存し、更新を差分確認。",
+      "remaining_at_review": "借用した状態変数を分岐試読が解決できない。章試読への世界登録は接続済み。",
+      "review_finding_ids": [
+        "RV04"
+      ],
+      "review_code_paths": [
+        "src/domain/types.ts",
+        "src/storage/archive.ts",
+        "src/storage/store.ts",
+        "src/App.tsx",
+        "src/ui/Reader.tsx",
+        "src/domain/runtime.ts",
+        "src/domain/runtimeVersions.ts",
+        "src/domain/pinnedWorlds.ts"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-F10",
+      "title": "地図と年表を連動する",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP09",
+      "shall": "地図の場所から出来事を絞り、出来事から地図の位置へ移動する。世界→地方→街→建物の地図をつなぐこと。",
+      "failure_behavior": "地図画像がない場合は場所の一覧を同等に使う。地図階層の循環と無効な座標参照を拒否する。",
+      "acceptance_ids": [
+        "AT-F10"
+      ],
+      "source_refs": [
+        "S13",
+        "S15"
+      ],
+      "source_feature_id": "F10",
+      "batch_id": "RB03",
+      "review_status": "残作業あり",
+      "implemented_at_review": "階層地図、ピン、場所と出来事の絞り込み、年表との往復がある。",
+      "remaining_at_review": "実端末の画像／ピン操作、公開投影／同期素材の総合受入が残る。",
+      "review_finding_ids": [
+        "RV26",
+        "RV29"
+      ],
+      "review_code_paths": [
+        "src/ui/fieldSpecs.ts",
+        "src/domain/model.ts",
+        "src/domain/projection.ts",
+        "src/domain/publicCatalog.ts",
+        "src/sync/README.md"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-F11",
+      "title": "移動と場所の変化を記録する",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP09",
+      "shall": "登録した移動経路、手段、所要時間から時期を確認する。場所の改名、破壊、再建、支配組織の変化も時点で切り替えること。",
+      "failure_behavior": "移動手段・距離・所要時間の根拠がない場合は未確認とする。時点による改名や支配の違いを恒久上書きしない。",
+      "acceptance_ids": [
+        "AT-F11"
+      ],
+      "source_refs": [
+        "S15"
+      ],
+      "source_feature_id": "F11",
+      "batch_id": "RB03",
+      "review_status": "挙動差あり",
+      "implemented_at_review": "移動手段／所要tick、場所の改名／破壊／支配の時点別履歴を実装。",
+      "remaining_at_review": "没の世界状態候補を現在の有効情報へ混ぜない修正が必要。",
+      "review_finding_ids": [
+        "RV03"
+      ],
+      "review_code_paths": [
+        "src/ui/fieldSpecs.ts",
+        "src/domain/types.ts",
+        "src/domain/world.ts",
+        "src/domain/relationGraph.ts",
+        "src/ui/WorldHistories.tsx",
+        "src/ui/Relationships.tsx"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-F12",
+      "title": "家系・別名・正体を扱う",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP09",
+      "shall": "家系、師弟、血統などを専用表示にする。同じ人物の本名・偽名を時期と認識者に結び付け、作者向けと公開向けの名前を分けること。",
+      "failure_behavior": "家系は関係種類と根拠を持つ。正体の公開前は本名だけでなく、索引・画像名・リンク・親子関係からも漏らさない。",
+      "acceptance_ids": [
+        "AT-F12"
+      ],
+      "source_refs": [
+        "S17",
+        "S20"
+      ],
+      "source_feature_id": "F12",
+      "batch_id": "RB03",
+      "review_status": "挙動差あり",
+      "implemented_at_review": "家系の専用表示、別名／正体の時期・holder、公開名の指定がある。",
+      "remaining_at_review": "没の関係／assertionの有効評価を修正。実APIからの秘密除外は未受入。",
+      "review_finding_ids": [
+        "RV03",
+        "RV26"
+      ],
+      "review_code_paths": [
+        "src/domain/model.ts",
+        "src/domain/projection.ts",
+        "src/ui/Lists.tsx",
+        "src/domain/world.ts",
+        "src/domain/relationGraph.ts",
+        "src/ui/WorldHistories.tsx",
+        "src/ui/Relationships.tsx",
+        "src/domain/publicCatalog.ts",
+        "src/sync/README.md",
+        "src/ui/fieldSpecs.ts"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-F13",
+      "title": "図を章・場面・会話へ分ける",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP12",
+      "shall": "大きな図では章だけを表示し、選ぶと場面、さらに会話へ掘り下げる。小さな図の入口と出口を明示してつなぐこと。",
+      "failure_behavior": "下位図の未解決入口・出口・条件エラーは上位図の件数に反映し、折りたたみでエラーを隠さない。",
+      "acceptance_ids": [
+        "AT-F13"
+      ],
+      "source_refs": [
+        "S06",
+        "S07"
+      ],
+      "source_feature_id": "F13",
+      "batch_id": "RB05",
+      "review_status": "残作業あり",
+      "implemented_at_review": "親子flow_graph、入口／出口／callをデータと評価処理で扱う。",
+      "remaining_at_review": "通常画面は平坦なノード一覧で、章→場面→会話の掘下げ／上位エラー集計が不足。",
+      "review_finding_ids": [
+        "RV11"
+      ],
+      "review_code_paths": [
+        "src/domain/runtime.ts",
+        "src/ui/Lists.tsx",
+        "src/domain/types.ts"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-F14",
+      "title": "発生のきっかけと条件を分ける",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP12",
+      "shall": "場所に入る、話しかける、戦闘に勝つなどのきっかけと、所持品・生存などの条件を別に登録する。一度だけ、繰り返し、期限も扱うこと。",
+      "failure_behavior": "条件評価だけでは効果を実行しない。自動発火は明示設定とし、重複した同一トリガーでは一度だけ規則を守る。",
+      "acceptance_ids": [
+        "AT-F14"
+      ],
+      "source_refs": [
+        "S06",
+        "S19",
+        "S28"
+      ],
+      "source_feature_id": "F14",
+      "batch_id": "RB05",
+      "review_status": "残作業あり",
+      "implemented_at_review": "きっかけ、条件、単発／反復／期限、明示的な発火確認の基盤がある。",
+      "remaining_at_review": "全scope・重複発火・期限の通常操作を含む結合受入が残る。",
+      "review_finding_ids": [
+        "RV12"
+      ],
+      "review_code_paths": [
+        "src/domain/runtime.ts",
+        "tests/runtime.test.ts",
+        "src/ui/Reader.tsx",
+        "src/domain/runtimeContracts.ts",
+        "src/domain/model.ts",
+        "src/ui/fieldSpecs.ts"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-F15",
+      "title": "途中状態から試し読みする",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP13",
+      "shall": "所持品、人物の状態、既読情報などをまとめた開始状態を保存する。そこから試し読みし、選択を戻すと状態も戻すこと。",
+      "failure_behavior": "版不一致の開始状態は移行確認が必要。不足値は未確認とし、途中開始の証跡を通しプレイの証跡として扱わない。",
+      "acceptance_ids": [
+        "AT-F15"
+      ],
+      "source_refs": [
+        "S08",
+        "S25"
+      ],
+      "source_feature_id": "F15",
+      "batch_id": "RB05",
+      "review_status": "挙動差あり",
+      "implemented_at_review": "checkpoint、途中開始、型付きRuntimeState、固定版整合と巻戻がある。",
+      "remaining_at_review": "旧版の開始UIと状態移行、全所持品／認識の通常操作の受入が残る。",
+      "review_finding_ids": [
+        "RV05",
+        "RV12"
+      ],
+      "review_code_paths": [
+        "src/domain/runtime.ts",
+        "src/ui/Reader.tsx",
+        "src/ui/fieldSpecs.ts",
+        "src/domain/runtimeContracts.ts",
+        "src/domain/model.ts"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-F16",
+      "title": "選択前後と別の道を比べる",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP13",
+      "shall": "試し読みの前後で、知識、好感度、所持品など何が変わったかを表示する。同じ場面に到達した別の道の状態とも比べること。",
+      "failure_behavior": "合流時は自動初期化しない。差を解消するには明示効果を登録し、差分から変更元へ戻れるようにする。",
+      "acceptance_ids": [
+        "AT-F16"
+      ],
+      "source_refs": [
+        "S05",
+        "S08"
+      ],
+      "source_feature_id": "F16",
+      "batch_id": "RB05",
+      "review_status": "残作業あり",
+      "implemented_at_review": "全状態差分・合流比較のドメイン関数、画面の直前差分がある。",
+      "remaining_at_review": "同じ合流点に来た二つの保存経路を選んで比較する通常画面が未接続。",
+      "review_finding_ids": [
+        "RV12"
+      ],
+      "review_code_paths": [
+        "src/domain/runtime.ts",
+        "src/ui/Reader.tsx",
+        "src/domain/runtimeContracts.ts",
+        "src/domain/model.ts",
+        "src/ui/fieldSpecs.ts"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-F17",
+      "title": "確認した経路を保存する",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP14",
+      "shall": "選択の履歴と開始状態、作品の版を保存して再実行する。通った場面・選択肢と未確認箇所を一覧にし、変更後の再確認に使うこと。",
+      "failure_behavior": "台詞到達率・選択肢到達率・条件結果の網羅率を別々に算出する。版変更後の経路は再確認待ちとする。",
+      "acceptance_ids": [
+        "AT-F17"
+      ],
+      "source_refs": [
+        "S08",
+        "S25"
+      ],
+      "source_feature_id": "F17",
+      "batch_id": "RB05",
+      "review_status": "挙動差あり",
+      "implemented_at_review": "開始状態・版・選択・条件・乱数を固定して経路を保存／再生。",
+      "remaining_at_review": "保存競合、回帰経路集合、変更後再確認待ち、宣言テスト集合の網羅率が残る。",
+      "review_finding_ids": [
+        "RV07",
+        "RV14"
+      ],
+      "review_code_paths": [
+        "src/domain/runtime.ts",
+        "src/ui/Reader.tsx",
+        "src/ui/WritingWorkspace.tsx",
+        "src/domain/runtimeContracts.ts",
+        "src/domain/changeReviews.ts"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-F18",
+      "title": "条件と行き止まりを検査する",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP14",
+      "shall": "参照切れ、出られない繰り返し、選択肢の消失、到達できない終わりの候補を調べる。根拠になる条件と経路を添えること。",
+      "failure_behavior": "外部値・無制限ループ・探索打切りは未確認とする。不具合候補には再現経路または不成立の根拠を添える。",
+      "acceptance_ids": [
+        "AT-F18"
+      ],
+      "source_refs": [
+        "S06",
+        "S28",
+        "S32"
+      ],
+      "source_feature_id": "F18",
+      "batch_id": "RB05",
+      "review_status": "残作業あり",
+      "implemented_at_review": "状態を含む有限探索、未到達候補、ループ、上限／取消／証人経路がある。",
+      "remaining_at_review": "全入口の集約と伏線評価の探索内結合がない。未探索を安全扱いしない契約を維持。",
+      "review_finding_ids": [
+        "RV13"
+      ],
+      "review_code_paths": [
+        "src/domain/runtime.ts",
+        "tests/runtime.test.ts",
+        "src/domain/runtimeContracts.ts",
+        "src/ui/Reader.tsx"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-F19",
+      "title": "共通の会話や場面を再利用する",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP12",
+      "shall": "参照して共通部分を使う、独立した複製を作る、一部だけ変える、を選ぶ。再利用先と変更の影響を一覧にすること。",
+      "failure_behavior": "参照・複製・差分上書きの方式を保存する。元を削除する前に全参照先を示し、更新の適用範囲を固定する。",
+      "acceptance_ids": [
+        "AT-F19"
+      ],
+      "source_refs": [
+        "S07",
+        "S28"
+      ],
+      "source_feature_id": "F19",
+      "batch_id": "RB05",
+      "review_status": "残作業あり",
+      "implemented_at_review": "reuseのreference／clone／overrideを保存できる。cloneの基盤がある。",
+      "remaining_at_review": "参照／部分上書きの試読は明示的に未対応停止する。固定版更新の差分と影響接続が残る。",
+      "review_finding_ids": [
+        "RV11"
+      ],
+      "review_code_paths": [
+        "src/domain/runtime.ts",
+        "src/ui/fieldSpecs.ts",
+        "src/ui/Lists.tsx",
+        "src/domain/types.ts"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-F20",
+      "title": "短い反応と周回を扱う",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP13",
+      "shall": "条件で変わる短い台詞、初回と再訪、順番に出す反応、抽選する反応を登録する。周回で残す情報と初期化する情報を選ぶこと。",
+      "failure_behavior": "乱数種・抽選位置・既読・周回持越しを保存する。抽選候補ゼロを無言で進行せず不成立時の処理に従う。",
+      "acceptance_ids": [
+        "AT-F20"
+      ],
+      "source_refs": [
+        "S06",
+        "S28"
+      ],
+      "source_feature_id": "F20",
+      "batch_id": "RB05",
+      "review_status": "挙動差あり",
+      "implemented_at_review": "訪問数、乱数位置、抽選、次周回／全初期化を持つ。",
+      "remaining_at_review": "new_loop規則を無視する。短い台詞の初回／再訪／順次／抽選選択を完成する。",
+      "review_finding_ids": [
+        "RV01",
+        "RV12"
+      ],
+      "review_code_paths": [
+        "src/domain/runtime.ts",
+        "src/ui/Reader.tsx",
+        "src/domain/conditions.ts",
+        "src/domain/runtimeContracts.ts",
+        "src/domain/model.ts",
+        "src/ui/fieldSpecs.ts"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-F21",
+      "title": "台詞に変わらない番号を付ける",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP19",
+      "shall": "台詞と選択肢の一つずつに、表示しない番号を付ける。文章を変更しても翻訳、音声、ゲーム側の参照との対応を保つこと。",
+      "failure_behavior": "既存台詞の編集はID維持、コピーは新ID、分割は元から二つの新IDへの対応履歴を残す。IDの手動再利用を拒否する。",
+      "acceptance_ids": [
+        "AT-F21"
+      ],
+      "source_refs": [
+        "S31"
+      ],
+      "source_feature_id": "F21",
+      "batch_id": "RB07",
+      "review_status": "残作業あり",
+      "implemented_at_review": "台詞／選択肢の安定ID、段落ID、原文hash、参照を保持。",
+      "remaining_at_review": "分割／統合した台詞の旧→新対応履歴と翻訳・音声・ゲームへの反映が残る。",
+      "review_finding_ids": [
+        "RV18"
+      ],
+      "review_code_paths": [
+        "src/domain/production.ts",
+        "src/domain/types.ts",
+        "src/ui/Fields.tsx",
+        "src/ui/fieldSpecs.ts",
+        "src/domain/exports.ts"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-F22",
+      "title": "演出と必要な素材を結ぶ",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP20",
+      "shall": "話者、表情、立ち絵、背景、音楽、効果音、間、カメラなどを台詞や場面に結ぶ。仮素材・完成素材と不足を確認すること。",
+      "failure_behavior": "欠落素材と仮素材を別状態にし、素材がなくても本文を読める。素材IDの取り替えで台詞IDを変えない。",
+      "acceptance_ids": [
+        "AT-F22"
+      ],
+      "source_refs": [
+        "S06",
+        "S07",
+        "S30"
+      ],
+      "source_feature_id": "F22",
+      "batch_id": "RB07",
+      "review_status": "残作業あり",
+      "implemented_at_review": "cue、話者、表情、素材、待ち時間／mediaTime、素材の仮／完成を入力。",
+      "remaining_at_review": "素材版差替え、不足一覧、試読／担当別成果物との一連の結合受入が残る。",
+      "review_finding_ids": [
+        "RV19"
+      ],
+      "review_code_paths": [
+        "src/ui/fieldSpecs.ts",
+        "src/ui/AssetPreview.tsx",
+        "src/domain/types.ts",
+        "src/domain/attachments.ts",
+        "src/domain/changeReviews.ts"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-F23",
+      "title": "翻訳と音声の見直しを管理する",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP19",
+      "shall": "言語ごとの本文と用語、収録メモ、音声を対応させる。元の文章を変えたら翻訳・音声を見直し対象にし、担当別に書き出すこと。",
+      "failure_behavior": "原文の内容ハッシュが変わった場合のみ依存成果物を確認待ちにする。音声・翻訳の版と確認者を保持する。",
+      "acceptance_ids": [
+        "AT-F23"
+      ],
+      "source_refs": [
+        "S06",
+        "S10",
+        "S31"
+      ],
+      "source_feature_id": "F23",
+      "batch_id": "RB07",
+      "review_status": "残作業あり",
+      "implemented_at_review": "翻訳／収録の参照、原文内容変更時needs_review、公開ID出力がある。",
+      "remaining_at_review": "現在hashの承認操作、担当別運用、分割対応、用語／音声の全受入が残る。",
+      "review_finding_ids": [
+        "RV18"
+      ],
+      "review_code_paths": [
+        "src/domain/production.ts",
+        "src/domain/exports.ts",
+        "src/ui/fieldSpecs.ts",
+        "src/domain/types.ts"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-F24",
+      "title": "目的に応じて書き出す",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP22",
+      "shall": "保存用の完全な作品、読みやすい資料、選択して読める簡易体験版、ゲーム制作向けの構造化データを別々に出力すること。",
+      "failure_behavior": "完全保存・公開資料・試遊・制作データの各プロファイルを選択する。未対応の条件や外部コマンドは制作出力を拒否し説明する。",
+      "acceptance_ids": [
+        "AT-F24"
+      ],
+      "source_refs": [
+        "S06",
+        "S11",
+        "S26",
+        "S29"
+      ],
+      "source_feature_id": "F24",
+      "batch_id": "RB08",
+      "review_status": "残作業あり",
+      "implemented_at_review": "完全保存、reader MD／HTML、汎用runtime、制作、相談、単体試遊ZIPがある。",
+      "remaining_at_review": "試遊の物品／知識／再利用等は拒否され、完成計画の対応範囲に届いていない。",
+      "review_finding_ids": [
+        "RV22"
+      ],
+      "review_code_paths": [
+        "src/domain/exports.ts",
+        "docs/implementation/EXPORT_COMPATIBILITY.md",
+        "src/ui/WorkPage.tsx"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-F25",
+      "title": "採用状態と別案を記録する",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP10",
+      "shall": "確定、仮、要確認、没、別案を設定する。確定稿を保って別の展開を試す。作者の別案とゲーム内で選べる分岐を別に表示すること。",
+      "failure_behavior": "作者別案とゲーム内経路を別ID・別種として保存する。没・仮の情報が正本の制作出力へ混入しない。",
+      "acceptance_ids": [
+        "AT-F25"
+      ],
+      "source_refs": [
+        "S23",
+        "S24"
+      ],
+      "source_feature_id": "F25",
+      "batch_id": "RB04",
+      "review_status": "挙動差あり",
+      "implemented_at_review": "確定／仮／要確認／没と、固定版からの作者別案、差分採用・採用記録を実装。",
+      "remaining_at_review": "世界状態／関係の没評価、全種類の採用・復元の最終受入が残る。",
+      "review_finding_ids": [
+        "RV03"
+      ],
+      "review_code_paths": [
+        "src/ui/EntityEditor.tsx",
+        "src/domain/projection.ts",
+        "src/domain/runtime.ts",
+        "src/domain/world.ts",
+        "src/domain/relationGraph.ts",
+        "src/ui/WorldHistories.tsx",
+        "src/ui/Relationships.tsx"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-F26",
+      "title": "変更で見直す箇所を示す",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP05",
+      "shall": "設定変更後、関連する場面、条件、伏線、翻訳、素材を確認待ちにする。直接の参照と意味上の関連を区別し、変更理由を残すこと。",
+      "failure_behavior": "ID参照の改名反映と意味の見直しを区別する。見直し候補を確定修正として本文へ適用しない。",
+      "acceptance_ids": [
+        "AT-F26"
+      ],
+      "source_refs": [
+        "S06",
+        "S21"
+      ],
+      "source_feature_id": "F26",
+      "batch_id": "RB02",
+      "review_status": "残作業あり",
+      "implemented_at_review": "直接参照と意味上の関連を区別した確認依頼、原文／媒体の確認待ちがある。",
+      "remaining_at_review": "回帰経路、演出素材、全経路の伏線、実同期への変更影響の結合が残る。",
+      "review_finding_ids": [
+        "RV14",
+        "RV18",
+        "RV19",
+        "RV25"
+      ],
+      "review_code_paths": [
+        "src/domain/maintenance.ts",
+        "src/domain/production.ts",
+        "src/ui/EntityEditor.tsx",
+        "src/domain/runtime.ts",
+        "src/domain/runtimeContracts.ts",
+        "src/domain/changeReviews.ts",
+        "src/ui/Reader.tsx",
+        "src/domain/types.ts",
+        "src/ui/fieldSpecs.ts",
+        "src/domain/exports.ts",
+        "src/ui/AssetPreview.tsx",
+        "src/domain/attachments.ts",
+        "src/sync/README.md",
+        "src/sync/outbox.ts",
+        "src/sync/adapter.ts",
+        "src/storage/store.ts"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-F27",
+      "title": "未リンクの名前と参照元を探す",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP05",
+      "shall": "本文内の名前・別名からリンク候補を作り、同名なら選択する。設定を開くと使用箇所を表示する。不要な候補は除外できること。",
+      "failure_behavior": "リンク候補の除外を保持し、同名では識別情報を示す。普通の単語や引用資料を無断で置換しない。",
+      "acceptance_ids": [
+        "AT-F27"
+      ],
+      "source_refs": [
+        "S16",
+        "S21"
+      ],
+      "source_feature_id": "F27",
+      "batch_id": "RB02",
+      "review_status": "挙動差あり",
+      "implemented_at_review": "名前／別名候補、同名の選択、候補除外、参照元の本文位置へ戻る操作がある。",
+      "remaining_at_review": "分岐試読の固定リンク位置を渡す修正と全端末の受入が残る。",
+      "review_finding_ids": [
+        "RV06"
+      ],
+      "review_code_paths": [
+        "src/domain/model.ts",
+        "src/ui/Fields.tsx",
+        "src/ui/EntityEditor.tsx",
+        "src/ui/Reader.tsx",
+        "src/ui/WritingWorkspace.tsx",
+        "src/App.tsx"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-F28",
+      "title": "資料と設定の根拠を残す",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP20",
+      "shall": "画像、音声、動画、PDF、Web資料を設定や場面へ結ぶ。参照した箇所、日付、作者の解釈を記録すること。",
+      "failure_behavior": "添付と外部URLを区別し、参照箇所・取得日・解釈を分ける。外部資料の再配布権限がない場合はリンクと書誌情報だけを出す。",
+      "acceptance_ids": [
+        "AT-F28"
+      ],
+      "source_refs": [
+        "S13",
+        "S22",
+        "S23"
+      ],
+      "source_feature_id": "F28",
+      "batch_id": "RB07",
+      "review_status": "残作業あり",
+      "implemented_at_review": "Web／書籍／観察／ファイル、参照箇所、解釈、添付、再配布指定を持つ。",
+      "remaining_at_review": "accessedAtは型にあるが通常フォームにない。全資料形式と素材差替えの受入が残る。",
+      "review_finding_ids": [
+        "RV19"
+      ],
+      "review_code_paths": [
+        "src/domain/attachments.ts",
+        "src/ui/AssetPreview.tsx",
+        "src/ui/fieldSpecs.ts",
+        "src/domain/types.ts",
+        "src/domain/changeReviews.ts"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-F29",
+      "title": "指摘と次の作業を場面に結ぶ",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP18",
+      "shall": "人物、台詞、場面、関係線へコメントや確認事項を付ける。未対応、修正済み、再確認済みを区別する。担当者は任意とすること。",
+      "failure_behavior": "指摘時の対象版と引用範囲を保持する。対象段落が削除されても元指摘は残し、最新位置は不明と表示する。",
+      "acceptance_ids": [
+        "AT-F29"
+      ],
+      "source_refs": [
+        "S07",
+        "S23"
+      ],
+      "source_feature_id": "F29",
+      "batch_id": "RB09",
+      "review_status": "残作業あり",
+      "implemented_at_review": "対象版、本文位置／線、open／fixed／verified、担当のreviewデータがある。",
+      "remaining_at_review": "限定閲覧者が使う指摘画面、版追跡、実権限・共同作業は未接続。",
+      "review_finding_ids": [
+        "RV26"
+      ],
+      "review_code_paths": [
+        "src/ui/fieldSpecs.ts",
+        "src/domain/model.ts",
+        "src/domain/projection.ts",
+        "src/domain/publicCatalog.ts",
+        "src/sync/README.md"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-F30",
+      "title": "秘密を隠して確認してもらう",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP18",
+      "shall": "読むだけ、指摘する、編集する範囲を選ぶ。章・人物・分岐に限定した資料を作り、名前、地図、リンク先も同じ公開範囲で扱うこと。",
+      "failure_behavior": "権限はサーバー側と出力時に検証する。非公開データを送ってCSSで隠す方式を禁止し、検索・素材・参照数にも同じ投影を適用する。",
+      "acceptance_ids": [
+        "AT-F30"
+      ],
+      "source_refs": [
+        "S07",
+        "S15",
+        "S20"
+      ],
+      "source_feature_id": "F30",
+      "batch_id": "RB09",
+      "review_status": "残作業あり",
+      "implemented_at_review": "明示allowlist、公開文／名前、再割当ID、不変公開投影がある。",
+      "remaining_at_review": "閲覧／指摘／編集のサーバー権限、期限／失効、素材／索引／件数の実漏れ受入が残る。",
+      "review_finding_ids": [
+        "RV26"
+      ],
+      "review_code_paths": [
+        "src/domain/projection.ts",
+        "src/sync/README.md",
+        "src/ui/WorkPage.tsx",
+        "src/domain/publicCatalog.ts",
+        "src/ui/fieldSpecs.ts"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-F31",
+      "title": "画面の広さに合わせて編集する",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP02",
+      "shall": "広い画面は一覧・図・詳細、iPadは二画面、スマートフォンは図と詳細を切り替える。縦横と分割表示にも合わせること。",
+      "failure_behavior": "端末の幅で表示を切り替え、重要操作をPCに限定しない。分割表示やソフトキーボードで確定ボタンが隠れない。",
+      "acceptance_ids": [
+        "AT-F31"
+      ],
+      "source_refs": [
+        "S06",
+        "S23",
+        "S33"
+      ],
+      "source_feature_id": "F31",
+      "batch_id": "RB02",
+      "review_status": "実装あり・最終受入未確認",
+      "implemented_at_review": "幅に応じた一画面／二領域／三領域、図と詳細の切替を実装。",
+      "remaining_at_review": "実iPhone／iPad回転・分割・200%での全編集受入が未確認。",
+      "review_finding_ids": [
+        "RV29"
+      ],
+      "review_code_paths": [
+        "src/styles.css",
+        "src/App.tsx",
+        "tests/e2e/editor.spec.ts"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-F32",
+      "title": "指・マウス・キーボードに対応する",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP02",
+      "shall": "ドラッグ、タップでの始点と終点指定、一覧からの選択を併用する。まとめて編集、整列、検索、移動をキーボードでも行えること。",
+      "failure_behavior": "ドラッグ・ホバー・右クリック・長押しの各操作は常時アクセスできるボタンと一覧で代替する。ブラウザーの文字拡大を妨げない。",
+      "acceptance_ids": [
+        "AT-F32"
+      ],
+      "source_refs": [
+        "S01",
+        "S06",
+        "S23"
+      ],
+      "source_feature_id": "F32",
+      "batch_id": "RB02",
+      "review_status": "残作業あり",
+      "implemented_at_review": "通常フォーム、タップ選択、前後移動、図の一覧、検索／一括編集がある。",
+      "remaining_at_review": "階層分岐・同期競合・全整列等の操作代替、実端末／支援技術の受入が残る。",
+      "review_finding_ids": [
+        "RV11",
+        "RV25",
+        "RV29"
+      ],
+      "review_code_paths": [
+        "src/ui/Lists.tsx",
+        "src/ui/Fields.tsx",
+        "src/styles.css",
+        "src/domain/runtime.ts",
+        "src/domain/types.ts",
+        "src/sync/README.md",
+        "src/sync/outbox.ts",
+        "src/sync/adapter.ts",
+        "src/storage/store.ts"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-F33",
+      "title": "表示と作業の続きへ戻る",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP02",
+      "shall": "名前を付けた絞り込みや配置を保存する。最近開いた対象、お気に入り、図の位置、選択中の場面を保持する。表示設定は端末別にすること。",
+      "failure_behavior": "内容と端末別の表示設定を分ける。削除された対象への再開リンクは履歴または復元案内へ移し白画面にしない。",
+      "acceptance_ids": [
+        "AT-F33"
+      ],
+      "source_refs": [
+        "S06",
+        "S19"
+      ],
+      "source_feature_id": "F33",
+      "batch_id": "RB02",
+      "review_status": "挙動差あり",
+      "implemented_at_review": "保存検索／配置、最近の対象、お気に入り、端末別viewStateを保持。",
+      "remaining_at_review": "作品設定の未保存入力は移動後に残らない。",
+      "review_finding_ids": [
+        "RV08"
+      ],
+      "review_code_paths": [
+        "src/App.tsx",
+        "src/storage/store.ts",
+        "src/ui/fieldSpecs.ts",
+        "src/ui/WorkPage.tsx",
+        "src/ui/draftState.ts"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-F34",
+      "title": "通信なしの編集と同期を区別する",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP17",
+      "shall": "開いて保存済みの作品を通信なしでも編集できるようにする。端末内保存済み、送信待ち、同期済み、食い違いありを表示すること。",
+      "failure_behavior": "同一項目の競合は双方と共通元を保持する。保存済みと同期済みを混同せず、再送・削除対編集でも黙って上書きしない。",
+      "acceptance_ids": [
+        "AT-F34"
+      ],
+      "source_refs": [
+        "S12"
+      ],
+      "source_feature_id": "F34",
+      "batch_id": "RB09",
+      "review_status": "残作業あり",
+      "implemented_at_review": "オフライン編集と端末内保存、outbox、同期契約を分離。",
+      "remaining_at_review": "実認証・送信・再送・競合解決UI・添付同期は未接続。",
+      "review_finding_ids": [
+        "RV25"
+      ],
+      "review_code_paths": [
+        "src/storage/store.ts",
+        "src/sync/README.md",
+        "src/App.tsx",
+        "src/sync/outbox.ts",
+        "src/sync/adapter.ts"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-F35",
+      "title": "履歴とファイルを確実に持ち出す",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP16",
+      "shall": "作品全体と対象一つの復元を分ける。専用ファイルに素材も含められるようにし、形式の版、読み込み前の確認、追加か置換かを扱うこと。",
+      "failure_behavior": "単体復元は最新の関連情報への影響を提示する。追加・置換・統合のID規則を適用し、失敗時は全体をロールバックする。",
+      "acceptance_ids": [
+        "AT-F35"
+      ],
+      "source_refs": [
+        "S09",
+        "S24",
+        "S26"
+      ],
+      "source_feature_id": "F35",
+      "batch_id": "RB06",
+      "review_status": "残作業あり",
+      "implemented_at_review": "作品完全保存と対象復元を分け、素材包含／metadata-onlyを明示。",
+      "remaining_at_review": "別作品の明示ID統合・旧形式移行と、最新50件より古い対象版選択が不足。",
+      "review_finding_ids": [
+        "RV16",
+        "RV17"
+      ],
+      "review_code_paths": [
+        "src/storage/store.ts",
+        "src/storage/archive.ts",
+        "src/ui/WorkPage.tsx",
+        "src/storage/importMapping.ts"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-F36",
+      "title": "相談用に必要な情報だけ集める",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP22",
+      "shall": "人物や場面を指定して、確定設定、関連する出来事、前後の状態、未確定事項、参照番号をまとめて書き出す。提案の文章は別案として取り込むこと。",
+      "failure_behavior": "相談用出力にも公開範囲を適用する。AIサービスへ自動送信せず、取り込む文章は出所と対象版を持つ別案とする。",
+      "acceptance_ids": [
+        "AT-F36"
+      ],
+      "source_refs": [
+        "S06",
+        "S07",
+        "S11"
+      ],
+      "source_feature_id": "F36",
+      "batch_id": "RB08",
+      "review_status": "残作業あり",
+      "implemented_at_review": "指定公開範囲を手動相談MDに出力し、提案オブジェクトを作る関数がある。",
+      "remaining_at_review": "提案文章を出所・対象版付き作者別案へ取り込む画面と永続化がない。",
+      "review_finding_ids": [
+        "RV24"
+      ],
+      "review_code_paths": [
+        "src/domain/exports.ts",
+        "src/ui/WorkPage.tsx",
+        "src/ui/AuthorAlternativeStudio.tsx"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-F37",
+      "title": "状態の意味と初期値を登録する",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP11",
+      "shall": "状態ごとに表示名、説明、型、初期値、許容値を定める。オン・オフ、数値、選択肢から選ぶ状態を使い分け、関連する人物やクエストと結ぶこと。",
+      "failure_behavior": "同義語・反対語は同じ状態の値として表現する候補を示す。型違い、許容値外、未定義の使用は拒否または未確認とする。",
+      "acceptance_ids": [
+        "AT-F37"
+      ],
+      "source_refs": [
+        "S06",
+        "S41"
+      ],
+      "source_feature_id": "F37",
+      "batch_id": "RB05",
+      "review_status": "挙動差あり",
+      "implemented_at_review": "表示名／key／型／初期値／許容値／人物／クエストの入力と検査がある。",
+      "remaining_at_review": "相互排他、reset、禁止遷移の例外、全状態運用の結合受入が残る。",
+      "review_finding_ids": [
+        "RV01",
+        "RV02",
+        "RV12"
+      ],
+      "review_code_paths": [
+        "src/ui/fieldSpecs.ts",
+        "src/domain/conditions.ts",
+        "src/domain/model.ts",
+        "src/domain/runtime.ts",
+        "src/domain/runtimeContracts.ts",
+        "src/ui/Reader.tsx"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-F38",
+      "title": "有効範囲・初期化・算出を決める",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP11",
+      "shall": "一場面、章、人物、今回のプレイ、周回をまたぐ情報を区別する。初期化する時点を決め、ほかの値から判定する状態は式として定義すること。",
+      "failure_behavior": "算出状態への直接代入と循環式を拒否する。周回初期化と全リセットを別コマンドとし、持ち越し対象を一覧化する。",
+      "acceptance_ids": [
+        "AT-F38"
+      ],
+      "source_refs": [
+        "S28",
+        "S42"
+      ],
+      "source_feature_id": "F38",
+      "batch_id": "RB05",
+      "review_status": "挙動差あり",
+      "implemented_at_review": "scopeとresetRules、算出式を保存し、周回と全リセットを分ける。",
+      "remaining_at_review": "resetRulesが実行されない。場面／章／run終了と周回の共通評価が必要。",
+      "review_finding_ids": [
+        "RV01"
+      ],
+      "review_code_paths": [
+        "src/domain/runtime.ts",
+        "src/domain/conditions.ts",
+        "src/ui/fieldSpecs.ts"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-F39",
+      "title": "読む箇所・変更箇所・理由を追う",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP11",
+      "shall": "ある状態を条件に使う場面、変更する場面、初期化する処理を一覧にする。試し読みでは、いつ何が原因で値が変わったかを記録すること。",
+      "failure_behavior": "値の参照元と書込元を安定IDで追う。未使用状態は削除候補だけを示し、外部で使う宣言がある値を誤削除しない。",
+      "acceptance_ids": [
+        "AT-F39"
+      ],
+      "source_refs": [
+        "S08",
+        "S41"
+      ],
+      "source_feature_id": "F39",
+      "batch_id": "RB05",
+      "review_status": "挙動差あり",
+      "implemented_at_review": "参照影響と試読の前後状態／effect条件の証跡を持つ。",
+      "remaining_at_review": "reset処理を含む読取／更新／初期化・原因の専用導線と受入が残る。",
+      "review_finding_ids": [
+        "RV01",
+        "RV12"
+      ],
+      "review_code_paths": [
+        "src/ui/EntityEditor.tsx",
+        "src/domain/runtime.ts",
+        "src/domain/maintenance.ts",
+        "src/domain/conditions.ts",
+        "src/domain/runtimeContracts.ts",
+        "src/domain/model.ts",
+        "src/ui/Reader.tsx",
+        "src/ui/fieldSpecs.ts"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-F40",
+      "title": "条件を組み立て、成立理由を見る",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP11",
+      "shall": "「すべて」「どれか」「否定」を入れ子で選び、条件を自然文と式で確認する。複数成立時の優先順、全実行か一つか、不成立時の行き先を決めること。",
+      "failure_behavior": "括弧・優先順・不成立時処理を明示する。未知を偽にしない三値評価を行い、任意のコードを条件として実行しない。",
+      "acceptance_ids": [
+        "AT-F40"
+      ],
+      "source_refs": [
+        "S06",
+        "S41"
+      ],
+      "source_feature_id": "F40",
+      "batch_id": "RB05",
+      "review_status": "残作業あり",
+      "implemented_at_review": "all／any／not、自然文、型付き値、優先順／全実行／fallback、三値評価がある。",
+      "remaining_at_review": "状態規則・全scope・上限・未知を含む通常操作の最終結合受入が残る。",
+      "review_finding_ids": [
+        "RV12"
+      ],
+      "review_code_paths": [
+        "src/ui/Fields.tsx",
+        "src/ui/Reader.tsx",
+        "src/domain/conditions.ts",
+        "src/domain/runtime.ts",
+        "src/domain/runtimeContracts.ts",
+        "src/domain/model.ts",
+        "src/ui/fieldSpecs.ts"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-F41",
+      "title": "状態が変わる順番を定義する",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP11",
+      "shall": "未受注→進行中→完了・失敗など、許す変化を表にする。両立しない状態と意図した例外を登録し、変更前後を確認すること。",
+      "failure_behavior": "禁止遷移は一連の効果を原子的に拒否する。例外は理由・対象経路・期限付きで明示し、以前の状態を記録する。",
+      "acceptance_ids": [
+        "AT-F41"
+      ],
+      "source_refs": [
+        "S19",
+        "S41"
+      ],
+      "source_feature_id": "F41",
+      "batch_id": "RB05",
+      "review_status": "挙動差あり",
+      "implemented_at_review": "許容遷移の表、クエストと変数の遷移規則、原子effectの基盤がある。",
+      "remaining_at_review": "一般のeffect.reasonだけで表外の遷移が許される。明示した範囲付き例外と相互排他が不足。",
+      "review_finding_ids": [
+        "RV02",
+        "RV12"
+      ],
+      "review_code_paths": [
+        "src/domain/conditions.ts",
+        "src/ui/fieldSpecs.ts",
+        "src/domain/runtimeContracts.ts",
+        "src/domain/model.ts",
+        "src/domain/runtime.ts",
+        "src/ui/Reader.tsx"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-F42",
+      "title": "ゲーム側との受け渡しを定める",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP22",
+      "shall": "体力や戦闘結果など外部の値について、どちらが管理するか、入力と出力、想定する処理を記録する。仮の値で確認し、実装結果との対応を残すこと。",
+      "failure_behavior": "外部値の管理元・型・欠損時の扱いを固定する。仮の外部応答とゲーム実機の確認結果は別証跡とする。",
+      "acceptance_ids": [
+        "AT-F42"
+      ],
+      "source_refs": [
+        "S06",
+        "S28",
+        "S30"
+      ],
+      "source_feature_id": "F42",
+      "batch_id": "RB08",
+      "review_status": "残作業あり",
+      "implemented_at_review": "管理主体・入出力型・仮値・外部入力検査、仮実ラベルの型がある。",
+      "remaining_at_review": "実ゲーム受取例、受領hash、実結果・台詞／素材ID対応を往復する経路が未接続。",
+      "review_finding_ids": [
+        "RV23"
+      ],
+      "review_code_paths": [
+        "src/domain/exports.ts",
+        "src/domain/runtime.ts",
+        "src/ui/Reader.tsx",
+        "src/domain/externalInputs.ts",
+        "src/domain/runtimeContracts.ts",
+        "src/domain/presentation.ts"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-F43",
+      "title": "伏線を独立した項目として持つ",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP15",
+      "shall": "謎や期待、真相、意図を持つ伏線の項目を作る。複数の手掛かりと複数の回収を結び、一つの場面が複数の伏線を扱えるようにすること。",
+      "failure_behavior": "場面を削除しても伏線本体は残す。複数の手掛かり・回収と代替説明を別IDで対応付ける。",
+      "acceptance_ids": [
+        "AT-F43"
+      ],
+      "source_refs": [
+        "S40"
+      ],
+      "source_feature_id": "F43",
+      "batch_id": "RB05",
+      "review_status": "挙動差あり",
+      "implemented_at_review": "独立した伏線、問い／真相／意図、複数手掛かり／回収を保存。",
+      "remaining_at_review": "対象scopeを分岐で無視するため、提示評価と全経路確認の修正／結合が必要。",
+      "review_finding_ids": [
+        "RV10",
+        "RV13"
+      ],
+      "review_code_paths": [
+        "src/ui/fieldSpecs.ts",
+        "src/domain/types.ts",
+        "src/domain/runtime.ts",
+        "src/domain/presentation.ts",
+        "src/domain/runtimeContracts.ts",
+        "src/ui/Reader.tsx"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-F44",
+      "title": "体験順に開示の段階を確認する",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP15",
+      "shall": "初めて示す、疑わせる、補強する、真相を明かすなどを本文の箇所へ結ぶ。選んだ章順やプレイ経路で、人物と読み手の認識を並べること。",
+      "failure_behavior": "開示の段階は経路上の提示位置で評価する。章の並べ替えは世界時間を変えず開示評価だけを再確認待ちにする。",
+      "acceptance_ids": [
+        "AT-F44"
+      ],
+      "source_refs": [
+        "S01",
+        "S40"
+      ],
+      "source_feature_id": "F44",
+      "batch_id": "RB05",
+      "review_status": "挙動差あり",
+      "implemented_at_review": "開示段階・本文位置、提示時の状態と条件証跡、章順／分岐の記録がある。",
+      "remaining_at_review": "章／分岐で対象範囲と版の評価が一致せず、人物／読み手認識の比較も未完成。",
+      "review_finding_ids": [
+        "RV10",
+        "RV15"
+      ],
+      "review_code_paths": [
+        "src/domain/runtime.ts",
+        "src/ui/Reader.tsx",
+        "src/domain/presentation.ts",
+        "src/domain/runtimeContracts.ts",
+        "src/domain/types.ts",
+        "src/ui/WorldHistories.tsx"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-F45",
+      "title": "手掛かりを見られる道を調べる",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP15",
+      "shall": "回収へ進むために必要と作者が指定した情報について、経路上で提示されるかを確認する。任意の手掛かり、代わりの説明、別経路の回収も登録すること。",
+      "failure_behavior": "作者が必要とした情報の提示有無だけを評価する。探索の制限超過や外部条件は未確認、プレイヤーの理解は自動認定しない。",
+      "acceptance_ids": [
+        "AT-F45"
+      ],
+      "source_refs": [
+        "S25",
+        "S28",
+        "S40"
+      ],
+      "source_feature_id": "F45",
+      "batch_id": "RB05",
+      "review_status": "残作業あり",
+      "implemented_at_review": "requiredInfoの経路上提示不足を、実際の提示順の証跡で候補化。",
+      "remaining_at_review": "代替説明、全入口の有限探索、別経路回収の総合確認が残る。",
+      "review_finding_ids": [
+        "RV13"
+      ],
+      "review_code_paths": [
+        "src/domain/runtime.ts",
+        "src/ui/Reader.tsx",
+        "src/domain/runtimeContracts.ts"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-F46",
+      "title": "知識・証言・誤解の出所を残す",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP15",
+      "shall": "誰から聞いたか、何を見たか、何を根拠に信じるかを記録する。世界の真の設定、作中の証言、人物の認識、作者の未確定案を結び付けて区別すること。",
+      "failure_behavior": "証言の誤り、意図した嘘、未確定案を真実から分離する。知識取得には出所と時点または経路位置を必要とする。",
+      "acceptance_ids": [
+        "AT-F46"
+      ],
+      "source_refs": [
+        "S02",
+        "S13"
+      ],
+      "source_feature_id": "F46",
+      "batch_id": "RB05",
+      "review_status": "残作業あり",
+      "implemented_at_review": "sourceIds、holder、truthKind、evidenceLocationで根拠と認識を分ける。",
+      "remaining_at_review": "発言／嘘／誤解の比較と、章順／経路に沿う認識の並列表示が未結合。",
+      "review_finding_ids": [
+        "RV15"
+      ],
+      "review_code_paths": [
+        "src/domain/types.ts",
+        "src/domain/conditions.ts",
+        "src/ui/fieldSpecs.ts",
+        "src/domain/runtimeContracts.ts",
+        "src/ui/WorldHistories.tsx",
+        "src/ui/Reader.tsx"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-F47",
+      "title": "未回収の意図と期限を記録する",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP15",
+      "shall": "この作品で回収、続編で回収、意図して残す、誤誘導、検討中、没を区別する。作品・分岐ごとの対象を定め、回収先の変更を確認待ちにすること。",
+      "failure_behavior": "今作・分岐・続編など対象範囲と意図を明示する。回収先変更時は再確認待ちにし、意図した未回収は警告の集計から分ける。",
+      "acceptance_ids": [
+        "AT-F47"
+      ],
+      "source_refs": [
+        "S12",
+        "S40"
+      ],
+      "source_feature_id": "F47",
+      "batch_id": "RB05",
+      "review_status": "残作業あり",
+      "implemented_at_review": "今作／続編／意図した未回収／誤誘導／検討／没の方針と対象型がある。",
+      "remaining_at_review": "対象作品／経路／期限／例外による未回収一覧と変更再確認が残る。",
+      "review_finding_ids": [
+        "RV13"
+      ],
+      "review_code_paths": [
+        "src/domain/runtime.ts",
+        "src/ui/fieldSpecs.ts",
+        "src/domain/runtimeContracts.ts",
+        "src/ui/Reader.tsx"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-F48",
+      "title": "人物の声と用語の基準を持つ",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP19",
+      "shall": "人物ごとの一人称、呼び方、口調、使う語、台詞例を記録する。用語の表記・読み・意図した例外をまとめ、本文と字幕・翻訳の確認に使うこと。",
+      "failure_behavior": "表記・口調の期間と例外を保持する。指摘は置換候補であり、本文や翻訳を自動修正しない。",
+      "acceptance_ids": [
+        "AT-F48"
+      ],
+      "source_refs": [
+        "S13",
+        "S31",
+        "S44"
+      ],
+      "source_feature_id": "F48",
+      "batch_id": "RB07",
+      "review_status": "残作業あり",
+      "implemented_at_review": "人物の声・用語・読み・表記ゆれ・有効期間・例外の型と入力がある。",
+      "remaining_at_review": "本文／字幕／翻訳を同じ基準で検査し、候補を担当別に確認する運用が残る。",
+      "review_finding_ids": [
+        "RV18"
+      ],
+      "review_code_paths": [
+        "src/ui/fieldSpecs.ts",
+        "src/domain/types.ts",
+        "src/domain/production.ts",
+        "src/domain/exports.ts"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-F49",
+      "title": "企画の基準と判断理由を残す",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP21",
+      "shall": "想定する読み手・プレイヤー、届けたい体験、主題、作風、制作範囲、成果物をまとめる。重要な変更の判断、理由、優先度、対象の版を記録すること。",
+      "failure_behavior": "企画・判断には対象版と根拠を保存する。却下・保留を削除せず、方針変更を公開済み版へ自動反映しない。",
+      "acceptance_ids": [
+        "AT-F49"
+      ],
+      "source_refs": [
+        "S38"
+      ],
+      "source_feature_id": "F49",
+      "batch_id": "RB08",
+      "review_status": "残作業あり",
+      "implemented_at_review": "企画意図、主題／作風／範囲、判断理由・対象版・優先度を入力できる。",
+      "remaining_at_review": "制作タスク／媒体／旧版との往復、通常運用の総合受入が残る。",
+      "review_finding_ids": [
+        "RV20"
+      ],
+      "review_code_paths": [
+        "src/ui/fieldSpecs.ts",
+        "src/domain/model.ts",
+        "src/ui/Lists.tsx",
+        "src/domain/production.ts",
+        "src/domain/relationGraph.ts"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-F50",
+      "title": "物語とプレイヤーの行動を結ぶ",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP21",
+      "shall": "場面で知ることと、実際に行う探索・選択・戦闘・操作を並べる。必要なゲーム機能、クエスト、チュートリアル、報酬、実装担当の作業と結ぶこと。",
+      "failure_behavior": "遊びの仕様と物語の記述の差は意図付き確認候補にする。ゲーム機能の未実装を執筆未完了と混同しない。",
+      "acceptance_ids": [
+        "AT-F50"
+      ],
+      "source_refs": [
+        "S06",
+        "S28",
+        "S30"
+      ],
+      "source_feature_id": "F50",
+      "batch_id": "RB08",
+      "review_status": "残作業あり",
+      "implemented_at_review": "場面のプレイ行動・機能・クエスト・チュートリアル・報酬・タスクを持つ。",
+      "remaining_at_review": "実装側の結果との対応、工程画面を含む一連の結合が残る。",
+      "review_finding_ids": [
+        "RV20",
+        "RV23"
+      ],
+      "review_code_paths": [
+        "src/ui/fieldSpecs.ts",
+        "src/domain/types.ts",
+        "src/ui/Lists.tsx",
+        "src/domain/production.ts",
+        "src/domain/relationGraph.ts",
+        "src/domain/externalInputs.ts",
+        "src/domain/runtimeContracts.ts",
+        "src/domain/presentation.ts",
+        "src/domain/exports.ts"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-F51",
+      "title": "制作日程と依存する作業を持つ",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP21",
+      "shall": "執筆、レビュー、実装、翻訳、収録、確認、公開の状態を別々に記録する。担当、現実の期限、先に必要な素材や作業を場面へ結ぶこと。",
+      "failure_behavior": "執筆・実装・翻訳・収録・確認・公開の状態と実日付を別々に保存する。依存作業の循環と期限不整合を示す。",
+      "acceptance_ids": [
+        "AT-F51"
+      ],
+      "source_refs": [
+        "S35",
+        "S36"
+      ],
+      "source_feature_id": "F51",
+      "batch_id": "RB08",
+      "review_status": "残作業あり",
+      "implemented_at_review": "工程、進捗、担当、実日付の期限、先行タスク、循環拒否、ボードがある。",
+      "remaining_at_review": "工程別状態の比較、依存／期限／詰まりの運用と総合受入が残る。",
+      "review_finding_ids": [
+        "RV20"
+      ],
+      "review_code_paths": [
+        "src/ui/Lists.tsx",
+        "src/domain/model.ts",
+        "src/ui/fieldSpecs.ts",
+        "src/domain/production.ts",
+        "src/domain/relationGraph.ts"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-F52",
+      "title": "制作量と一経路の量を分ける",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP21",
+      "shall": "固有の場面・台詞・素材の数、再利用部分、分岐ごとの読める量を別々に集計する。制作の見積もりと根拠、未決定の範囲も残すこと。",
+      "failure_behavior": "制作数は安定IDの集合、体験量は経路ごとの出現回数で集計する。速度・重複・未確定箇所・対象版を明示する。",
+      "acceptance_ids": [
+        "AT-F52"
+      ],
+      "source_refs": [
+        "S12",
+        "S36"
+      ],
+      "source_feature_id": "F52",
+      "batch_id": "RB08",
+      "review_status": "残作業あり",
+      "implemented_at_review": "固有場面数と経路中の登場回数を分けるproductionCountsがある。",
+      "remaining_at_review": "画面はタスク総数と対象場面中心。台詞／素材／再利用／経路量・速度仮定付き見積を結合する。",
+      "review_finding_ids": [
+        "RV20"
+      ],
+      "review_code_paths": [
+        "src/domain/production.ts",
+        "src/ui/Lists.tsx",
+        "src/ui/fieldSpecs.ts",
+        "src/domain/relationGraph.ts"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-F53",
+      "title": "本文と絵コンテ・演出を並べる",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP20",
+      "shall": "場面・台詞へ絵コンテのコマ、カメラ、音声、字幕、演出上の時刻を結ぶ。参照画像と完成素材を区別し、差し替え後の確認対象を示すこと。",
+      "failure_behavior": "演出時刻はミリ秒、世界時刻は暦のtickとして分離する。素材差替え後は依存コマを確認待ちにする。",
+      "acceptance_ids": [
+        "AT-F53"
+      ],
+      "source_refs": [
+        "S35",
+        "S37",
+        "S38"
+      ],
+      "source_feature_id": "F53",
+      "batch_id": "RB07",
+      "review_status": "残作業あり",
+      "implemented_at_review": "絵コンテ、参照／完成画像、cue、字幕、mediaTimeを世界tickと別に保持。",
+      "remaining_at_review": "本文との並列運用、素材版差替えによる確認待ちの全受入が残る。",
+      "review_finding_ids": [
+        "RV19"
+      ],
+      "review_code_paths": [
+        "src/ui/fieldSpecs.ts",
+        "src/domain/types.ts",
+        "src/ui/AssetPreview.tsx",
+        "src/domain/attachments.ts",
+        "src/domain/changeReviews.ts"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-F54",
+      "title": "媒体ごとの派生内容を管理する",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP21",
+      "shall": "共通の世界設定を参照しながら、ゲーム、小説、動画、音声、告知用の文章を別に持つ。媒体別の公開範囲、版、公開予定日、変更後の確認先を記録すること。",
+      "failure_behavior": "派生作品は共通設定の版を参照する。媒体別文章と公開済みスナップショットは保持し、変更候補だけを伝える。",
+      "acceptance_ids": [
+        "AT-F54"
+      ],
+      "source_refs": [
+        "S38",
+        "S39"
+      ],
+      "source_feature_id": "F54",
+      "batch_id": "RB08",
+      "review_status": "残作業あり",
+      "implemented_at_review": "媒体別本文、固定元版、公開プロファイル、実公開予定日、needsReviewがある。",
+      "remaining_at_review": "旧公開媒体版と改訂候補の比較・公開範囲・確認先を結ぶ画面が残る。",
+      "review_finding_ids": [
+        "RV21"
+      ],
+      "review_code_paths": [
+        "src/domain/production.ts",
+        "src/ui/fieldSpecs.ts",
+        "src/domain/types.ts",
+        "src/ui/WorkPage.tsx"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-F55",
+      "title": "共通の情報と意味付きの関係を持つ",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP08",
+      "shall": "人物、出来事、場面、場所、物品、状態、伏線、素材を一度登録する。関係には種類、向き、有効な時期・分岐、根拠の場面を付けること。",
+      "failure_behavior": "方向と時期・経路と根拠を検証する。自己関係を許す種類だけ認め、対称性や推移性を勝手に補わない。",
+      "acceptance_ids": [
+        "AT-F55"
+      ],
+      "source_refs": [
+        "S02",
+        "S06",
+        "S19"
+      ],
+      "source_feature_id": "F55",
+      "batch_id": "RB03",
+      "review_status": "挙動差あり",
+      "implemented_at_review": "共通IDの情報と意味／方向／時期／経路／根拠を持つ関係を実装。",
+      "remaining_at_review": "没の関係を有効関係として扱う評価と、後続の進行／制作／伏線の結合を修正。",
+      "review_finding_ids": [
+        "RV03",
+        "RV11",
+        "RV20"
+      ],
+      "review_code_paths": [
+        "src/domain/model.ts",
+        "src/ui/Lists.tsx",
+        "src/domain/world.ts",
+        "src/domain/relationGraph.ts",
+        "src/ui/WorldHistories.tsx",
+        "src/ui/Relationships.tsx",
+        "src/domain/runtime.ts",
+        "src/domain/types.ts",
+        "src/domain/production.ts",
+        "src/ui/fieldSpecs.ts"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-F56",
+      "title": "項目の型と入力規則を定める",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP04",
+      "shall": "日付、数値、選択、文章、ほかの項目への参照を使い分ける。雛形の変更は既存データへの影響を確認して適用し、読み込み時も型を検査すること。",
+      "failure_behavior": "同名は原則許可しIDで識別する。キー項目だけ所定スコープで一意とする。型変更に適合しない値を消さず影響を示す。",
+      "acceptance_ids": [
+        "AT-F56"
+      ],
+      "source_refs": [
+        "S06",
+        "S43",
+        "S45"
+      ],
+      "source_feature_id": "F56",
+      "batch_id": "RB02",
+      "review_status": "挙動差あり",
+      "implemented_at_review": "型付き通常入力、雛形変更の影響差分、strict schema取り込みを実装。",
+      "remaining_at_review": "後続で必要な状態例外／代替情報等の型・保存・移行を同時に接続する必要がある。",
+      "review_finding_ids": [
+        "RV02",
+        "RV13",
+        "RV16"
+      ],
+      "review_code_paths": [
+        "src/domain/model.ts",
+        "src/ui/EntityEditor.tsx",
+        "src/domain/conditions.ts",
+        "src/domain/runtimeContracts.ts",
+        "src/domain/runtime.ts",
+        "src/ui/Reader.tsx",
+        "src/storage/store.ts",
+        "src/storage/importMapping.ts",
+        "src/storage/archive.ts"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-F57",
+      "title": "日本語の索引と用語集を作る",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP05",
+      "shall": "読み、表記揺れ、略称、旧名、別名、分類から項目を探す。五十音順・分類別の索引を持ち、同名を選び分け、本文の段落や台詞へ移動できること。",
+      "failure_behavior": "原文を保持し検索用正規化を別に持つ。作者索引と自動検索を分け、秘匿対象の読み・別名・参照数を公開側へ出さない。",
+      "acceptance_ids": [
+        "AT-F57"
+      ],
+      "source_refs": [
+        "S21",
+        "S44"
+      ],
+      "source_feature_id": "F57",
+      "batch_id": "RB02",
+      "review_status": "挙動差あり",
+      "implemented_at_review": "五十音／分類の日本語索引、読み／別名／同名区別、本文位置への移動がある。",
+      "remaining_at_review": "旧版リンクを含む分岐試読・公開索引・実端末の最終受入が残る。",
+      "review_finding_ids": [
+        "RV06",
+        "RV26",
+        "RV29"
+      ],
+      "review_code_paths": [
+        "src/ui/components.tsx",
+        "src/App.tsx",
+        "src/ui/fieldSpecs.ts",
+        "src/ui/Reader.tsx",
+        "src/ui/Fields.tsx",
+        "src/ui/WritingWorkspace.tsx",
+        "src/domain/projection.ts",
+        "src/domain/publicCatalog.ts",
+        "src/sync/README.md"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-F58",
+      "title": "一覧・カード・図を同じ情報で使う",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP05",
+      "shall": "表、カード、年表、図を切り替えて編集する。「この人物が出て、未実装の場面」など複数条件の検索を保存する。まとめて編集した変更も取り消せること。",
+      "failure_behavior": "動的条件一覧と固定ID集合の一覧を区別する。一括編集は変更前後を確認し、一部だけ失敗した更新を確定しない。",
+      "acceptance_ids": [
+        "AT-F58"
+      ],
+      "source_refs": [
+        "S02",
+        "S45",
+        "S46"
+      ],
+      "source_feature_id": "F58",
+      "batch_id": "RB02",
+      "review_status": "残作業あり",
+      "implemented_at_review": "表／カード／年表／図、保存複合検索、固定／動的一覧、一括変更と取消がある。",
+      "remaining_at_review": "分岐の階層画面、制作集計、全大規模表示の結合が残る。",
+      "review_finding_ids": [
+        "RV11",
+        "RV20",
+        "RV27"
+      ],
+      "review_code_paths": [
+        "src/App.tsx",
+        "src/ui/Lists.tsx",
+        "src/ui/fieldSpecs.ts",
+        "src/domain/runtime.ts",
+        "src/domain/types.ts",
+        "src/domain/production.ts",
+        "src/domain/relationGraph.ts",
+        "src/ui/WritingWorkspace.tsx",
+        "src/ui/Fields.tsx",
+        "src/ui/Reader.tsx"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-F59",
+      "title": "線の意味を選んで可視化する",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP08",
+      "shall": "人物関係、因果、伏線、進行、参照、制作の依存を別表示にする。選んだ項目から一段・二段の範囲だけ開き、階層、凡例、一覧・関係表も用意すること。",
+      "failure_behavior": "凡例・線種・矢印・ラベルを持ち、色以外でも意味を伝える。表示範囲と隠れた件数を示すが公開側の秘密の件数は漏らさない。",
+      "acceptance_ids": [
+        "AT-F59"
+      ],
+      "source_refs": [
+        "S02",
+        "S06",
+        "S22"
+      ],
+      "source_feature_id": "F59",
+      "batch_id": "RB03",
+      "review_status": "挙動差あり",
+      "implemented_at_review": "人物／家系／因果／伏線／進行／参照／制作の意味別図、凡例・表・近傍がある。",
+      "remaining_at_review": "没の線の有効判定、階層分岐、全伏線・制作の派生表示結合が残る。",
+      "review_finding_ids": [
+        "RV03",
+        "RV11",
+        "RV13",
+        "RV20"
+      ],
+      "review_code_paths": [
+        "src/ui/Lists.tsx",
+        "src/ui/Timeline.tsx",
+        "src/domain/world.ts",
+        "src/domain/relationGraph.ts",
+        "src/ui/WorldHistories.tsx",
+        "src/ui/Relationships.tsx",
+        "src/domain/runtime.ts",
+        "src/domain/types.ts",
+        "src/domain/runtimeContracts.ts",
+        "src/ui/Reader.tsx",
+        "src/domain/production.ts",
+        "src/ui/fieldSpecs.ts"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-F60",
+      "title": "重複・未参照・変更待ちを整理する",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP05",
+      "shall": "重複候補の統合時は残す項目と参照の変更を確認する。未参照の設定、未使用の状態、読み未登録、未確認の変更を一覧にし、削除前に影響を見せること。",
+      "failure_behavior": "統合の残すIDと全参照書換えを事前表示する。背景設定・外部利用を保持指定でき、統合・削除・一括変更は補償操作で戻せる。",
+      "acceptance_ids": [
+        "AT-F60"
+      ],
+      "source_refs": [
+        "S06",
+        "S21",
+        "S43"
+      ],
+      "source_feature_id": "F60",
+      "batch_id": "RB02",
+      "review_status": "残作業あり",
+      "implemented_at_review": "重複候補、フィールド別統合とID対応、未参照／未使用／読み不足、削除影響がある。",
+      "remaining_at_review": "後続の回帰経路／素材／同期を含む全変更待ち整理の最終受入が残る。",
+      "review_finding_ids": [
+        "RV14",
+        "RV19",
+        "RV25"
+      ],
+      "review_code_paths": [
+        "src/domain/maintenance.ts",
+        "src/App.tsx",
+        "src/domain/runtime.ts",
+        "src/domain/runtimeContracts.ts",
+        "src/domain/changeReviews.ts",
+        "src/ui/Reader.tsx",
+        "src/domain/types.ts",
+        "src/ui/fieldSpecs.ts",
+        "src/ui/AssetPreview.tsx",
+        "src/domain/attachments.ts",
+        "src/sync/README.md",
+        "src/sync/outbox.ts",
+        "src/sync/adapter.ts",
+        "src/storage/store.ts"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-N01",
+      "title": "全端末での編集",
+      "provenance": "仕様を成立させる品質条件・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP02",
+      "shall": "スマートフォンの幅320 CSS px以上で、人物・本文・日時・条件・関係線・履歴・ファイル読み込みを完了できること。",
+      "failure_behavior": "PC専用操作やページ全体の不要な横スクロールを残さない",
+      "acceptance_ids": [
+        "AT-N01"
+      ],
+      "source_refs": [],
+      "batch_id": "RB02",
+      "review_status": "残作業あり",
+      "implemented_at_review": "幅320以上を想定する通常フォーム、条件／関係／復元の操作を実装。",
+      "remaining_at_review": "階層分岐／同期競合など未完成の操作と実機の全編集受入が残る。",
+      "review_finding_ids": [
+        "RV11",
+        "RV25",
+        "RV29"
+      ],
+      "review_code_paths": [
+        "src/styles.css",
+        "tests/e2e/editor.spec.ts",
+        "src/ui/Reader.tsx",
+        "src/ui/Lists.tsx",
+        "src/domain/runtime.ts",
+        "src/domain/types.ts",
+        "src/sync/README.md",
+        "src/sync/outbox.ts",
+        "src/sync/adapter.ts",
+        "src/storage/store.ts"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-N02",
+      "title": "対応ブラウザーと実端末",
+      "provenance": "仕様を成立させる品質条件・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP23",
+      "shall": "iPhone Safari・Chrome、iPad Safari・分割表示、PC Chrome・Edge・Firefox・Safariの対象環境表を検証し、OSとブラウザーの実バージョンを記録すること。",
+      "failure_behavior": "自動ブラウザー試験だけを実端末の合格証拠にしない",
+      "acceptance_ids": [
+        "AT-N02"
+      ],
+      "source_refs": [],
+      "batch_id": "RB10",
+      "review_status": "実装あり・最終受入未確認",
+      "implemented_at_review": "CIにChromium／Firefox／WebKitの自動試験と幅別fixtureがある。",
+      "remaining_at_review": "実iPhone／iPad／macOS Safari／Edge等のOS・ブラウザー実版証拠は未確認。",
+      "review_finding_ids": [
+        "RV29"
+      ],
+      "review_code_paths": [
+        "playwright.config.ts",
+        "tests/e2e/editor.spec.ts",
+        "docs/implementation/PROGRESS.md"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-N03",
+      "title": "アクセシビリティ",
+      "provenance": "仕様を成立させる品質条件・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP23",
+      "shall": "WCAG 2.2 AAを受入目標とし、キーボード・スクリーンリーダー・文字拡大200%・色以外の意味表現・ドラッグ代替を提供すること。",
+      "failure_behavior": "図だけで編集を強制せず、見える焦点や拡大を無効にしない",
+      "acceptance_ids": [
+        "AT-N03"
+      ],
+      "source_refs": [
+        "T02"
+      ],
+      "batch_id": "RB10",
+      "review_status": "実装あり・最終受入未確認",
+      "implemented_at_review": "ラベル、フォーカス、色以外の表現、ドラッグ代替、axe検査の基盤がある。",
+      "remaining_at_review": "全画面の200%・キーボード・VoiceOver／NVDA・WCAG AA手動受入が残る。",
+      "review_finding_ids": [
+        "RV29"
+      ],
+      "review_code_paths": [
+        "tests/e2e/editor.spec.ts",
+        "src/ui/components.tsx",
+        "src/styles.css"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-N04",
+      "title": "標準データの応答目標",
+      "provenance": "仕様を成立させる品質条件・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP23",
+      "shall": "標準データの操作応答p95≤200 ms、ローカル検索p95≤500 ms、保存完了p95≤1000 ms、キャッシュ済み起動≤3秒を目標とすること。測定条件は性能仕様に従うこと。",
+      "failure_behavior": "実測前の数値を達成済みとしない。超過を要件削減で黙って隠さない",
+      "acceptance_ids": [
+        "AT-N04"
+      ],
+      "source_refs": [],
+      "batch_id": "RB10",
+      "review_status": "実装あり・最終受入未確認",
+      "implemented_at_review": "Standard 8,800件、実IndexedDB、production Chromium保存区間30回の計測がある。",
+      "remaining_at_review": "入力→描画、検索、起動、図frame、実端末の全目標は同一対象版で未確認。",
+      "review_finding_ids": [
+        "RV29"
+      ],
+      "review_code_paths": [
+        "src/testing/performanceFixture.ts",
+        "src/storage/store.ts",
+        "src/domain/production.ts"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-N05",
+      "title": "大規模データと処理の中断",
+      "provenance": "仕様を成立させる品質条件・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP14",
+      "shall": "大規模データを分割表示し、全件をDOMへ描画しないこと。解析・入出力は進捗と取消を持ち、探索上限を表示すること。",
+      "failure_behavior": "探索の途中終了を全経路の安全証明にしない",
+      "acceptance_ids": [
+        "AT-N05"
+      ],
+      "source_refs": [],
+      "batch_id": "RB05",
+      "review_status": "残作業あり",
+      "implemented_at_review": "年表／図／カタログ／EntityCards等に分割表示、解析上限・進捗／取消がある。",
+      "remaining_at_review": "章／構成／分岐／制作タスク／参照選択等に全件mapが残る。Large・長時間受入も残る。",
+      "review_finding_ids": [
+        "RV27",
+        "RV29"
+      ],
+      "review_code_paths": [
+        "src/ui/Lists.tsx",
+        "src/ui/Timeline.tsx",
+        "src/storage/archive.ts",
+        "src/domain/runtime.ts",
+        "src/ui/WritingWorkspace.tsx",
+        "src/ui/Fields.tsx",
+        "src/ui/Reader.tsx"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-N06",
+      "title": "保存と移行の原子性",
+      "provenance": "仕様を成立させる品質条件・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP03",
+      "shall": "端末内の一操作は本体・参照・履歴・送信待ちを同じトランザクションで保存し、形式更新前に復元点を作ること。",
+      "failure_behavior": "一部更新・未検証のマイグレーション・偽の保存表示を残さない",
+      "acceptance_ids": [
+        "AT-N06"
+      ],
+      "source_refs": [
+        "T01"
+      ],
+      "batch_id": "RB06",
+      "review_status": "残作業あり",
+      "implemented_at_review": "本体・参照・履歴・outbox・素材の原子commit、復元点と移行APIがある。",
+      "remaining_at_review": "旧形式の実移行fixtureと全種類の障害注入・再起動・容量不足の総合受入が残る。",
+      "review_finding_ids": [
+        "RV16",
+        "RV29"
+      ],
+      "review_code_paths": [
+        "src/storage/store.ts",
+        "src/storage/storage.test.ts",
+        "src/storage/importMapping.ts",
+        "src/storage/archive.ts"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-N07",
+      "title": "同期の競合と再送",
+      "provenance": "仕様を成立させる品質条件・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP17",
+      "shall": "共通元のrevisionを使い、同じ項目の競合・削除対編集・操作の重複を検知すること。未解決は双方を保持すること。",
+      "failure_behavior": "端末時計や最終書込だけで片方を消さない",
+      "acceptance_ids": [
+        "AT-N07"
+      ],
+      "source_refs": [],
+      "batch_id": "RB09",
+      "review_status": "残作業あり",
+      "implemented_at_review": "共通元revision、三方向merge、冪等ack、双方保持、アカウント境界の契約試験がある。",
+      "remaining_at_review": "実サーバー、依存outbox rebase、添付再送、競合解決UIを接続する必要がある。",
+      "review_finding_ids": [
+        "RV25"
+      ],
+      "review_code_paths": [
+        "src/sync/README.md",
+        "src/sync/outbox.ts",
+        "tests/sync.test.ts",
+        "src/sync/adapter.ts",
+        "src/storage/store.ts"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-N08",
+      "title": "権限と秘密の投影",
+      "provenance": "仕様を成立させる品質条件・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP18",
+      "shall": "作品の閲覧・指摘・編集・管理権限と共有範囲をサーバー側で検証し、本文・検索・図・素材・リンクで一致させること。",
+      "failure_behavior": "secretキーの公開、UIのみの非表示、他作品のID差替えを許さない",
+      "acceptance_ids": [
+        "AT-N08"
+      ],
+      "source_refs": [],
+      "batch_id": "RB09",
+      "review_status": "残作業あり",
+      "implemented_at_review": "公開allowlist、名前／文／ID／素材の投影とローカル拒否検査がある。",
+      "remaining_at_review": "実サーバーmembership、直接API、private Storage、権限撤回の受入が未実施。",
+      "review_finding_ids": [
+        "RV26"
+      ],
+      "review_code_paths": [
+        "src/domain/projection.ts",
+        "src/sync/testing.ts",
+        "src/sync/README.md",
+        "src/domain/publicCatalog.ts",
+        "src/ui/fieldSpecs.ts"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-N09",
+      "title": "読み込みの制限と検証",
+      "provenance": "仕様を成立させる品質条件・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP16",
+      "shall": "専用ファイルの版・構造・型・参照・ハッシュ・展開後量・パスを確認後に一括確定すること。数値上限はファイル仕様に従うこと。",
+      "failure_behavior": "一時解析の失敗を既存作品の一部置換として残さない",
+      "acceptance_ids": [
+        "AT-N09"
+      ],
+      "source_refs": [],
+      "batch_id": "RB06",
+      "review_status": "残作業あり",
+      "implemented_at_review": "版・構造・型・参照・hash・ZIP量・パスを事前検査し一括確定。",
+      "remaining_at_review": "後続追加の全種類・旧形式・未知版／中断／上限の最終受入が残る。",
+      "review_finding_ids": [
+        "RV16",
+        "RV29"
+      ],
+      "review_code_paths": [
+        "src/storage/archive.ts",
+        "src/storage/json.ts",
+        "src/storage/storage.test.ts",
+        "src/storage/store.ts",
+        "src/storage/importMapping.ts"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-N10",
+      "title": "入力と添付の安全な表示",
+      "provenance": "仕様を成立させる品質条件・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP20",
+      "shall": "本文・外部URL・添付を非実行データとして扱い、HTML・SVG等の能動内容や危険URLを実行しないこと。",
+      "failure_behavior": "ファイル名だけの種類判定や任意コードの条件実行を許さない",
+      "acceptance_ids": [
+        "AT-N10"
+      ],
+      "source_refs": [],
+      "batch_id": "RB07",
+      "review_status": "残作業あり",
+      "implemented_at_review": "本文を非実行表示し、安全URLと添付署名／形式の検査を実装。",
+      "remaining_at_review": "全資料形式・素材版・全出力先での安全表示の最終受入が残る。",
+      "review_finding_ids": [
+        "RV19",
+        "RV22",
+        "RV29"
+      ],
+      "review_code_paths": [
+        "src/domain/attachments.ts",
+        "src/ui/AssetPreview.tsx",
+        "src/domain/exports.ts",
+        "src/domain/types.ts",
+        "src/ui/fieldSpecs.ts",
+        "src/domain/changeReviews.ts",
+        "src/ui/WorkPage.tsx"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-N11",
+      "title": "通信なしでの継続",
+      "provenance": "仕様を成立させる品質条件・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP03",
+      "shall": "取得済み作品とキャッシュ済みアプリで、通信なしの編集・検索・試読・ファイル出力を可能にすること。未取得の素材は明示すること。",
+      "failure_behavior": "初回取得や未キャッシュ添付を利用済みと偽表示しない",
+      "acceptance_ids": [
+        "AT-N11"
+      ],
+      "source_refs": [
+        "T01"
+      ],
+      "batch_id": "RB06",
+      "review_status": "実装あり・最終受入未確認",
+      "implemented_at_review": "service worker、キャッシュ起動、端末内編集／検索／試読／出力を実装。",
+      "remaining_at_review": "最終候補版の実機、アプリ更新、素材未取得、容量不足の継続受入が残る。",
+      "review_finding_ids": [
+        "RV29"
+      ],
+      "review_code_paths": [
+        "scripts/build/service-worker.mjs",
+        "src/main.tsx",
+        "tests/e2e/editor.spec.ts"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-N12",
+      "title": "再現可能な確認記録",
+      "provenance": "仕様を成立させる品質条件・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP14",
+      "shall": "作品版・開始状態・経路・条件結果・乱数種・外部応答の仮実区分を確認記録へ含めること。",
+      "failure_behavior": "新しい版の結果を古い版の合格証跡として扱わない",
+      "acceptance_ids": [
+        "AT-N12"
+      ],
+      "source_refs": [],
+      "batch_id": "RB05",
+      "review_status": "挙動差あり",
+      "implemented_at_review": "版、開始状態、経路、条件、乱数種、仮値を固定し再実行する。",
+      "remaining_at_review": "保存中の位置巻戻、宣言集合網羅、実ゲーム受領証跡の結合が残る。",
+      "review_finding_ids": [
+        "RV07",
+        "RV14",
+        "RV23"
+      ],
+      "review_code_paths": [
+        "src/domain/runtime.ts",
+        "tests/runtime.test.ts",
+        "src/ui/Reader.tsx",
+        "src/ui/WritingWorkspace.tsx",
+        "src/domain/runtimeContracts.ts",
+        "src/domain/changeReviews.ts",
+        "src/domain/externalInputs.ts",
+        "src/domain/presentation.ts",
+        "src/domain/exports.ts"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-N13",
+      "title": "日本語と時間の正確性",
+      "provenance": "仕様を成立させる品質条件・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP05",
+      "shall": "UTF-8、日本語IME、ルビ、読み、別名、絵文字を破損なく保持し、世界時間と実日時を別型にすること。",
+      "failure_behavior": "IME変換を操作キーで確定前に破壊したり、tickを浮動小数で丸めない",
+      "acceptance_ids": [
+        "AT-N13"
+      ],
+      "source_refs": [],
+      "batch_id": "RB02",
+      "review_status": "挙動差あり",
+      "implemented_at_review": "コードポイント位置、IME、絵文字、ルビ、日本語索引、世界tick／実日時分離を実装。",
+      "remaining_at_review": "分岐リンク位置、実機IME、後続台詞分割／移行の全受入が残る。",
+      "review_finding_ids": [
+        "RV06",
+        "RV18",
+        "RV29"
+      ],
+      "review_code_paths": [
+        "src/ui/EntityEditor.tsx",
+        "src/ui/Fields.tsx",
+        "src/domain/time.ts",
+        "src/ui/Reader.tsx",
+        "src/ui/WritingWorkspace.tsx",
+        "src/App.tsx",
+        "src/domain/production.ts",
+        "src/domain/types.ts",
+        "src/ui/fieldSpecs.ts",
+        "src/domain/exports.ts"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-N14",
+      "title": "復元手順の完了",
+      "provenance": "仕様を成立させる品質条件・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP16",
+      "shall": "最新完全保存ファイルと公開スナップショットの復元方法を利用者に提示し、空環境への復元試験を行うこと。",
+      "failure_behavior": "端末内履歴だけを外部バックアップの代わりとして保証しない",
+      "acceptance_ids": [
+        "AT-N14"
+      ],
+      "source_refs": [
+        "T01"
+      ],
+      "batch_id": "RB06",
+      "review_status": "残作業あり",
+      "implemented_at_review": "利用ガイド、完全ファイル復元、同一作品の復元点、公開版保持の基盤がある。",
+      "remaining_at_review": "最終対象版の全情報・素材・世界・別案・公開版を空環境へ復元する訓練証拠が残る。",
+      "review_finding_ids": [
+        "RV16",
+        "RV29"
+      ],
+      "review_code_paths": [
+        "docs/implementation/USER_GUIDE.md",
+        "src/storage/store.ts",
+        "tests/e2e/editor.spec.ts",
+        "src/storage/importMapping.ts",
+        "src/storage/archive.ts"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-N15",
+      "title": "診断とプライバシー",
+      "provenance": "仕様を成立させる品質条件・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP24",
+      "shall": "診断にはエラーコード・操作ID・版・環境を記録し、本文・個人情報・秘密・認証情報を既定で含めないこと。送信は任意とすること。",
+      "failure_behavior": "ログや分析サービスへ作品本文を自動送信しない",
+      "acceptance_ids": [
+        "AT-N15"
+      ],
+      "source_refs": [],
+      "batch_id": "RB10",
+      "review_status": "残作業あり",
+      "implemented_at_review": "本文／stackを受け取らない診断生成関数と安全入力の単体試験がある。",
+      "remaining_at_review": "実エラー→診断記録→本人が任意に持出す導線が未接続。environmentもbrowser固定。",
+      "review_finding_ids": [
+        "RV28"
+      ],
+      "review_code_paths": [
+        "src/diagnostics.ts",
+        "tests/diagnostics.test.ts",
+        "src/App.tsx",
+        "src/ui/WorkPage.tsx"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-N16",
+      "title": "拡張性と検証可能性",
+      "provenance": "仕様を成立させる品質条件・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP01",
+      "shall": "時間・状態評価・投影・ファイル移行をUIと保存製品から分け、固定データと決定的試験で検証すること。",
+      "failure_behavior": "画面ごとに別の条件評価や独自のID管理を作らない",
+      "acceptance_ids": [
+        "AT-N16"
+      ],
+      "source_refs": [],
+      "batch_id": "RB02",
+      "review_status": "挙動差あり",
+      "implemented_at_review": "時間／状態／投影／ファイルをUI・保存製品から分離し固定データで試験する。",
+      "remaining_at_review": "章／分岐の提示処理が別実装で対象scope評価に差があり、同一契約への統一が必要。",
+      "review_finding_ids": [
+        "RV10"
+      ],
+      "review_code_paths": [
+        "src/domain/conditions.ts",
+        "src/domain/time.ts",
+        "src/domain/projection.ts",
+        "vitest.config.ts",
+        "src/domain/runtime.ts",
+        "src/domain/presentation.ts",
+        "src/domain/runtimeContracts.ts"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-N17",
+      "title": "公開構成と費用の明示",
+      "provenance": "仕様を成立させる品質条件・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP24",
+      "shall": "公開時はデプロイ対象commitと基底パスを確認し、同期・保存容量・送信等の上限と費用を記録すること。新規有料機能の自動有効化をしないこと。",
+      "failure_behavior": "この資料の作成だけで公開済みや費用ゼロと宣言しない",
+      "acceptance_ids": [
+        "AT-N17"
+      ],
+      "source_refs": [],
+      "batch_id": "RB10",
+      "review_status": "実装あり・最終受入未確認",
+      "implemented_at_review": "公開workflowの証拠gate、base path、build-info、費用確認条件がある。",
+      "remaining_at_review": "完成公開候補の同一commit証拠、現行接続先quota／費用と公開後確認は未成立。公開保留は計画どおり。",
+      "review_finding_ids": [
+        "RV30"
+      ],
+      "review_code_paths": [
+        ".github/workflows/release.yml",
+        "scripts/check_release.py",
+        "docs/implementation/RELEASE.md"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-N18",
+      "title": "失敗時の説明と入力保持",
+      "provenance": "仕様を成立させる品質条件・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP02",
+      "shall": "エラーは何が失敗したか・未保存範囲・修正方法を対象近傍と通知へ表示し、入力を保持すること。",
+      "failure_behavior": "白画面・無言の失敗・黙ったデータ削除を残さない",
+      "acceptance_ids": [
+        "AT-N18"
+      ],
+      "source_refs": [],
+      "batch_id": "RB02",
+      "review_status": "挙動差あり",
+      "implemented_at_review": "EntityEditor／JSON／作者別案の入力保持、保存失敗表示、未保存案内がある。",
+      "remaining_at_review": "作品設定の入力保持と分岐保存中の操作整合が共通保護の外にある。",
+      "review_finding_ids": [
+        "RV07",
+        "RV08"
+      ],
+      "review_code_paths": [
+        "src/ui/EntityEditor.tsx",
+        "src/App.tsx",
+        "tests/e2e/editor.spec.ts",
+        "src/ui/Reader.tsx",
+        "src/ui/WritingWorkspace.tsx",
+        "src/ui/WorkPage.tsx",
+        "src/ui/draftState.ts"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-N19",
+      "title": "正本と公開版の保護",
+      "provenance": "仕様を成立させる品質条件・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP10",
+      "shall": "正本・作者別案・ゲーム内経路・公開スナップショットを区別し、公開版の更新は新しい版として作ること。",
+      "failure_behavior": "別案の編集で公開済み本文や参照設定を上書きしない",
+      "acceptance_ids": [
+        "AT-N19"
+      ],
+      "source_refs": [],
+      "batch_id": "RB04",
+      "review_status": "挙動差あり",
+      "implemented_at_review": "正本、作者別案の不変版、ゲーム経路、公開snapshotと採用記録を分離。",
+      "remaining_at_review": "分岐の旧版開始／本文リンク、全種類の採用／復元／投影受入が残る。",
+      "review_finding_ids": [
+        "RV05",
+        "RV06",
+        "RV29"
+      ],
+      "review_code_paths": [
+        "src/storage/store.ts",
+        "src/domain/exports.ts",
+        "src/domain/projection.ts",
+        "src/domain/runtime.ts",
+        "src/ui/Reader.tsx",
+        "src/ui/Fields.tsx",
+        "src/ui/WritingWorkspace.tsx",
+        "src/App.tsx"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    },
+    {
+      "id": "REQ-N20",
+      "title": "持ち出しと互換性",
+      "provenance": "仕様を成立させる品質条件・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP22",
+      "shall": "完全保存・汎用JSON・読み物等の出力に仕様版と対象版を付け、未対応機能と除外項目を表示すること。互換性の検証範囲を記録すること。",
+      "failure_behavior": "Unity・Unreal・ink・Yarn等すべてに対応済みと仮定しない",
+      "acceptance_ids": [
+        "AT-N20"
+      ],
+      "source_refs": [],
+      "batch_id": "RB08",
+      "review_status": "残作業あり",
+      "implemented_at_review": "形式／runtime仕様版・対象版・警告／除外と現在互換表を出力する。",
+      "remaining_at_review": "未対応の試遊挙動解消、受取例・媒体／相談取込・全互換性受入が残る。",
+      "review_finding_ids": [
+        "RV22",
+        "RV23",
+        "RV24"
+      ],
+      "review_code_paths": [
+        "src/domain/exports.ts",
+        "docs/implementation/EXPORT_COMPATIBILITY.md",
+        "src/ui/WorkPage.tsx",
+        "src/domain/externalInputs.ts",
+        "src/domain/runtimeContracts.ts",
+        "src/domain/presentation.ts",
+        "src/ui/AuthorAlternativeStudio.tsx"
+      ],
+      "final_acceptance": "未判定・RB10の同一対象版証拠で最終確認"
+    }
+  ],
+  "findings": [
+    {
+      "id": "RV01",
+      "title": "初期化規則を登録しても試読で実行されない",
+      "category": "再現した挙動差",
+      "priority": "高",
+      "stage": "RB05",
+      "reqs": [
+        "B15",
+        "F20",
+        "F38",
+        "F39"
+      ],
+      "actual": "scene_endで0へ戻す規則を持つ場面状態が、次の場面でも5のまま。across_runsにnew_loop→2を宣言しても次周回へ7を持ち越す。",
+      "expected": "宣言したscene／chapter／run終了・new_loopの規則を評価し、初期化の原因と前後状態を記録する。",
+      "evidence": [
+        "src/domain/runtime.ts",
+        "src/domain/conditions.ts",
+        "docs/spec/BEHAVIOR_CONTRACT.md",
+        "docs/spec/DATA_MODEL.md"
+      ],
+      "reproduction": [
+        "R01",
+        "R01-loop"
+      ],
+      "acceptance": "場面／章／周回の正常・未知・例外、算出状態再計算、巻戻と保存再生で同じ結果になる。"
+    },
+    {
+      "id": "RV02",
+      "title": "通常の理由欄が禁止遷移の無条件解除になっている",
+      "category": "再現した挙動差",
+      "priority": "高",
+      "stage": "RB05",
+      "reqs": [
+        "B15",
+        "F41",
+        "F56"
+      ],
+      "actual": "0→1しか許していない変数へset 3を実行し、effect.reasonに「備考だけ」と書くと成功する。例外としての対象経路・期限・根拠を評価しない。",
+      "expected": "AT-F41の明示した例外規則を評価する。一般の説明欄だけで禁止遷移を解除しない。相互排他は別の残作業。",
+      "evidence": [
+        "src/domain/conditions.ts",
+        "src/domain/runtimeContracts.ts",
+        "src/domain/model.ts",
+        "docs/quality/ACCEPTANCE_TESTS.md"
+      ],
+      "reproduction": [
+        "R02"
+      ],
+      "acceptance": "表外遷移＋所持金変更の群は全体を拒否。範囲内／範囲外／期限切れ／未知の例外と明示resetを別々に検証する。"
+    },
+    {
+      "id": "RV03",
+      "title": "没の設定・関係が現在有効な世界へ混ざる",
+      "category": "再現した挙動差",
+      "priority": "高",
+      "stage": "RB03補修＋RB05",
+      "reqs": [
+        "B07",
+        "B09",
+        "B17",
+        "B18",
+        "B20",
+        "F07",
+        "F11",
+        "F12",
+        "F25",
+        "F55",
+        "F59"
+      ],
+      "actual": "status=rejectedのauthor_truthだけを登録してもworldStateCandidatesはknownを返す。rejectedのtrust関係も図にassessment=trueとして入る。",
+      "expected": "編集用に没案を表示する場合も、現在有効な真実・所有・所属・関係の評価／集計とは明確に分ける。",
+      "evidence": [
+        "src/domain/world.ts",
+        "src/domain/relationGraph.ts",
+        "src/ui/WorldHistories.tsx",
+        "src/ui/Relationships.tsx"
+      ],
+      "reproduction": [
+        "R03",
+        "R03-graph"
+      ],
+      "acceptance": "確定／仮／要確認／没の方針を定義し、worldStateCandidatesとcreateWorldAssessment、図／表／年表／地図で同じ採用状態評価になる。"
+    },
+    {
+      "id": "RV04",
+      "title": "固定共通世界の状態が分岐試読に届かない",
+      "category": "再現した挙動差",
+      "priority": "高",
+      "stage": "RB03→RB05結合",
+      "reqs": [
+        "F09",
+        "B15",
+        "B16"
+      ],
+      "actual": "共有世界の固定版から初期値trueの変数を採用。世界登録付きvalidateProjectは成功するが、その変数を入口gateで使うstartTrialはunknownになる。Appは分岐Readerに世界登録を渡していない。",
+      "expected": "選択した不変世界版を同じ状態辞書と参照解決処理で利用する。現在の世界稿を代用せず、借用情報を正本へ複製しない。",
+      "evidence": [
+        "src/App.tsx",
+        "src/ui/Reader.tsx",
+        "src/domain/runtime.ts",
+        "src/domain/runtimeVersions.ts",
+        "src/domain/pinnedWorlds.ts"
+      ],
+      "reproduction": [
+        "R04"
+      ],
+      "acceptance": "作品再読込・完全保存／複製復元・世界改訂後も固定旧版で条件、状態、引用、再生結果が一致する。"
+    },
+    {
+      "id": "RV05",
+      "title": "現在稿にノードがないと旧版の試読も開始できない",
+      "category": "再現した挙動差",
+      "priority": "中",
+      "stage": "RB05",
+      "reqs": [
+        "B16",
+        "F15",
+        "N19"
+      ],
+      "actual": "有効な入口を持つ旧snapshotを選んでも、現在のノードをアーカイブ済みだと「試読を始める」がdisabled。ドメインのstartTrial(contentVersionId=旧版)はreadyになる。",
+      "expected": "開始点・checkpoint候補・実行可否・解析対象を選択した作品版から導く。",
+      "evidence": [
+        "src/ui/Reader.tsx",
+        "src/domain/runtime.ts"
+      ],
+      "reproduction": [
+        "R05"
+      ],
+      "acceptance": "旧版と現稿の入口が違う／現稿が空／旧入口がアーカイブ済みでも、選択版に従い開始・解析・再生できる。"
+    },
+    {
+      "id": "RV06",
+      "title": "分岐試読のリンクが元版・段落・文字位置を失う",
+      "category": "再現した挙動差",
+      "priority": "高",
+      "stage": "RB02／RB04補修＋RB05",
+      "reqs": [
+        "B10",
+        "F06",
+        "F27",
+        "F57",
+        "N13",
+        "N19"
+      ],
+      "actual": "有効な固定版・ブロック・文字範囲付きリンクを選んでも、Reader→RichTextView→onOpenへentityId一つだけが渡る。章試読のonOpenTarget接続とは異なる。",
+      "expected": "ContentAnchor全体を渡して固定版の該当位置を開き、戻り位置も保持する。",
+      "evidence": [
+        "src/ui/Reader.tsx",
+        "src/ui/Fields.tsx",
+        "src/ui/WritingWorkspace.tsx",
+        "src/App.tsx"
+      ],
+      "reproduction": [
+        "R06"
+      ],
+      "acceptance": "改名／現稿変更／Unicode／固定共有世界／旧版で、版・block／line・codepoint範囲と戻り位置を確認する。"
+    },
+    {
+      "id": "RV07",
+      "title": "分岐の経路保存中に進むと保存完了で以前へ戻る",
+      "category": "再現した挙動差",
+      "priority": "高",
+      "stage": "RB05",
+      "reqs": [
+        "B16",
+        "F17",
+        "N12",
+        "N18"
+      ],
+      "actual": "経路保存を遅延させて次の終端へ進める。保存したtraceをpropsへ反映するとpendingReplayが古い位置を再生し、終端から前のready位置へ戻る。",
+      "expected": "同一ターンの多重保存と保存中の進行／戻る／周回／版切替を整合させる。章試読の対策を参考にし、新しい操作を無断で捨てない。",
+      "evidence": [
+        "src/ui/Reader.tsx",
+        "src/ui/WritingWorkspace.tsx"
+      ],
+      "reproduction": [
+        "R11"
+      ],
+      "acceptance": "開始／保存／再生を遅延させ、連打・進行・巻戻・版切替・画面移動・保存失敗で経路と状態が一致し、操作が消えない。"
+    },
+    {
+      "id": "RV08",
+      "title": "作品設定の未保存入力が画面移動で消える",
+      "category": "再現した挙動差",
+      "priority": "高",
+      "stage": "RB02補修",
+      "reqs": [
+        "B06",
+        "F02",
+        "F33",
+        "N18"
+      ],
+      "actual": "ProjectInfoの作品名を変更して画面を離れ、戻ると保存済み名へ戻る。drafts／jsonBuffers／alternativeDraftsの共通保持や未保存案内の対象に作品設定が入っていない。",
+      "expected": "作品別・基底版付きの設定下書きを保持し、保存失敗・移動・作品切替後も復帰させる。取消の明示操作とは区別する。",
+      "evidence": [
+        "src/ui/WorkPage.tsx",
+        "src/App.tsx",
+        "src/ui/draftState.ts"
+      ],
+      "reproduction": [
+        "R07"
+      ],
+      "acceptance": "作品名・本編開始・雛形関連入力について、移動／保存待ち／失敗／更新競合時に入力と未保存表示が一致する。"
+    },
+    {
+      "id": "RV09",
+      "title": "暦の影響確認が更新後の作品版まで承認してしまう",
+      "category": "再現した挙動差",
+      "priority": "高",
+      "stage": "RB03補修",
+      "reqs": [
+        "B05",
+        "B21",
+        "F08"
+      ],
+      "actual": "暦の変更影響を確認した後にproject.revisionが進んでもpreviewが残る。「確認した暦を保存」は新しいpropsのrevisionを使い、追加影響を再承認させない。",
+      "expected": "確認時の基底版と差分を保持し、更新後は新しい影響を再確認させる。入力した暦は保持する。",
+      "evidence": [
+        "src/ui/WorldCalendars.tsx",
+        "src/ui/WorldTimeImpactPreview.tsx",
+        "src/domain/timeEditing.ts",
+        "src/App.tsx"
+      ],
+      "reproduction": [
+        "R08"
+      ],
+      "acceptance": "確認後の日時・生涯・暦規則更新、保存競合、保存失敗、二重クリックを原子拒否／再確認し、tickと固定旧版が不変。"
+    },
+    {
+      "id": "RV10",
+      "title": "章と分岐の提示処理が別実装で開示範囲が一致しない",
+      "category": "再現した挙動差",
+      "priority": "高",
+      "stage": "RB04→RB05結合",
+      "reqs": [
+        "B13",
+        "B16",
+        "F06",
+        "F43",
+        "F44",
+        "N16"
+      ],
+      "actual": "別章限定のdisclosureを現在の場面へ結ぶと、分岐startTrialはknowledgeEffectを実行する。一方presentContentは対象章が異なるとして実行しない。runtime内presentはtargetScope・sourceVersionIdを評価していない。",
+      "expected": "章と分岐で作品／章／graph／経路／版／提示位置を同じ規則で評価し、条件観測後に効果を原子適用する。",
+      "evidence": [
+        "src/domain/runtime.ts",
+        "src/domain/presentation.ts",
+        "src/domain/runtimeContracts.ts"
+      ],
+      "reproduction": [
+        "R12"
+      ],
+      "acceptance": "同一内容の章／分岐で提示ID・状態・条件結果が一致。対象外・期限・未知・旧版・没の提示は誤って実行しない。"
+    },
+    {
+      "id": "RV11",
+      "title": "階層分岐と固定参照・部分上書きの再利用が未完成",
+      "category": "後続工程の残作業",
+      "priority": "中",
+      "stage": "RB05",
+      "reqs": [
+        "B14",
+        "B22",
+        "F13",
+        "F19",
+        "F32",
+        "F55",
+        "F58",
+        "F59"
+      ],
+      "actual": "BranchListは平坦なノード一覧とgraph要約。reuseのreference／overrideはreuseIssueで明示的に試読を停止する。",
+      "expected": "章→場面→会話の掘下げ、入口／出口、上位での未完成／エラー集計、固定参照・複製・部分上書きと更新影響を完成する。",
+      "evidence": [
+        "src/ui/Lists.tsx",
+        "src/domain/runtime.ts",
+        "src/domain/types.ts",
+        "docs/data/completion_plan.json"
+      ],
+      "reproduction": [],
+      "acceptance": "折りたたんでも不足を隠さない。共通元の改訂は差分承認で更新し、独立cloneと旧固定版が変わらない。"
+    },
+    {
+      "id": "RV12",
+      "title": "状態・反応・途中開始・二経路比較の通常運用が未結合",
+      "category": "後続工程の残作業",
+      "priority": "中",
+      "stage": "RB05",
+      "reqs": [
+        "B15",
+        "B22",
+        "F14",
+        "F15",
+        "F16",
+        "F20",
+        "F37",
+        "F39",
+        "F40",
+        "F41"
+      ],
+      "actual": "型付き条件／変数、checkpoint、直前差分、合流比較関数はある。二つの保存経路を選ぶ比較UI、短い反応の初回／再訪／順次／抽選、相互排他の永続schemaと実行接続は未完成。RuntimeExclusion等は宣言だけ。",
+      "expected": "既存フォームと実行処理を使い、状態の読取／更新／初期化の原因、開始状態、scope、禁止／未知／例外を通常操作で扱う。",
+      "evidence": [
+        "src/domain/runtime.ts",
+        "src/domain/runtimeContracts.ts",
+        "src/domain/model.ts",
+        "src/ui/Reader.tsx",
+        "src/ui/fieldSpecs.ts"
+      ],
+      "reproduction": [],
+      "acceptance": "所持品／認識／乱数／callStackを含む二経路比較、途中開始、単発／期限、相互排他、巻戻と版移行を原条件で受入する。"
+    },
+    {
+      "id": "RV13",
+      "title": "全入口探索と伏線・代替情報・対象／期限が結合していない",
+      "category": "後続工程の残作業",
+      "priority": "高",
+      "stage": "RB05",
+      "reqs": [
+        "B19",
+        "F18",
+        "F43",
+        "F45",
+        "F47",
+        "F56",
+        "F59"
+      ],
+      "actual": "analyzeFlowは一つのstartTrialから探索する。探索内でcheckTrialForeshadowsを呼ばない。経路内のrequiredInfoと一部回収方針は評価するが、代替説明、期限／scope別の未回収一覧は未完成。",
+      "expected": "全宣言入口と選んだ開始状態を有限探索し、提示時の手掛かり・代替説明・方針・対象／期限から根拠経路付き候補を出す。",
+      "evidence": [
+        "src/domain/runtime.ts",
+        "src/domain/runtimeContracts.ts",
+        "src/ui/Reader.tsx",
+        "docs/spec/BEHAVIOR_CONTRACT.md"
+      ],
+      "reproduction": [],
+      "acceptance": "手掛かりなしで回収へ進む経路、同場面内順序、代替説明、対象外、続編、探索打切り／取消／未知を区別する。"
+    },
+    {
+      "id": "RV14",
+      "title": "回帰経路集合と変更後の再確認・集合網羅率が未接続",
+      "category": "後続工程の残作業",
+      "priority": "中",
+      "stage": "RB05",
+      "reqs": [
+        "F17",
+        "F26",
+        "F60",
+        "N12"
+      ],
+      "actual": "経路の保存／固定版再生、個別の到達／条件網羅関数はある。trialRecordDataのdeclaredTestsは0/0固定。回帰集合の目的や変更待ちは通常UIへ接続されていない。",
+      "expected": "宣言した集合の母数を持ち、開始由来・版・仮実を分けて集計し、変更影響だけを再確認待ちにする。",
+      "evidence": [
+        "src/domain/runtime.ts",
+        "src/domain/runtimeContracts.ts",
+        "src/domain/changeReviews.ts",
+        "src/ui/Reader.tsx"
+      ],
+      "reproduction": [],
+      "acceptance": "旧版の確認証拠を保持し、未探索／没／途中開始／stubを完了件数に換算しない。"
+    },
+    {
+      "id": "RV15",
+      "title": "人物・読み手の認識と発言の比較が未完成",
+      "category": "後続工程の残作業",
+      "priority": "中",
+      "stage": "RB05",
+      "reqs": [
+        "B17",
+        "B20",
+        "F44",
+        "F46"
+      ],
+      "actual": "truthKind、holder、出所、根拠位置、時点別世界履歴はある。RuntimeDialogueExtensionsの発言／嘘／誤解／引用は型宣言で、本文／会話・章順／経路の比較へ未接続。",
+      "expected": "作者の真実、証言、人物の信念、実提示を並べ、出所へ戻れる。矛盾は意図／根拠付き候補として扱う。",
+      "evidence": [
+        "src/domain/types.ts",
+        "src/domain/runtimeContracts.ts",
+        "src/ui/WorldHistories.tsx",
+        "src/ui/Reader.tsx"
+      ],
+      "reproduction": [],
+      "acceptance": "嘘、誤解、回想、認識者別・経路別、未確定・没を混同せず、読者の理解を自動認定しない。"
+    },
+    {
+      "id": "RV16",
+      "title": "別作品のID対応統合と旧形式移行が未対応",
+      "category": "後続工程の残作業",
+      "priority": "中",
+      "stage": "RB06",
+      "reqs": [
+        "B12",
+        "B23",
+        "F35",
+        "F56",
+        "N06",
+        "N09",
+        "N14"
+      ],
+      "actual": "新規／clone／同一projectIdの置換・統合は実装。previewImportは別projectIdを拒否する。migrateProjectはあるが、過去形式の固定fixtureと互換表は完成していない。",
+      "expected": "明示ID対応と差分確認による作品間統合、形式移行前の復元点、旧／未知版／破損／中断の互換受入を用意する。",
+      "evidence": [
+        "src/storage/store.ts",
+        "src/storage/importMapping.ts",
+        "src/storage/archive.ts",
+        "docs/implementation/EXPORT_COMPATIBILITY.md"
+      ],
+      "reproduction": [],
+      "acceptance": "全kind・固定世界・別案・公開版・履歴・素材hashが空環境で一致。拒否／取消／失敗では元データが不変。"
+    },
+    {
+      "id": "RV17",
+      "title": "古い対象版を通常の履歴画面から選べない",
+      "category": "現在の操作範囲の不足",
+      "priority": "中",
+      "stage": "RB06",
+      "reqs": [
+        "B23",
+        "F35"
+      ],
+      "actual": "HistoryPanelはcommands.slice(0,50)だけを描画し、前のページ／検索の導線がない。全履歴はファイルに保存されており、データ消失と断定するものではない。",
+      "expected": "対象一つの過去版を一覧／検索／ページから選んで、差分→復元→取消へ到達できる。",
+      "evidence": [
+        "src/ui/WorkPage.tsx",
+        "src/storage/store.ts"
+      ],
+      "reproduction": [],
+      "acceptance": "50件以上の履歴で古い任意対象版を選び、参照・型・固定版を検査して復元し、大量履歴を一括DOMへ描画しない。"
+    },
+    {
+      "id": "RV18",
+      "title": "台詞分割対応・原文hash承認・声／用語の運用が未完成",
+      "category": "後続工程の残作業",
+      "priority": "中",
+      "stage": "RB07",
+      "reqs": [
+        "F21",
+        "F23",
+        "F26",
+        "F48",
+        "N13"
+      ],
+      "actual": "安定ID、原文内容hash、翻訳／収録needs_review、JSON出力はある。originLineIdsやpendingSourceHashesはあるが、通常操作で旧→新対応と現在hash承認を完結する導線が不足。",
+      "expected": "分割／統合対応履歴、担当別出力、声／表記／読み／期間／例外の確認を同じ版に結ぶ。",
+      "evidence": [
+        "src/domain/production.ts",
+        "src/domain/types.ts",
+        "src/ui/fieldSpecs.ts",
+        "src/domain/exports.ts"
+      ],
+      "reproduction": [],
+      "acceptance": "改名／並替では音声対応が不変。本文／ルビ／話者／演出変更・分割・復元は翻訳／音声を再確認待ちにする。"
+    },
+    {
+      "id": "RV19",
+      "title": "資料の参照日時と素材・絵コンテの運用が不足",
+      "category": "通常入力の不足／後続工程",
+      "priority": "中",
+      "stage": "RB07",
+      "reqs": [
+        "F22",
+        "F26",
+        "F28",
+        "F53",
+        "F60",
+        "N10"
+      ],
+      "actual": "SourceData.accessedAtはあるがFIELD_SPECS.sourceに入力欄がない。高度なJSON入力では保持できる。素材／cue／絵コンテ／mediaTimeの型と安全表示はあるが、版差替え・不足・確認待ちの総合運用は未完了。",
+      "expected": "資料の参照日時を通常入力で記録し、資料／仮／完成素材と世界tick／演出msを分け、差替えの確認先を示す。",
+      "evidence": [
+        "src/domain/types.ts",
+        "src/ui/fieldSpecs.ts",
+        "src/ui/AssetPreview.tsx",
+        "src/domain/attachments.ts",
+        "src/domain/changeReviews.ts"
+      ],
+      "reproduction": [
+        "R09"
+      ],
+      "acceptance": "画像／音声／動画／PDF／Web、出所／参照箇所／日時／解釈／再配布を通常操作で往復し、安全表示と変更影響を確認する。"
+    },
+    {
+      "id": "RV20",
+      "title": "制作工程・量・見積もりを運用画面へ十分接続していない",
+      "category": "後続工程の残作業",
+      "priority": "中",
+      "stage": "RB08",
+      "reqs": [
+        "F49",
+        "F50",
+        "F51",
+        "F52",
+        "F55",
+        "F58",
+        "F59"
+      ],
+      "actual": "企画・判断・行動・タスク／依存／期限の入力、進捗別ボードはある。productionCountsは単体利用中心で、ボードはタスク数と対象場面数に留まる。",
+      "expected": "工程別の状態、依存と詰まり、固有の場面／台詞／素材／再利用と経路上の量、速度・未知数を明示した見積もりを結ぶ。",
+      "evidence": [
+        "src/ui/Lists.tsx",
+        "src/domain/production.ts",
+        "src/ui/fieldSpecs.ts",
+        "src/domain/relationGraph.ts"
+      ],
+      "reproduction": [],
+      "acceptance": "共通場面は固有制作数で一回、経路再訪回数は別集計。期限は実日付、時間見積は速度／仮定／不明範囲を保持する。"
+    },
+    {
+      "id": "RV21",
+      "title": "媒体の旧公開版と改訂候補を比べる運用が未完成",
+      "category": "後続工程の残作業",
+      "priority": "中",
+      "stage": "RB08",
+      "reqs": [
+        "F54"
+      ],
+      "actual": "media_variantの固定元版、媒体本文、公開予定日、公開範囲、sourceIdsとneedsReviewを持つ。専用の旧公開媒体版比較・公開運用は未結合。",
+      "expected": "旧公開本文・範囲・予定日を保持し、新しい媒体案との比較と確認先を用意する。",
+      "evidence": [
+        "src/domain/production.ts",
+        "src/domain/types.ts",
+        "src/ui/fieldSpecs.ts",
+        "src/ui/WorkPage.tsx"
+      ],
+      "reproduction": [],
+      "acceptance": "元設定の改訂で媒体本文を自動置換せず、公開済み版と修正候補を比較できる。"
+    },
+    {
+      "id": "RV22",
+      "title": "簡易体験版と汎用runtimeの完成範囲に届いていない",
+      "category": "後続工程の残作業",
+      "priority": "中",
+      "stage": "RB08",
+      "reqs": [
+        "F24",
+        "N10",
+        "N20"
+      ],
+      "actual": "試遊ZIPは単一開始graphと限定条件／効果に対応。call／trigger／all_match／外部／物品／認識／knowledgeEffects／演出／素材等は事前拒否。汎用runtimeも算出／再利用等を拒否する。",
+      "expected": "完成計画の内部条件・物品・知識・再利用を同じ規則で提供する。特定engine全対応は追加しない。",
+      "evidence": [
+        "src/domain/exports.ts",
+        "docs/implementation/EXPORT_COMPATIBILITY.md",
+        "src/ui/WorkPage.tsx",
+        "docs/data/completion_plan.json"
+      ],
+      "reproduction": [],
+      "acceptance": "未対応を黙って削らず拒否する安全策を維持。対応した機能の本アプリ／試遊／汎用受取例の状態とID対応が一致する。"
+    },
+    {
+      "id": "RV23",
+      "title": "実ゲーム結果を受領証跡付きで往復する導線がない",
+      "category": "後続工程の残作業",
+      "priority": "中",
+      "stage": "RB08",
+      "reqs": [
+        "F42",
+        "F50",
+        "N12",
+        "N20"
+      ],
+      "actual": "external_contract、仮値、actual receiptHashの検査関数はある。実際の独立ブラウザーゲーム受取例と受領照合／台詞・素材ID対応は未接続。",
+      "expected": "同repoの汎用受取例と版付き受領記録を用意し、stub／actual／mixedを根拠付きで分ける。",
+      "evidence": [
+        "src/domain/externalInputs.ts",
+        "src/domain/runtimeContracts.ts",
+        "src/domain/presentation.ts",
+        "src/domain/exports.ts",
+        "docs/data/completion_plan.json"
+      ],
+      "reproduction": [],
+      "acceptance": "型不一致／未取得／古い版／不正receiptを拒否し、試読から実ゲーム副作用を直接実行しない。"
+    },
+    {
+      "id": "RV24",
+      "title": "相談提案を作者別案へ取り込む操作がない",
+      "category": "後続工程の残作業",
+      "priority": "中",
+      "stage": "RB08",
+      "reqs": [
+        "F36",
+        "N20"
+      ],
+      "actual": "相談MDの出力とcreateConsultationProposalはあるが、呼出しは単体試験中心。通常UIから作者別案として入力／保存／比較する処理が未接続。",
+      "expected": "出所と相談対象版を保持し、提案文章を作者別案へ取り込んで比較・選択採用できる。",
+      "evidence": [
+        "src/domain/exports.ts",
+        "src/ui/WorkPage.tsx",
+        "src/ui/AuthorAlternativeStudio.tsx",
+        "docs/implementation/EXPORT_COMPATIBILITY.md"
+      ],
+      "reproduction": [],
+      "acceptance": "正本へ自動適用せず、公開範囲と旧版を保ち、再読込／完全保存／複製後も提案の出所と版が残る。"
+    },
+    {
+      "id": "RV25",
+      "title": "同期契約と端末outbox・実サーバーが未接続",
+      "category": "後続工程／外部条件待ち",
+      "priority": "高",
+      "stage": "RB09",
+      "reqs": [
+        "F26",
+        "F34",
+        "F60",
+        "N07"
+      ],
+      "actual": "三方向merge、冪等ack、未解決双方保持、アカウント境界の契約とメモリ試験はある。保存outbox→確定サーバー基底のprepared操作、依存rebase、添付bytes、実Auth／接続先と競合UIは未接続。",
+      "expected": "専用接続先の認証・型／参照検査・サーバーrevision・原子ackと端末確定、再送／解決中更新のUIを結ぶ。",
+      "evidence": [
+        "src/sync/README.md",
+        "src/sync/outbox.ts",
+        "src/sync/adapter.ts",
+        "src/storage/store.ts",
+        "docs/data/completion_plan.json"
+      ],
+      "reproduction": [],
+      "acceptance": "二端末、通信断、重複、削除対編集、認証失効、権限撤回、アカウント切替、素材再送を実接続で検証する。"
+    },
+    {
+      "id": "RV26",
+      "title": "限定共有・指摘・実権限／素材公開の受入が未完成",
+      "category": "後続工程／外部条件待ち",
+      "priority": "高",
+      "stage": "RB09",
+      "reqs": [
+        "F10",
+        "F12",
+        "F29",
+        "F30",
+        "F57",
+        "N08"
+      ],
+      "actual": "ローカル公開投影は厳格なallowlistと公開名／文／IDを使う。閲覧／指摘／編集／管理の実membershipと共有UI、private Storage、失効／期限と直接API試験はない。review項目を保存できるだけで共同レビュー完成ではない。",
+      "expected": "サーバー側で役割と公開範囲を検査し、本文・検索・図・地図・素材・リンク・ファイル名・件数へ同じ投影を適用する。",
+      "evidence": [
+        "src/domain/projection.ts",
+        "src/domain/publicCatalog.ts",
+        "src/sync/README.md",
+        "docs/spec/SYNC_SECURITY.md",
+        "src/ui/fieldSpecs.ts"
+      ],
+      "reproduction": [],
+      "acceptance": "非メンバー／閲覧者／指摘者／編集者／管理者による直接API、private素材、期限／撤回、秘密の子件数まで実環境で確認する。"
+    },
+    {
+      "id": "RV27",
+      "title": "一部の大規模表示は全件をDOMへ描画する",
+      "category": "仕様に対する実装不足",
+      "priority": "中",
+      "stage": "RB05＋RB10",
+      "reqs": [
+        "F03",
+        "F58",
+        "N05"
+      ],
+      "actual": "EntityCardsは60件ごと、年表／図／カタログ／世界には分割表示がある。一方ChapterList、WritingWorkspace、BranchList、ProductionBoardや参照select等には全件mapが残る。",
+      "expected": "各一覧・図・入力候補をページ／窓／検索で分割し、Largeで全件DOMを避ける。",
+      "evidence": [
+        "src/ui/Lists.tsx",
+        "src/ui/WritingWorkspace.tsx",
+        "src/ui/Fields.tsx",
+        "src/ui/Reader.tsx",
+        "docs/spec/NONFUNCTIONAL_REQUIREMENTS.md"
+      ],
+      "reproduction": [],
+      "acceptance": "Largeの入力→描画／検索／初回表示、進捗／取消、上限、2時間編集を計測。bundleサイズだけで遅いと断定しない。"
+    },
+    {
+      "id": "RV28",
+      "title": "診断関数が実エラーと本人の持出しへ未接続",
+      "category": "静的確認した未接続",
+      "priority": "中",
+      "stage": "RB10",
+      "reqs": [
+        "N15"
+      ],
+      "actual": "createDiagnosticは定義と試験にあるが本番App／WorkPageから使われない。environmentはbrowserという固定文字列のみ。",
+      "expected": "実失敗時にコード・操作ID・対象版・必要な環境メタ情報を記録し、本人の操作で任意に持出せる。",
+      "evidence": [
+        "src/diagnostics.ts",
+        "src/App.tsx",
+        "src/ui/WorkPage.tsx",
+        "tests/diagnostics.test.ts"
+      ],
+      "reproduction": [
+        "R10"
+      ],
+      "acceptance": "本文・stack・個人情報・秘密・認証情報を既定で含まず、送信／出力前に本人が内容を確認できる。"
+    },
+    {
+      "id": "RV29",
+      "title": "全116受入・実機・支援技術・全性能の完成証拠がない",
+      "category": "未確認の最終受入",
+      "priority": "高",
+      "stage": "RB10",
+      "reqs": [
+        "B24",
+        "F01",
+        "F05",
+        "F31",
+        "F32",
+        "N01",
+        "N02",
+        "N03",
+        "N04",
+        "N05",
+        "N06",
+        "N09",
+        "N10",
+        "N11",
+        "N13",
+        "N14",
+        "N19"
+      ],
+      "actual": "最新mainのCI成功と段階別証拠はある。104要件＋12総合、実機、手動支援技術、全性能目標、全情報復元、実同期を同じ完成commitで受入した証拠は確認できない。今回の環境はブラウザー未導入。",
+      "expected": "自動／部品／実ブラウザー／実機／実APIの証拠を区別して最終対象版へ対応させる。",
+      "evidence": [
+        "docs/implementation/PROGRESS.md",
+        "docs/quality/ACCEPTANCE_TESTS.md",
+        "docs/spec/NONFUNCTIONAL_REQUIREMENTS.md",
+        "docs/spec/UI_UX.md",
+        "scripts/check_release.py",
+        ".github/workflows/ci.yml"
+      ],
+      "reproduction": [],
+      "acceptance": "標準データ30回p95、大規模、2時間、実端末・VoiceOver／NVDA、全正常／失敗と障害注入を元の条件で満たす。未実行は未実行と記録する。"
+    },
+    {
+      "id": "RV30",
+      "title": "完成候補の公開構成・費用・公開後確認は未成立",
+      "category": "未確認の最終受入",
+      "priority": "高",
+      "stage": "RB10",
+      "reqs": [
+        "N17"
+      ],
+      "actual": "公開は保留され、release evidence gateは残っている。専用同期先・quota／現行費用・完成commitの公開後証拠は未成立。公開保留自体は計画どおり。",
+      "expected": "完成対象commit、base path、build-info、cache、直リンク、費用／上限と復元ガイドを具体化して候補を提示する。",
+      "evidence": [
+        "docs/implementation/RELEASE.md",
+        "docs/data/completion_plan.json",
+        "scripts/check_release.py",
+        "scripts/build/service-worker.mjs"
+      ],
+      "reproduction": [],
+      "acceptance": "別用途DBを流用せず新規課金を自動有効化しない。最終候補と証拠が揃うまで公開gateを緩めない。"
+    }
+  ],
+  "verification": {
+    "local_build": "passed",
+    "local_docs": "passed",
+    "local_plan": "passed",
+    "python_checks": "15 passed",
+    "repository_unit_tests": "539 passed / 541; 2 browser-dependent tests blocked by missing Chromium executable",
+    "review_reproductions": "14 passed; 12 behavioral observations and 2 static connection/form observations; these confirm current gaps, not product acceptance",
+    "native_browser_retest": "not_run; browser executable unavailable",
+    "real_device": "not_run",
+    "live_sync_permissions": "not_run"
+  },
+  "claim_limit": "104要件を全件照合した時点で確認できた差分。未知の不具合がないことや全116受入の合格を保証しない。",
+  "source_sha256": {
+    ".github/workflows/ci.yml": "6e72146ba74aaf5f2b62ed9065ec33e00845224589cac8c58aa5b356c63bfff0",
+    ".github/workflows/release.yml": "1c82433acd90b032878deaa67d4eeae6c35475acf750c2975a4b9c05b6e9feee",
+    "docs/data/acceptance_cases.json": "e1e4b06a3bb1cd79fc590239ab6350103323335f2e1ee87a2e6a283755834c4f",
+    "docs/data/completion_plan.json": "c493dfb16c842c146e01da59a6addd7b85a87dbeb327b911abf2b9d21e34a253",
+    "docs/data/requirements.json": "df11649ab7ec25c31ae2aad6aacdca98d7324aba2e701352f9a78136c3bed0dc",
+    "docs/implementation/EXPORT_COMPATIBILITY.md": "d30ea31ac95503b17b34ec38ef86a23c5940e9f3e513f75f05c3ad84bc2d19db",
+    "docs/implementation/PROGRESS.md": "567a5a7a0a269e50a2d214a0d790ab327e1bb95cc8d4c1db5e5d9efeedaa2c54",
+    "docs/implementation/RELEASE.md": "b3e97fda2535197ca894a3769ab3c3611cace5aeb38758f66aeb828038b2ba92",
+    "docs/implementation/USER_GUIDE.md": "952ba2a4dff48c5fb6b10a689be3077841edc9f58906d29fa06b2bec6c3fd82c",
+    "docs/quality/ACCEPTANCE_TESTS.md": "6562552f4df7604e8c16d7c1e5eabf99466172aa942d0afe7e501ceb82385812",
+    "docs/research/Game_Scenario_Manager_Research_2026-10-05.pdf": "59e23b37a1c04b08fdc1699f9894ce37716bfcd69d01257122bf47073fe33a06",
+    "docs/spec/BEHAVIOR_CONTRACT.md": "685feaf6de80b9b424460d0ce9e422247d773053089232a9be8c993e33e42d5f",
+    "docs/spec/DATA_MODEL.md": "1aa5a8a6ffebf354e4089164987de32fdd3cf81c342834f287dfbdb213f4b389",
+    "docs/spec/NONFUNCTIONAL_REQUIREMENTS.md": "b67a3ceafaf2bb897c1877bcd2c81670bfcc58dc2911043e1e61c67986a2c491",
+    "docs/spec/SYNC_SECURITY.md": "fc91c8f866f5117aee82cc4df6ce3711315379f396c91ff6a6e056b97257a5ed",
+    "docs/spec/UI_UX.md": "46be9bb0b4c131c7c3c8892432f967a8f2bd0a394ffde5c90aa508ec047fdea4",
+    "playwright.config.ts": "fd11ed54eaeafd74fe44f36b05acdb87b16e30c635a31de650af42910b0a952e",
+    "scripts/build/service-worker.mjs": "1323ab1f3b4f82c7c4c689c9f2a5a5215b5ae1b1a70904d9620ea09bc1e1b774",
+    "scripts/check_release.py": "3128cdbc0bdba458765a325671be08562de139f16fee7e7fde5cd69f08bce2dd",
+    "src/App.tsx": "7c0f35cde0d3a5e12a8e4e511f1dcfd636f9ddcf5bb4552e2efadcde19d44681",
+    "src/diagnostics.ts": "1326b26f0e756b166c60f6c3051d555aae9a0707d34b58304f51932d1b0925fb",
+    "src/domain/attachments.ts": "4c176838731a0e63ae9fa84404c13a95f0e364124e3a386bb2b9506be3827fa1",
+    "src/domain/changeReviews.ts": "6ff32f7b552644b5553446e0537633d5f83df89e99cbf7350a41f6022a18abc8",
+    "src/domain/conditions.ts": "347286da37498c1997b9b956331127c863c432a10c8fe71923214f22d6ce89fd",
+    "src/domain/exports.ts": "4be8ad2cfe55b0179fa6be136cdd094dba314e31332c7a5232b78cf9e14dbc21",
+    "src/domain/externalInputs.ts": "dbea9185e12908b9c20361b778ae50102e177a117657620104ea452535db1d03",
+    "src/domain/maintenance.ts": "63202fa602f921840575f8edd5d6302b0292066c5265564edcfaa511d3a28998",
+    "src/domain/model.ts": "5523cb220d69b19f6d0da3215be4f960002ee04672cc202839c2c69143b2cb89",
+    "src/domain/pinnedWorlds.ts": "e00f98795dd947e374b9d39fc91f608492be340fe2ab78587cfaa3c2614646ee",
+    "src/domain/presentation.ts": "a639886c3861667677e76f07f729578d86bbec97f6e8734f2731e852fe064b7a",
+    "src/domain/production.ts": "1b6ff5a4811c5b92e7d497b9d1f4f8836c9d1d341542ebcc0f7d34b9f0af2fe1",
+    "src/domain/projection.ts": "4c578ee5808bedc5b514d957f2189012d803174bc7414e0b190fac3f99f03890",
+    "src/domain/publicCatalog.ts": "f0e1c410183381991f4e6330753c9c337f77f57073ec9d482d83193401ee47d6",
+    "src/domain/relationGraph.ts": "62f558fc3c3655dc225fb80d449068360d00cb7601f0e6302da232da1a0969e7",
+    "src/domain/runtime.ts": "cbc275803d83237b5c303043c534bead4a83b68aa513d8b35171ed19756fbc8d",
+    "src/domain/runtimeContracts.ts": "6bc002c8b9e5a13f39cc6f2bd12233ad976bcd5e419ddd171b7338d06143bf8b",
+    "src/domain/runtimeVersions.ts": "090278c02e6100aa4b97118c40e0db5ad7e72de93cf68eaada07c9a5a0071154",
+    "src/domain/time.ts": "6bcaade20487c977da38a7c3100cdb092ca25422f10b3b753b4a54488aad67bb",
+    "src/domain/timeEditing.ts": "b1189a5425b724eed1384be3a20fc905a8bb807258dd6e1f7ab55a8b3b2c2c00",
+    "src/domain/types.ts": "f6c2cebd6537c4f7c1420ea7de9e401d888984f2c3dc5085e080c0d01bb7c1f8",
+    "src/domain/world.ts": "3bdb9d77dc01d440b0362f506097d6c40addbcc55ca3e0d5b3135afc55a2bcbb",
+    "src/main.tsx": "29c84e21e010f36e84324ca473a3b2ce55c16693c2da3196e8847619988e7606",
+    "src/storage/archive.ts": "923645d8288e83ed812c0c9c78504a49d2f89c8175536e34efd5d8db637230c6",
+    "src/storage/importMapping.ts": "30c1fb0c0052044a95630d17b4cf4c34fe9433f2814ff302e474c528eba39c62",
+    "src/storage/json.ts": "13de86b172685c9181bfe8f9f5d05e5f6b889ed9acbcb987428637d792e68df0",
+    "src/storage/storage.test.ts": "313bc389d4aaf1b00e7d4d4bbd9333f50d2e6ab744956c73e62681ec58c73781",
+    "src/storage/store.ts": "fdad2bc985f67a59ec3b544468e85c0c10080f0483076e3748543a9c3b3d8216",
+    "src/styles.css": "091d0ff396736fa582236dc1519ecf907bb886cdae14a4aef46f86ecf2caf125",
+    "src/sync/README.md": "769fd52853706229da1efd9bfd1025768fb33fcea96bee25ca5c765a1532d824",
+    "src/sync/adapter.ts": "c0e236cb35423d79216f6a46a74331023d82adfce84975c88aa2b903cda8b9e7",
+    "src/sync/outbox.ts": "090484da6d13c63ae748fcb19ae47e2652e91f6567519ab05cb00cd5d4eb59c9",
+    "src/sync/testing.ts": "97e546074266c284f46e9f00bf25e2a8d178250d507cc76043f6d6d9dead8aa7",
+    "src/testing/performanceFixture.ts": "92959081479faed6d3b6000c8c1abed0f9efce7141e93b624bb3722bce449228",
+    "src/ui/AssetPreview.tsx": "ba0870e65c8c370854b7e057c11267d1ffb321b27033ef00da190d4648e69813",
+    "src/ui/AuthorAlternativeStudio.tsx": "d1383efbdf56b52e9ee41f098927e01c8962c1517f4dc181be78b434374d83d3",
+    "src/ui/EntityEditor.tsx": "e47c54c0a235b0d772f7b2566fda7addc6fb906da7493767d3a96da6975271be",
+    "src/ui/Fields.tsx": "0c6087b036166fedde17013ea75029bacaf7a38fd9daba2caf79a99032658a5c",
+    "src/ui/Lists.tsx": "5e0981ed3b0569d1a5d20a1e4de777afd14a8dae1f0c3306204b3b5529ed50a3",
+    "src/ui/Reader.tsx": "e685ecf669a3f91d8eed5fe3f17d3563e90319da49d59de1c6105395559ff035",
+    "src/ui/Relationships.tsx": "5f575c69c94c34d251c350532be117b8182cb87a98053433ca876dec6031d329",
+    "src/ui/Timeline.tsx": "8b3c198a6669e78c764c39742a5103746eca146a411f3269e85e702688e62ae3",
+    "src/ui/WorkPage.tsx": "d4d6e38d331ecffa0ccfe485d3e3517c757d4020fc0011b552de722a5af3f57a",
+    "src/ui/WorldCalendars.tsx": "7abcd6395157e35cff6aa5908cc5f6046b05f9019b9a122ab73d738031421a55",
+    "src/ui/WorldHistories.tsx": "cd1db8b89d7d5c50f5cf5f4cf68d53e1dac553cd9ec958f810e929a39fe01f64",
+    "src/ui/WorldTimeImpactPreview.tsx": "8ed3aaf654eaa00176cf816f99fb6f893e6b7d7ad8b844142a31cbdd2f572bdb",
+    "src/ui/WritingWorkspace.tsx": "5016af03a2a9deb95e87fef27edbdae54621806e8051c5c3860646c135bf53aa",
+    "src/ui/components.tsx": "7a419db0fb68f4addea1fd1ce881cdc6902e04b2fc5ce736427af56d69edf0ee",
+    "src/ui/draftState.ts": "cd1898594d59bff587d16416f8084c30cf6ee58b650ff56c45b96259abd0b5ed",
+    "src/ui/fieldSpecs.ts": "02895eafd41119f7c7138a90f7e93a483cd38e56ecf691ed5942809230ebc910",
+    "tests/diagnostics.test.ts": "3fbc87ae69d4f76ec8540abf38e97401f156bf7170bd342b2854990031863b31",
+    "tests/e2e/editor.spec.ts": "e0fdbe01454d6916703a66448ea21c047fd9c13786a445f3f964ca82e7835f4b",
+    "tests/runtime.test.ts": "24df771a00ee6fbbc14e9fc867d21255f855d4273f51bf813647e28b91a131dc",
+    "tests/sync.test.ts": "7b624670860aacadb2ded616af55ba5244d49ce90f8895203778f16739db3b63",
+    "vitest.config.ts": "0f3dc319a1154614a9f4cb2cbd1fb4b0fa2cac635ea4c4fab29f3d73eb472d9f"
+  }
+}
