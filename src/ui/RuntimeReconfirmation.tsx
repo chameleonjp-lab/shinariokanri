@@ -1,3 +1,5 @@
+import {registerAuthorCache,registerAuthorBusy} from './StoreContext';
+import {useAuthorScope} from './StoreContext';
 import { useEffect, useRef, useState } from 'react';
 import type { Entity, ProjectContent, ProjectData, ProjectSnapshot } from '../domain/types';
 import { confirmedCheckpointMigration, previewCheckpointMigration, type CheckpointMigrationPlan } from '../domain/checkpoints';
@@ -17,10 +19,11 @@ export function RuntimeReconfirmation({ project, version, entryId, selectedCheck
   project: ProjectData; version: string; entryId: string; selectedCheckpointId: string; worldSnapshots: Record<string, ProjectContent>; disabled: boolean; onBusy: (busy: boolean) => void; mode?: 'flow' | 'chapters'; worldTick?: string; sceneId?: string;
   onSaveMany: (entities: Entity[], reason: string, assets?: undefined, snapshots?: ProjectSnapshot[], expectedRevision?: string) => Promise<void>;
 }) {
-  const [draft, setDraft] = useState(() => load(project.projectId)), latest = useRef(project), actions = useRef(onBusy), ownedBusy = useRef(false), controller = useRef<AbortController | null>(null); latest.current = project; actions.current = onBusy;
-  const update = (change: Partial<Draft>) => { const next = { ...load(project.projectId), ...change }; drafts.set(project.projectId, next); try { localStorage.setItem(`scenario-reconfirmation-selection:${project.projectId}`, JSON.stringify({ checkpointId: next.checkpointId, traceId: next.traceId })); } catch { /* Selection still survives navigation in memory. */ } window.dispatchEvent(new CustomEvent(EVENT, { detail: project.projectId })); };
-  useEffect(() => { const sync = (event?: Event) => { if (event && (event as CustomEvent).detail !== project.projectId) return; const current = load(project.projectId); setDraft(current); const previous = ownedBusy.current; ownedBusy.current = current.busy; if (current.busy || previous) actions.current(current.busy); }; sync(); window.addEventListener(EVENT, sync); return () => { window.removeEventListener(EVENT, sync); controller.current?.abort(); }; }, [project.projectId]);
-  useEffect(() => { const current = load(project.projectId); if (current.savedIds?.every(id => project.entities.some(entity => entity.id === id)) && current.savedSnapshotIds?.every(id => project.snapshots.some(snapshot => snapshot.id === id))) update({ busy: false, savedIds: undefined, savedSnapshotIds: undefined, migration: undefined, reconfirmation: undefined, notice: '開始状態・対象版・新しい証跡を端末内に保存しました。旧版の証跡も保持しています。' }); }, [project, draft.savedIds, draft.savedSnapshotIds]);
+  const authorScope=useAuthorScope(project.projectId);
+  const [draft, setDraft] = useState(() => load(authorScope)), latest = useRef(project), actions = useRef(onBusy), ownedBusy = useRef(false), controller = useRef<AbortController | null>(null); latest.current = project; actions.current = onBusy;
+  const update = (change: Partial<Draft>) => { const next = { ...load(authorScope), ...change }; drafts.set(authorScope, next); try { localStorage.setItem(`scenario-reconfirmation-selection:${authorScope}`, JSON.stringify({ checkpointId: next.checkpointId, traceId: next.traceId })); } catch { /* Selection still survives navigation in memory. */ } window.dispatchEvent(new CustomEvent(EVENT, { detail: authorScope })); };
+  useEffect(() => { const sync = (event?: Event) => { if (event && (event as CustomEvent).detail !== authorScope) return; const current = load(authorScope); setDraft(current); const previous = ownedBusy.current; ownedBusy.current = current.busy; if (current.busy || previous) actions.current(current.busy); }; sync(); window.addEventListener(EVENT, sync); return () => { window.removeEventListener(EVENT, sync); controller.current?.abort(); }; }, [project.projectId]);
+  useEffect(() => { const current = load(authorScope); if (current.savedIds?.every(id => project.entities.some(entity => entity.id === id)) && current.savedSnapshotIds?.every(id => project.snapshots.some(snapshot => snapshot.id === id))) update({ busy: false, savedIds: undefined, savedSnapshotIds: undefined, migration: undefined, reconfirmation: undefined, notice: '開始状態・対象版・新しい証跡を端末内に保存しました。旧版の証跡も保持しています。' }); }, [project, draft.savedIds, draft.savedSnapshotIds]);
   const checkpoints = project.entities.filter((entity): entity is Entity<'checkpoint'> => entity.kind === 'checkpoint' && adoptedRecord(entity) && entity.data.contentVersionId !== (version || project.projectId));
   const traces = project.entities.filter((entity): entity is Entity<'trace'> => entity.kind === 'trace' && adoptedRecord(entity));
   const checkpointPage = useListWindow({ items: checkpoints, scope: `${project.projectId}:checkpoint-migration`, selectedId: draft.checkpointId });
@@ -32,7 +35,7 @@ export function RuntimeReconfirmation({ project, version, entryId, selectedCheck
   const expectedWorldTick = worldTick || sourceCheckpoint?.data.worldTick || (sourceTicks.length === 1 ? sourceTicks[0] : null);
   const busy = disabled || draft.busy, staleMigration = !!draft.migration && (draft.migration.baseRevision !== project.revision || draft.migration.targetVersionId !== (version || project.projectId) || draft.migration.targetEntryId !== (entryId || null) || draft.migration.targetMode !== mode || draft.migration.targetWorldTick !== expectedWorldTick || draft.migration.targetSceneId !== (mode === 'chapters' ? sceneId || null : null)), staleTrace = !!draft.reconfirmation && (draft.reconfirmation.baseRevision !== project.revision || draft.reconfirmation.startCheckpointId !== (selectedCheckpointId || null));
   const prepare = async (kind: 'migration' | 'trace') => {
-    if (disabled || load(project.projectId).busy) return;
+    if (disabled || load(authorScope).busy) return;
     update({ busy: true, error: '', notice: '', progress: 0 }); actions.current(true);
     const abort = new AbortController(); controller.current = abort;
     try {
@@ -42,8 +45,8 @@ export function RuntimeReconfirmation({ project, version, entryId, selectedCheck
     finally { controller.current = null; update({ busy: false }); actions.current(false); }
   };
   const save = async (kind: 'migrate' | 'recreate' | 'trace') => {
-    if (disabled || load(project.projectId).busy) return;
-    const submitted = load(project.projectId), base = latest.current;
+    if (disabled || load(authorScope).busy) return;
+    const submitted = load(authorScope), base = latest.current;
     update({ busy: true, error: '', notice: '' }); actions.current(true);
     try {
       const result = kind === 'trace' ? await confirmTraceReconfirmation(base, submitted.reconfirmation!) : await confirmedCheckpointMigration(base, submitted.migration!, kind, worldSnapshots).then(prepared => ({ entities: [prepared.checkpoint], snapshots: prepared.snapshots }));
@@ -64,3 +67,6 @@ export function RuntimeReconfirmation({ project, version, entryId, selectedCheck
     {draft.reconfirmation && <div><p>再実行基底revision {draft.reconfirmation.baseRevision}。新しい固定版 {draft.reconfirmation.targetVersionId}。旧経路を残して回帰集合へ新しい経路を追加します。</p>{staleTrace && <p role="alert">再実行後に作品が変わりました。結果を保持して再実行してください。</p>}<ListPager {...traceChanges} label="経路の変更影響"/>{traceChanges.items.map(change => <p key={change.id}>{labelOf(project.entities.find(entity => entity.id === change.id))} · {change.reason}</p>)}{draft.reconfirmation.findings.map((finding, i) => <p key={i}>{finding.status} · {finding.message}</p>)}<button className="button primary" disabled={busy || staleTrace} onClick={() => void save('trace')}>再実行した新しい経路と証跡を保存</button></div>}
   </section>;
 }
+
+registerAuthorCache(account=>{const prefix=account+":";for(const map of [drafts])for(const key of map.keys())if(key.startsWith(prefix))map.delete(key);});
+registerAuthorBusy(account=>[...drafts].some(([key,value])=>key.startsWith(account+":")&&value.busy));

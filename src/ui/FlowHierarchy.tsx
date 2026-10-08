@@ -1,3 +1,4 @@
+import {useAuthorScope} from './StoreContext';
 import { useMemo, useState } from 'react';
 import type { ContentAnchor, ProjectData } from '../domain/types';
 import { flowStructure, structureCounts, type FlowStructureItem } from '../domain/flowStructure';
@@ -7,6 +8,7 @@ import { resolveReuseContent, reuseOrigin, reuseTargetAnchor } from '../domain/r
 
 function Level({ items, scope, selectedId, onSelect }: { items: FlowStructureItem[]; scope: string; selectedId: string | null; onSelect: (id: string) => void }) {
   const window = useListWindow({ items, scope, selectedId });
+  scope=useAuthorScope(scope);
   const [openId, setOpenId] = useState(() => { try { return localStorage.getItem(`scenario-hierarchy-open:v1:${scope}`) ?? ''; } catch { return ''; } });
   const toggle = (id: string) => { const next = openId === id ? '' : id; setOpenId(next); try { localStorage.setItem(`scenario-hierarchy-open:v1:${scope}`, next); } catch { /* Optional view preference. */ } };
   return <><ol className="flow-hierarchy-level">{window.items.map(item => <Folder key={item.id} scope={`${scope}/${item.id}`} item={item} open={openId === item.id} toggle={() => toggle(item.id)} selectedId={selectedId} onSelect={onSelect}/>)}</ol><ListPager {...window} label="階層"/></>;

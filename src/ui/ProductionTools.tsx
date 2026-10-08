@@ -1,9 +1,11 @@
+import {registerAuthorCache,registerAuthorBusy} from './StoreContext';
+import {useScenarioStore,useAuthorScope,storeForAuthorScope} from './StoreContext';
 import { useEffect, useSyncExternalStore } from 'react';
 import type { Entity, ProjectData } from '../domain/types';
 import { previewDialogueChange, confirmDialogueChange, previewSourceApproval, confirmSourceApproval, type DialogueChangePlan } from '../domain/productionWorkflow';
 import { previewMaterial, confirmMaterial, materialUsers, type MaterialPlan } from '../domain/materials';
 import { prepareAsset, type PreparedAsset } from '../domain/attachments';
-import { scenarioStore, type AssetInput, type AuthorToolDraft } from '../storage';
+import { type AssetInput, type AuthorToolDraft } from '../storage';
 import { labelOf, RichTextView } from './Fields';
 import { PagedSelect } from './PagedSelect';
 import { ListPager, useListWindow } from './ListWindow';
@@ -18,20 +20,21 @@ function load(key: string, project: ProjectData, entity: Entity): Draft {
   return draft;
 }
 function update(key: string, patch: Partial<Draft>) { drafts.set(key, { ...drafts.get(key)!, ...patch }); listeners.forEach(listener => listener()); }
-function store(key: string, projectId: string) {
+function store(key: string, projectId: string) {const scenarioStore=storeForAuthorScope(key);
   const draft = drafts.get(key)!;
   const submitted: AuthorToolDraft = { key, projectId, baseRevision: draft.baseRevision, fields: structuredClone(draft.input), ...(draft.asset ? { asset: { bytes: draft.asset.bytes, contentHash: draft.asset.contentHash } } : {}) };
   const write = (writes.get(key) ?? Promise.resolve()).catch(() => {}).then(() => scenarioStore.saveAuthorToolDraft(submitted)).catch(cause => update(key, { error: `制作入力の一時保存に失敗しました。画面内の入力は保持しています。${(cause as Error).message}` })); writes.set(key, write);
 }
 export function ProductionTools({ project, entity, disabled, onSaveProject, onBusy, onApplied, onOpen }: { project: ProjectData; entity: Entity; disabled: boolean; onSaveProject: (project: ProjectData, reason: string, assets?: AssetInput[]) => Promise<ProjectData>; onBusy: (busy: boolean) => void; onApplied: (entity: Entity) => void; onOpen: (id: string) => void }) {
-  const key = `production:v1:${project.projectId}:${entity.id}`, draft = useSyncExternalStore(subscribe, () => load(key, project, entity));
+  const scenarioStore=useScenarioStore();
+  const key = useAuthorScope(`production:v1:${project.projectId}:${entity.id}`), draft = useSyncExternalStore(subscribe, () => load(key, project, entity));
   const current = project.entities.find(record => record.id === entity.id) ?? entity;
   const approvalSource = current.kind === 'localization' || current.kind === 'recording' ? project.entities.find(record => record.id === current.data.sourceLineId && record.kind === 'dialogue_line') as Entity<'dialogue_line'> | undefined : undefined;
   const stale = !!(draft.dialogue || draft.approval || draft.material) && project.revision !== (draft.dialogue?.baseRevision ?? draft.approval?.baseRevision ?? draft.material?.baseRevision);
   const users = entity.kind === 'attachment' ? materialUsers(project, entity.id) : [], userPage = useListWindow({ items: users, scope: `${key}:material-users` });
   const lineage = entity.kind === 'dialogue_line' ? entity.data.lineage?.segments ?? [] : [], lineagePage = useListWindow({ items: lineage.map((segment,index) => ({ id: `${index}`, segment })), scope: `${key}:lineage` });
   const choices = project.entities.filter(record => record.kind === 'dialogue_line' && !record.deletedAt && !['rejected','alternate'].includes(record.status) && !draft.input.mergeIds.includes(record.id)).map(record => ({ id: record.id, label: labelOf(record) }));
-  useEffect(() => { const retained = drafts.get(key)!; if (retained.ready || retained.busy) return; update(key, { busy: true }); void scenarioStore.getAuthorToolDraft(key).then(async stored => {
+  useEffect(() => { const retained = drafts.get(key)!; if (retained.ready || retained.busy) return; update(key, { busy: true }); void scenarioStore.getAuthorToolDraft(key).then(async stored => {if(!stored&&key.startsWith('guest:')){const old=await scenarioStore.getAuthorToolDraft(key.slice(6));if(old){stored={...old,key};await scenarioStore.saveAuthorToolDraft(stored);await scenarioStore.clearAuthorToolDraft(key.slice(6));}}
     if (!stored) return;
     const input = stored.fields as Input;
     if (!['split','merge','copy'].includes(input.mode) || !Array.isArray(input.mergeIds) || !Array.isArray(input.replaceIds) || typeof input.reason !== 'string' || stored.projectId !== project.projectId) throw new Error('制作入力の保存形式を確認できません。作品データは変更していません。');
@@ -75,3 +78,6 @@ export function ProductionTools({ project, entity, disabled, onSaveProject, onBu
     {entity.kind==='dialogue_line' && (entity.data.replacedByLineIds?.length || lineage.length) ? <><p>元台詞と新台詞の対応</p>{entity.data.replacedByLineIds?.map(id=><button className="text-button" type="button" key={id} onClick={()=>onOpen(id)}>{labelOf(project.entities.find(record=>record.id===id))}を開く</button>)}{lineagePage.items.map(({id,segment})=><p key={id}><button type="button" className="text-button" onClick={()=>onOpen(segment.source.entityId)}>元 {segment.source.entityId}</button> → {segment.target.entityId} · 文字 {segment.source.start??0}〜{segment.source.end??'段落末'}</p>)}<ListPager {...lineagePage} label="台詞ID対応"/></>:null}
   </details>;
 }
+
+registerAuthorCache(account=>{const prefix=account+":";for(const map of [drafts,writes,queuedFiles])for(const key of map.keys())if(key.startsWith(prefix))map.delete(key);});
+registerAuthorBusy(account=>[...drafts].some(([key,value])=>key.startsWith(account+":")&&value.busy));

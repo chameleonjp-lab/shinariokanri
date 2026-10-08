@@ -25,20 +25,22 @@ export class SyncOutbox {
   constructor(private store: SyncOutboxStore, private getSession: () => SyncSession,
     private transport: SyncTransport | null = null) {}
 
-  flush(scope: SyncScope): Promise<SyncReport> {
+  flush(scope: SyncScope,options:{signal?:AbortSignal;onProgress?:(acknowledged:number,remaining:number)=>void}={}): Promise<SyncReport> {
     assertScope(scope);
     const captured = clone(scope);
     const key = JSON.stringify([scope.accountId, scope.projectId]);
     const existing = this.running.get(key);
     if (existing) return existing;
-    const pending = this.perform(captured).finally(() => this.running.delete(key));
+    const pending = this.perform(captured,{signal:options.signal,onProgress:options.onProgress}).finally(() => this.running.delete(key));
     this.running.set(key, pending);
     return pending;
   }
 
-  private async perform(scope: SyncScope): Promise<SyncReport> {
+  private async perform(scope: SyncScope,options:{signal?:AbortSignal;onProgress?:(acknowledged:number,remaining:number)=>void}): Promise<SyncReport> {
     const report: SyncReport = { status: 'idle', acknowledged: 0, remaining: 0, conflicts: 0, confirmedRevision: null };
     try {
+      const cancelled=()=>{if(options.signal?.aborted)throw new SyncProtocolError('CANCELLED');};
+      cancelled();
       const initialSession = clone(this.getSession());
       if (!sessionMatches(initialSession, scope)) return { ...report,
         status: initialSession.authenticated ? 'account-changed' : 'auth-required',
@@ -50,16 +52,21 @@ export class SyncOutbox {
       // The barrier is durable: a new flush or a restarted client must still see unresolved alternatives.
       const unresolved = await this.store.listUnresolvedConflicts(scope);
       assertSession(this.getSession(), scope, initialSession.generation);
-      const candidates = unresolved.length ? queued.filter(operation =>
+      let candidates = unresolved.length ? queued.filter(operation =>
         unresolved.some(conflict => conflict.operationId === operation.resolvesOperationId)) : queued;
       if (unresolved.length && !candidates.length) return { ...report, status: 'conflict', conflicts: unresolved.reduce((count, row) => count + row.conflicts.length, 0) };
-      for (const stored of candidates) {
+      const sent = new Set<string>();
+      while (candidates.length) {
+        cancelled();
+        const stored = candidates[0];
+        if (sent.has(stored.operationId) || sent.size >= 10000) return { ...report, status: 'pending' };
+        sent.add(stored.operationId);
         const operation = clone(stored);
         await assertOperation(operation);
         if (!sameScope(operation.scope, scope)) throw new SyncProtocolError('PROTOCOL_INVALID');
         const before = this.getSession();
         assertSession(before, scope, initialSession.generation);
-        const ack = await this.transport.send(operation, clone(before));
+        const ack = await this.transport.send(operation, clone(before),options.signal);
         const after = this.getSession();
         assertSession(after, scope, initialSession.generation);
         await assertAck(operation, ack);
@@ -69,6 +76,7 @@ export class SyncOutbox {
         report.acknowledged++;
         report.remaining--;
         report.confirmedRevision = ack.serverRevision;
+        try{options.onProgress?.(report.acknowledged,report.remaining);}catch{/* Observation never changes a durable acknowledgement. */}
         assertSession(this.getSession(), scope, initialSession.generation);
         if (ack.status === 'conflict') {
           report.conflicts += ack.conflicts.length;
@@ -76,6 +84,13 @@ export class SyncOutbox {
           report.status = 'conflict';
           return report;
         }
+        // An ack changes the common base. Refetch and prepare dependent edits against that base.
+        const barriers = await this.store.listUnresolvedConflicts(scope);
+        const next = await this.store.list(scope);
+        assertSession(this.getSession(), scope, initialSession.generation);
+        report.remaining = next.length;
+        candidates = barriers.length ? next.filter(row => barriers.some(c => c.operationId === row.resolvesOperationId)) : next;
+        if (barriers.length && !candidates.length) return { ...report, status: 'conflict', conflicts: barriers.reduce((n,c)=>n+c.conflicts.length,0) };
       }
       const remaining = await this.store.list(scope);
       report.remaining = remaining.length;
@@ -85,10 +100,10 @@ export class SyncOutbox {
       report.status = remaining.length ? 'pending' : report.acknowledged ? 'synced' : 'idle';
       return report;
     } catch (error) {
-      const code = error instanceof SyncProtocolError ? error.code : 'TRANSPORT_UNAVAILABLE';
+      const code = options.signal?.aborted?'CANCELLED':error instanceof SyncProtocolError ? error.code : 'TRANSPORT_UNAVAILABLE';
       report.errorCode = code;
       report.status = code === 'AUTH_REQUIRED' ? 'auth-required' : code === 'ACCOUNT_CHANGED' ? 'account-changed' :
-        code === 'FORBIDDEN' ? 'forbidden' : 'failed';
+        code === 'FORBIDDEN' ? 'forbidden' : code==='CANCELLED'?'pending':'failed';
       return report;
     }
   }

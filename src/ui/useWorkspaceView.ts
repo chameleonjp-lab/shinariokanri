@@ -1,6 +1,6 @@
+import {useScenarioStore} from './StoreContext';
 import { useEffect, useRef, useState } from 'react';
 import type { ViewState } from '../domain/types';
-import { scenarioStore } from '../storage';
 import { recordRecentEntity, restoreWorkspacePreferences, saveWorkspaceViewState, parseEntityNavigationMarks, serializeEntityNavigationMarks, toggleFavoriteEntity, workspaceMarksStorageKey, WORKSPACE_VIEW_ID, type EntityNavigationMarks, type WorkspacePreferences } from './viewPreferences';
 
 function deviceClass(): ViewState['deviceClass'] { return window.innerWidth < 768 ? 'phone' : window.innerWidth < 1200 ? 'tablet' : 'desktop'; }
@@ -15,7 +15,8 @@ function mirroredView(projectId: string, userId: string, device: ViewState['devi
   } catch { return stored; }
 }
 export function useWorkspaceView(projectId: string | null, preferences: WorkspacePreferences, selectedId: string | null, restore: (preferences: WorkspacePreferences, selectedId: string | null) => void) {
-  const userId = useRef(localUser());
+  const scenarioStore=useScenarioStore();
+  const userId = useRef(scenarioStore.accountId??localUser());
   const latest = useRef({ preferences, selectedId, restore }); latest.current = { preferences, selectedId, restore };
   const previous = useRef<ViewState | undefined>(undefined);
   const scope = useRef<string | null>(null);

@@ -85,6 +85,9 @@ test('AT-F02/F56 雛形の通常フォームを差分確認して適用し、非
   await expect(editor.getByLabel('項目1の型', { exact: true })).toHaveValue('number');
   await page.reload();
   editor = await open(page, 'template', '人物の入力項目');
+  await expect(editor.getByLabel('項目1の型', { exact: true })).toHaveValue('number');
+  await expect(editor.locator('.editor-save-state')).toContainText('差分の確認待ち');
+  await editor.getByRole('button', { name: '保存済みの内容へ戻す', exact: true }).click();
   await expect(editor.getByLabel('項目1の型', { exact: true })).toHaveValue('enum');
   await editor.getByLabel('項目1の型', { exact: true }).selectOption('number');
   await editor.getByLabel('項目1を必須にする').check();

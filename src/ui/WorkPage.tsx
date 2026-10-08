@@ -1,10 +1,10 @@
+import {useScenarioStore,useAuthorScope} from './StoreContext';
 import { useAuthorField, useAuthorInput, authorField, flushAuthorDraft, AuthorDraftNotice } from './authorOperation';
 import { PagedSelect } from './PagedSelect';
 import {ExportCitationTools} from './ExportCitationTools';
 import {PROJECTABLE_KINDS} from '../domain/projection';
 import { resolveReuseContent } from '../domain/reuse';
 import { resolvePinnedWorlds } from '../domain/pinnedWorlds';
-import { scenarioStore } from '../storage';
 import { projectSettingsDraft, acknowledgeSettingsDraft, settingsDraftChanged, type ProjectSettingsDraft } from './projectSettingsDraft';
 import { useEffect, useRef, useState } from 'react';
 import type { Entity, ProjectContent, ProjectData, ProjectSnapshot } from '../domain/types';
@@ -19,7 +19,8 @@ export { BackupPanel } from './BackupPanel';
 export { HistoryPanel } from './HistoryPanel';
 
 export function ExportPanel({ project, onSave, onOpen, worldSnapshots = {} }: { project: ProjectData; worldSnapshots?:Record<string,ProjectContent>; onSave: (entity: Entity) => Promise<Entity>; onOpen: (id: string) => void }) {
-  const key=`export:${project.projectId}`,alive=useRef(true);useEffect(()=>{alive.current=true;return()=>{alive.current=false;};},[project.projectId]);
+  const scenarioStore=useScenarioStore();
+  const key=useAuthorScope(`export:${project.projectId}`),alive=useRef(true);useEffect(()=>{alive.current=true;return()=>{alive.current=false;};},[project.projectId]);
   const [worldPins,setWorldPins]=useState<ProjectSnapshot[]>([]);useEffect(()=>{let alive=true;void scenarioStore.listWorldSnapshots().then(worlds=>{if(alive)setWorldPins(Object.values(worlds).flatMap(world=>world.snapshots));});return()=>{alive=false;};},[project.projectId,worldSnapshots]);
   const editionPins=[...project.snapshots,...worldPins];
   const profiles = project.entities.filter(e => e.kind === 'projection_profile' && !e.deletedAt);
@@ -62,6 +63,7 @@ export function ExportPanel({ project, onSave, onOpen, worldSnapshots = {} }: { 
 }
 
 export function ProjectInfo({ project, initialDraft, saving = false, onDraftChange, onDraftSaved, onSavingChange, onSaveProject, onSaveEntities, onOpen, theme, setTheme }: { project: ProjectData; initialDraft?: ProjectSettingsDraft; saving?: boolean; onDraftChange?: (draft: ProjectSettingsDraft) => void; onDraftSaved?: (submitted: ProjectSettingsDraft, saved: ProjectData, consumedSnapshotName?: string) => void; onSavingChange?: (saving: boolean) => void; onSaveProject: (project: ProjectData, reason: string) => Promise<ProjectData>; onSaveEntities: (entities: Entity[], reason: string, assets?: AssetInput[]) => Promise<void>; onOpen: (id: string) => void; theme: string; setTheme: (theme: string) => void }) {
+  const scenarioStore=useScenarioStore();
   const [draft, setDraft] = useState(() => initialDraft ?? projectSettingsDraft(project));
   const draftRef = useRef(draft); draftRef.current = draft;
   const { name, mainStart, calendars: calendarJson, calendarValid, snapshotName } = draft;

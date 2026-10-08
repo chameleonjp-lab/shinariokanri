@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import {useAuthorScope} from './StoreContext';
 
 const PREFIX = 'scenario-list-position:v1:';
 function readPage(scope: string) {
@@ -6,6 +7,7 @@ function readPage(scope: string) {
 }
 /** Per-project view position, independent from authored data and save revisions. */
 export function useListWindow<T extends { id: string }>({ items, scope, selectedId, size = 60 }: { items: readonly T[]; scope: string; selectedId?: string | null; size?: number }) {
+  scope=useAuthorScope(scope);
   const [position, setPosition] = useState(() => ({ scope, page: readPage(scope) }));
   const selected = useRef<string | null | undefined>(undefined);
   const lastScope = useRef(scope);

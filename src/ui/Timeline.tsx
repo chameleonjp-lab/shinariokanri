@@ -1,3 +1,4 @@
+import {useAuthorScope} from './StoreContext';
 import { adoptedRecord, adoptionAssessment } from '../domain/adoption';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { CalendarDefinition, Entity, ID, ProjectData, Relation, Tick, TimeSpec } from '../domain/types';
@@ -31,10 +32,10 @@ export function timeLabel(value: unknown, project: ProjectData): string {
 
 interface LocalTimelineView { center: Tick; unit: CalendarDisplayUnit; zoom: number; span: string | null; collapsed: ID[]; scrollTop: number; scrollLeft: number; calendarId: string; customTicks: Tick; customName: string; selectedId?: ID | null }
 function validSpan(value: unknown): value is string { return typeof value === 'string' && /^[1-9][0-9]{0,38}$/.test(value) && BigInt(value) <= MAX_TICK * 2n; }
-function initialView(project: ProjectData): LocalTimelineView {
+function initialView(project: ProjectData,authorScope:string): LocalTimelineView {
   const defaults: LocalTimelineView = { center: project.mainStart, unit: 'tick', zoom: 1, span: null, collapsed: [], scrollTop: 0, scrollLeft: 0, calendarId: project.calendarId, customTicks: '1', customName: '独自単位' };
   try {
-    const saved = JSON.parse(localStorage.getItem(`scenario-timeline:v1:${project.projectId}`) ?? 'null') as Partial<LocalTimelineView> | null;
+    const saved = JSON.parse(localStorage.getItem(`scenario-timeline:v1:${authorScope}`) ?? 'null') as Partial<LocalTimelineView> | null;
     if (!saved || !isTick(saved.center) || !['tick', 'hour', 'day', 'month', 'year', 'custom'].includes(saved.unit ?? '')) return defaults;
     return { ...defaults, center: saved.center, unit: saved.unit!, zoom: typeof saved.zoom === 'number' && saved.zoom >= .001 && saved.zoom <= 20 ? saved.zoom : 1, span: validSpan(saved.span) ? saved.span : null, collapsed: Array.isArray(saved.collapsed) ? saved.collapsed.filter((id): id is ID => typeof id === 'string') : [], scrollTop: typeof saved.scrollTop === 'number' && Number.isFinite(saved.scrollTop) ? Math.max(0, saved.scrollTop) : 0, scrollLeft: typeof saved.scrollLeft === 'number' && Number.isFinite(saved.scrollLeft) ? Math.max(0, saved.scrollLeft) : 0, selectedId: typeof saved.selectedId === 'string' ? saved.selectedId : null, calendarId: project.calendars.some(calendar => calendar.id === saved.calendarId) ? saved.calendarId! : project.calendarId, customTicks: isTick(saved.customTicks) && parseTick(saved.customTicks) > 0n ? saved.customTicks : '1', customName: typeof saved.customName === 'string' ? saved.customName.slice(0, 128) : defaults.customName };
   } catch { return defaults; }
@@ -47,7 +48,8 @@ export interface TimelineProps {
   onShowMap?: (placeId: ID, eventId?: ID) => void; onShowRelationships?: (entityId: ID, at?: Tick | null) => void; onShowWorldHistory?: (entityId: ID, at?: Tick | null) => void;
 }
 export function Timeline({ project, selectedId: externalSelectedId, onSelect, onAdd, onSaveProject, onOpenRelation, referenceEntities = [], referenceRelations = [], referenceCalendars = [], adoptedReferenceIds, placeFilterId, worldTick, checkpointId = '', onViewPointChange, onShowMap, onShowRelationships, onShowWorldHistory }: TimelineProps) {
-  const [initial] = useState(() => initialView(project));
+  const authorScope=useAuthorScope(project.projectId);
+  const [initial] = useState(() => initialView(project,authorScope));
   const [localSelectedId, setLocalSelectedId] = useState<ID | null>(initial.selectedId ?? null), selectedId = externalSelectedId ?? localSelectedId;
   useEffect(() => { if (externalSelectedId) setLocalSelectedId(externalSelectedId); }, [externalSelectedId]);
   const [unit, setUnit] = useState<CalendarDisplayUnit>(initial.unit), [zoom, setZoom] = useState(initial.zoom), [fittedSpan, setFittedSpan] = useState<string | null>(initial.span), [center, setCenter] = useState<Tick>(initial.center), [calendarId, setCalendarId] = useState(initial.calendarId);
@@ -97,7 +99,7 @@ export function Timeline({ project, selectedId: externalSelectedId, onSelect, on
     update(); const observer = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(update) : undefined; observer?.observe(node);
     window.addEventListener('resize', update); return () => { observer?.disconnect(); window.removeEventListener('resize', update); };
   }, [mode, events.length > 0]);
-  useEffect(() => { try { localStorage.setItem(`scenario-timeline:v1:${project.projectId}`, JSON.stringify({ center, unit, zoom, span: fittedSpan, collapsed, scrollTop: viewport.top, scrollLeft: viewport.left, calendarId, customTicks, customName, selectedId })); } catch { /* A blocked preference store does not block editing. */ } }, [project.projectId, center, unit, zoom, fittedSpan, collapsed, viewport.top, viewport.left, calendarId, customTicks, customName, selectedId]);
+  useEffect(() => { try { localStorage.setItem(`scenario-timeline:v1:${authorScope}`, JSON.stringify({ center, unit, zoom, span: fittedSpan, collapsed, scrollTop: viewport.top, scrollLeft: viewport.left, calendarId, customTicks, customName, selectedId })); } catch { /* A blocked preference store does not block editing. */ } }, [project.projectId, center, unit, zoom, fittedSpan, collapsed, viewport.top, viewport.left, calendarId, customTicks, customName, selectedId]);
   useEffect(() => {
     const node = canvas.current; if (!node) return;
     const point = pendingReveal.current ? layout.positions.get(pendingReveal.current)?.[0] : undefined, lane = pendingReveal.current ? layout.rows.find(row => row.lane.characterId === pendingReveal.current || row.lane.groupId === pendingReveal.current) : undefined;

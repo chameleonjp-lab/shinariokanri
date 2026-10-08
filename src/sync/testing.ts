@@ -99,7 +99,7 @@ export class ContractSyncServer implements SyncTransport {
     let ack: SyncAck;
     if (conflicts.length) {
       ack = { ...common, status: 'conflict', serverRevision: project.revision,
-        documents: operation.targets.map(target => clone(project.documents.get(target.targetId) ?? null)), conflicts };
+        documents: operation.targets.map(target => clone(project.documents.get(target.targetId) ?? null)), confirmedDocuments:[...project.documents.values()].map(doc=>clone(doc)), conflicts };
     } else {
       const hasChange = candidates.some(candidate => !sameContent(project.documents.get(candidate.id) ?? null, candidate));
       const revision = hasChange ? (BigInt(project.revision) + 1n).toString() : project.revision;
@@ -113,7 +113,7 @@ export class ContractSyncServer implements SyncTransport {
       this.validate?.([...next.values()].map(doc => clone(doc)), clone(operation.scope));
       // Commit records, server revision, revision snapshot and idempotency ledger together.
       ack = { ...common, status: 'applied', serverRevision: revision, conflicts: [],
-        documents: operation.targets.map(target => clone(next.get(target.targetId)!)) };
+        documents: operation.targets.map(target => clone(next.get(target.targetId)!)), confirmedDocuments:[...next.values()].map(doc=>clone(doc)) };
       project.documents = next;
       project.revision = revision;
       if (hasChange) project.history.set(revision, copyDocuments(next));

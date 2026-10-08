@@ -1,3 +1,4 @@
+import {useScenarioStore,useAuthorScope} from './StoreContext';
 import { useEffect } from 'react';
 import { productionWorkload, productionTraceWorkload, estimateProduction } from '../domain/productionPlanning';
 import type { Entity, ProjectData } from '../domain/types';
@@ -7,10 +8,10 @@ import { PagedSelect } from './PagedSelect';
 import { ListPager, useListWindow } from './ListWindow';
 import { labelOf } from './Fields';
 import {GameplayProductionLinks} from './GameplayProductionLinks';
-import {scenarioStore} from '../storage';
 import {ProductionDependencies} from './ProductionDependencies';
 export function ProductionPlanningPanel({project,onOpen,onSaveProject}:{project:ProjectData;onOpen:(id:string)=>void;onSaveProject?:(p:ProjectData,reason:string)=>Promise<ProjectData>}){
- const key=`production-planning:${project.projectId}`,[traceId,setTrace]=useAuthorInput(key,'trace','',project.projectId,project.revision),[taskId,setTask]=useAuthorInput(key,'task','',project.projectId,project.revision),[speed,setSpeed]=useAuthorInput(key,'speed','',project.projectId,project.revision),[assumptions,setAssumptions]=useAuthorInput(key,'assumptions','',project.projectId,project.revision),[busy,setBusy]=useAuthorField(key,'busy',false),[error,setError]=useAuthorField(key,'error',''),[plan,setPlan]=useAuthorField<{revision:string;task:Entity<'production_task'>}|null>(key,'plan',null),[saved,setSaved]=useAuthorField<string|null>(key,'saved',null);
+  const scenarioStore=useScenarioStore();
+ const key=useAuthorScope(`production-planning:${project.projectId}`),[traceId,setTrace]=useAuthorInput(key,'trace','',project.projectId,project.revision),[taskId,setTask]=useAuthorInput(key,'task','',project.projectId,project.revision),[speed,setSpeed]=useAuthorInput(key,'speed','',project.projectId,project.revision),[assumptions,setAssumptions]=useAuthorInput(key,'assumptions','',project.projectId,project.revision),[busy,setBusy]=useAuthorField(key,'busy',false),[error,setError]=useAuthorField(key,'error',''),[plan,setPlan]=useAuthorField<{revision:string;task:Entity<'production_task'>}|null>(key,'plan',null),[saved,setSaved]=useAuthorField<string|null>(key,'saved',null);
  const trace=project.entities.find(e=>e.id===traceId&&e.kind==='trace'),[route,setRoute]=useAuthorField<Awaited<ReturnType<typeof productionTraceWorkload>>|null>(key,'route',null),[routeError,setRouteError]=useAuthorField(key,'routeError','');
  useEffect(()=>{let alive=true;setRoute(null);setRouteError('');if(traceId){const captured=structuredClone(project);void scenarioStore.listWorldSnapshots().then(worlds=>productionTraceWorkload(captured,traceId,Object.fromEntries(Object.values(worlds).flatMap(world=>world.snapshots.map(pin=>[pin.id,pin.content]))))).then(result=>{if(alive)setRoute(result);}).catch(cause=>{if(alive)setRouteError((cause as Error).message);});}return()=>{alive=false;};},[project.revision,project.projectId,traceId]);
  let workload:ReturnType<typeof productionWorkload>|undefined,problem='';try{workload=productionWorkload(project);}catch(cause){problem=(cause as Error).message;}

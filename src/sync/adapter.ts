@@ -24,6 +24,7 @@ export interface PreparedSyncStorage {
   /** The storage implementation is permanently bound to one account namespace, never the guest DB. */
   readonly accountId: string;
   listPreparedOperations(projectId: string): Promise<SyncOperation[]>;
+  prepareSavedOperations?(projectId: string): Promise<SyncOperation | null>;
   listPreparedConflicts(projectId: string): Promise<{operationId: string; conflicts: SyncConflict[]}[]>;
   /** One transaction: full original operation + ack + rejected alternatives + revision + outbox removal.
    * Refuse a resolution which omits any target of the rejected atomic batch. */
@@ -42,7 +43,11 @@ export class AccountScopedSyncStore implements SyncOutboxStore {
   }
   async list(scope: SyncScope): Promise<SyncOperation[]> {
     this.authorize(scope);
-    const operations = await this.storage.listPreparedOperations(scope.projectId);
+    let operations = await this.storage.listPreparedOperations(scope.projectId);
+    if (!operations.length && this.storage.prepareSavedOperations && !(await this.storage.listPreparedConflicts(scope.projectId)).length) {
+      const next = await this.storage.prepareSavedOperations(scope.projectId);
+      operations = next ? [next] : [];
+    }
     if (operations.some(operation => !sameScope(operation.scope, scope))) throw new SyncProtocolError('PROTOCOL_INVALID');
     return clone(operations);
   }

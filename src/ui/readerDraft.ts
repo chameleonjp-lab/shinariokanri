@@ -1,3 +1,4 @@
+import {registerAuthorCache,registerAuthorBusy} from './StoreContext';
 import { useSyncExternalStore, type Dispatch, type SetStateAction } from 'react';
 import type { TrialSession } from '../domain/runtime';
 
@@ -31,3 +32,6 @@ export function useReaderField<K extends keyof Omit<ReaderDraft, 'operation'>>(p
   };
   return [value, update];
 }
+
+registerAuthorCache(account=>{const prefix=account+":";for(const map of [drafts])for(const key of map.keys())if(key.startsWith(prefix))map.delete(key);});
+registerAuthorBusy(account=>[...drafts].some(([key,value])=>key.startsWith(account+":")&&value.busy));

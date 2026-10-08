@@ -1,3 +1,4 @@
+import {validateSyncRecovery,syncRecoveryImages,type NativeSyncRecovery,type RetainedSyncRecovery} from './syncRecovery';
 import Dexie, { type Table } from 'dexie';
 import { prepareWorldPin, type WorldPinInput } from './worldPins';
 import type { Block, CommandRecord, ContentState, Entity, ProjectContent, ProjectData, ProjectSnapshot, Relation, SavedView, ViewState } from '../domain/types';
@@ -8,11 +9,15 @@ import { addChangeReviews } from '../domain/changeReviews';
 import { validateProjectIntegrity } from '../domain/projectRecordValidation';
 import { sealAuthorAlternative } from '../domain/authorAlternativeIntegrity';
 import { appendAlternativeVersion, applyAlternativeChanges, projectContent } from '../domain/writingWorkspace';
-import { assetPath, attachmentMetadata, exportScenario, referencedWorlds, validateAsset, verifySnapshotHashes, verifyWorlds, worldSnapshotContents, type PreparedScenario } from './archive';
+import { assetPath, attachmentMetadata, closureAttachmentMetadata, exportScenario, referencedWorlds, validateAsset, verifySnapshotHashes, verifyWorlds, worldSnapshotContents, type PreparedScenario } from './archive';
 import { checkCancelled, saveError, StorageError } from './errors';
 import { canonicalJson, equalJson, jsonBytes, sha256 } from './json';
 import { recoveryImages, projectWithRecoveryHistory, validateRecovery, type PortableRecovery } from './recovery';
 import { planCrossProjectImport, type CrossProjectImportPlan } from './importMapping';
+import { assertAck } from '../sync/validation';
+import { assertDocumentTarget, createSyncOperation, sameValue, valueHash, SyncProtocolError, type SyncAck, type SyncDocument } from '../sync/protocol';
+import { nativeDocuments, nativeFromDocuments, prepareNativeOperation, acknowledgeNativeDocuments,sameDocumentContent, resolveCurrentNativeConflict, type ConfirmedSyncBase, type PreparedNativeOperation, type PreservedNativeConflict, type NativeSyncAck } from '../sync/nativeBridge';
+import type { ConflictResolution } from '../sync/merge';
 
 type StoredProject = Omit<ProjectData, 'entities' | 'relations' | 'snapshots' | 'history' | 'views'> & {
   entityIds: string[]; relationIds: string[]; snapshotIds: string[]; historyIds: string[]; viewIds: string[];
@@ -80,6 +85,7 @@ export interface ImportConflict { id: string; kind: 'project' | 'entity' | 'rela
 export interface ImportResult extends SaveResult { mode: ImportMode; idMap?: Record<string, string>; restorePointId?: string; warnings: string[] }
 
 class ScenarioDatabase extends Dexie {
+  sharedSnapshots!:Table<import('../sync/publicShare').SharedSnapshot,string>;
   projects!: Table<StoredProject, string>;
   entities!: Table<StoredEntity, [string, string]>;
   relations!: Table<Relation, [string, string]>;
@@ -98,6 +104,12 @@ class ScenarioDatabase extends Dexie {
   importDrafts!: Table<ImportDraft, string>;
   authorToolDrafts!: Table<AuthorToolDraft, string>;
   recoveredPending!: Table<RecoveredPendingIntent, string>;
+  retainedSyncRecovery!:Table<RetainedSyncRecovery,string>;
+  syncAssetAcks!:Table<{key:string;projectId:string;contentHash:string;byteSize:number;mediaType:string},string>;
+  syncBases!: Table<ConfirmedSyncBase, string>;
+  preparedSync!: Table<PreparedNativeOperation, string>;
+  syncConflicts!: Table<PreservedNativeConflict, string>;
+  syncAckEvidence!: Table<NativeSyncAck, string>;
   constructor(name: string) {
     super(name);
     this.version(1).stores({
@@ -110,6 +122,7 @@ class ScenarioDatabase extends Dexie {
     this.version(2).stores({ importDrafts: 'key' });
     this.version(3).stores({ recoveredPending: 'key,projectId' });
     this.version(4).stores({ authorToolDrafts: 'key,projectId' });
+    this.version(5).stores({ syncBases:'projectId', preparedSync:'operationId,projectId', syncConflicts:'operationId,projectId', syncAckEvidence:'operationId,projectId',retainedSyncRecovery:'key,projectId',syncAssetAcks:'key,projectId',sharedSnapshots:'id,createdAt' });
   }
 }
 
@@ -362,7 +375,11 @@ async function targetChanges(before: ContentState, after: ContentState, isNew = 
 }
 
 export class ScenarioStore {
+  private authorAccess:Map<string,string>|null=null;
+  setAuthorAccess(roles:Record<string,string>|null){this.authorAccess=roles?new Map(Object.entries(roles)):null;}
   private readonly db: ScenarioDatabase;
+  private activeOperations=0;
+  get pendingOperations(){return this.activeOperations;}
   readonly accountId: string | null;
   private readonly faultInjector?: StoreOptions['faultInjector'];
   private readonly onSaveMetrics?: StoreOptions['onSaveMetrics'];
@@ -379,9 +396,10 @@ export class ScenarioStore {
     this.faultInjector = options.faultInjector;
     this.onSaveMetrics = options.onSaveMetrics;
     this.db = new ScenarioDatabase(options.databaseName ?? (this.accountId ? `scenario-manager-account-${encodeURIComponent(this.accountId)}` : 'scenario-manager-local-v1'));
+    for(const name of ['saveProject','importScenario','putAsset','commitPreparedAck','confirmSyncResolution','bindBootstrapBase','bindConfirmedProject','saveAuthorToolDraft','saveImportDraft','applyReceivedImage']){const fn=(this as unknown as Record<string,(...args:unknown[])=>Promise<unknown>>)[name].bind(this);Object.defineProperty(this,name,{configurable:true,writable:true,value:async(...args:unknown[])=>{this.activeOperations++;try{return await fn(...args);}finally{this.activeOperations--;}}});}
   }
   // Store names avoid Dexie's recursive KeyPaths expansion on the domain's large discriminated unions.
-  private get writeTables(): string[] { return ['projects', 'entities', 'relations', 'blocks', 'snapshots', 'commands', 'outbox', 'assets', 'views', 'syncMetadata', 'restorePoints', 'worlds', 'importLogs', 'recoveredPending']; }
+  private get writeTables(): string[] { return ['projects', 'entities', 'relations', 'blocks', 'snapshots', 'commands', 'outbox', 'assets', 'views', 'syncMetadata', 'restorePoints', 'worlds', 'importLogs', 'recoveredPending','syncBases','preparedSync','syncConflicts','syncAckEvidence','retainedSyncRecovery','syncAssetAcks']; }
   private async guardWorldRegistry(incoming: ProjectData[]): Promise<void> {
     const snapshots = new Map<string, ProjectSnapshot>();
     for (const project of [...(await this.db.worlds.toArray()).map(row => row.project), ...incoming]) for (const snapshot of project.snapshots) {
@@ -479,6 +497,7 @@ export class ScenarioStore {
   }
   /** Editing reads current rows only. Its immutable history token lets saves retain history without loading it. */
   async getProjectForEditing(projectId: string): Promise<ProjectData | undefined> {
+    if(this.authorAccess&&await this.db.syncBases.get(projectId)&&this.authorAccess.get(projectId)!=='owner')return undefined;
     try {
       const readEpoch = { project: this.cacheEpochs.get(projectId) ?? 0, lifetime: this.cacheLifetime };
       const read = await this.db.transaction('r', this.writeTables, async () => {
@@ -612,6 +631,7 @@ export class ScenarioStore {
     try {
       checkCancelled(options.signal);
       const draft = projectCopy(input), operationId = options.operationId ?? newId(), now = new Date().toISOString();
+      if(this.authorAccess&&await this.db.syncBases.get(draft.projectId)&&this.authorAccess.get(draft.projectId)!=='owner')throw new SyncProtocolError('FORBIDDEN');
       const assets = await this.checkedAssets(options.assets);
       measure('prepare');
       const duplicate = await this.db.commands.get(operationId);
@@ -809,12 +829,18 @@ export class ScenarioStore {
     const captured = await this.db.transaction('r', ['outbox', 'commands'], async () => ({ rows: await this.db.outbox.where('projectId').equals(projectId).toArray(), commands: await this.db.commands.where('projectId').equals(projectId).toArray() }));
     return this.materializeOutbox(captured.rows, new Map(captured.commands.map(row => [row.operationId, row])));
   }
-  async getSaveState(projectId: string): Promise<{ localSaved: boolean; pendingCount: number; recoveredPendingCount: number; serverRevision: string; syncState: 'pending' | 'synced' | 'conflict' }> {
-    return this.db.transaction('r', ['projects', 'outbox', 'syncMetadata', 'recoveredPending'], async () => {
-      const [project, metadata, pendingCount, recoveredPendingCount] = await Promise.all([this.db.projects.get(projectId), this.db.syncMetadata.get(projectId), this.db.outbox.where('projectId').equals(projectId).count(), this.db.recoveredPending.where('projectId').equals(projectId).count()]);
-      return { localSaved: !!project, pendingCount, recoveredPendingCount, serverRevision: metadata?.serverRevision ?? '0', syncState: metadata?.state ?? 'pending' };
-    });
+  async getSaveState(projectId:string):Promise<{localSaved:boolean;pendingCount:number;recoveredPendingCount:number;pendingAssetCount:number;serverRevision:string;syncState:'pending'|'synced'|'conflict'}>{
+    return this.db.transaction('r',this.writeTables,async()=>{const [read,metadata,pendingCount,recoveredPendingCount,assets]=await Promise.all([this.readProject(projectId,false),this.db.syncMetadata.get(projectId),this.db.outbox.where('projectId').equals(projectId).count(),this.db.recoveredPending.where('projectId').equals(projectId).count(),this.db.syncAssetAcks.where('projectId').equals(projectId).toArray()]);const pendingAssetCount=read?closureAttachmentMetadata(read.project,await this.validationWorlds()).filter(m=>!assets.some(a=>a.contentHash===m.contentHash&&a.byteSize===m.byteSize&&a.mediaType===m.mediaType)).length:0;return {localSaved:!!read,pendingCount,recoveredPendingCount,pendingAssetCount,serverRevision:metadata?.serverRevision??'0',syncState:metadata?.state==='conflict'?'conflict':pendingCount||pendingAssetCount?'pending':metadata?.state??'pending'};});
   }
+  async getAssetSyncAck(projectId:string,contentHash:string){return copy(await this.db.syncAssetAcks.get(`${projectId}:${contentHash}`));}
+  async confirmAssetUpload(projectId:string,input:{contentHash:string;bytes:number;mediaType:string}){
+    this.syncScope(projectId);const submitted=copy(input),bytes=await this.getAsset(submitted.contentHash);if(!bytes||bytes.byteLength!==submitted.bytes||await sha256(bytes)!==submitted.contentHash)throw new SyncProtocolError('PROTOCOL_INVALID');const record={key:`${projectId}:${submitted.contentHash}`,projectId,contentHash:submitted.contentHash,byteSize:submitted.bytes,mediaType:submitted.mediaType};await this.db.transaction('rw',this.writeTables,async()=>{const old=await this.db.syncAssetAcks.get(record.key);if(old&&!sameValue(old,record))throw new SyncProtocolError('PROTOCOL_INVALID');await this.db.syncAssetAcks.put(record);this.faultInjector?.('before-commit');});
+  }
+  async listRetainedSyncRecovery(projectId:string){return copy(await this.db.retainedSyncRecovery.where('projectId').equals(projectId).toArray());}
+  async listAuthorToolDrafts(){return copy(await this.db.authorToolDrafts.toArray());}
+  async saveSharedSnapshot(input:import('../sync/publicShare').SharedSnapshot){const {validateSharedSnapshot}=await import('../sync/publicShare');const snapshot=await validateSharedSnapshot(copy(input));const old=await this.db.sharedSnapshots.get(snapshot.id);if(old&&old.contentHash!==snapshot.contentHash)throw new SyncProtocolError('PROTOCOL_INVALID');await this.db.sharedSnapshots.put(snapshot);}
+  async listSharedSnapshots(){return copy(await this.db.sharedSnapshots.toArray());}
+  async discardSharedSnapshot(snapshotId:string){await this.db.sharedSnapshots.delete(snapshotId);}
   async listRecoveredPending(projectId: string): Promise<RecoveredPendingIntent[]> { return copy((await this.db.recoveredPending.where('projectId').equals(projectId).toArray()).sort((a, b) => a.sequence - b.sequence)); }
 
   /** An acknowledgement is persisted before an applied operation is removed. Conflicts retain the outbox. */
@@ -834,6 +860,105 @@ export class ScenarioStore {
       const pendingCount = await this.db.outbox.where('projectId').equals(projectId).count();
       await this.db.syncMetadata.put({ projectId, serverRevision: ack.serverRevision, state: ack.status === 'conflict' ? 'conflict' : pendingCount ? 'pending' : 'synced' });
     }); } catch (error) { throw saveError(error); }
+  }
+
+  private syncScope(projectId:string) { if(!this.accountId||this.accountId==='guest')throw new SyncProtocolError('AUTH_REQUIRED');return {accountId:this.accountId,projectId}; }
+  /** Called after authenticated bootstrap/pull, never from CommandRecord.before. */
+  async bindConfirmedProject(input:{projectId:string;serverRevision:string;documents:SyncDocument[];contentHash:string;localRevision:string;outboxIds:string[]}):Promise<void>{
+    const captured=copy(input),scope=this.syncScope(captured.projectId);if(!/^(0|[1-9]\d*)$/.test(captured.serverRevision)||!captured.documents.length||captured.documents.length>100001)throw new SyncProtocolError('PROTOCOL_INVALID');
+    const seen=new Set<string>();for(const doc of captured.documents){assertDocumentTarget(doc,scope,doc.id);if(seen.has(doc.id)||BigInt(doc.revision)>BigInt(captured.serverRevision))throw new SyncProtocolError('PROTOCOL_INVALID');seen.add(doc.id);}
+    if(await valueHash(captured.documents)!==captured.contentHash)throw new SyncProtocolError('PROTOCOL_INVALID');
+    const previous=await this.getProject(captured.projectId);if(!previous||previous.revision!==captured.localRevision)throw new SyncProtocolError('REVISION_CHANGED');
+    const candidate=nativeFromDocuments(previous,captured.documents,new Date().toISOString()),worlds=await this.validationWorlds();validated(candidate,worldSnapshotContents(worlds));await verifySnapshotHashes([candidate]);await validateDurableIntegrity(candidate,worldSnapshotContents(worlds));
+    if(!sameValue(nativeDocuments(previous,captured.serverRevision).map(({revision:_revision,...doc})=>doc),captured.documents.map(({revision:_revision,...doc})=>doc)))throw new SyncProtocolError('REVISION_CHANGED');
+    await this.db.transaction('rw',this.writeTables,async()=>{
+      const header=await this.db.projects.get(captured.projectId);if(!header||header.revision!==captured.localRevision||await this.db.preparedSync.where('projectId').equals(captured.projectId).count()||await this.db.syncConflicts.where('projectId').equals(captured.projectId).count())throw new SyncProtocolError('REVISION_CHANGED');
+      for(const id of captured.outboxIds){const row=await this.db.outbox.get(id);if(!row||row.projectId!==captured.projectId||row.accountId!==this.accountId||BigInt(row.localRevision)>BigInt(captured.localRevision))throw new SyncProtocolError('PROTOCOL_INVALID');}
+      await this.db.syncBases.put({projectId:captured.projectId,serverRevision:captured.serverRevision,documents:captured.documents,contentHash:captured.contentHash});await this.db.outbox.bulkDelete(captured.outboxIds);
+      await this.db.syncMetadata.put({projectId:captured.projectId,serverRevision:captured.serverRevision,state:await this.db.outbox.where('projectId').equals(captured.projectId).count()?'pending':'synced'});this.faultInjector?.('before-commit');
+    });
+  }
+  async getConfirmedSyncBase(projectId:string){this.syncScope(projectId);return copy(await this.db.syncBases.get(projectId));}
+  /** The bootstrap image is frozen before network I/O; later local edits are retained above its base. */
+  async bindBootstrapBase(source:ProjectData,input:{serverRevision:string;documents:SyncDocument[];contentHash:string;outboxIds:string[]}){
+    const original=copy(source),submitted=copy(input),scope=this.syncScope(original.projectId),documents=nativeDocuments(original,submitted.serverRevision);if(!sameValue(documents,submitted.documents)||await valueHash(documents)!==submitted.contentHash)throw new SyncProtocolError('PROTOCOL_INVALID');
+    const worlds=await this.validationWorlds();validated(original,worldSnapshotContents(worlds));await verifySnapshotHashes([original]);await validateDurableIntegrity(original,worldSnapshotContents(worlds));
+    await this.db.transaction('rw',this.writeTables,async()=>{const latest=await this.db.projects.get(scope.projectId);if(!latest||BigInt(latest.revision)<BigInt(original.revision)||await this.db.syncBases.get(scope.projectId)||await this.db.preparedSync.where('projectId').equals(scope.projectId).count())throw new SyncProtocolError('REVISION_CHANGED');for(const id of submitted.outboxIds){const row=await this.db.outbox.get(id);if(!row||row.accountId!==this.accountId||row.projectId!==scope.projectId||BigInt(row.localRevision)>BigInt(original.revision))throw new SyncProtocolError('PROTOCOL_INVALID');}await this.db.syncBases.put({projectId:scope.projectId,serverRevision:submitted.serverRevision,documents,contentHash:submitted.contentHash});await this.db.outbox.bulkDelete(submitted.outboxIds);await this.db.syncMetadata.put({projectId:scope.projectId,serverRevision:submitted.serverRevision,state:await this.db.outbox.where('projectId').equals(scope.projectId).count()?'pending':'synced'});this.faultInjector?.('before-commit');});
+  }
+  async applyReceivedImage(projectId:string,input:{serverRevision:string;documents:SyncDocument[];contentHash:string;worlds?:Record<string,ProjectData>}){
+    const received=copy(input),scope=this.syncScope(projectId),[base,current,prepared,conflicts]=await Promise.all([this.db.syncBases.get(projectId),this.getProject(projectId),this.listPreparedOperations(projectId),this.listPreparedConflicts(projectId)]);if(!base||!current)throw new SyncProtocolError('BASE_UNAVAILABLE');if(prepared.length||conflicts.length)throw new SyncProtocolError('REVISION_CHANGED');if(BigInt(received.serverRevision)<BigInt(base.serverRevision)||await valueHash(received.documents)!==received.contentHash)throw new SyncProtocolError('PROTOCOL_INVALID');
+    const old=new Map(base.documents.map(d=>[d.id,d])),targets=received.documents.filter(d=>!sameDocumentContent(old.get(d.id),d)).map(d=>({base:old.get(d.id)??null,local:old.get(d.id)??d}));if(!targets.length){const head=base.documents.find(d=>d.id===projectId);if(!head)throw new SyncProtocolError('PROTOCOL_INVALID');targets.push({base:head,local:head});}
+    const operation=await createSyncOperation({scope,baseRevision:base.serverRevision,operationId:newId(),targets,reason:'認証した接続先の確定版を取得して端末の後発編集を保持'}),ack:SyncAck={schemaVersion:1,operationId:operation.operationId,scope,operationHash:await valueHash(operation),status:'applied',serverRevision:received.serverRevision,documents:targets.map(t=>received.documents.find(d=>d.id===t.local.id)!),confirmedDocuments:received.documents,conflicts:[]};
+    await assertAck(operation,ack);await this.db.transaction('rw',this.writeTables,async()=>{const latest=await this.db.projects.get(projectId),confirmed=await this.db.syncBases.get(projectId);if(latest?.revision!==current.revision||!sameValue(confirmed,base)||await this.db.preparedSync.where('projectId').equals(projectId).count()||await this.db.syncConflicts.where('projectId').equals(projectId).count())throw new SyncProtocolError('REVISION_CHANGED');await this.db.preparedSync.add({operationId:operation.operationId,projectId,operation,localRevision:current.revision,localDocuments:base.documents,outboxIds:[],origin:'received_image',createdAt:new Date().toISOString()});});await this.commitPreparedAck(projectId,ack,received.worlds);
+  }
+  /** At most one aggregate is prepared; subsequent saves wait for its confirmed ack and are rebased. */
+  async prepareSavedOperations(projectId:string,reason='端末の保存待ちを確定共通元から準備'){
+    const scope=this.syncScope(projectId),captured=await this.db.transaction('r',this.writeTables,async()=>({base:await this.db.syncBases.get(projectId),current:await this.readProject(projectId,false),pending:await this.db.preparedSync.where('projectId').equals(projectId).toArray(),conflicts:await this.db.syncConflicts.where('projectId').equals(projectId).toArray(),outbox:await this.db.outbox.where('projectId').equals(projectId).toArray()}));
+    if(captured.pending.length)return copy(captured.pending[0].operation);if(captured.conflicts.length)throw new SyncProtocolError('REVISION_CHANGED');if(!captured.base||!captured.current)throw new SyncProtocolError('BASE_UNAVAILABLE');
+    const prepared=await prepareNativeOperation(scope,captured.base,captured.current.project,captured.outbox.map(row=>row.operationId),reason);
+    await this.db.transaction('rw',this.writeTables,async()=>{
+      const current=await this.db.projects.get(projectId),base=await this.db.syncBases.get(projectId);if(current?.revision!==captured.current!.project.revision||base?.contentHash!==captured.base!.contentHash||base?.serverRevision!==captured.base!.serverRevision||await this.db.preparedSync.where('projectId').equals(projectId).count()||await this.db.syncConflicts.where('projectId').equals(projectId).count())throw new SyncProtocolError('REVISION_CHANGED');
+      if(prepared)await this.db.preparedSync.add(prepared);else{await this.db.outbox.bulkDelete(captured.outbox.map(row=>row.operationId));await this.db.syncMetadata.put({projectId,serverRevision:captured.base!.serverRevision,state:'synced'});}this.faultInjector?.('before-commit');
+    });return prepared?copy(prepared.operation):null;
+  }
+  async listPreparedOperations(projectId:string){this.syncScope(projectId);return copy((await this.db.preparedSync.where('projectId').equals(projectId).toArray()).map(row=>row.operation));}
+  async listPreparedConflicts(projectId:string){this.syncScope(projectId);return copy((await this.db.syncConflicts.where('projectId').equals(projectId).toArray()).map(row=>({operationId:row.operationId,conflicts:row.conflicts})));}
+  async listSyncConflictAlternatives(projectId:string){this.syncScope(projectId);return copy(await this.db.syncConflicts.where('projectId').equals(projectId).toArray());}
+  async listSyncAckEvidence(projectId:string){this.syncScope(projectId);return copy(await this.db.syncAckEvidence.where('projectId').equals(projectId).toArray());}
+  /** Ack, rejected batch, confirmed common base, local content/history and captured outbox removal share one transaction. */
+  async commitPreparedAck(projectId:string,input:SyncAck,worldInput:Record<string,ProjectData>={}):Promise<void>{
+    const receivedWorlds=copy(worldInput);await this.guardWorldRegistry(Object.values(receivedWorlds));await verifySnapshotHashes(Object.values(receivedWorlds));
+    const scope=this.syncScope(projectId),ack=copy(input);if(!sameValue(scope,ack.scope))throw new SyncProtocolError('PROTOCOL_INVALID');
+    const captured=await this.db.transaction('r',this.writeTables,async()=>({prepared:await this.db.preparedSync.get(ack.operationId),previousAck:await this.db.syncAckEvidence.get(ack.operationId),base:await this.db.syncBases.get(projectId),current:await this.readProject(projectId),conflicts:await this.db.syncConflicts.where('projectId').equals(projectId).toArray()}));
+    if(captured.previousAck){if(!sameValue(captured.previousAck.ack,ack))throw new SyncProtocolError('OPERATION_REUSED');return;}
+    if(!captured.prepared||captured.prepared.projectId!==projectId||!captured.base||!captured.current||captured.base.serverRevision!==captured.prepared.operation.baseRevision)throw new SyncProtocolError('BASE_UNAVAILABLE');
+    await assertAck(captured.prepared.operation,ack);const previous=captured.current.project,now=new Date().toISOString();let candidate=previous,storedCommand:StoredCommand|undefined,confirmed:ConfirmedSyncBase|undefined,postConflicts:PreservedNativeConflict|undefined;
+    if(ack.status==='applied'){
+      const combined=acknowledgeNativeDocuments(captured.prepared,captured.base,ack,previous);confirmed={projectId,serverRevision:ack.serverRevision,documents:combined.confirmed,contentHash:await valueHash(combined.confirmed)};
+      let next=nativeFromDocuments(previous,combined.documents,now);protectSnapshots(previous,next);await preserveAlternativeHistory(previous,next);next=await reconcileDeliverables(previous,next);next=addChangeReviews(previous,next);next.entities=normalizeRecords(previous.entities,next.entities,ack.operationId,now);next.relations=normalizeRecords(previous.relations,next.relations,ack.operationId,now);
+      if(!sameJson(withoutHistory(next),withoutHistory(previous))){next.revision=increment(previous.revision);const before=withoutHistory(previous),after=withoutHistory(next),changes=await targetChanges(before,after),operationId=newId(),command:CommandRecord={operationId,projectId,baseRevision:previous.revision,revision:next.revision,targetIds:changes.map(change=>change.targetId),reason:`同期ackを端末確定: ${ack.operationId}`,createdAt:now,before,after};next.history=[...previous.history,command];storedCommand={operationId,projectId,revision:next.revision,record:command};candidate=next;}
+      const worlds=await this.validationWorlds(receivedWorlds);validated(candidate,worldSnapshotContents(worlds));verifyWorlds([candidate],worlds);await verifySnapshotHashes([candidate]);await validateDurableIntegrity(candidate,worldSnapshotContents(worlds));
+      if(combined.conflicts.length)postConflicts={operationId:ack.operationId,projectId,prepared:captured.prepared,ack,conflicts:combined.conflicts,createdAt:now};
+    }
+    await this.db.transaction('rw',this.writeTables,async()=>{
+      const already=await this.db.syncAckEvidence.get(ack.operationId);
+      if(already){if(!sameValue(already.ack,ack))throw new SyncProtocolError('OPERATION_REUSED');return;}
+      const latest=await this.db.projects.get(projectId),base=await this.db.syncBases.get(projectId),prepared=await this.db.preparedSync.get(ack.operationId);if(latest?.revision!==previous.revision||base?.contentHash!==captured.base!.contentHash||base?.serverRevision!==captured.base!.serverRevision||!sameValue(prepared,captured.prepared))throw new SyncProtocolError('REVISION_CHANGED');
+      if(ack.status==='conflict'){await this.db.syncConflicts.put({operationId:ack.operationId,projectId,prepared:captured.prepared!,ack,conflicts:ack.conflicts,createdAt:now});}
+      else{
+        for(const [id,world]of Object.entries(receivedWorlds)){const old=await this.db.worlds.get(id);if(old&&!equalJson(old.project,world))throw new StorageError('IMMUTABLE_SNAPSHOT','固定世界の取得内容が保存済み版と異なります。');await this.db.worlds.put({id,project:world});}
+        if(storedCommand){await this.writeContent(candidate,previous,storedCommand.operationId);this.faultInjector?.('after-content');await this.db.commands.add(storedCommand);this.faultInjector?.('after-history');}
+        await this.db.syncBases.put(confirmed!);await this.db.outbox.bulkDelete(captured.prepared!.outboxIds);
+        if(captured.prepared!.operation.resolvesOperationId){const original=await this.db.syncConflicts.get(captured.prepared!.operation.resolvesOperationId);if(!original||[...original.prepared.operation.targets.map(target=>target.targetId),...original.conflicts.map(c=>c.targetId)].some(id=>!captured.prepared!.operation.targets.some(target=>target.targetId===id)))throw new SyncProtocolError('PROTOCOL_INVALID');await this.db.syncConflicts.delete(original.operationId);}
+        if(postConflicts)await this.db.syncConflicts.put(postConflicts);
+      }
+      await this.db.syncAckEvidence.add({operationId:ack.operationId,projectId,operation:captured.prepared!.operation,ack,origin:captured.prepared!.origin??'prepared_operation',createdAt:now});await this.db.preparedSync.delete(ack.operationId);
+      await this.db.syncMetadata.put({projectId,serverRevision:confirmed?.serverRevision??captured.base!.serverRevision,state:await this.db.syncConflicts.where('projectId').equals(projectId).count()?'conflict':await this.db.outbox.where('projectId').equals(projectId).count()?'pending':'synced'});this.faultInjector?.('after-outbox');this.faultInjector?.('before-commit');
+    });this.invalidateProjectCache(projectId);
+  }
+  async previewSyncResolution(projectId:string,operationId:string,choices:Record<string,ConflictResolution>){
+    const picked=copy(choices),scope=this.syncScope(projectId),[saved,base,current]=await Promise.all([this.db.syncConflicts.get(operationId),this.db.syncBases.get(projectId),this.getProject(projectId)]);if(!saved||saved.projectId!==projectId||!base||!current)throw new SyncProtocolError('BASE_UNAVAILABLE');
+    const documents=copy(saved.ack.confirmedDocuments);if(!documents)throw new SyncProtocolError('PROTOCOL_INVALID');for(const doc of saved.ack.documents)if(doc){const index=documents.findIndex(value=>value.id===doc.id);if(index>=0)documents[index]=copy(doc);else documents.push(copy(doc));}
+    const targets=resolveCurrentNativeConflict(saved,picked,documents,current);
+    const operation=await createSyncOperation({scope,baseRevision:saved.ack.serverRevision,operationId:newId(),targets,reason:'共通元・二案と参照への影響を確認して競合解決',resolvesOperationId:operationId}),nextDocs=new Map(documents.map(doc=>[doc.id,doc]));for(const target of targets)nextDocs.set(target.local.id,target.local);const candidate=nativeFromDocuments(current,[...nextDocs.values()],new Date().toISOString()),worlds=await this.validationWorlds();validated(candidate,worldSnapshotContents(worlds));await verifySnapshotHashes([candidate]);await validateDurableIntegrity(candidate,worldSnapshotContents(worlds));
+    const payload={projectId,operationId,localRevision:current.revision,serverRevision:saved.ack.serverRevision,baseHash:base.contentHash,conflictHash:await valueHash(saved),choices:picked,operation,candidate};return {...payload,confirmationHash:await valueHash(payload)};
+  }
+  async confirmSyncResolution(input:Awaited<ReturnType<ScenarioStore['previewSyncResolution']>>){
+    const plan=copy(input),{confirmationHash,...payload}=plan;this.syncScope(plan.projectId);if(await valueHash(payload)!==confirmationHash)throw new SyncProtocolError('PROTOCOL_INVALID');
+    const fresh=await this.previewSyncResolution(plan.projectId,plan.operationId,plan.choices);
+    if(fresh.localRevision!==plan.localRevision||fresh.baseHash!==plan.baseHash||fresh.conflictHash!==plan.conflictHash||fresh.serverRevision!==plan.serverRevision)throw new SyncProtocolError('REVISION_CHANGED');
+    if(!sameValue({...fresh.operation,operationId:plan.operation.operationId},plan.operation)||!sameValue(fresh.candidate,plan.candidate))throw new SyncProtocolError('PROTOCOL_INVALID');
+    const [previous,base,conflict]=await Promise.all([this.getProject(plan.projectId),this.db.syncBases.get(plan.projectId),this.db.syncConflicts.get(plan.operationId)]);if(!previous||!base||!conflict)throw new SyncProtocolError('BASE_UNAVAILABLE');
+    const documents=copy(conflict.ack.confirmedDocuments);if(!documents)throw new SyncProtocolError('PROTOCOL_INVALID');
+    const confirmed={projectId:plan.projectId,serverRevision:plan.serverRevision,documents,contentHash:await valueHash(documents)},now=new Date().toISOString(),operationId=newId();
+    let candidate={...plan.candidate,revision:increment(previous.revision)};protectSnapshots(previous,candidate);await preserveAlternativeHistory(previous,candidate);candidate=await reconcileDeliverables(previous,candidate);candidate=addChangeReviews(previous,candidate);candidate.entities=normalizeRecords(previous.entities,candidate.entities,operationId,now);candidate.relations=normalizeRecords(previous.relations,candidate.relations,operationId,now);
+    const worlds=await this.validationWorlds();validated(candidate,worldSnapshotContents(worlds));await verifySnapshotHashes([candidate]);await validateDurableIntegrity(candidate,worldSnapshotContents(worlds));
+    const changes=await targetChanges(withoutHistory(previous),withoutHistory(candidate)),command:CommandRecord={operationId,projectId:plan.projectId,baseRevision:previous.revision,revision:candidate.revision,targetIds:changes.map(change=>change.targetId),reason:`競合の共通元・二案から明示選択: ${plan.operationId}`,createdAt:now,before:withoutHistory(previous),after:withoutHistory(candidate)};candidate.history=[...previous.history,command];
+    await this.db.transaction('rw',this.writeTables,async()=>{const [current,latestBase,latestConflict]=await Promise.all([this.db.projects.get(plan.projectId),this.db.syncBases.get(plan.projectId),this.db.syncConflicts.get(plan.operationId)]);if(current?.revision!==plan.localRevision||!sameValue(latestBase,base)||!sameValue(latestConflict,conflict)||await this.db.preparedSync.where('projectId').equals(plan.projectId).count())throw new SyncProtocolError('REVISION_CHANGED');
+      await this.writeContent(candidate,previous,operationId);await this.db.commands.add({operationId,projectId:plan.projectId,revision:candidate.revision,record:command});
+      await this.db.outbox.add({operationId,projectId:plan.projectId,accountId:this.accountId,baseRevision:plan.serverRevision,localRevision:candidate.revision,targetIds:command.targetIds,changes,command,createdAt:now});
+      await this.db.syncBases.put(confirmed);const outboxIds=(await this.db.outbox.where('projectId').equals(plan.projectId).toArray()).map(row=>row.operationId);await this.db.preparedSync.add({operationId:plan.operation.operationId,projectId:plan.projectId,operation:plan.operation,localRevision:candidate.revision,localDocuments:nativeDocuments(candidate,plan.serverRevision),outboxIds,createdAt:now});this.faultInjector?.('before-commit');
+    });this.invalidateProjectCache(plan.projectId);return copy(plan.operation);
   }
 
   async getViewState(projectId: string, userId: string, deviceClass: ViewState['deviceClass'], viewId: string): Promise<ViewState | undefined> {
@@ -889,10 +1014,10 @@ export class ScenarioStore {
     return this.saveProject(migrated, { reason: '検証済みの形式移行' });
   }
 
-  async exportProject(projectId: string, options: Omit<NonNullable<Parameters<typeof exportScenario>[1]>, 'loadAsset' | 'worlds' | 'recovery'> = {}): Promise<Uint8Array> {
+  async exportProject(projectId: string, options: Omit<NonNullable<Parameters<typeof exportScenario>[1]>, 'loadAsset' | 'worlds' | 'recovery' | 'syncRecovery'> = {}): Promise<Uint8Array> {
     // Content, all history and pending intents come from one database read image.
     checkCancelled(options.signal);
-    const captured = await this.db.transaction('r', this.writeTables, async () => ({ current: await this.readProject(projectId, false), commands: await this.db.commands.where('projectId').equals(projectId).toArray(), rows: await this.db.outbox.where('projectId').equals(projectId).toArray(), retained: await this.listRecoveredPending(projectId), metadata: await this.db.syncMetadata.get(projectId), registry: await this.validationWorlds() }));
+    const captured = await this.db.transaction('r', this.writeTables, async () => ({ current: await this.readProject(projectId, false), commands: await this.db.commands.where('projectId').equals(projectId).toArray(), rows: await this.db.outbox.where('projectId').equals(projectId).toArray(), retained: await this.listRecoveredPending(projectId), metadata: await this.db.syncMetadata.get(projectId), syncBase:await this.db.syncBases.get(projectId),syncPrepared:await this.db.preparedSync.where('projectId').equals(projectId).toArray(),syncConflicts:await this.db.syncConflicts.where('projectId').equals(projectId).toArray(),syncAcks:await this.db.syncAckEvidence.where('projectId').equals(projectId).toArray(),syncAssetAcks:await this.db.syncAssetAcks.where('projectId').equals(projectId).toArray(),syncRetained:await this.db.retainedSyncRecovery.where('projectId').equals(projectId).toArray(), registry: await this.validationWorlds() }));
     checkCancelled(options.signal);
     if (!captured.current) throw new StorageError('NOT_FOUND', '書き出す作品が見つかりません。');
     const commandRows = new Map(captured.commands.map(row => [row.operationId, row])), ready = new Map<string, CommandRecord>(), history: CommandRecord[] = [];
@@ -913,8 +1038,10 @@ export class ScenarioStore {
       operations.set(row.operationId, { operationId: row.operationId, command: row.command, commandHash, origin: { projectId, operationId: row.operationId, serverRevision: row.baseRevision } });
     }
     const recovery = operations.size ? { version: 1 as const, projectId, sourceRevision: project.revision, serverRevision: captured.metadata?.serverRevision ?? '0', pending: [...operations.values()] } : undefined;
+    const syncRecovery:NativeSyncRecovery[]=options.snapshotId?[]:captured.syncRetained.map(r=>r.evidence);
+    if(!options.snapshotId&&(captured.syncBase||captured.syncPrepared.length||captured.syncConflicts.length||captured.syncAcks.length)){const payload={format:'scenario-sync-recovery' as const,version:1 as const,state:'needs_reconnect' as const,origin:{...project,history:[]},...(captured.syncBase?{base:captured.syncBase}:{}),prepared:captured.syncPrepared,conflicts:captured.syncConflicts,acknowledgements:captured.syncAcks,assetAcknowledgements:captured.syncAssetAcks};const evidence={...payload,contentHash:await valueHash(payload)};if(!syncRecovery.some(r=>r.contentHash===evidence.contentHash))syncRecovery.push(evidence);}
     const worlds: Record<string, ProjectData> = {};
-    let discovered = [project, ...recoveryImages(recovery)];
+    let discovered = [project, ...recoveryImages(recovery),...syncRecoveryImages(syncRecovery)];
     while (discovered.length) {
       const next: ProjectData[] = [];
       for (const reference of referencedWorlds(discovered,captured.registry)) {
@@ -924,7 +1051,7 @@ export class ScenarioStore {
       }
       discovered = next;
     }
-    return exportScenario(project, { ...options, ...(recovery ? { recovery } : {}), worlds, loadAsset: hash => this.getAsset(hash) });
+    return exportScenario(project, { ...options, ...(recovery ? { recovery } : {}), worlds,syncRecovery, loadAsset: hash => this.getAsset(hash) });
   }
 
   async previewImport(preparedInput: PreparedScenario, optionsInput: ImportOptions): Promise<ImportPreview> {
@@ -967,6 +1094,11 @@ export class ScenarioStore {
     if (!submitted.key || !ID_PATTERN.test(submitted.projectId) || !/^\d+$/.test(submitted.baseRevision) || jsonBytes(submitted.fields).byteLength > 1024 * 1024 || submitted.asset && submitted.asset.bytes.byteLength > 32 * 1024 * 1024) throw new StorageError('LIMIT_EXCEEDED', '制作入力の一時保存上限または作品識別が不正です。');
     if (submitted.asset && await sha256(submitted.asset.bytes) !== submitted.asset.contentHash) throw new StorageError('HASH_MISMATCH', '制作入力の素材bytesが変わっています。');
     try { await this.db.authorToolDrafts.put(submitted); } catch (cause) { throw saveError(cause); }
+  }
+  async restoreAuthorToolDrafts(inputs:AuthorToolDraft[],expected:AuthorToolDraft[]){
+    const drafts=copy(inputs),previous=copy(expected);if(new Set(drafts.map(d=>d.key)).size!==drafts.length)throw new StorageError('VALIDATION_FAILED','入力IDが重複しています。');
+    for(const d of drafts){if(!this.accountId||!d.key.startsWith(this.accountId+':')||!ID_PATTERN.test(d.projectId)||!/^\d+$/.test(d.baseRevision)||jsonBytes(d.fields).byteLength>1024*1024||d.asset&&(d.asset.bytes.byteLength>32*1024*1024||await sha256(d.asset.bytes)!==d.asset.contentHash))throw new StorageError('VALIDATION_FAILED','入力の領域・hash・上限が不正です。');}
+    await this.db.transaction('rw',this.db.authorToolDrafts,async()=>{const actual=await this.db.authorToolDrafts.toArray();if(!sameJson(actual.map(d=>({...d,asset:d.asset?{contentHash:d.asset.contentHash,byteSize:d.asset.bytes.byteLength}:null})),previous.map(d=>({...d,asset:d.asset?{contentHash:d.asset.contentHash,byteSize:d.asset.bytes.byteLength}:null}))))throw new StorageError('REVISION_CONFLICT','確認後に未保存入力が変わりました。');await this.db.authorToolDrafts.bulkPut(drafts);this.faultInjector?.('before-commit');});
   }
   async getAuthorToolDraft(key: string): Promise<AuthorToolDraft | undefined> { const draft = await this.db.authorToolDrafts.get(key); return draft ? copy(draft) : undefined; }
   async clearAuthorToolDraft(key: string): Promise<void> { await this.db.authorToolDrafts.delete(key); }
@@ -1043,6 +1175,7 @@ export class ScenarioStore {
       project = validated(project, worldContents);
       await validateDurableIntegrity(project, worldContents);
       if (recovery) recovery = await validateRecovery({ ...recovery, projectId: project.projectId, sourceRevision: project.revision }, project, worldContents, options.signal);
+      const syncRecovery=prepared.syncRecovery?await validateSyncRecovery(prepared.syncRecovery,worldContents,options.signal):[];
       // New recovery retains the original content revisions/history; the local import audit is separate.
       const point: RestorePoint | undefined = preview.target ? { id: newId(), projectId: preview.target.projectId, createdAt: now, reason: `専用ファイル${options.mode}の前の復元点`, project: preview.target, assetHashes: attachmentMetadata(preview.target).map(item => item.contentHash) } : undefined;
       const result = await this.db.transaction('rw', this.writeTables, async () => {
@@ -1074,6 +1207,7 @@ export class ScenarioStore {
           if (previous && !equalJson(previous.operation, retained)) throw new StorageError('OPERATION_CONFLICT', '同じ送信待ち操作の復元内容が異なります。');
           if (!previous) await this.db.recoveredPending.add(row);
         }
+        for(const evidence of syncRecovery)await this.db.retainedSyncRecovery.put({key:`${project.projectId}:${evidence.contentHash}`,projectId:project.projectId,evidence,status:'needs_reconnect'});
         await this.db.syncMetadata.put({ projectId: project.projectId, serverRevision: metadata?.serverRevision ?? '0', state: 'pending' });
         await this.db.importLogs.add({ operationId, projectId: project.projectId, mode: options.mode, createdAt: now, ...(idMap ? { idMap } : {}) });
         this.faultInjector?.('after-outbox'); checkCancelled(options.signal); this.faultInjector?.('before-commit');

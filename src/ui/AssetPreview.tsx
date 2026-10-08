@@ -1,10 +1,12 @@
+import {useScenarioStore} from './StoreContext';
 import { useEffect, useState } from 'react';
 import type { Entity } from '../domain/types';
 import { detectAsset, type PreparedAsset } from '../domain/attachments';
-import { scenarioStore, sha256, validateAsset } from '../storage';
+import { sha256, validateAsset } from '../storage';
 import { downloadBytes, Icon, safeFileName } from './components';
 
 export function AssetPreview({ entity }: { entity: Entity<'attachment'> }) {
+  const scenarioStore=useScenarioStore();
   const [asset, setAsset] = useState<{ bytes: Uint8Array; url: string; mediaType: string; preview: PreparedAsset['preview'] } | null>(null);
   const [message, setMessage] = useState('素材を確認しています…');
   useEffect(() => {

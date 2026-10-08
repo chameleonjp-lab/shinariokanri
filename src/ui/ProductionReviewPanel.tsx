@@ -1,3 +1,4 @@
+import {useScenarioStore,useAuthorScope} from './StoreContext';
 import { useEffect } from 'react';
 import { authorField, useAuthorField } from './authorOperation';
 import type { ContentAnchor, Entity, ProjectData, RuntimeContext } from '../domain/types';
@@ -10,12 +11,12 @@ import { replayChapterReading } from '../domain/presentation';
 import { createEntity } from '../domain/model';
 import { createWorldSnapshot } from '../domain/world';
 import { isTick } from '../domain/time';
-import { scenarioStore } from '../storage';
 import { labelOf } from './Fields';
 import { PagedSelect } from './PagedSelect';
 import { ListPager, useListWindow } from './ListWindow';
 export function ProductionReviewPanel({project,onOpen,onOpenTarget,onSaveProject}:{project:ProjectData;onOpen:(id:string)=>void;onOpenTarget?:(anchor:ContentAnchor)=>void;onSaveProject?:(project:ProjectData,reason:string)=>Promise<ProjectData>}) {
- const key=`production-check:v1:${project.projectId}`;
+  const scenarioStore=useScenarioStore();
+ const key=useAuthorScope(`production-check:v1:${project.projectId}`);
  const [tick,setTick]=useAuthorField(key,'tick',()=>{try{return JSON.parse(localStorage.getItem(key)??'{}').tick??'';}catch{return '';}}),[traceId,setTrace]=useAuthorField(key,'traceId',()=>{try{return JSON.parse(localStorage.getItem(key)??'{}').traceId??'';}catch{return '';}});
  const [report,setReport]=useAuthorField<{source:ProjectData;sourceVersionId:string;baseRevision:string;checks:ProductionCheck[]}|null>(key,'report',null),[busy,setBusy]=useAuthorField(key,'busy',false),[error,setError]=useAuthorField(key,'error',''),[notice,setNotice]=useAuthorField(key,'notice',''),[available,setAvailable]=useAuthorField<Set<string>|null>(key,'available',null);
  useEffect(()=>{try{localStorage.setItem(key,JSON.stringify({tick,traceId}));}catch{/* Input still remains in the view. */}},[key,tick,traceId]);

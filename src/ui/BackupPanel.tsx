@@ -1,7 +1,9 @@
+import {registerAuthorCache,registerAuthorBusy} from './StoreContext';
+import {useScenarioStore,useAuthorScope,storeForAuthorScope} from './StoreContext';
 import { useEffect, useSyncExternalStore, useMemo, useState } from 'react';
 import type { Entity, ProjectData } from '../domain/types';
 import { newId } from '../domain/model';
-import { ARCHIVE_LIMITS, scenarioStore, inspectScenario, sha256, type ImportDraft, type ImportMode, type ImportPreview, type PreparedScenario } from '../storage';
+import { ARCHIVE_LIMITS, inspectScenario, sha256, type ImportDraft, type ImportMode, type ImportPreview, type PreparedScenario } from '../storage';
 import { collectImportIds } from '../storage/importMapping';
 import { projectWithRecoveryHistory } from '../storage/recovery';
 import { Icon, downloadBytes, safeFileName } from './components';
@@ -13,19 +15,20 @@ interface Draft extends ImportDraft { prepared?: PreparedScenario; preview?: Imp
 const drafts = new Map<string, Draft>(), listeners = new Set<() => void>(), writes = new Map<string, Promise<unknown>>();
 const queuedFiles = new Map<string, File>();
 const emit = () => listeners.forEach(listener => listener());
-function load(key: string): Draft { let value = drafts.get(key); if (!value) { value = { key, mode: 'clone', targetProjectId: key === 'library' ? '' : key, idMap: {}, resolutions: {}, checked: false, busy: false, ready: false, error: '', notice: '', progress: '' }; drafts.set(key, value); } return value; }
+function load(key: string): Draft { let value = drafts.get(key); if (!value) { value = { key, mode: 'clone', targetProjectId: key.split(':').at(-1) === 'library' ? '' : key.split(':').at(-1)!, idMap: {}, resolutions: {}, checked: false, busy: false, ready: false, error: '', notice: '', progress: '' }; drafts.set(key, value); } return value; }
 function update(key: string, patch: Partial<Draft>, persist = false) {
   const next = { ...load(key), ...patch }; drafts.set(key, next); emit();
   if (persist) {
     const value = next, request: ImportDraft = { key, sourceHash: value.sourceHash, mode: value.mode, targetProjectId: value.targetProjectId, idMap: structuredClone(value.idMap), resolutions: structuredClone(value.resolutions), selectedId: value.selectedId };
     const prior = writes.get(key) ?? Promise.resolve();
-    const pending = prior.catch(() => {}).then(() => scenarioStore.saveImportDraft(request)).catch(cause => update(key, { error: `復元入力の一時保存に失敗しました。画面内の入力は保持しています。${(cause as Error).message}` })); writes.set(key, pending);
+    const capturedStore=storeForAuthorScope(key),pending = prior.catch(() => {}).then(() => capturedStore.saveImportDraft(request)).catch(cause => update(key, { error: `復元入力の一時保存に失敗しました。画面内の入力は保持しています。${(cause as Error).message}` })); writes.set(key, pending);
   }
 }
 const subscribe = (listener: () => void) => { listeners.add(listener); return () => listeners.delete(listener); };
 
 export function BackupPanel({ project, projects, onImported }: { project: ProjectData | null; projects: ProjectData[]; onImported: (project: ProjectData, intent?: { followSelection: boolean }) => void }) {
-  const key = project?.projectId ?? 'library';
+  const scenarioStore=useScenarioStore();
+  const key = useAuthorScope(project?.projectId ?? 'library');
   const draft = useSyncExternalStore(subscribe, () => load(key));
   const [query, setQuery] = useState('');
   const [recoveredPendingCount, setRecoveredPendingCount] = useState(0);
@@ -49,7 +52,7 @@ export function BackupPanel({ project, projects, onImported }: { project: Projec
   useEffect(() => {
     if (load(key).ready || load(key).busy) return;
     update(key, { busy: true, progress: '保持した復元入力を読み込み中…' });
-    void scenarioStore.getImportDraft(key).then(async saved => {
+    void scenarioStore.getImportDraft(key).then(async saved => {if(!saved&&key.startsWith('guest:')){const old=await scenarioStore.getImportDraft(key.slice(6));if(old){saved={...old,key};await scenarioStore.saveImportDraft(saved);await scenarioStore.clearImportDraft(key.slice(6));}}
       if (saved) {
         const prepared = saved.bytes ? await inspectScenario(saved.bytes) : undefined;
         if (saved.bytes && await sha256(saved.bytes) !== saved.sourceHash) throw new Error('保持した元ファイルのhashが一致しません。');
@@ -115,3 +118,6 @@ export function BackupPanel({ project, projects, onImported }: { project: Projec
     </div>}
   </section>;
 }
+
+registerAuthorCache(account=>{const prefix=account+":";for(const map of [drafts,writes,queuedFiles])for(const key of map.keys())if(key.startsWith(prefix))map.delete(key);});
+registerAuthorBusy(account=>[...drafts].some(([key,value])=>key.startsWith(account+":")&&value.busy));

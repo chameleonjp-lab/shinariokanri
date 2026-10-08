@@ -1,3 +1,5 @@
+import {registerAuthorCache,registerAuthorBusy} from './StoreContext';
+import {useAuthorScope} from './StoreContext';
 import { PresentationCues } from './PresentationCues';
 import { checkChapterForeshadows, chapterNarrativeOccurrences } from '../domain/presentation';
 import { reuseTargetAnchor } from '../domain/reuse';
@@ -195,20 +197,21 @@ function getReadingPreferences(projectId: string): Partial<ReadingPreferences> {
 
 export function ChapterReadingView({ project, chapterIds, scenePath, currentVersionLabel = '現在の編集稿', worldSnapshots = {}, onOpenEntity, onOpenTarget, onSaveMany }: ChapterReadingViewProps) {
   const [vertical, setVertical] = useState(false);
-  const [contentVersionId, setContentVersionId] = useState(() => getReadingPreferences(project.projectId).contentVersionId ?? '');
-  const [worldTick, setWorldTick] = useState(() => getReadingPreferences(project.projectId).worldTick ?? '');
-  const [selectedCheckpointId, setSelectedCheckpointId] = useState(() => getReadingPreferences(project.projectId).selectedCheckpointId ?? '');
+  const authorScope=useAuthorScope(project.projectId);
+  const [contentVersionId, setContentVersionId] = useState(() => getReadingPreferences(authorScope).contentVersionId ?? '');
+  const [worldTick, setWorldTick] = useState(() => getReadingPreferences(authorScope).worldTick ?? '');
+  const [selectedCheckpointId, setSelectedCheckpointId] = useState(() => getReadingPreferences(authorScope).selectedCheckpointId ?? '');
   const checkpoints = project.entities.filter((entity): entity is Entity<'checkpoint'> => entity.kind === 'checkpoint' && adoptedRecord(entity) && !entity.data.runtimeState.presentationPosition);
   const selectedSnapshot = project.snapshots.find(snapshot => snapshot.id === contentVersionId);
   const readingSource = useMemo(() => selectedSnapshot ? { ...project, ...selectedSnapshot.content } : project, [project, selectedSnapshot]);
   const chapters = readingSource.entities.filter((entity): entity is Entity<'chapter'> => entity.kind === 'chapter' && !entity.deletedAt && entity.status !== 'rejected');
-  const [selectedChapterIds, setSelectedChapterIds] = useState<string[]>(() => [...(chapterIds ?? getReadingPreferences(project.projectId).selectedChapterIds ?? chapters.map(chapter => chapter.id))]);
-  const [routeMode, setRouteMode] = useState<'chapters' | 'custom'>(() => scenePath === undefined ? getReadingPreferences(project.projectId).routeMode ?? 'chapters' : 'custom');
-  const [routeSceneIds, setRouteSceneIds] = useState<string[]>(() => [...(scenePath ?? getReadingPreferences(project.projectId).routeSceneIds ?? [])]);
+  const [selectedChapterIds, setSelectedChapterIds] = useState<string[]>(() => [...(chapterIds ?? getReadingPreferences(authorScope).selectedChapterIds ?? chapters.map(chapter => chapter.id))]);
+  const [routeMode, setRouteMode] = useState<'chapters' | 'custom'>(() => scenePath === undefined ? getReadingPreferences(authorScope).routeMode ?? 'chapters' : 'custom');
+  const [routeSceneIds, setRouteSceneIds] = useState<string[]>(() => [...(scenePath ?? getReadingPreferences(authorScope).routeSceneIds ?? [])]);
   const [routeSceneToAdd, setRouteSceneToAdd] = useState('');
   const [session, setSession] = useState<ChapterReadingSession | null>(null);
-  const [busy, setBusy] = useState(() => runtimeReconfirmationBusy(project.projectId));
-  const operation = useRef(runtimeReconfirmationBusy(project.projectId));
+  const [busy, setBusy] = useState(() => runtimeReconfirmationBusy(authorScope));
+  const operation = useRef(runtimeReconfirmationBusy(authorScope));
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const previousVersion = useRef(contentVersionId);
@@ -224,7 +227,7 @@ export function ChapterReadingView({ project, chapterIds, scenePath, currentVers
     }
     setRouteSceneToAdd('');
   }, [contentVersionId]);
-  useEffect(() => { const next = { contentVersionId, worldTick, selectedCheckpointId, selectedChapterIds, routeMode, routeSceneIds }; readingPreferences.set(project.projectId, next); try { localStorage.setItem(`scenario-chapter-reading:v1:${project.projectId}`, JSON.stringify(next)); } catch { /* Navigation still retains the selected scope and clock in memory. */ } }, [project.projectId, contentVersionId, worldTick, selectedCheckpointId, selectedChapterIds, routeMode, routeSceneIds]);
+  useEffect(() => { const next = { contentVersionId, worldTick, selectedCheckpointId, selectedChapterIds, routeMode, routeSceneIds }; readingPreferences.set(authorScope, next); try { localStorage.setItem(`scenario-chapter-reading:v1:${authorScope}`, JSON.stringify(next)); } catch { /* Navigation still retains the selected scope and clock in memory. */ } }, [project.projectId, contentVersionId, worldTick, selectedCheckpointId, selectedChapterIds, routeMode, routeSceneIds]);
   const savedReadingRecords = project.entities.filter((entity): entity is Entity<'trace'> => entity.kind === 'trace' && !entity.deletedAt && entity.data.mode === 'chapters');
 
   const effectiveChapterIds = chapterIds ?? selectedChapterIds.filter(id => chapters.some(chapter => chapter.id === id));
@@ -488,3 +491,5 @@ export function StructurePreview({ project, onApplyToDraft, initialPlan, onPlanC
     </>}
   </section>;
 }
+
+registerAuthorCache(account=>{const prefix=account+":";for(const map of [readingPreferences])for(const key of map.keys())if(key.startsWith(prefix))map.delete(key);});

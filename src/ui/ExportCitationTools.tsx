@@ -1,3 +1,4 @@
+import {useAuthorScope} from './StoreContext';
 import {useEffect} from 'react';
 import type {Entity,ProjectData,ProjectSnapshot} from '../domain/types';
 import {newId} from '../domain/model';
@@ -6,7 +7,7 @@ import {ListPager,useListWindow} from './ListWindow';
 import {useAuthorField,useAuthorInput,authorField,flushAuthorDraft,acknowledgeAuthorDraft,AuthorDraftNotice} from './authorOperation';
 /** Approval belongs to a particular old edition and public policy; it never borrows the current prose. */
 export function ExportCitationTools({project,profileId,pins,onSave}:{project:ProjectData;profileId:string;pins:readonly ProjectSnapshot[];onSave:(entity:Entity)=>Promise<Entity>}){
- const key=`export-citations:${project.projectId}`,[version,setVersion]=useAuthorInput(key,'version','',project.projectId,project.revision),[childId,setChild]=useAuthorInput(key,'profile','',project.projectId,project.revision),[busy,setBusy]=useAuthorField(key,'busy',false),[error,setError]=useAuthorField(key,'error',''),[saved,setSaved]=useAuthorField<string|null>(key,'saved',null);
+ const key=useAuthorScope(`export-citations:${project.projectId}`),[version,setVersion]=useAuthorInput(key,'version','',project.projectId,project.revision),[childId,setChild]=useAuthorInput(key,'profile','',project.projectId,project.revision),[busy,setBusy]=useAuthorField(key,'busy',false),[error,setError]=useAuthorField(key,'error',''),[saved,setSaved]=useAuthorField<string|null>(key,'saved',null);
  const parent=project.entities.find((entity):entity is Entity<'projection_profile'>=>entity.id===profileId&&entity.kind==='projection_profile'&&!entity.deletedAt),pin=pins.find(pin=>pin.id===version),children=[...(pin?.content.entities??[]).filter(entity=>entity.kind==='projection_profile'&&entity.status==='confirmed'&&!entity.deletedAt),...project.entities.filter(entity=>entity.kind==='projection_profile'&&entity.status==='confirmed'&&!entity.deletedAt&&entity.data.sourceVersionId===version&&!pin?.content.entities.some(old=>old.id===entity.id))].filter(entity=>entity.id!==parent?.id);
  const rows=useListWindow({items:(parent?.data.citedVersions??[]).map(item=>({...item,id:item.sourceVersionId})),scope:`${key}:${profileId}:list`});
  useEffect(()=>{if(saved&&parent&&BigInt(project.revision)>=BigInt(saved)){setSaved(null);setBusy(false);}},[project.revision,parent,saved]);

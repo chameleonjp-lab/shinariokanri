@@ -1,11 +1,12 @@
+import {useScenarioStore,useAuthorScope} from './StoreContext';
 import { useEffect } from 'react';
 import type { ProjectContent,ProjectData } from '../domain/types';
 import { previewGameReceiptImport,confirmGameReceiptImport,parseGameReceipt } from '../domain/gameHandoff';
 import { authorField,useAuthorField,useAuthorInput,flushAuthorDraft,acknowledgeAuthorDraft,AuthorDraftNotice } from './authorOperation';
 import { PagedSelect } from './PagedSelect';
-import { scenarioStore } from '../storage';
 export function GameHandoffPanel({project,worldSnapshots,onSaveProject}:{project:ProjectData;worldSnapshots:Record<string,ProjectContent>;onSaveProject:(p:ProjectData,r:string)=>Promise<ProjectData>}){
- const key=`game-handoff:${project.projectId}`,[raw,setRaw]=useAuthorInput(key,'raw','',project.projectId,project.revision),[profile,setProfile]=useAuthorInput(key,'profile','',project.projectId,project.revision),[version,setVersion]=useAuthorInput(key,'version','',project.projectId,project.revision),[plan,setPlan]=useAuthorField<Awaited<ReturnType<typeof previewGameReceiptImport>>|null>(key,'plan',null),[busy,setBusy]=useAuthorField(key,'busy',false),[error,setError]=useAuthorField(key,'error',''),[saved,setSaved]=useAuthorField<string|null>(key,'saved',null);
+  const scenarioStore=useScenarioStore();
+ const key=useAuthorScope(`game-handoff:${project.projectId}`),[raw,setRaw]=useAuthorInput(key,'raw','',project.projectId,project.revision),[profile,setProfile]=useAuthorInput(key,'profile','',project.projectId,project.revision),[version,setVersion]=useAuthorInput(key,'version','',project.projectId,project.revision),[plan,setPlan]=useAuthorField<Awaited<ReturnType<typeof previewGameReceiptImport>>|null>(key,'plan',null),[busy,setBusy]=useAuthorField(key,'busy',false),[error,setError]=useAuthorField(key,'error',''),[saved,setSaved]=useAuthorField<string|null>(key,'saved',null);
  const [ack,setAck]=useAuthorField<string|null>(key,'pendingAck',null);
  function release(){setBusy(false);const next=authorField<File|null>(key,'queuedFile');if(next){setQueued(null);void read(next);}}
  useEffect(()=>{if(ack&&authorField(key,'pendingAck')===ack&&BigInt(project.revision)>=BigInt(ack)){setAck(null);release();}},[project.revision,ack]);

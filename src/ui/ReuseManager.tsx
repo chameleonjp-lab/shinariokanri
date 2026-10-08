@@ -1,3 +1,5 @@
+import {registerAuthorCache,registerAuthorBusy} from './StoreContext';
+import {useAuthorScope} from './StoreContext';
 import { useEffect, useRef, useState } from 'react';
 import type { Entity, ProjectData, Reuse } from '../domain/types';
 import { adoptedRecord } from '../domain/adoption';
@@ -18,7 +20,7 @@ function readDraft(key: string, owner: Owner): Draft {
   return { sourceId: reuse?.sourceId ?? '', snapshotId: reuse?.pinnedSnapshotId ?? '', mode: reuse?.mode ?? 'reference', overrideFields: reuse?.overrideFields ?? [] };
 }
 export function ReuseManager({ project, owner, disabled, onSaveProject, onApplied, onBusy }: { project: ProjectData; owner: Owner; disabled: boolean; onSaveProject: (project: ProjectData, reason: string) => Promise<ProjectData>; onApplied: (entity: Entity) => void; onBusy: (busy: boolean) => void }) {
-  const key = draftKey(project.projectId, owner.id);
+  const key = useAuthorScope(draftKey(project.projectId, owner.id));
   const [draft, setDraft] = useState(() => readDraft(key, owner)), [preview, setPreview] = useState<Awaited<ReturnType<typeof prepareReuse>> | null>(null);
   const [outcome, setOutcome] = useState<Outcome>(() => outcomes.get(key) ?? { busy: false }), [preparing, setPreparing] = useState(false), [error, setError] = useState('');
   const live = useRef(true), preparation = useRef(0), actions = useRef({ onApplied, onBusy }); actions.current = { onApplied, onBusy };
@@ -64,3 +66,6 @@ export function ReuseManager({ project, owner, disabled, onSaveProject, onApplie
     </fieldset>{preparing && <p role="status">共通元の固定版とID対応を確認中…</p>}{outcome.busy && <p role="status">再利用と固定版を保存中…</p>}{outcome.saved && <p role="status">固定版と再利用を端末内に保存しました。</p>}{(error || outcome.error) && <p role="alert">{error || outcome.error}</p>}
   </details>;
 }
+
+registerAuthorCache(account=>{const prefix=account+":";for(const map of [memory,outcomes])for(const key of map.keys())if(key.startsWith(prefix))map.delete(key);});
+registerAuthorBusy(account=>[...outcomes].some(([key,value])=>key.startsWith(account+":")&&value.busy));

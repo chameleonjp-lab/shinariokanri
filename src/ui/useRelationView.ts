@@ -1,6 +1,6 @@
+import {useScenarioStore,useAuthorScope} from './StoreContext';
 import { useEffect, useRef, useState } from 'react';
 import type { ProjectData, ViewState } from '../domain/types';
-import { scenarioStore } from '../storage';
 
 function actor() { try { const key = 'scenario-local-view-user', current = localStorage.getItem(key); if (current) return current; const id = crypto.randomUUID(); localStorage.setItem(key, id); return id; } catch { return 'local-device'; } }
 function deviceClass(): ViewState['deviceClass'] { return window.innerWidth < 768 ? 'phone' : window.innerWidth < 1200 ? 'tablet' : 'desktop'; }
@@ -18,8 +18,9 @@ function semanticFilters(filters: ViewState['filters']): ViewState['filters'] { 
 function withSemanticFilters(view: ViewState, preserved?: ViewState['filters'], selectedId?: ViewState['lastOpenedId']): ViewState { return preserved === undefined ? view : { ...view, lastOpenedId: selectedId ?? null, filters: { ...Object.fromEntries(Object.entries(view.filters).filter(([key]) => key === 'scrollX' || key === 'scrollY')), ...preserved } }; }
 /** Layout is device view state. It never saves changes to world membership or relations. */
 export function useRelationView(project: ProjectData) {
-  const userId = useRef(actor()), [device, setDevice] = useState(deviceClass);
-  const key = `scenario-relations:v1:${userId.current}:${project.projectId}:${device}`;
+  const scenarioStore=useScenarioStore();
+  const userId = useRef(scenarioStore.accountId??actor()), [device, setDevice] = useState(deviceClass);
+  const key = useAuthorScope(`scenario-relations:v1:${userId.current}:${project.projectId}:${device}`);
   const initial: ViewState = { userId: userId.current, deviceClass: device, viewId: 'relations', positions: {}, sortIds: [], collapsedIds: [], zoom: 1, filters: {}, lastOpenedId: null };
   const [record, setRecord] = useState(() => ({ key, view: mirroredView(key, initial) ?? initial }));
   const currentKey = useRef(key), loadedProject = useRef(project.projectId), dirtyKey = useRef<string | null>(null); currentKey.current = key;

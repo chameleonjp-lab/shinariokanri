@@ -55,11 +55,13 @@ interface AckBase {
   serverRevision: Revision;
   /** Same order as operation.targets. Tombstones are retained, never physically removed. */
   documents: (SyncDocument | null)[];
+  /** Native adapter capability: complete confirmed image at serverRevision, including unrelated remote changes. */
+  confirmedDocuments?: SyncDocument[];
 }
 export type SyncAck = (AckBase & { status: 'applied'; conflicts: [] }) |
   (AckBase & { status: 'conflict'; conflicts: SyncConflict[] });
 export type SyncErrorCode = 'PROTOCOL_INVALID' | 'AUTH_REQUIRED' | 'FORBIDDEN' | 'ACCOUNT_CHANGED' |
-  'OPERATION_REUSED' | 'BASE_UNAVAILABLE' | 'REVISION_CHANGED' | 'TRANSPORT_UNAVAILABLE' | 'LOCAL_COMMIT_FAILED';
+  'OPERATION_REUSED' | 'BASE_UNAVAILABLE' | 'REVISION_CHANGED' | 'TRANSPORT_UNAVAILABLE' | 'LOCAL_COMMIT_FAILED' | 'CANCELLED';
 /** Only codes are surfaced; transport error bodies can contain author text or credentials. */
 export class SyncProtocolError extends Error {
   constructor(readonly code: SyncErrorCode) { super(code); this.name = 'SyncProtocolError'; }
@@ -72,7 +74,7 @@ export interface SyncSession {
 }
 export interface SyncTransport {
   /** A real adapter must authenticate the JWT and validate membership/type/reference scope server-side. */
-  send(operation: SyncOperation, session: SyncSession): Promise<SyncAck>;
+  send(operation: SyncOperation, session: SyncSession, signal?:AbortSignal): Promise<SyncAck>;
 }
 export interface SyncOutboxStore {
   /** Must return only this account and project, in local operation order. */
@@ -166,6 +168,8 @@ export async function createSyncOperation(input: {
   targets: { base: SyncDocument | null; local: SyncDocument }[]; reason?: string;
   resolvesOperationId?: string;
 }): Promise<SyncOperation> {
+  // Capture all targets and their account before the first asynchronous hash.
+  input = clone(input);
   assertScope(input.scope);
   if (!uuid.test(input.operationId) || !isRevision(input.baseRevision) || !input.targets.length ||
     input.targets.length > 10_000 || (input.reason !== undefined && typeof input.reason !== 'string') ||
@@ -201,6 +205,11 @@ export async function assertAckEnvelope(operation: SyncOperation, ack: SyncAck):
       assertDocumentTarget(document, operation.scope, operation.targets[index].targetId);
       if (BigInt(document.revision) > BigInt(ack.serverRevision)) invalid();
     }
+  }
+  if(ack.confirmedDocuments!==undefined){
+    if(!Array.isArray(ack.confirmedDocuments)||ack.confirmedDocuments.length>100001)invalid();
+    const confirmed=new Map<string,SyncDocument>();for(const doc of ack.confirmedDocuments){assertDocumentTarget(doc,operation.scope,doc.id);if(confirmed.has(doc.id)||BigInt(doc.revision)>BigInt(ack.serverRevision))invalid();confirmed.set(doc.id,doc);}
+    for(const [index,doc]of ack.documents.entries())if(!sameValue(doc,confirmed.get(operation.targets[index].targetId)??null))invalid();
   }
   if (ack.status === 'applied') {
     if (ack.conflicts.length || ack.documents.some(document => !document)) invalid();

@@ -1,3 +1,4 @@
+import {useAuthorScope} from './StoreContext';
 import {useEffect} from 'react';
 import type {ProjectData,Entity} from '../domain/types';
 import {createEntity,textToRichText} from '../domain/model';
@@ -8,7 +9,7 @@ import {RichTextView,labelOf} from './Fields';
 import {useAuthorField,authorField} from './authorOperation';
 import {ListPager,useListWindow} from './ListWindow';
 export function GameplayProductionLinks({project,onOpen,onSaveProject}:{project:ProjectData;onOpen:(id:string)=>void;onSaveProject?:(project:ProjectData,reason:string)=>Promise<ProjectData>}){
- const key=`gameplay-production:${project.projectId}`,[busy,setBusy]=useAuthorField(key,'busy',false),[error,setError]=useAuthorField(key,'error',''),[saved,setSaved]=useAuthorField<string|null>(key,'saved',null),rows=useListWindow({items:project.entities.filter(adoptedRecord).filter(entity=>['creative_brief','decision','gameplay_spec'].includes(entity.kind)),scope:key});
+ const key=useAuthorScope(`gameplay-production:${project.projectId}`),[busy,setBusy]=useAuthorField(key,'busy',false),[error,setError]=useAuthorField(key,'error',''),[saved,setSaved]=useAuthorField<string|null>(key,'saved',null),rows=useListWindow({items:project.entities.filter(adoptedRecord).filter(entity=>['creative_brief','decision','gameplay_spec'].includes(entity.kind)),scope:key});
  let view=project;try{view=resolveReuseContent(project,project.snapshots);}catch{}
  useEffect(()=>{if(saved&&BigInt(project.revision)>=BigInt(saved)){setBusy(false);setSaved(null);}},[saved,project.revision]);
  async function review(entity:Entity<'gameplay_spec'>){if(!onSaveProject||authorField<boolean>(key,'busy'))return;setBusy(true);const captured=structuredClone(project),spec=structuredClone(entity),source=structuredClone(view.entities.find(entity=>entity.id===spec.data.sceneId));try{const candidate=await createWorldSnapshot(captured,'遊びと物語の差の確認対象版'),pin=candidate.snapshots.at(-1)!,record=createEntity(captured.projectId,'review',`${spec.name} · 遊びと物語の差の確認`,{target:spec.id,targetVersionId:pin.id,stage:'open',body:textToRichText(`物語: ${source?.kind==='scene'?[...source.data.summary??[],...source.data.body].map(block=>block.text).join('\n'):'対象場面未確認'}\nプレイ行動: ${spec.data.action.map(block=>block.text).join('\n')}\n必要機能: ${spec.data.mechanic??'未指定'}\n意図: ${spec.data.intentionalDifference??'未指定・確認が必要'}\n実装と執筆の工程状態を別々に確認する。`)});candidate.entities.push(record);const result=await onSaveProject(candidate,'遊びと物語の差を対象版付き確認候補へ保存');setSaved(result.revision);setError('');}catch(cause){setError((cause as Error).message);setBusy(false);}}
