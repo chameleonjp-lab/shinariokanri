@@ -15,3 +15,5 @@
 確認差分と結果のhash、基底revision・開始点・開始場面・世界内tick・読み方を固定して画面に示す。確認後・保存待ち・キュー処理中に作品が変わった場合は保存を拒否し、入力と結果を保持する。同一ターンと保存完了props反映まで操作を直列化し、画面移動からも待ち状態を再開する。失敗では差分を残して再試行できる。保存完了表示は保存したIDと固定版が最新propsに現れた後に出す。
 
 追加検査は `tests/rb05-narrative.test.ts`、独立正期待を保持した `tests/rb05-narrative-boundaries.test.ts`、`tests/rb05-reconfirmation.test.ts`、production通常操作 `tests/e2e/rb05-reconfirmation.spec.ts` に記録する。元の設計レジストリのplanned/not_runを更新して完成扱いにせず、現在の局所結果を別に記録する。
+
+固定借用の対象graph・章も宣言と実行文脈で同じID対応を使う。対象範囲だけの参照と実際に呼び出す子graphを区別し、現在の使用先が元の許可対象なら同じ固定例外を評価する。別のgraph・章への使用は範囲外のまま拒否する。子graphを呼び出したときはその仮想graph IDを保持し、元IDへの一律な巻戻しで内部の限定遷移を拒否しない。`tests/rb05-edition-extra.test.ts` の CTX-graph/CTX-chapter/CTX-child で同一範囲、別範囲、内部呼出し、期間外の原子拒否とnative往復を検査する。

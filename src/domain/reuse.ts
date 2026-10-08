@@ -136,7 +136,14 @@ export function reuseTargetAnchor(project: ProjectContent, anchor: ContentAnchor
   return { ...anchor, entityId: origin.entityId, sourceVersionId: origin.sourceVersionId, ...(anchor.blockId ? { blockId: reverse.get(anchor.blockId) ?? anchor.blockId } : {}), ...(anchor.lineId ? { lineId: reverse.get(anchor.lineId) ?? anchor.lineId } : {}) };
 }
 export function reuseRuleContexts(project: ProjectContent, base: NonNullable<RuntimeContext['ruleContext']>): NonNullable<RuntimeContext['ruleContexts']> {
-  return Object.fromEntries([...(origins.get(project) ?? [])].map(([id, origin]) => [id, { ...base, sourceVersionId: origin.sourceVersionId, anchorBindings: origin.bindings }]));
+  return Object.fromEntries([...(origins.get(project) ?? [])].map(([id, origin]) => [id, {
+    ...base,
+    // Qualifiers and the actual use site must be compared in the same namespace.
+    // Mapping only the declaration would reject its unchanged permitted graph/chapter.
+    graphId: base.graphId ? origin.bindings[base.graphId] ?? base.graphId : undefined,
+    chapterId: base.chapterId ? origin.bindings[base.chapterId] ?? base.chapterId : undefined,
+    sourceVersionId: origin.sourceVersionId, anchorBindings: origin.bindings,
+  }]));
 }
 /** Fixed author anchors keep their real namespace. Only the originating borrowed
  * declaration translates them while evaluating an occurrence of that module. */
