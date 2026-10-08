@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { allKindsFixture } from '../testing/allKindsFixture';
 import { readFileSync } from 'node:fs';
 import Ajv2020 from 'ajv/dist/2020.js';
 import type { Condition, EffectData, Entity, EntityDataMap, EntityKind, ProjectData, Query, TypedValue } from './types';
@@ -11,42 +12,7 @@ const hash = '0'.repeat(64);
 function add<K extends EntityKind>(project: ProjectData, kind: K, data?: Partial<EntityDataMap[K]>, name = KIND_LABELS[kind]): Entity<K> {
   const entity = createEntity(project.projectId, kind, name, data); project.entities.push(entity); return entity;
 }
-function allKindsFixture(): ProjectData {
-  const project = createProject('全種類固定データ'), byKind = new Map<EntityKind, Entity>();
-  for (const kind of ENTITY_KINDS) byKind.set(kind, add(project, kind));
-  const id = (kind: EntityKind): string => byKind.get(kind)!.id;
-  const set = <K extends EntityKind>(kind: K, fields: Partial<EntityDataMap[K]>): void => { Object.assign(byKind.get(kind)!.data, fields); };
-  set('goal', { ownerId: id('character') });
-  set('flow_node', { nodeType: 'entry', executionPolicy: 'manual_choice' });
-  set('flow_edge', { fromId: id('flow_node'), toId: id('flow_node'), effectIds: [id('effect')] });
-  set('flow_graph', { nodeIds: [id('flow_node')], edgeIds: [id('flow_edge')], entryIds: [id('flow_node')], exitIds: [] });
-  set('quest', { key: 'quest', stateVariableId: id('variable') });
-  set('variable', { key: 'flag', initial: { type: 'boolean', value: false } });
-  set('effect', { operation: 'mark_seen', targetId: id('note'), value: null });
-  set('assertion', { subjectId: id('character'), predicate: '居場所', value: { type: 'ref', value: id('place') } });
-  set('disclosure', { foreshadowId: id('foreshadow'), anchor: { entityId: id('scene') } });
-  set('checkpoint', { contentVersionId: project.projectId, contentRevision: '0', runtimeState: emptyRuntimeState(project.projectId) });
-  set('trace', { contentVersionId: project.projectId, startCheckpointId: id('checkpoint'), contentRevision: '0' });
-  set('attachment', { mediaType: 'image/png', contentHash: hash, assetPath: `assets/${hash}.png`, provenanceId: id('source') });
-  set('source', { locator: 'https://example.com', attachmentId: id('attachment') });
-  set('cue', { anchor: { entityId: id('dialogue_line') }, cueType: 'narration' });
-  set('storyboard_frame', { anchor: { entityId: id('scene') }, mediaStartMs: 0, mediaEndMs: 2000 });
-  set('localization', { sourceLineId: id('dialogue_line'), language: 'ja', sourceHash: hash });
-  set('recording', { sourceLineId: id('dialogue_line'), language: 'ja', sourceHash: hash });
-  set('terminology', { canonical: '霧の門' });
-  set('map', { placeId: id('place') });
-  set('travel_route', { fromPlaceId: id('place'), toPlaceId: id('place'), minimumTicks: '0', maximumTicks: '10' });
-  set('review', { target: id('note'), targetVersionId: id('snapshot') });
-  set('decision', { subject: '企画判断', targetVersionId: id('snapshot') });
-  set('gameplay_spec', { sceneId: id('scene') });
-  set('production_task', { targetIds: [id('scene')] });
-  set('media_variant', { baseSnapshotId: id('snapshot') });
-  set('voice_rule', { characterId: id('character') });
-  set('external_contract', { key: 'battle' });
-  set('snapshot', { versionLabel: 'v1', contentHash: hash });
-  set('projection_profile', { audience: '読者', includedIds: [id('character')] });
-  return project;
-}
+
 
 describe('versioned entity and reference contracts', () => {
   it('validates a complete all-kind project and the interactive demo', () => {

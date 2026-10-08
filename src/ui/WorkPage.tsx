@@ -1,65 +1,15 @@
 import { projectSettingsDraft, acknowledgeSettingsDraft, settingsDraftChanged, type ProjectSettingsDraft } from './projectSettingsDraft';
 import { useEffect, useRef, useState } from 'react';
 import type { Entity, ProjectData, ProjectSnapshot } from '../domain/types';
-import { createEntity, newId, KIND_LABELS, textToRichText } from '../domain/model';
+import { createEntity, newId, textToRichText } from '../domain/model';
 import { exportProject as createExport, type ExportProfile, type ExportResult } from '../domain/exports';
-import { ARCHIVE_LIMITS, scenarioStore, inspectScenario, jsonBytes, sha256, type ImportMode, type PreparedScenario, type AssetInput } from '../storage';
+import { jsonBytes, sha256, type AssetInput } from '../storage';
 import { prepareAsset } from '../domain/attachments';
 import { EmptyState, Icon, Modal, downloadBytes, safeFileName } from './components';
 import { dataOf, labelOf, JsonField, RefList } from './Fields';
 
-export function BackupPanel({ project, projects, onImported }: { project: ProjectData | null; projects: ProjectData[]; onImported: (project: ProjectData) => void }) {
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
-  const [notice, setNotice] = useState('');
-  const [progress, setProgress] = useState('');
-  const [prepared, setPrepared] = useState<PreparedScenario | null>(null);
-  const [mode, setMode] = useState<ImportMode>('clone');
-  const [targetId, setTargetId] = useState(project?.projectId || '');
-  const [preview, setPreview] = useState<Awaited<ReturnType<typeof scenarioStore.previewImport>> | null>(null);
-  const [resolutions, setResolutions] = useState<Record<string, 'existing' | 'incoming'>>({});
-  const [checked, setChecked] = useState(false);
-  const controller = useRef<AbortController | null>(null);
-  const previewSequence = useRef(0);
-  useEffect(() => () => controller.current?.abort(), []);
-  useEffect(() => {
-    setPreview(null); setChecked(false); setResolutions({});
-    if (!prepared) return;
-    const sequence = ++previewSequence.current;
-    const options = { mode, targetProjectId: ['replace', 'merge'].includes(mode) ? targetId || undefined : undefined };
-    void scenarioStore.previewImport(prepared, options).then(next => { if (sequence === previewSequence.current) { setPreview(next); setError(''); } }).catch(e => { if (sequence === previewSequence.current) setError((e as Error).message); });
-  }, [prepared, mode, targetId]);
-  const exportBackup = async (full = true) => {
-    if (!project) return;
-    setBusy(true); setError(''); setNotice('');
-    try { const bytes = await scenarioStore.exportProject(project.projectId, { assetMode: full ? 'embedded' : 'metadata_only' }); downloadBytes(bytes as BlobPart, `${safeFileName(project.name)}${full ? '' : '-素材を除く'}.scenario`, 'application/zip'); setNotice(full ? '完全保存ファイルを作成しました。端末のダウンロードを確認してください。' : '素材bytesを除いたファイルを作成しました。完全復元には素材が別途必要です。'); }
-    catch (e) { setError((e as Error).message); }
-    finally { setBusy(false); }
-  };
-  const inspect = async (file: File) => {
-    if (file.size > ARCHIVE_LIMITS.compressedBytes) { setError('保存ファイルの上限は64 MiBです。選択したファイルは読み込まず、保存済みの作品を保持しています。'); return; }
-    setPrepared(null); setPreview(null); setError(''); setNotice(''); setBusy(true); setProgress('ファイルを読み込み中…');
-    const abort = new AbortController(); controller.current = abort;
-    try { const candidate = await inspectScenario(new Uint8Array(await file.arrayBuffer()), { signal: abort.signal, onProgress: p => setProgress(`${{ container: '形式を検査', expanding: '展開', hashes: '内容の整合性を検査', validating: 'データと参照先を検査' }[p.stage]} ${p.completed} / ${p.total}`) }); setPrepared(candidate); setMode(projects.some(p => p.projectId === candidate.project.projectId) ? 'clone' : 'new'); if (projects.some(p => p.projectId === candidate.project.projectId)) setTargetId(candidate.project.projectId); }
-    catch (e) { setError((e as Error).message); }
-    finally { setBusy(false); controller.current = null; setProgress(''); }
-  };
-  const commit = async () => {
-    if (!prepared || !preview) return;
-    setBusy(true); setError('');
-    try { const result = await scenarioStore.importScenario(prepared, { mode, targetProjectId: ['replace', 'merge'].includes(mode) ? targetId : undefined, baseRevision: preview.target?.revision, resolutions }); setPrepared(null); setPreview(null); setNotice('検査した作品を端末内に復元しました。'); onImported(result.project); }
-    catch (e) { setError((e as Error).message); }
-    finally { setBusy(false); }
-  };
-  const blocked = !preview || mode === 'new' && preview.conflicts.length > 0 || mode === 'replace' && preview.pendingChanges > 0 || mode === 'merge' && preview.conflicts.some(c => !resolutions[c.id]);
-
-  return <section className="backup-page">{project && <div className="backup-card"><span className="panel-icon"><Icon name="download" size={26}/></span><div><h3>作品を完全保存</h3><p>本文・状態・履歴・添付を専用の .scenario ファイルに保存します。作者用の内容を含みます。</p><div className="backup-actions"><button className="button primary" disabled={busy} onClick={() => void exportBackup()}><Icon name="download" size={18}/>完全保存ファイルを作成</button><button className="text-button" disabled={busy} onClick={() => void exportBackup(false)}>素材bytesを除いて保存</button></div></div></div>}
-    <div className="backup-card"><span className="panel-icon soft-green"><Icon name="upload" size={26}/></span><div><h3>ファイルから復元</h3><p>選んだファイルを検査し、作品名・件数・変更の影響を確認してから復元します。</p><label className={`button secondary file-button ${busy ? 'disabled' : ''}`}><Icon name="upload" size={18}/>保存ファイルを選ぶ<input type="file" accept=".scenario,.zip,application/zip" disabled={busy} onChange={e => { const file = e.target.files?.[0]; e.target.value = ''; if (file) void inspect(file); }}/></label></div></div>
-    {busy && <div className="import-progress" role="status"><span className="spinner"/>{progress || '処理中…'}{controller.current && <button className="text-button" onClick={() => controller.current?.abort()}>中止</button>}</div>}{error && <div className="error-notice" role="alert"><strong>処理を完了できませんでした</strong><p>{error}</p><span className="field-hint">保存済みの作品は保持されています。</span></div>}{notice && <div className="success-notice" role="status">{notice}</div>}
-    {prepared && <div className="import-preview"><div className="section-heading"><h3>検査済みの作品</h3><span className="status-badge status-confirmed">整合性を確認</span></div><h4>{prepared.summary.name}</h4><div className="import-counts"><span>{prepared.summary.entities}件の情報</span><span>{prepared.summary.relations}件の関係</span><span>{prepared.summary.history}件の履歴</span><span>{(prepared.summary.assetBytes / 1024 / 1024).toFixed(2)} MiBの素材</span></div>{prepared.warnings.map((warning, i) => <p className="info-notice" key={i}>{warning}</p>)}<div className="form-field"><label>復元方法</label><select aria-label="復元方法" value={mode} onChange={e => setMode(e.target.value as ImportMode)}><option value="new">保存IDを維持して新規復元</option><option value="clone">新しいIDへ複製して追加</option><option value="replace">同じ作品を置換</option><option value="merge">同じ作品へ統合</option></select></div>{['replace', 'merge'].includes(mode) && <div className="form-field"><label>対象の作品</label><select aria-label="復元する対象作品" value={targetId} onChange={e => setTargetId(e.target.value)}><option value="">対象を選択</option>{projects.filter(p => p.projectId === prepared.project.projectId).map(p => <option key={p.projectId} value={p.projectId}>{p.name} · 版 {p.revision}</option>)}</select></div>}{preview && <><p className="info-notice">{mode === 'clone' ? '作品と内部参照へ新しいIDを付け、保存済みの作品に追加します。' : mode === 'new' ? 'ファイルの固定IDを維持します。同じ作品IDとの衝突がある場合は停止します。' : `対象の現在版 ${preview.target?.revision}。追加 ${preview.additions}件、同IDの差分 ${preview.conflicts.length}件。`} {mode === 'replace' && '置換前の完全復元点を作成します。'}</p>{mode === 'replace' && preview.pendingChanges > 0 && <p className="error-notice">未送信の変更が{preview.pendingChanges}件あるため置換できません。「複製して追加」を選べます。</p>}{preview.conflicts.map(conflict => <details className="import-conflict" key={conflict.id}><summary>同IDの差分 · {conflict.kind} · {labelOf(conflict.existing as Entity)}</summary><div className="conflict-comparison"><div><h5>現在の作品</h5><pre>{JSON.stringify(conflict.existing, null, 2)}</pre></div><div><h5>ファイルの内容</h5><pre>{JSON.stringify(conflict.incoming, null, 2)}</pre></div></div>{mode === 'merge' && <select aria-label={`${conflict.id}の統合方法`} value={resolutions[conflict.id] || ''} onChange={e => setResolutions(previous => ({ ...previous, [conflict.id]: e.target.value as 'existing' | 'incoming' }))}><option value="">採用する内容を選ぶ</option><option value="existing">現在の内容を残す</option><option value="incoming">ファイルの内容を採用</option></select>}</details>)}</>}
-      <label className="check-label import-check"><input type="checkbox" checked={checked} onChange={e => setChecked(e.target.checked)}/>復元方法と対象への影響を確認しました</label><div className="modal-actions"><button className="button secondary" disabled={busy} onClick={() => { setPrepared(null); setPreview(null); }}>中止</button><button className="button primary" disabled={busy || blocked || !checked} onClick={() => void commit()}>この内容で復元する</button></div></div>}
-  </section>;
-}
+export { BackupPanel } from './BackupPanel';
+export { HistoryPanel } from './HistoryPanel';
 
 export function ExportPanel({ project, onSave, onOpen }: { project: ProjectData; onSave: (entity: Entity) => Promise<Entity>; onOpen: (id: string) => void }) {
   const profiles = project.entities.filter(e => e.kind === 'projection_profile' && !e.deletedAt);
@@ -146,26 +96,3 @@ export function ProjectInfo({ project, initialDraft, saving = false, onDraftChan
   </section>;
 }
 
-export function HistoryPanel({ project, onUpdated, onOpen }: { project: ProjectData; onUpdated: (project: ProjectData) => void; onOpen: (id: string) => void }) {
-  const [error, setError] = useState('');
-  const [busy, setBusy] = useState(false);
-  const [history, setHistory] = useState(project.history);
-  const [loading, setLoading] = useState(true);
-  const [undoId, setUndoId] = useState<string | null>(null);
-  const [restore, setRestore] = useState<{ operationId: string; entityId: string; side: 'before' | 'after' } | null>(null);
-  useEffect(() => {
-    let live = true;
-    setLoading(true); setError(''); setHistory(project.history);
-    void scenarioStore.listHistory(project.projectId).then(history => { if (live) setHistory(history); }).catch(error => { if (live) setError((error as Error).message); }).finally(() => { if (live) setLoading(false); });
-    return () => { live = false; };
-  }, [project.projectId, project.revision]);
-  const commands = [...history].reverse();
-  const pending = commands.find(c => c.operationId === undoId);
-  const undo = async () => { setBusy(true); setError(''); try { const result = await scenarioStore.undo(project.projectId, undoId || undefined); onUpdated(result.project); setUndoId(null); } catch (e) { setError((e as Error).message); } finally { setBusy(false); } };
-  const restoreEntity = async () => { if (!restore) return; setBusy(true); setError(''); try { const result = await scenarioStore.restoreEntity(project.projectId, restore.operationId, restore.entityId, restore.side); onUpdated(result.project); setRestore(null); } catch (e) { setError((e as Error).message); } finally { setBusy(false); } };
-  const archived = project.entities.filter(e => e.deletedAt);
-  return <section className="history-page">{loading && <p role="status">変更履歴を読み込んでいます…</p>}{error && <div className="error-notice" role="alert">{error}</div>}{archived.length > 0 && <div className="settings-card"><h3>アーカイブ済みの情報</h3>{archived.map(e => <button className="reference-link" key={e.id} onClick={() => { const beforeDelete = commands.find(c => c.targetIds.includes(e.id) && c.before.entities.some(v => v.id === e.id && !v.deletedAt)); if (beforeDelete) setRestore({ operationId: beforeDelete.operationId, entityId: e.id, side: 'before' }); else onOpen(e.id); }}>{labelOf(e)}<small>{KIND_LABELS[e.kind]} · 復元</small></button>)}</div>}{!commands.length ? loading ? null : <EmptyState icon="clock" title="変更履歴はまだありません"/> : <ol className="history-list">{commands.slice(0, 50).map((c, i) => <li key={c.operationId}><span className="history-marker"><Icon name={c.compensatesOperationId ? 'back' : 'check'} size={16}/></span><div className="history-entry"><div className="section-heading"><h3>{c.reason}</h3><span>版 {c.revision}</span></div><p className="field-hint">{new Date(c.createdAt).toLocaleString('ja-JP')} · {c.targetIds.length}件の変更</p><div className="history-targets">{c.targetIds.map(id => { const entity = c.after.entities.find(e => e.id === id) || c.before.entities.find(e => e.id === id); return entity ? <button key={id} className="text-button" onClick={() => setRestore({ operationId: c.operationId, entityId: id, side: 'after' })}>{labelOf(entity)}をこの版へ復元</button> : null; })}</div>{i === 0 && <button className="button secondary small" onClick={() => setUndoId(c.operationId)}>この変更を取り消す</button>}</div></li>)}</ol>}{commands.length > 50 && <p className="field-hint">最新の50件を表示しています。全履歴は完全保存ファイルに含まれます。</p>}
-    {undoId && <Modal title="変更の取り消し" onClose={() => { if (!busy) setUndoId(null); }}><p>「{pending?.reason}」の変更を、新しい履歴を追加して取り消します。</p><ul>{pending?.targetIds.map(id => <li key={id}>{labelOf(pending.after.entities.find(e => e.id === id) || pending.before.entities.find(e => e.id === id))}</li>)}</ul><div className="modal-actions"><button className="button secondary" disabled={busy} onClick={() => setUndoId(null)}>中止</button><button className="button primary" disabled={busy} onClick={() => void undo()}>この変更を取り消す</button></div></Modal>}
-    {restore && <Modal title="情報を過去の版へ復元" onClose={() => { if (!busy) setRestore(null); }}><p>対象だけを選んだ履歴の内容へ復元します。現在の参照先と型を検査してから、新しい変更として保存します。</p><pre className="restore-preview">{JSON.stringify(commands.find(c => c.operationId === restore.operationId)?.[restore.side].entities.find(e => e.id === restore.entityId), null, 2)}</pre><div className="modal-actions"><button className="button secondary" disabled={busy} onClick={() => setRestore(null)}>中止</button><button className="button primary" disabled={busy} onClick={() => void restoreEntity()}>この内容へ復元する</button></div></Modal>}
-  </section>;
-}

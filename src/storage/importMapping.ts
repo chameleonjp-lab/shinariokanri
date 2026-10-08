@@ -32,6 +32,7 @@ export interface CrossProjectImportPlan {
 export function collectImportIds(project: ProjectData): ImportId[] {
   const found = new Map<string, ImportId>();
   const bindings: { id: string; ownerId: string }[] = [];
+  const runtimeItems = new Set<string>();
   const add = (id: string, role: ImportIdRole, ownerId?: string) => {
     const old = found.get(id);
     if (old && (old.role !== role || old.ownerId !== ownerId)) throw new StorageError('IMPORT_CONFLICT', '同じIDが別の種別・所有者で使われています。', id);
@@ -45,7 +46,7 @@ export function collectImportIds(project: ProjectData): ImportId[] {
       const role: ImportIdRole = 'kind' in record && 'text' in record ? 'block' : 'audienceHolderIds' in record ? 'alias' : 'eventKey' in record ? 'trigger' : 'x' in record && 'y' in record ? 'map_pin' : (() => { throw new StorageError('IMPORT_CONFLICT', '未対応の埋込IDです。', record.id as string); })();
       add(record.id, role, ownerId);
     }
-    if (typeof record.instanceId === 'string' && 'quantity' in record && 'consumed' in record) add(record.instanceId, 'runtime_item');
+    if (typeof record.instanceId === 'string' && 'quantity' in record && 'consumed' in record) runtimeItems.add(record.instanceId);
     if (record.mode === 'anonymize' && typeof record.publicId === 'string') add(record.publicId, 'public_id');
     for (const [key, item] of Object.entries(record)) {
       if (key === 'publicIds' && item && typeof item === 'object') for (const id of Object.values(item)) if (typeof id === 'string') add(id, 'public_id');
@@ -73,6 +74,9 @@ export function collectImportIds(project: ProjectData): ImportId[] {
   };
   state(project);
   for (const command of project.history) { add(command.operationId, 'operation'); state(command.before); state(command.after); }
+  // Declared individual items and aggregate type quantities use their entity ID in runtime.
+  // Generated instances own independent IDs; they must still reject other roles.
+  for (const id of runtimeItems) if (found.get(id)?.role !== 'entity:item') add(id, 'runtime_item');
   for (const binding of bindings) if (!found.has(binding.id)) add(binding.id, 'reuse_binding', binding.ownerId);
   return [...found.values()];
 }
@@ -226,7 +230,7 @@ function mappedStructurePlan(plan: NonNullable<AuthorAlternative['versions'][num
   return { ...structuredClone(plan), chapterId: lookup(plan.chapterId), templateId: lookup(plan.templateId), assignments: Object.fromEntries(Object.entries(plan.assignments).map(([beat, id]) => [beat, lookup(id)])) };
 }
 
-async function mapProject(source: ProjectData, target: ProjectData, idMap: Record<string, string>, signal?: AbortSignal): Promise<ProjectData> {
+export async function mapImportedProject(source: ProjectData, target: ProjectData, idMap: Record<string, string>, signal?: AbortSignal): Promise<ProjectData> {
   const lookup = (id: string) => idMap[id] ?? id;
   const state = async <T extends ProjectContent | ContentState>(input: T): Promise<T> => {
     checkCancelled(signal);
@@ -273,7 +277,7 @@ async function mapProject(source: ProjectData, target: ProjectData, idMap: Recor
     if ('snapshots' in content && 'snapshots' in input) content.snapshots = await Promise.all(input.snapshots.map(async snapshot => ({ ...structuredClone(snapshot), id: lookup(snapshot.id), content: await state(snapshot.content) })));
     return content;
   };
-  const project: ProjectData = { ...await state(source), history: await Promise.all(source.history.map(async command => ({ ...structuredClone(command), operationId: lookup(command.operationId), projectId: lookup(command.projectId), targetIds: command.targetIds.map(lookup), before: await state(command.before), after: await state(command.after), ...(command.compensatesOperationId ? { compensatesOperationId: lookup(command.compensatesOperationId) } : {}), ...(command.idMap ? { idMap: Object.fromEntries(Object.entries(command.idMap).map(([oldId, currentId]) => [oldId, lookup(currentId)])) } : {}) }))) };
+  const project: ProjectData = { ...await state(source), history: await Promise.all(source.history.map(async command => ({ ...structuredClone(command), operationId: lookup(command.operationId), projectId: lookup(command.projectId), targetIds: command.targetIds.map(lookup), before: await state(command.before), after: await state(command.after), ...(command.compensatesOperationId ? { compensatesOperationId: lookup(command.compensatesOperationId) } : {}), ...(command.importOrigin ? { importOrigin: { ...command.importOrigin, importOperationId: lookup(command.importOrigin.importOperationId) } } : {}), ...(command.idMap ? { idMap: Object.fromEntries(Object.entries(command.idMap).map(([oldId, currentId]) => [oldId, lookup(currentId)])) } : {}) }))) };
   const snapshots = new Map<string, ProjectSnapshot>();
   const visitStates = (callback: (state: ProjectContent | ContentState) => void) => {
     const visit = (content: ProjectContent | ContentState) => {
@@ -363,7 +367,7 @@ export async function planCrossProjectImport(source: PreparedScenario, target: P
   await verifySnapshotHashes([source.project, target, ...Object.values(worlds)]);
   for (const [id, resolution] of Object.entries(options.resolutions ?? {})) if (!['existing', 'incoming'].includes(resolution)) throw new StorageError('IMPORT_CONFLICT', '競合の採用方法が未対応です。', id);
   const idMap = validateMap(source.project, target, options.idMap);
-  const mappedProject = await mapProject(source.project, target, idMap, options.signal);
+  const mappedProject = await mapImportedProject(source.project, target, idMap, options.signal);
   const mapped = validateProject(mappedProject, { worldSnapshots }); if (!mapped.ok) throw validationError(mapped.issues);
   await verifySnapshotHashes([mappedProject]);
   const metadata = new Map<string, ReturnType<typeof attachmentMetadata>[number]>();

@@ -11,6 +11,8 @@ import { appendAlternativeVersion, applyAlternativeChanges, projectContent } fro
 import { assetPath, attachmentMetadata, exportScenario, referencedWorlds, validateAsset, verifySnapshotHashes, verifyWorlds, worldSnapshotContents, type PreparedScenario } from './archive';
 import { checkCancelled, saveError, StorageError } from './errors';
 import { canonicalJson, equalJson, jsonBytes, sha256 } from './json';
+import { recoveryImages, projectWithRecoveryHistory, validateRecovery, type PortableRecovery } from './recovery';
+import { planCrossProjectImport, type CrossProjectImportPlan } from './importMapping';
 
 type StoredProject = Omit<ProjectData, 'entities' | 'relations' | 'snapshots' | 'history' | 'views'> & {
   entityIds: string[]; relationIds: string[]; snapshotIds: string[]; historyIds: string[]; viewIds: string[];
@@ -63,11 +65,16 @@ export interface SaveMetrics {
   historyRead: number;
 }
 export interface StoreOptions { databaseName?: string; accountId?: string; faultInjector?: (stage: FaultStage) => void; onSaveMetrics?: (metrics: SaveMetrics) => void }
-export type ImportMode = 'new' | 'clone' | 'replace' | 'merge';
+export type ImportMode = 'new' | 'clone' | 'replace' | 'merge' | 'mapped_merge';
 export interface ImportOptions {
   mode: ImportMode; targetProjectId?: string; baseRevision?: string; operationId?: string; signal?: AbortSignal;
   resolutions?: Record<string, 'existing' | 'incoming'>;
+  idMap?: Record<string, string>; confirmationHash?: string;
 }
+export interface ImportPreview { conflicts: ImportConflict[]; pendingChanges: number; target?: ProjectData; additions: number; mappedPlan?: CrossProjectImportPlan; mappedRecovery?: PortableRecovery; confirmationHash?: string }
+export interface RecoveredPendingIntent { key: string; projectId: string; importOperationId: string; sequence: number; operation: PortableRecovery['pending'][number]; status: 'needs_reconnect' }
+export interface ImportDraft { key: string; bytes?: Uint8Array; sourceHash?: string; mode: ImportMode; targetProjectId: string; idMap: Record<string, string>; resolutions: Record<string, 'existing' | 'incoming'>; selectedId?: string }
+export interface HistoryPage { entries: CommandMetadata[]; page: number; maximum: number; total: number; size: number }
 export interface ImportConflict { id: string; kind: 'project' | 'entity' | 'relation' | 'snapshot' | 'view' | 'alternative'; existing: unknown; incoming: unknown }
 export interface ImportResult extends SaveResult { mode: ImportMode; idMap?: Record<string, string>; restorePointId?: string; warnings: string[] }
 
@@ -87,6 +94,8 @@ class ScenarioDatabase extends Dexie {
   restorePoints!: Table<RestorePoint, string>;
   worlds!: Table<{ id: string; project: ProjectData }, string>;
   importLogs!: Table<ImportLog, string>;
+  importDrafts!: Table<ImportDraft, string>;
+  recoveredPending!: Table<RecoveredPendingIntent, string>;
   constructor(name: string) {
     super(name);
     this.version(1).stores({
@@ -96,6 +105,8 @@ class ScenarioDatabase extends Dexie {
       views: '[projectId+id],projectId', viewStates: 'key,projectId', syncMetadata: 'projectId', acks: 'operationId,projectId',
       restorePoints: 'id,projectId,createdAt', worlds: 'id', importLogs: 'operationId,projectId',
     });
+    this.version(2).stores({ importDrafts: 'key' });
+    this.version(3).stores({ recoveredPending: 'key,projectId' });
   }
 }
 
@@ -367,7 +378,7 @@ export class ScenarioStore {
     this.db = new ScenarioDatabase(options.databaseName ?? (this.accountId ? `scenario-manager-account-${encodeURIComponent(this.accountId)}` : 'scenario-manager-local-v1'));
   }
   // Store names avoid Dexie's recursive KeyPaths expansion on the domain's large discriminated unions.
-  private get writeTables(): string[] { return ['projects', 'entities', 'relations', 'blocks', 'snapshots', 'commands', 'outbox', 'assets', 'views', 'syncMetadata', 'restorePoints', 'worlds', 'importLogs']; }
+  private get writeTables(): string[] { return ['projects', 'entities', 'relations', 'blocks', 'snapshots', 'commands', 'outbox', 'assets', 'views', 'syncMetadata', 'restorePoints', 'worlds', 'importLogs', 'recoveredPending']; }
   private async guardWorldRegistry(incoming: ProjectData[]): Promise<void> {
     const snapshots = new Map<string, ProjectSnapshot>();
     for (const project of [...(await this.db.worlds.toArray()).map(row => row.project), ...incoming]) for (const snapshot of project.snapshots) {
@@ -403,7 +414,7 @@ export class ScenarioStore {
   }
   getHistoryCount(project: ProjectData): number { return this.editingHistories.get(project.history)?.historyIds.length ?? project.history.length; }
 
-  private async materializeCommand(row: StoredCommand, rows = new Map<string, StoredCommand>(), ready = new Map<string, CommandRecord>(), active = new Set<string>()): Promise<CommandRecord> {
+  private async materializeCommand(row: StoredCommand, rows = new Map<string, StoredCommand>(), ready = new Map<string, CommandRecord>(), active = new Set<string>(), allowRead = true): Promise<CommandRecord> {
     const cached = ready.get(row.operationId);
     if (cached) return cached;
     if (row.record) { ready.set(row.operationId, row.record); return row.record; }
@@ -412,9 +423,9 @@ export class ScenarioStore {
     active.add(row.operationId);
     let before = delta.checkpoint;
     if (!before && delta.parentOperationId) {
-      const parent = rows.get(delta.parentOperationId) ?? await this.db.commands.get(delta.parentOperationId);
+      const parent = rows.get(delta.parentOperationId) ?? (allowRead ? await this.db.commands.get(delta.parentOperationId) : undefined);
       if (!parent || parent.projectId !== row.projectId) throw new StorageError('SAVE_FAILED', '履歴の元の版が不足しています。', delta.parentOperationId);
-      before = (await this.materializeCommand(parent, rows, ready, active)).after;
+      before = (await this.materializeCommand(parent, rows, ready, active, allowRead)).after;
     }
     if (!before || before.projectId !== row.projectId || before.revision !== delta.metadata.baseRevision) throw new StorageError('SAVE_FAILED', '履歴の復元点と元の版が一致しません。', row.operationId);
     const record: CommandRecord = { ...delta.metadata, before, after: applyContentDelta(before, delta.patch) };
@@ -494,6 +505,25 @@ export class ScenarioStore {
     } catch (error) { throw saveError(error); }
   }
   async listHistory(projectId: string): Promise<CommandRecord[]> { return (await this.getProject(projectId))?.history ?? []; }
+  async historyPage(projectId: string, options: { query?: string; page?: number; size?: number } = {}): Promise<HistoryPage> {
+    const query = (options.query ?? '').normalize('NFKC').toLocaleLowerCase(), page = options.page ?? 0, size = options.size ?? 30;
+    if (!Number.isSafeInteger(page) || page < 0 || !Number.isSafeInteger(size) || size < 1 || size > 60) throw new StorageError('VALIDATION_FAILED', '履歴のページは0以上、ページ件数は1〜60です。');
+    const header = await this.db.projects.get(projectId); if (!header) throw new StorageError('NOT_FOUND', '作品が見つかりません。');
+    const rows = await this.db.commands.bulkGet(header.historyIds);
+    const entries = rows.map((row, index) => {
+      const value = row?.delta?.metadata ?? row?.record;
+      if (!value || value.projectId !== projectId || value.operationId !== header.historyIds[index]) throw new StorageError('SAVE_FAILED', '履歴の操作情報が不足しています。', header.historyIds[index]);
+      const { before: _before, after: _after, ...metadata } = value as CommandRecord;
+      return metadata;
+    }).reverse().filter(entry => !query || [entry.reason, entry.revision, entry.baseRevision, entry.operationId, entry.createdAt, ...entry.targetIds].some(value => value.normalize('NFKC').toLocaleLowerCase().includes(query)));
+    const maximum = Math.max(0, Math.ceil(entries.length / size) - 1), bounded = Math.min(page, maximum);
+    return { entries: entries.slice(bounded * size, (bounded + 1) * size), page: bounded, maximum, total: entries.length, size };
+  }
+  async historyCommand(projectId: string, operationId: string): Promise<CommandRecord> {
+    const header = await this.db.projects.get(projectId), row = await this.db.commands.get(operationId);
+    if (!header?.historyIds.includes(operationId) || !row || row.projectId !== projectId) throw new StorageError('NOT_FOUND', 'この作品の履歴操作が見つかりません。', operationId);
+    return copy(await this.materializeCommand(row));
+  }
   private async validationWorlds(extra: Record<string, ProjectData> = {}): Promise<Record<string, ProjectData>> {
     const rows = await this.db.worlds.toArray();
     const worlds = Object.fromEntries(rows.map(row => [row.id, row.project]));
@@ -669,6 +699,12 @@ export class ScenarioStore {
       measure('database'); milliseconds.total = performance.now() - started;
       if (result.project === candidate) this.rememberProject(candidate, operationId, historyIds);
       try { this.onSaveMetrics?.({ operationId, projectId: candidate.projectId, milliseconds, written, historyRead: previous === cachedBefore ? 0 : previous?.history.length ?? 0 }); } catch { /* Diagnostics never change a committed save's result. */ }
+      if (editingHistory && options.includeHistory === true) {
+        const rows = await this.db.commands.bulkGet(historyIds), byId = new Map(rows.filter((row): row is StoredCommand => !!row).map(row => [row.operationId, row])), ready = new Map<string, CommandRecord>();
+        if (rows.some(row => !row)) throw new StorageError('SAVE_FAILED', '保存した対象版の履歴を読み込めません。');
+        const history: CommandRecord[] = []; for (const row of rows) history.push(await this.materializeCommand(row!, byId, ready));
+        return { ...result, project: { ...projectCopy(result.project), history } };
+      }
       return { ...result, project: editingHistory || options.includeHistory === false ? this.editingCopy(result.project, result.project === candidate ? historyIds : result.project.history.map(command => command.operationId)) : projectCopy(result.project) };
     } catch (error) { throw saveError(error); }
   }
@@ -691,29 +727,48 @@ export class ScenarioStore {
   }
 
   async previewRestoreEntity(projectId: string, historyOperationId: string, entityId: string, side: 'before' | 'after' = 'after') {
-    const current = await this.getProject(projectId);
-    const command = current?.history.find(record => record.operationId === historyOperationId), source = command?.[side].entities.find(entity => entity.id === entityId);
+    const current = await this.getProjectForEditing(projectId);
+    const command = await this.historyCommand(projectId, historyOperationId), source = command[side].entities.find(entity => entity.id === entityId);
     if (!current || !command || !source) throw new StorageError('NOT_FOUND', '指定した版の情報が見つかりません。', entityId);
     const referrers = current.entities.filter(entity => entity.id !== entityId && collectReferences(entity).some(reference => reference.id === entityId)).map(entity => entity.id);
     return { project: current, source: copy(source), referrers, warnings: referrers.length ? [`${referrers.length}件の参照があります。翻訳・音声・媒体版は内容の変更に応じて確認待ちになります。`] : [] };
   }
-  async restoreEntity(projectId: string, historyOperationId: string, entityId: string, side: 'before' | 'after' = 'after'): Promise<SaveResult> {
+  async restoreEntity(projectId: string, historyOperationId: string, entityId: string, side: 'before' | 'after' = 'after', expectedRevision?: string): Promise<SaveResult> {
     const preview = await this.previewRestoreEntity(projectId, historyOperationId, entityId, side);
     const project = preview.project;
+    if (expectedRevision !== undefined && project.revision !== expectedRevision) throw new StorageError('REVISION_CONFLICT', '復元の影響確認後に作品が更新されました。選択を保持して再確認してください。');
     const existing = project.entities.find(entity => entity.id === entityId);
     project.entities = project.entities.some(entity => entity.id === entityId) ? project.entities.map(entity => entity.id === entityId ? preview.source : entity) : [...project.entities, preview.source];
     if (existing) {
       project.entities = remapEditedTextReferences(project.entities, existing, preview.source);
       project.relations = remapEditedTextRelationReferences(project.relations, existing, preview.source);
     }
-    return this.saveProject(project, { reason: `履歴から単体復元: ${preview.source.name}`, compensatesOperationId: historyOperationId });
+    return this.saveProject(project, { reason: `履歴から単体復元: ${preview.source.name}`, compensatesOperationId: historyOperationId, includeHistory: true });
   }
-  async restoreRelation(projectId: string, historyOperationId: string, relationId: string, side: 'before' | 'after' = 'after'): Promise<SaveResult> {
-    const current = await this.getProject(projectId), command = current?.history.find(item => item.operationId === historyOperationId);
+  async restoreRelation(projectId: string, historyOperationId: string, relationId: string, side: 'before' | 'after' = 'after', expectedRevision?: string): Promise<SaveResult> {
+    const current = await this.getProjectForEditing(projectId), command = await this.historyCommand(projectId, historyOperationId);
     const source = command?.[side].relations.find(item => item.id === relationId);
     if (!current || !source) throw new StorageError('NOT_FOUND', '指定した版の関係が見つかりません。', relationId);
+    if (expectedRevision !== undefined && current.revision !== expectedRevision) throw new StorageError('REVISION_CONFLICT', '復元の影響確認後に作品が更新されました。選択を保持して再確認してください。');
     current.relations = current.relations.some(item => item.id === relationId) ? current.relations.map(item => item.id === relationId ? copy(source) : item) : [...current.relations, copy(source)];
-    return this.saveProject(current, { reason: '履歴から関係を単体復元', compensatesOperationId: historyOperationId });
+    return this.saveProject(current, { reason: '履歴から関係を単体復元', compensatesOperationId: historyOperationId, includeHistory: true });
+  }
+  async previewRestoreVersion(projectId: string, historyOperationId: string, side: 'before' | 'after' = 'after') {
+    const current = await this.getProjectForEditing(projectId), command = await this.historyCommand(projectId, historyOperationId);
+    if (!current) throw new StorageError('NOT_FOUND', '復元先の作品が見つかりません。');
+    const source = command[side], candidate = preservePublishedVersions({ ...copy(source), revision: current.revision, history: current.history }, current);
+    const changes = await targetChanges(withoutHistory(current), withoutHistory(candidate));
+    const payload = { projectId, historyOperationId, side, baseRevision: current.revision, sourceRevision: source.revision, changes: changes.map(change => ({ id: change.targetId, fields: change.fields.map(field => field.field) })) };
+    return { ...payload, confirmationHash: await sha256(jsonBytes(payload)) };
+  }
+  async restoreHistoryVersion(projectId: string, approved: Awaited<ReturnType<ScenarioStore['previewRestoreVersion']>>): Promise<SaveResult> {
+    const request = copy(approved), preview = await this.previewRestoreVersion(projectId, request.historyOperationId, request.side);
+    const { confirmationHash, ...payload } = request;
+    if (await sha256(jsonBytes(payload)) !== confirmationHash || projectId !== request.projectId || preview.baseRevision !== request.baseRevision || preview.confirmationHash !== request.confirmationHash) throw new StorageError('REVISION_CONFLICT', '作品全体の復元差分が変わりました。対象操作と差分を再確認してください。');
+    const current = await this.getProjectForEditing(projectId), command = await this.historyCommand(projectId, request.historyOperationId);
+    if (!current || current.revision !== request.baseRevision) throw new StorageError('REVISION_CONFLICT', '復元の確定前に作品が更新されました。');
+    const next = preservePublishedVersions({ ...copy(command[request.side]), revision: current.revision, history: current.history }, current);
+    return this.saveProject(next, { reason: `作品全体を操作 ${request.historyOperationId} の${request.side === 'before' ? '変更前' : '変更後'}（版 ${request.sourceRevision}）へ復元`, compensatesOperationId: request.historyOperationId, includeHistory: true });
   }
 
   async restoreRevision(projectId: string, revision: string): Promise<SaveResult> {
@@ -732,28 +787,31 @@ export class ScenarioStore {
     }); } catch (error) { throw saveError(error); }
   }
   async getAsset(contentHash: string): Promise<Uint8Array | undefined> { const asset = await this.db.assets.get(contentHash); return asset?.bytes.slice(); }
+  private async materializeOutbox(rows: StoredOutbox[], commands: Map<string, StoredCommand>): Promise<OutboxRecord[]> {
+    rows = [...rows].sort((left, right) => BigInt(left.localRevision) < BigInt(right.localRevision) ? -1 : BigInt(left.localRevision) > BigInt(right.localRevision) ? 1 : left.createdAt.localeCompare(right.createdAt));
+    const ready = new Map<string, CommandRecord>(), result: OutboxRecord[] = [];
+    for (const row of rows) {
+      const stored = row.commandOperationId ? commands.get(row.commandOperationId) : undefined;
+      const command = row.command ?? (stored ? await this.materializeCommand(stored, commands, ready, new Set(), false) : undefined);
+      if (!command || command.projectId !== row.projectId) throw new StorageError('SAVE_FAILED', '送信待ちに必要な履歴が不足しています。', row.operationId);
+      const before = new Map<string, TargetRecord>([...command.before.entities, ...command.before.relations, headerTarget(command.before)].map(record => [record.id, record]));
+      const after = new Map<string, TargetRecord>([...command.after.entities, ...command.after.relations, headerTarget(command.after)].map(record => [record.id, record]));
+      const { commandOperationId: _commandOperationId, ...metadata } = row;
+      result.push({ ...metadata, command, changes: row.changes.map(change => ({ ...change, before: Object.hasOwn(change, 'before') ? change.before! : before.get(change.targetId) ?? null, after: Object.hasOwn(change, 'after') ? change.after! : after.get(change.targetId) ?? null })) });
+    }
+    return result;
+  }
   async listOutbox(projectId: string): Promise<OutboxRecord[]> {
-    return this.db.transaction('r', ['outbox', 'commands'], async () => {
-      const rows = (await this.db.outbox.where('projectId').equals(projectId).toArray()).sort((left, right) => BigInt(left.localRevision) < BigInt(right.localRevision) ? -1 : 1);
-      const ready = new Map<string, CommandRecord>(), result: OutboxRecord[] = [];
-      for (const row of rows) {
-        const stored = row.commandOperationId ? await this.db.commands.get(row.commandOperationId) : undefined;
-        const command = row.command ?? (stored ? await this.materializeCommand(stored, new Map(), ready) : undefined);
-        if (!command || command.projectId !== projectId) throw new StorageError('SAVE_FAILED', '送信待ちに必要な履歴が不足しています。', row.operationId);
-        const before = new Map<string, TargetRecord>([...command.before.entities, ...command.before.relations, headerTarget(command.before)].map(record => [record.id, record]));
-        const after = new Map<string, TargetRecord>([...command.after.entities, ...command.after.relations, headerTarget(command.after)].map(record => [record.id, record]));
-        const { commandOperationId: _commandOperationId, ...metadata } = row;
-        result.push({ ...metadata, command, changes: row.changes.map(change => ({ ...change, before: Object.hasOwn(change, 'before') ? change.before! : before.get(change.targetId) ?? null, after: Object.hasOwn(change, 'after') ? change.after! : after.get(change.targetId) ?? null })) });
-      }
-      return result;
+    const captured = await this.db.transaction('r', ['outbox', 'commands'], async () => ({ rows: await this.db.outbox.where('projectId').equals(projectId).toArray(), commands: await this.db.commands.where('projectId').equals(projectId).toArray() }));
+    return this.materializeOutbox(captured.rows, new Map(captured.commands.map(row => [row.operationId, row])));
+  }
+  async getSaveState(projectId: string): Promise<{ localSaved: boolean; pendingCount: number; recoveredPendingCount: number; serverRevision: string; syncState: 'pending' | 'synced' | 'conflict' }> {
+    return this.db.transaction('r', ['projects', 'outbox', 'syncMetadata', 'recoveredPending'], async () => {
+      const [project, metadata, pendingCount, recoveredPendingCount] = await Promise.all([this.db.projects.get(projectId), this.db.syncMetadata.get(projectId), this.db.outbox.where('projectId').equals(projectId).count(), this.db.recoveredPending.where('projectId').equals(projectId).count()]);
+      return { localSaved: !!project, pendingCount, recoveredPendingCount, serverRevision: metadata?.serverRevision ?? '0', syncState: metadata?.state ?? 'pending' };
     });
   }
-  async getSaveState(projectId: string): Promise<{ localSaved: boolean; pendingCount: number; serverRevision: string; syncState: 'pending' | 'synced' | 'conflict' }> {
-    return this.db.transaction('r', ['projects', 'outbox', 'syncMetadata'], async () => {
-      const [project, metadata, pendingCount] = await Promise.all([this.db.projects.get(projectId), this.db.syncMetadata.get(projectId), this.db.outbox.where('projectId').equals(projectId).count()]);
-      return { localSaved: !!project, pendingCount, serverRevision: metadata?.serverRevision ?? '0', syncState: metadata?.state ?? 'pending' };
-    });
-  }
+  async listRecoveredPending(projectId: string): Promise<RecoveredPendingIntent[]> { return copy((await this.db.recoveredPending.where('projectId').equals(projectId).toArray()).sort((a, b) => a.sequence - b.sequence)); }
 
   /** An acknowledgement is persisted before an applied operation is removed. Conflicts retain the outbox. */
   async commitAck(projectId: string, ack: PersistedAck): Promise<void> {
@@ -793,9 +851,28 @@ export class ScenarioStore {
     });
   }
   async listRestorePoints(projectId: string): Promise<RestorePoint[]> { return this.db.restorePoints.where('projectId').equals(projectId).reverse().toArray(); }
-  async restorePoint(projectId: string, restorePointId: string): Promise<SaveResult> {
+  async restorePointPage(projectId: string, page = 0, size = 30) {
+    size = Math.max(1, Math.min(60, Number.isSafeInteger(size) ? size : 30));
+    const total = await this.db.restorePoints.where('projectId').equals(projectId).count(), maximum = Math.max(0, Math.ceil(total / size) - 1);
+    page = Math.max(0, Math.min(maximum, Number.isSafeInteger(page) ? page : 0));
+    const rows = await this.db.restorePoints.where('projectId').equals(projectId).offset(page * size).limit(size).toArray();
+    return { entries: rows.map(({ id, createdAt, reason, project, assetHashes }) => ({ id, createdAt, reason, revision: project.revision, assetCount: assetHashes.length })), total, page, maximum, size };
+  }
+  async previewRestorePoint(projectId: string, restorePointId: string) {
+    const [point, current] = await Promise.all([this.db.restorePoints.get(restorePointId), this.getProjectForEditing(projectId)]);
+    if (!point || point.projectId !== projectId || !current) throw new StorageError('NOT_FOUND', 'この作品の復元点が見つかりません。');
+    const candidate = preservePublishedVersions({ ...copy(point.project), revision: current.revision, history: current.history }, current), changes = await targetChanges(withoutHistory(current), withoutHistory(candidate));
+    const payload = { projectId, restorePointId, baseRevision: current.revision, sourceRevision: point.project.revision, pointHash: await sha256(jsonBytes(point.project)), changes: changes.map(change => ({ id: change.targetId, fields: change.fields.map(field => field.field) })) };
+    return { ...payload, confirmationHash: await sha256(jsonBytes(payload)) };
+  }
+  async restorePoint(projectId: string, restorePointId: string, approved?: Awaited<ReturnType<ScenarioStore['previewRestorePoint']>>): Promise<SaveResult> {
+    if (approved) {
+      const { confirmationHash, ...payload } = copy(approved), fresh = await this.previewRestorePoint(projectId, restorePointId);
+      if (payload.projectId !== projectId || payload.restorePointId !== restorePointId || await sha256(jsonBytes(payload)) !== confirmationHash || fresh.confirmationHash !== confirmationHash) throw new StorageError('REVISION_CONFLICT', '復元点の影響確認後に作品または差分が更新されました。選択を保持して再確認してください。');
+    }
     const [point, current] = await Promise.all([this.db.restorePoints.get(restorePointId), this.getProject(projectId)]);
     if (!point || point.projectId !== projectId || !current) throw new StorageError('NOT_FOUND', 'この作品の復元点が見つかりません。');
+    if (approved && current.revision !== approved.baseRevision) throw new StorageError('REVISION_CONFLICT', '復元点の確定前に作品が更新されました。');
     const next = preservePublishedVersions({ ...copy(point.project), revision: current.revision, history: current.history }, current);
     return this.saveProject(next, { reason: `復元点から作品全体を復元: ${point.reason}` });
   }
@@ -808,50 +885,107 @@ export class ScenarioStore {
     return this.saveProject(migrated, { reason: '検証済みの形式移行' });
   }
 
-  async exportProject(projectId: string, options: Omit<NonNullable<Parameters<typeof exportScenario>[1]>, 'loadAsset' | 'worlds'> = {}): Promise<Uint8Array> {
-    const project = options.snapshotId ? await this.getProjectAtSnapshot(projectId, options.snapshotId) : await this.getProject(projectId);
-    if (!project) throw new StorageError('NOT_FOUND', '書き出す作品が見つかりません。');
+  async exportProject(projectId: string, options: Omit<NonNullable<Parameters<typeof exportScenario>[1]>, 'loadAsset' | 'worlds' | 'recovery'> = {}): Promise<Uint8Array> {
+    // Content, all history and pending intents come from one database read image.
+    checkCancelled(options.signal);
+    const captured = await this.db.transaction('r', this.writeTables, async () => ({ current: await this.readProject(projectId, false), commands: await this.db.commands.where('projectId').equals(projectId).toArray(), rows: await this.db.outbox.where('projectId').equals(projectId).toArray(), retained: await this.listRecoveredPending(projectId), metadata: await this.db.syncMetadata.get(projectId), registry: await this.validationWorlds() }));
+    checkCancelled(options.signal);
+    if (!captured.current) throw new StorageError('NOT_FOUND', '書き出す作品が見つかりません。');
+    const commandRows = new Map(captured.commands.map(row => [row.operationId, row])), ready = new Map<string, CommandRecord>(), history: CommandRecord[] = [];
+    for (const id of captured.current.historyIds) {
+      checkCancelled(options.signal); const row = commandRows.get(id);
+      if (!row) throw new StorageError('SAVE_FAILED', '完全保存に必要な履歴が不足しています。', id);
+      history.push(await this.materializeCommand(row, commandRows, ready, new Set(), false));
+    }
+    const content = { ...captured.current.project, history }, capturedPending = await this.materializeOutbox(captured.rows, commandRows);
+    const selected = options.snapshotId ? content.snapshots.find(snapshot => snapshot.id === options.snapshotId) : undefined;
+    if (options.snapshotId && !selected) throw new StorageError('NOT_FOUND', '書き出す固定版が見つかりません。');
+    const project = selected ? { ...copy(selected.content), snapshots: content.snapshots, history: content.history.filter(command => BigInt(command.revision) <= BigInt(selected.content.revision)) } : content;
+    const pending = options.snapshotId ? [] : capturedPending, retained = options.snapshotId ? [] : captured.retained;
+    const operations = new Map(retained.map(row => [row.operation.operationId, row.operation]));
+    for (const row of pending) {
+      const commandHash = await sha256(jsonBytes(row.command)), previous = operations.get(row.operationId);
+      if (previous && previous.commandHash !== commandHash) throw new StorageError('OPERATION_CONFLICT', '復元した送信待ちと現在の送信待ちが同じIDで異なります。');
+      operations.set(row.operationId, { operationId: row.operationId, command: row.command, commandHash, origin: { projectId, operationId: row.operationId, serverRevision: row.baseRevision } });
+    }
+    const recovery = operations.size ? { version: 1 as const, projectId, sourceRevision: project.revision, serverRevision: captured.metadata?.serverRevision ?? '0', pending: [...operations.values()] } : undefined;
     const worlds: Record<string, ProjectData> = {};
-    let discovered = [project];
+    let discovered = [project, ...recoveryImages(recovery)];
     while (discovered.length) {
       const next: ProjectData[] = [];
       for (const reference of referencedWorlds(discovered)) {
         if (worlds[reference.immutableSnapshotId]) continue;
-        const row = await this.db.worlds.get(reference.immutableSnapshotId);
-        if (row) { worlds[reference.immutableSnapshotId] = row.project; next.push(row.project); }
+        const world = captured.registry[reference.immutableSnapshotId];
+        if (world) { worlds[reference.immutableSnapshotId] = world; next.push(world); }
       }
       discovered = next;
     }
-    return exportScenario(project, { ...options, worlds, loadAsset: hash => this.getAsset(hash) });
+    return exportScenario(project, { ...options, ...(recovery ? { recovery } : {}), worlds, loadAsset: hash => this.getAsset(hash) });
   }
 
-  async previewImport(prepared: PreparedScenario, options: ImportOptions): Promise<{ conflicts: ImportConflict[]; pendingChanges: number; target?: ProjectData; additions: number }> {
+  async previewImport(preparedInput: PreparedScenario, optionsInput: ImportOptions): Promise<ImportPreview> {
+    const prepared = copy(preparedInput), options = { ...optionsInput, idMap: optionsInput.idMap ? copy(optionsInput.idMap) : undefined, resolutions: optionsInput.resolutions ? copy(optionsInput.resolutions) : undefined };
     const incoming = prepared.project, targetId = options.targetProjectId ?? incoming.projectId, target = await this.getProject(targetId);
     const pendingChanges = target ? (await this.listOutbox(targetId)).length : 0;
     if (options.mode === 'new') return { conflicts: target ? [{ id: targetId, kind: 'project', existing: target, incoming }] : [], pendingChanges, target, additions: incoming.entities.length + incoming.relations.length };
     if (options.mode === 'clone') return { conflicts: [], pendingChanges: 0, additions: incoming.entities.length + incoming.relations.length };
     if (!target) throw new StorageError('NOT_FOUND', '置換・統合する既存作品が見つかりません。', targetId);
+    if (options.mode === 'mapped_merge') {
+      if (!options.idMap) throw new StorageError('IMPORT_CONFLICT', '別作品の統合には全IDの明示対応表が必要です。');
+      const mappedPlan = await planCrossProjectImport({ ...prepared, project: projectWithRecoveryHistory(prepared.project, prepared.recovery) }, target, { idMap: options.idMap, resolutions: options.resolutions, knownWorlds: await this.validationWorlds(prepared.worlds), loadAsset: hash => this.getAsset(hash), signal: options.signal });
+      const mappedRecovery = prepared.recovery ? await mappedPortableRecovery(prepared.recovery, mappedPlan.mappedProject, mappedPlan.idMap) : undefined;
+      const historyIds = new Set(prepared.project.history.map(command => mappedPlan.idMap[command.operationId]));
+      mappedPlan.mappedProject.history = mappedPlan.mappedProject.history.filter(command => historyIds.has(command.operationId));
+      const confirmationHash = await sha256(jsonBytes({ sourceContentHash: mappedPlan.sourceContentHash, manifest: prepared.manifest, targetId, targetRevision: target.revision, idMap: mappedPlan.idMap, resolutions: options.resolutions ?? {}, changes: mappedPlan.changes, assets: mappedPlan.assets }));
+      return { conflicts: mappedPlan.conflicts, pendingChanges, target, additions: mappedPlan.changes.filter(change => change.action === 'add').length, mappedPlan, mappedRecovery, confirmationHash };
+    }
     if (targetId !== incoming.projectId) throw new StorageError('IMPORT_CONFLICT', '置換・統合は同じprojectIdが必要です。別の作品には複製して追加してください。', targetId);
     const conflicts = mergeConflicts(target, incoming);
     const ids = new Set([...target.entities, ...target.relations].map(item => item.id));
     return { conflicts, pendingChanges, target, additions: [...incoming.entities, ...incoming.relations].filter(item => !ids.has(item.id)).length };
   }
 
-  async importScenario(preparedInput: PreparedScenario, options: ImportOptions): Promise<ImportResult> {
+  async saveImportDraft(draft: ImportDraft): Promise<void> {
+    if (!draft.key || draft.bytes && draft.bytes.byteLength > 64 * 1024 * 1024) throw new StorageError('LIMIT_EXCEEDED', '復元入力の一時保存上限を超えています。');
+    const submitted = copy(draft);
+    if (submitted.bytes && await sha256(submitted.bytes) !== submitted.sourceHash) throw new StorageError('HASH_MISMATCH', '復元入力の元ファイルが変わっています。');
+    try { await this.db.transaction('rw', this.db.importDrafts, async () => {
+      const previous = await this.db.importDrafts.get(submitted.key);
+      if (!submitted.bytes && previous && previous.sourceHash === submitted.sourceHash) submitted.bytes = previous.bytes;
+      await this.db.importDrafts.put(submitted);
+    }); } catch (cause) { throw saveError(cause); }
+  }
+  async getImportDraft(key: string): Promise<ImportDraft | undefined> { const draft = await this.db.importDrafts.get(key); return draft ? copy(draft) : undefined; }
+  async clearImportDraft(key: string): Promise<void> { await this.db.importDrafts.delete(key); }
+
+  async importScenario(preparedInput: PreparedScenario, optionsInput: ImportOptions): Promise<ImportResult> {
+    const options = { ...optionsInput, idMap: optionsInput.idMap ? copy(optionsInput.idMap) : undefined, resolutions: optionsInput.resolutions ? copy(optionsInput.resolutions) : undefined };
     try {
       checkCancelled(options.signal);
-      if (!['new', 'clone', 'replace', 'merge'].includes(options.mode)) throw new StorageError('FORMAT_UNSUPPORTED', '読み込みモードが未対応です。');
+      if (!['new', 'clone', 'replace', 'merge', 'mapped_merge'].includes(options.mode)) throw new StorageError('FORMAT_UNSUPPORTED', '読み込みモードが未対応です。');
       const prepared = copy(preparedInput), operationId = options.operationId ?? newId();
       const knownWorlds = await this.validationWorlds(prepared.worlds), worldContents = worldSnapshotContents(knownWorlds);
       prepared.project = validated(prepared.project, worldContents);
+      if (prepared.recovery) prepared.recovery = await validateRecovery(prepared.recovery, prepared.project, worldContents, options.signal);
       verifyWorlds([prepared.project, ...Object.values(prepared.worlds)], knownWorlds);
       if (prepared.manifest.projectId !== prepared.project.projectId) throw new StorageError('VALIDATION_FAILED', '読み込み候補とmanifestの作品IDが一致しません。');
       const preview = await this.previewImport(prepared, options);
       if (options.mode === 'new' && preview.target) throw new StorageError('IMPORT_CONFLICT', '同じ作品IDが既にあります。複製・置換・統合を選んでください。');
       if (options.mode === 'replace' && preview.pendingChanges) throw new StorageError('PENDING_CHANGES', '未送信の変更があります。同期・競合解決を済ませるか、複製して復元してください。');
       if (preview.target && options.baseRevision !== preview.target.revision) throw new StorageError('REVISION_CONFLICT', '確認した対象版と現在版が一致しません。読み込みの影響を確認し直してください。');
-      let project = prepared.project, idMap: Record<string, string> | undefined;
-      if (options.mode === 'clone') { ({ project, idMap } = await cloneProject(project)); }
+      let project = prepared.project, recovery = prepared.recovery, idMap: Record<string, string> | undefined;
+      if (options.mode === 'mapped_merge') {
+        if (!preview.mappedPlan?.candidate || preview.mappedPlan.unresolved.length) throw new StorageError('IMPORT_CONFLICT', '全IDの対応とすべての採用差分を確認してください。');
+        if (!options.confirmationHash || options.confirmationHash !== preview.confirmationHash) throw new StorageError('REVISION_CONFLICT', '確認したID対応・採用差分・素材が変わりました。入力を保持して再確認してください。');
+        project = preview.mappedPlan.candidate; idMap = preview.mappedPlan.idMap;
+        recovery = preview.mappedRecovery;
+      }
+      if (options.mode === 'clone') {
+        const cloned = await cloneProject(projectWithRecoveryHistory(project, recovery)); idMap = cloned.idMap;
+        recovery = recovery ? await mappedPortableRecovery(recovery, cloned.project, idMap) : undefined;
+        const historyIds = new Set(project.history.map(command => idMap![command.operationId]));
+        project = { ...cloned.project, history: cloned.project.history.filter(command => historyIds.has(command.operationId)) };
+      }
       if (options.mode === 'merge') project = mergeProjects(preview.target!, project, options.resolutions ?? {});
       if (options.mode === 'replace') {
         const snapshots = new Map(project.snapshots.map(item => [item.id, item]));
@@ -872,7 +1006,7 @@ export class ScenarioStore {
       const now = new Date().toISOString(), before = preview.target ? withoutHistory(preview.target) : blankBefore(project);
       let command: CommandRecord;
       if (preview.target) {
-        project = { ...project, revision: increment(preview.target.revision), history: combineHistories(preview.target.history, prepared.project.history) };
+        project = { ...project, revision: increment(preview.target.revision), history: combineHistories(preview.target.history, (preview.mappedPlan?.mappedProject.history ?? prepared.project.history).map((record, index) => options.mode === 'mapped_merge' ? { ...record, importOrigin: record.importOrigin ?? { sourceProjectId: prepared.project.projectId, sourceOperationId: prepared.project.history[index].operationId, importOperationId: operationId } } : record)) };
         project.entities = normalizeRecords(preview.target.entities, project.entities, operationId, now);
         project.relations = normalizeRecords(preview.target.relations, project.relations, operationId, now);
         protectSnapshots(preview.target, project);
@@ -885,8 +1019,17 @@ export class ScenarioStore {
       const changes = await targetChanges(before, withoutHistory(project), !preview.target);
       command = { operationId, projectId: project.projectId, baseRevision: preview.target?.revision ?? '0', revision: project.revision, targetIds: changes.map(change => change.targetId), createdAt: now, reason: `専用ファイルを${options.mode}で復元`, before: copy(before), after: copy(withoutHistory(project)), ...(idMap ? { idMap } : {}) };
       if (preview.target || options.mode === 'clone') project.history = [...project.history, command];
+      if (recovery) {
+        const history = new Map(project.history.map(record => [record.operationId, record]));
+        const pending = await Promise.all(recovery.pending.map(async item => {
+          const retainedCommand = history.get(item.operationId) ?? item.command;
+          return { ...item, command: retainedCommand, commandHash: await sha256(jsonBytes(retainedCommand)) };
+        }));
+        recovery = { ...recovery, projectId: project.projectId, sourceRevision: project.revision, pending };
+      }
       project = validated(project, worldContents);
       await validateDurableIntegrity(project, worldContents);
+      if (recovery) recovery = await validateRecovery({ ...recovery, projectId: project.projectId, sourceRevision: project.revision }, project, worldContents, options.signal);
       // New recovery retains the original content revisions/history; the local import audit is separate.
       const point: RestorePoint | undefined = preview.target ? { id: newId(), projectId: preview.target.projectId, createdAt: now, reason: `専用ファイル${options.mode}の前の復元点`, project: preview.target, assetHashes: attachmentMetadata(preview.target).map(item => item.contentHash) } : undefined;
       const result = await this.db.transaction('rw', this.writeTables, async () => {
@@ -912,6 +1055,12 @@ export class ScenarioStore {
         this.faultInjector?.('after-history');
         const metadata = await this.db.syncMetadata.get(project.projectId);
         await this.db.outbox.add({ operationId, projectId: project.projectId, accountId: this.accountId, baseRevision: metadata?.serverRevision ?? '0', localRevision: project.revision, createdAt: now, targetIds: command.targetIds, changes, command });
+        let recoveredSequence = (await this.listRecoveredPending(project.projectId)).reduce((maximum, row) => Math.max(maximum, row.sequence), -1) + 1;
+        for (const retained of recovery?.pending ?? []) {
+          const row: RecoveredPendingIntent = { key: `${project.projectId}:${retained.operationId}`, projectId: project.projectId, importOperationId: operationId, sequence: recoveredSequence++, operation: retained, status: 'needs_reconnect' }, previous = await this.db.recoveredPending.get(row.key);
+          if (previous && !equalJson(previous.operation, retained)) throw new StorageError('OPERATION_CONFLICT', '同じ送信待ち操作の復元内容が異なります。');
+          if (!previous) await this.db.recoveredPending.add(row);
+        }
         await this.db.syncMetadata.put({ projectId: project.projectId, serverRevision: metadata?.serverRevision ?? '0', state: 'pending' });
         await this.db.importLogs.add({ operationId, projectId: project.projectId, mode: options.mode, createdAt: now, ...(idMap ? { idMap } : {}) });
         this.faultInjector?.('after-outbox'); checkCancelled(options.signal); this.faultInjector?.('before-commit');
@@ -925,10 +1074,20 @@ export class ScenarioStore {
 
 function equalBytes(left: Uint8Array, right: Uint8Array): boolean { return left.byteLength === right.byteLength && left.every((byte, index) => byte === right[index]); }
 
+async function mappedPortableRecovery(recovery: PortableRecovery, mapped: ProjectData, idMap: Record<string, string>): Promise<PortableRecovery> {
+  const pending = await Promise.all(recovery.pending.map(async item => {
+    const operationId = idMap[item.operationId], command = mapped.history.find(record => record.operationId === operationId);
+    if (!operationId || !command) throw new StorageError('IMPORT_CONFLICT', '復元する送信待ち操作の明示ID対応が不足しています。', item.operationId);
+    return { operationId, command, commandHash: await sha256(jsonBytes(command)), origin: item.origin ?? { projectId: recovery.projectId, operationId: item.operationId, serverRevision: recovery.serverRevision } };
+  }));
+  return { ...recovery, projectId: mapped.projectId, sourceRevision: mapped.revision, pending };
+}
+
 function preservePublishedVersions(candidate: ProjectData, current: ProjectData): ProjectData {
   const snapshots = new Map(candidate.snapshots.map(item => [item.id, item]));
   for (const version of current.snapshots) snapshots.set(version.id, copy(version));
   candidate.snapshots = [...snapshots.values()];
+  if (current.authorAlternatives) candidate.authorAlternatives = copy(current.authorAlternatives);
   const published = new Map(current.entities.filter(entity => entity.kind === 'snapshot').map(entity => [entity.id, entity]));
   candidate.entities = candidate.entities.map(entity => copy(published.get(entity.id) ?? entity));
   const ids = new Set(candidate.entities.map(entity => entity.id));
@@ -1016,6 +1175,7 @@ export async function cloneProject(input: ProjectData): Promise<{ project: Proje
       if (key === 'key' && parent && typeof parent.scope === 'string' && Array.isArray(parent.path)) return [parent.scope, typeof parent.itemId === 'string' ? idMap[parent.itemId] ?? parent.itemId : '', ...parent.path.map(part => String(part))].map(part => encodeURIComponent(part)).join(':');
       return (/(?:Id|Ids)$/.test(key) || ['id', 'operationId'].includes(key) || key === 'value' && parent?.type === 'ref') && idMap[value] ? idMap[value] : value;
     }
+    if (key === 'importOrigin' && value && typeof value === 'object') { const origin = value as NonNullable<CommandRecord['importOrigin']>; return { ...origin, importOperationId: idMap[origin.importOperationId] ?? origin.importOperationId }; }
     if (key === 'path' && Array.isArray(value)) return [...value];
     if (key === 'assignments' && value && typeof value === 'object' && !Array.isArray(value)) return Object.fromEntries(Object.entries(value as Record<string, unknown>).map(([beat, sceneId]) => [beat, typeof sceneId === 'string' ? idMap[sceneId] ?? sceneId : sceneId]));
     if (Array.isArray(value)) return value.map(item => rewrite(item, key, parent));
