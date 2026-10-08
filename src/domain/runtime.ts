@@ -4,6 +4,7 @@ import { applyEffectsAtomic, evaluateCondition, initializeRuntimeState, resetRun
 import { isTick, resolveTime } from './time';
 import { presentContent, presentationAnchorApplies, presentationAnchorOrder, presentationRuleContext } from './presentation';
 import { declaredRegressionPaths, regressionPathCoverage } from './regressionPaths';
+import { resolveReuseContent, reuseAuthorContent, reuseRuleContexts, reuseExecutionAnchor } from './reuse';
 import { adoptedRecord } from './adoption';
 import { evaluateScenarioException, evaluateTargetScope } from './stateRules';
 
@@ -138,7 +139,8 @@ function versionContent(project: ProjectData, version: ID): ProjectData | undefi
 }
 function captureContent(project: ProjectData, references: Entity[] = []): ProjectData {
   const { authorAlternatives: _authorAlternatives, ...branchFree } = project;
-  const captured = { ...clone({ ...branchFree, history: [], snapshots: [] }), snapshots: project.snapshots };
+  const raw = { ...clone({ ...branchFree, history: [], snapshots: [] }), snapshots: project.snapshots };
+  const captured = resolveReuseContent(raw, project.snapshots);
   const index: ContentIndex = { byId: new Map(), activeByKind: new Map(), edgesFrom: new Map() };
   capturedReferences.set(captured, clone(references));
   for (const entity of [...captured.entities, ...(capturedReferences.get(captured) ?? [])]) {
@@ -186,6 +188,7 @@ function errorIssues(error: unknown): RuntimeIssue[] {
 }
 
 export function declaredEntrypoints(project: ProjectData): ID[] {
+  project = reuseAuthorContent(project);
   const roots = graphs(project).filter(graph => graph.projectId === project.projectId && !graph.data.parentGraphId);
   if (roots.length > 0) return [...new Set(roots.flatMap(graph => graph.data.entryIds))];
   return nodes(project).filter(node => node.projectId === project.projectId && node.data.nodeType === 'entry').map(node => node.id);
@@ -262,7 +265,7 @@ export function startTrial(project: ProjectData, options: TrialStartOptions = {}
   try { return startTrialInternal(project, options); }
   catch (error) {
     const state = options.state ? clone(options.state) : emptyRuntimeState(options.contentVersionId ?? project.projectId);
-    return { content: captureContent(project), state, nodeId: state.presentationPosition, contentRevision: project.revision, startState: clone(state), startConditionResults: [], status: 'error', history: [], trace: [], issues: errorIssues(error), lastDiff: [], externalValues: {}, startExternalValues: {} };
+    return { content: project, state, nodeId: state.presentationPosition, contentRevision: project.revision, startState: clone(state), startConditionResults: [], status: 'error', history: [], trace: [], issues: errorIssues(error), lastDiff: [], externalValues: {}, startExternalValues: {} };
   }
 }
 function startTrialInternal(project: ProjectData, options: TrialStartOptions = {}, alreadyCaptured = false): TrialSession {
@@ -306,6 +309,15 @@ function startTrialInternal(project: ProjectData, options: TrialStartOptions = {
   }
   if (options.seed !== undefined) state.rngSeed = options.seed;
   const entry = options.entryId ?? state.presentationPosition ?? declaredEntry(project);
+  if (checkpointId && state.provenance === 'full_play') {
+    // A hand-edited origin label cannot turn an arbitrary checkpoint into a
+    // declared initial play. Reconstruct its opening from the captured edition.
+    const fresh = entry && declaredEntrypoints(project).includes(entry) ? startTrialInternal(source, {
+      contentVersionId: version, entryId: entry, seed: state.rngSeed,
+      worldTick: options.worldTick, referenceEntities: capturedReferences.get(project),
+    }) : undefined;
+    if (!fresh || fresh.status === 'error' || !sameRuntimeValue(fresh.startState, state)) state.provenance = 'partial';
+  }
   if (options.entryId && !declaredEntrypoints(project).includes(options.entryId) && !checkpointId) state.provenance = 'partial';
   if (!failure && !entry) failure = issue('VALIDATION_FAILED', '開始点が一つに決まりません。入口を指定してください。', 'entryId');
   if (!failure && !findNode(project, entry ?? null)) failure = issue('REFERENCE_INVALID', '指定した開始点が存在しません。', 'entryId');
@@ -319,7 +331,7 @@ function startTrialInternal(project: ProjectData, options: TrialStartOptions = {
         state = arrival.state; startConditionResults = arrival.conditions; startPresentationState = arrival.observationState;
         const target = findNode(project, entry);
         if (target?.data.nodeType === 'terminal') {
-          const ended = resetRuntimeLifecycle(state, [...(target.data.sceneId ? ['scene_end' as const] : []), ...(presentationRuleContext(project, { nodeId: entry }).chapterId ? ['chapter_end' as const] : []), 'run_end'], { state, variables: variables(project), entities: runtimeEntities(project), ruleContext: presentationRuleContext(project, { nodeId: entry, worldTick: options.worldTick }) });
+          const ended = resetRuntimeLifecycle(state, [...(target.data.sceneId ? ['scene_end' as const] : []), ...(presentationRuleContext(project, { nodeId: entry }).chapterId ? ['chapter_end' as const] : []), 'run_end'], { state, variables: variables(project), entities: runtimeEntities(project), ruleContext: presentationRuleContext(project, { nodeId: entry, worldTick: options.worldTick }), ruleContexts: reuseRuleContexts(project, presentationRuleContext(project, { nodeId: entry, worldTick: options.worldTick })) });
           if (ended.ok) state = ended.state; else presentationIssues = ended.issues;
         }
       }
@@ -426,7 +438,7 @@ function commitStep(project: ProjectData, session: TrialSession, next: RuntimeSt
   const events: ('scene_end' | 'chapter_end')[] = [];
   if (from?.data.sceneId && from.data.sceneId !== to?.data.sceneId) events.push('scene_end');
   if (fromScope.chapterId && fromScope.chapterId !== toScope.chapterId) events.push('chapter_end');
-  const reset = resetRuntimeLifecycle({ ...next, ...(next.resetCauses ? { resetCauses: [] } : {}) }, events, { state: next, variables: variables(project), entities: runtimeEntities(project), externalValues: session.externalValues, ruleContext: presentationRuleContext(project, { nodeId: from?.id, worldTick: request.worldTick }) });
+  const reset = resetRuntimeLifecycle({ ...next, ...(next.resetCauses ? { resetCauses: [] } : {}) }, events, { state: next, variables: variables(project), entities: runtimeEntities(project), externalValues: session.externalValues, ruleContext: presentationRuleContext(project, { nodeId: from?.id, worldTick: request.worldTick }), ruleContexts: reuseRuleContexts(project, presentationRuleContext(project, { nodeId: from?.id, worldTick: request.worldTick })) });
   if (!reset.ok) return resultSession(session, 'error', reset.issues);
   const arrival = present(project, reset.state, toId, session.externalValues, request.worldTick);
   if (!arrival.ok) return resultSession(session, arrival.issues.some(value => value.code === 'CONDITION_UNKNOWN') ? 'unknown' : 'error', arrival.issues);
@@ -436,7 +448,7 @@ function commitStep(project: ProjectData, session: TrialSession, next: RuntimeSt
     if (toScope.chapterId) ending.push('chapter_end');
     ending.push('run_end');
   }
-  const endReset = resetRuntimeLifecycle(arrival.state, ending, { state: arrival.state, variables: variables(project), entities: runtimeEntities(project), externalValues: session.externalValues, ruleContext: presentationRuleContext(project, { nodeId: toId, worldTick: request.worldTick }) });
+  const endReset = resetRuntimeLifecycle(arrival.state, ending, { state: arrival.state, variables: variables(project), entities: runtimeEntities(project), externalValues: session.externalValues, ruleContext: presentationRuleContext(project, { nodeId: toId, worldTick: request.worldTick }), ruleContexts: reuseRuleContexts(project, presentationRuleContext(project, { nodeId: toId, worldTick: request.worldTick })) });
   if (!endReset.ok) return resultSession(session, 'error', endReset.issues);
   const state = endReset.state;
   if (to?.data.nodeType === 'terminal' && (reset.state.resetCauses || endReset.state.resetCauses)) state.resetCauses = [...(reset.state.resetCauses ?? []), ...(endReset.state.resetCauses ?? [])];
@@ -457,6 +469,7 @@ function commitStep(project: ProjectData, session: TrialSession, next: RuntimeSt
 }
 
 export function stepTrial(project: ProjectData, session: TrialSession, request: TrialRequest = {}): TrialSession {
+  if (session.status === 'error' && session.nodeId === null) return session;
   try { return stepTrialInternal(project, session, request); }
   catch (error) { return resultSession(session, 'error', errorIssues(error)); }
 }
@@ -547,7 +560,7 @@ function stepTrialInternal(project: ProjectData, session: TrialSession, request:
     if (!effect || effect.kind !== 'effect' || effect.deletedAt || effect.status === 'rejected') return resultSession(session, 'error', [issue('REFERENCE_INVALID', effect?.status === 'rejected' ? '分岐に不採用の効果が指定されています。' : '分岐に指定した効果が存在しないか、削除済みです。', `${edge.id}.effectIds`)]);
     effects.push(effect);
   }
-  const applied = applyEffectsAtomic(next, effects, { state: next, variables: variables(project), entities: runtimeEntities(project), externalValues: session.externalValues, ruleContext: presentationRuleContext(project, { nodeId: node.id, worldTick: request.worldTick }) });
+  const applied = applyEffectsAtomic(next, effects, { state: next, variables: variables(project), entities: runtimeEntities(project), externalValues: session.externalValues, ruleContext: presentationRuleContext(project, { nodeId: node.id, worldTick: request.worldTick }), ruleContexts: reuseRuleContexts(project, presentationRuleContext(project, { nodeId: node.id, worldTick: request.worldTick })) });
   if (!applied.ok) return resultSession(session, applied.issues.some(value => value.code === 'CONDITION_UNKNOWN') ? 'unknown' : 'error', applied.issues);
   next = applied.state;
   const keys = triggerKeys(node, session.state, request);
@@ -611,7 +624,7 @@ function setTrialStubValuesInternal(project: ProjectData, session: TrialSession,
 /** New run and total reset are separate explicit operations. */
 export function restartTrial(project: ProjectData, session: TrialSession, mode: 'next_run' | 'all', entryId?: ID, contextOptions?: { worldTick?: string }): TrialSession {
   const content = getTrialContent(project, session);
-  const context = { state: session.state, variables: variables(content), entities: runtimeEntities(content), externalValues: session.externalValues, ruleContext: presentationRuleContext(content, { nodeId: session.nodeId ?? undefined, worldTick: contextOptions ? contextOptions.worldTick : session.initialWorldTick }) };
+  const context = { state: session.state, variables: variables(content), entities: runtimeEntities(content), externalValues: session.externalValues, ruleContext: presentationRuleContext(content, { nodeId: session.nodeId ?? undefined, worldTick: contextOptions ? contextOptions.worldTick : session.initialWorldTick }), ruleContexts: reuseRuleContexts(content, presentationRuleContext(content, { nodeId: session.nodeId ?? undefined, worldTick: contextOptions ? contextOptions.worldTick : session.initialWorldTick })) };
   const reset = resetRuntimeLifecycle(session.state, mode === 'next_run' ? ['run_end', 'new_loop'] : ['full_reset'], context);
   if (!reset.ok) return resultSession(session, reset.issues.some(value => value.code === 'CONDITION_UNKNOWN') ? 'unknown' : 'error', reset.issues);
   const initial = initializeRuntimeState(content, session.state.contentVersionId, session.referenceEntities);
@@ -782,7 +795,7 @@ export function trialRecordData(project: ProjectData, session: TrialSession, che
       },
     },
   };
-  record.trace.coverage!.declaredTests = regressionPathCoverage(project, { ...record.trace, contentVersionId: session.state.contentVersionId, steps: record.trace.steps.map(step => ({ ...step, before: { ...step.before, contentVersionId: session.state.contentVersionId }, after: { ...step.after, contentVersionId: session.state.contentVersionId }, ...(step.presentationState ? { presentationState: { ...step.presentationState, contentVersionId: session.state.contentVersionId } } : {}) })) }, session.startState);
+  record.trace.coverage!.declaredTests = regressionPathCoverage(project, { ...record.trace, contentVersionId: session.state.contentVersionId, steps: record.trace.steps.map(step => ({ ...step, before: { ...step.before, contentVersionId: session.state.contentVersionId }, after: { ...step.after, contentVersionId: session.state.contentVersionId }, ...(step.presentationState ? { presentationState: { ...step.presentationState, contentVersionId: session.state.contentVersionId } } : {}) })) }, session.startState, session.status);
   const declarations = declaredRegressionPaths(project);
   if (declarations.ids.length) record.trace.regressionDeclarations = { projectRevision: project.revision, traceIds: declarations.ids };
   return record;
@@ -790,7 +803,7 @@ export function trialRecordData(project: ProjectData, session: TrialSession, che
 
 /** Prepare snapshot content and its evidence for one transaction. IDs and timestamps belong to the caller. */
 export function pinTrialRecord(session: TrialSession, ids: { checkpointId: ID; snapshotId: ID }, declarationProject: ProjectData = session.declarationProject ?? session.content): { checkpoint: CheckpointData; trace: TraceData; content: ProjectContent } {
-  const { history: _history, snapshots: _snapshots, authorAlternatives: _authorAlternatives, ...content } = session.content;
+  const { history: _history, snapshots: _snapshots, authorAlternatives: _authorAlternatives, ...content } = reuseAuthorContent(session.content);
   return { ...trialRecordData(declarationProject, session, ids.checkpointId, ids.snapshotId), content: clone(content) };
 }
 
@@ -809,8 +822,8 @@ export interface AnalysisFinding {
   edgePath?: ID[][];
 }
 
-function anchorIsPresented(project: ProjectData, state: RuntimeState, anchor: import('./types').ContentAnchor): boolean {
-  return presentationAnchorApplies(project, state, anchor, { nodeId: state.presentationPosition ?? undefined });
+function anchorIsPresented(project: ProjectData, state: RuntimeState, anchor: import('./types').ContentAnchor, declarationId?: ID): boolean {
+  return presentationAnchorApplies(project, state, anchor, { nodeId: state.presentationPosition ?? undefined }, declarationId);
 }
 
 function anchorPrecedes(project: ProjectData, state: RuntimeState, left: import('./types').ContentAnchor, right: import('./types').ContentAnchor): boolean | undefined {
@@ -859,12 +872,12 @@ function checkTrialForeshadowsInternal(project: ProjectData, session: TrialSessi
     for (const id of state.seenIds) {
       const disclosure = disclosures.find(disclosure => disclosure.id === id);
       if (disclosure?.data.anchor.positionStatus === 'unresolved') { uncertain.add(id); continue; }
-      if (!disclosure || !anchorIsPresented(project, state, disclosure.data.anchor)) seen.add(id);
+      if (!disclosure || !anchorIsPresented(project, state, reuseExecutionAnchor(project, disclosure.data.anchor, disclosure.id), disclosure.id)) seen.add(id);
     }
-    const currentClues = disclosures.filter(disclosure => disclosure.data.role === 'clue' && anchorIsPresented(project, state, disclosure.data.anchor))
+    const currentClues = disclosures.filter(disclosure => disclosure.data.role === 'clue' && anchorIsPresented(project, state, reuseExecutionAnchor(project, disclosure.data.anchor, disclosure.id), disclosure.id))
       .map(disclosure => ({ disclosure, condition: presentationCondition(disclosure.id) }));
     for (const payoff of disclosures.filter(disclosure => disclosure.data.role === 'payoff')) {
-      if (!anchorIsPresented(project, state, payoff.data.anchor) || !state.seenIds.includes(payoff.id) || found.has(payoff.id)) continue;
+      if (!anchorIsPresented(project, state, reuseExecutionAnchor(project, payoff.data.anchor, payoff.id), payoff.id) || !state.seenIds.includes(payoff.id) || found.has(payoff.id)) continue;
       // A supplied false observation cannot erase an actual presentation ID,
       // including evidence from legacy checkpoints without initial observations.
       const observedCondition = presentationCondition(payoff.id);
@@ -877,13 +890,14 @@ function checkTrialForeshadowsInternal(project: ProjectData, session: TrialSessi
         if (seen.has(id)) return true;
         const clue = currentClues.find(clue => clue.disclosure.id === id);
         if (!clue || clue.condition.value === 'false') return false;
-        const before = anchorPrecedes(project, state, clue.disclosure.data.anchor, payoff.data.anchor);
+        const before = anchorPrecedes(project, state, reuseExecutionAnchor(project, clue.disclosure.data.anchor, clue.disclosure.id), reuseExecutionAnchor(project, payoff.data.anchor, payoff.id));
         if (before === undefined || before === true && clue.condition.value === 'unknown') uncertainOrder = true;
         return before === true && clue.condition.value === 'true';
       };
       const missing = (foreshadow.data.requiredInfo ?? []).filter(id => ![id, ...(foreshadow.data.alternativeInfo?.[id] ?? [])].some(presentedBefore));
       const ruleContext = presentationRuleContext(project, { nodeId: state.presentationPosition, worldTick });
-      const context = { state: observationState ?? state, variables: variables(project), entities: runtimeEntities(project), externalValues, ruleContext };
+      const contexts = reuseRuleContexts(project, ruleContext);
+      const context = { state: observationState ?? state, variables: variables(project), entities: runtimeEntities(project), externalValues, ruleContext: contexts[foreshadow.id] ?? ruleContext, ruleContexts: contexts };
       const scope = foreshadow.data.deadline ? !observationState && foreshadow.data.deadline.routeCondition ? { value: 'unknown' } : evaluateTargetScope(foreshadow.data.deadline, context) : { value: 'true' };
       if (scope.value === 'false') continue;
       found.add(payoff.id);
@@ -1091,7 +1105,7 @@ function* analysisIterator(project: ProjectData, options: AnalysisOptions): Gene
     activeStart = session.startState;
     // Inspect the witnessed presentation order before state deduplication. Two
     // paths may join at the same values after presenting information in a different order.
-    if (session.status === 'terminal' || activeKind(project, 'disclosure').some(disclosure => disclosure.data.role === 'payoff' && anchorIsPresented(project, session.state, disclosure.data.anchor))) {
+    if (session.status === 'terminal' || activeKind(project, 'disclosure').some(disclosure => disclosure.data.role === 'payoff' && anchorIsPresented(project, session.state, reuseExecutionAnchor(project, disclosure.data.anchor, disclosure.id), disclosure.id))) {
       for (const finding of checkTrialForeshadows(project, pathSession(recordIndex))) {
         const key = `${finding.status}:${finding.code}:${finding.targetId}:${finding.payoffId}:${finding.missingInfoIds?.join(',')}`;
         if (!unique.has(key)) { unique.add(key); findings.push(finding); }

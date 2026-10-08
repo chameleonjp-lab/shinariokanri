@@ -1,4 +1,5 @@
 import { resolvePinnedWorlds } from './pinnedWorlds';
+import { resolveReuseContent, reuseValidationIssues } from './reuse';
 import { FORMAT_VERSION } from './types';
 import type { Alias, CalendarDefinition, Condition, Entity, EntityDataMap, EntityKind, Expression, ID, PresentationConditionResult, ProjectContent, ProjectData, Relation, RelationTypeDefinition, RichText, RuntimeState, TimeSpec, TypedValue, ValidationIssue, ValidationResult, Validity } from './types';
 import { GREGORIAN_CALENDAR, compareTicks, isTick, parseTick, validateCalendar, validateEventTimes, sameCalendarDefinition } from './time';
@@ -178,7 +179,7 @@ const transition = obj({ from: req(typed), to: req(typed), reason: opt(txt()), e
 const resetRule = obj({ on: req(en('scene_end', 'chapter_end', 'run_end', 'new_loop', 'full_reset')), value: req(typed), reason: opt(txt()) });
 const allowed = obj({ min: opt(num(undefined, undefined, true)), max: opt(num(undefined, undefined, true)), values: opt(arr(union(txt(), bool), true)) });
 const trigger = obj({ id: opt(idSchema), event: req(en('enter', 'talk', 'battle_result', 'manual', 'custom')), eventKey: req(txt()), repeat: req(en('once', 'repeatable')), scope: opt(en(...SCOPES)), deadline: opt(time) });
-const reuse = obj({ mode: req(en('reference', 'clone', 'override')), sourceId: req(ref()), pinnedSnapshotId: req(scopedRef('snapshot')), overrideFields: req(arr(txt(1), true)) });
+const reuse = obj({ mode: req(en('reference', 'clone', 'override')), sourceId: req(ref()), pinnedSnapshotId: req(scopedRef('snapshot')), overrideFields: req(arr(txt(1), true)), bindings: opt(record(idSchema, idSchema)) });
 const unresolved = obj({ unresolved: req(obj({ label: req(txt()), reason: req(txt(1)) })) });
 const runtimeItem = obj({ instanceId: req(idSchema), typeId: req(ref('item')), quantity: req(num(0, undefined, true)), ownerId: opt(ref('character', 'group')), locationId: opt(ref('place')), consumed: req(bool), reason: opt(txt()) });
 const runtimeAssertion = obj({ assertionId: req(ref('assertion')), holderId: opt(ref('character')), truth: req(en('true', 'false', 'unknown')), sourceEffectId: opt(ref('effect')) });
@@ -206,7 +207,7 @@ export const ENTITY_SCHEMAS: Record<EntityKind, Schema> = {
   item: obj({ itemMode: req(en('type', 'instance')), typeId: opt(ref('item')), body: opt(rich), properties: opt({ type: 'custom' }), changes: opt(refs('assertion')) }),
   note: obj({ body: req(rich), attachmentIds: opt(refs('attachment')), convertedToIds: opt(refs()), originNoteId: opt(ref('note')) }),
   chapter: obj({ sceneIds: req(refs('scene')), summary: opt(summary), authorNotes: opt(rich), structureRole: opt(short) }),
-  scene: obj({ summary: req(summary), body: req(rich), authorNotes: req(rich), eventIds: req(refs('event')), dialogueLineIds: opt(refs('dialogue_line')), chapterId: opt(ref('chapter')), threadIds: opt(refs('group')), povId: opt(ref('character')), goals: opt(rich), conflicts: opt(rich), results: opt(rich), newInformation: opt(rich), tension: opt(num(0, 10)), importance: opt(num(0, 10)), blockIds: opt(arr(scopedRef('block'), true)) }),
+  scene: obj({ summary: req(summary), body: req(rich), authorNotes: req(rich), eventIds: req(refs('event')), dialogueLineIds: opt(refs('dialogue_line')), chapterId: opt(ref('chapter')), threadIds: opt(refs('group')), povId: opt(ref('character')), goals: opt(rich), conflicts: opt(rich), results: opt(rich), newInformation: opt(rich), tension: opt(num(0, 10)), importance: opt(num(0, 10)), blockIds: opt(arr(scopedRef('block'), true)), reuse: opt(reuse) }),
   goal: obj({ ownerId: req(ref('character', 'group')), description: req(rich), changes: opt(refs('assertion')), evidenceSceneIds: opt(refs('scene')), validity: opt(nullableValidity) }),
   flow_node: obj({ nodeType: req(en('scene', 'choice', 'automatic', 'call', 'entry', 'exit', 'terminal')), sceneId: opt(ref('scene')), childGraphId: opt(ref('flow_graph')), terminalReason: opt(txt()), trigger: opt(trigger), gate: opt(cond), executionPolicy: opt(en('manual_choice', 'first_match', 'all_match')), fallbackId: opt(ref('flow_node')), reuse: opt(reuse) }),
   flow_edge: obj({ fromId: req(ref('flow_node')), toId: req(union(ref('flow_node'), unresolved)), edgeType: req(en('choice', 'automatic', 'call_return')), label: opt(txt()), condition: opt(cond), effectIds: opt(refs('effect')), priority: opt(num(undefined, undefined, true)), choiceLineId: opt(ref('dialogue_line')) }),
@@ -676,7 +677,11 @@ function rewritePaths<T>(source: T, references: DomainReference[], idMap: Map<ID
   }
   return copy;
 }
-export function rewriteEntityReferences<K extends EntityKind>(entity: Entity<K>, idMap: Map<ID, ID> | Record<ID, ID>): Entity<K> { return rewritePaths(entity, collectReferences(entity), idMap); }
+export function rewriteEntityReferences<K extends EntityKind>(entity: Entity<K>, idMap: Map<ID, ID> | Record<ID, ID>): Entity<K> {
+  const copy = rewritePaths(entity, collectReferences(entity), idMap), lookup = (id: ID) => (idMap instanceof Map ? idMap.get(id) : idMap[id]) ?? id;
+  if ((entity.kind === 'scene' || entity.kind === 'flow_node') && entity.data.reuse?.bindings && (copy.kind === 'scene' || copy.kind === 'flow_node') && copy.data.reuse) copy.data.reuse.bindings = Object.fromEntries(Object.entries(entity.data.reuse.bindings).map(([source, target]) => [lookup(source), lookup(target)]));
+  return copy;
+}
 export function rewriteRelationReferences(relation: Relation, idMap: Map<ID, ID> | Record<ID, ID>): Relation { return rewritePaths(relation, collectRelationReferences(relation), idMap); }
 
 export interface ProjectValidationOptions { worlds?: ProjectContent[]; worldSnapshots?: Record<ID, ProjectContent>; relationTypes?: RelationTypeDefinition[]; runtime?: boolean }
@@ -735,16 +740,21 @@ function validateContent(input: unknown, path: string, options: ProjectValidatio
   const viewRefs: DomainReference[] = []; walk(arr(viewSchema), input.views, `${path}.views`, issues, viewRefs);
   if (issues.length) return { ok: false, issues: issues.slice(0, 256) };
   const project = input as unknown as ProjectContent;
-  const allowedWorldIds = new Set(project.worldReferences.map(reference => reference.projectId));
-  const closure = options.worldSnapshots ? resolvePinnedWorlds(project, options.worldSnapshots) : undefined;
+  const reusableSnapshots = [...versionContents].map(([id, content]) => ({ id, content, contentHash: '', createdAt: '', versionLabel: '' }));
+  issues.push(...reuseValidationIssues(project, reusableSnapshots, path));
+  if (issues.length) return { ok: false, issues: issues.slice(0, 256) };
+  const executionProject = project.entities.some(entity => (entity.kind === 'scene' || entity.kind === 'flow_node') && entity.data.reuse?.bindings) ? resolveReuseContent(project, reusableSnapshots) : project;
+  const allowedWorldIds = new Set(executionProject.worldReferences.map(reference => reference.projectId));
+  const closure = options.worldSnapshots ? resolvePinnedWorlds(executionProject, options.worldSnapshots) : undefined;
   if (closure) for (const message of closure.errors) addIssue(issues, `${path}.worldReferences`, message, 'REFERENCE_INVALID');
   const worlds = closure?.worlds ?? (options.worlds ?? []).filter(world => allowedWorldIds.has(world.projectId));
   if (entities.length + relations.length + worlds.reduce((count, world) => count + world.entities.length + world.relations.length, 0) > 100_000) addIssue(issues, path, '参照世界を含むレコード数が100,000件を超えています。', 'IMPORT_LIMIT');
   // Validate before constructing maps: a world record must never overwrite a local ID.
   // Each historical content calls this independently with its own pinned worlds.
   validateActiveRecordNamespace(project, worlds, path, issues);
+  if (executionProject !== project) validateActiveRecordNamespace(executionProject, worlds, `${path}.reuse`, issues);
   if (issues.length) return { ok: false, issues: issues.slice(0, 256) };
-  const allEntities = [...project.entities, ...worlds.flatMap(world => world.entities)], entityMap = new Map(allEntities.map(entity => [entity.id, entity]));
+  const allEntities = [...executionProject.entities, ...worlds.flatMap(world => world.entities)], entityMap = new Map(allEntities.map(entity => [entity.id, entity]));
   const relationMap = new Map([...project.relations, ...worlds.flatMap(world => world.relations)].map(relation => [relation.id, relation]));
   const allCalendarIds = new Set([...project.calendars, ...worlds.flatMap(world => world.calendars)].map(calendar => calendar.id));
   const ids = new Set<string>();
@@ -766,14 +776,16 @@ function validateContent(input: unknown, path: string, options: ProjectValidatio
   }
   const worldVersionDependencies = worlds.flatMap(world => [...world.entities.flatMap(collectReferences), ...world.relations.flatMap(collectRelationReferences)])
     .filter(reference => reference.scope === 'snapshot' && options.worldSnapshots?.[reference.id] && worlds.some(world => world.projectId === options.worldSnapshots?.[reference.id].projectId)).map(reference => reference.id);
-  const knownVersions = new Set([...snapshotIds, ...worldVersionDependencies, project.projectId, ...allEntities.filter(entity => entity.kind === 'snapshot').map(entity => entity.id), ...(closure?.references ?? project.worldReferences).map(world => world.immutableSnapshotId)]);
-  const knownProjects = new Set([project.projectId, ...(closure?.references ?? project.worldReferences).map(world => world.projectId)]);
+  const knownVersions = new Set([...snapshotIds, ...worldVersionDependencies, project.projectId, ...allEntities.filter(entity => entity.kind === 'snapshot').map(entity => entity.id), ...(closure?.references ?? executionProject.worldReferences).map(world => world.immutableSnapshotId)]);
+  const knownProjects = new Set([project.projectId, ...(closure?.references ?? executionProject.worldReferences).map(world => world.projectId)]);
   type ReferenceIndex = { entities: Map<ID, Entity>; relations: Map<ID, Relation>; blocks: Map<ID, { entityId: ID; text: string }>; calendars: Set<string>; projects: Set<ID> };
   const currentIndex: ReferenceIndex = { entities: entityMap, relations: relationMap, blocks, calendars: allCalendarIds, projects: knownProjects }, versionIndexes = new Map<ID, ReferenceIndex>();
   function versionIndex(versionId: ID): ReferenceIndex | undefined {
-    if (versionId === project.projectId) return currentIndex;
+    if (versionId === project.projectId && !project.entities.some(entity => (entity.kind === 'scene' || entity.kind === 'flow_node') && entity.data.reuse?.bindings)) return currentIndex;
     const cached = versionIndexes.get(versionId); if (cached) return cached;
-    const content = versionContents.get(versionId) ?? options.worldSnapshots?.[versionId]; if (!content) return undefined;
+    const rawContent = versionId === project.projectId ? project : versionContents.get(versionId) ?? options.worldSnapshots?.[versionId]; if (!rawContent) return undefined;
+    let content = rawContent;
+    try { if (content.entities.some(entity => (entity.kind === 'scene' || entity.kind === 'flow_node') && entity.data.reuse?.bindings)) content = resolveReuseContent(content, reusableSnapshots); } catch { return undefined; }
     const versionClosure = options.worldSnapshots ? resolvePinnedWorlds(content, options.worldSnapshots) : undefined;
     if (versionClosure) for (const message of versionClosure.errors) addIssue(issues, `${path}.versions.${versionId}.worldReferences`, message, 'REFERENCE_INVALID');
     const pinnedWorlds = versionClosure?.worlds ?? (options.worlds ?? []).filter(world => content.worldReferences.some(reference => reference.projectId === world.projectId));
@@ -812,8 +824,9 @@ function validateContent(input: unknown, path: string, options: ProjectValidatio
     const prefix = `${path}.entities[${i}]`;
     for (const reference of referencesFor(entity)) {
       const parts = pathParts(reference.path), parent = parts.slice(0, -1).reduce<unknown>((object, field) => object && typeof object === 'object' ? (object as Record<string, unknown>)[field] : undefined, entity);
-      const anchorVersion = isObject(parent) && typeof parent.entityId === 'string' && typeof parent.sourceVersionId === 'string' ? parent.sourceVersionId
-        : entity.kind === 'review' && reference.path.startsWith('data.target.') ? entity.data.targetVersionId : undefined;
+      const reuseVersion = (entity.kind === 'scene' || entity.kind === 'flow_node') && entity.data.reuse && reference.path === 'data.reuse.sourceId' ? entity.data.reuse.pinnedSnapshotId : undefined;
+      const anchorVersion = reuseVersion ?? (isObject(parent) && typeof parent.entityId === 'string' && typeof parent.sourceVersionId === 'string' ? parent.sourceVersionId
+        : entity.kind === 'review' && reference.path.startsWith('data.target.') ? entity.data.targetVersionId : undefined);
       const usesVersion = entity.kind === 'checkpoint' && (reference.path.startsWith('data.runtimeState.') || reference.path.startsWith('data.presentationState.') || reference.path.startsWith('data.presentationResults['))
         || entity.kind === 'trace' && (reference.path.startsWith('data.steps[') || reference.path.startsWith('data.initialExternalValues.') || reference.path.startsWith('data.readingPath.'));
       if (anchorVersion || usesVersion && (entity.kind === 'checkpoint' || entity.kind === 'trace')) {

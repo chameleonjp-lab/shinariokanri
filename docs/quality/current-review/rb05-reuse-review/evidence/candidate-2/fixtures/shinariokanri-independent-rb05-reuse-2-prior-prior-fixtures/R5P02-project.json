@@ -1,0 +1,352 @@
+{
+  "projectId": "a55ca293-d488-47ad-ab8c-86162c6dd170",
+  "name": "新しい作品",
+  "formatVersion": "1.0.0",
+  "revision": "0",
+  "calendarId": "proleptic-gregorian-second",
+  "mainStart": "0",
+  "calendars": [
+    {
+      "id": "proleptic-gregorian-second",
+      "name": "先発グレゴリオ暦",
+      "kind": "gregorian",
+      "originLabel": "0000-01-01 00:00:00",
+      "ticksPerDay": "86400"
+    }
+  ],
+  "worldReferences": [],
+  "entities": [
+    {
+      "id": "86394d51-ecf2-406c-86cb-01e51eb67b68",
+      "projectId": "a55ca293-d488-47ad-ab8c-86162c6dd170",
+      "kind": "scene",
+      "revision": "0",
+      "name": "scene",
+      "status": "confirmed",
+      "visibility": "private",
+      "createdAt": "2026-10-08T06:05:47.810Z",
+      "updatedAt": "2026-10-08T06:05:47.810Z",
+      "customValues": {},
+      "data": {
+        "summary": [],
+        "body": [],
+        "authorNotes": [],
+        "eventIds": [],
+        "chapterId": null,
+        "threadIds": [],
+        "povId": null,
+        "goals": [],
+        "conflicts": [],
+        "results": [],
+        "newInformation": [],
+        "tension": null,
+        "importance": null,
+        "blockIds": []
+      }
+    },
+    {
+      "id": "e7d7888d-2b52-4c84-9417-5388c6318f3a",
+      "projectId": "a55ca293-d488-47ad-ab8c-86162c6dd170",
+      "kind": "scene",
+      "revision": "0",
+      "name": "scene",
+      "status": "confirmed",
+      "visibility": "private",
+      "createdAt": "2026-10-08T06:05:47.810Z",
+      "updatedAt": "2026-10-08T06:05:47.810Z",
+      "customValues": {},
+      "data": {
+        "summary": [],
+        "body": [],
+        "authorNotes": [],
+        "eventIds": [],
+        "chapterId": null,
+        "threadIds": [],
+        "povId": null,
+        "goals": [],
+        "conflicts": [],
+        "results": [],
+        "newInformation": [],
+        "tension": null,
+        "importance": null,
+        "blockIds": []
+      }
+    },
+    {
+      "id": "5a7f5f55-df66-42ef-ad26-099174a53a00",
+      "projectId": "a55ca293-d488-47ad-ab8c-86162c6dd170",
+      "kind": "flow_node",
+      "revision": "0",
+      "name": "flow_node",
+      "status": "confirmed",
+      "visibility": "private",
+      "createdAt": "2026-10-08T06:05:47.810Z",
+      "updatedAt": "2026-10-08T06:05:47.810Z",
+      "customValues": {},
+      "data": {
+        "nodeType": "entry",
+        "sceneId": "86394d51-ecf2-406c-86cb-01e51eb67b68",
+        "childGraphId": null,
+        "terminalReason": "",
+        "gate": {
+          "op": "constant",
+          "value": true
+        },
+        "executionPolicy": "manual_choice",
+        "fallbackId": null
+      }
+    },
+    {
+      "id": "ebd427fb-77d7-4cf0-b2c1-f742cb115686",
+      "projectId": "a55ca293-d488-47ad-ab8c-86162c6dd170",
+      "kind": "flow_node",
+      "revision": "0",
+      "name": "flow_node",
+      "status": "confirmed",
+      "visibility": "private",
+      "createdAt": "2026-10-08T06:05:47.810Z",
+      "updatedAt": "2026-10-08T06:05:47.810Z",
+      "customValues": {},
+      "data": {
+        "nodeType": "terminal",
+        "sceneId": "e7d7888d-2b52-4c84-9417-5388c6318f3a",
+        "childGraphId": null,
+        "terminalReason": "Declared ending",
+        "gate": {
+          "op": "constant",
+          "value": true
+        },
+        "executionPolicy": "manual_choice",
+        "fallbackId": null
+      }
+    },
+    {
+      "id": "0ac6a9f5-66be-49ce-a59b-3a9a0c9d3d55",
+      "projectId": "a55ca293-d488-47ad-ab8c-86162c6dd170",
+      "kind": "flow_edge",
+      "revision": "0",
+      "name": "flow_edge",
+      "status": "confirmed",
+      "visibility": "private",
+      "createdAt": "2026-10-08T06:05:47.810Z",
+      "updatedAt": "2026-10-08T06:05:47.810Z",
+      "customValues": {},
+      "data": {
+        "fromId": "5a7f5f55-df66-42ef-ad26-099174a53a00",
+        "toId": "ebd427fb-77d7-4cf0-b2c1-f742cb115686",
+        "edgeType": "choice",
+        "label": "",
+        "condition": {
+          "op": "constant",
+          "value": true
+        },
+        "effectIds": [],
+        "priority": 0,
+        "choiceLineId": null
+      }
+    },
+    {
+      "id": "3d8b5245-46f3-4ebb-9c6f-27574702dd3b",
+      "projectId": "a55ca293-d488-47ad-ab8c-86162c6dd170",
+      "kind": "flow_graph",
+      "revision": "0",
+      "name": "flow_graph",
+      "status": "confirmed",
+      "visibility": "private",
+      "createdAt": "2026-10-08T06:05:47.810Z",
+      "updatedAt": "2026-10-08T06:05:47.810Z",
+      "customValues": {},
+      "data": {
+        "nodeIds": [
+          "5a7f5f55-df66-42ef-ad26-099174a53a00",
+          "ebd427fb-77d7-4cf0-b2c1-f742cb115686"
+        ],
+        "edgeIds": [
+          "0ac6a9f5-66be-49ce-a59b-3a9a0c9d3d55"
+        ],
+        "entryIds": [
+          "5a7f5f55-df66-42ef-ad26-099174a53a00"
+        ],
+        "exitIds": [
+          "ebd427fb-77d7-4cf0-b2c1-f742cb115686"
+        ],
+        "parentGraphId": null,
+        "parameters": []
+      }
+    },
+    {
+      "id": "190f90c6-82ea-44b8-be6e-0bba6d0ffbba",
+      "projectId": "a55ca293-d488-47ad-ab8c-86162c6dd170",
+      "kind": "variable",
+      "revision": "0",
+      "name": "variable",
+      "status": "confirmed",
+      "visibility": "private",
+      "createdAt": "2026-10-08T06:05:47.810Z",
+      "updatedAt": "2026-10-08T06:05:47.810Z",
+      "customValues": {},
+      "data": {
+        "key": "x",
+        "valueType": "boolean",
+        "scope": "run",
+        "initial": {
+          "type": "boolean",
+          "value": false
+        },
+        "allowed": {
+          "values": [
+            false,
+            true
+          ]
+        },
+        "description": [],
+        "ownerId": null,
+        "externalContractId": null,
+        "resetRules": [],
+        "transitionRules": [],
+        "externalUseDeclared": false,
+        "exclusions": [
+          {
+            "variableId": "bb9727d2-02bb-46ca-b60b-61fb1684ade1",
+            "value": {
+              "type": "boolean",
+              "value": true
+            },
+            "otherValue": {
+              "type": "boolean",
+              "value": true
+            },
+            "reason": "Cannot hold both"
+          }
+        ]
+      }
+    },
+    {
+      "id": "bb9727d2-02bb-46ca-b60b-61fb1684ade1",
+      "projectId": "a55ca293-d488-47ad-ab8c-86162c6dd170",
+      "kind": "variable",
+      "revision": "0",
+      "name": "variable",
+      "status": "confirmed",
+      "visibility": "private",
+      "createdAt": "2026-10-08T06:05:47.810Z",
+      "updatedAt": "2026-10-08T06:05:47.810Z",
+      "customValues": {},
+      "data": {
+        "key": "y",
+        "valueType": "boolean",
+        "scope": "run",
+        "initial": {
+          "type": "boolean",
+          "value": false
+        },
+        "allowed": {
+          "values": [
+            false,
+            true
+          ]
+        },
+        "description": [],
+        "ownerId": null,
+        "externalContractId": null,
+        "resetRules": [],
+        "transitionRules": [],
+        "externalUseDeclared": false
+      }
+    },
+    {
+      "id": "af0ee32b-4881-4120-ab1d-324c8308196d",
+      "projectId": "a55ca293-d488-47ad-ab8c-86162c6dd170",
+      "kind": "projection_profile",
+      "revision": "0",
+      "name": "projection_profile",
+      "status": "confirmed",
+      "visibility": "private",
+      "createdAt": "2026-10-08T06:05:47.810Z",
+      "updatedAt": "2026-10-08T06:05:47.810Z",
+      "customValues": {},
+      "data": {
+        "audience": "reader",
+        "includedIds": [
+          "86394d51-ecf2-406c-86cb-01e51eb67b68",
+          "e7d7888d-2b52-4c84-9417-5388c6318f3a",
+          "5a7f5f55-df66-42ef-ad26-099174a53a00",
+          "ebd427fb-77d7-4cf0-b2c1-f742cb115686",
+          "0ac6a9f5-66be-49ce-a59b-3a9a0c9d3d55",
+          "3d8b5245-46f3-4ebb-9c6f-27574702dd3b",
+          "190f90c6-82ea-44b8-be6e-0bba6d0ffbba",
+          "bb9727d2-02bb-46ca-b60b-61fb1684ade1"
+        ],
+        "namePolicy": {
+          "defaultPolicy": {
+            "mode": "exclude"
+          },
+          "byEntityId": {
+            "86394d51-ecf2-406c-86cb-01e51eb67b68": {
+              "mode": "replace",
+              "replacement": "Public 0"
+            },
+            "e7d7888d-2b52-4c84-9417-5388c6318f3a": {
+              "mode": "replace",
+              "replacement": "Public 1"
+            },
+            "5a7f5f55-df66-42ef-ad26-099174a53a00": {
+              "mode": "replace",
+              "replacement": "Public 2"
+            },
+            "ebd427fb-77d7-4cf0-b2c1-f742cb115686": {
+              "mode": "replace",
+              "replacement": "Public 3"
+            },
+            "0ac6a9f5-66be-49ce-a59b-3a9a0c9d3d55": {
+              "mode": "replace",
+              "replacement": "Public 4"
+            },
+            "3d8b5245-46f3-4ebb-9c6f-27574702dd3b": {
+              "mode": "replace",
+              "replacement": "Public 5"
+            },
+            "190f90c6-82ea-44b8-be6e-0bba6d0ffbba": {
+              "mode": "replace",
+              "replacement": "Public 6"
+            },
+            "bb9727d2-02bb-46ca-b60b-61fb1684ade1": {
+              "mode": "replace",
+              "replacement": "Public 7"
+            }
+          }
+        },
+        "allowedKinds": [
+          "scene",
+          "flow_node",
+          "flow_edge",
+          "flow_graph",
+          "variable"
+        ],
+        "excludedFields": [
+          "authorNotes"
+        ],
+        "routeScope": null,
+        "includeAuthorNotes": false,
+        "publicTitle": "Synthetic public fixture",
+        "publicTexts": {
+          "190f90c6-82ea-44b8-be6e-0bba6d0ffbba": {
+            "key": "x"
+          },
+          "bb9727d2-02bb-46ca-b60b-61fb1684ade1": {
+            "key": "y"
+          },
+          "ebd427fb-77d7-4cf0-b2c1-f742cb115686": {
+            "terminalReason": "Declared ending"
+          }
+        },
+        "allowedRelationIds": [],
+        "idPolicy": "preserve"
+      }
+    }
+  ],
+  "relations": [],
+  "snapshots": [],
+  "history": [],
+  "views": []
+}

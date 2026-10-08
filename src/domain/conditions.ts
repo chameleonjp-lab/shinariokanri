@@ -145,7 +145,7 @@ export function runtimeExclusionIssues(context: RuntimeContext): ValidationIssue
   for (const variable of defs(context)) for (const [index, rule] of (variable.data.exclusions ?? []).entries()) {
     const result = evaluateCondition({ op: 'all', children: [{ op: 'compare', variableId: variable.id, comparator: 'eq', value: rule.value }, { op: 'compare', variableId: rule.variableId, comparator: 'eq', value: rule.otherValue }] }, context);
     if (result.value === 'false') continue;
-    const exceptions = (rule.exceptions ?? []).map(exception => evaluateScenarioException(exception, context));
+    const exceptions = (rule.exceptions ?? []).map(exception => evaluateScenarioException(exception, { ...context, ruleContext: context.ruleContexts?.[variable.id] ?? context.ruleContext }));
     if (result.value === 'true' && exceptions.some(exception => exception.value === 'true')) continue;
     const unknown = result.value === 'unknown' || exceptions.some(exception => exception.value === 'unknown');
     issues.push(issue(unknown ? `相互排他を評価できません。${rule.reason}` : `相互排他に反する状態です。${rule.reason}`, `${variable.id}.exclusions[${index}]`, unknown ? 'CONDITION_UNKNOWN' : 'TRANSITION_BLOCKED'));
@@ -156,13 +156,12 @@ function sameValue(a: TypedValue, b: TypedValue): boolean { return a.type === b.
 function transitionAllowed(variable: Entity<'variable'>, before: TypedValue, after: TypedValue, effect: EffectData, context: RuntimeContext): void {
   if (effect.operation === 'reset' || sameValue(before, after)) return;
   const quests = contextEntities(context).filter((entity): entity is Entity<'quest'> => entity.kind === 'quest' && entity.data.stateVariableId === variable.id);
-  const rules = [...(variable.data.transitionRules ?? []), ...quests.flatMap(quest => quest.data.transitionRules ?? [])];
+  const rules = [...(variable.data.transitionRules ?? []).map(rule => ({ rule, ownerId: variable.id })), ...quests.flatMap(quest => (quest.data.transitionRules ?? []).map(rule => ({ rule, ownerId: quest.id })))];
   if (!rules.length && !quests.length) return;
   if (before.type === 'unknown') throw new DomainValidationError([issue('遷移前の状態が未定です。', `variables.${variable.id}`, 'CONDITION_UNKNOWN')]);
-  const matching = rules.filter(rule => sameValue(rule.from, before) && sameValue(rule.to, after));
-  if (matching.some(rule => !rule.exception && !rule.exceptionDetails)) return;
-  const exceptions = [...matching.flatMap(rule => rule.exceptionDetails ? [rule.exceptionDetails] : []), ...(effect.exceptionDetails ? [effect.exceptionDetails] : [])];
-  const checked = exceptions.map(exception => evaluateScenarioException(exception, context));
+  const matching = rules.filter(({ rule }) => sameValue(rule.from, before) && sameValue(rule.to, after));
+  if (matching.some(({ rule }) => !rule.exception && !rule.exceptionDetails)) return;
+  const checked = [...matching.flatMap(({ rule, ownerId }) => rule.exceptionDetails ? [evaluateScenarioException(rule.exceptionDetails, { ...context, ruleContext: context.ruleContexts?.[ownerId] ?? context.ruleContext })] : []), ...(effect.exceptionDetails ? [evaluateScenarioException(effect.exceptionDetails, context)] : [])];
   if (checked.some(value => value.value === 'true')) return;
   throw new DomainValidationError([issue(checked.flatMap(value => value.reasons).join('、') || '許容遷移表にない状態更新です。明示resetまたは対象・期限・根拠付きの例外が必要です。', `variables.${variable.id}`, checked.some(value => value.value === 'unknown') ? 'CONDITION_UNKNOWN' : 'TRANSITION_BLOCKED')]);
 }
@@ -252,10 +251,11 @@ export function applyEffectsAtomic(state: RuntimeState, effects: (Entity<'effect
       if ('data' in input && !adoptedRecord(input)) throw new DomainValidationError([issue('削除・不採用・別案の効果は実行できません。', `effects[${index}]`, 'REFERENCE_INVALID')]);
       const effect = 'data' in input ? input.data : input, effectId = 'id' in input ? input.id : undefined;
       const checkedEffect = validateEffectData(effect, `effects[${index}]`); if (!checkedEffect.ok) throw new DomainValidationError(checkedEffect.issues);
-      const condition = evaluateCondition(effect.condition, { ...context, state: working });
+      const effectContext = { ...context, state: working, ruleContext: effectId && context.ruleContexts?.[effectId] || context.ruleContext };
+      const condition = evaluateCondition(effect.condition, effectContext);
       if (condition.value === 'unknown') throw new DomainValidationError([issue(condition.reasons.join('、') || '効果の条件が未定です。', `effects[${index}].condition`, 'CONDITION_UNKNOWN')]);
       if (condition.value === 'false') continue;
-      applyOne(working, effect, { ...context, state: working }, effectId);
+      applyOne(working, effect, effectContext, effectId);
     }
     const instanceIds = new Set<ID>();
     for (const item of working.itemInstances) {

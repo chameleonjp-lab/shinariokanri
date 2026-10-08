@@ -1,0 +1,331 @@
+{
+  "projectId": "039717ec-59ba-44fd-badb-5ddce8d15494",
+  "name": "新しい作品",
+  "formatVersion": "1.0.0",
+  "revision": "0",
+  "calendarId": "proleptic-gregorian-second",
+  "mainStart": "0",
+  "calendars": [
+    {
+      "id": "proleptic-gregorian-second",
+      "name": "先発グレゴリオ暦",
+      "kind": "gregorian",
+      "originLabel": "0000-01-01 00:00:00",
+      "ticksPerDay": "86400"
+    }
+  ],
+  "worldReferences": [],
+  "entities": [
+    {
+      "id": "1145d774-9d81-457c-acbd-145b0403d0e1",
+      "projectId": "039717ec-59ba-44fd-badb-5ddce8d15494",
+      "kind": "scene",
+      "revision": "0",
+      "name": "scene",
+      "status": "provisional",
+      "visibility": "private",
+      "createdAt": "2026-10-08T06:05:47.693Z",
+      "updatedAt": "2026-10-08T06:05:47.693Z",
+      "customValues": {},
+      "data": {
+        "summary": [],
+        "body": [],
+        "authorNotes": [],
+        "eventIds": [],
+        "chapterId": null,
+        "threadIds": [],
+        "povId": null,
+        "goals": [],
+        "conflicts": [],
+        "results": [],
+        "newInformation": [],
+        "tension": null,
+        "importance": null,
+        "blockIds": []
+      }
+    },
+    {
+      "id": "45f8df57-4ec2-4ea6-81f3-950806937985",
+      "projectId": "039717ec-59ba-44fd-badb-5ddce8d15494",
+      "kind": "scene",
+      "revision": "0",
+      "name": "scene",
+      "status": "provisional",
+      "visibility": "private",
+      "createdAt": "2026-10-08T06:05:47.693Z",
+      "updatedAt": "2026-10-08T06:05:47.693Z",
+      "customValues": {},
+      "data": {
+        "summary": [],
+        "body": [],
+        "authorNotes": [],
+        "eventIds": [],
+        "chapterId": null,
+        "threadIds": [],
+        "povId": null,
+        "goals": [],
+        "conflicts": [],
+        "results": [],
+        "newInformation": [],
+        "tension": null,
+        "importance": null,
+        "blockIds": []
+      }
+    },
+    {
+      "id": "7fcf537c-daaa-41cd-b4c6-54597468c3bd",
+      "projectId": "039717ec-59ba-44fd-badb-5ddce8d15494",
+      "kind": "flow_node",
+      "revision": "0",
+      "name": "flow_node",
+      "status": "provisional",
+      "visibility": "private",
+      "createdAt": "2026-10-08T06:05:47.693Z",
+      "updatedAt": "2026-10-08T06:05:47.693Z",
+      "customValues": {},
+      "data": {
+        "nodeType": "entry",
+        "sceneId": "1145d774-9d81-457c-acbd-145b0403d0e1",
+        "childGraphId": null,
+        "terminalReason": "",
+        "gate": {
+          "op": "constant",
+          "value": true
+        },
+        "executionPolicy": "manual_choice",
+        "fallbackId": null
+      }
+    },
+    {
+      "id": "fd4aeb3f-7498-4a35-88e4-c93b839a4e44",
+      "projectId": "039717ec-59ba-44fd-badb-5ddce8d15494",
+      "kind": "flow_node",
+      "revision": "0",
+      "name": "flow_node",
+      "status": "provisional",
+      "visibility": "private",
+      "createdAt": "2026-10-08T06:05:47.693Z",
+      "updatedAt": "2026-10-08T06:05:47.693Z",
+      "customValues": {},
+      "data": {
+        "nodeType": "terminal",
+        "sceneId": "45f8df57-4ec2-4ea6-81f3-950806937985",
+        "childGraphId": null,
+        "terminalReason": "Declared ending",
+        "gate": {
+          "op": "constant",
+          "value": true
+        },
+        "executionPolicy": "manual_choice",
+        "fallbackId": null
+      }
+    },
+    {
+      "id": "48f18160-7232-4168-bfa0-543f5007d694",
+      "projectId": "039717ec-59ba-44fd-badb-5ddce8d15494",
+      "kind": "flow_edge",
+      "revision": "0",
+      "name": "flow_edge",
+      "status": "provisional",
+      "visibility": "private",
+      "createdAt": "2026-10-08T06:05:47.693Z",
+      "updatedAt": "2026-10-08T06:05:47.693Z",
+      "customValues": {},
+      "data": {
+        "fromId": "7fcf537c-daaa-41cd-b4c6-54597468c3bd",
+        "toId": "fd4aeb3f-7498-4a35-88e4-c93b839a4e44",
+        "edgeType": "choice",
+        "label": "",
+        "condition": {
+          "op": "compare",
+          "variableId": "cffc05e0-fe93-44d6-b2b1-470cb8157597",
+          "comparator": "eq",
+          "value": {
+            "type": "boolean",
+            "value": true
+          }
+        },
+        "effectIds": [],
+        "priority": 0,
+        "choiceLineId": null
+      }
+    },
+    {
+      "id": "2dc4f4a1-7aa5-4773-be34-aab81a186bb8",
+      "projectId": "039717ec-59ba-44fd-badb-5ddce8d15494",
+      "kind": "flow_graph",
+      "revision": "0",
+      "name": "flow_graph",
+      "status": "provisional",
+      "visibility": "private",
+      "createdAt": "2026-10-08T06:05:47.693Z",
+      "updatedAt": "2026-10-08T06:05:47.693Z",
+      "customValues": {},
+      "data": {
+        "nodeIds": [
+          "7fcf537c-daaa-41cd-b4c6-54597468c3bd",
+          "fd4aeb3f-7498-4a35-88e4-c93b839a4e44"
+        ],
+        "edgeIds": [
+          "48f18160-7232-4168-bfa0-543f5007d694",
+          "b8730777-a428-49fb-8144-8969564b200f"
+        ],
+        "entryIds": [
+          "7fcf537c-daaa-41cd-b4c6-54597468c3bd"
+        ],
+        "exitIds": [
+          "fd4aeb3f-7498-4a35-88e4-c93b839a4e44"
+        ],
+        "parentGraphId": null,
+        "parameters": []
+      }
+    },
+    {
+      "id": "cffc05e0-fe93-44d6-b2b1-470cb8157597",
+      "projectId": "039717ec-59ba-44fd-badb-5ddce8d15494",
+      "kind": "variable",
+      "revision": "0",
+      "name": "variable",
+      "status": "provisional",
+      "visibility": "private",
+      "createdAt": "2026-10-08T06:05:47.693Z",
+      "updatedAt": "2026-10-08T06:05:47.693Z",
+      "customValues": {},
+      "data": {
+        "key": "ready_to_leave",
+        "valueType": "boolean",
+        "scope": "run",
+        "initial": {
+          "type": "boolean",
+          "value": false
+        },
+        "allowed": {
+          "values": [
+            false,
+            true
+          ]
+        },
+        "description": [],
+        "ownerId": null,
+        "externalContractId": null,
+        "resetRules": [],
+        "transitionRules": [],
+        "externalUseDeclared": false
+      }
+    },
+    {
+      "id": "a09ae002-3d91-4696-9824-966b8a495909",
+      "projectId": "039717ec-59ba-44fd-badb-5ddce8d15494",
+      "kind": "effect",
+      "revision": "0",
+      "name": "effect",
+      "status": "provisional",
+      "visibility": "private",
+      "createdAt": "2026-10-08T06:05:47.693Z",
+      "updatedAt": "2026-10-08T06:05:47.693Z",
+      "customValues": {},
+      "data": {
+        "operation": "set",
+        "targetId": "cffc05e0-fe93-44d6-b2b1-470cb8157597",
+        "value": {
+          "type": "boolean",
+          "value": true
+        },
+        "condition": {
+          "op": "constant",
+          "value": true
+        },
+        "instanceId": null,
+        "reason": ""
+      }
+    },
+    {
+      "id": "42514a55-827f-409b-91bb-36ebe780efcf",
+      "projectId": "039717ec-59ba-44fd-badb-5ddce8d15494",
+      "kind": "foreshadow",
+      "revision": "0",
+      "name": "foreshadow",
+      "status": "provisional",
+      "visibility": "private",
+      "createdAt": "2026-10-08T06:05:47.693Z",
+      "updatedAt": "2026-10-08T06:05:47.693Z",
+      "customValues": {},
+      "data": {
+        "question": [],
+        "intent": [],
+        "resolutionPolicy": "this_work",
+        "truthAssertionIds": [],
+        "clueIds": [
+          "a1833fcc-f68d-44f1-b54c-782577d55c35"
+        ],
+        "payoffIds": [],
+        "requiredInfo": [],
+        "deadline": null,
+        "exceptions": []
+      }
+    },
+    {
+      "id": "a1833fcc-f68d-44f1-b54c-782577d55c35",
+      "projectId": "039717ec-59ba-44fd-badb-5ddce8d15494",
+      "kind": "disclosure",
+      "revision": "0",
+      "name": "disclosure",
+      "status": "provisional",
+      "visibility": "private",
+      "createdAt": "2026-10-08T06:05:47.693Z",
+      "updatedAt": "2026-10-08T06:05:47.693Z",
+      "customValues": {},
+      "data": {
+        "foreshadowId": "42514a55-827f-409b-91bb-36ebe780efcf",
+        "anchor": {
+          "entityId": "1145d774-9d81-457c-acbd-145b0403d0e1"
+        },
+        "stage": "hint",
+        "role": "clue",
+        "condition": {
+          "op": "visited",
+          "entityId": "1145d774-9d81-457c-acbd-145b0403d0e1",
+          "count": 3
+        },
+        "knowledgeEffects": [
+          "a09ae002-3d91-4696-9824-966b8a495909"
+        ],
+        "targetScope": null
+      }
+    },
+    {
+      "id": "b8730777-a428-49fb-8144-8969564b200f",
+      "projectId": "039717ec-59ba-44fd-badb-5ddce8d15494",
+      "kind": "flow_edge",
+      "revision": "0",
+      "name": "flow_edge",
+      "status": "provisional",
+      "visibility": "private",
+      "createdAt": "2026-10-08T06:05:47.693Z",
+      "updatedAt": "2026-10-08T06:05:47.693Z",
+      "customValues": {},
+      "data": {
+        "fromId": "7fcf537c-daaa-41cd-b4c6-54597468c3bd",
+        "toId": "7fcf537c-daaa-41cd-b4c6-54597468c3bd",
+        "edgeType": "choice",
+        "label": "",
+        "condition": {
+          "op": "compare",
+          "variableId": "cffc05e0-fe93-44d6-b2b1-470cb8157597",
+          "comparator": "eq",
+          "value": {
+            "type": "boolean",
+            "value": false
+          }
+        },
+        "effectIds": [],
+        "priority": 0,
+        "choiceLineId": null
+      }
+    }
+  ],
+  "relations": [],
+  "snapshots": [],
+  "history": [],
+  "views": []
+}

@@ -1,0 +1,42 @@
+[WebServer] (node:64719) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 2 tests using 1 worker
+
+(node:64743) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [chromium] › tests/e2e/rb05-reuse.spec.ts:10:1 › RB05 共通元を固定参照・独立複製・部分上書きで原子保存し、共通元改稿後の本文と再読込を確認する (9.5s)
+  ✘  2 [chromium] › tests/e2e/rb05-reuse.spec.ts:30:1 › 多重固定参照を完全保存から再読込し、旧本文の固定リンクと元のUnicode位置へ戻る (30.2s)
+
+
+  1) [chromium] › tests/e2e/rb05-reuse.spec.ts:30:1 › 多重固定参照を完全保存から再読込し、旧本文の固定リンクと元のUnicode位置へ戻る ───
+
+    Test timeout of 30000ms exceeded.
+
+    Error: locator.click: Test timeout of 30000ms exceeded.
+    Call log:
+      - waiting for locator('.detail-panel').getByRole('tab', { name: '確認表示', exact: true })
+
+
+      42 |   project.entities.push(entrance);
+      43 |   await seed(page, project); await page.reload();
+    > 44 |   const editor = await open(page, entrance.name); await editor.getByRole('tab', { name: '確認表示', exact: true }).click();
+         |                                                                                                                ^
+      45 |   await editor.getByRole('button', { name: '外側固定版へ', exact: true }).click();
+      46 |   const dialog = page.getByRole('dialog', { name: '固定版の参照先', exact: true });
+      47 |   await expect(dialog).toContainText(prefix); await expect(dialog).toContainText('外側共通元の固定版');
+        at /workspace/shinariokanri/tests/e2e/rb05-reuse.spec.ts:44:112
+
+    Error Context: test-results/rb05-reuse-多重固定参照を完全保存から再読込し、旧本文の固定リンクと元のUnicode位置へ戻る-chromium/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/rb05-reuse-多重固定参照を完全保存から再読込し、旧本文の固定リンクと元のUnicode位置へ戻る-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/rb05-reuse-多重固定参照を完全保存から再読込し、旧本文の固定リンクと元のUnicode位置へ戻る-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    [chromium] › tests/e2e/rb05-reuse.spec.ts:30:1 › 多重固定参照を完全保存から再読込し、旧本文の固定リンクと元のUnicode位置へ戻る ────
+  1 passed (41.4s)

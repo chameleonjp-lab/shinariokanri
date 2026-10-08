@@ -253,7 +253,8 @@ describe('RG-R03: rejected effects refuse the entire operation', () => {
     expect(stopped.state).toBe(before.state);
     expect(stopped.history).toBe(before.history);
     expect(stopped.trace).toBe(before.trace);
-    expect(stopped.issues[0].message).toContain(mode === 'clone' ? '不採用' : '未対応');
+    if (mode === 'clone') expect(stopped.issues[0].message).toContain('不採用');
+    else { expect(before.status).toBe('error'); expect(before.issues[0].message).toContain('固定版'); expect(stopped.issues[0].code).toBe('REFERENCE_INVALID'); }
   });
 
   it('rolls back edge effects and disclosure effects together', () => {

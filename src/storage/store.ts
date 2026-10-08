@@ -976,6 +976,7 @@ export async function cloneProject(input: ProjectData): Promise<{ project: Proje
     if (!value || typeof value !== 'object') return;
     for (const [key, item] of Object.entries(value)) {
       if (['id', 'operationId', 'instanceId', 'deletionOperationId'].includes(key) && typeof item === 'string' && /^[0-9a-f-]{36}$/.test(item)) idMap[item] ??= newId();
+      if (key === 'bindings' && item && typeof item === 'object' && !Array.isArray(item)) for (const id of Object.values(item)) if (typeof id === 'string' && /^[0-9a-f-]{36}$/.test(id)) idMap[id] ??= newId();
       collect(item);
     }
   };
@@ -1059,8 +1060,8 @@ export async function cloneProject(input: ProjectData): Promise<{ project: Proje
         patch.key = [scope, itemId ?? '', ...mappedPath].map(part => encodeURIComponent(part)).join(':');
         return patch;
       }
-      const keyedByReference = ['variableValues', 'visitCounts', 'publicTexts', 'publicIds', 'byEntityId'].includes(key);
-      const rewritten = Object.fromEntries(Object.entries(value).map(([name, item]) => [keyedByReference ? idMap[name] ?? name : name, key === 'idMap' && typeof item === 'string' ? idMap[item] ?? item : rewrite(item, name, value as Record<string, unknown>)]));
+      const keyedByReference = ['variableValues', 'visitCounts', 'publicTexts', 'publicIds', 'byEntityId', 'bindings'].includes(key);
+      const rewritten = Object.fromEntries(Object.entries(value).map(([name, item]) => [keyedByReference ? idMap[name] ?? name : name, ['idMap', 'bindings'].includes(key) && typeof item === 'string' ? idMap[item] ?? item : rewrite(item, name, value as Record<string, unknown>)]));
       if ('kind' in rewritten && 'data' in rewritten && 'projectId' in rewritten) return rewriteEntityReferences(rewritten as Entity, idMap);
       if ('relationType' in rewritten && 'fromId' in rewritten && 'toId' in rewritten) return rewriteRelationReferences(rewritten as unknown as Relation, idMap);
       if (Array.isArray(rewritten.patches) && Array.isArray(rewritten.selectedChangeKeys)) rewritten.selectedChangeKeys = rewritten.patches.map((patch: { key: string }) => patch.key).sort();

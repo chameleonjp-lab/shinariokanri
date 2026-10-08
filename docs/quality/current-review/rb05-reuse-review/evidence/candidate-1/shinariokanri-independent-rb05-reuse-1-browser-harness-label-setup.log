@@ -1,0 +1,38 @@
+S5V01 delayed save survives closing and reopening and commits only once complete
+S5V02 failed save after closing explains failure and retries the same retained input complete
+S5V03 completed save before reentry survives cold reload without an editor draft overwriting it complete
+S5V04 cold draft reload preserves override input and a cancelled preview leaves author data unchanged complete
+S5V05 all three modes keep pinned body after a common-source revision and update only the selected reference complete
+{
+  "passed": 3,
+  "failed": 2,
+  "results": [
+    {
+      "id": "S5V01 delayed save survives closing and reopening and commits only once",
+      "status": "passed",
+      "pageErrors": []
+    },
+    {
+      "id": "S5V02 failed save after closing explains failure and retries the same retained input",
+      "status": "failed",
+      "error": "expect(locator).toHaveValue(expected) failed\n\nLocator: locator('.detail-panel').getByLabel('本文', { exact: true })\nExpected: \"使用先Uの本文\"\nError: strict mode violation: locator('.detail-panel').getByLabel('本文', { exact: true }) resolved to 2 elements:\n    1) <input checked type=\"checkbox\"/> aka getByRole('checkbox', { name: '本文' })\n    2) <textarea rows=\"9\" aria-label=\"本文\" data-rich-text-editor=\"true\" placeholder=\"あとから詳しく書くこともできます\" id=\"rich-text-editor-40ce9b58-ffb2-4260-8852-d5070343c754-body\">使用先Uの本文</textarea> aka getByRole('textbox', { name: '本文' })\n\nCall log:\n  - Expect \"toHaveValue\" locator('.detail-panel').getByLabel('本文', { exact: true }) with timeout 5000ms\n  - waiting for locator('.detail-panel').getByLabel('本文', { exact: true })\n",
+      "pageErrors": []
+    },
+    {
+      "id": "S5V03 completed save before reentry survives cold reload without an editor draft overwriting it",
+      "status": "passed",
+      "pageErrors": []
+    },
+    {
+      "id": "S5V04 cold draft reload preserves override input and a cancelled preview leaves author data unchanged",
+      "status": "passed",
+      "pageErrors": []
+    },
+    {
+      "id": "S5V05 all three modes keep pinned body after a common-source revision and update only the selected reference",
+      "status": "failed",
+      "error": "expect(locator).toHaveValue(expected) failed\n\nLocator: locator('.detail-panel').getByLabel('本文', { exact: true })\nExpected: \"使用先Uの本文\"\nError: strict mode violation: locator('.detail-panel').getByLabel('本文', { exact: true }) resolved to 2 elements:\n    1) <input checked type=\"checkbox\"/> aka locator('details').filter({ hasText: '共通元の固定参照・複製・部分上書き参照は固定した共通元を使い、複製は別ID' }).getByLabel('本文')\n    2) <textarea rows=\"9\" aria-label=\"本文\" data-rich-text-editor=\"true\" placeholder=\"あとから詳しく書くこともできます\" id=\"rich-text-editor-33c4d964-e0bc-4013-87ba-bf95360cbf60-body\">使用先Uの本文</textarea> aka getByRole('textbox', { name: '本文' })\n\nCall log:\n  - Expect \"toHaveValue\" locator('.detail-panel').getByLabel('本文', { exact: true }) with timeout 5000ms\n  - waiting for locator('.detail-panel').getByLabel('本文', { exact: true })\n",
+      "pageErrors": []
+    }
+  ]
+}

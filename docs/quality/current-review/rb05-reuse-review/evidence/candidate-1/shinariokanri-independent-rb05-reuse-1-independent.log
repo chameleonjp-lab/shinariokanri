@@ -1,0 +1,1043 @@
+
+ RUN  v5.0.3 /tmp/shinariokanri-independent-rb05-reuse-20261008-1
+
+ ❯ tests/independent-rb05-reuse.test.ts (11 tests | 9 failed) 226ms
+   ❯ Independent fixed reuse original-contract boundaries (11)
+     × S5F01: honors a confirmed, in-range pin-scoped exclusion exception before initial presentation 51ms
+     × S5F02: reports missing mandatory information in the fixed source edition instead of dropping its pin-scoped deadline 38ms
+     × S5F03/relation: rejects virtual bindings colliding with a canonical owned ID atomically 9ms
+     × S5F03/block: rejects virtual bindings colliding with a canonical owned ID atomically 6ms
+     × S5F04: captures the preview request and author revision before hashing 5ms
+     × S5F07/reference: verifies transitive fixed source hashes before preparing borrowed or independent content 14ms
+     × S5F07/clone: verifies transitive fixed source hashes before preparing borrowed or independent content 6ms
+     × S5F08: preserves a typed local override referencing a borrowed pinned variable through save and native restore 6ms
+     × S5F09: preserves an explicit foreign fixed link even when its entity ID is the present reuse owner 3ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 9 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/independent-rb05-reuse.test.ts > Independent fixed reuse original-contract boundaries > S5F01: honors a confirmed, in-range pin-scoped exclusion exception before initial presentation
+AssertionError: expected 'error' to be 'ready' // Object.is equality
+
+Expected: "ready"
+Received: "error"
+
+ ❯ tests/independent-rb05-reuse.test.ts:33:70
+     31|     p = (await prepareReuse(p, { ownerId: use.id, sourceId: source.id,…
+     32|     const session = await startTrialVerified(p, { entryId: route.entry…
+     33|     expect(validateProject(p).ok).toBe(true); expect(session.status).t…
+       |                                                                      ^
+     34|   });
+     35|   it('S5F02: reports missing mandatory information in the fixed source…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/9]⎯
+
+ FAIL  tests/independent-rb05-reuse.test.ts > Independent fixed reuse original-contract boundaries > S5F02: reports missing mandatory information in the fixed source edition instead of dropping its pin-scoped deadline
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ tests/independent-rb05-reuse.test.ts:44:142
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/9]⎯
+
+ FAIL  tests/independent-rb05-reuse.test.ts > Independent fixed reuse original-contract boundaries > S5F03/relation: rejects virtual bindings colliding with a canonical owned ID atomically
+ FAIL  tests/independent-rb05-reuse.test.ts > Independent fixed reuse original-contract boundaries > S5F03/block: rejects virtual bindings colliding with a canonical owned ID atomically
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/independent-rb05-reuse.test.ts:55:27
+     53|     bindings[collision === 'relation' ? note.id : source.data.body[0].…
+     54|     const before = structuredClone(p), validation = validateProject(p)…
+     55|     expect(validation.ok).toBe(false); expect(p).toEqual(before);
+       |                           ^
+     56|   });
+     57|   it('S5F04: captures the preview request and author revision before h…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/9]⎯
+
+ FAIL  tests/independent-rb05-reuse.test.ts > Independent fixed reuse original-contract boundaries > S5F04: captures the preview request and author revision before hashing
+AssertionError: expected '1' to be '0' // Object.is equality
+
+Expected: "0"
+Received: "1"
+
+ ❯ tests/independent-rb05-reuse.test.ts:62:39
+     60|     p.revision = '1'; source.data.body[0].text = 'hash待ち中の新本文'; (reque…
+     61|     const result = await promise; record('S5F04', { before, mutated: p…
+     62|     expect(result.candidate.revision).toBe(before.revision); expect((r…
+       |                                       ^
+     63|     expect(result.candidate.entities.find(e => e.id === source.id)).to…
+     64|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/9]⎯
+
+ FAIL  tests/independent-rb05-reuse.test.ts > Independent fixed reuse original-contract boundaries > S5F07/reference: verifies transitive fixed source hashes before preparing borrowed or independent content
+AssertionError: promise resolved "{ candidate: { …(13) }, …(5) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "candidate": {
++     "calendarId": "proleptic-gregorian-second",
++     "calendars": [
++       {
++         "id": "proleptic-gregorian-second",
++         "kind": "gregorian",
++         "name": "先発グレゴリオ暦",
++         "originLabel": "0000-01-01 00:00:00",
++         "ticksPerDay": "86400",
++       },
++     ],
++     "entities": [
++       {
++         "createdAt": "2026-10-08T05:53:37.868Z",
++         "customValues": {},
++         "data": {
++           "authorNotes": [],
++           "blockIds": [],
++           "body": [
++             {
++               "id": "105e0897-e30f-402d-9277-d4211900c713",
++               "kind": "paragraph",
++               "text": "正しい依存pin本文",
++             },
++           ],
++           "chapterId": null,
++           "conflicts": [],
++           "eventIds": [],
++           "goals": [],
++           "importance": null,
++           "newInformation": [],
++           "povId": null,
++           "results": [],
++           "summary": [],
++           "tension": null,
++           "threadIds": [],
++         },
++         "id": "3b9024da-b4c5-40bb-a53d-a24af0ea9e79",
++         "kind": "scene",
++         "name": "scene",
++         "projectId": "f57bbe48-5df8-4efd-b1a3-f85d8f1d9ef4",
++         "revision": "0",
++         "status": "provisional",
++         "updatedAt": "2026-10-08T05:53:37.868Z",
++         "visibility": "private",
++       },
++       {
++         "createdAt": "2026-10-08T05:53:37.868Z",
++         "customValues": {},
++         "data": {
++           "authorNotes": [],
++           "blockIds": [],
++           "body": [],
++           "chapterId": null,
++           "conflicts": [],
++           "eventIds": [],
++           "goals": [],
++           "importance": null,
++           "newInformation": [],
++           "povId": null,
++           "results": [],
++           "reuse": {
++             "bindings": {
++               "105e0897-e30f-402d-9277-d4211900c713": "1f4bf231-272c-4852-9e06-456b8f4ba325",
++               "3b9024da-b4c5-40bb-a53d-a24af0ea9e79": "3729f178-37a9-458a-bb2d-8a432a7374fd",
++             },
++             "mode": "reference",
++             "overrideFields": [],
++             "pinnedSnapshotId": "07aa76e5-b9c8-40aa-8708-9ee1b291144a",
++             "sourceId": "3b9024da-b4c5-40bb-a53d-a24af0ea9e79",
++           },
++           "summary": [],
++           "tension": null,
++           "threadIds": [],
++         },
++         "id": "3729f178-37a9-458a-bb2d-8a432a7374fd",
++         "kind": "scene",
++         "name": "scene",
++         "projectId": "f57bbe48-5df8-4efd-b1a3-f85d8f1d9ef4",
++         "revision": "0",
++         "status": "provisional",
++         "updatedAt": "2026-10-08T05:53:37.868Z",
++         "visibility": "private",
++       },
++       {
++         "createdAt": "2026-10-08T05:53:37.868Z",
++         "customValues": {},
++         "data": {
++           "authorNotes": [],
++           "blockIds": [],
++           "body": [],
++           "chapterId": null,
++           "conflicts": [],
++           "eventIds": [],
++           "goals": [],
++           "importance": null,
++           "newInformation": [],
++           "povId": null,
++           "results": [],
++           "reuse": {
++             "bindings": {
++               "1f4bf231-272c-4852-9e06-456b8f4ba325": "68fff0cf-2ad6-4ad4-ab5a-47ecf2f5ccef",
++               "3729f178-37a9-458a-bb2d-8a432a7374fd": "4f229ad0-1541-4a64-bf51-80c4a471762c",
++             },
++             "mode": "reference",
++             "overrideFields": [],
++             "pinnedSnapshotId": "57cd4010-2615-4d3e-aac0-8751ed0ace94",
++             "sourceId": "3729f178-37a9-458a-bb2d-8a432a7374fd",
++           },
++           "summary": [],
++           "tension": null,
++           "threadIds": [],
++         },
++         "id": "4f229ad0-1541-4a64-bf51-80c4a471762c",
++         "kind": "scene",
++         "name": "scene",
++         "projectId": "f57bbe48-5df8-4efd-b1a3-f85d8f1d9ef4",
++         "revision": "0",
++         "status": "provisional",
++         "updatedAt": "2026-10-08T05:53:37.868Z",
++         "visibility": "private",
++       },
++     ],
++     "formatVersion": "1.0.0",
++     "history": [],
++     "mainStart": "0",
++     "name": "新しい作品",
++     "projectId": "f57bbe48-5df8-4efd-b1a3-f85d8f1d9ef4",
++     "relations": [],
++     "revision": "0",
++     "snapshots": [
++       {
++         "content": {
++           "calendarId": "proleptic-gregorian-second",
++           "calendars": [
++             {
++               "id": "proleptic-gregorian-second",
++               "kind": "gregorian",
++               "name": "先発グレゴリオ暦",
++               "originLabel": "0000-01-01 00:00:00",
++               "ticksPerDay": "86400",
++             },
++           ],
++           "entities": [
++             {
++               "createdAt": "2026-10-08T05:53:37.868Z",
++               "customValues": {},
++               "data": {
++                 "authorNotes": [],
++                 "blockIds": [],
++                 "body": [
++                   {
++                     "id": "105e0897-e30f-402d-9277-d4211900c713",
++                     "kind": "paragraph",
++                     "text": "hash不一致の依存本文",
++                   },
++                 ],
++                 "chapterId": null,
++                 "conflicts": [],
++                 "eventIds": [],
++                 "goals": [],
++                 "importance": null,
++                 "newInformation": [],
++                 "povId": null,
++                 "results": [],
++                 "summary": [],
++                 "tension": null,
++                 "threadIds": [],
++               },
++               "id": "3b9024da-b4c5-40bb-a53d-a24af0ea9e79",
++               "kind": "scene",
++               "name": "scene",
++               "projectId": "f57bbe48-5df8-4efd-b1a3-f85d8f1d9ef4",
++               "revision": "0",
++               "status": "provisional",
++               "updatedAt": "2026-10-08T05:53:37.868Z",
++               "visibility": "private",
++             },
++             {
++               "createdAt": "2026-10-08T05:53:37.868Z",
++               "customValues": {},
++               "data": {
++                 "authorNotes": [],
++                 "blockIds": [],
++                 "body": [],
++                 "chapterId": null,
++                 "conflicts": [],
++                 "eventIds": [],
++                 "goals": [],
++                 "importance": null,
++                 "newInformation": [],
++                 "povId": null,
++                 "results": [],
++                 "summary": [],
++                 "tension": null,
++                 "threadIds": [],
++               },
++               "id": "3729f178-37a9-458a-bb2d-8a432a7374fd",
++               "kind": "scene",
++               "name": "scene",
++               "projectId": "f57bbe48-5df8-4efd-b1a3-f85d8f1d9ef4",
++               "revision": "0",
++               "status": "provisional",
++               "updatedAt": "2026-10-08T05:53:37.868Z",
++               "visibility": "private",
++             },
++             {
++               "createdAt": "2026-10-08T05:53:37.868Z",
++               "customValues": {},
++               "data": {
++                 "authorNotes": [],
++                 "blockIds": [],
++                 "body": [],
++                 "chapterId": null,
++                 "conflicts": [],
++                 "eventIds": [],
++                 "goals": [],
++                 "importance": null,
++                 "newInformation": [],
++                 "povId": null,
++                 "results": [],
++                 "summary": [],
++                 "tension": null,
++                 "threadIds": [],
++               },
++               "id": "4f229ad0-1541-4a64-bf51-80c4a471762c",
++               "kind": "scene",
++               "name": "scene",
++               "projectId": "f57bbe48-5df8-4efd-b1a3-f85d8f1d9ef4",
++               "revision": "0",
++               "status": "provisional",
++               "updatedAt": "2026-10-08T05:53:37.868Z",
++               "visibility": "private",
++             },
++           ],
++           "formatVersion": "1.0.0",
++           "mainStart": "0",
++           "name": "新しい作品",
++           "projectId": "f57bbe48-5df8-4efd-b1a3-f85d8f1d9ef4",
++           "relations": [],
++           "revision": "0",
++           "views": [],
++           "worldReferences": [],
++         },
++         "contentHash": "5f4415f6ed373664a27574483dbfc84838772ecaeab1c7fff93adc7bb497fe01",
++         "createdAt": "2026-10-08T05:53:37.868Z",
++         "id": "07aa76e5-b9c8-40aa-8708-9ee1b291144a",
++         "versionLabel": "共通元の固定版 0",
++       },
++       {
++         "content": {
++           "calendarId": "proleptic-gregorian-second",
++           "calendars": [
++             {
++               "id": "proleptic-gregorian-second",
++               "kind": "gregorian",
++               "name": "先発グレゴリオ暦",
++               "originLabel": "0000-01-01 00:00:00",
++               "ticksPerDay": "86400",
++             },
++           ],
++           "entities": [
++             {
++               "createdAt": "2026-10-08T05:53:37.868Z",
++               "customValues": {},
++               "data": {
++                 "authorNotes": [],
++                 "blockIds": [],
++                 "body": [
++                   {
++                     "id": "105e0897-e30f-402d-9277-d4211900c713",
++                     "kind": "paragraph",
++                     "text": "正しい依存pin本文",
++                   },
++                 ],
++                 "chapterId": null,
++                 "conflicts": [],
++                 "eventIds": [],
++                 "goals": [],
++                 "importance": null,
++                 "newInformation": [],
++                 "povId": null,
++                 "results": [],
++                 "summary": [],
++                 "tension": null,
++                 "threadIds": [],
++               },
++               "id": "3b9024da-b4c5-40bb-a53d-a24af0ea9e79",
++               "kind": "scene",
++               "name": "scene",
++               "projectId": "f57bbe48-5df8-4efd-b1a3-f85d8f1d9ef4",
++               "revision": "0",
++               "status": "provisional",
++               "updatedAt": "2026-10-08T05:53:37.868Z",
++               "visibility": "private",
++             },
++             {
++               "createdAt": "2026-10-08T05:53:37.868Z",
++               "customValues": {},
++               "data": {
++                 "authorNotes": [],
++                 "blockIds": [],
++                 "body": [],
++                 "chapterId": null,
++                 "conflicts": [],
++                 "eventIds": [],
++                 "goals": [],
++                 "importance": null,
++                 "newInformation": [],
++                 "povId": null,
++                 "results": [],
++                 "reuse": {
++                   "bindings": {
++                     "105e0897-e30f-402d-9277-d4211900c713": "1f4bf231-272c-4852-9e06-456b8f4ba325",
++                     "3b9024da-b4c5-40bb-a53d-a24af0ea9e79": "3729f178-37a9-458a-bb2d-8a432a7374fd",
++                   },
++                   "mode": "reference",
++                   "overrideFields": [],
++                   "pinnedSnapshotId": "07aa76e5-b9c8-40aa-8708-9ee1b291144a",
++                   "sourceId": "3b9024da-b4c5-40bb-a53d-a24af0ea9e79",
++                 },
++                 "summary": [],
++                 "tension": null,
++                 "threadIds": [],
++               },
++               "id": "3729f178-37a9-458a-bb2d-8a432a7374fd",
++               "kind": "scene",
++               "name": "scene",
++               "projectId": "f57bbe48-5df8-4efd-b1a3-f85d8f1d9ef4",
++               "revision": "0",
++               "status": "provisional",
++               "updatedAt": "2026-10-08T05:53:37.868Z",
++               "visibility": "private",
++             },
++             {
++               "createdAt": "2026-10-08T05:53:37.868Z",
++               "customValues": {},
++               "data": {
++                 "authorNotes": [],
++                 "blockIds": [],
++                 "body": [],
++                 "chapterId": null,
++                 "conflicts": [],
++                 "eventIds": [],
++                 "goals": [],
++                 "importance": null,
++                 "newInformation": [],
++                 "povId": null,
++                 "results": [],
++                 "summary": [],
++                 "tension": null,
++                 "threadIds": [],
++               },
++               "id": "4f229ad0-1541-4a64-bf51-80c4a471762c",
++               "kind": "scene",
++               "name": "scene",
++               "projectId": "f57bbe48-5df8-4efd-b1a3-f85d8f1d9ef4",
++               "revision": "0",
++               "status": "provisional",
++               "updatedAt": "2026-10-08T05:53:37.868Z",
++               "visibility": "private",
++             },
++           ],
++           "formatVersion": "1.0.0",
++           "mainStart": "0",
++           "name": "新しい作品",
++           "projectId": "f57bbe48-5df8-4efd-b1a3-f85d8f1d9ef4",
++           "relations": [],
++           "revision": "0",
++           "views": [],
++           "worldReferences": [],
++         },
++         "contentHash": "8052503dd4361ac28debf4aa7b9cb97f0a3023b95d824c18ea29cae57c571697",
++         "createdAt": "2026-10-08T05:53:37.873Z",
++         "id": "57cd4010-2615-4d3e-aac0-8751ed0ace94",
++         "versionLabel": "共通元の固定版 0",
++       },
++     ],
++     "views": [],
++     "worldReferences": [],
++   },
++   "fields": [
++     "summary",
++     "body",
++     "authorNotes",
++     "eventIds",
++     "chapterId",
++     "threadIds",
++     "povId",
++     "goals",
++     "conflicts",
++     "results",
++     "newInformation",
++     "tension",
++     "importance",
++     "blockIds",
++   ],
++   "overriddenConflicts": [],
++   "owner": {
++     "createdAt": "2026-10-08T05:53:37.868Z",
++     "customValues": {},
++     "data": {
++       "authorNotes": [],
++       "blockIds": [],
++       "body": [],
++       "chapterId": null,
++       "conflicts": [],
++       "eventIds": [],
++       "goals": [],
++       "importance": null,
++       "newInformation": [],
++       "povId": null,
++       "results": [],
++       "reuse": {
++         "bindings": {
++           "1f4bf231-272c-4852-9e06-456b8f4ba325": "68fff0cf-2ad6-4ad4-ab5a-47ecf2f5ccef",
++           "3729f178-37a9-458a-bb2d-8a432a7374fd": "4f229ad0-1541-4a64-bf51-80c4a471762c",
++         },
++         "mode": "reference",
++         "overrideFields": [],
++         "pinnedSnapshotId": "57cd4010-2615-4d3e-aac0-8751ed0ace94",
++         "sourceId": "3729f178-37a9-458a-bb2d-8a432a7374fd",
++       },
++       "summary": [],
++       "tension": null,
++       "threadIds": [],
++     },
++     "id": "4f229ad0-1541-4a64-bf51-80c4a471762c",
++     "kind": "scene",
++     "name": "scene",
++     "projectId": "f57bbe48-5df8-4efd-b1a3-f85d8f1d9ef4",
++     "revision": "0",
++     "status": "provisional",
++     "updatedAt": "2026-10-08T05:53:37.868Z",
++     "visibility": "private",
++   },
++   "sourceVersionId": "57cd4010-2615-4d3e-aac0-8751ed0ace94",
++   "users": [],
+  }
+
+ ❯ tests/independent-rb05-reuse.test.ts:90:84
+     88|     (p.snapshots[0].content.entities.find(e => e.id === source.id) as …
+     89|     const before = structuredClone(p); record(`S5F07-${mode}`, { proje…
+     90|     await expect(prepareReuse(p, { ownerId: second.id, sourceId: first…
+       |                                                                                    ^
+     91|   });
+     92|   it('S5F08: preserves a typed local override referencing a borrowed p…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/9]⎯
+
+ FAIL  tests/independent-rb05-reuse.test.ts > Independent fixed reuse original-contract boundaries > S5F07/clone: verifies transitive fixed source hashes before preparing borrowed or independent content
+AssertionError: promise resolved "{ candidate: { …(13) }, …(5) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "candidate": {
++     "calendarId": "proleptic-gregorian-second",
++     "calendars": [
++       {
++         "id": "proleptic-gregorian-second",
++         "kind": "gregorian",
++         "name": "先発グレゴリオ暦",
++         "originLabel": "0000-01-01 00:00:00",
++         "ticksPerDay": "86400",
++       },
++     ],
++     "entities": [
++       {
++         "createdAt": "2026-10-08T05:53:37.882Z",
++         "customValues": {},
++         "data": {
++           "authorNotes": [],
++           "blockIds": [],
++           "body": [
++             {
++               "id": "a0caa615-86db-447e-9abb-aa9e00d3b833",
++               "kind": "paragraph",
++               "text": "正しい依存pin本文",
++             },
++           ],
++           "chapterId": null,
++           "conflicts": [],
++           "eventIds": [],
++           "goals": [],
++           "importance": null,
++           "newInformation": [],
++           "povId": null,
++           "results": [],
++           "summary": [],
++           "tension": null,
++           "threadIds": [],
++         },
++         "id": "b43ffedd-a8d9-4a0d-a398-3d5c9463223a",
++         "kind": "scene",
++         "name": "scene",
++         "projectId": "79ff701f-fd70-445d-b8df-67c02d2bb273",
++         "revision": "0",
++         "status": "provisional",
++         "updatedAt": "2026-10-08T05:53:37.882Z",
++         "visibility": "private",
++       },
++       {
++         "createdAt": "2026-10-08T05:53:37.882Z",
++         "customValues": {},
++         "data": {
++           "authorNotes": [],
++           "blockIds": [],
++           "body": [],
++           "chapterId": null,
++           "conflicts": [],
++           "eventIds": [],
++           "goals": [],
++           "importance": null,
++           "newInformation": [],
++           "povId": null,
++           "results": [],
++           "reuse": {
++             "bindings": {
++               "a0caa615-86db-447e-9abb-aa9e00d3b833": "21745493-b1dd-44ab-8deb-2346af857e07",
++               "b43ffedd-a8d9-4a0d-a398-3d5c9463223a": "3c645333-babf-442a-97e0-892aa588b86b",
++             },
++             "mode": "reference",
++             "overrideFields": [],
++             "pinnedSnapshotId": "a7f9771d-22a8-41a1-a970-eafc53e84f7f",
++             "sourceId": "b43ffedd-a8d9-4a0d-a398-3d5c9463223a",
++           },
++           "summary": [],
++           "tension": null,
++           "threadIds": [],
++         },
++         "id": "3c645333-babf-442a-97e0-892aa588b86b",
++         "kind": "scene",
++         "name": "scene",
++         "projectId": "79ff701f-fd70-445d-b8df-67c02d2bb273",
++         "revision": "0",
++         "status": "provisional",
++         "updatedAt": "2026-10-08T05:53:37.882Z",
++         "visibility": "private",
++       },
++       {
++         "createdAt": "2026-10-08T05:53:37.882Z",
++         "customValues": {},
++         "data": {
++           "authorNotes": [],
++           "blockIds": [],
++           "body": [
++             {
++               "id": "900bf5bf-d69e-4e3c-a2fb-7912742d8334",
++               "kind": "paragraph",
++               "text": "hash不一致の依存本文",
++             },
++           ],
++           "chapterId": null,
++           "conflicts": [],
++           "eventIds": [],
++           "goals": [],
++           "importance": null,
++           "newInformation": [],
++           "povId": null,
++           "results": [],
++           "reuse": {
++             "mode": "clone",
++             "overrideFields": [],
++             "pinnedSnapshotId": "ca0cbdfb-3af5-456b-a5a2-d77f5f452ea6",
++             "sourceId": "3c645333-babf-442a-97e0-892aa588b86b",
++           },
++           "summary": [],
++           "tension": null,
++           "threadIds": [],
++         },
++         "id": "eedc82e0-11fb-4e3d-bf73-07e0661f41ee",
++         "kind": "scene",
++         "name": "scene",
++         "projectId": "79ff701f-fd70-445d-b8df-67c02d2bb273",
++         "revision": "0",
++         "status": "provisional",
++         "updatedAt": "2026-10-08T05:53:37.882Z",
++         "visibility": "private",
++       },
++     ],
++     "formatVersion": "1.0.0",
++     "history": [],
++     "mainStart": "0",
++     "name": "新しい作品",
++     "projectId": "79ff701f-fd70-445d-b8df-67c02d2bb273",
++     "relations": [],
++     "revision": "0",
++     "snapshots": [
++       {
++         "content": {
++           "calendarId": "proleptic-gregorian-second",
++           "calendars": [
++             {
++               "id": "proleptic-gregorian-second",
++               "kind": "gregorian",
++               "name": "先発グレゴリオ暦",
++               "originLabel": "0000-01-01 00:00:00",
++               "ticksPerDay": "86400",
++             },
++           ],
++           "entities": [
++             {
++               "createdAt": "2026-10-08T05:53:37.882Z",
++               "customValues": {},
++               "data": {
++                 "authorNotes": [],
++                 "blockIds": [],
++                 "body": [
++                   {
++                     "id": "a0caa615-86db-447e-9abb-aa9e00d3b833",
++                     "kind": "paragraph",
++                     "text": "hash不一致の依存本文",
++                   },
++                 ],
++                 "chapterId": null,
++                 "conflicts": [],
++                 "eventIds": [],
++                 "goals": [],
++                 "importance": null,
++                 "newInformation": [],
++                 "povId": null,
++                 "results": [],
++                 "summary": [],
++                 "tension": null,
++                 "threadIds": [],
++               },
++               "id": "b43ffedd-a8d9-4a0d-a398-3d5c9463223a",
++               "kind": "scene",
++               "name": "scene",
++               "projectId": "79ff701f-fd70-445d-b8df-67c02d2bb273",
++               "revision": "0",
++               "status": "provisional",
++               "updatedAt": "2026-10-08T05:53:37.882Z",
++               "visibility": "private",
++             },
++             {
++               "createdAt": "2026-10-08T05:53:37.882Z",
++               "customValues": {},
++               "data": {
++                 "authorNotes": [],
++                 "blockIds": [],
++                 "body": [],
++                 "chapterId": null,
++                 "conflicts": [],
++                 "eventIds": [],
++                 "goals": [],
++                 "importance": null,
++                 "newInformation": [],
++                 "povId": null,
++                 "results": [],
++                 "summary": [],
++                 "tension": null,
++                 "threadIds": [],
++               },
++               "id": "3c645333-babf-442a-97e0-892aa588b86b",
++               "kind": "scene",
++               "name": "scene",
++               "projectId": "79ff701f-fd70-445d-b8df-67c02d2bb273",
++               "revision": "0",
++               "status": "provisional",
++               "updatedAt": "2026-10-08T05:53:37.882Z",
++               "visibility": "private",
++             },
++             {
++               "createdAt": "2026-10-08T05:53:37.882Z",
++               "customValues": {},
++               "data": {
++                 "authorNotes": [],
++                 "blockIds": [],
++                 "body": [],
++                 "chapterId": null,
++                 "conflicts": [],
++                 "eventIds": [],
++                 "goals": [],
++                 "importance": null,
++                 "newInformation": [],
++                 "povId": null,
++                 "results": [],
++                 "summary": [],
++                 "tension": null,
++                 "threadIds": [],
++               },
++               "id": "eedc82e0-11fb-4e3d-bf73-07e0661f41ee",
++               "kind": "scene",
++               "name": "scene",
++               "projectId": "79ff701f-fd70-445d-b8df-67c02d2bb273",
++               "revision": "0",
++               "status": "provisional",
++               "updatedAt": "2026-10-08T05:53:37.882Z",
++               "visibility": "private",
++             },
++           ],
++           "formatVersion": "1.0.0",
++           "mainStart": "0",
++           "name": "新しい作品",
++           "projectId": "79ff701f-fd70-445d-b8df-67c02d2bb273",
++           "relations": [],
++           "revision": "0",
++           "views": [],
++           "worldReferences": [],
++         },
++         "contentHash": "ac969c0f0f7f19ea01885bc6339a20c7cf892f20040fb6fee772328c48086f65",
++         "createdAt": "2026-10-08T05:53:37.882Z",
++         "id": "a7f9771d-22a8-41a1-a970-eafc53e84f7f",
++         "versionLabel": "共通元の固定版 0",
++       },
++       {
++         "content": {
++           "calendarId": "proleptic-gregorian-second",
++           "calendars": [
++             {
++               "id": "proleptic-gregorian-second",
++               "kind": "gregorian",
++               "name": "先発グレゴリオ暦",
++               "originLabel": "0000-01-01 00:00:00",
++               "ticksPerDay": "86400",
++             },
++           ],
++           "entities": [
++             {
++               "createdAt": "2026-10-08T05:53:37.882Z",
++               "customValues": {},
++               "data": {
++                 "authorNotes": [],
++                 "blockIds": [],
++                 "body": [
++                   {
++                     "id": "a0caa615-86db-447e-9abb-aa9e00d3b833",
++                     "kind": "paragraph",
++                     "text": "正しい依存pin本文",
++                   },
++                 ],
++                 "chapterId": null,
++                 "conflicts": [],
++                 "eventIds": [],
++                 "goals": [],
++                 "importance": null,
++                 "newInformation": [],
++                 "povId": null,
++                 "results": [],
++                 "summary": [],
++                 "tension": null,
++                 "threadIds": [],
++               },
++               "id": "b43ffedd-a8d9-4a0d-a398-3d5c9463223a",
++               "kind": "scene",
++               "name": "scene",
++               "projectId": "79ff701f-fd70-445d-b8df-67c02d2bb273",
++               "revision": "0",
++               "status": "provisional",
++               "updatedAt": "2026-10-08T05:53:37.882Z",
++               "visibility": "private",
++             },
++             {
++               "createdAt": "2026-10-08T05:53:37.882Z",
++               "customValues": {},
++               "data": {
++                 "authorNotes": [],
++                 "blockIds": [],
++                 "body": [],
++                 "chapterId": null,
++                 "conflicts": [],
++                 "eventIds": [],
++                 "goals": [],
++                 "importance": null,
++                 "newInformation": [],
++                 "povId": null,
++                 "results": [],
++                 "reuse": {
++                   "bindings": {
++                     "a0caa615-86db-447e-9abb-aa9e00d3b833": "21745493-b1dd-44ab-8deb-2346af857e07",
++                     "b43ffedd-a8d9-4a0d-a398-3d5c9463223a": "3c645333-babf-442a-97e0-892aa588b86b",
++                   },
++                   "mode": "reference",
++                   "overrideFields": [],
++                   "pinnedSnapshotId": "a7f9771d-22a8-41a1-a970-eafc53e84f7f",
++                   "sourceId": "b43ffedd-a8d9-4a0d-a398-3d5c9463223a",
++                 },
++                 "summary": [],
++                 "tension": null,
++                 "threadIds": [],
++               },
++               "id": "3c645333-babf-442a-97e0-892aa588b86b",
++               "kind": "scene",
++               "name": "scene",
++               "projectId": "79ff701f-fd70-445d-b8df-67c02d2bb273",
++               "revision": "0",
++               "status": "provisional",
++               "updatedAt": "2026-10-08T05:53:37.882Z",
++               "visibility": "private",
++             },
++             {
++               "createdAt": "2026-10-08T05:53:37.882Z",
++               "customValues": {},
++               "data": {
++                 "authorNotes": [],
++                 "blockIds": [],
++                 "body": [],
++                 "chapterId": null,
++                 "conflicts": [],
++                 "eventIds": [],
++                 "goals": [],
++                 "importance": null,
++                 "newInformation": [],
++                 "povId": null,
++                 "results": [],
++                 "summary": [],
++                 "tension": null,
++                 "threadIds": [],
++               },
++               "id": "eedc82e0-11fb-4e3d-bf73-07e0661f41ee",
++               "kind": "scene",
++               "name": "scene",
++               "projectId": "79ff701f-fd70-445d-b8df-67c02d2bb273",
++               "revision": "0",
++               "status": "provisional",
++               "updatedAt": "2026-10-08T05:53:37.882Z",
++               "visibility": "private",
++             },
++           ],
++           "formatVersion": "1.0.0",
++           "mainStart": "0",
++           "name": "新しい作品",
++           "projectId": "79ff701f-fd70-445d-b8df-67c02d2bb273",
++           "relations": [],
++           "revision": "0",
++           "views": [],
++           "worldReferences": [],
++         },
++         "contentHash": "8dca1ad5e0684ff8cfd1240a330c831ae5fee680d662c9013e086e4191c1330b",
++         "createdAt": "2026-10-08T05:53:37.883Z",
++         "id": "ca0cbdfb-3af5-456b-a5a2-d77f5f452ea6",
++         "versionLabel": "共通元の固定版 0",
++       },
++     ],
++     "views": [],
++     "worldReferences": [],
++   },
++   "fields": [
++     "summary",
++     "body",
++     "authorNotes",
++     "eventIds",
++     "chapterId",
++     "threadIds",
++     "povId",
++     "goals",
++     "conflicts",
++     "results",
++     "newInformation",
++     "tension",
++     "importance",
++     "blockIds",
++   ],
++   "overriddenConflicts": [],
++   "owner": {
++     "createdAt": "2026-10-08T05:53:37.882Z",
++     "customValues": {},
++     "data": {
++       "authorNotes": [],
++       "blockIds": [],
++       "body": [
++         {
++           "id": "900bf5bf-d69e-4e3c-a2fb-7912742d8334",
++           "kind": "paragraph",
++           "text": "hash不一致の依存本文",
++         },
++       ],
++       "chapterId": null,
++       "conflicts": [],
++       "eventIds": [],
++       "goals": [],
++       "importance": null,
++       "newInformation": [],
++       "povId": null,
++       "results": [],
++       "reuse": {
++         "mode": "clone",
++         "overrideFields": [],
++         "pinnedSnapshotId": "ca0cbdfb-3af5-456b-a5a2-d77f5f452ea6",
++         "sourceId": "3c645333-babf-442a-97e0-892aa588b86b",
++       },
++       "summary": [],
++       "tension": null,
++       "threadIds": [],
++     },
++     "id": "eedc82e0-11fb-4e3d-bf73-07e0661f41ee",
++     "kind": "scene",
++     "name": "scene",
++     "projectId": "79ff701f-fd70-445d-b8df-67c02d2bb273",
++     "revision": "0",
++     "status": "provisional",
++     "updatedAt": "2026-10-08T05:53:37.882Z",
++     "visibility": "private",
++   },
++   "sourceVersionId": "ca0cbdfb-3af5-456b-a5a2-d77f5f452ea6",
++   "users": [],
+  }
+
+ ❯ tests/independent-rb05-reuse.test.ts:90:84
+     88|     (p.snapshots[0].content.entities.find(e => e.id === source.id) as …
+     89|     const before = structuredClone(p); record(`S5F07-${mode}`, { proje…
+     90|     await expect(prepareReuse(p, { ownerId: second.id, sourceId: first…
+       |                                                                                    ^
+     91|   });
+     92|   it('S5F08: preserves a typed local override referencing a borrowed p…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/9]⎯
+
+ FAIL  tests/independent-rb05-reuse.test.ts > Independent fixed reuse original-contract boundaries > S5F08: preserves a typed local override referencing a borrowed pinned variable through save and native restore
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ tests/independent-rb05-reuse.test.ts:99:116
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/9]⎯
+
+ FAIL  tests/independent-rb05-reuse.test.ts > Independent fixed reuse original-contract boundaries > S5F09: preserves an explicit foreign fixed link even when its entity ID is the present reuse owner
+AssertionError: expected { …(2) } to deeply equal { …(2) }
+
+- Expected
++ Received
+
+  {
+-   "entityId": "00d3bc3b-883b-4d80-9dbd-fc7c701bda33",
+-   "sourceVersionId": "81948d68-ad07-4e69-b41c-3307e6c6ac2f",
++   "entityId": "1b35dc13-6cb4-4ea1-913f-d982e302c6d7",
++   "sourceVersionId": "b1a62c1a-8bc1-4289-b320-1139b2673ec3",
+  }
+
+ ❯ tests/independent-rb05-reuse.test.ts:107:62
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/9]⎯
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  9 failed | 7 passed (16)
+   Start at  05:53:37
+   Duration  913ms (transform 54%, tests 30%, import 16%, worker 1%)
+

@@ -1,0 +1,427 @@
+{
+  "projectId": "ae04c82a-957e-4398-acff-554f847ccb9c",
+  "name": "独立 RB05 通常操作",
+  "formatVersion": "1.0.0",
+  "revision": "1",
+  "calendarId": "proleptic-gregorian-second",
+  "mainStart": "0",
+  "calendars": [
+    {
+      "id": "proleptic-gregorian-second",
+      "name": "先発グレゴリオ暦",
+      "kind": "gregorian",
+      "originLabel": "0000-01-01 00:00:00",
+      "ticksPerDay": "86400"
+    }
+  ],
+  "worldReferences": [],
+  "entities": [
+    {
+      "id": "4b56399a-5d56-4947-a3eb-ef23e600f230",
+      "projectId": "ae04c82a-957e-4398-acff-554f847ccb9c",
+      "kind": "scene",
+      "revision": "0",
+      "name": "初回の場面",
+      "status": "provisional",
+      "visibility": "private",
+      "createdAt": "2026-10-08T05:03:23.275Z",
+      "updatedAt": "2026-10-08T05:03:23.275Z",
+      "customValues": {},
+      "data": {
+        "summary": [],
+        "body": [
+          {
+            "id": "7dce7b85-48e5-42c2-aa1d-424aa97eb3cc",
+            "kind": "paragraph",
+            "text": "初回の反応です。"
+          }
+        ],
+        "authorNotes": [],
+        "eventIds": [],
+        "chapterId": null,
+        "threadIds": [],
+        "povId": null,
+        "goals": [],
+        "conflicts": [],
+        "results": [],
+        "newInformation": [],
+        "tension": null,
+        "importance": null,
+        "blockIds": []
+      }
+    },
+    {
+      "id": "6db0ed74-608d-443c-8bf0-a42c80dc20be",
+      "projectId": "ae04c82a-957e-4398-acff-554f847ccb9c",
+      "kind": "scene",
+      "revision": "0",
+      "name": "再訪の場面",
+      "status": "provisional",
+      "visibility": "private",
+      "createdAt": "2026-10-08T05:03:23.275Z",
+      "updatedAt": "2026-10-08T05:03:23.275Z",
+      "customValues": {},
+      "data": {
+        "summary": [],
+        "body": [
+          {
+            "id": "7b9afe67-4a0c-42bc-8a40-16ad7a6141ef",
+            "kind": "paragraph",
+            "text": "再訪の反応です。"
+          }
+        ],
+        "authorNotes": [],
+        "eventIds": [],
+        "chapterId": null,
+        "threadIds": [],
+        "povId": null,
+        "goals": [],
+        "conflicts": [],
+        "results": [],
+        "newInformation": [],
+        "tension": null,
+        "importance": null,
+        "blockIds": []
+      }
+    },
+    {
+      "id": "bd954c8e-63a3-45f6-96e4-540fe93712a0",
+      "projectId": "ae04c82a-957e-4398-acff-554f847ccb9c",
+      "kind": "flow_node",
+      "revision": "0",
+      "name": "独立入口",
+      "status": "provisional",
+      "visibility": "private",
+      "createdAt": "2026-10-08T05:03:23.275Z",
+      "updatedAt": "2026-10-08T05:03:23.275Z",
+      "customValues": {},
+      "data": {
+        "nodeType": "entry",
+        "sceneId": "4b56399a-5d56-4947-a3eb-ef23e600f230",
+        "childGraphId": null,
+        "terminalReason": "",
+        "gate": {
+          "op": "constant",
+          "value": true
+        },
+        "executionPolicy": "manual_choice",
+        "fallbackId": null
+      }
+    },
+    {
+      "id": "8fbe93c1-436d-43d4-9994-379f340c8416",
+      "projectId": "ae04c82a-957e-4398-acff-554f847ccb9c",
+      "kind": "flow_node",
+      "revision": "0",
+      "name": "独立終端",
+      "status": "provisional",
+      "visibility": "private",
+      "createdAt": "2026-10-08T05:03:23.275Z",
+      "updatedAt": "2026-10-08T05:03:23.275Z",
+      "customValues": {},
+      "data": {
+        "nodeType": "terminal",
+        "sceneId": "6db0ed74-608d-443c-8bf0-a42c80dc20be",
+        "childGraphId": null,
+        "terminalReason": "Declared end",
+        "gate": {
+          "op": "constant",
+          "value": true
+        },
+        "executionPolicy": "manual_choice",
+        "fallbackId": null
+      }
+    },
+    {
+      "id": "75982821-7ce6-4308-a3d4-182377446fab",
+      "projectId": "ae04c82a-957e-4398-acff-554f847ccb9c",
+      "kind": "flow_edge",
+      "revision": "0",
+      "name": "進む",
+      "status": "provisional",
+      "visibility": "private",
+      "createdAt": "2026-10-08T05:03:23.275Z",
+      "updatedAt": "2026-10-08T05:03:23.275Z",
+      "customValues": {},
+      "data": {
+        "fromId": "bd954c8e-63a3-45f6-96e4-540fe93712a0",
+        "toId": "8fbe93c1-436d-43d4-9994-379f340c8416",
+        "edgeType": "choice",
+        "label": "",
+        "condition": {
+          "op": "constant",
+          "value": true
+        },
+        "effectIds": [],
+        "priority": 0,
+        "choiceLineId": null
+      }
+    },
+    {
+      "id": "40690790-2034-4d6e-b9d1-b102f8dea192",
+      "projectId": "ae04c82a-957e-4398-acff-554f847ccb9c",
+      "kind": "flow_graph",
+      "revision": "0",
+      "name": "既存の図",
+      "status": "provisional",
+      "visibility": "private",
+      "createdAt": "2026-10-08T05:03:23.275Z",
+      "updatedAt": "2026-10-08T05:03:23.275Z",
+      "customValues": {},
+      "data": {
+        "nodeIds": [
+          "bd954c8e-63a3-45f6-96e4-540fe93712a0",
+          "8fbe93c1-436d-43d4-9994-379f340c8416"
+        ],
+        "edgeIds": [
+          "75982821-7ce6-4308-a3d4-182377446fab"
+        ],
+        "entryIds": [
+          "bd954c8e-63a3-45f6-96e4-540fe93712a0"
+        ],
+        "exitIds": [
+          "8fbe93c1-436d-43d4-9994-379f340c8416"
+        ],
+        "parentGraphId": null,
+        "parameters": []
+      }
+    }
+  ],
+  "relations": [],
+  "snapshots": [],
+  "views": [],
+  "history": [
+    {
+      "operationId": "d524246a-3a69-4e71-881e-0127a8ace546",
+      "projectId": "ae04c82a-957e-4398-acff-554f847ccb9c",
+      "baseRevision": "0",
+      "revision": "1",
+      "targetIds": [
+        "4b56399a-5d56-4947-a3eb-ef23e600f230",
+        "6db0ed74-608d-443c-8bf0-a42c80dc20be",
+        "bd954c8e-63a3-45f6-96e4-540fe93712a0",
+        "8fbe93c1-436d-43d4-9994-379f340c8416",
+        "75982821-7ce6-4308-a3d4-182377446fab",
+        "40690790-2034-4d6e-b9d1-b102f8dea192",
+        "ae04c82a-957e-4398-acff-554f847ccb9c"
+      ],
+      "reason": "Independent browser fixture",
+      "createdAt": "2026-10-08T05:03:23.276Z",
+      "before": {
+        "projectId": "ae04c82a-957e-4398-acff-554f847ccb9c",
+        "name": "独立 RB05 通常操作",
+        "formatVersion": "1.0.0",
+        "revision": "0",
+        "calendarId": "proleptic-gregorian-second",
+        "mainStart": "0",
+        "calendars": [
+          {
+            "id": "proleptic-gregorian-second",
+            "name": "先発グレゴリオ暦",
+            "kind": "gregorian",
+            "originLabel": "0000-01-01 00:00:00",
+            "ticksPerDay": "86400"
+          }
+        ],
+        "worldReferences": [],
+        "entities": [],
+        "relations": [],
+        "snapshots": [],
+        "views": []
+      },
+      "after": {
+        "projectId": "ae04c82a-957e-4398-acff-554f847ccb9c",
+        "name": "独立 RB05 通常操作",
+        "formatVersion": "1.0.0",
+        "revision": "1",
+        "calendarId": "proleptic-gregorian-second",
+        "mainStart": "0",
+        "calendars": [
+          {
+            "id": "proleptic-gregorian-second",
+            "name": "先発グレゴリオ暦",
+            "kind": "gregorian",
+            "originLabel": "0000-01-01 00:00:00",
+            "ticksPerDay": "86400"
+          }
+        ],
+        "worldReferences": [],
+        "entities": [
+          {
+            "id": "4b56399a-5d56-4947-a3eb-ef23e600f230",
+            "projectId": "ae04c82a-957e-4398-acff-554f847ccb9c",
+            "kind": "scene",
+            "revision": "0",
+            "name": "初回の場面",
+            "status": "provisional",
+            "visibility": "private",
+            "createdAt": "2026-10-08T05:03:23.275Z",
+            "updatedAt": "2026-10-08T05:03:23.275Z",
+            "customValues": {},
+            "data": {
+              "summary": [],
+              "body": [
+                {
+                  "id": "7dce7b85-48e5-42c2-aa1d-424aa97eb3cc",
+                  "kind": "paragraph",
+                  "text": "初回の反応です。"
+                }
+              ],
+              "authorNotes": [],
+              "eventIds": [],
+              "chapterId": null,
+              "threadIds": [],
+              "povId": null,
+              "goals": [],
+              "conflicts": [],
+              "results": [],
+              "newInformation": [],
+              "tension": null,
+              "importance": null,
+              "blockIds": []
+            }
+          },
+          {
+            "id": "6db0ed74-608d-443c-8bf0-a42c80dc20be",
+            "projectId": "ae04c82a-957e-4398-acff-554f847ccb9c",
+            "kind": "scene",
+            "revision": "0",
+            "name": "再訪の場面",
+            "status": "provisional",
+            "visibility": "private",
+            "createdAt": "2026-10-08T05:03:23.275Z",
+            "updatedAt": "2026-10-08T05:03:23.275Z",
+            "customValues": {},
+            "data": {
+              "summary": [],
+              "body": [
+                {
+                  "id": "7b9afe67-4a0c-42bc-8a40-16ad7a6141ef",
+                  "kind": "paragraph",
+                  "text": "再訪の反応です。"
+                }
+              ],
+              "authorNotes": [],
+              "eventIds": [],
+              "chapterId": null,
+              "threadIds": [],
+              "povId": null,
+              "goals": [],
+              "conflicts": [],
+              "results": [],
+              "newInformation": [],
+              "tension": null,
+              "importance": null,
+              "blockIds": []
+            }
+          },
+          {
+            "id": "bd954c8e-63a3-45f6-96e4-540fe93712a0",
+            "projectId": "ae04c82a-957e-4398-acff-554f847ccb9c",
+            "kind": "flow_node",
+            "revision": "0",
+            "name": "独立入口",
+            "status": "provisional",
+            "visibility": "private",
+            "createdAt": "2026-10-08T05:03:23.275Z",
+            "updatedAt": "2026-10-08T05:03:23.275Z",
+            "customValues": {},
+            "data": {
+              "nodeType": "entry",
+              "sceneId": "4b56399a-5d56-4947-a3eb-ef23e600f230",
+              "childGraphId": null,
+              "terminalReason": "",
+              "gate": {
+                "op": "constant",
+                "value": true
+              },
+              "executionPolicy": "manual_choice",
+              "fallbackId": null
+            }
+          },
+          {
+            "id": "8fbe93c1-436d-43d4-9994-379f340c8416",
+            "projectId": "ae04c82a-957e-4398-acff-554f847ccb9c",
+            "kind": "flow_node",
+            "revision": "0",
+            "name": "独立終端",
+            "status": "provisional",
+            "visibility": "private",
+            "createdAt": "2026-10-08T05:03:23.275Z",
+            "updatedAt": "2026-10-08T05:03:23.275Z",
+            "customValues": {},
+            "data": {
+              "nodeType": "terminal",
+              "sceneId": "6db0ed74-608d-443c-8bf0-a42c80dc20be",
+              "childGraphId": null,
+              "terminalReason": "Declared end",
+              "gate": {
+                "op": "constant",
+                "value": true
+              },
+              "executionPolicy": "manual_choice",
+              "fallbackId": null
+            }
+          },
+          {
+            "id": "75982821-7ce6-4308-a3d4-182377446fab",
+            "projectId": "ae04c82a-957e-4398-acff-554f847ccb9c",
+            "kind": "flow_edge",
+            "revision": "0",
+            "name": "進む",
+            "status": "provisional",
+            "visibility": "private",
+            "createdAt": "2026-10-08T05:03:23.275Z",
+            "updatedAt": "2026-10-08T05:03:23.275Z",
+            "customValues": {},
+            "data": {
+              "fromId": "bd954c8e-63a3-45f6-96e4-540fe93712a0",
+              "toId": "8fbe93c1-436d-43d4-9994-379f340c8416",
+              "edgeType": "choice",
+              "label": "",
+              "condition": {
+                "op": "constant",
+                "value": true
+              },
+              "effectIds": [],
+              "priority": 0,
+              "choiceLineId": null
+            }
+          },
+          {
+            "id": "40690790-2034-4d6e-b9d1-b102f8dea192",
+            "projectId": "ae04c82a-957e-4398-acff-554f847ccb9c",
+            "kind": "flow_graph",
+            "revision": "0",
+            "name": "既存の図",
+            "status": "provisional",
+            "visibility": "private",
+            "createdAt": "2026-10-08T05:03:23.275Z",
+            "updatedAt": "2026-10-08T05:03:23.275Z",
+            "customValues": {},
+            "data": {
+              "nodeIds": [
+                "bd954c8e-63a3-45f6-96e4-540fe93712a0",
+                "8fbe93c1-436d-43d4-9994-379f340c8416"
+              ],
+              "edgeIds": [
+                "75982821-7ce6-4308-a3d4-182377446fab"
+              ],
+              "entryIds": [
+                "bd954c8e-63a3-45f6-96e4-540fe93712a0"
+              ],
+              "exitIds": [
+                "8fbe93c1-436d-43d4-9994-379f340c8416"
+              ],
+              "parentGraphId": null,
+              "parameters": []
+            }
+          }
+        ],
+        "relations": [],
+        "snapshots": [],
+        "views": []
+      }
+    }
+  ]
+}

@@ -1,0 +1,302 @@
+{
+  "projectId": "8f9993e6-b73c-420b-94cc-2092686873c6",
+  "name": "新しい作品",
+  "formatVersion": "1.0.0",
+  "revision": "0",
+  "calendarId": "proleptic-gregorian-second",
+  "mainStart": "0",
+  "calendars": [
+    {
+      "id": "proleptic-gregorian-second",
+      "name": "先発グレゴリオ暦",
+      "kind": "gregorian",
+      "originLabel": "0000-01-01 00:00:00",
+      "ticksPerDay": "86400"
+    }
+  ],
+  "worldReferences": [],
+  "entities": [
+    {
+      "id": "652201a5-3e17-4d7e-bbac-9f9d65b67cdd",
+      "projectId": "8f9993e6-b73c-420b-94cc-2092686873c6",
+      "kind": "scene",
+      "revision": "0",
+      "name": "scene",
+      "status": "provisional",
+      "visibility": "private",
+      "createdAt": "2026-10-08T06:05:47.677Z",
+      "updatedAt": "2026-10-08T06:05:47.677Z",
+      "customValues": {},
+      "data": {
+        "summary": [],
+        "body": [],
+        "authorNotes": [],
+        "eventIds": [],
+        "chapterId": null,
+        "threadIds": [],
+        "povId": null,
+        "goals": [],
+        "conflicts": [],
+        "results": [],
+        "newInformation": [],
+        "tension": null,
+        "importance": null,
+        "blockIds": []
+      }
+    },
+    {
+      "id": "92145b24-f48f-4c41-abe6-2fa48e2afd14",
+      "projectId": "8f9993e6-b73c-420b-94cc-2092686873c6",
+      "kind": "scene",
+      "revision": "0",
+      "name": "scene",
+      "status": "provisional",
+      "visibility": "private",
+      "createdAt": "2026-10-08T06:05:47.677Z",
+      "updatedAt": "2026-10-08T06:05:47.677Z",
+      "customValues": {},
+      "data": {
+        "summary": [],
+        "body": [],
+        "authorNotes": [],
+        "eventIds": [],
+        "chapterId": null,
+        "threadIds": [],
+        "povId": null,
+        "goals": [],
+        "conflicts": [],
+        "results": [],
+        "newInformation": [],
+        "tension": null,
+        "importance": null,
+        "blockIds": []
+      }
+    },
+    {
+      "id": "6fe525d9-7522-4191-9dfe-374888c539df",
+      "projectId": "8f9993e6-b73c-420b-94cc-2092686873c6",
+      "kind": "flow_node",
+      "revision": "0",
+      "name": "flow_node",
+      "status": "provisional",
+      "visibility": "private",
+      "createdAt": "2026-10-08T06:05:47.677Z",
+      "updatedAt": "2026-10-08T06:05:47.677Z",
+      "customValues": {},
+      "data": {
+        "nodeType": "entry",
+        "sceneId": "652201a5-3e17-4d7e-bbac-9f9d65b67cdd",
+        "childGraphId": null,
+        "terminalReason": "",
+        "gate": {
+          "op": "constant",
+          "value": true
+        },
+        "executionPolicy": "manual_choice",
+        "fallbackId": null
+      }
+    },
+    {
+      "id": "5dfaf7f3-c898-4380-bb77-23690942017e",
+      "projectId": "8f9993e6-b73c-420b-94cc-2092686873c6",
+      "kind": "flow_node",
+      "revision": "0",
+      "name": "flow_node",
+      "status": "provisional",
+      "visibility": "private",
+      "createdAt": "2026-10-08T06:05:47.677Z",
+      "updatedAt": "2026-10-08T06:05:47.677Z",
+      "customValues": {},
+      "data": {
+        "nodeType": "terminal",
+        "sceneId": "92145b24-f48f-4c41-abe6-2fa48e2afd14",
+        "childGraphId": null,
+        "terminalReason": "Declared ending",
+        "gate": {
+          "op": "constant",
+          "value": true
+        },
+        "executionPolicy": "manual_choice",
+        "fallbackId": null
+      }
+    },
+    {
+      "id": "ce3b9f5e-199e-44d0-ac2b-b0aa18dcf7f4",
+      "projectId": "8f9993e6-b73c-420b-94cc-2092686873c6",
+      "kind": "flow_edge",
+      "revision": "0",
+      "name": "flow_edge",
+      "status": "provisional",
+      "visibility": "private",
+      "createdAt": "2026-10-08T06:05:47.677Z",
+      "updatedAt": "2026-10-08T06:05:47.677Z",
+      "customValues": {},
+      "data": {
+        "fromId": "6fe525d9-7522-4191-9dfe-374888c539df",
+        "toId": "5dfaf7f3-c898-4380-bb77-23690942017e",
+        "edgeType": "choice",
+        "label": "",
+        "condition": {
+          "op": "constant",
+          "value": true
+        },
+        "effectIds": [],
+        "priority": 0,
+        "choiceLineId": null
+      }
+    },
+    {
+      "id": "10eaa345-f4bb-454a-b81d-b659d79bdae6",
+      "projectId": "8f9993e6-b73c-420b-94cc-2092686873c6",
+      "kind": "flow_graph",
+      "revision": "0",
+      "name": "flow_graph",
+      "status": "provisional",
+      "visibility": "private",
+      "createdAt": "2026-10-08T06:05:47.677Z",
+      "updatedAt": "2026-10-08T06:05:47.677Z",
+      "customValues": {},
+      "data": {
+        "nodeIds": [
+          "6fe525d9-7522-4191-9dfe-374888c539df",
+          "5dfaf7f3-c898-4380-bb77-23690942017e"
+        ],
+        "edgeIds": [
+          "ce3b9f5e-199e-44d0-ac2b-b0aa18dcf7f4"
+        ],
+        "entryIds": [
+          "6fe525d9-7522-4191-9dfe-374888c539df"
+        ],
+        "exitIds": [
+          "5dfaf7f3-c898-4380-bb77-23690942017e"
+        ],
+        "parentGraphId": null,
+        "parameters": []
+      }
+    },
+    {
+      "id": "964a4954-f5d9-4436-86e4-618c8855bb24",
+      "projectId": "8f9993e6-b73c-420b-94cc-2092686873c6",
+      "kind": "variable",
+      "revision": "0",
+      "name": "variable",
+      "status": "provisional",
+      "visibility": "private",
+      "createdAt": "2026-10-08T06:05:47.677Z",
+      "updatedAt": "2026-10-08T06:05:47.677Z",
+      "customValues": {},
+      "data": {
+        "key": "x",
+        "valueType": "boolean",
+        "scope": "across_runs",
+        "initial": {
+          "type": "boolean",
+          "value": true
+        },
+        "allowed": {
+          "values": [
+            false,
+            true
+          ]
+        },
+        "description": [],
+        "ownerId": null,
+        "externalContractId": null,
+        "resetRules": [],
+        "transitionRules": [],
+        "externalUseDeclared": false,
+        "exclusions": [
+          {
+            "variableId": "99aa5f89-a4da-4a02-b4fb-a9d612c18189",
+            "value": {
+              "type": "boolean",
+              "value": true
+            },
+            "otherValue": {
+              "type": "boolean",
+              "value": true
+            },
+            "reason": "Exclusive",
+            "exceptions": [
+              {
+                "reason": "Declared temporary exception",
+                "targetScope": {
+                  "projectId": "8f9993e6-b73c-420b-94cc-2092686873c6"
+                },
+                "validity": {
+                  "worldRange": {
+                    "start": "0",
+                    "end": "10"
+                  },
+                  "routeCondition": null,
+                  "presentationAnchor": null
+                },
+                "evidenceIds": [
+                  "dbc201db-90b1-44b9-93a5-db38cafdd14d"
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "99aa5f89-a4da-4a02-b4fb-a9d612c18189",
+      "projectId": "8f9993e6-b73c-420b-94cc-2092686873c6",
+      "kind": "variable",
+      "revision": "0",
+      "name": "variable",
+      "status": "provisional",
+      "visibility": "private",
+      "createdAt": "2026-10-08T06:05:47.677Z",
+      "updatedAt": "2026-10-08T06:05:47.677Z",
+      "customValues": {},
+      "data": {
+        "key": "y",
+        "valueType": "boolean",
+        "scope": "across_runs",
+        "initial": {
+          "type": "boolean",
+          "value": true
+        },
+        "allowed": {
+          "values": [
+            false,
+            true
+          ]
+        },
+        "description": [],
+        "ownerId": null,
+        "externalContractId": null,
+        "resetRules": [],
+        "transitionRules": [],
+        "externalUseDeclared": false
+      }
+    },
+    {
+      "id": "dbc201db-90b1-44b9-93a5-db38cafdd14d",
+      "projectId": "8f9993e6-b73c-420b-94cc-2092686873c6",
+      "kind": "source",
+      "revision": "0",
+      "name": "source",
+      "status": "confirmed",
+      "visibility": "private",
+      "createdAt": "2026-10-08T06:05:47.677Z",
+      "updatedAt": "2026-10-08T06:05:47.677Z",
+      "customValues": {},
+      "data": {
+        "sourceType": "web",
+        "locator": "Synthetic exclusion authority",
+        "accessedAt": null,
+        "excerptLocation": "",
+        "interpretation": [],
+        "attachmentId": null,
+        "redistributionAllowed": false
+      }
+    }
+  ],
+  "relations": [],
+  "snapshots": [],
+  "history": [],
+  "views": []
+}

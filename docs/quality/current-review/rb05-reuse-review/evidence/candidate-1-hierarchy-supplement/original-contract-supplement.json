@@ -1,0 +1,100 @@
+{
+  "requirements": [
+    {
+      "id": "REQ-F13",
+      "title": "図を章・場面・会話へ分ける",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP12",
+      "shall": "大きな図では章だけを表示し、選ぶと場面、さらに会話へ掘り下げる。小さな図の入口と出口を明示してつなぐこと。",
+      "failure_behavior": "下位図の未解決入口・出口・条件エラーは上位図の件数に反映し、折りたたみでエラーを隠さない。",
+      "acceptance_ids": [
+        "AT-F13"
+      ],
+      "source_refs": [
+        "S06",
+        "S07"
+      ],
+      "source_feature_id": "F13"
+    },
+    {
+      "id": "REQ-F19",
+      "title": "共通の会話や場面を再利用する",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP12",
+      "shall": "参照して共通部分を使う、独立した複製を作る、一部だけ変える、を選ぶ。再利用先と変更の影響を一覧にすること。",
+      "failure_behavior": "参照・複製・差分上書きの方式を保存する。元を削除する前に全参照先を示し、更新の適用範囲を固定する。",
+      "acceptance_ids": [
+        "AT-F19"
+      ],
+      "source_refs": [
+        "S07",
+        "S28"
+      ],
+      "source_feature_id": "F19"
+    },
+    {
+      "id": "REQ-F41",
+      "title": "状態が変わる順番を定義する",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP11",
+      "shall": "未受注→進行中→完了・失敗など、許す変化を表にする。両立しない状態と意図した例外を登録し、変更前後を確認すること。",
+      "failure_behavior": "禁止遷移は一連の効果を原子的に拒否する。例外は理由・対象経路・期限付きで明示し、以前の状態を記録する。",
+      "acceptance_ids": [
+        "AT-F41"
+      ],
+      "source_refs": [
+        "S19",
+        "S41"
+      ],
+      "source_feature_id": "F41"
+    }
+  ],
+  "acceptance": [
+    {
+      "id": "AT-F13",
+      "requirement_ids": [
+        "REQ-F13"
+      ],
+      "package_id": "WP12",
+      "given": "章内に場面、場面内に会話があり、未接続の出口が一つある階層graph",
+      "when": "章まで折りたたんで未完成件数を確認し、会話へ掘り下げ出口を再接続する",
+      "then": "図を折りたたんでも、中に条件や未完成箇所があることを確認できる。",
+      "negative_or_edge": "下位図の未解決入口・出口・条件エラーは上位図の件数に反映し、折りたたみでエラーを隠さない。",
+      "result": "not_run"
+    },
+    {
+      "id": "AT-F19",
+      "requirement_ids": [
+        "REQ-F19"
+      ],
+      "package_id": "WP12",
+      "given": "共通会話Cを参照するS、独立複製T、台詞のみoverrideするU",
+      "when": "Cの台詞を改訂し、影響一覧と適用版を確認してS/T/Uの文章を比較する",
+      "then": "元を変更するとどこが変わるか分かり、意図しない分岐へ反映されない。",
+      "negative_or_edge": "参照・複製・差分上書きの方式を保存する。元を削除する前に全参照先を示し、更新の適用範囲を固定する。",
+      "result": "not_run"
+    },
+    {
+      "id": "AT-F41",
+      "requirement_ids": [
+        "REQ-F41"
+      ],
+      "package_id": "WP11",
+      "given": "未受注→進行中→完了/失敗のみを許すクエスト",
+      "when": "完了→未受注と同時に所持金加算するeffect群を実行し、理由付きresetを別途試す",
+      "then": "完了済みのクエストが意図せず未受注へ戻った場合、変更した処理と規則を確認できる。",
+      "negative_or_edge": "禁止遷移は一連の効果を原子的に拒否する。例外は理由・対象経路・期限付きで明示し、以前の状態を記録する。",
+      "result": "not_run"
+    }
+  ],
+  "registryResultsUnchanged": true
+}

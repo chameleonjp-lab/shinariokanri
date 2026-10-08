@@ -392,7 +392,7 @@ describe('pure reading runtime', () => {
     expect(analyzeFlow(project).status).toBe('confirmed_issue');
   });
 
-  it('stops unsupported reference/override reuse before applying an entering edge effect', () => {
+  it('stops reference/override reuse with a missing fixed pin and namespace before applying any entering edge effect', () => {
     const { project, add, entry, end, edge } = fixture();
     const key = add('variable', { key: 'key', valueType: 'boolean', initial: { type: 'boolean', value: false } });
     const effect = add('effect', { operation: 'set', targetId: key.id, value: { type: 'boolean', value: true } });
@@ -403,7 +403,9 @@ describe('pure reading runtime', () => {
       const stopped = stepTrial(project, before, { edgeId: selected.id });
       expect(stopped.status).toBe('error');
       expect(stopped.state).toBe(before.state);
-      expect(stopped.issues[0]?.code).toBe('VALIDATION_FAILED');
+      expect(before.status).toBe('error');
+      expect(before.issues[0]?.code).toBe('REFERENCE_INVALID');
+      expect(stopped.issues[0]?.code).toBe('REFERENCE_INVALID');
       entry.data.reuse = structuredClone(end.data.reuse);
       expect(startTrial(project).status).toBe('error');
       delete entry.data.reuse;
