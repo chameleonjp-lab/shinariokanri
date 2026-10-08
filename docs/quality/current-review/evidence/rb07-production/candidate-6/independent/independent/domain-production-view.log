@@ -1,0 +1,32 @@
+
+ RUN  v5.0.3 /tmp/shinariokanri-independent-rb07-1b7b508
+
+ ❯ tests/independent-rb07-production-view.test.ts (6 tests | 1 failed) 721ms
+   × R7D23 complete archive includes the explicitly cited old world even when the work itself never adopted it as current world 54ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/independent-rb07-production-view.test.ts > R7D23 complete archive includes the explicitly cited old world even when the work itself never adopted it as current world
+StorageError: project.entities[0].data.anchor.sourceVersionId: 参照する固定版の本文がありません。
+project.entities[0].data.anchor.sourceVersionId: 参照する固定版の本文がありません。
+project.entities[0].data.anchor.sourceVersionId: 参照する固定版の本文がありません。
+project.entities[0].data.anchor.sourceVersionId: 参照する固定版の本文がありません。
+ ❯ checkedProject src/storage/archive.ts:237:29
+    235|   try { validation = validateProject(value, { worldSnapshots }); }
+    236|   catch (error) { throw new StorageError('VALIDATION_FAILED', '共通世界または…
+    237|   if (!validation.ok) throw new StorageError('VALIDATION_FAILED', vali…
+       |                             ^
+    238|   const project = validation.value;
+    239|   if (project.entities.length + project.relations.length > limits.reco…
+ ❯ exportScenario src/storage/archive.ts:432:19
+ ❯ ScenarioStore.exportProject src/storage/store.ts:927:12
+ ❯ tests/independent-rb07-production-view.test.ts:65:40
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 5 passed (6)
+   Start at  12:43:31
+   Duration  1.80s (transform 47%, tests 44%, import 9%)
+

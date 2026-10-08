@@ -1,0 +1,530 @@
+{
+  "requirements": [
+    {
+      "id": "REQ-B10",
+      "title": "名前からのリンクと逆参照",
+      "provenance": "元の依頼",
+      "decision_status": "previously_adopted",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP05",
+      "shall": "本文・メモの確定リンクから人物等と段落へ移動し、対象から利用箇所へ戻れること。",
+      "failure_behavior": "同名や一般語を自動で一人へ確定しない",
+      "acceptance_ids": [
+        "AT-B10"
+      ],
+      "source_refs": []
+    },
+    {
+      "id": "REQ-F06",
+      "title": "要約と本文を行き来する",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP10",
+      "shall": "カードには要約、執筆画面には本文を出す。章や選んだ道を通して読む。要約、本文、作者メモを分け、小説用にはルビ・縦書きの確認表示も用意すること。",
+      "failure_behavior": "要約の更新は本文を上書きしない。公開用読み物へ作者メモを混ぜず、ルビと縦書きでも元の段落IDを保つ。",
+      "acceptance_ids": [
+        "AT-F06"
+      ],
+      "source_refs": [
+        "S06",
+        "S23",
+        "S27"
+      ],
+      "source_feature_id": "F06"
+    },
+    {
+      "id": "REQ-F21",
+      "title": "台詞に変わらない番号を付ける",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP19",
+      "shall": "台詞と選択肢の一つずつに、表示しない番号を付ける。文章を変更しても翻訳、音声、ゲーム側の参照との対応を保つこと。",
+      "failure_behavior": "既存台詞の編集はID維持、コピーは新ID、分割は元から二つの新IDへの対応履歴を残す。IDの手動再利用を拒否する。",
+      "acceptance_ids": [
+        "AT-F21"
+      ],
+      "source_refs": [
+        "S31"
+      ],
+      "source_feature_id": "F21"
+    },
+    {
+      "id": "REQ-F22",
+      "title": "演出と必要な素材を結ぶ",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP20",
+      "shall": "話者、表情、立ち絵、背景、音楽、効果音、間、カメラなどを台詞や場面に結ぶ。仮素材・完成素材と不足を確認すること。",
+      "failure_behavior": "欠落素材と仮素材を別状態にし、素材がなくても本文を読める。素材IDの取り替えで台詞IDを変えない。",
+      "acceptance_ids": [
+        "AT-F22"
+      ],
+      "source_refs": [
+        "S06",
+        "S07",
+        "S30"
+      ],
+      "source_feature_id": "F22"
+    },
+    {
+      "id": "REQ-F23",
+      "title": "翻訳と音声の見直しを管理する",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP19",
+      "shall": "言語ごとの本文と用語、収録メモ、音声を対応させる。元の文章を変えたら翻訳・音声を見直し対象にし、担当別に書き出すこと。",
+      "failure_behavior": "原文の内容ハッシュが変わった場合のみ依存成果物を確認待ちにする。音声・翻訳の版と確認者を保持する。",
+      "acceptance_ids": [
+        "AT-F23"
+      ],
+      "source_refs": [
+        "S06",
+        "S10",
+        "S31"
+      ],
+      "source_feature_id": "F23"
+    },
+    {
+      "id": "REQ-F28",
+      "title": "資料と設定の根拠を残す",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP20",
+      "shall": "画像、音声、動画、PDF、Web資料を設定や場面へ結ぶ。参照した箇所、日付、作者の解釈を記録すること。",
+      "failure_behavior": "添付と外部URLを区別し、参照箇所・取得日・解釈を分ける。外部資料の再配布権限がない場合はリンクと書誌情報だけを出す。",
+      "acceptance_ids": [
+        "AT-F28"
+      ],
+      "source_refs": [
+        "S13",
+        "S22",
+        "S23"
+      ],
+      "source_feature_id": "F28"
+    },
+    {
+      "id": "REQ-F48",
+      "title": "人物の声と用語の基準を持つ",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP19",
+      "shall": "人物ごとの一人称、呼び方、口調、使う語、台詞例を記録する。用語の表記・読み・意図した例外をまとめ、本文と字幕・翻訳の確認に使うこと。",
+      "failure_behavior": "表記・口調の期間と例外を保持する。指摘は置換候補であり、本文や翻訳を自動修正しない。",
+      "acceptance_ids": [
+        "AT-F48"
+      ],
+      "source_refs": [
+        "S13",
+        "S31",
+        "S44"
+      ],
+      "source_feature_id": "F48"
+    },
+    {
+      "id": "REQ-F53",
+      "title": "本文と絵コンテ・演出を並べる",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP20",
+      "shall": "場面・台詞へ絵コンテのコマ、カメラ、音声、字幕、演出上の時刻を結ぶ。参照画像と完成素材を区別し、差し替え後の確認対象を示すこと。",
+      "failure_behavior": "演出時刻はミリ秒、世界時刻は暦のtickとして分離する。素材差替え後は依存コマを確認待ちにする。",
+      "acceptance_ids": [
+        "AT-F53"
+      ],
+      "source_refs": [
+        "S35",
+        "S37",
+        "S38"
+      ],
+      "source_feature_id": "F53"
+    },
+    {
+      "id": "REQ-N13",
+      "title": "日本語と時間の正確性",
+      "provenance": "仕様を成立させる品質条件・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP05",
+      "shall": "UTF-8、日本語IME、ルビ、読み、別名、絵文字を破損なく保持し、世界時間と実日時を別型にすること。",
+      "failure_behavior": "IME変換を操作キーで確定前に破壊したり、tickを浮動小数で丸めない",
+      "acceptance_ids": [
+        "AT-N13"
+      ],
+      "source_refs": []
+    },
+    {
+      "id": "REQ-N18",
+      "title": "失敗時の説明と入力保持",
+      "provenance": "仕様を成立させる品質条件・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP02",
+      "shall": "エラーは何が失敗したか・未保存範囲・修正方法を対象近傍と通知へ表示し、入力を保持すること。",
+      "failure_behavior": "白画面・無言の失敗・黙ったデータ削除を残さない",
+      "acceptance_ids": [
+        "AT-N18"
+      ],
+      "source_refs": []
+    }
+  ],
+  "cases": [
+    {
+      "id": "AT-B10",
+      "requirement_ids": [
+        "REQ-B10"
+      ],
+      "package_id": "WP05",
+      "given": "同名人物と別名がある",
+      "when": "候補を確認して本文にリンクを付ける",
+      "then": "選んだ対象のIDと本文位置に対応する",
+      "negative_or_edge": "同名や一般語を自動で一人へ確定しない",
+      "result": "not_run"
+    },
+    {
+      "id": "AT-F06",
+      "requirement_ids": [
+        "REQ-F06"
+      ],
+      "package_id": "WP10",
+      "given": "要約「門が開く」、本文「門番は去った」、秘密の作者メモとルビを持つ場面",
+      "when": "カードから本文へ移り本文を変更し、選んだ章を横書き/縦書きで通読する",
+      "then": "作者メモを試し読みへ出さず、本文の修正が関連する表示へ反映される。",
+      "negative_or_edge": "要約の更新は本文を上書きしない。公開用読み物へ作者メモを混ぜず、ルビと縦書きでも元の段落IDを保つ。",
+      "result": "not_run"
+    },
+    {
+      "id": "AT-F21",
+      "requirement_ids": [
+        "REQ-F21"
+      ],
+      "package_id": "WP19",
+      "given": "台詞L1/L2と対応する翻訳/音声/外部参照",
+      "when": "話者改名とL1/L2並替え、L1編集、複製、分割を行い各IDと対応履歴を確認する",
+      "then": "並べ替えや改名をしても、別の台詞の音声へ取り違えない。",
+      "negative_or_edge": "既存台詞の編集はID維持、コピーは新ID、分割は元から二つの新IDへの対応履歴を残す。IDの手動再利用を拒否する。",
+      "result": "not_run"
+    },
+    {
+      "id": "AT-F22",
+      "requirement_ids": [
+        "REQ-F22"
+      ],
+      "package_id": "WP20",
+      "given": "話者/背景/音楽/間が指定され、背景は仮素材、音楽は欠落",
+      "when": "本文だけの表示と演出込み表示を切り替え、素材一覧で不足と仮完成を調べる",
+      "then": "シナリオだけを読める表示と、演出を含めて確認する表示を切り替えられる。",
+      "negative_or_edge": "欠落素材と仮素材を別状態にし、素材がなくても本文を読める。素材IDの取り替えで台詞IDを変えない。",
+      "result": "not_run"
+    },
+    {
+      "id": "AT-F23",
+      "requirement_ids": [
+        "REQ-F23"
+      ],
+      "package_id": "WP19",
+      "given": "原文hashに対応し翻訳/収録が確認済みの台詞",
+      "when": "原文を修正して担当別出力し、並べ替えだけの場合と見直し対象を比較する",
+      "then": "元の文章だけが変わっても、古い翻訳や音声を完成済みのまま扱わない。",
+      "negative_or_edge": "原文の内容ハッシュが変わった場合のみ依存成果物を確認待ちにする。音声・翻訳の版と確認者を保持する。",
+      "result": "not_run"
+    },
+    {
+      "id": "AT-F28",
+      "requirement_ids": [
+        "REQ-F28"
+      ],
+      "package_id": "WP20",
+      "given": "Web資料URL、PDF添付、画像、作者の解釈を持つ設定",
+      "when": "参照ページ/取得日を指定して設定に結び、公開出力の再配布許可を確認する",
+      "then": "設定の説明と参考資料の文章を区別し、後から元の資料へ戻れる。",
+      "negative_or_edge": "添付と外部URLを区別し、参照箇所・取得日・解釈を分ける。外部資料の再配布権限がない場合はリンクと書誌情報だけを出す。",
+      "result": "not_run"
+    },
+    {
+      "id": "AT-F48",
+      "requirement_ids": [
+        "REQ-F48"
+      ],
+      "package_id": "WP19",
+      "given": "時期で一人称が変わる人物と表記ゆれ用語、意図した例外",
+      "when": "時期前後の台詞と字幕/翻訳へ候補検査を行い、本文が無断置換されないか確認する",
+      "then": "人物が成長して口調を変える場合は時期を指定する。指摘は候補として示し、本文を勝手に置換しない。",
+      "negative_or_edge": "表記・口調の期間と例外を保持する。指摘は置換候補であり、本文や翻訳を自動修正しない。",
+      "result": "not_run"
+    },
+    {
+      "id": "AT-F53",
+      "requirement_ids": [
+        "REQ-F53"
+      ],
+      "package_id": "WP20",
+      "given": "台詞にコマと演出開始1000ms、世界tick -10がある",
+      "when": "コマから本文へ戻り、参考画像を完成素材へ差替え確認待ちを開く",
+      "then": "物語の年月日と動画・演出内の秒数を混同しない。必要なコマから対象の本文へ戻れる。",
+      "negative_or_edge": "演出時刻はミリ秒、世界時刻は暦のtickとして分離する。素材差替え後は依存コマを確認待ちにする。",
+      "result": "not_run"
+    },
+    {
+      "id": "AT-N13",
+      "requirement_ids": [
+        "REQ-N13"
+      ],
+      "package_id": "WP05",
+      "given": "日本語変換途中と負の巨大tick",
+      "when": "保存・検索・出力・読み戻しを行う",
+      "then": "原文とIDとtick文字列が完全一致する",
+      "negative_or_edge": "IME変換を操作キーで確定前に破壊したり、tickを浮動小数で丸めない",
+      "result": "not_run"
+    },
+    {
+      "id": "AT-N18",
+      "requirement_ids": [
+        "REQ-N18"
+      ],
+      "package_id": "WP02",
+      "given": "保存・参照・同期の失敗",
+      "when": "修正または再試行を行う",
+      "then": "同じ入力から復帰し成功時だけ完了と表示する",
+      "negative_or_edge": "白画面・無言の失敗・黙ったデータ削除を残さない",
+      "result": "not_run"
+    },
+    {
+      "id": "AT-E08",
+      "title": "翻訳・音声・台詞分割",
+      "requirement_ids": [
+        "REQ-F21",
+        "REQ-F23",
+        "REQ-F48"
+      ],
+      "package_id": "WP23",
+      "given": "原文と翻訳と音声が確認済みの台詞",
+      "when": "改名/並替え、原文編集、分割、差戻しを行う",
+      "then": "音声取り違えがなく内容変更時だけ見直し対象となり分割対応履歴を追える",
+      "negative_or_edge": "取消や単体復元も新revisionとなり古い成果物を自動確認済みにしない",
+      "result": "not_run"
+    },
+    {
+      "id": "AT-E12",
+      "title": "保存失敗とアプリ更新からの復帰",
+      "requirement_ids": [
+        "REQ-B23",
+        "REQ-F34",
+        "REQ-F35",
+        "REQ-N06",
+        "REQ-N11",
+        "REQ-N18"
+      ],
+      "package_id": "WP23",
+      "given": "キャッシュ済みアプリと未送信作品",
+      "when": "機内モード、保存容量不足、途中更新、移行失敗、専用出力からの再開を行う",
+      "then": "失敗と未保存を明示し、更新は安全地点で適用し、書き出しと復元で再開できる",
+      "negative_or_edge": "初回未取得・未取得素材・保存先取消を成功と扱わない",
+      "result": "not_run"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "REQ-F21",
+      "title": "台詞に変わらない番号を付ける",
+      "original_package_id": "WP19",
+      "batch_id": "RB07",
+      "status": "planned",
+      "baseline_assessment": "部分実装",
+      "retained_implementation": "台詞/選択肢の固定ID、原文hash、コピーと編集の基本データ契約がある。",
+      "review_gap": "台詞の分割/統合操作と元→新ID対応履歴がない。本文内注記の位置追従も不具合。",
+      "required_behavior": "台詞と選択肢の一つずつに、表示しない番号を付ける。文章を変更しても翻訳、音声、ゲーム側の参照との対応を保つこと。",
+      "implementation_action": "台詞・選択肢の改名・並べ替えではIDを保つ。分割・統合・複製では新IDと旧→新対応履歴を保存し、翻訳・音声・外部参照の再確認対象を一括表示する。",
+      "code_paths": [
+        "src/domain/production.ts",
+        "src/domain/types.ts",
+        "src/ui/Fields.tsx"
+      ],
+      "acceptance_ids": [
+        "AT-F21"
+      ],
+      "integration_ids": [
+        "AT-E08"
+      ],
+      "finding_ids": [
+        "R01"
+      ],
+      "done_when": [
+        "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+        "既存台詞の編集はID維持、コピーは新ID、分割は元から二つの新IDへの対応履歴を残す。IDの手動再利用を拒否する。",
+        "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+      ],
+      "result": "not_run",
+      "evidence": [],
+      "final_acceptance_batch": "RB10"
+    },
+    {
+      "id": "REQ-F22",
+      "title": "演出と必要な素材を結ぶ",
+      "original_package_id": "WP20",
+      "batch_id": "RB07",
+      "status": "planned",
+      "baseline_assessment": "登録・土台のみ",
+      "retained_implementation": "cue、話者、表情、素材、待機ms、仮/確定素材を保存・確認できる。",
+      "review_gap": "本文と連動する演出表示、足りない素材と仮素材の横断一覧、素材差替えの全影響が不足。",
+      "required_behavior": "話者、表情、立ち絵、背景、音楽、効果音、間、カメラなどを台詞や場面に結ぶ。仮素材・完成素材と不足を確認すること。",
+      "implementation_action": "台詞・場面と話者、表情、立ち絵、背景、音楽、効果音、間、カメラを並べて編集・確認する。仮・完成・不足素材の横断一覧と素材版の差替え影響を作る。",
+      "code_paths": [
+        "src/ui/fieldSpecs.ts",
+        "src/ui/AssetPreview.tsx"
+      ],
+      "acceptance_ids": [
+        "AT-F22"
+      ],
+      "integration_ids": [],
+      "finding_ids": [],
+      "done_when": [
+        "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+        "欠落素材と仮素材を別状態にし、素材がなくても本文を読める。素材IDの取り替えで台詞IDを変えない。",
+        "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+      ],
+      "result": "not_run",
+      "evidence": [],
+      "final_acceptance_batch": "RB10"
+    },
+    {
+      "id": "REQ-F23",
+      "title": "翻訳と音声の見直しを管理する",
+      "original_package_id": "WP19",
+      "batch_id": "RB07",
+      "status": "planned",
+      "baseline_assessment": "部分実装",
+      "retained_implementation": "翻訳/収録の原台詞参照・言語・hash・工程、原文変更時needs_review、localization出力がある。",
+      "review_gap": "分割履歴、担当/確認者別の操作、原文hashを通常操作で確認・承認する導線が不足。",
+      "required_behavior": "言語ごとの本文と用語、収録メモ、音声を対応させる。元の文章を変えたら翻訳・音声を見直し対象にし、担当別に書き出すこと。",
+      "implementation_action": "言語別原稿、担当、確認者、収録メモ、音声を台詞IDに対応させる。原文内容・分割対応・現在の内容指紋を確認して承認する導線と担当別出力を完成させる。",
+      "code_paths": [
+        "src/domain/production.ts",
+        "src/domain/exports.ts",
+        "src/ui/fieldSpecs.ts"
+      ],
+      "acceptance_ids": [
+        "AT-F23"
+      ],
+      "integration_ids": [
+        "AT-E08"
+      ],
+      "finding_ids": [],
+      "done_when": [
+        "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+        "原文の内容ハッシュが変わった場合のみ依存成果物を確認待ちにする。音声・翻訳の版と確認者を保持する。",
+        "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+      ],
+      "result": "not_run",
+      "evidence": [],
+      "final_acceptance_batch": "RB10"
+    },
+    {
+      "id": "REQ-F28",
+      "title": "資料と設定の根拠を残す",
+      "original_package_id": "WP20",
+      "batch_id": "RB07",
+      "status": "planned",
+      "baseline_assessment": "部分実装",
+      "retained_implementation": "安全な画像/音声/PDF添付、Web URL、出所/解釈/参照箇所の登録がある。PDFは埋込実行しない。",
+      "review_gap": "動画や全資料形式の追加・確認、取得日や再配布に関する全画面連携は未完了。",
+      "required_behavior": "画像、音声、動画、PDF、Web資料を設定や場面へ結ぶ。参照した箇所、日付、作者の解釈を記録すること。",
+      "implementation_action": "画像・音声・動画・PDF・Web資料を通常操作で追加し、参照箇所・取得日・出所・作者の解釈・再配布可否を保存する。未取得・非対応形式は理由を示し、能動内容を実行しない。",
+      "code_paths": [
+        "src/domain/attachments.ts",
+        "src/ui/AssetPreview.tsx",
+        "src/ui/fieldSpecs.ts"
+      ],
+      "acceptance_ids": [
+        "AT-F28"
+      ],
+      "integration_ids": [],
+      "finding_ids": [],
+      "done_when": [
+        "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+        "添付と外部URLを区別し、参照箇所・取得日・解釈を分ける。外部資料の再配布権限がない場合はリンクと書誌情報だけを出す。",
+        "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+      ],
+      "result": "not_run",
+      "evidence": [],
+      "final_acceptance_batch": "RB10"
+    },
+    {
+      "id": "REQ-F48",
+      "title": "人物の声と用語の基準を持つ",
+      "original_package_id": "WP19",
+      "batch_id": "RB07",
+      "status": "planned",
+      "baseline_assessment": "登録・土台のみ",
+      "retained_implementation": "voice_ruleとterminologyの一人称/用法/読み/例外/validityを保存できる。",
+      "review_gap": "本文・字幕・翻訳の表記/口調の候補検査と期間適用がない。",
+      "required_behavior": "人物ごとの一人称、呼び方、口調、使う語、台詞例を記録する。用語の表記・読み・意図した例外をまとめ、本文と字幕・翻訳の確認に使うこと。",
+      "implementation_action": "人物ごとの一人称・呼称・口調・台詞例、用語の表記・読み・例外・時期を編集する。本文・字幕・翻訳の一致候補を根拠箇所へ結び、意図した例外と自動では分からない口調を区別する。",
+      "code_paths": [
+        "src/ui/fieldSpecs.ts",
+        "src/domain/types.ts"
+      ],
+      "acceptance_ids": [
+        "AT-F48"
+      ],
+      "integration_ids": [
+        "AT-E08"
+      ],
+      "finding_ids": [],
+      "done_when": [
+        "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+        "表記・口調の期間と例外を保持する。指摘は置換候補であり、本文や翻訳を自動修正しない。",
+        "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+      ],
+      "result": "not_run",
+      "evidence": [],
+      "final_acceptance_batch": "RB10"
+    },
+    {
+      "id": "REQ-F53",
+      "title": "本文と絵コンテ・演出を並べる",
+      "original_package_id": "WP20",
+      "batch_id": "RB07",
+      "status": "planned",
+      "baseline_assessment": "登録・土台のみ",
+      "retained_implementation": "storyboard/cueのanchor、参照/完成素材、ms時刻を世界tickと別に保存。",
+      "review_gap": "本文と絵コンテ/演出を並べる表示、素材差替えの確認待ち・timecode編集が不足。",
+      "required_behavior": "場面・台詞へ絵コンテのコマ、カメラ、音声、字幕、演出上の時刻を結ぶ。参照画像と完成素材を区別し、差し替え後の確認対象を示すこと。",
+      "implementation_action": "本文と絵コンテ・演出を並べ、コマ・カメラ・音声・字幕・演出時刻を通常編集する。参照画像と完成素材を区別し、差替え後の確認待ちを全関連台詞へ反映する。",
+      "code_paths": [
+        "src/ui/fieldSpecs.ts",
+        "src/domain/types.ts"
+      ],
+      "acceptance_ids": [
+        "AT-F53"
+      ],
+      "integration_ids": [],
+      "finding_ids": [],
+      "done_when": [
+        "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+        "演出時刻はミリ秒、世界時刻は暦のtickとして分離する。素材差替え後は依存コマを確認待ちにする。",
+        "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+      ],
+      "result": "not_run",
+      "evidence": [],
+      "final_acceptance_batch": "RB10"
+    }
+  ],
+  "notice": "Original given/when/then/negative_or_edge and planned/not_run retained; not current pass grades."
+}

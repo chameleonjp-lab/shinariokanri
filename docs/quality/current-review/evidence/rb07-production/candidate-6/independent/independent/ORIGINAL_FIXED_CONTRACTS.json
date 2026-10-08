@@ -1,0 +1,125 @@
+{
+  "requirements": [
+    {
+      "id": "REQ-B16",
+      "title": "試し読みと操作の巻き戻し",
+      "provenance": "以前から採用済みの拡張",
+      "decision_status": "previously_adopted",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP13",
+      "shall": "提示順または分岐を試し読みし、選択を戻すと対応する状態も戻せること。",
+      "failure_behavior": "試し読みの操作で作者の正本や公開版を上書きしない",
+      "acceptance_ids": [
+        "AT-B16"
+      ],
+      "source_refs": []
+    },
+    {
+      "id": "REQ-F48",
+      "title": "人物の声と用語の基準を持つ",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP19",
+      "shall": "人物ごとの一人称、呼び方、口調、使う語、台詞例を記録する。用語の表記・読み・意図した例外をまとめ、本文と字幕・翻訳の確認に使うこと。",
+      "failure_behavior": "表記・口調の期間と例外を保持する。指摘は置換候補であり、本文や翻訳を自動修正しない。",
+      "acceptance_ids": [
+        "AT-F48"
+      ],
+      "source_refs": [
+        "S13",
+        "S31",
+        "S44"
+      ],
+      "source_feature_id": "F48"
+    },
+    {
+      "id": "REQ-F53",
+      "title": "本文と絵コンテ・演出を並べる",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP20",
+      "shall": "場面・台詞へ絵コンテのコマ、カメラ、音声、字幕、演出上の時刻を結ぶ。参照画像と完成素材を区別し、差し替え後の確認対象を示すこと。",
+      "failure_behavior": "演出時刻はミリ秒、世界時刻は暦のtickとして分離する。素材差替え後は依存コマを確認待ちにする。",
+      "acceptance_ids": [
+        "AT-F53"
+      ],
+      "source_refs": [
+        "S35",
+        "S37",
+        "S38"
+      ],
+      "source_feature_id": "F53"
+    },
+    {
+      "id": "REQ-N19",
+      "title": "正本と公開版の保護",
+      "provenance": "仕様を成立させる品質条件・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP10",
+      "shall": "正本・作者別案・ゲーム内経路・公開スナップショットを区別し、公開版の更新は新しい版として作ること。",
+      "failure_behavior": "別案の編集で公開済み本文や参照設定を上書きしない",
+      "acceptance_ids": [
+        "AT-N19"
+      ],
+      "source_refs": []
+    }
+  ],
+  "cases": [
+    {
+      "id": "AT-B16",
+      "requirement_ids": [
+        "REQ-B16"
+      ],
+      "package_id": "WP13",
+      "given": "二つの選択肢と効果がある",
+      "when": "片方へ進み戻って他方へ進む",
+      "then": "所持品・知識・既読・抽選状態を巻き戻した結果で進行する",
+      "negative_or_edge": "試し読みの操作で作者の正本や公開版を上書きしない",
+      "result": "not_run"
+    },
+    {
+      "id": "AT-F48",
+      "requirement_ids": [
+        "REQ-F48"
+      ],
+      "package_id": "WP19",
+      "given": "時期で一人称が変わる人物と表記ゆれ用語、意図した例外",
+      "when": "時期前後の台詞と字幕/翻訳へ候補検査を行い、本文が無断置換されないか確認する",
+      "then": "人物が成長して口調を変える場合は時期を指定する。指摘は候補として示し、本文を勝手に置換しない。",
+      "negative_or_edge": "表記・口調の期間と例外を保持する。指摘は置換候補であり、本文や翻訳を自動修正しない。",
+      "result": "not_run"
+    },
+    {
+      "id": "AT-F53",
+      "requirement_ids": [
+        "REQ-F53"
+      ],
+      "package_id": "WP20",
+      "given": "台詞にコマと演出開始1000ms、世界tick -10がある",
+      "when": "コマから本文へ戻り、参考画像を完成素材へ差替え確認待ちを開く",
+      "then": "物語の年月日と動画・演出内の秒数を混同しない。必要なコマから対象の本文へ戻れる。",
+      "negative_or_edge": "演出時刻はミリ秒、世界時刻は暦のtickとして分離する。素材差替え後は依存コマを確認待ちにする。",
+      "result": "not_run"
+    },
+    {
+      "id": "AT-N19",
+      "requirement_ids": [
+        "REQ-N19"
+      ],
+      "package_id": "WP10",
+      "given": "公開済み作品と別案がある",
+      "when": "改訂して制作出力を行う",
+      "then": "選択した正本版だけが対象となり旧公開版は不変で残る",
+      "negative_or_edge": "別案の編集で公開済み本文や参照設定を上書きしない",
+      "result": "not_run"
+    }
+  ],
+  "notice": "Immutable original clauses; given/when/then/negative retained and not regraded by limited independent boundary success."
+}

@@ -1,0 +1,584 @@
+{
+  "project": {
+    "projectId": "095954c8-72fd-465c-9701-ff29b5b7f38e",
+    "name": "固定世界の同じ経路を読む作品",
+    "formatVersion": "1.0.0",
+    "revision": "0",
+    "calendarId": "proleptic-gregorian-second",
+    "mainStart": "0",
+    "calendars": [
+      {
+        "id": "proleptic-gregorian-second",
+        "name": "先発グレゴリオ暦",
+        "kind": "gregorian",
+        "originLabel": "0000-01-01 00:00:00",
+        "ticksPerDay": "86400"
+      }
+    ],
+    "worldReferences": [
+      {
+        "projectId": "d4da8397-ab20-47b0-b0b8-ccb6929cc3ad",
+        "immutableSnapshotId": "aff771ab-27f4-431a-9ec7-2ac7f9c0973c",
+        "contentHash": "a8f52d4d7a41209d7886bb6b0638ecef20dc3200e18feed9f27ba307db11e095"
+      }
+    ],
+    "entities": [
+      {
+        "id": "4c028250-89c6-46de-8074-f3bb46714306",
+        "projectId": "095954c8-72fd-465c-9701-ff29b5b7f38e",
+        "kind": "storyboard_frame",
+        "revision": "0",
+        "name": "固定世界台詞の字幕",
+        "status": "confirmed",
+        "visibility": "private",
+        "createdAt": "2026-10-08T13:11:38.766Z",
+        "updatedAt": "2026-10-08T13:11:38.766Z",
+        "customValues": {},
+        "data": {
+          "anchor": {
+            "entityId": "120ab290-1db5-485d-af55-c472d4794738",
+            "lineId": "120ab290-1db5-485d-af55-c472d4794738",
+            "sourceVersionId": "aff771ab-27f4-431a-9ec7-2ac7f9c0973c"
+          },
+          "mediaStartMs": 0,
+          "mediaEndMs": null,
+          "referenceAssetId": null,
+          "finalAssetId": null,
+          "cueIds": [],
+          "caption": [
+            {
+              "id": "1edc9bd2-7f02-46c2-821c-63476bd3c96f",
+              "kind": "paragraph",
+              "text": "字幕で声を確認"
+            }
+          ]
+        }
+      },
+      {
+        "id": "d57e4dcf-ee68-475b-b346-2ecf86a4d2b5",
+        "projectId": "095954c8-72fd-465c-9701-ff29b5b7f38e",
+        "kind": "flow_node",
+        "revision": "0",
+        "name": "条件trueの入口",
+        "status": "confirmed",
+        "visibility": "private",
+        "createdAt": "2026-10-08T13:11:38.766Z",
+        "updatedAt": "2026-10-08T13:11:38.766Z",
+        "customValues": {},
+        "data": {
+          "nodeType": "entry",
+          "sceneId": null,
+          "childGraphId": null,
+          "terminalReason": "",
+          "gate": {
+            "op": "compare",
+            "variableId": "2900116f-17f1-4c4b-bbb4-0bf9da73c7f6",
+            "comparator": "eq",
+            "value": {
+              "type": "boolean",
+              "value": true
+            }
+          },
+          "executionPolicy": "first_match",
+          "fallbackId": null
+        }
+      },
+      {
+        "id": "778cd12d-2212-42ef-8b80-b1e8edf89f42",
+        "projectId": "095954c8-72fd-465c-9701-ff29b5b7f38e",
+        "kind": "flow_node",
+        "revision": "0",
+        "name": "終端",
+        "status": "confirmed",
+        "visibility": "private",
+        "createdAt": "2026-10-08T13:11:38.766Z",
+        "updatedAt": "2026-10-08T13:11:38.766Z",
+        "customValues": {},
+        "data": {
+          "nodeType": "terminal",
+          "sceneId": null,
+          "childGraphId": null,
+          "terminalReason": "完了",
+          "gate": {
+            "op": "constant",
+            "value": true
+          },
+          "executionPolicy": "manual_choice",
+          "fallbackId": null
+        }
+      },
+      {
+        "id": "65096387-c2bc-467b-974f-ff912952fcd8",
+        "projectId": "095954c8-72fd-465c-9701-ff29b5b7f38e",
+        "kind": "flow_edge",
+        "revision": "0",
+        "name": "内部進行",
+        "status": "confirmed",
+        "visibility": "private",
+        "createdAt": "2026-10-08T13:11:38.766Z",
+        "updatedAt": "2026-10-08T13:11:38.766Z",
+        "customValues": {},
+        "data": {
+          "fromId": "d57e4dcf-ee68-475b-b346-2ecf86a4d2b5",
+          "toId": "778cd12d-2212-42ef-8b80-b1e8edf89f42",
+          "edgeType": "automatic",
+          "label": "",
+          "condition": {
+            "op": "constant",
+            "value": true
+          },
+          "effectIds": [],
+          "priority": 0,
+          "choiceLineId": null
+        }
+      }
+    ],
+    "relations": [],
+    "snapshots": [],
+    "history": [],
+    "views": []
+  },
+  "world": {
+    "projectId": "d4da8397-ab20-47b0-b0b8-ccb6929cc3ad",
+    "name": "経路条件付き声の固定世界",
+    "formatVersion": "1.0.0",
+    "revision": "0",
+    "calendarId": "proleptic-gregorian-second",
+    "mainStart": "0",
+    "calendars": [
+      {
+        "id": "proleptic-gregorian-second",
+        "name": "先発グレゴリオ暦",
+        "kind": "gregorian",
+        "originLabel": "0000-01-01 00:00:00",
+        "ticksPerDay": "86400"
+      }
+    ],
+    "worldReferences": [],
+    "entities": [
+      {
+        "id": "98e31dfc-467f-4769-871f-7f7ab270a9bf",
+        "projectId": "d4da8397-ab20-47b0-b0b8-ccb6929cc3ad",
+        "kind": "character",
+        "revision": "0",
+        "name": "固定声の話者",
+        "status": "confirmed",
+        "visibility": "private",
+        "createdAt": "2026-10-08T13:11:38.763Z",
+        "updatedAt": "2026-10-08T13:11:38.763Z",
+        "customValues": {},
+        "data": {
+          "reading": "",
+          "aliases": [],
+          "summary": [],
+          "body": [],
+          "authorNotes": [],
+          "goals": [],
+          "voiceRules": []
+        }
+      },
+      {
+        "id": "2900116f-17f1-4c4b-bbb4-0bf9da73c7f6",
+        "projectId": "d4da8397-ab20-47b0-b0b8-ccb6929cc3ad",
+        "kind": "variable",
+        "revision": "0",
+        "name": "同じ固定世界の声条件",
+        "status": "confirmed",
+        "visibility": "private",
+        "createdAt": "2026-10-08T13:11:38.763Z",
+        "updatedAt": "2026-10-08T13:11:38.763Z",
+        "customValues": {},
+        "data": {
+          "key": "world_voice",
+          "valueType": "boolean",
+          "scope": "across_runs",
+          "initial": {
+            "type": "boolean",
+            "value": true
+          },
+          "allowed": {
+            "values": [
+              false,
+              true
+            ]
+          },
+          "description": [],
+          "ownerId": null,
+          "externalContractId": null,
+          "resetRules": [],
+          "transitionRules": [],
+          "externalUseDeclared": false
+        }
+      },
+      {
+        "id": "120ab290-1db5-485d-af55-c472d4794738",
+        "projectId": "d4da8397-ab20-47b0-b0b8-ccb6929cc3ad",
+        "kind": "dialogue_line",
+        "revision": "0",
+        "name": "世界の元台詞",
+        "status": "confirmed",
+        "visibility": "private",
+        "createdAt": "2026-10-08T13:11:38.764Z",
+        "updatedAt": "2026-10-08T13:11:38.764Z",
+        "customValues": {},
+        "data": {
+          "text": [
+            {
+              "id": "faf1269e-0509-421a-a751-0afd48150f2a",
+              "kind": "paragraph",
+              "text": "声の本文"
+            }
+          ],
+          "speakerId": "98e31dfc-467f-4769-871f-7f7ab270a9bf",
+          "choiceEdgeId": null,
+          "cueIds": [],
+          "originLineIds": []
+        }
+      },
+      {
+        "id": "16f6a8cc-4a3c-4000-a810-7e5e8761db70",
+        "projectId": "d4da8397-ab20-47b0-b0b8-ccb6929cc3ad",
+        "kind": "voice_rule",
+        "revision": "0",
+        "name": "世界の状態に沿う声",
+        "status": "confirmed",
+        "visibility": "private",
+        "createdAt": "2026-10-08T13:11:38.764Z",
+        "updatedAt": "2026-10-08T13:11:38.764Z",
+        "customValues": {},
+        "data": {
+          "characterId": "98e31dfc-467f-4769-871f-7f7ab270a9bf",
+          "validity": {
+            "worldRange": null,
+            "routeCondition": {
+              "op": "compare",
+              "variableId": "2900116f-17f1-4c4b-bbb4-0bf9da73c7f6",
+              "comparator": "eq",
+              "value": {
+                "type": "boolean",
+                "value": true
+              }
+            },
+            "presentationAnchor": null
+          },
+          "firstPerson": "私",
+          "addressing": "",
+          "phrasing": "",
+          "examples": [],
+          "exceptions": []
+        }
+      },
+      {
+        "id": "aff771ab-27f4-431a-9ec7-2ac7f9c0973c",
+        "projectId": "d4da8397-ab20-47b0-b0b8-ccb6929cc3ad",
+        "kind": "snapshot",
+        "revision": "0",
+        "name": "声条件trueの世界固定版",
+        "status": "provisional",
+        "visibility": "private",
+        "createdAt": "2026-10-08T13:11:38.766Z",
+        "updatedAt": "2026-10-08T13:11:38.766Z",
+        "customValues": {},
+        "data": {
+          "versionLabel": "声条件trueの世界固定版",
+          "contentHash": "a8f52d4d7a41209d7886bb6b0638ecef20dc3200e18feed9f27ba307db11e095",
+          "immutable": true,
+          "parentVersionIds": [],
+          "releasedAt": null,
+          "referencedWorldVersionIds": []
+        }
+      }
+    ],
+    "relations": [],
+    "snapshots": [
+      {
+        "id": "aff771ab-27f4-431a-9ec7-2ac7f9c0973c",
+        "contentHash": "a8f52d4d7a41209d7886bb6b0638ecef20dc3200e18feed9f27ba307db11e095",
+        "versionLabel": "声条件trueの世界固定版",
+        "createdAt": "2026-10-08T13:11:38.766Z",
+        "content": {
+          "projectId": "d4da8397-ab20-47b0-b0b8-ccb6929cc3ad",
+          "name": "経路条件付き声の固定世界",
+          "formatVersion": "1.0.0",
+          "revision": "0",
+          "calendarId": "proleptic-gregorian-second",
+          "mainStart": "0",
+          "calendars": [
+            {
+              "id": "proleptic-gregorian-second",
+              "name": "先発グレゴリオ暦",
+              "kind": "gregorian",
+              "originLabel": "0000-01-01 00:00:00",
+              "ticksPerDay": "86400"
+            }
+          ],
+          "worldReferences": [],
+          "entities": [
+            {
+              "id": "98e31dfc-467f-4769-871f-7f7ab270a9bf",
+              "projectId": "d4da8397-ab20-47b0-b0b8-ccb6929cc3ad",
+              "kind": "character",
+              "revision": "0",
+              "name": "固定声の話者",
+              "status": "confirmed",
+              "visibility": "private",
+              "createdAt": "2026-10-08T13:11:38.763Z",
+              "updatedAt": "2026-10-08T13:11:38.763Z",
+              "customValues": {},
+              "data": {
+                "reading": "",
+                "aliases": [],
+                "summary": [],
+                "body": [],
+                "authorNotes": [],
+                "goals": [],
+                "voiceRules": []
+              }
+            },
+            {
+              "id": "2900116f-17f1-4c4b-bbb4-0bf9da73c7f6",
+              "projectId": "d4da8397-ab20-47b0-b0b8-ccb6929cc3ad",
+              "kind": "variable",
+              "revision": "0",
+              "name": "同じ固定世界の声条件",
+              "status": "confirmed",
+              "visibility": "private",
+              "createdAt": "2026-10-08T13:11:38.763Z",
+              "updatedAt": "2026-10-08T13:11:38.763Z",
+              "customValues": {},
+              "data": {
+                "key": "world_voice",
+                "valueType": "boolean",
+                "scope": "across_runs",
+                "initial": {
+                  "type": "boolean",
+                  "value": true
+                },
+                "allowed": {
+                  "values": [
+                    false,
+                    true
+                  ]
+                },
+                "description": [],
+                "ownerId": null,
+                "externalContractId": null,
+                "resetRules": [],
+                "transitionRules": [],
+                "externalUseDeclared": false
+              }
+            },
+            {
+              "id": "120ab290-1db5-485d-af55-c472d4794738",
+              "projectId": "d4da8397-ab20-47b0-b0b8-ccb6929cc3ad",
+              "kind": "dialogue_line",
+              "revision": "0",
+              "name": "世界の元台詞",
+              "status": "confirmed",
+              "visibility": "private",
+              "createdAt": "2026-10-08T13:11:38.764Z",
+              "updatedAt": "2026-10-08T13:11:38.764Z",
+              "customValues": {},
+              "data": {
+                "text": [
+                  {
+                    "id": "faf1269e-0509-421a-a751-0afd48150f2a",
+                    "kind": "paragraph",
+                    "text": "声の本文"
+                  }
+                ],
+                "speakerId": "98e31dfc-467f-4769-871f-7f7ab270a9bf",
+                "choiceEdgeId": null,
+                "cueIds": [],
+                "originLineIds": []
+              }
+            },
+            {
+              "id": "16f6a8cc-4a3c-4000-a810-7e5e8761db70",
+              "projectId": "d4da8397-ab20-47b0-b0b8-ccb6929cc3ad",
+              "kind": "voice_rule",
+              "revision": "0",
+              "name": "世界の状態に沿う声",
+              "status": "confirmed",
+              "visibility": "private",
+              "createdAt": "2026-10-08T13:11:38.764Z",
+              "updatedAt": "2026-10-08T13:11:38.764Z",
+              "customValues": {},
+              "data": {
+                "characterId": "98e31dfc-467f-4769-871f-7f7ab270a9bf",
+                "validity": {
+                  "worldRange": null,
+                  "routeCondition": {
+                    "op": "compare",
+                    "variableId": "2900116f-17f1-4c4b-bbb4-0bf9da73c7f6",
+                    "comparator": "eq",
+                    "value": {
+                      "type": "boolean",
+                      "value": true
+                    }
+                  },
+                  "presentationAnchor": null
+                },
+                "firstPerson": "私",
+                "addressing": "",
+                "phrasing": "",
+                "examples": [],
+                "exceptions": []
+              }
+            }
+          ],
+          "relations": [],
+          "views": []
+        }
+      }
+    ],
+    "history": [],
+    "views": []
+  },
+  "ids": {
+    "flag": "2900116f-17f1-4c4b-bbb4-0bf9da73c7f6",
+    "line": "120ab290-1db5-485d-af55-c472d4794738",
+    "rule": "16f6a8cc-4a3c-4000-a810-7e5e8761db70",
+    "frame": "4c028250-89c6-46de-8074-f3bb46714306",
+    "entry": "d57e4dcf-ee68-475b-b346-2ecf86a4d2b5",
+    "terminal": "778cd12d-2212-42ef-8b80-b1e8edf89f42",
+    "edge": "65096387-c2bc-467b-974f-ff912952fcd8",
+    "pin": "aff771ab-27f4-431a-9ec7-2ac7f9c0973c"
+  },
+  "registry": {
+    "aff771ab-27f4-431a-9ec7-2ac7f9c0973c": {
+      "projectId": "d4da8397-ab20-47b0-b0b8-ccb6929cc3ad",
+      "name": "経路条件付き声の固定世界",
+      "formatVersion": "1.0.0",
+      "revision": "0",
+      "calendarId": "proleptic-gregorian-second",
+      "mainStart": "0",
+      "calendars": [
+        {
+          "id": "proleptic-gregorian-second",
+          "name": "先発グレゴリオ暦",
+          "kind": "gregorian",
+          "originLabel": "0000-01-01 00:00:00",
+          "ticksPerDay": "86400"
+        }
+      ],
+      "worldReferences": [],
+      "entities": [
+        {
+          "id": "98e31dfc-467f-4769-871f-7f7ab270a9bf",
+          "projectId": "d4da8397-ab20-47b0-b0b8-ccb6929cc3ad",
+          "kind": "character",
+          "revision": "0",
+          "name": "固定声の話者",
+          "status": "confirmed",
+          "visibility": "private",
+          "createdAt": "2026-10-08T13:11:38.763Z",
+          "updatedAt": "2026-10-08T13:11:38.763Z",
+          "customValues": {},
+          "data": {
+            "reading": "",
+            "aliases": [],
+            "summary": [],
+            "body": [],
+            "authorNotes": [],
+            "goals": [],
+            "voiceRules": []
+          }
+        },
+        {
+          "id": "2900116f-17f1-4c4b-bbb4-0bf9da73c7f6",
+          "projectId": "d4da8397-ab20-47b0-b0b8-ccb6929cc3ad",
+          "kind": "variable",
+          "revision": "0",
+          "name": "同じ固定世界の声条件",
+          "status": "confirmed",
+          "visibility": "private",
+          "createdAt": "2026-10-08T13:11:38.763Z",
+          "updatedAt": "2026-10-08T13:11:38.763Z",
+          "customValues": {},
+          "data": {
+            "key": "world_voice",
+            "valueType": "boolean",
+            "scope": "across_runs",
+            "initial": {
+              "type": "boolean",
+              "value": true
+            },
+            "allowed": {
+              "values": [
+                false,
+                true
+              ]
+            },
+            "description": [],
+            "ownerId": null,
+            "externalContractId": null,
+            "resetRules": [],
+            "transitionRules": [],
+            "externalUseDeclared": false
+          }
+        },
+        {
+          "id": "120ab290-1db5-485d-af55-c472d4794738",
+          "projectId": "d4da8397-ab20-47b0-b0b8-ccb6929cc3ad",
+          "kind": "dialogue_line",
+          "revision": "0",
+          "name": "世界の元台詞",
+          "status": "confirmed",
+          "visibility": "private",
+          "createdAt": "2026-10-08T13:11:38.764Z",
+          "updatedAt": "2026-10-08T13:11:38.764Z",
+          "customValues": {},
+          "data": {
+            "text": [
+              {
+                "id": "faf1269e-0509-421a-a751-0afd48150f2a",
+                "kind": "paragraph",
+                "text": "声の本文"
+              }
+            ],
+            "speakerId": "98e31dfc-467f-4769-871f-7f7ab270a9bf",
+            "choiceEdgeId": null,
+            "cueIds": [],
+            "originLineIds": []
+          }
+        },
+        {
+          "id": "16f6a8cc-4a3c-4000-a810-7e5e8761db70",
+          "projectId": "d4da8397-ab20-47b0-b0b8-ccb6929cc3ad",
+          "kind": "voice_rule",
+          "revision": "0",
+          "name": "世界の状態に沿う声",
+          "status": "confirmed",
+          "visibility": "private",
+          "createdAt": "2026-10-08T13:11:38.764Z",
+          "updatedAt": "2026-10-08T13:11:38.764Z",
+          "customValues": {},
+          "data": {
+            "characterId": "98e31dfc-467f-4769-871f-7f7ab270a9bf",
+            "validity": {
+              "worldRange": null,
+              "routeCondition": {
+                "op": "compare",
+                "variableId": "2900116f-17f1-4c4b-bbb4-0bf9da73c7f6",
+                "comparator": "eq",
+                "value": {
+                  "type": "boolean",
+                  "value": true
+                }
+              },
+              "presentationAnchor": null
+            },
+            "firstPerson": "私",
+            "addressing": "",
+            "phrasing": "",
+            "examples": [],
+            "exceptions": []
+          }
+        }
+      ],
+      "relations": [],
+      "views": []
+    }
+  }
+}

@@ -1,0 +1,5 @@
+RB07候補 `22bd75aec2829b84b012857aa1a8dce026981b66` / tree `717208f02556c8ccf6c74ebd04867845b9e8db42` を読み取り専用で独立再確認した。26部品＋fixture妥当性1件、実Appダウンロードファイルの検査→empty new/clone1件、15通常App群、production3件が成功した。同じ採用世界の状態を通常内部経路で読み終端まで進め、原子記録→cold reload→選択した字幕条件は2候補/未知0となりD26/U15を補修確認した。実効果falseでは候補なし、別採用版の旧字幕・未検証・別state版は未知、欠損・改ざんは拒否する境界3件も成功した。
+
+追加D27/CAP-R1は失敗した。productionCheckViewの固定作品hash検証開始後、呼出元の字幕本文を変更すると、最初に捕捉した正常入力を拒否する。変更しない同じ正常入力は対照で成功した。authorだけ呼出元のentities参照をawait後まで保持する原因であり、期待値・入力・2再現rawを保持した。通常UIの当該事象再現は未実行で、通常App15群の成功と区別した。
+
+169src・原15資料・旧4fixture（hash保持のみ）・12固定入力と実成果物をSHA結合し、28eの144成果物とそれ以前の負例を維持した。独立テストの非実在graphIdが一度buildを阻害した検査setupも原log/sourceで分けて保存し、期待を変えず修正後buildとD26を再実行した。隔離build-info unknown/dirty=trueはclean候補buildではない。104/116/24/6・全RB07・実端末/Files/録音/支援技術/全性能/長時間/実Auth/APIは未判定。repo製品・既存証拠・commitへ変更していない。
