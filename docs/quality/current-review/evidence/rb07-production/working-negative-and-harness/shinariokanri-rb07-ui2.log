@@ -1,0 +1,46 @@
+
+> shinariokanri@0.1.0 test:e2e
+> playwright test tests/e2e/rb07-production.spec.ts
+
+[WebServer] (node:165156) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 3 tests using 1 worker
+
+(node:165180) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [chromium] › tests/e2e/rb07-production.spec.ts:12:1 › 台詞分割の入力と差分を移動・失敗から再開し、旧新ID・翻訳確認待ちをcold保存と完全ファイルで確認する (3.0s)
+  ✓  2 [chromium] › tests/e2e/rb07-production.spec.ts:18:1 › 資料の取得日時と実動画bytesを通常保存し、再読込で安全な動画表示と不足状態を区別する (1.8s)
+  ✘  3 [chromium] › tests/e2e/rb07-production.spec.ts:22:1 › 現在原文を選び直した翻訳をhash承認し、期限外・没用語を除いたUnicode候補を指摘版ごと原子保存する (30.1s)
+
+
+  1) [chromium] › tests/e2e/rb07-production.spec.ts:22:1 › 現在原文を選び直した翻訳をhash承認し、期限外・没用語を除いたUnicode候補を指摘版ごと原子保存する 
+
+    Test timeout of 30000ms exceeded.
+
+    Error: locator.click: Test timeout of 30000ms exceeded.
+    Call log:
+      - waiting for getByRole('tab', { name: '制作進行', exact: true })
+
+
+      21 |
+      22 | test('現在原文を選び直した翻訳をhash承認し、期限外・没用語を除いたUnicode候補を指摘版ごと原子保存する',async({page})=>{
+    > 23 |  const p=createProject('制作確認の通常操作'),line=createEntity(p.projectId,'dialogue_line','確認する台詞',{text:textToRichText('😀赤き扉')}),translation=createEntity(p.projectId,'localization','確認する翻訳',{sourceLineId:line.id,language:'en',sourceHash:'0'.repeat(64),text:textToRichText('Red door'),stage:'needs_review'}),term=createEntity(p.projectId,'terminology','採用する用語',{canonical:'赤い扉',variants:['赤き扉'],reading:'あかいとびら',validity:{worldRange:{start:'10',end:'20'},routeCondition:null,presentationAnchor:null}}),rejected=createEntity(p.projectId,'terminology','没の用語',{canonical:'赤き扉',reading:'ぼつ'});[line,translation,term].forEach(e=>e.status='confirmed');rejected.status='rejected';p.entities.push(line,translation,term,rejected);await seed(page,await exportScenario(p));await open(page,'localization',translation.name);const tools=page.locator('.production-tools');await tools.locator('summary').click();await tools.getByRole('button',{name:'現在原文とhashを確認',exact:true}).click();await expect(tools).toContainText('😀赤き扉');await tools.getByRole('button',{name:'確認した変更を保存',exact:true}).click();await expect(tools.getByRole('status').filter({hasText:'表示版を確認'})).toBeVisible();await nav(page,/^構成/);await page.getByRole('tab',{name:'制作進行',exact:true}).click();const review=page.locator('.production-review');await review.getByLabel('検査時点の世界内tick',{exact:true}).fill('9');await review.getByRole('button',{name:'口調・用語の候補を検査',exact:true}).click();await expect(review).toContainText('候補 0件');await review.getByLabel('検査時点の世界内tick',{exact:true}).fill('10');await review.getByRole('button',{name:'口調・用語の候補を検査',exact:true}).click();await expect(review).toContainText('候補 2件');await expect(review).not.toContainText('ぼつ');await review.getByRole('button',{name:'候補を指摘として保存',exact:true}).first().click();await expect(review.getByRole('status').filter({hasText:'表示版を確認'})).toBeVisible();await page.reload();const saved=(await backup(page)).project;expect(saved.entities.find(e=>e.id===translation.id)).toMatchObject({data:{stage:'reviewed'}});const issue=saved.entities.find(e=>e.kind==='review');expect(issue?.kind==='review'&&issue.data.target).toMatchObject({entityId:line.id,start:1,end:4});expect(issue?.kind==='review'&&saved.snapshots.some(s=>s.id===issue.data.targetVersionId)).toBe(true);
+         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                ^
+      24 | });
+      25 |
+        at /workspace/shinariokanri-rb07/tests/e2e/rb07-production.spec.ts:23:1232
+
+    Error Context: test-results/rb07-production-現在原文を選び直した-db4f4-用語を除いたUnicode候補を指摘版ごと原子保存する-chromium/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/rb07-production-現在原文を選び直した-db4f4-用語を除いたUnicode候補を指摘版ごと原子保存する-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/rb07-production-現在原文を選び直した-db4f4-用語を除いたUnicode候補を指摘版ごと原子保存する-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    [chromium] › tests/e2e/rb07-production.spec.ts:22:1 › 現在原文を選び直した翻訳をhash承認し、期限外・没用語を除いたUnicode候補を指摘版ごと原子保存する 
+  2 passed (37.0s)

@@ -1,0 +1,51 @@
+R7U01-split-away-switch-failure-cold complete
+R7U02-copy-merge-keeps-history-source complete
+R7U03-material-ack-next-clear-cold complete
+R7U04-stale-material-input-retained complete
+R7U05-dependent-frame-review complete
+R7U06-acquired-time-normal-failure complete
+R7U07-chapter-flow-cues-timecode complete
+{
+  "passed": 4,
+  "failed": 3,
+  "results": [
+    {
+      "id": "R7U01-split-away-switch-failure-cold",
+      "status": "passed",
+      "pageErrors": []
+    },
+    {
+      "id": "R7U02-copy-merge-keeps-history-source",
+      "status": "failed",
+      "error": "expect(received).toEqual(expected) // deep equality\n\n- Expected  - 3\n+ Received  + 3\n\n  Object {\n-   \"blockId\": \"7cf5396e-e69e-4e58-a7aa-43b61725bc31\",\n+   \"blockId\": \"78070183-ab4d-44fa-8630-73384f0c8f38\",\n    \"end\": 6,\n-   \"entityId\": \"c9d5a8dc-2cb1-4f24-b1d4-039938d3c66b\",\n-   \"lineId\": \"c9d5a8dc-2cb1-4f24-b1d4-039938d3c66b\",\n+   \"entityId\": \"3e546b61-9891-45c7-823d-959a6f03f2a2\",\n+   \"lineId\": \"3e546b61-9891-45c7-823d-959a6f03f2a2\",\n    \"start\": 0,\n  }",
+      "pageErrors": []
+    },
+    {
+      "id": "R7U03-material-ack-next-clear-cold",
+      "status": "failed",
+      "error": "expect(received).toBeGreaterThan(expected)\n\nExpected: > -1\nReceived:   -1",
+      "pageErrors": []
+    },
+    {
+      "id": "R7U04-stale-material-input-retained",
+      "status": "passed",
+      "pageErrors": []
+    },
+    {
+      "id": "R7U05-dependent-frame-review",
+      "status": "failed",
+      "error": "expect(received).toBe(expected) // Object.is equality\n\nExpected: \"needs_review\"\nReceived: \"confirmed\"",
+      "pageErrors": []
+    },
+    {
+      "id": "R7U06-acquired-time-normal-failure",
+      "status": "passed",
+      "pageErrors": []
+    },
+    {
+      "id": "R7U07-chapter-flow-cues-timecode",
+      "status": "passed",
+      "pageErrors": []
+    }
+  ]
+}
