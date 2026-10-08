@@ -917,7 +917,7 @@ export class ScenarioStore {
     let discovered = [project, ...recoveryImages(recovery)];
     while (discovered.length) {
       const next: ProjectData[] = [];
-      for (const reference of referencedWorlds(discovered)) {
+      for (const reference of referencedWorlds(discovered,captured.registry)) {
         if (worlds[reference.immutableSnapshotId]) continue;
         const world = captured.registry[reference.immutableSnapshotId];
         if (world) { worlds[reference.immutableSnapshotId] = world; next.push(world); }
