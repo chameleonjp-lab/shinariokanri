@@ -2,6 +2,7 @@ import { useSyncExternalStore, type Dispatch, type SetStateAction } from 'react'
 import type { TrialSession } from '../domain/runtime';
 
 interface ReaderDraft {
+  version: string;
   session: TrialSession | null;
   error: string;
   notice: string;
@@ -12,9 +13,9 @@ interface ReaderDraft {
 }
 const drafts = new Map<string, ReaderDraft>(), listeners = new Set<() => void>();
 const subscribe = (listener: () => void) => { listeners.add(listener); return () => listeners.delete(listener); };
-export function readerDraft(projectId: string, initialBusy = false): ReaderDraft {
+export function readerDraft(projectId: string, initialBusy = false, initialVersion = ''): ReaderDraft {
   let value = drafts.get(projectId);
-  if (!value) { value = { session: null, error: '', notice: '', busy: initialBusy, saving: false, pendingReplay: null, operation: { current: initialBusy } }; drafts.set(projectId, value); }
+  if (!value) { value = { version: initialVersion, session: null, error: '', notice: '', busy: initialBusy, saving: false, pendingReplay: null, operation: { current: initialBusy } }; drafts.set(projectId, value); }
   return value;
 }
 export function updateReaderDraft(projectId: string, patch: Partial<Omit<ReaderDraft, 'operation'>>) {
