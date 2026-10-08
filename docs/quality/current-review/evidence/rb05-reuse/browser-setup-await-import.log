@@ -1,0 +1,44 @@
+[WebServer] (node:63307) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 2 tests using 1 worker
+
+(node:63331) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [chromium] › tests/e2e/rb05-reuse.spec.ts:10:1 › RB05 共通元を固定参照・独立複製・部分上書きで原子保存し、共通元改稿後の本文と再読込を確認する (8.0s)
+  ✘  2 [chromium] › tests/e2e/rb05-reuse.spec.ts:30:1 › 多重固定参照を完全保存から再読込し、旧本文の固定リンクと元のUnicode位置へ戻る (30.1s)
+
+
+  1) [chromium] › tests/e2e/rb05-reuse.spec.ts:30:1 › 多重固定参照を完全保存から再読込し、旧本文の固定リンクと元のUnicode位置へ戻る ───
+
+    Test timeout of 30000ms exceeded.
+
+    Error: locator.click: Test timeout of 30000ms exceeded.
+    Call log:
+      - waiting for locator('.sidebar').getByRole('button', { name: /^検索/ }).first()
+
+
+       5 | import { prepareReuse } from '../../src/domain/reuse';
+       6 | import { createWorldSnapshot } from '../../src/domain/world';
+    >  7 | async function navigate(page: Page, name: RegExp) { const menu = page.getByRole('button', { name: 'メニューを開く' }); if (await menu.isVisible()) await menu.click(); await page.locator('.sidebar').getByRole('button', { name }).first().click(); }
+         |                                                                                                                                                                                                                                      ^
+       8 | async function open(page: Page, name: string) { await navigate(page, /^検索/); await page.getByLabel('作品内を検索').fill(name); await page.locator('.entity-card').filter({ hasText: name }).first().click(); return page.locator('.detail-panel'); }
+       9 | async function seed(page: Page, p: ProjectData) { await page.goto('./'); await page.getByRole('button', { name: '保存ファイルを読み込む', exact: true }).click(); await page.locator('input[type=file]').setInputFiles({ name: 'reuse.scenario', mimeType: 'application/octet-stream', buffer: Buffer.from(await exportScenario(p)) }); await page.getByLabel('復元方法と対象への影響を確認しました').check(); await page.getByRole('button', { name: 'この内容で復元する', exact: true }).click(); }
+      10 | test('RB05 共通元を固定参照・独立複製・部分上書きで原子保存し、共通元改稿後の本文と再読込を確認する', async ({ page }) => {
+        at navigate (/workspace/shinariokanri/tests/e2e/rb05-reuse.spec.ts:7:230)
+        at open (/workspace/shinariokanri/tests/e2e/rb05-reuse.spec.ts:8:49)
+        at /workspace/shinariokanri/tests/e2e/rb05-reuse.spec.ts:44:18
+
+    Error Context: test-results/rb05-reuse-多重固定参照を完全保存から再読込し、旧本文の固定リンクと元のUnicode位置へ戻る-chromium/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/rb05-reuse-多重固定参照を完全保存から再読込し、旧本文の固定リンクと元のUnicode位置へ戻る-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/rb05-reuse-多重固定参照を完全保存から再読込し、旧本文の固定リンクと元のUnicode位置へ戻る-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    [chromium] › tests/e2e/rb05-reuse.spec.ts:30:1 › 多重固定参照を完全保存から再読込し、旧本文の固定リンクと元のUnicode位置へ戻る ────
+  1 passed (40.4s)

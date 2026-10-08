@@ -1,5 +1,7 @@
 RB05第3追加は [固定再利用](RB05_FIXED_REUSE.md) を参照。固定版の共通元を参照・独立複製・部分上書きで通常保存し、旧pinの状態・本文・開示・例外・経路を再読込／復元／cloneで検査する。独立レビューの追加境界を正期待で補修した。伏線方針・改訂後再確認・状態版引継ぎ・公開出力、RB06〜RB10と116原受入の残条件は保持する。
 
+第3追加の候補 `686f4e9`（tree `434809f`）では608単体／保存、production Chromium44通常操作、独立53部品／保存と8実App操作が成功。build-infoは同候補・dirty=false・base `/shinariokanri/`。[結合記録](../quality/current-review/evidence/rb05-reuse/candidate-binding.json)と[独立レビュー](../quality/current-review/rb05-reuse-review/INDEPENDENT_REVIEW.md)に失敗→補修→同じ正期待の再実行を区別して保存した。最新main `47b70ab` はPR #10取り込み後、CI run37735339752がsuccess。PR #11は作業ブランチへ取り込まれ、main未反映の第2追加も次のmain向けPRへ保持する。この作業からマージ・公開を実行していない。
+
 # 実装進捗（完成版は未公開）
 
 RB05第2追加は [階層・反応系列・型付き途中開始](RB05_STRUCTURE_READING.md) を参照。下位call図を含む階層集計、短い反応の3方式、作品別下書き、固定版付き途中状態の通常フォームを保存・再読込・巻戻へ接続する。未知の経路を回帰確認済みに数える問題とcold start時の履歴token／保存待ち再入を独立レビューで確認し修正した。固定再利用と伏線方針等の残実装、原116受入は保持する。
