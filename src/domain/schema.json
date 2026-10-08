@@ -4445,6 +4445,14 @@
                       "$ref": "#/$defs/ID",
                       "$comment": "{\"referenceScope\":\"snapshot\"}"
                     },
+                    "verificationVersionId": {
+                      "$ref": "#/$defs/ID",
+                      "$comment": "{\"referenceScope\":\"snapshot\"}"
+                    },
+                    "profileVersionId": {
+                      "$ref": "#/$defs/ID",
+                      "$comment": "{\"referenceScope\":\"snapshot\"}"
+                    },
                     "sourceRevision": {
                       "$ref": "#/$defs/Revision"
                     },
@@ -4499,17 +4507,100 @@
                         "additionalProperties": false
                       },
                       "maxItems": 100000
+                    },
+                    "projectionBindings": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "entityId": {
+                            "$ref": "#/$defs/ID",
+                            "$comment": "{\"referenceScope\":\"projection_record\"}"
+                          },
+                          "sourceVersionId": {
+                            "$ref": "#/$defs/ID",
+                            "$comment": "{\"referenceScope\":\"snapshot\"}"
+                          },
+                          "editionVersionId": {
+                            "$ref": "#/$defs/ID",
+                            "$comment": "{\"referenceScope\":\"snapshot\"}"
+                          },
+                          "publicId": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256
+                          }
+                        },
+                        "required": [
+                          "entityId",
+                          "sourceVersionId",
+                          "editionVersionId",
+                          "publicId"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "maxItems": 100000
+                    },
+                    "citationBindings": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "sourceVersionId": {
+                            "$ref": "#/$defs/ID",
+                            "$comment": "{\"referenceScope\":\"snapshot\"}"
+                          },
+                          "publicVersionId": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256
+                          }
+                        },
+                        "required": [
+                          "sourceVersionId",
+                          "publicVersionId"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "maxItems": 100000
+                    },
+                    "worldVersions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "sourceVersionId": {
+                            "$ref": "#/$defs/ID",
+                            "$comment": "{\"referenceScope\":\"snapshot\"}"
+                          },
+                          "contentHash": {
+                            "type": "string",
+                            "pattern": "^[0-9a-f]{64}$"
+                          }
+                        },
+                        "required": [
+                          "sourceVersionId",
+                          "contentHash"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "maxItems": 100000
                     }
                   },
                   "required": [
                     "sourceVersionId",
+                    "verificationVersionId",
+                    "profileVersionId",
                     "sourceRevision",
                     "profileId",
                     "packageHash",
                     "receiptHash",
                     "mode",
                     "rawJson",
-                    "idMappings"
+                    "idMappings",
+                    "projectionBindings",
+                    "citationBindings",
+                    "worldVersions"
                   ],
                   "additionalProperties": false
                 },

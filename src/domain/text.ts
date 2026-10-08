@@ -238,6 +238,7 @@ function editedTextRemapper(beforeEntity: Entity, afterEntity: Entity): ((value:
 
 export function remapEditedTextReferences(entities: Entity[], beforeEntity: Entity, afterEntity: Entity): Entity[] {
   const walk = editedTextRemapper(beforeEntity, afterEntity); if (!walk) return entities;
+  const textEdits=Object.entries(beforeEntity.data).flatMap(([key,before])=>{const after=(afterEntity.data as unknown as Record<string,unknown>)[key];return isRichText(before)&&Array.isArray(after)&&JSON.stringify(before)!==JSON.stringify(after)?[{before,transform:buildTextTransform(before,after as RichText)}]:[];});
   return entities.map(entity => {
     // Review targets name the historical targetVersionId even without sourceVersionId.
     const historicalReview = entity.kind === 'review' && entity.data.targetVersionId !== beforeEntity.projectId;
@@ -250,6 +251,11 @@ export function remapEditedTextReferences(entities: Entity[], beforeEntity: Enti
         return anchor.blockId ?? blockId;
       }))];
       if (blockIds.some((id, index) => id !== entity.data.blockIds![index]) || blockIds.length !== entity.data.blockIds.length) changed = { ...(changed as object), blockIds };
+    }
+    if(entity.kind==='projection_profile'&&(!entity.data.sourceVersionId||entity.data.sourceVersionId===beforeEntity.projectId)){
+      const sources={...entity.data.blockSources};let affected=false;
+      for(const [publicBlock,sourceBlock]of Object.entries(sources))for(const edit of textEdits)if(edit.before.some(block=>block.id===sourceBlock)){affected=true;const next=edit.transform.block(sourceBlock);if(next)sources[publicBlock]=next;else delete sources[publicBlock];}
+      if(affected)return {...entity,status:'needs_review',data:{...(changed as Entity<'projection_profile'>['data']),blockSources:sources}};
     }
     return changed === data ? entity : { ...entity, data: changed } as Entity;
   });

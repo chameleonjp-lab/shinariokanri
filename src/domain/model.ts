@@ -205,7 +205,7 @@ export const ENTITY_SCHEMAS: Record<EntityKind, Schema> = {
   event: obj({ summary: req(summary), time: req(time), laneRole: req(en('common', 'participants', 'both')), participants: opt(arr(obj({ characterId: req(ref('character')), role: req(en('actor', 'witness', 'mentioned', 'informed', 'custom')), evidenceIds: opt(refs()), knowledgeEffectIds: opt(refs('effect')) }))), locationId: opt(ref('place')), itemIds: opt(refs('item')), authorNotes: opt(rich), constraints: opt(arr(union(obj({ type: req(en('before', 'same_start')), targetEventId: req(ref('event')) }), obj({ type: req(en('end_gap')), targetEventId: req(ref('event')), minimumTicks: req(tick), maximumTicks: req(tick) })))) }),
   place: obj({ parentId: opt(ref('place')), reading: opt(short), aliases: opt(arr(alias)), body: opt(rich), mapIds: opt(refs('map')), changes: opt(refs('assertion')) }),
   item: obj({ itemMode: req(en('type', 'instance')), typeId: opt(ref('item')), body: opt(rich), properties: opt({ type: 'custom' }), changes: opt(refs('assertion')) }),
-  note: obj({ handoffReceipt: opt(obj({sourceVersionId:req(scopedRef('snapshot')),sourceRevision:req({type:'revision'}),profileId:req(ref('projection_profile')),packageHash:req({type:'hash'}),receiptHash:req({type:'hash'}),mode:req(en('stub','actual','mixed')),rawJson:req(txt(1,1024*1024)),idMappings:req(arr(obj({entityId:req(scopedRef('record')),sourceVersionId:req(scopedRef('snapshot')),publicId:req(txt(1,256))}))) })), body: req(rich), attachmentIds: opt(refs('attachment')), convertedToIds: opt(refs()), originNoteId: opt(ref('note')) }),
+  note: obj({ handoffReceipt: opt(obj({sourceVersionId:req(scopedRef('snapshot')),verificationVersionId:req(scopedRef('snapshot')),profileVersionId:req(scopedRef('snapshot')),sourceRevision:req({type:'revision'}),profileId:req(ref('projection_profile')),packageHash:req({type:'hash'}),receiptHash:req({type:'hash'}),mode:req(en('stub','actual','mixed')),rawJson:req(txt(1,1024*1024)),idMappings:req(arr(obj({entityId:req(scopedRef('record')),sourceVersionId:req(scopedRef('snapshot')),publicId:req(txt(1,256))}))),projectionBindings:req(arr(obj({entityId:req(scopedRef('projection_record')),sourceVersionId:req(scopedRef('snapshot')),editionVersionId:req(scopedRef('snapshot')),publicId:req(txt(1,256))}))),citationBindings:req(arr(obj({sourceVersionId:req(scopedRef('snapshot')),publicVersionId:req(txt(1,256))}))),worldVersions:req(arr(obj({sourceVersionId:req(scopedRef('snapshot')),contentHash:req({type:'hash'})}))) })), body: req(rich), attachmentIds: opt(refs('attachment')), convertedToIds: opt(refs()), originNoteId: opt(ref('note')) }),
   chapter: obj({ sceneIds: req(refs('scene')), summary: opt(summary), authorNotes: opt(rich), structureRole: opt(short) }),
   scene: obj({ summary: req(summary), body: req(rich), authorNotes: req(rich), eventIds: req(refs('event')), dialogueLineIds: opt(refs('dialogue_line')), chapterId: opt(ref('chapter')), threadIds: opt(refs('group')), povId: opt(ref('character')), goals: opt(rich), conflicts: opt(rich), results: opt(rich), newInformation: opt(rich), tension: opt(num(0, 10)), importance: opt(num(0, 10)), blockIds: opt(arr(scopedRef('block'), true)), reuse: opt(reuse) }),
   goal: obj({ ownerId: req(ref('character', 'group')), description: req(rich), changes: opt(refs('assertion')), evidenceSceneIds: opt(refs('scene')), validity: opt(nullableValidity) }),
@@ -369,7 +369,9 @@ function walk(schema: Schema, value: unknown, path: string, issues: ValidationIs
     case 'ref': {
       const valid = typeof value === 'string' && (schema.scope === 'calendar' ? value.length > 0 : ID_PATTERN.test(value));
       if (!valid) fail(schema.scope === 'calendar' ? '暦IDが必要です。' : '参照先は小文字UUIDです。');
-      else references.push({ id: value as string, path, kinds: schema.kinds, scope: schema.scope ?? 'entity' });
+      // Keep typed string paths for explicit public-to-native ID conversion.
+      // Format validation above still rejects them at every native boundary.
+      if(typeof value==='string')references.push({ id: value, path, kinds: schema.kinds, scope: schema.scope ?? 'entity' });
       return;
     }
     case 'tick': if (!isTick(value)) fail('tickは38桁以内の正規整数文字列です。'); return;
@@ -778,8 +780,8 @@ function validateContent(input: unknown, path: string, options: ProjectValidatio
     .filter(reference => reference.scope === 'snapshot' && options.worldSnapshots?.[reference.id] && worlds.some(world => world.projectId === options.worldSnapshots?.[reference.id].projectId)).map(reference => reference.id);
   const knownVersions = new Set([...snapshotIds, ...worldVersionDependencies, project.projectId, ...allEntities.filter(entity => entity.kind === 'snapshot').map(entity => entity.id), ...(closure?.references ?? executionProject.worldReferences).map(world => world.immutableSnapshotId)]);
   const knownProjects = new Set([project.projectId, ...(closure?.references ?? executionProject.worldReferences).map(world => world.projectId)]);
-  type ReferenceIndex = { entities: Map<ID, Entity>; relations: Map<ID, Relation>; blocks: Map<ID, { entityId: ID; text: string }>; calendars: Set<string>; projects: Set<ID> };
-  const currentIndex: ReferenceIndex = { entities: entityMap, relations: relationMap, blocks, calendars: allCalendarIds, projects: knownProjects }, versionIndexes = new Map<ID, ReferenceIndex>();
+  type ReferenceIndex = { entities: Map<ID, Entity>; relations: Map<ID, Relation>; blocks: Map<ID, { entityId: ID; text: string }>; calendars: Set<string>; projects: Set<ID>; projectionIds:Set<ID> };
+  const currentIndex: ReferenceIndex = { entities: entityMap, relations: relationMap, blocks, calendars: allCalendarIds, projects: knownProjects,projectionIds }, versionIndexes = new Map<ID, ReferenceIndex>();
   function versionIndex(versionId: ID): ReferenceIndex | undefined {
     if (versionId === project.projectId && !project.entities.some(entity => (entity.kind === 'scene' || entity.kind === 'flow_node') && entity.data.reuse?.bindings)) return currentIndex;
     const cached = versionIndexes.get(versionId); if (cached) return cached;
@@ -793,7 +795,9 @@ function validateContent(input: unknown, path: string, options: ProjectValidatio
     if (issues.length !== before) return undefined;
     const records = [...content.entities, ...pinnedWorlds.flatMap(world => world.entities)], versionBlocks = new Map<ID, { entityId: ID; text: string }>();
     for (const record of records) if (isObject(record)) collectContentIds(record.data, record.id, versionBlocks, new Map(), [], 'version');
-    const index = { entities: new Map(records.filter(record => isObject(record)).map(record => [record.id, record])), relations: new Map([...content.relations, ...pinnedWorlds.flatMap(world => world.relations)].filter(record => isObject(record)).map(record => [record.id, record])), blocks: versionBlocks, calendars: new Set([...content.calendars, ...pinnedWorlds.flatMap(world => world.calendars)].map(calendar => calendar.id)), projects: new Set([content.projectId, ...pinnedWorlds.map(world => world.projectId)]) };
+    const versionProjectionIds=new Set([...records.map(record=>record.id),...content.relations.map(relation=>relation.id),...pinnedWorlds.flatMap(world=>world.relations.map(relation=>relation.id)),...versionBlocks.keys()]);
+    for(const entity of records){if(entity.kind==='flow_node'&&entity.data.trigger?.id)versionProjectionIds.add(entity.data.trigger.id);if(entity.kind==='projection_profile')for(const fields of Object.values(entity.data.publicTexts??{}))for(const value of Object.values(fields))if(Array.isArray(value))for(const block of value)if(isObject(block)&&typeof block.id==='string')versionProjectionIds.add(block.id);}
+    const index = { entities: new Map(records.filter(record => isObject(record)).map(record => [record.id, record])), relations: new Map([...content.relations, ...pinnedWorlds.flatMap(world => world.relations)].filter(record => isObject(record)).map(record => [record.id, record])), blocks: versionBlocks, calendars: new Set([...content.calendars, ...pinnedWorlds.flatMap(world => world.calendars)].map(calendar => calendar.id)), projects: new Set([content.projectId, ...pinnedWorlds.map(world => world.projectId)]),projectionIds:versionProjectionIds };
     versionIndexes.set(versionId, index); return index;
   }
   function inspect(reference: DomainReference, prefix = '', index = currentIndex): void {
@@ -805,7 +809,7 @@ function validateContent(input: unknown, path: string, options: ProjectValidatio
       if (target && options.runtime && target.deletedAt) addIssue(issues, location, '削除済み情報は実行用出力で参照できません。', 'REFERENCE_INVALID');
     } else if (reference.scope === 'relation') exists = index.relations.has(reference.id);
     else if (reference.scope === 'record') exists = index.entities.has(reference.id) || index.relations.has(reference.id);
-    else if (reference.scope === 'projection_record') exists = projectionIds.has(reference.id);
+    else if (reference.scope === 'projection_record') exists = index.projectionIds.has(reference.id);
     else if (reference.scope === 'presentation') exists = index.entities.has(reference.id) || index.blocks.has(reference.id);
     else if (reference.scope === 'calendar') exists = index.calendars.has(reference.id);
     else if (reference.scope === 'project') exists = index.projects.has(reference.id);
@@ -826,8 +830,12 @@ function validateContent(input: unknown, path: string, options: ProjectValidatio
       const parts = pathParts(reference.path), parent = parts.slice(0, -1).reduce<unknown>((object, field) => object && typeof object === 'object' ? (object as Record<string, unknown>)[field] : undefined, entity);
       const reuseVersion = (entity.kind === 'scene' || entity.kind === 'flow_node') && entity.data.reuse && reference.path === 'data.reuse.sourceId' ? entity.data.reuse.pinnedSnapshotId : undefined;
       const profileVersion=entity.kind==='projection_profile'&&entity.data.sourceVersionId&&/^data\.(?:includedIds|publicTexts|blockSources|publicIds|publicValues|namePolicy|allowedRelationIds|approvedAttachmentIds)(?:\.|\[)/.test(reference.path)?entity.data.sourceVersionId:undefined;
-      const anchorVersion = reuseVersion ?? (isObject(parent) && typeof parent.entityId === 'string' && typeof parent.sourceVersionId === 'string' ? parent.sourceVersionId
+      const gameProfileVersion=entity.kind==='note'&&reference.path==='data.handoffReceipt.profileId'?entity.data.handoffReceipt?.profileVersionId:undefined;
+      const anchorVersion = gameProfileVersion ?? reuseVersion ?? (isObject(parent) && typeof parent.entityId === 'string' && typeof parent.sourceVersionId === 'string' ? parent.sourceVersionId
         : entity.kind === 'review' && reference.path.startsWith('data.target.') ? entity.data.targetVersionId : profileVersion);
+      // Independently authored public paragraphs belong to the approval policy,
+      // while blockSources values still resolve in the historical source edition.
+      if(entity.kind==='projection_profile'&&reference.scope==='projection_record'&&reference.path.endsWith('.$key')&&Object.values(entity.data.publicTexts??{}).some(fields=>Object.values(fields).some(value=>Array.isArray(value)&&value.some(block=>block.id===reference.id)))){inspect(reference,prefix);continue;}
       const usesVersion = entity.kind === 'checkpoint' && (reference.path.startsWith('data.runtimeState.') || reference.path.startsWith('data.presentationState.') || reference.path.startsWith('data.presentationResults['))
         || entity.kind === 'trace' && (reference.path.startsWith('data.steps[') || reference.path.startsWith('data.initialExternalValues.') || reference.path.startsWith('data.initialStubValues.') || reference.path.startsWith('data.initialStubBaseState.') || reference.path.startsWith('data.readingPath.'));
       if (anchorVersion || usesVersion && (entity.kind === 'checkpoint' || entity.kind === 'trace')) {
