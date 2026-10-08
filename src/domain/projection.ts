@@ -418,7 +418,7 @@ export function createProjection(project: ProjectData, profileId: string, option
         for (const raw of value) {
           const transition = object(raw); if (!transition) { fail('VALIDATION_FAILED', '状態遷移の形が不正です。', entity.id, field); continue; }
           const from = typedValue(transition.from, variableId, entity, field), to = typedValue(transition.to, variableId, entity, field);
-          if (transition.exception === true) { fail('EXPORT_UNSUPPORTED', '例外付きの状態遷移は制作出力へ対応していません。', entity.id, field); continue; }
+          if (transition.exception === true || transition.exceptionDetails) { fail('EXPORT_UNSUPPORTED', '例外付きの状態遷移は制作出力へ対応していません。', entity.id, field); continue; }
           if (from !== undefined && to !== undefined) output.push({ from, to });
         }
         return output;

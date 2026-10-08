@@ -1,6 +1,6 @@
 import type { CheckpointData, ProjectData, TraceData, ValidationIssue } from './types';
 import type { RuntimeTraceExtensions } from './runtimeContracts';
-import { presentContent } from './presentation';
+import { presentChapterOccurrence } from './presentation';
 import { canonicalJson } from '../storage/json';
 import { validateExternalInput } from './externalInputs';
 import { resolvePinnedWorlds } from './pinnedWorlds';
@@ -16,7 +16,7 @@ export function validateReadingTraceRecord(content: ProjectData, trace: TraceDat
   const closure = resolvePinnedWorlds(content, options.worldSnapshots ?? {});
   if (closure.errors.length) fail('worldReferences', closure.errors[0]!, 'REFERENCE_INVALID');
   const referenceEntities = closure.worlds.flatMap(world => world.entities);
-  issues.push(...validateExternalInput(content, trace.initialExternalValues ?? {}).map(issue => ({ ...issue, path: `${path}.initialExternalValues.${issue.path}` })));
+  issues.push(...validateExternalInput(content, trace.initialExternalValues ?? {}, undefined, referenceEntities).map(issue => ({ ...issue, path: `${path}.initialExternalValues.${issue.path}` })));
   if (trace.steps.length) fail('steps', '章読み通しにフロー遷移を混在させられません。');
   if (trace.contentVersionId !== checkpoint.contentVersionId || checkpoint.runtimeState.contentVersionId !== trace.contentVersionId) fail('contentVersionId', '開始状態と読み通しの固定版が一致しません。');
   if (trace.contentRevision !== content.revision || checkpoint.contentRevision !== content.revision) fail('contentRevision', '章読み通しには開始状態と内容版に一致する更新番号が必要です。');
@@ -30,7 +30,7 @@ export function validateReadingTraceRecord(content: ProjectData, trace: TraceDat
     if (occurrence.before.contentVersionId !== trace.contentVersionId || occurrence.after.contentVersionId !== trace.contentVersionId || occurrence.before.presentationPosition !== null || occurrence.after.presentationPosition !== null) fail(current, '提示状態の内容版またはフロー位置が不正です。');
     if (canonicalJson(occurrence.before) !== canonicalJson(expected)) fail(`${current}.before`, '提示状態が開始状態または直前の提示とつながりません。', 'INTEGRITY_FAILED');
     if (canonicalJson(occurrence.externalValues ?? {}) !== canonicalJson(trace.initialExternalValues ?? {})) fail(`${current}.externalValues`, '章読み通し中に、記録した外部入力を未記録の操作で変更できません。', 'INTEGRITY_FAILED');
-    const replay = presentContent(content, occurrence.before, { sceneId: occurrence.entityId, externalValues: occurrence.externalValues ?? trace.initialExternalValues ?? {}, referenceEntities });
+    const replay = presentChapterOccurrence(content, occurrence.before, { sceneId: occurrence.entityId, worldTick: trace.initialWorldTick ?? undefined, previousSceneId: reading.occurrences[index - 1]?.entityId, last: index + 1 === reading.sceneIds.length, externalValues: occurrence.externalValues ?? trace.initialExternalValues ?? {}, referenceEntities });
     if (!replay.ok) for (const issue of replay.issues) issues.push({ ...issue, path: `${path}.${current}.${issue.path}` });
     else {
       if (canonicalJson(replay.state) !== canonicalJson(occurrence.after)) fail(`${current}.after`, '記録した提示後の状態と共通エンジンの結果が一致しません。', 'INTEGRITY_FAILED');

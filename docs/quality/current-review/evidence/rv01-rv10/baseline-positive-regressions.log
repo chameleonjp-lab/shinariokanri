@@ -1,0 +1,143 @@
+
+ RUN  v5.0.3 /workspace/shinariokanri
+
+ ❯ tests/review-runtime-regressions.test.ts (6 tests | 6 failed) 47ms
+   ❯ RV01/RV02/RV03/RV10 expected behavior (Node, not device evidence) (6)
+     × runs scene/chapter/run reset declarations and recomputes derived values, with full rewind 28ms
+     × applies declared new_loop to carried values and full_reset separately 3ms
+     × rejects a forbidden transition with only a note and rolls money and inventory back 3ms
+     × excludes rejected/alternate truth and marks provisional truth as uncertain in both assessment APIs 2ms
+     × keeps rejected relations outside the effective graph and tentative relations uncertain 3ms
+     × uses identical chapter/route/version scope and arrival observations in chapter and flow presentation 6ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/review-runtime-regressions.test.ts > RV01/RV02/RV03/RV10 expected behavior (Node, not device evidence) > runs scene/chapter/run reset declarations and recomputes derived values, with full rewind
+AssertionError: expected { type: 'integer', value: 5 } to deeply equal { type: 'integer', value: 2 }
+
+- Expected
++ Received
+
+  {
+    "type": "integer",
+-   "value": 2,
++   "value": 5,
+  }
+
+ ❯ tests/review-runtime-regressions.test.ts:32:85
+     30|     const state = initializeRuntimeState(p); state.variableValues[v.id…
+     31|     const before = startTrial(p, { entryId: a.id, state }), after = st…
+     32|     expect(after.status).toBe('terminal'); expect(after.state.variable…
+       |                                                                                     ^
+     33|     expect(after.state.variableValues[derived.id]).toEqual({ type: 'in…
+     34|     expect(backTrial(after).state).toEqual(before.state);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  tests/review-runtime-regressions.test.ts > RV01/RV02/RV03/RV10 expected behavior (Node, not device evidence) > applies declared new_loop to carried values and full_reset separately
+AssertionError: expected { type: 'integer', value: 7 } to deeply equal { type: 'integer', value: 2 }
+
+- Expected
++ Received
+
+  {
+    "type": "integer",
+-   "value": 2,
++   "value": 7,
+  }
+
+ ❯ tests/review-runtime-regressions.test.ts:41:75
+     39|     const state = initializeRuntimeState(p); state.variableValues[v.id…
+     40|     const trial = startTrial(p, { state });
+     41|     expect(restartTrial(p, trial, 'next_run').state.variableValues[v.i…
+       |                                                                           ^
+     42|     expect(restartTrial(p, trial, 'all').state.variableValues[v.id]).t…
+     43|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+ FAIL  tests/review-runtime-regressions.test.ts > RV01/RV02/RV03/RV10 expected behavior (Node, not device evidence) > rejects a forbidden transition with only a note and rolls money and inventory back
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/review-runtime-regressions.test.ts:51:23
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯
+
+ FAIL  tests/review-runtime-regressions.test.ts > RV01/RV02/RV03/RV10 expected behavior (Node, not device evidence) > excludes rejected/alternate truth and marks provisional truth as uncertain in both assessment APIs
+AssertionError: expected 'known' to be 'unknown' // Object.is equality
+
+Expected: "unknown"
+Received: "known"
+
+ ❯ tests/review-runtime-regressions.test.ts:59:69
+     57|     for (const status of ['rejected', 'alternate'] as const) {
+     58|       assertion.status = status;
+     59|       expect(worldStateCandidates(p, person.id, 'location').status).to…
+       |                                                                     ^
+     60|       expect(createWorldAssessment(p).stateCandidates(person.id, 'loca…
+     61|     }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/6]⎯
+
+ FAIL  tests/review-runtime-regressions.test.ts > RV01/RV02/RV03/RV10 expected behavior (Node, not device evidence) > keeps rejected relations outside the effective graph and tentative relations uncertain
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/review-runtime-regressions.test.ts:70:79
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/6]⎯
+
+ FAIL  tests/review-runtime-regressions.test.ts > RV01/RV02/RV03/RV10 expected behavior (Node, not device evidence) > uses identical chapter/route/version scope and arrival observations in chapter and flow presentation
+AssertionError: expected { …(13) } to deeply equal { …(13) }
+
+- Expected
++ Received
+
+@@ -10,15 +10,16 @@
+    "rngPosition": 0,
+    "rngSeed": "scenario-1",
+    "seenIds": [
+      "bd5bf1a3-e92a-46b1-8dec-0b9bcf04dda1",
+      "31026a5d-3a2e-4874-b93b-21227aeef196",
++     "bbfceae9-59c7-4887-b488-25d398dee8b3",
+    ],
+    "variableValues": {
+      "47114e3a-b4b2-447d-bc96-cca06d3f03ca": {
+        "type": "boolean",
+-       "value": false,
++       "value": true,
+      },
+    },
+    "visitCounts": {
+      "31026a5d-3a2e-4874-b93b-21227aeef196": 1,
+      "bd5bf1a3-e92a-46b1-8dec-0b9bcf04dda1": 1,
+
+ ❯ tests/review-runtime-regressions.test.ts:82:42
+     80|     const chapter = presentContent(p, initializeRuntimeState(p), { nod…
+     81|     expect(chapter.ok).toBe(true);
+     82|     if (chapter.ok) { expect(flow.state).toEqual(chapter.state); expec…
+       |                                          ^
+     83|     expect(flow.state.seenIds).not.toContain(disclosure.id); expect(fl…
+     84|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/6]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  6 failed (6)
+   Start at  02:08:06
+   Duration  923ms (transform 83%, import 10%, tests 7%, worker 1%)
+

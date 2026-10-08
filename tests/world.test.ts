@@ -7,7 +7,7 @@ import { alignGraphPositions, buildRelationGraph } from '../src/domain/relationG
 import { worldTimeConsequences } from '../src/domain/worldTimeImpact';
 import { worldSnapshotContents } from '../src/storage/archive';
 
-function add<K extends Entity['kind']>(project: ProjectData, kind: K, name: string, data: Partial<Entity<K>['data']> = {}): Entity<K> { const entity = createEntity(project.projectId, kind, name, data) as Entity<K>; project.entities.push(entity); return entity; }
+function add<K extends Entity['kind']>(project: ProjectData, kind: K, name: string, data: Partial<Entity<K>['data']> = {}): Entity<K> { const entity = createEntity(project.projectId, kind, name, data) as Entity<K>; entity.status = 'confirmed'; project.entities.push(entity); return entity; }
 const period = (start: string | null, end: string | null): Validity => ({ ...emptyValidity(), worldRange: { start, end } });
 function assertion(project: ProjectData, subjectId: string, predicate: string, value: string, validity: Validity = emptyValidity()) { return add(project, 'assertion', `${predicate}の記録`, { subjectId, predicate, value, truthKind: 'author_truth', validity, sourceIds: [] }); }
 function relation(project: ProjectData, fromId: string, toId: string, type = 'trust', validity = emptyValidity()): Relation { const result: Relation = { id: newId(), projectId: project.projectId, revision: '0', fromId, toId, relationType: type, direction: 'forward', validity, evidenceIds: [], status: 'provisional', visibility: 'private' }; project.relations.push(result); return result; }

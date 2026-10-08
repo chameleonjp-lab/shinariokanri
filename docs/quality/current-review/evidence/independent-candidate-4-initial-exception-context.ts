@@ -1,0 +1,12 @@
+import { expect, it } from 'vitest';
+import { createProject, createEntity, emptyValidity, validateProject } from '../src/domain/model';
+import { initializeRuntimeState } from '../src/domain/conditions';
+import { presentContent } from '../src/domain/presentation';
+import { startTrialVerified } from '../src/domain/runtimeVerified';
+import { writeFileSync } from 'node:fs';
+it('IC14 supplies an explicit starting world tick to the same valid initial-presentation exception',async()=>{
+ const p=createProject('Initial exception'),scene=createEntity(p.projectId,'scene','first'),last=createEntity(p.projectId,'scene','last'),entry=createEntity(p.projectId,'flow_node','entry',{nodeType:'entry',sceneId:scene.id,executionPolicy:'first_match'}),end=createEntity(p.projectId,'flow_node','end',{nodeType:'terminal',sceneId:last.id,terminalReason:'end'}),edge=createEntity(p.projectId,'flow_edge','next',{fromId:entry.id,toId:end.id,edgeType:'automatic',priority:0}),evidence=createEntity(p.projectId,'source','Evidence',{locator:'Synthetic section 1'}),q=createEntity(p.projectId,'variable','Quest',{key:'quest',valueType:'integer',initial:{type:'integer',value:0},allowed:{min:0,max:3},transitionRules:[{from:{type:'integer',value:0},to:{type:'integer',value:1}}]}),f=createEntity(p.projectId,'foreshadow','Question',{resolutionPolicy:'this_work'});evidence.status='confirmed';
+ const effect=createEntity(p.projectId,'effect','Intentional exception',{operation:'set',targetId:q.id,value:{type:'integer',value:3},exceptionDetails:{reason:'intentional route',targetScope:{projectId:p.projectId},validity:{...emptyValidity(),worldRange:{start:'0',end:'10'}},evidenceIds:[evidence.id]}}),disclosure=createEntity(p.projectId,'disclosure','Opening disclosure',{foreshadowId:f.id,anchor:{entityId:scene.id},stage:'hint',role:'clue',knowledgeEffects:[effect.id]});p.entities.push(scene,last,entry,end,edge,evidence,q,f,effect,disclosure);writeFileSync('/tmp/shinariokanri-independent-candidate-4-initial-exception-validation.json',JSON.stringify(validateProject(p),null,2));expect(validateProject(p).ok).toBe(true);
+ const direct=presentContent(p,initializeRuntimeState(p),{nodeId:entry.id,worldTick:'5'});expect(direct.ok).toBe(true);if(direct.ok)expect(direct.state.variableValues[q.id]).toEqual({type:'integer',value:3});
+ const trial=await startTrialVerified(p,{entryId:entry.id,worldTick:'5'} as any,{});expect(trial.status).toBe('ready');expect(trial.state.variableValues[q.id]).toEqual({type:'integer',value:3});
+});

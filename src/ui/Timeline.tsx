@@ -1,3 +1,4 @@
+import { adoptedRecord, adoptionAssessment } from '../domain/adoption';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { CalendarDefinition, Entity, ID, ProjectData, Relation, Tick, TimeSpec } from '../domain/types';
 import { emptyValidity, newId, RELATION_LABELS, RELATION_TYPES } from '../domain/model';
@@ -56,9 +57,9 @@ export function Timeline({ project, selectedId: externalSelectedId, onSelect, on
   const [editingRelation, setEditingRelation] = useState<Relation | null>(null), [editingTime, setEditingTime] = useState<ID | null>(null), [laneEditor, setLaneEditor] = useState(false), [mainStartEditor, setMainStartEditor] = useState(false), [mainStartDraft, setMainStartDraft] = useState(project.mainStart), [mainStartValid, setMainStartValid] = useState(true);
   const [shiftEditor, setShiftEditor] = useState(false), [shiftOffset, setShiftOffset] = useState('0'), [shiftPreview, setShiftPreview] = useState<TimeEditPreview | null>(null), [lastChanges, setLastChanges] = useState<TimeEditChange[] | null>(null), [busy, setBusy] = useState(false), [error, setError] = useState(''), [notice, setNotice] = useState('');
   const canvas = useRef<HTMLDivElement>(null), restored = useRef(false), pendingReveal = useRef<ID | null>(null), previousSelection = useRef<ID | null>(initial.selectedId === selectedId ? selectedId : null);
-  const active = useMemo(() => { const local = project.entities.filter(entity => !entity.deletedAt), ids = new Set(project.entities.map(entity => entity.id)); return [...local, ...referenceEntities.filter(entity => !entity.deletedAt && !ids.has(entity.id))]; }, [project.entities, referenceEntities]);
+  const active = useMemo(() => { const local = project.entities.filter(entity => adoptedRecord(entity)), ids = new Set(project.entities.map(entity => entity.id)); return [...local, ...referenceEntities.filter(entity => adoptedRecord(entity) && !ids.has(entity.id))]; }, [project.entities, referenceEntities]);
   const entityIndex = useMemo(() => new Map(active.map(entity => [entity.id, entity])), [active]);
-  const localEvents = useMemo(() => project.entities.filter((entity): entity is Entity<'event'> => entity.kind === 'event' && !entity.deletedAt), [project.entities]);
+  const localEvents = useMemo(() => project.entities.filter((entity): entity is Entity<'event'> => entity.kind === 'event' && adoptedRecord(entity)), [project.entities]);
   const referenceEvents = useMemo(() => active.filter((entity): entity is Entity<'event'> => entity.kind === 'event' && entity.projectId !== project.projectId), [active, project.projectId]);
   const allEvents = useMemo(() => [...localEvents, ...referenceEvents], [localEvents, referenceEvents]);
   const events = useMemo(() => allEvents.filter(event => !placeFilterId || !!event.data.locationId && compatibleLocations(event.data.locationId, placeFilterId, entityIndex)), [allEvents, placeFilterId, entityIndex]);
@@ -84,7 +85,7 @@ export function Timeline({ project, selectedId: externalSelectedId, onSelect, on
   const selected = selectedId ? entityIndex.get(selectedId) : undefined, selectedTick = worldTick !== undefined ? worldTick : localTick;
   const context = useMemo(() => checkpointContext(viewProject, checkpointId), [viewProject, checkpointId]), point = useMemo(() => ({ at: selectedTick, context }), [selectedTick, context]), worldAssessment = useMemo(() => createWorldAssessment(viewProject, point), [viewProject, point]);
   const selectedPeople = selected?.kind === 'event' ? [...new Set((selected.data.participants ?? []).map(participant => participant.characterId))].flatMap(id => { const person = entityIndex.get(id); return person?.kind === 'character' ? [person] : []; }) : selected?.kind === 'character' ? [selected] : [];
-  const eventRelations = useMemo(() => viewProject.relations.filter(relation => !relation.deletedAt && entityIndex.get(relation.fromId)?.kind === 'event' && entityIndex.get(relation.toId)?.kind === 'event' && assessWorldValidity(relation.validity, point).value !== 'false' && (relationFilter === 'all' || relation.relationType === relationFilter) && (!relatedOnly || relation.fromId === selectedId || relation.toId === selectedId)), [viewProject.relations, entityIndex, relationFilter, relatedOnly, selectedId, point]);
+  const eventRelations = useMemo(() => viewProject.relations.filter(relation => adoptedRecord(relation) && entityIndex.get(relation.fromId)?.kind === 'event' && entityIndex.get(relation.toId)?.kind === 'event' && adoptionAssessment(relation, assessWorldValidity(relation.validity, point)).value !== 'false' && (relationFilter === 'all' || relation.relationType === relationFilter) && (!relatedOnly || relation.fromId === selectedId || relation.toId === selectedId)), [viewProject.relations, entityIndex, relationFilter, relatedOnly, selectedId, point]);
   const safeRelationPage = Math.min(relationPage, Math.max(0, Math.ceil(eventRelations.length / PAGE_SIZE) - 1));
 
   useEffect(() => {

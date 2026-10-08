@@ -1,0 +1,57 @@
+{
+  "scope": "component integration in actual headless Chromium; not full App, real device, or original acceptance",
+  "startedAt": "2026-10-08T02:51:38.410Z",
+  "environment": {
+    "node": "v24.19.0",
+    "platform": "linux",
+    "browser": "151.0.7922.173"
+  },
+  "checks": [
+    {
+      "id": "IC08a",
+      "expected": "save remains disabled after remount during pending save",
+      "actual": {
+        "saveDisabled": true
+      },
+      "status": "passed"
+    },
+    {
+      "id": "IC08b",
+      "expected": "acknowledged input ceases to be unsaved after remount",
+      "actual": {
+        "staleNoticeCount": 0,
+        "name": "Saved input",
+        "parentDraft": null,
+        "statuses": []
+      },
+      "status": "passed"
+    },
+    {
+      "id": "IC09",
+      "expected": "invalid calendar JSON input is preserved across remount",
+      "actual": "{ incomplete calendar",
+      "status": "passed"
+    },
+    {
+      "id": "IC14u",
+      "expected": "tick inputs are available before start and while reading a node with no trigger",
+      "actual": {
+        "startCount": 1,
+        "progressCount": 1,
+        "progressValue": "5"
+      },
+      "status": "passed"
+    },
+    {
+      "id": "IC10",
+      "expected": "borrowed variable stub modal opens safely with its fixed definition",
+      "actual": {
+        "modalCount": 1,
+        "pageErrors": [],
+        "rootChildren": 1
+      },
+      "status": "passed"
+    }
+  ],
+  "finishedAt": "2026-10-08T02:51:40.471Z"
+}

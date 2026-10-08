@@ -1,0 +1,193 @@
+
+ RUN  v5.0.3 /tmp/shinariokanri-independent-3099c9d
+
+ ❯ tests/independent-contract-regressions.test.ts (9 tests | 9 failed) 45ms
+   ❯ Independent audit: expected original contracts (9)
+     × IR01 rejected state definitions do not initialize effective trial values 16ms
+     × IR02 unresolved presentation outside the current chapter cannot block arrival 4ms
+     × RV01 scene_end resets, back/replay obligation remains separate 6ms
+     × RV01 explicit new_loop supersedes carryover 2ms
+     × RV02 free reason cannot authorize forbidden transition or accompanying money 2ms
+     × RV03 rejected world assertions are excluded from effective candidates and index 2ms
+     × RV03 rejected trust is not an active effective relationship 1ms
+     × RV04 trial resolves adopted variable from the pinned registry 6ms
+     × RV10 another chapter disclosure is ignored consistently without effects 3ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 9 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/independent-contract-regressions.test.ts > Independent audit: expected original contracts > IR01 rejected state definitions do not initialize effective trial values
+AssertionError: expected { type: 'boolean', value: true } to be undefined
+
+- Expected:
+undefined
+
++ Received:
+{
+  "type": "boolean",
+  "value": true,
+}
+
+ ❯ tests/independent-contract-regressions.test.ts:12:369
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/9]⎯
+
+ FAIL  tests/independent-contract-regressions.test.ts > Independent audit: expected original contracts > IR02 unresolved presentation outside the current chapter cannot block arrival
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ tests/independent-contract-regressions.test.ts:13:637
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/9]⎯
+
+ FAIL  tests/independent-contract-regressions.test.ts > Independent audit: expected original contracts > RV01 scene_end resets, back/replay obligation remains separate
+AssertionError: expected { type: 'integer', value: 5 } to deeply equal { type: 'integer', value: +0 }
+
+- Expected
++ Received
+
+  {
+    "type": "integer",
+-   "value": 0,
++   "value": 5,
+  }
+
+ ❯ tests/independent-contract-regressions.test.ts:14:576
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/9]⎯
+
+ FAIL  tests/independent-contract-regressions.test.ts > Independent audit: expected original contracts > RV01 explicit new_loop supersedes carryover
+AssertionError: expected { type: 'integer', value: 7 } to deeply equal { type: 'integer', value: 2 }
+
+- Expected
++ Received
+
+  {
+    "type": "integer",
+-   "value": 2,
++   "value": 7,
+  }
+
+ ❯ tests/independent-contract-regressions.test.ts:15:442
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/9]⎯
+
+ FAIL  tests/independent-contract-regressions.test.ts > Independent audit: expected original contracts > RV02 free reason cannot authorize forbidden transition or accompanying money
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/independent-contract-regressions.test.ts:16:827
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/9]⎯
+
+ FAIL  tests/independent-contract-regressions.test.ts > Independent audit: expected original contracts > RV03 rejected world assertions are excluded from effective candidates and index
+AssertionError: expected [ { assertion: { …(11) }, …(2) } ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   {
++     "assertion": {
++       "createdAt": "2026-10-08T02:12:03.594Z",
++       "customValues": {},
++       "data": {
++         "evidenceLocation": null,
++         "holderId": null,
++         "predicate": "location",
++         "reason": "",
++         "sourceIds": [],
++         "subjectId": "cfc7a410-0bc1-4733-a8f0-40fa58251452",
++         "truthKind": "author_truth",
++         "validity": {
++           "presentationAnchor": null,
++           "routeCondition": null,
++           "worldRange": null,
++         },
++         "value": "8807fc87-7e94-4b3c-9310-792071773324",
++       },
++       "id": "a05337aa-23cb-4a28-94ce-f791606c0dcd",
++       "kind": "assertion",
++       "name": "rejected location",
++       "projectId": "774f55ac-583e-4e45-9088-2711bb9b800d",
++       "revision": "0",
++       "status": "rejected",
++       "updatedAt": "2026-10-08T02:12:03.594Z",
++       "visibility": "private",
++     },
++     "assessment": {
++       "reasons": [],
++       "value": "true",
++     },
++     "targetId": "8807fc87-7e94-4b3c-9310-792071773324",
++   },
++ ]
+
+ ❯ tests/independent-contract-regressions.test.ts:17:571
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/9]⎯
+
+ FAIL  tests/independent-contract-regressions.test.ts > Independent audit: expected original contracts > RV03 rejected trust is not an active effective relationship
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/independent-contract-regressions.test.ts:18:489
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/9]⎯
+
+ FAIL  tests/independent-contract-regressions.test.ts > Independent audit: expected original contracts > RV04 trial resolves adopted variable from the pinned registry
+AssertionError: expected 'unknown' to be 'ready' // Object.is equality
+
+Expected: "ready"
+Received: "unknown"
+
+ ❯ tests/independent-contract-regressions.test.ts:19:806
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/9]⎯
+
+ FAIL  tests/independent-contract-regressions.test.ts > Independent audit: expected original contracts > RV10 another chapter disclosure is ignored consistently without effects
+AssertionError: expected { type: 'boolean', value: true } to deeply equal { type: 'boolean', value: false }
+
+- Expected
++ Received
+
+  {
+    "type": "boolean",
+-   "value": false,
++   "value": true,
+  }
+
+ ❯ tests/independent-contract-regressions.test.ts:20:928
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/9]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  9 failed (9)
+   Start at  02:12:03
+   Duration  519ms (transform 75%, tests 12%, import 12%, worker 1%)
+

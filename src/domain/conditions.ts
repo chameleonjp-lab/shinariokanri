@@ -1,5 +1,7 @@
-import type { Condition, ConditionResult, EffectData, Entity, Expression, ID, ProjectData, RuntimeContext, RuntimeItem, RuntimeState, TruthValue, TypedValue, ValidationIssue } from './types';
+import type { Condition, ConditionResult, EffectData, Entity, Expression, ID, ProjectData, ResetRule, RuntimeContext, RuntimeItem, RuntimeState, TruthValue, TypedValue, ValidationIssue } from './types';
 import { emptyRuntimeState, validateCondition, validateEffectData, validateExpression, validateRuntimeState, validateTypedValue, validateVariableValue } from './model';
+import { adoptedRecord } from './adoption';
+import { evaluateScenarioException } from './stateRules';
 
 export class DomainValidationError extends Error {
   readonly issues: ValidationIssue[];
@@ -8,7 +10,8 @@ export class DomainValidationError extends Error {
 const issue = (message: string, path = 'condition', code: ValidationIssue['code'] = 'VALIDATION_FAILED'): ValidationIssue => ({ code, path, message });
 const unknown = (reason: string): TypedValue => ({ type: 'unknown', value: null, reason });
 const result = (value: TruthValue, reasons: string[] = []): ConditionResult => ({ value, reasons: [...new Set(reasons)] });
-const defs = (context: RuntimeContext): Entity<'variable'>[] => context.variables ?? (context.entities ?? []).filter((entity): entity is Entity<'variable'> => entity.kind === 'variable' && !entity.deletedAt);
+const contextEntities = (context: RuntimeContext) => [...(context.entities ?? []), ...(context.referenceEntities ?? [])].filter(adoptedRecord);
+const defs = (context: RuntimeContext): Entity<'variable'>[] => (context.variables ?? [...(context.entities ?? []), ...(context.referenceEntities ?? [])].filter((entity): entity is Entity<'variable'> => entity.kind === 'variable')).filter(adoptedRecord);
 function variableValue(variableId: ID, context: RuntimeContext, stack: ID[]): TypedValue {
   const variable = defs(context).find(variable => variable.id === variableId);
   if (!variable) {
@@ -60,21 +63,21 @@ function evaluate(condition: Condition, context: RuntimeContext, stack: ID[]): C
       return result(values.some(value => value.value === 'true') ? 'true' : values.some(value => value.value === 'unknown') ? 'unknown' : 'false', values.flatMap(value => value.reasons));
     }
     case 'item': {
-      if (context.entities && !context.entities.some(entity => entity.id === condition.itemId && entity.kind === 'item' && !entity.deletedAt)) return result('unknown', ['指定した物品が定義されていません。']);
+      if (context.entities && !contextEntities(context).some(entity => entity.id === condition.itemId && entity.kind === 'item')) return result('unknown', ['指定した物品が定義されていません。']);
       const quantity = context.state.itemInstances.filter(item => !item.consumed && (item.instanceId === condition.itemId || item.typeId === condition.itemId)).reduce((sum, item) => sum + item.quantity, 0);
       return result(quantity >= condition.quantity ? 'true' : 'false');
     }
     case 'known': {
-      if (context.entities && (!context.entities.some(entity => entity.id === condition.assertionId && entity.kind === 'assertion' && !entity.deletedAt) || ![...context.entities, ...(context.referenceEntities ?? [])].some(entity => entity.id === condition.holderId && entity.kind === 'character' && !entity.deletedAt))) return result('unknown', ['認識の対象または人物が定義されていません。']);
+      if (context.entities && (!contextEntities(context).some(entity => entity.id === condition.assertionId && entity.kind === 'assertion') || !contextEntities(context).some(entity => entity.id === condition.holderId && entity.kind === 'character'))) return result('unknown', ['認識の対象または人物が定義されていません。']);
       const knowledge = context.state.assertions.find(assertion => assertion.assertionId === condition.assertionId && assertion.holderId === condition.holderId);
       return knowledge ? result(knowledge.truth, knowledge.truth === 'unknown' ? ['人物の認識が未確定です。'] : []) : result('false');
     }
     case 'visited': {
-      if (context.entities && !context.entities.some(entity => entity.id === condition.entityId && !entity.deletedAt)) return result('unknown', ['訪問先が定義されていません。']);
+      if (context.entities && !contextEntities(context).some(entity => entity.id === condition.entityId)) return result('unknown', ['訪問先が定義されていません。']);
       return result((context.state.visitCounts[condition.entityId] ?? 0) >= condition.count ? 'true' : 'false');
     }
     case 'external': {
-      if (context.entities && !context.entities.some(entity => entity.id === condition.contractId && entity.kind === 'external_contract' && !entity.deletedAt)) return result('unknown', ['外部契約が定義されていません。']);
+      if (context.entities && !contextEntities(context).some(entity => entity.id === condition.contractId && entity.kind === 'external_contract')) return result('unknown', ['外部契約が定義されていません。']);
       const value = context.externalValues?.[condition.contractId];
       if (!value) return result('unknown', ['外部値をまだ取得していません。']);
       const checked = validateTypedValue(value); if (!checked.ok) throw new DomainValidationError(checked.issues);
@@ -112,10 +115,10 @@ export function evaluateExpression(expression: Expression, context: RuntimeConte
   const checked = validateExpression(expression); if (!checked.ok) throw new DomainValidationError(checked.issues);
   return expressionValue(checked.value, context, []);
 }
-export function initializeRuntimeState(project: ProjectData, contentVersionId: ID = project.projectId): RuntimeState {
-  const state = emptyRuntimeState(contentVersionId), variables = project.entities.filter((entity): entity is Entity<'variable'> => entity.kind === 'variable' && !entity.deletedAt);
+export function initializeRuntimeState(project: ProjectData, contentVersionId: ID = project.projectId, referenceEntities: Entity[] = []): RuntimeState {
+  const state = emptyRuntimeState(contentVersionId), variables = [...project.entities, ...referenceEntities].filter((entity): entity is Entity<'variable'> => entity.kind === 'variable' && adoptedRecord(entity));
   for (const variable of variables) state.variableValues[variable.id] = structuredClone(variable.data.initial);
-  for (const variable of variables) if (variable.data.derived) state.variableValues[variable.id] = variableValue(variable.id, { state, variables, entities: project.entities }, []);
+  for (const variable of variables) if (variable.data.derived) state.variableValues[variable.id] = variableValue(variable.id, { state, variables, entities: project.entities, referenceEntities }, []);
   // Authors' world assertions and event participation never grant runtime knowledge.
   return state;
 }
@@ -139,15 +142,20 @@ export type EffectsResult = { ok: true; state: RuntimeState } | { ok: false; sta
 function sameValue(a: TypedValue, b: TypedValue): boolean { return a.type === b.type && a.value === b.value; }
 function transitionAllowed(variable: Entity<'variable'>, before: TypedValue, after: TypedValue, effect: EffectData, context: RuntimeContext): void {
   if (effect.operation === 'reset' || sameValue(before, after)) return;
-  const quests = (context.entities ?? []).filter((entity): entity is Entity<'quest'> => entity.kind === 'quest' && entity.data.stateVariableId === variable.id && !entity.deletedAt);
+  const quests = contextEntities(context).filter((entity): entity is Entity<'quest'> => entity.kind === 'quest' && entity.data.stateVariableId === variable.id);
   const rules = [...(variable.data.transitionRules ?? []), ...quests.flatMap(quest => quest.data.transitionRules ?? [])];
   if (!rules.length && !quests.length) return;
   if (before.type === 'unknown') throw new DomainValidationError([issue('遷移前の状態が未定です。', `variables.${variable.id}`, 'CONDITION_UNKNOWN')]);
-  if (!rules.some(rule => sameValue(rule.from, before) && sameValue(rule.to, after)) && !effect.reason?.trim()) throw new DomainValidationError([issue('許容遷移表にない状態更新です。明示resetまたは理由付き例外が必要です。', `variables.${variable.id}`, 'TRANSITION_BLOCKED')]);
+  const matching = rules.filter(rule => sameValue(rule.from, before) && sameValue(rule.to, after));
+  if (matching.some(rule => !rule.exception && !rule.exceptionDetails)) return;
+  const exceptions = [...matching.flatMap(rule => rule.exceptionDetails ? [rule.exceptionDetails] : []), ...(effect.exceptionDetails ? [effect.exceptionDetails] : [])];
+  const checked = exceptions.map(exception => evaluateScenarioException(exception, context));
+  if (checked.some(value => value.value === 'true')) return;
+  throw new DomainValidationError([issue(checked.flatMap(value => value.reasons).join('、') || '許容遷移表にない状態更新です。明示resetまたは対象・期限・根拠付きの例外が必要です。', `variables.${variable.id}`, checked.some(value => value.value === 'unknown') ? 'CONDITION_UNKNOWN' : 'TRANSITION_BLOCKED')]);
 }
 function itemTargets(state: RuntimeState, targetId: ID, instanceId?: ID | null): RuntimeItem[] { return state.itemInstances.filter(item => instanceId ? item.instanceId === instanceId : item.instanceId === targetId || item.typeId === targetId); }
 function applyOne(state: RuntimeState, effect: EffectData, context: RuntimeContext, effectId?: ID): void {
-  const variables = defs(context), target = (context.entities ?? []).find(entity => entity.id === effect.targetId && !entity.deletedAt);
+  const variables = defs(context), target = [...(context.entities ?? []), ...(context.referenceEntities ?? [])].find(entity => entity.id === effect.targetId && adoptedRecord(entity));
   const fail: (message: string, code?: ValidationIssue['code']) => never = (message, code = 'TRANSITION_BLOCKED') => { throw new DomainValidationError([issue(message, `effects.${effectId ?? effect.targetId}`, code)]); };
   if (['set', 'add', 'reset'].includes(effect.operation)) {
     const variable = variables.find(variable => variable.id === effect.targetId); if (!variable) fail('更新先の状態変数がありません。', 'REFERENCE_INVALID');
@@ -179,7 +187,7 @@ function applyOne(state: RuntimeState, effect: EffectData, context: RuntimeConte
   }
   if (!target || target.kind !== 'item') fail('物品効果の対象には宣言済みの物品が必要です。', 'REFERENCE_INVALID');
   if (effect.instanceId) {
-    const individual = context.entities?.find(entity => entity.id === effect.instanceId);
+    const individual = contextEntities(context).find(entity => entity.id === effect.instanceId);
     if (!individual || individual.kind !== 'item' || individual.data.itemMode !== 'instance') fail('指定した物品個体が定義されていません。', 'REFERENCE_INVALID');
     if ((target.data.itemMode === 'type' && individual.data.typeId !== target.id) || (target.data.itemMode === 'instance' && individual.id !== target.id)) fail('指定した個体が効果の対象物品に属していません。', 'REFERENCE_INVALID');
   }
@@ -187,7 +195,7 @@ function applyOne(state: RuntimeState, effect: EffectData, context: RuntimeConte
   if (effect.operation === 'grant') {
     if (effect.value && effect.value.type !== 'integer') fail('取得数量はintegerです。', 'VALIDATION_FAILED');
     if (!Number.isSafeInteger(quantity) || quantity < 1) fail('取得数量は正の安全な整数です。', 'VALIDATION_FAILED');
-    const individual = target.data.itemMode === 'instance' ? target : effect.instanceId ? context.entities?.find(entity => entity.id === effect.instanceId && entity.kind === 'item' && entity.data.itemMode === 'instance') as Entity<'item'> | undefined : undefined;
+    const individual = target.data.itemMode === 'instance' ? target : effect.instanceId ? contextEntities(context).find(entity => entity.id === effect.instanceId && entity.kind === 'item' && entity.data.itemMode === 'instance') as Entity<'item'> | undefined : undefined;
     if (effect.instanceId && !individual) fail('指定した物品個体がありません。', 'REFERENCE_INVALID');
     if (individual) {
       if (quantity !== 1) fail('物品個体の数量は1です。');
@@ -215,7 +223,7 @@ function applyOne(state: RuntimeState, effect: EffectData, context: RuntimeConte
   }
   if (effect.operation === 'move') {
     if (effect.value?.type !== 'ref') fail('移動先には人物・グループ・場所のrefが必要です。', 'VALIDATION_FAILED');
-    const destination = context.entities?.find(entity => entity.id === effect.value?.value && !entity.deletedAt);
+    const destination = contextEntities(context).find(entity => entity.id === effect.value?.value);
     if (!destination || !['character', 'group', 'place'].includes(destination.kind)) fail('物品の移動先がありません。', 'REFERENCE_INVALID');
     if (items.length !== 1) fail('移動する現存物品を一個体に特定してください。');
     const item = items[0]; item.ownerId = destination.kind === 'place' ? null : destination.id; item.locationId = destination.kind === 'place' ? destination.id : null;
@@ -228,7 +236,7 @@ export function applyEffectsAtomic(state: RuntimeState, effects: (Entity<'effect
   const working = structuredClone(state);
   try {
     for (const [index, input] of effects.entries()) {
-      if ('data' in input && (input.status === 'rejected' || input.deletedAt)) throw new DomainValidationError([issue(input.status === 'rejected' ? '不採用の効果は実行できません。' : '削除済みの効果は実行できません。', `effects[${index}]`, 'REFERENCE_INVALID')]);
+      if ('data' in input && !adoptedRecord(input)) throw new DomainValidationError([issue('削除・不採用・別案の効果は実行できません。', `effects[${index}]`, 'REFERENCE_INVALID')]);
       const effect = 'data' in input ? input.data : input, effectId = 'id' in input ? input.id : undefined;
       const checkedEffect = validateEffectData(effect, `effects[${index}]`); if (!checkedEffect.ok) throw new DomainValidationError(checkedEffect.issues);
       const condition = evaluateCondition(effect.condition, { ...context, state: working });
@@ -246,4 +254,27 @@ export function applyEffectsAtomic(state: RuntimeState, effects: (Entity<'effect
   } catch (error) {
     return { ok: false, state, issues: error instanceof DomainValidationError ? error.issues : [issue(error instanceof Error ? error.message : '効果を適用できません。', 'effects')] };
   }
+}
+
+/** Lifecycle resets are explicit effects with the same validation and atomicity as a choice. */
+export function resetRuntimeLifecycle(state: RuntimeState, events: ResetRule['on'][], context: RuntimeContext): EffectsResult {
+  let working = structuredClone(state);
+  const causes: NonNullable<RuntimeState['resetCauses']> = [];
+  for (const on of events) {
+    const effects: EffectData[] = [];
+    for (const variable of defs(context)) {
+      if (variable.data.derived || variable.data.externalContractId) continue;
+      const rule = variable.data.resetRules?.find(rule => rule.on === on);
+      const resetScope = on === 'full_reset' || on === 'new_loop' && ['scene', 'chapter', 'run'].includes(variable.data.scope);
+      if (!rule && !resetScope) continue;
+      const value = rule?.value ?? variable.data.initial;
+      effects.push({ operation: 'reset', targetId: variable.id, value });
+      causes.push({ variableId: variable.id, on, before: structuredClone(working.variableValues[variable.id] ?? { type: 'unknown', value: null, reason: '途中開始時の値が未指定です。' }), after: structuredClone(value), reason: rule?.reason || (rule ? '宣言した初期化規則' : `有効範囲 ${variable.data.scope} の初期化`) });
+    }
+    const applied = applyEffectsAtomic(working, effects, { ...context, state: working });
+    if (!applied.ok) return { ...applied, state };
+    working = applied.state;
+  }
+  if (events.length && (causes.length || state.resetCauses)) working.resetCauses = causes;
+  return { ok: true, state: working };
 }
