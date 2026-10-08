@@ -1,0 +1,88 @@
+{
+  "commit": "22db870f0f67f64f798e163cc3abc46a355c5ffe",
+  "tree": "cec857bd636505c6f5b84279e5b7fead72627973",
+  "srcFiles": 186,
+  "productCodeSchema": 151,
+  "srcTests": 35,
+  "sourceAllHashesMatch": true,
+  "originalDocuments15Unchanged": true,
+  "oldB59FailuresUnchanged": true,
+  "original104Requirements116Acceptance24WorkPackages6GroupsPreserved": true,
+  "notOriginalWholeAcceptancePass": true,
+  "environment": {
+    "os": "Debian13.6",
+    "node": "24.19.0",
+    "vitest": "5.0.3",
+    "browser": "Chromium153.0.8010.12",
+    "ports": [
+      5371,
+      5373
+    ],
+    "realDevicesFilesAuthAPI": "not_run"
+  },
+  "results": {
+    "originalSemantic14": "14pass",
+    "fixture1": "1pass",
+    "addedSemantic5": {
+      "pass": [
+        "R8V10-wire-save-reload-native-new-clone-current-change",
+        "R8V11-unknown-receiver-foreign-version-manual-actual-refusal"
+      ],
+      "fail": [
+        "R8D08",
+        "R8D09",
+        "R8D10"
+      ],
+      "logs": [
+        "independent/domain-receipt-boundaries.log",
+        "independent/domain-receipt-scope-final.log",
+        "independent/domain-package-hash.log"
+      ]
+    },
+    "actualAppAdditional4": "4pass",
+    "productionExisting7": "7pass; URL4173→5373 only",
+    "build": "pass; archive build-info unknown/dirty, not release gate"
+  },
+  "remainingFindings": [
+    {
+      "id": "R8D08",
+      "file": "src/domain/gameProtocol.ts",
+      "given": "Valid receipt note also appears in historical snapshot; unchanged control validates",
+      "when": "Call verifyStoredGameEvidence then change only caller snapshot note.mode",
+      "expected": "Original submitted image validates; later edit is separate",
+      "actual": "INTEGRITY_FAILED because images use input snapshots/history/alternatives rather than cloned project",
+      "evidence": "independent/fixtures/R8D08.json"
+    },
+    {
+      "id": "R8D09",
+      "file": "src/domain/gameEvidence.ts",
+      "given": "Valid metadata; unchanged execution reconstruction matches wire runtime hash",
+      "when": "Call rebuildGameExecution then change caller evidence.sourceRevision to99",
+      "expected": "Captured original metadata reconstructs; later field retained separately",
+      "actual": "Revision mismatch rejection after await reads live evidence",
+      "evidence": "independent/fixtures/R8D09.json"
+    },
+    {
+      "id": "R8D10",
+      "file": "src/domain/gameProtocol.ts",
+      "given": "Verified actual receipt and unchanged final state",
+      "when": "Change reception packageHash to64f, reseal action previous/hash chain and receipt/note hashes",
+      "expected": "Original received packageHash mismatch refuses save atomically",
+      "actual": "Direct verification against original package refuses; durable save succeeds and revision advances",
+      "evidence": "independent/fixtures/R8D10.json"
+    }
+  ],
+  "rb07EvidenceRetention": {
+    "oldReportSHA256": "1fdc72a13188b819989919b696d4445b204ca9262d3286536075ee3f618f4dd1",
+    "all145OriginalArtifactsNowPackagedAndSame": true,
+    "oldBindingUnchanged": true,
+    "verification": "independent/RB07_ARTIFACT_RETENTION.json"
+  },
+  "setupClassifications": {
+    "domain-prebuild-setup.log": "Direct Vitest began before generated portable runtime existed; no semantic tests executed; build completed then same15 passed",
+    "setup-receipt-negative-message-run1": "Refusal works; reviewer expected different wording; old log/source retained",
+    "setup-receipt-negative-message-run2": "Foreign candidate revision fixed to base; actual sourceVersionId refusal worked but reviewer expected different code wording. Final expectation checks same missing-source rejection and unchanged DB, passes."
+  },
+  "readOnly": true,
+  "releaseFullRequirementsDevicesAPI": "not_run/no_completion_declared"
+}

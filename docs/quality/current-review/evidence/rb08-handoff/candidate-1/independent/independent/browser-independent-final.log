@@ -1,0 +1,32 @@
+R8U01-consultation-scene-public-blocks-save-cold complete
+R8U02-prior-consult-save-does-not-release-later-file-read-on-reentry complete
+R8U03-production-estimate-delay-away-failure-doubleclick-cold complete
+R8U04-media-preview-save-delay-reentry-cold complete
+{
+  "passed": 2,
+  "failed": 2,
+  "results": [
+    {
+      "id": "R8U01-consultation-scene-public-blocks-save-cold",
+      "status": "failed",
+      "error": "expect(locator).toBeVisible() failed\n\nLocator: locator('.consultation-import').getByRole('status').filter({ hasText: '作者別案へ保存しました' })\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n  - Expect \"toBeVisible\" locator('.consultation-import').getByRole('status').filter({ hasText: '作者別案へ保存しました' }) with timeout 5000ms\n  - waiting for locator('.consultation-import').getByRole('status').filter({ hasText: '作者別案へ保存しました' })\n",
+      "pageErrors": []
+    },
+    {
+      "id": "R8U02-prior-consult-save-does-not-release-later-file-read-on-reentry",
+      "status": "failed",
+      "error": "expect(locator).toBeDisabled() failed\n\nLocator:  locator('.consultation-import').getByRole('button', { name: '提案の別案差分を確認', exact: true })\nExpected: disabled\nReceived: enabled\nTimeout:  5000ms\n\nCall log:\n  - Expect \"toBeDisabled\" locator('.consultation-import').getByRole('button', { name: '提案の別案差分を確認', exact: true }) with timeout 5000ms\n  - waiting for locator('.consultation-import').getByRole('button', { name: '提案の別案差分を確認', exact: true })\n    14 × locator resolved to <button>提案の別案差分を確認</button>\n       - unexpected value \"enabled\"\n",
+      "pageErrors": []
+    },
+    {
+      "id": "R8U03-production-estimate-delay-away-failure-doubleclick-cold",
+      "status": "passed",
+      "pageErrors": []
+    },
+    {
+      "id": "R8U04-media-preview-save-delay-reentry-cold",
+      "status": "passed",
+      "pageErrors": []
+    }
+  ]
+}

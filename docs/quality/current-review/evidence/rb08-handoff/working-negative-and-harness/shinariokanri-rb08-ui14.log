@@ -1,0 +1,46 @@
+[WebServer] (node:247460) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 7 tests using 1 worker
+
+(node:247484) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [chromium] › tests/e2e/rb08-handoff.spec.ts:22:1 › 制作見積の入力を移動とcold再開から保持し、quota拒否後の原子保存を完全ファイルへつなぐ (3.3s)
+  ✓  2 [chromium] › tests/e2e/rb08-handoff.spec.ts:24:1 › 旧媒体と元pinを保持し、未保存候補を再開して独立改訂・予定日・完全復元を確認する (4.3s)
+  ✓  3 [chromium] › tests/e2e/rb08-handoff.spec.ts:26:1 › 相談MDの出所と対象版をcold再開し、作者別案へ保存・選択採用して正本と採用記録を復元する (4.0s)
+  ✓  4 [chromium] › tests/e2e/rb08-handoff.spec.ts:28:1 › 通常出力を独立ゲームへ渡し、実勝利・経路・受領証跡を戻して原子保存・cold・完全復元する (2.7s)
+  ✓  5 [chromium] › tests/e2e/rb08-handoff.spec.ts:30:1 › 通常画面で旧版と現稿の公開範囲を作り、固定引用のUnicode位置を試遊ZIPから開いて戻り、承認をcold復元する (6.9s)
+  ✓  6 [chromium] › tests/e2e/rb08-handoff.spec.ts:36:1 › 通常画面で企画・プレイ行動・実装作業を照合し、容量失敗後に対象版付き確認を保存しcold完全復元する (2.2s)
+  ✘  7 [chromium] › tests/e2e/rb08-handoff.spec.ts:41:1 › 通常出力の試遊ZIPが同じ素材IDの旧動画と新音声を別々に検証・再生して固定参照から戻る (30.1s)
+
+
+  1) [chromium] › tests/e2e/rb08-handoff.spec.ts:41:1 › 通常出力の試遊ZIPが同じ素材IDの旧動画と新音声を別々に検証・再生して固定参照から戻る 
+
+    Test timeout of 30000ms exceeded.
+
+    Error: locator.click: Test timeout of 30000ms exceeded.
+    Call log:
+      - waiting for getByRole('button', { name: '関連: 旧素材へ', exact: true })
+
+
+      42 |  const f=story(),old=await prepareAsset(new Uint8Array(await readFile('tests/fixtures/media/fixture-blue.mp4')),'旧動画'),{bytes:oldBytes,preview:_oldPreview,...oldMeta}=old,asset=createEntity(f.p.projectId,'attachment','公開する素材',oldMeta);asset.status='confirmed';f.p.entities.push(asset);const pinned=await createWorldSnapshot(f.p,'旧動画の版'),pin=pinned.snapshots.at(-1)!,newAsset=await prepareAsset(new Uint8Array(await readFile('tests/fixtures/media/fixture-tone.wav')),'新音声'),{bytes:newBytes,preview:_newPreview,...newMeta}=newAsset,current=pinned.entities.find(entity=>entity.id===asset.id)!;if(current.kind!=='attachment')throw Error('fixture');current.data=newMeta;const scene=pinned.entities.find(entity=>entity.id===f.scene.id)!;if(scene.kind!=='scene')throw Error('fixture');scene.data.body=[{...textToRichText('旧素材へ')[0],links:[{start:0,end:3,target:{entityId:asset.id,sourceVersionId:pin.id}}]}];
+      43 |  function scope(records:typeof pinned.entities,version?:string){const publicTexts=Object.fromEntries(records.map(entity=>[entity.id,Object.fromEntries(Object.entries(entity.data).filter(([field,value])=>value!=null&&['body','text','key','label','terminalReason','description','displayName'].includes(field)).map(([field,value])=>[field,Array.isArray(value)?value.map(block=>({...block,id:newId()})):value]))])),policy=createEntity(pinned.projectId,'projection_profile','素材出力承認',{audience:'reader',publicTitle:'素材確認',includedIds:records.map(entity=>entity.id),allowedKinds:[...new Set(records.map(entity=>entity.kind))],idPolicy:'preserve',namePolicy:{defaultPolicy:{mode:'replace',replacement:'確認した素材と場面'}},publicTexts,approvedAttachmentIds:[asset.id],...(version?{sourceVersionId:version}:{})});policy.status='confirmed';pinned.entities.push(policy);return policy;}
+    > 44 |  const child=scope(pin.content.entities.filter(entity=>entity.kind==='attachment'),pin.id),root=scope(pinned.entities.filter(entity=>['scene','dialogue_line','flow_node','flow_edge','flow_graph','attachment'].includes(entity.kind)));root.data.citedVersions=[{sourceVersionId:pin.id,profileId:child.id,publicVersionId:newId()}];await seed(page,pinned,{[oldMeta.contentHash]:oldBytes,[newMeta.contentHash]:newBytes});await output(page);await page.getByLabel('出力する公開範囲',{exact:true}).selectOption(root.id);await page.getByLabel('出力目的',{exact:true}).selectOption('playable_preview');await page.getByRole('button',{name:'内容を検査・プレビュー',exact:true}).click();await expect(page.locator('.export-result')).toContainText('playable-preview.zip');const download=page.waitForEvent('download');await page.locator('.export-artifact').getByRole('button',{name:'この内容を保存',exact:true}).click();const files=unzipSync(new Uint8Array(await readFile((await(await download).path())!))),htmlPath=join(await mkdtemp(join(tmpdir(),'rb08-old-material-')),'index.html');await writeFile(htmlPath,strFromU8(files['index.html']));const trial=await context.newPage();await trial.goto(pathToFileURL(htmlPath).href);await trial.getByRole('button',{name:'関連: 旧素材へ',exact:true}).click();await expect(trial.getByRole('dialog').locator('video')).toBeVisible();await expect.poll(()=>trial.getByRole('dialog').locator('video').evaluate((element:HTMLVideoElement)=>({width:element.videoWidth,height:element.videoHeight,duration:element.duration}))).toEqual({width:160,height:90,duration:0.5});await trial.getByRole('button',{name:'元の読み位置へ戻る',exact:true}).click();await expect(trial.getByRole('button',{name:'関連: 旧素材へ',exact:true})).toBeFocused();await trial.close();await page.reload();const restored=await backup(page);expect(restored.assets.map(asset=>asset.contentHash)).toEqual(expect.arrayContaining([oldMeta.contentHash,newMeta.contentHash]));
+         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         ^
+      45 | });
+      46 |
+        at /workspace/shinariokanri-rb08/tests/e2e/rb08-handoff.spec.ts:44:1241
+
+    Error Context: test-results/rb08-handoff-通常出力の試遊ZIPが同じ素材IDの旧動画と新音声を別々に検証・再生して固定参照から戻る-chromium/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/rb08-handoff-通常出力の試遊ZIPが同じ素材IDの旧動画と新音声を別々に検証・再生して固定参照から戻る-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/rb08-handoff-通常出力の試遊ZIPが同じ素材IDの旧動画と新音声を別々に検証・再生して固定参照から戻る-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    [chromium] › tests/e2e/rb08-handoff.spec.ts:41:1 › 通常出力の試遊ZIPが同じ素材IDの旧動画と新音声を別々に検証・再生して固定参照から戻る 
+  6 passed (55.4s)

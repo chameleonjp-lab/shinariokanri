@@ -1,0 +1,802 @@
+{
+  "format": "scenario-runtime",
+  "formatVersion": "1.0.0",
+  "requiredFeatures": [
+    "runtime-project-1",
+    "lifecycle-1",
+    "presentation-1",
+    "reuse-flattening-1",
+    "finite-exceptions-1"
+  ],
+  "profile": {
+    "profileId": "scenario-runtime",
+    "profileVersion": "1.1.0",
+    "schemaVersion": "1.0.0",
+    "supportedNodeTypes": [
+      "scene",
+      "choice",
+      "automatic",
+      "call",
+      "entry",
+      "exit",
+      "terminal"
+    ],
+    "supportedConditions": [
+      "constant",
+      "all",
+      "any",
+      "not",
+      "compare",
+      "item",
+      "known",
+      "visited",
+      "external"
+    ],
+    "supportedEffects": [
+      "set",
+      "add",
+      "grant",
+      "consume",
+      "move",
+      "assert",
+      "mark_seen",
+      "reset"
+    ],
+    "externalContracts": [
+      "boolean",
+      "integer",
+      "enum"
+    ],
+    "assetTypes": [
+      "image/png",
+      "image/jpeg",
+      "image/gif",
+      "image/webp",
+      "audio/wav",
+      "audio/mpeg",
+      "application/pdf",
+      "video/mp4",
+      "video/webm",
+      "video/ogg",
+      "audio/ogg",
+      "text/plain",
+      "application/json",
+      "application/octet-stream"
+    ],
+    "omissions": [
+      "author_notes",
+      "rejected_and_alternate_records",
+      "private_names_and_aliases",
+      "original_source_ids_unless_explicitly_approved",
+      "asset_bytes",
+      "playtest_traces"
+    ]
+  },
+  "title": "公開したゲーム",
+  "versionLabel": "公開一版",
+  "contentVersionId": "sha256:5e2b1ab1e4296018980bbe9917298beac781413a163de42d62263e60440a610a",
+  "hashScope": "public_projection",
+  "entities": [
+    {
+      "id": "74f309cc-c42a-4714-8906-0680be2104b6",
+      "kind": "scene",
+      "name": "公開対象",
+      "status": "confirmed",
+      "data": {
+        "body": [
+          {
+            "id": "8e2259b2-1366-4a7a-b5ac-a797a5a807db",
+            "kind": "paragraph",
+            "text": "😀門で勝利を確かめる"
+          }
+        ],
+        "eventIds": [],
+        "dialogueLineIds": [
+          "e0c8ea1d-b72e-4504-a1e3-90d16b423f09"
+        ],
+        "threadIds": [],
+        "blockIds": []
+      }
+    },
+    {
+      "id": "e0c8ea1d-b72e-4504-a1e3-90d16b423f09",
+      "kind": "dialogue_line",
+      "name": "公開対象",
+      "status": "confirmed",
+      "data": {
+        "text": [
+          {
+            "id": "67f3a6db-c17f-4e22-8c7b-008d7b122f88",
+            "kind": "paragraph",
+            "text": "😀帰ってきた"
+          }
+        ],
+        "cueIds": []
+      }
+    },
+    {
+      "id": "cdc4a67a-078f-422a-9634-75e4c0fa5bb3",
+      "kind": "flow_node",
+      "name": "公開対象",
+      "status": "confirmed",
+      "data": {
+        "nodeType": "automatic",
+        "sceneId": "74f309cc-c42a-4714-8906-0680be2104b6",
+        "terminalReason": "",
+        "gate": {
+          "op": "external",
+          "contractId": "ea5be66d-afdf-4d9d-a077-ddf45484b50d"
+        },
+        "executionPolicy": "first_match"
+      }
+    },
+    {
+      "id": "c705da1a-5a53-4364-8234-452d61c37d8d",
+      "kind": "flow_node",
+      "name": "公開対象",
+      "status": "confirmed",
+      "data": {
+        "nodeType": "terminal",
+        "terminalReason": "完了",
+        "gate": {
+          "op": "constant",
+          "value": true
+        },
+        "executionPolicy": "manual_choice"
+      }
+    },
+    {
+      "id": "0872d9be-e174-450f-8f31-e90df1a0468e",
+      "kind": "flow_edge",
+      "name": "公開対象",
+      "status": "confirmed",
+      "data": {
+        "fromId": "cdc4a67a-078f-422a-9634-75e4c0fa5bb3",
+        "toId": "c705da1a-5a53-4364-8234-452d61c37d8d",
+        "edgeType": "automatic",
+        "label": "",
+        "condition": {
+          "op": "constant",
+          "value": true
+        },
+        "effectIds": [],
+        "priority": 0
+      }
+    },
+    {
+      "id": "33908c44-3707-49a9-8d7c-9c356aa44b23",
+      "kind": "flow_graph",
+      "name": "公開対象",
+      "status": "confirmed",
+      "data": {
+        "nodeIds": [
+          "cdc4a67a-078f-422a-9634-75e4c0fa5bb3",
+          "c705da1a-5a53-4364-8234-452d61c37d8d"
+        ],
+        "edgeIds": [
+          "0872d9be-e174-450f-8f31-e90df1a0468e"
+        ],
+        "entryIds": [
+          "cdc4a67a-078f-422a-9634-75e4c0fa5bb3"
+        ],
+        "exitIds": [
+          "c705da1a-5a53-4364-8234-452d61c37d8d"
+        ],
+        "parameters": []
+      }
+    },
+    {
+      "id": "ea5be66d-afdf-4d9d-a077-ddf45484b50d",
+      "kind": "external_contract",
+      "name": "公開対象",
+      "status": "confirmed",
+      "data": {
+        "key": "game_result",
+        "owner": "game",
+        "inputType": "boolean",
+        "outputType": "boolean",
+        "missingPolicy": "block",
+        "description": [],
+        "version": "1.0.0",
+        "stubValues": [
+          {
+            "type": "boolean",
+            "value": true
+          },
+          {
+            "type": "boolean",
+            "value": false
+          }
+        ]
+      }
+    }
+  ],
+  "relations": [],
+  "calendars": [],
+  "flow": {
+    "graphs": [
+      {
+        "id": "33908c44-3707-49a9-8d7c-9c356aa44b23",
+        "kind": "flow_graph",
+        "name": "公開対象",
+        "status": "confirmed",
+        "data": {
+          "nodeIds": [
+            "cdc4a67a-078f-422a-9634-75e4c0fa5bb3",
+            "c705da1a-5a53-4364-8234-452d61c37d8d"
+          ],
+          "edgeIds": [
+            "0872d9be-e174-450f-8f31-e90df1a0468e"
+          ],
+          "entryIds": [
+            "cdc4a67a-078f-422a-9634-75e4c0fa5bb3"
+          ],
+          "exitIds": [
+            "c705da1a-5a53-4364-8234-452d61c37d8d"
+          ],
+          "parameters": []
+        }
+      }
+    ],
+    "nodes": [
+      {
+        "id": "cdc4a67a-078f-422a-9634-75e4c0fa5bb3",
+        "kind": "flow_node",
+        "name": "公開対象",
+        "status": "confirmed",
+        "data": {
+          "nodeType": "automatic",
+          "sceneId": "74f309cc-c42a-4714-8906-0680be2104b6",
+          "terminalReason": "",
+          "gate": {
+            "op": "external",
+            "contractId": "ea5be66d-afdf-4d9d-a077-ddf45484b50d"
+          },
+          "executionPolicy": "first_match"
+        }
+      },
+      {
+        "id": "c705da1a-5a53-4364-8234-452d61c37d8d",
+        "kind": "flow_node",
+        "name": "公開対象",
+        "status": "confirmed",
+        "data": {
+          "nodeType": "terminal",
+          "terminalReason": "完了",
+          "gate": {
+            "op": "constant",
+            "value": true
+          },
+          "executionPolicy": "manual_choice"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "0872d9be-e174-450f-8f31-e90df1a0468e",
+        "kind": "flow_edge",
+        "name": "公開対象",
+        "status": "confirmed",
+        "data": {
+          "fromId": "cdc4a67a-078f-422a-9634-75e4c0fa5bb3",
+          "toId": "c705da1a-5a53-4364-8234-452d61c37d8d",
+          "edgeType": "automatic",
+          "label": "",
+          "condition": {
+            "op": "constant",
+            "value": true
+          },
+          "effectIds": [],
+          "priority": 0
+        }
+      }
+    ]
+  },
+  "dialogue": [
+    {
+      "id": "e0c8ea1d-b72e-4504-a1e3-90d16b423f09",
+      "kind": "dialogue_line",
+      "name": "公開対象",
+      "status": "confirmed",
+      "data": {
+        "text": [
+          {
+            "id": "67f3a6db-c17f-4e22-8c7b-008d7b122f88",
+            "kind": "paragraph",
+            "text": "😀帰ってきた"
+          }
+        ],
+        "cueIds": []
+      }
+    }
+  ],
+  "scenes": [
+    {
+      "id": "74f309cc-c42a-4714-8906-0680be2104b6",
+      "kind": "scene",
+      "name": "公開対象",
+      "status": "confirmed",
+      "data": {
+        "body": [
+          {
+            "id": "8e2259b2-1366-4a7a-b5ac-a797a5a807db",
+            "kind": "paragraph",
+            "text": "😀門で勝利を確かめる"
+          }
+        ],
+        "eventIds": [],
+        "dialogueLineIds": [
+          "e0c8ea1d-b72e-4504-a1e3-90d16b423f09"
+        ],
+        "threadIds": [],
+        "blockIds": []
+      }
+    }
+  ],
+  "characters": [],
+  "variables": [],
+  "effects": [],
+  "items": [],
+  "assertions": [],
+  "quests": [],
+  "disclosures": [],
+  "cues": [],
+  "externalContracts": [
+    {
+      "id": "ea5be66d-afdf-4d9d-a077-ddf45484b50d",
+      "kind": "external_contract",
+      "name": "公開対象",
+      "status": "confirmed",
+      "data": {
+        "key": "game_result",
+        "owner": "game",
+        "inputType": "boolean",
+        "outputType": "boolean",
+        "missingPolicy": "block",
+        "description": [],
+        "version": "1.0.0",
+        "stubValues": [
+          {
+            "type": "boolean",
+            "value": true
+          },
+          {
+            "type": "boolean",
+            "value": false
+          }
+        ]
+      }
+    }
+  ],
+  "assets": [],
+  "externalEvidence": "not_included",
+  "publicProjection": {
+    "format": "scenario-projection",
+    "formatVersion": "1.0.0",
+    "title": "公開したゲーム",
+    "mainStart": "0",
+    "calendars": [],
+    "entities": [
+      {
+        "id": "74f309cc-c42a-4714-8906-0680be2104b6",
+        "kind": "scene",
+        "name": "公開対象",
+        "status": "confirmed",
+        "data": {
+          "body": [
+            {
+              "id": "8e2259b2-1366-4a7a-b5ac-a797a5a807db",
+              "kind": "paragraph",
+              "text": "😀門で勝利を確かめる"
+            }
+          ],
+          "eventIds": [],
+          "dialogueLineIds": [
+            "e0c8ea1d-b72e-4504-a1e3-90d16b423f09"
+          ],
+          "threadIds": [],
+          "blockIds": []
+        }
+      },
+      {
+        "id": "e0c8ea1d-b72e-4504-a1e3-90d16b423f09",
+        "kind": "dialogue_line",
+        "name": "公開対象",
+        "status": "confirmed",
+        "data": {
+          "text": [
+            {
+              "id": "67f3a6db-c17f-4e22-8c7b-008d7b122f88",
+              "kind": "paragraph",
+              "text": "😀帰ってきた"
+            }
+          ],
+          "cueIds": []
+        }
+      },
+      {
+        "id": "cdc4a67a-078f-422a-9634-75e4c0fa5bb3",
+        "kind": "flow_node",
+        "name": "公開対象",
+        "status": "confirmed",
+        "data": {
+          "nodeType": "automatic",
+          "sceneId": "74f309cc-c42a-4714-8906-0680be2104b6",
+          "terminalReason": "",
+          "gate": {
+            "op": "external",
+            "contractId": "ea5be66d-afdf-4d9d-a077-ddf45484b50d"
+          },
+          "executionPolicy": "first_match"
+        }
+      },
+      {
+        "id": "c705da1a-5a53-4364-8234-452d61c37d8d",
+        "kind": "flow_node",
+        "name": "公開対象",
+        "status": "confirmed",
+        "data": {
+          "nodeType": "terminal",
+          "terminalReason": "完了",
+          "gate": {
+            "op": "constant",
+            "value": true
+          },
+          "executionPolicy": "manual_choice"
+        }
+      },
+      {
+        "id": "0872d9be-e174-450f-8f31-e90df1a0468e",
+        "kind": "flow_edge",
+        "name": "公開対象",
+        "status": "confirmed",
+        "data": {
+          "fromId": "cdc4a67a-078f-422a-9634-75e4c0fa5bb3",
+          "toId": "c705da1a-5a53-4364-8234-452d61c37d8d",
+          "edgeType": "automatic",
+          "label": "",
+          "condition": {
+            "op": "constant",
+            "value": true
+          },
+          "effectIds": [],
+          "priority": 0
+        }
+      },
+      {
+        "id": "33908c44-3707-49a9-8d7c-9c356aa44b23",
+        "kind": "flow_graph",
+        "name": "公開対象",
+        "status": "confirmed",
+        "data": {
+          "nodeIds": [
+            "cdc4a67a-078f-422a-9634-75e4c0fa5bb3",
+            "c705da1a-5a53-4364-8234-452d61c37d8d"
+          ],
+          "edgeIds": [
+            "0872d9be-e174-450f-8f31-e90df1a0468e"
+          ],
+          "entryIds": [
+            "cdc4a67a-078f-422a-9634-75e4c0fa5bb3"
+          ],
+          "exitIds": [
+            "c705da1a-5a53-4364-8234-452d61c37d8d"
+          ],
+          "parameters": []
+        }
+      },
+      {
+        "id": "ea5be66d-afdf-4d9d-a077-ddf45484b50d",
+        "kind": "external_contract",
+        "name": "公開対象",
+        "status": "confirmed",
+        "data": {
+          "key": "game_result",
+          "owner": "game",
+          "inputType": "boolean",
+          "outputType": "boolean",
+          "missingPolicy": "block",
+          "description": [],
+          "version": "1.0.0",
+          "stubValues": [
+            {
+              "type": "boolean",
+              "value": true
+            },
+            {
+              "type": "boolean",
+              "value": false
+            }
+          ]
+        }
+      }
+    ],
+    "relations": [],
+    "searchIndex": [
+      {
+        "entityId": "74f309cc-c42a-4714-8906-0680be2104b6",
+        "kind": "scene",
+        "name": "公開対象",
+        "text": "公開対象\n😀門で勝利を確かめる",
+        "normalized": "公開対象\n😀門で勝利を確かめる"
+      },
+      {
+        "entityId": "e0c8ea1d-b72e-4504-a1e3-90d16b423f09",
+        "kind": "dialogue_line",
+        "name": "公開対象",
+        "text": "公開対象\n😀帰ってきた",
+        "normalized": "公開対象\n😀帰ってきた"
+      },
+      {
+        "entityId": "cdc4a67a-078f-422a-9634-75e4c0fa5bb3",
+        "kind": "flow_node",
+        "name": "公開対象",
+        "text": "公開対象",
+        "normalized": "公開対象"
+      },
+      {
+        "entityId": "c705da1a-5a53-4364-8234-452d61c37d8d",
+        "kind": "flow_node",
+        "name": "公開対象",
+        "text": "公開対象",
+        "normalized": "公開対象"
+      },
+      {
+        "entityId": "0872d9be-e174-450f-8f31-e90df1a0468e",
+        "kind": "flow_edge",
+        "name": "公開対象",
+        "text": "公開対象\n",
+        "normalized": "公開対象\n"
+      },
+      {
+        "entityId": "33908c44-3707-49a9-8d7c-9c356aa44b23",
+        "kind": "flow_graph",
+        "name": "公開対象",
+        "text": "公開対象",
+        "normalized": "公開対象"
+      },
+      {
+        "entityId": "ea5be66d-afdf-4d9d-a077-ddf45484b50d",
+        "kind": "external_contract",
+        "name": "公開対象",
+        "text": "公開対象",
+        "normalized": "公開対象"
+      }
+    ]
+  },
+  "assetBytesIncluded": false,
+  "runtimeProject": {
+    "projectId": "5e2b1ab1-e429-4018-a80b-be9917298bea",
+    "name": "公開したゲーム",
+    "formatVersion": "1.0.0",
+    "revision": "0",
+    "calendarId": "public-calendar-default",
+    "mainStart": "0",
+    "calendars": [
+      {
+        "id": "public-calendar-default",
+        "name": "先発グレゴリオ暦",
+        "kind": "gregorian",
+        "originLabel": "0000-01-01 00:00:00",
+        "ticksPerDay": "86400"
+      }
+    ],
+    "worldReferences": [],
+    "entities": [
+      {
+        "id": "74f309cc-c42a-4714-8906-0680be2104b6",
+        "projectId": "5e2b1ab1-e429-4018-a80b-be9917298bea",
+        "kind": "scene",
+        "revision": "0",
+        "name": "公開対象",
+        "status": "confirmed",
+        "visibility": "private",
+        "createdAt": "1970-01-01T00:00:00.000Z",
+        "updatedAt": "1970-01-01T00:00:00.000Z",
+        "customValues": {},
+        "data": {
+          "summary": [],
+          "body": [
+            {
+              "id": "8e2259b2-1366-4a7a-b5ac-a797a5a807db",
+              "kind": "paragraph",
+              "text": "😀門で勝利を確かめる"
+            }
+          ],
+          "authorNotes": [],
+          "eventIds": [],
+          "chapterId": null,
+          "threadIds": [],
+          "povId": null,
+          "goals": [],
+          "conflicts": [],
+          "results": [],
+          "newInformation": [],
+          "tension": null,
+          "importance": null,
+          "blockIds": [],
+          "dialogueLineIds": [
+            "e0c8ea1d-b72e-4504-a1e3-90d16b423f09"
+          ]
+        }
+      },
+      {
+        "id": "e0c8ea1d-b72e-4504-a1e3-90d16b423f09",
+        "projectId": "5e2b1ab1-e429-4018-a80b-be9917298bea",
+        "kind": "dialogue_line",
+        "revision": "0",
+        "name": "公開対象",
+        "status": "confirmed",
+        "visibility": "private",
+        "createdAt": "1970-01-01T00:00:00.000Z",
+        "updatedAt": "1970-01-01T00:00:00.000Z",
+        "customValues": {},
+        "data": {
+          "text": [
+            {
+              "id": "67f3a6db-c17f-4e22-8c7b-008d7b122f88",
+              "kind": "paragraph",
+              "text": "😀帰ってきた"
+            }
+          ],
+          "speakerId": null,
+          "choiceEdgeId": null,
+          "cueIds": [],
+          "originLineIds": []
+        }
+      },
+      {
+        "id": "cdc4a67a-078f-422a-9634-75e4c0fa5bb3",
+        "projectId": "5e2b1ab1-e429-4018-a80b-be9917298bea",
+        "kind": "flow_node",
+        "revision": "0",
+        "name": "公開対象",
+        "status": "confirmed",
+        "visibility": "private",
+        "createdAt": "1970-01-01T00:00:00.000Z",
+        "updatedAt": "1970-01-01T00:00:00.000Z",
+        "customValues": {},
+        "data": {
+          "nodeType": "automatic",
+          "sceneId": "74f309cc-c42a-4714-8906-0680be2104b6",
+          "childGraphId": null,
+          "terminalReason": "",
+          "gate": {
+            "op": "external",
+            "contractId": "ea5be66d-afdf-4d9d-a077-ddf45484b50d"
+          },
+          "executionPolicy": "first_match",
+          "fallbackId": null
+        }
+      },
+      {
+        "id": "c705da1a-5a53-4364-8234-452d61c37d8d",
+        "projectId": "5e2b1ab1-e429-4018-a80b-be9917298bea",
+        "kind": "flow_node",
+        "revision": "0",
+        "name": "公開対象",
+        "status": "confirmed",
+        "visibility": "private",
+        "createdAt": "1970-01-01T00:00:00.000Z",
+        "updatedAt": "1970-01-01T00:00:00.000Z",
+        "customValues": {},
+        "data": {
+          "nodeType": "terminal",
+          "sceneId": null,
+          "childGraphId": null,
+          "terminalReason": "完了",
+          "gate": {
+            "op": "constant",
+            "value": true
+          },
+          "executionPolicy": "manual_choice",
+          "fallbackId": null
+        }
+      },
+      {
+        "id": "0872d9be-e174-450f-8f31-e90df1a0468e",
+        "projectId": "5e2b1ab1-e429-4018-a80b-be9917298bea",
+        "kind": "flow_edge",
+        "revision": "0",
+        "name": "公開対象",
+        "status": "confirmed",
+        "visibility": "private",
+        "createdAt": "1970-01-01T00:00:00.000Z",
+        "updatedAt": "1970-01-01T00:00:00.000Z",
+        "customValues": {},
+        "data": {
+          "fromId": "cdc4a67a-078f-422a-9634-75e4c0fa5bb3",
+          "toId": "c705da1a-5a53-4364-8234-452d61c37d8d",
+          "edgeType": "automatic",
+          "label": "",
+          "condition": {
+            "op": "constant",
+            "value": true
+          },
+          "effectIds": [],
+          "priority": 0,
+          "choiceLineId": null
+        }
+      },
+      {
+        "id": "33908c44-3707-49a9-8d7c-9c356aa44b23",
+        "projectId": "5e2b1ab1-e429-4018-a80b-be9917298bea",
+        "kind": "flow_graph",
+        "revision": "0",
+        "name": "公開対象",
+        "status": "confirmed",
+        "visibility": "private",
+        "createdAt": "1970-01-01T00:00:00.000Z",
+        "updatedAt": "1970-01-01T00:00:00.000Z",
+        "customValues": {},
+        "data": {
+          "nodeIds": [
+            "cdc4a67a-078f-422a-9634-75e4c0fa5bb3",
+            "c705da1a-5a53-4364-8234-452d61c37d8d"
+          ],
+          "edgeIds": [
+            "0872d9be-e174-450f-8f31-e90df1a0468e"
+          ],
+          "entryIds": [
+            "cdc4a67a-078f-422a-9634-75e4c0fa5bb3"
+          ],
+          "exitIds": [
+            "c705da1a-5a53-4364-8234-452d61c37d8d"
+          ],
+          "parentGraphId": null,
+          "parameters": []
+        }
+      },
+      {
+        "id": "ea5be66d-afdf-4d9d-a077-ddf45484b50d",
+        "projectId": "5e2b1ab1-e429-4018-a80b-be9917298bea",
+        "kind": "external_contract",
+        "revision": "0",
+        "name": "公開対象",
+        "status": "confirmed",
+        "visibility": "private",
+        "createdAt": "1970-01-01T00:00:00.000Z",
+        "updatedAt": "1970-01-01T00:00:00.000Z",
+        "customValues": {},
+        "data": {
+          "key": "game_result",
+          "owner": "game",
+          "inputType": "boolean",
+          "outputType": "boolean",
+          "missingPolicy": "block",
+          "description": [],
+          "stubValues": [
+            {
+              "type": "boolean",
+              "value": true
+            },
+            {
+              "type": "boolean",
+              "value": false
+            }
+          ],
+          "adapterProfileIds": [],
+          "version": "1.0.0"
+        }
+      }
+    ],
+    "relations": [],
+    "snapshots": [],
+    "history": [],
+    "views": []
+  },
+  "runtimeProjectHash": "23417595b49d40f39a1bc9649912358244b0a19c2a8ed48f371c7619911534f4",
+  "publicToRuntime": {
+    "public-project": "5e2b1ab1-e429-4018-a80b-be9917298bea",
+    "74f309cc-c42a-4714-8906-0680be2104b6": "74f309cc-c42a-4714-8906-0680be2104b6",
+    "e0c8ea1d-b72e-4504-a1e3-90d16b423f09": "e0c8ea1d-b72e-4504-a1e3-90d16b423f09",
+    "cdc4a67a-078f-422a-9634-75e4c0fa5bb3": "cdc4a67a-078f-422a-9634-75e4c0fa5bb3",
+    "c705da1a-5a53-4364-8234-452d61c37d8d": "c705da1a-5a53-4364-8234-452d61c37d8d",
+    "0872d9be-e174-450f-8f31-e90df1a0468e": "0872d9be-e174-450f-8f31-e90df1a0468e",
+    "33908c44-3707-49a9-8d7c-9c356aa44b23": "33908c44-3707-49a9-8d7c-9c356aa44b23",
+    "ea5be66d-afdf-4d9d-a077-ddf45484b50d": "ea5be66d-afdf-4d9d-a077-ddf45484b50d",
+    "8e2259b2-1366-4a7a-b5ac-a797a5a807db": "8e2259b2-1366-4a7a-b5ac-a797a5a807db",
+    "67f3a6db-c17f-4e22-8c7b-008d7b122f88": "67f3a6db-c17f-4e22-8c7b-008d7b122f88"
+  },
+  "assetData": {}
+}

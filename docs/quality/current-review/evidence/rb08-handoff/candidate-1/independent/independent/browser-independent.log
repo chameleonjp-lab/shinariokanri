@@ -1,0 +1,33 @@
+R8U01-consultation-scene-public-blocks-save-cold complete
+R8U02-prior-consult-save-does-not-release-later-file-read-on-reentry complete
+R8U03-production-estimate-delay-away-failure-doubleclick-cold complete
+R8U04-media-preview-save-delay-reentry-cold complete
+{
+  "passed": 1,
+  "failed": 3,
+  "results": [
+    {
+      "id": "R8U01-consultation-scene-public-blocks-save-cold",
+      "status": "failed",
+      "error": "expect(locator).toBeVisible() failed\n\nLocator: locator('.consultation-import').getByRole('status').filter({ hasText: '作者別案へ保存しました' })\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n  - Expect \"toBeVisible\" locator('.consultation-import').getByRole('status').filter({ hasText: '作者別案へ保存しました' }) with timeout 5000ms\n  - waiting for locator('.consultation-import').getByRole('status').filter({ hasText: '作者別案へ保存しました' })\n",
+      "pageErrors": []
+    },
+    {
+      "id": "R8U02-prior-consult-save-does-not-release-later-file-read-on-reentry",
+      "status": "failed",
+      "error": "expect(locator).toBeDisabled() failed\n\nLocator:  locator('.consultation-import').getByRole('button', { name: '提案の別案差分を確認', exact: true })\nExpected: disabled\nReceived: enabled\nTimeout:  5000ms\n\nCall log:\n  - Expect \"toBeDisabled\" locator('.consultation-import').getByRole('button', { name: '提案の別案差分を確認', exact: true }) with timeout 5000ms\n  - waiting for locator('.consultation-import').getByRole('button', { name: '提案の別案差分を確認', exact: true })\n    14 × locator resolved to <button>提案の別案差分を確認</button>\n       - unexpected value \"enabled\"\n",
+      "pageErrors": []
+    },
+    {
+      "id": "R8U03-production-estimate-delay-away-failure-doubleclick-cold",
+      "status": "passed",
+      "pageErrors": []
+    },
+    {
+      "id": "R8U04-media-preview-save-delay-reentry-cold",
+      "status": "failed",
+      "error": "locator.click: Error: strict mode violation: locator('details').filter({ has: locator('summary').filter({ hasText: '媒体の旧公開版と改訂候補を比較' }) }).locator('summary') resolved to 2 elements:\n    1) <summary>媒体の旧公開版と改訂候補を比較</summary> aka getByText('媒体の旧公開版と改訂候補を比較')\n    2) <summary>独立入口場面 · 元設定の改訂差</summary> aka getByText('独立入口場面 · 元設定の改訂差')\n\nCall log:\n\u001b[2m  - waiting for locator('details').filter({ has: locator('summary').filter({ hasText: '媒体の旧公開版と改訂候補を比較' }) }).locator('summary')\u001b[22m\n",
+      "pageErrors": []
+    }
+  ]
+}

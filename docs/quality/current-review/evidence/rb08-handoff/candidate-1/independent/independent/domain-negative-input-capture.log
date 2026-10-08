@@ -1,0 +1,44 @@
+
+ RUN  v5.0.3 /tmp/shinariokanri-independent-rb08-b59fddc
+
+ ❯ tests/independent-rb08-boundaries.test.ts (13 tests | 2 failed | 11 skipped) 561ms
+   × R8D03 durable save rejects rehashed final state that cannot replay from the original received package 420ms
+   × R8D06 consultation replaces branch text without invalidating existing public paragraph correspondence; stale approval rejects and archive clones 138ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/independent-rb08-boundaries.test.ts > R8D03 durable save rejects rehashed final state that cannot replay from the original received package
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ tests/independent-rb08-boundaries.test.ts:31:1511
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  tests/independent-rb08-boundaries.test.ts > R8D06 consultation replaces branch text without invalidating existing public paragraph correspondence; stale approval rejects and archive clones
+StorageError: project.authorAlternatives[0].versions[1].content.project.entities[13].data.blockSources.a5f3cba2-b34b-484e-ac97-d7d474b9630c: 参照先が存在しないか、指定した作品・共通世界の範囲外です。
+project.history[0].after.authorAlternatives[0].versions[1].content.project.entities[13].data.blockSources.a5f3cba2-b34b-484e-ac97-d7d474b9630c: 参照先が存在しないか、指定した作品・共通世界の範囲外です。
+ ❯ validateDurableIntegrity src/storage/store.ts:182:42
+    180| async function validateDurableIntegrity(project: ProjectData, worldSna…
+    181|   const issues = await validateProjectIntegrity(project, { worldSnapsh…
+    182|   if (issues.length) throw Object.assign(new StorageError('VALIDATION_…
+       |                                          ^
+    183| }
+    184|
+ ❯ ScenarioStore.saveProject src/storage/store.ts:668:7
+ ❯ tests/independent-rb08-boundaries.test.ts:36:804
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 11 skipped (13)
+   Start at  15:32:02
+   Duration  1.80s (transform 53%, tests 34%, import 12%)
+

@@ -1,0 +1,28 @@
+
+ RUN  v5.0.3 /workspace/shinariokanri-rb08
+
+ ❯ src/storage/rb08Handoff.test.ts (8 tests | 1 failed) 1569ms
+   × receives explicit game-owned contracts and stable dialogue/asset IDs, verifies actual mechanics and replay, then atomically saves/reloads/empty-clones the receipt without executing a game from trials 389ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/storage/rb08Handoff.test.ts > receives explicit game-owned contracts and stable dialogue/asset IDs, verifies actual mechanics and replay, then atomically saves/reloads/empty-clones the receipt without executing a game from trials
+StorageError: project.entities.handoffReceipt: INTEGRITY_FAILED: 受取パッケージに外部契約がありません。
+ ❯ validateDurableIntegrity src/storage/store.ts:182:42
+    180| async function validateDurableIntegrity(project: ProjectData, worldSna…
+    181|   const issues = await validateProjectIntegrity(project, { worldSnapsh…
+    182|   if (issues.length) throw Object.assign(new StorageError('VALIDATION_…
+       |                                          ^
+    183| }
+    184|
+ ❯ ScenarioStore.importScenario src/storage/store.ts:1017:7
+ ❯ src/storage/rb08Handoff.test.ts:30:2611
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 7 passed (8)
+   Start at  12:58:22
+   Duration  3.52s (tests 46%, transform 43%, import 11%)
+

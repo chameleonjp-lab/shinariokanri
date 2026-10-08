@@ -1,0 +1,39 @@
+
+ RUN  v5.0.3 /workspace/shinariokanri-rb08
+
+ ❯ src/storage/rb08Handoff.test.ts (8 tests | 1 failed) 882ms
+   × receives explicit game-owned contracts and stable dialogue/asset IDs, verifies actual mechanics and replay, then atomically saves/reloads/empty-clones the receipt without executing a game from trials 49ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/storage/rb08Handoff.test.ts > receives explicit game-owned contracts and stable dialogue/asset IDs, verifies actual mechanics and replay, then atomically saves/reloads/empty-clones the receipt without executing a game from trials
+AssertionError: expected [ { …(3) }, { …(3) } ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   {
++     "code": "REFERENCE_INVALID",
++     "message": "参照先が存在しないか、指定した作品・共通世界の範囲外です。",
++     "path": "project.entities[11].data.handoffReceipt.idMappings[9].id",
++   },
++   {
++     "code": "REFERENCE_INVALID",
++     "message": "参照先が存在しないか、指定した作品・共通世界の範囲外です。",
++     "path": "project.entities[11].data.handoffReceipt.idMappings[10].id",
++   },
++ ]
+
+ ❯ src/storage/rb08Handoff.test.ts:30:1516
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 7 passed (8)
+   Start at  12:55:16
+   Duration  3.21s (transform 58%, tests 30%, import 12%)
+

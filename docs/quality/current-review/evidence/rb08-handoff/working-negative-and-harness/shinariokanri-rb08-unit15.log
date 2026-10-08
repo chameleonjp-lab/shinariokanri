@@ -1,0 +1,39 @@
+
+> shinariokanri@0.1.0 pretest
+> node scripts/build/portable-runtime.mjs
+
+Production portable runtime generated: 138449 characters
+
+> shinariokanri@0.1.0 test
+> vitest run src/storage/rb08Handoff.test.ts tests/exports.test.ts --maxWorkers=2 --testTimeout=30000
+
+
+ RUN  v5.0.3 /workspace/shinariokanri-rb08
+
+ ❯ src/storage/rb08Handoff.test.ts (10 tests | 2 failed) 928ms
+   ❯ RB08 production handoff and independent portable engine (6)
+     × executes the generated independent browser engine with the same prestate/presentation/lifecycle result and whole-state back as the application 5ms
+   × exports independently approved old citations with Unicode positions and distinct old/new asset bytes, verifies receipt, and empty-restores native policies 14ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/storage/rb08Handoff.test.ts > RB08 production handoff and independent portable engine > executes the generated independent browser engine with the same prestate/presentation/lifecycle result and whole-state back as the application
+ReferenceError: pin is not defined
+ ❯ src/storage/rb08Handoff.test.ts:29:465
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/storage/rb08Handoff.test.ts > exports independently approved old citations with Unicode positions and distinct old/new asset bytes, verifies receipt, and empty-restores native policies
+Error: [{"code":"VALIDATION_FAILED","message":"出力に必要な情報または参照が不正です。作品を確認してください。"}]
+ ❯ src/storage/rb08Handoff.test.ts:47:100
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  2 failed | 29 passed (31)
+   Start at  14:15:02
+   Duration  2.44s (tests 62%, transform 24%, import 14%)
+

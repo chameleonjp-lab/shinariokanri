@@ -1,0 +1,1 @@
+22db870 / cec857bd の独立記録。元14正期待・fixture・App4・production7は成功。追加受領5境界は2成功／3失敗（歴史画像とevidence metadataのawait捕捉2差、packageHash再封印保存1差）。旧負例は変更せず、原104/116/24/6と未実行の実機/APIを維持。src186=製品151＋既存srcテスト35。元RB07の梱包145全SHAと旧bindings保持を確認。
