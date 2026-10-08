@@ -130,7 +130,7 @@ export function buildChapterReadingSequence(project: ProjectData, chapterIds?: r
     }
   }
   for (const scene of canonicalPresentationScenes(project, undefined, false)) {
-    if (!emitted.has(scene.id) && (!scene.data.chapterId || chosen.has(scene.data.chapterId))) {
+    if (!emitted.has(scene.id) && (scene.data.chapterId ? chosen.has(scene.data.chapterId) : chapterIds === undefined)) {
       sequence.push({ chapterId: scene.data.chapterId ?? null, scene }); emitted.add(scene.id);
     }
   }
