@@ -1,0 +1,348 @@
+{
+  "requirements": [
+    {
+      "id": "REQ-B17",
+      "title": "真実・人物の認識・プレイヤーの認識",
+      "provenance": "以前から採用済みの拡張",
+      "decision_status": "previously_adopted",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP15",
+      "shall": "作者が定める真実、証言、人物の認識、プレイヤーへの提示を分けて記録すること。",
+      "failure_behavior": "同じ場面に居るだけで真相を全員へ伝播しない",
+      "acceptance_ids": [
+        "AT-B17"
+      ],
+      "source_refs": []
+    },
+    {
+      "id": "REQ-B19",
+      "title": "伏線と回収の管理",
+      "provenance": "以前から採用済みの拡張",
+      "decision_status": "previously_adopted",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP15",
+      "shall": "伏線・手掛かり・回収の関連と状態を記録し、未回収を対象作品と経路に応じて一覧化すること。",
+      "failure_behavior": "プレイヤーに提示しただけで理解・推理済みと判定しない",
+      "acceptance_ids": [
+        "AT-B19"
+      ],
+      "source_refs": []
+    },
+    {
+      "id": "REQ-F15",
+      "title": "途中状態から試し読みする",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP13",
+      "shall": "所持品、人物の状態、既読情報などをまとめた開始状態を保存する。そこから試し読みし、選択を戻すと状態も戻すこと。",
+      "failure_behavior": "版不一致の開始状態は移行確認が必要。不足値は未確認とし、途中開始の証跡を通しプレイの証跡として扱わない。",
+      "acceptance_ids": [
+        "AT-F15"
+      ],
+      "source_refs": [
+        "S08",
+        "S25"
+      ],
+      "source_feature_id": "F15"
+    },
+    {
+      "id": "REQ-F17",
+      "title": "確認した経路を保存する",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP14",
+      "shall": "選択の履歴と開始状態、作品の版を保存して再実行する。通った場面・選択肢と未確認箇所を一覧にし、変更後の再確認に使うこと。",
+      "failure_behavior": "台詞到達率・選択肢到達率・条件結果の網羅率を別々に算出する。版変更後の経路は再確認待ちとする。",
+      "acceptance_ids": [
+        "AT-F17"
+      ],
+      "source_refs": [
+        "S08",
+        "S25"
+      ],
+      "source_feature_id": "F17"
+    },
+    {
+      "id": "REQ-F43",
+      "title": "伏線を独立した項目として持つ",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP15",
+      "shall": "謎や期待、真相、意図を持つ伏線の項目を作る。複数の手掛かりと複数の回収を結び、一つの場面が複数の伏線を扱えるようにすること。",
+      "failure_behavior": "場面を削除しても伏線本体は残す。複数の手掛かり・回収と代替説明を別IDで対応付ける。",
+      "acceptance_ids": [
+        "AT-F43"
+      ],
+      "source_refs": [
+        "S40"
+      ],
+      "source_feature_id": "F43"
+    },
+    {
+      "id": "REQ-F44",
+      "title": "体験順に開示の段階を確認する",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP15",
+      "shall": "初めて示す、疑わせる、補強する、真相を明かすなどを本文の箇所へ結ぶ。選んだ章順やプレイ経路で、人物と読み手の認識を並べること。",
+      "failure_behavior": "開示の段階は経路上の提示位置で評価する。章の並べ替えは世界時間を変えず開示評価だけを再確認待ちにする。",
+      "acceptance_ids": [
+        "AT-F44"
+      ],
+      "source_refs": [
+        "S01",
+        "S40"
+      ],
+      "source_feature_id": "F44"
+    },
+    {
+      "id": "REQ-F45",
+      "title": "手掛かりを見られる道を調べる",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP15",
+      "shall": "回収へ進むために必要と作者が指定した情報について、経路上で提示されるかを確認する。任意の手掛かり、代わりの説明、別経路の回収も登録すること。",
+      "failure_behavior": "作者が必要とした情報の提示有無だけを評価する。探索の制限超過や外部条件は未確認、プレイヤーの理解は自動認定しない。",
+      "acceptance_ids": [
+        "AT-F45"
+      ],
+      "source_refs": [
+        "S25",
+        "S28",
+        "S40"
+      ],
+      "source_feature_id": "F45"
+    },
+    {
+      "id": "REQ-F46",
+      "title": "知識・証言・誤解の出所を残す",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP15",
+      "shall": "誰から聞いたか、何を見たか、何を根拠に信じるかを記録する。世界の真の設定、作中の証言、人物の認識、作者の未確定案を結び付けて区別すること。",
+      "failure_behavior": "証言の誤り、意図した嘘、未確定案を真実から分離する。知識取得には出所と時点または経路位置を必要とする。",
+      "acceptance_ids": [
+        "AT-F46"
+      ],
+      "source_refs": [
+        "S02",
+        "S13"
+      ],
+      "source_feature_id": "F46"
+    },
+    {
+      "id": "REQ-F47",
+      "title": "未回収の意図と期限を記録する",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP15",
+      "shall": "この作品で回収、続編で回収、意図して残す、誤誘導、検討中、没を区別する。作品・分岐ごとの対象を定め、回収先の変更を確認待ちにすること。",
+      "failure_behavior": "今作・分岐・続編など対象範囲と意図を明示する。回収先変更時は再確認待ちにし、意図した未回収は警告の集計から分ける。",
+      "acceptance_ids": [
+        "AT-F47"
+      ],
+      "source_refs": [
+        "S12",
+        "S40"
+      ],
+      "source_feature_id": "F47"
+    }
+  ],
+  "acceptance": [
+    {
+      "id": "AT-B17",
+      "requirement_ids": [
+        "REQ-B17"
+      ],
+      "package_id": "WP15",
+      "given": "嘘の証言と真相がある",
+      "when": "誰がどの経路で聞いたか登録する",
+      "then": "真偽・出所・知っている範囲を別々に確認できる",
+      "negative_or_edge": "同じ場面に居るだけで真相を全員へ伝播しない",
+      "result": "not_run"
+    },
+    {
+      "id": "AT-B19",
+      "requirement_ids": [
+        "REQ-B19"
+      ],
+      "package_id": "WP15",
+      "given": "任意の手掛かりと続編用の謎がある",
+      "when": "今作の回収状況を表示する",
+      "then": "必須の未回収と意図した持ち越しを分ける",
+      "negative_or_edge": "プレイヤーに提示しただけで理解・推理済みと判定しない",
+      "result": "not_run"
+    },
+    {
+      "id": "AT-F15",
+      "requirement_ids": [
+        "REQ-F15"
+      ],
+      "package_id": "WP13",
+      "given": "鍵あり・好感度5のcheckpointと初期値欠落のcheckpoint",
+      "when": "途中開始で進み戻り、不足値のcheckpointと別版checkpointからの開始を試す",
+      "then": "途中開始で必要な状態がない場合、最初から開始した場合と区別して表示する。",
+      "negative_or_edge": "版不一致の開始状態は移行確認が必要。不足値は未確認とし、途中開始の証跡を通しプレイの証跡として扱わない。",
+      "result": "not_run"
+    },
+    {
+      "id": "AT-F17",
+      "requirement_ids": [
+        "REQ-F17"
+      ],
+      "package_id": "WP14",
+      "given": "場面4、選択肢3、条件真偽4項目の母数を持つ版",
+      "when": "二選択肢だけの経路記録を保存して再実行し、内容変更後の確認待ちを調べる",
+      "then": "確認できた割合は対象を明記する。場面を見ただけで全条件を確認済みにしない。",
+      "negative_or_edge": "台詞到達率・選択肢到達率・条件結果の網羅率を別々に算出する。版変更後の経路は再確認待ちとする。",
+      "result": "not_run"
+    },
+    {
+      "id": "AT-F43",
+      "requirement_ids": [
+        "REQ-F43"
+      ],
+      "package_id": "WP15",
+      "given": "独立伏線Qに二つの手掛かりと二つの回収がある",
+      "when": "手掛かり場面を分割/移動/削除し、Q本体を開いて根拠位置を付け直す",
+      "then": "場面を分割・移動しても伏線そのものは残り、手掛かりと回収先を付け直せる。",
+      "negative_or_edge": "場面を削除しても伏線本体は残す。複数の手掛かり・回収と代替説明を別IDで対応付ける。",
+      "result": "not_run"
+    },
+    {
+      "id": "AT-F44",
+      "requirement_ids": [
+        "REQ-F44"
+      ],
+      "package_id": "WP15",
+      "given": "世界tickが古い回想を提示順の最後に置く構成",
+      "when": "回想を先頭/最後に移動し、人物と読者提示の開示段階を二経路で確認する",
+      "then": "回想の世界内の日付が古くても、読み手が後から見るなら後の開示として扱う。",
+      "negative_or_edge": "開示の段階は経路上の提示位置で評価する。章の並べ替えは世界時間を変えず開示評価だけを再確認待ちにする。",
+      "result": "not_run"
+    },
+    {
+      "id": "AT-F45",
+      "requirement_ids": [
+        "REQ-F45"
+      ],
+      "package_id": "WP15",
+      "given": "必須情報Cと代替説明D、C/Dを両方飛ばして回収Pへ行けるgraph",
+      "when": "各経路の提示検査を行い、不足する証人経路と任意手掛かりの扱いを確認する",
+      "then": "手掛かりを飛ばして真相へ到達する経路を示せる。プレイヤーが推理できたと自動判定はしない。",
+      "negative_or_edge": "作者が必要とした情報の提示有無だけを評価する。探索の制限超過や外部条件は未確認、プレイヤーの理解は自動認定しない。",
+      "result": "not_run"
+    },
+    {
+      "id": "AT-F46",
+      "requirement_ids": [
+        "REQ-F46"
+      ],
+      "package_id": "WP15",
+      "given": "真実T、人物Aの嘘の証言、Bの誤解、Cの未取得知識",
+      "when": "出所と取得箇所を登録し、CがTを断言する台詞と理由付き嘘の台詞を検査する",
+      "then": "知らないはずの人物の発言を確認候補にする。意図した嘘や誤解は、その理由を添えて扱える。",
+      "negative_or_edge": "証言の誤り、意図した嘘、未確定案を真実から分離する。知識取得には出所と時点または経路位置を必要とする。",
+      "result": "not_run"
+    },
+    {
+      "id": "AT-F47",
+      "requirement_ids": [
+        "REQ-F47"
+      ],
+      "package_id": "WP15",
+      "given": "今作回収Q、続編回収R、意図した未回収S、没T",
+      "when": "今作/特定分岐の未回収を抽出し、Qの回収先を変えて確認待ちを調べる",
+      "then": "続編用に残した謎が不具合一覧へ混ざらず、今作で回収する予定の漏れを見つけられる。",
+      "negative_or_edge": "今作・分岐・続編など対象範囲と意図を明示する。回収先変更時は再確認待ちにし、意図した未回収は警告の集計から分ける。",
+      "result": "not_run"
+    },
+    {
+      "id": "AT-E02",
+      "title": "世界時間・回想・基準点",
+      "requirement_ids": [
+        "REQ-B05",
+        "REQ-B06",
+        "REQ-B13",
+        "REQ-B21",
+        "REQ-F44"
+      ],
+      "package_id": "WP23",
+      "given": "世界tick -10の出来事を後章で回想する作品",
+      "when": "表示単位、本編基準点、回想章順をそれぞれ変更する",
+      "then": "世界tickは不変、相対表示と開示順だけが所定に変わる",
+      "negative_or_edge": "暦の存在しない日付と相対制約循環は拒否される",
+      "result": "not_run"
+    },
+    {
+      "id": "AT-E04",
+      "title": "伏線の提示と人物の誤解",
+      "requirement_ids": [
+        "REQ-B17",
+        "REQ-B19",
+        "REQ-F43",
+        "REQ-F45",
+        "REQ-F46",
+        "REQ-F47"
+      ],
+      "package_id": "WP23",
+      "given": "必須手掛かりを飛ばせる経路と嘘の証言と続編の謎",
+      "when": "真相へ行く二経路を解析する",
+      "then": "手掛かり欠落の証人経路を示し、人物の認識と真実を区別し続編謎を別集計する",
+      "negative_or_edge": "理解したと判定せず、外部条件を含む経路は未確認とする",
+      "result": "not_run"
+    },
+    {
+      "id": "AT-E10",
+      "title": "解析の上限・仮実の区別",
+      "requirement_ids": [
+        "REQ-F17",
+        "REQ-F18",
+        "REQ-F20",
+        "REQ-F42",
+        "REQ-N05",
+        "REQ-N12"
+      ],
+      "package_id": "WP23",
+      "given": "抽選・無制限ループ・外部戦闘を含む作品",
+      "when": "同じ記録を再実行して探索上限まで解析する",
+      "then": "抽選は再現され、未確認の範囲と分母を示し、仮戦闘結果と実ゲーム結果を別に記録する",
+      "negative_or_edge": "対象版の変更で再確認待ちになり、打切りを到達不能の証明としない",
+      "result": "not_run"
+    }
+  ],
+  "sourceHashes": [
+    {
+      "file": "docs/data/requirements.json",
+      "sha256": "df11649ab7ec25c31ae2aad6aacdca98d7324aba2e701352f9a78136c3bed0dc"
+    },
+    {
+      "file": "docs/data/acceptance_cases.json",
+      "sha256": "e1e4b06a3bb1cd79fc590239ab6350103323335f2e1ee87a2e6a283755834c4f"
+    },
+    {
+      "file": "docs/spec/BEHAVIOR_CONTRACT.md",
+      "sha256": "685feaf6de80b9b424460d0ce9e422247d773053089232a9be8c993e33e42d5f"
+    },
+    {
+      "file": "docs/spec/DATA_MODEL.md",
+      "sha256": "1aa5a8a6ffebf354e4089164987de32fdd3cf81c342834f287dfbdb213f4b389"
+    }
+  ]
+}
