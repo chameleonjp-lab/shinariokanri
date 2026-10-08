@@ -4441,6 +4441,24 @@
                 {
                   "type": "object",
                   "properties": {
+                    "approval": {
+                      "type": "object",
+                      "properties": {
+                        "entityId": {
+                          "$ref": "#/$defs/ID",
+                          "$comment": "{\"referenceScope\":\"entity\"}"
+                        },
+                        "sourceVersionId": {
+                          "$ref": "#/$defs/ID",
+                          "$comment": "{\"referenceScope\":\"snapshot\"}"
+                        }
+                      },
+                      "required": [
+                        "entityId",
+                        "sourceVersionId"
+                      ],
+                      "additionalProperties": false
+                    },
                     "sourceVersionId": {
                       "$ref": "#/$defs/ID",
                       "$comment": "{\"referenceScope\":\"snapshot\"}"
@@ -4588,6 +4606,7 @@
                     }
                   },
                   "required": [
+                    "approval",
                     "sourceVersionId",
                     "verificationVersionId",
                     "profileVersionId",
