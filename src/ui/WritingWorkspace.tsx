@@ -1,3 +1,4 @@
+import { checkChapterForeshadows, chapterNarrativeOccurrences } from '../domain/presentation';
 import { reuseTargetAnchor } from '../domain/reuse';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ContentAnchor, Entity, ProjectContent, ProjectData, ProjectSnapshot } from '../domain/types';
@@ -24,7 +25,7 @@ import { DialoguePresentation } from './DialoguePresentation';
 import { backChapterReading, pinChapterReadingRecord, presentNextChapterScene, replayChapterReading, startChapterReading, type ChapterReadingSession } from '../domain/presentation';
 import { jsonBytes, sha256 } from '../storage/json';
 import { fieldText } from './components';
-import { RichTextView } from './Fields';
+import { labelOf, RichTextView } from './Fields';
 import './WritingWorkspace.css';
 
 const AXIS_LABELS: Record<StoryLaneAxis, string> = {
@@ -364,7 +365,8 @@ export function ChapterReadingView({ project, chapterIds, scenePath, currentVers
         <div className="reading-body"><strong>本文</strong><RichTextView value={presentedScene.data.body} vertical={vertical} onOpenTarget={onOpenEntity || onOpenTarget ? anchor => openReadingTarget(anchor, session.contentVersionId) : undefined}/></div>
         <DialoguePresentation key={presentedScene.id} project={session.content} lineIds={presentedScene.data.dialogueLineIds ?? []} vertical={vertical} onOpenTarget={anchor => openReadingTarget(anchor, session.contentVersionId)}/>
       </article>}
-      {(onOpenEntity || onOpenTarget) && <NarrativeClaims project={session.content} state={session.state} onOpenTarget={anchor => openReadingTarget(anchor, session.contentVersionId)}/>}
+      <section aria-label="章の伏線と回収"><h3>章の提示順・伏線と回収</h3><p>対象は選択した章・場面の提示順です。途中開始と未知は通し確認へ換算しません。</p>{checkChapterForeshadows(session).map((finding, index) => <article key={index}><strong>{finding.status === 'intentional' ? '意図した未回収' : finding.status === 'unknown' ? '未確認' : '確認候補'}</strong><p>{finding.message}</p>{finding.targetId && <button className="text-button" onClick={() => openReadingTarget({ entityId: finding.targetId! }, session.contentVersionId)}>伏線と出所へ戻る</button>}<p>根拠の提示順：{finding.path.map(id => labelOf(session.content.entities.find(entity => entity.id === id))).join(' → ')}</p></article>)}</section>
+      {(onOpenEntity || onOpenTarget) && <NarrativeClaims project={session.content} occurrences={chapterNarrativeOccurrences(session)} referenceEntities={session.referenceEntities} state={session.state} onOpenTarget={anchor => openReadingTarget(anchor, session.contentVersionId)}/>}
       <div className="reference-controls">
         <button type="button" className="button primary small" disabled={busy || stale || session.status !== 'ready'} onClick={presentNext}>{session.status === 'terminal' ? '全場面を提示しました' : '次の場面を提示'}</button>
         <button type="button" className="button secondary small" disabled={busy || !session.occurrences.length} onClick={goBack}>一場面戻る</button>

@@ -1,11 +1,12 @@
 import type { CheckpointData, Condition, Entity, EntityKind, Expression, ID, PresentationConditionResult, ProjectContent, ProjectData, RuntimeState, TraceData, Trigger, TypedValue } from './types';
-import { emptyRuntimeState, getEntitiesByKind, getEntity as getAuthorEntity, validateInitialPresentationResults, validateProject } from './model';
-import { applyEffectsAtomic, evaluateCondition, initializeRuntimeState, resetRuntimeLifecycle } from './conditions';
+import { emptyRuntimeState, getEntitiesByKind, getEntity as getAuthorEntity, validateInitialPresentationResults, validateProject, validateRuntimeState, validateVariableValue } from './model';
+import { applyEffectsAtomic, evaluateCondition, initializeRuntimeState, resetRuntimeLifecycle, runtimeExclusionIssues } from './conditions';
 import { isTick, resolveTime } from './time';
 import { presentContent, presentationAnchorApplies, presentationAnchorOrder, presentationRuleContext } from './presentation';
 import { declaredRegressionPaths, regressionPathCoverage } from './regressionPaths';
 import { resolveReuseContent, reuseAuthorContent, reuseRuleContexts, reuseExecutionAnchor } from './reuse';
 import { adoptedRecord } from './adoption';
+import { checkPresentationForeshadows } from './narrative';
 import { evaluateScenarioException, evaluateTargetScope } from './stateRules';
 
 export type TrialStatus = 'ready' | 'terminal' | 'blocked' | 'unknown' | 'error';
@@ -309,6 +310,17 @@ function startTrialInternal(project: ProjectData, options: TrialStartOptions = {
   }
   if (options.seed !== undefined) state.rngSeed = options.seed;
   const entry = options.entryId ?? state.presentationPosition ?? declaredEntry(project);
+  if (!failure) {
+    const shape = validateRuntimeState(state);
+    if (!shape.ok) failure = shape.issues[0];
+    for (const [id, value] of Object.entries(state.variableValues)) {
+      const variable = variables(project).find(variable => variable.id === id);
+      const errors = variable ? validateVariableValue(variable, value, `${id}.value`) : [issue('REFERENCE_INVALID', '開始状態に対象版の宣言がない状態値があります。', id)];
+      if (errors.length) { failure = errors[0]; break; }
+    }
+    const ruleContext = presentationRuleContext(project, { nodeId: entry ?? undefined, worldTick: options.worldTick });
+    if (!failure) failure = runtimeExclusionIssues({ state, variables: variables(project), entities: runtimeEntities(project), ruleContext, ruleContexts: reuseRuleContexts(project, ruleContext) })[0];
+  }
   if (checkpointId && state.provenance === 'full_play') {
     // A hand-edited origin label cannot turn an arbitrary checkpoint into a
     // declared initial play. Reconstruct its opening from the captured edition.
@@ -348,7 +360,7 @@ function startTrialInternal(project: ProjectData, options: TrialStartOptions = {
     status: 'ready', history: [], trace: [], issues: [], lastDiff: [], externalValues: {}, startExternalValues: {},
     pendingPresentation,
   };
-  if (failure) return resultSession(session, 'error', [failure]);
+  if (failure) return resultSession(session, failure.code === 'CONDITION_UNKNOWN' ? 'unknown' : 'error', [failure]);
   if (options.stub) {
     const stub = setTrialStubValues(project, session, options.stub);
     const observation = stub.trace.at(-1)?.presentationState ?? startPresentationState;
@@ -838,92 +850,16 @@ export function checkTrialForeshadows(project: ProjectData, session: TrialSessio
     return errorIssues(error).map(failure => ({ status: 'confirmed_issue', code: failure.code, message: failure.message, path: session.nodeId ? [session.nodeId] : [], startState: clone(session.startState) }));
   }
 }
-function checkTrialForeshadowsInternal(project: ProjectData, session: TrialSession): AnalysisFinding[] {
-  project = getTrialContent(project, session);
-  const findings: AnalysisFinding[] = [];
-  const disclosures = activeKind(project, 'disclosure');
-  const states: { state: RuntimeState; observationState?: RuntimeState; conditions: ConditionObservation[]; edgeIds?: ID[]; worldTick?: string; externalValues: Record<ID, TypedValue> }[] = [
-    { state: session.startState, observationState: session.startPresentationState, conditions: session.startConditionResults, worldTick: session.initialWorldTick, externalValues: session.startExternalValues },
-    ...session.trace.filter(step => !step.request.stub || !sameRuntimeValue(step.before.visitCounts, step.after.visitCounts)).map(step => ({ state: step.after, observationState: step.presentationState, conditions: step.conditionResults, edgeIds: step.request.stub ? undefined : step.edgeIds, worldTick: step.request.worldTick, externalValues: step.externalValuesAfter })),
+export function trialNarrativeOccurrences(session: TrialSession): import('./narrative').NarrativeOccurrence[] {
+  return [
+    { state: session.startState, observationState: session.startPresentationState, conditions: session.startConditionResults, target: { nodeId: session.startState.presentationPosition ?? undefined }, worldTick: session.initialWorldTick, externalValues: session.startExternalValues },
+    ...session.trace.filter(step => !step.request.stub || !sameRuntimeValue(step.before.visitCounts, step.after.visitCounts)).map(step => ({ state: step.after, observationState: step.presentationState, conditions: step.conditionResults, edgeIds: step.request.stub ? undefined : step.edgeIds, target: { nodeId: step.after.presentationPosition ?? undefined }, worldTick: step.request.worldTick, externalValues: step.externalValuesAfter })),
   ];
-  const seen = new Set<ID>();
-  const uncertain = new Set<ID>();
-  const found = new Set<ID>();
-  const path: ID[] = [];
-  const edgePath: ID[][] = [];
-  for (const disclosure of disclosures) if (disclosure.data.anchor.positionStatus === 'unresolved' && session.issues.some(failure => failure.code === 'CONDITION_UNKNOWN' && failure.path === `${disclosure.id}.anchor`)) {
-    uncertain.add(disclosure.id);
-    findings.push({ status: 'unknown', code: 'CONDITION_UNKNOWN', message: '提示位置が不明です。本文へ再リンクしてから伏線を確認してください。', targetId: disclosure.id, path: session.nodeId ? [session.nodeId] : [], startState: clone(session.startState) });
-  }
-  for (const { state, observationState, conditions, edgeIds, worldTick, externalValues } of states) {
-    // A pending initial disclosure is not a presentation until its arrival commits.
-    if (!state.presentationPosition || !state.seenIds.includes(state.presentationPosition)) continue;
-    path.push(state.presentationPosition);
-    if (edgeIds) edgePath.push([...edgeIds]);
-    const recorded = new Map((conditions ?? []).map(condition => [condition.targetId, condition]));
-    for (const disclosure of disclosures) if (disclosure.data.anchor.positionStatus === 'unresolved' && recorded.has(disclosure.id)) {
-      uncertain.add(disclosure.id);
-      findings.push({ status: 'unknown', code: 'CONDITION_UNKNOWN', message: '提示位置が不明です。本文へ再リンクしてから伏線を確認してください。', targetId: disclosure.id, path: [...path], startState: clone(session.startState) });
-    }
-    // Legacy checkpoints have no observations. Only recorded presentation IDs can
-    // establish a disclosure; never re-evaluate its condition using later values.
-    const presentationCondition = (id: ID): ConditionObservation => recorded.get(id)
-      ?? { targetId: id, value: state.seenIds.includes(id) ? 'true' : 'false', reasons: [] };
-    for (const id of state.seenIds) {
-      const disclosure = disclosures.find(disclosure => disclosure.id === id);
-      if (disclosure?.data.anchor.positionStatus === 'unresolved') { uncertain.add(id); continue; }
-      if (!disclosure || !anchorIsPresented(project, state, reuseExecutionAnchor(project, disclosure.data.anchor, disclosure.id), disclosure.id)) seen.add(id);
-    }
-    const currentClues = disclosures.filter(disclosure => disclosure.data.role === 'clue' && anchorIsPresented(project, state, reuseExecutionAnchor(project, disclosure.data.anchor, disclosure.id), disclosure.id))
-      .map(disclosure => ({ disclosure, condition: presentationCondition(disclosure.id) }));
-    for (const payoff of disclosures.filter(disclosure => disclosure.data.role === 'payoff')) {
-      if (!anchorIsPresented(project, state, reuseExecutionAnchor(project, payoff.data.anchor, payoff.id), payoff.id) || !state.seenIds.includes(payoff.id) || found.has(payoff.id)) continue;
-      // A supplied false observation cannot erase an actual presentation ID,
-      // including evidence from legacy checkpoints without initial observations.
-      const observedCondition = presentationCondition(payoff.id);
-      const condition = observedCondition.value === 'false' ? { ...observedCondition, value: 'true' as const } : observedCondition;
-      if (condition.value === 'false') continue;
-      const foreshadow = getEntity(project, payoff.data.foreshadowId);
-      if (!foreshadow || foreshadow.kind !== 'foreshadow' || !adoptedRecord(foreshadow)) continue;
-      let uncertainOrder = false;
-      const presentedBefore = (id: ID) => {
-        if (seen.has(id)) return true;
-        const clue = currentClues.find(clue => clue.disclosure.id === id);
-        if (!clue || clue.condition.value === 'false') return false;
-        const before = anchorPrecedes(project, state, reuseExecutionAnchor(project, clue.disclosure.data.anchor, clue.disclosure.id), reuseExecutionAnchor(project, payoff.data.anchor, payoff.id));
-        if (before === undefined || before === true && clue.condition.value === 'unknown') uncertainOrder = true;
-        return before === true && clue.condition.value === 'true';
-      };
-      const missing = (foreshadow.data.requiredInfo ?? []).filter(id => ![id, ...(foreshadow.data.alternativeInfo?.[id] ?? [])].some(presentedBefore));
-      const ruleContext = presentationRuleContext(project, { nodeId: state.presentationPosition, worldTick });
-      const contexts = reuseRuleContexts(project, ruleContext);
-      const context = { state: observationState ?? state, variables: variables(project), entities: runtimeEntities(project), externalValues, ruleContext: contexts[foreshadow.id] ?? ruleContext, ruleContexts: contexts };
-      const scope = foreshadow.data.deadline ? !observationState && foreshadow.data.deadline.routeCondition ? { value: 'unknown' } : evaluateTargetScope(foreshadow.data.deadline, context) : { value: 'true' };
-      if (scope.value === 'false') continue;
-      found.add(payoff.id);
-      const exceptions = (foreshadow.data.exceptions ?? []).map(exception => !observationState && (exception.targetScope.routeCondition || exception.validity.routeCondition) ? { value: 'unknown' } : evaluateScenarioException(exception, context));
-      if (exceptions.some(exception => exception.value === 'true')) continue;
-      if (missing.length === 0 && condition.value === 'true') continue;
-      const policy = foreshadow.data.resolutionPolicy;
-      const intentional = policy === 'sequel' || policy === 'intentional_open' || policy === 'red_herring' || policy === 'rejected';
-      const unknown = scope.value === 'unknown' || exceptions.some(exception => exception.value === 'unknown') || condition.value === 'unknown' || uncertainOrder || missing.some(id => uncertain.has(id)) || session.state.provenance !== 'full_play';
-      findings.push({
-        status: intentional ? 'intentional' : unknown ? 'unknown' : 'candidate',
-        code: condition.value === 'unknown' ? 'CONDITION_UNKNOWN' : 'REQUIRED_INFO_MISSING',
-        message: intentional ? `回収方針「${policy}」として区別した未提示情報があります。`
-          : unknown ? '回収前の必須情報について未確認の値または途中開始・仮値があり、確認が必要です。'
-          : '回収へ至るこの経路で、作者が必須にした情報の提示が不足しています。',
-        targetId: foreshadow.id, payoffId: payoff.id, missingInfoIds: missing,
-        path: [...path], edgePath: edgePath.map(ids => [...ids]), startState: clone(session.startState),
-      });
-    }
-    for (const { disclosure, condition } of currentClues) {
-      if (condition.value === 'true') seen.add(disclosure.id);
-      if (condition.value === 'unknown') uncertain.add(disclosure.id);
-    }
-  }
-  return findings;
 }
+function checkTrialForeshadowsInternal(project: ProjectData, session: TrialSession): AnalysisFinding[] {
+  return checkPresentationForeshadows(getTrialContent(project, session), trialNarrativeOccurrences(session), session.startState, session.status === 'terminal', session.referenceEntities, session.issues as import('./types').ValidationIssue[]);
+}
+
 export interface AnalysisProgress { checkedStates: number; pendingStates: number; elapsedMs: number; limits: AnalysisLimits }
 export interface AnalysisOptions extends Partial<AnalysisLimits>, TrialStartOptions {
   worldTick?: string;
@@ -1105,7 +1041,9 @@ function* analysisIterator(project: ProjectData, options: AnalysisOptions): Gene
     activeStart = session.startState;
     // Inspect the witnessed presentation order before state deduplication. Two
     // paths may join at the same values after presenting information in a different order.
-    if (session.status === 'terminal' || activeKind(project, 'disclosure').some(disclosure => disclosure.data.role === 'payoff' && anchorIsPresented(project, session.state, reuseExecutionAnchor(project, disclosure.data.anchor, disclosure.id), disclosure.id))) {
+    const lastStep = session.trace.at(-1), oldChapter = lastStep ? presentationRuleContext(project, { nodeId: lastStep.before.presentationPosition ?? undefined }).chapterId : undefined;
+    const currentChapter = presentationRuleContext(project, { nodeId: session.nodeId ?? undefined }).chapterId;
+    if (session.status === 'terminal' || getTrialNode(project, session)?.data.nodeType === 'exit' || oldChapter && oldChapter !== currentChapter || activeKind(project, 'foreshadow').some(foreshadow => foreshadow.data.presentationDeadline && anchorIsPresented(project, session.state, reuseExecutionAnchor(project, foreshadow.data.presentationDeadline, foreshadow.id), foreshadow.id)) || activeKind(project, 'disclosure').some(disclosure => disclosure.data.role === 'payoff' && anchorIsPresented(project, session.state, reuseExecutionAnchor(project, disclosure.data.anchor, disclosure.id), disclosure.id))) {
       for (const finding of checkTrialForeshadows(project, pathSession(recordIndex))) {
         const key = `${finding.status}:${finding.code}:${finding.targetId}:${finding.payoffId}:${finding.missingInfoIds?.join(',')}`;
         if (!unique.has(key)) { unique.add(key); findings.push(finding); }

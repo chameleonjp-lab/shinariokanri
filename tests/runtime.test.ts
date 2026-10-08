@@ -41,7 +41,8 @@ describe('pure reading runtime', () => {
     const key = add('variable', { key: 'key', valueType: 'boolean', initial: { type: 'boolean', value: false } });
     const item = add('item', { itemMode: 'type' });
     const holder = add('character', {});
-    const fact = add('assertion', { subjectId: holder.id, predicate: '鍵を知る', value: { type: 'boolean', value: true }, truthKind: 'belief', holderId: holder.id });
+    const acquisitionSource = add('source', { sourceType: 'observation', locator: '入口で示した情報' });
+    const fact = add('assertion', { subjectId: holder.id, predicate: '鍵を知る', value: { type: 'boolean', value: true }, truthKind: 'belief', holderId: holder.id, sourceIds: [acquisitionSource.id], evidenceLocation: { entityId: entry.id } });
     const effects = [
       add('effect', { operation: 'set', targetId: key.id, value: { type: 'boolean', value: true } }),
       add('effect', { operation: 'grant', targetId: item.id, value: { type: 'integer', value: 1 } }),
@@ -547,7 +548,7 @@ describe('declared disclosure knowledge effects', () => {
     const event = add('event', { participants: [{ characterId: holder.id, role: 'witness' }] });
     const scene = add('scene', { eventIds: [event.id], body: [{ id: newId(), kind: 'paragraph', text: '証言を読む' }] });
     const reader = node({ nodeType: 'scene', sceneId: scene.id });
-    const fact = add('assertion', { subjectId: holder.id, predicate: '鍵の在処', value: { type: 'boolean', value: true }, truthKind: 'belief', holderId: holder.id });
+    const fact = add('assertion', { subjectId: holder.id, predicate: '鍵の在処', value: { type: 'boolean', value: true }, truthKind: 'belief', holderId: holder.id, sourceIds: [scene.id], evidenceLocation: { entityId: scene.id, blockId: scene.data.body[0].id } });
     const grant = add('effect', { operation: 'assert', targetId: fact.id, value: { type: 'boolean', value: true } });
     const question = add('foreshadow', { resolutionPolicy: 'this_work' });
     const disclosure = add('disclosure', { foreshadowId: question.id, role: 'clue', stage: 'hint', anchor: { entityId: scene.id, blockId: scene.data.body[0].id } });
@@ -569,6 +570,7 @@ describe('declared disclosure knowledge effects', () => {
     const fact = add('assertion', { subjectId: holder.id, predicate: '秘密', value: { type: 'boolean', value: true }, truthKind: 'belief', holderId: holder.id });
     const grant = add('effect', { operation: 'assert', targetId: fact.id, value: { type: 'boolean', value: true } });
     const scene = add('scene', { body: [{ id: newId(), kind: 'paragraph', text: '秘密を読む' }] });
+    fact.data.sourceIds = [scene.id]; fact.data.evidenceLocation = { entityId: scene.id };
     const target = node({ nodeType: 'scene', sceneId: scene.id });
     const question = add('foreshadow', { resolutionPolicy: 'this_work' });
     add('disclosure', { foreshadowId: question.id, role: 'clue', stage: 'hint', anchor: { entityId: scene.id }, knowledgeEffects: [grant.id, invalid.id] });
@@ -610,7 +612,7 @@ describe('declared disclosure knowledge effects', () => {
     const key = add('variable', { key: 'key', valueType: 'boolean', initial: { type: 'unknown', value: null, reason: '未入力' } });
     const scene = add('scene', { body: [{ id: newId(), kind: 'paragraph', text: '条件が必要な開始場面' }] });
     const holder = add('character', {});
-    const fact = add('assertion', { subjectId: holder.id, predicate: '開始時の秘密', value: { type: 'boolean', value: true }, truthKind: 'belief', holderId: holder.id });
+    const fact = add('assertion', { subjectId: holder.id, predicate: '開始時の秘密', value: { type: 'boolean', value: true }, truthKind: 'belief', holderId: holder.id, sourceIds: [scene.id], evidenceLocation: { entityId: scene.id } });
     const grant = add('effect', { operation: 'assert', targetId: fact.id, value: { type: 'boolean', value: true } });
     const question = add('foreshadow', { resolutionPolicy: 'this_work' });
     add('disclosure', { foreshadowId: question.id, role: 'clue', stage: 'hint', anchor: { entityId: scene.id }, condition: { op: 'compare', variableId: key.id, comparator: 'eq', value: { type: 'boolean', value: true } }, knowledgeEffects: [grant.id] });
@@ -645,7 +647,7 @@ describe('declared disclosure knowledge effects', () => {
     const target = node({ nodeType: 'scene', sceneId: scene.id });
     const question = add('foreshadow', { resolutionPolicy: 'this_work' });
     const disclosures = [0, 1].map(index => {
-      const fact = add('assertion', { subjectId: holder.id, predicate: `秘密${index}`, value: { type: 'boolean', value: true }, truthKind: 'belief', holderId: holder.id });
+      const fact = add('assertion', { subjectId: holder.id, predicate: `秘密${index}`, value: { type: 'boolean', value: true }, truthKind: 'belief', holderId: holder.id, sourceIds: [scene.id], evidenceLocation: { entityId: scene.id, blockId: scene.data.body[0].id, start: 0, end: 0 } });
       const grant = add('effect', { operation: 'assert', targetId: fact.id, value: { type: 'boolean', value: true } });
       return add('disclosure', { foreshadowId: question.id, role: 'clue', stage: 'hint', anchor: { entityId: scene.id, blockId: scene.data.body[0].id }, knowledgeEffects: [grant.id] });
     });

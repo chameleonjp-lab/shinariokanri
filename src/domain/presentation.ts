@@ -1,4 +1,4 @@
-import type { CheckpointData, ContentAnchor, Entity, ID, PresentationConditionResult, ProjectContent, ProjectData, RuntimeState, TraceData, TypedValue, ValidationIssue } from './types';
+import type { CheckpointData, ContentAnchor, Entity, ID, PresentationConditionResult, ProjectContent, ProjectData, RuntimeContext, RuntimeState, TraceData, TypedValue, ValidationIssue } from './types';
 import { validateRuntimeState } from './model';
 import { applyEffectsAtomic, DomainValidationError, evaluateCondition, initializeRuntimeState, resetRuntimeLifecycle, runtimeExclusionIssues } from './conditions';
 import { buildChapterReadingSequence } from './writingWorkspace';
@@ -13,16 +13,25 @@ import { evaluateTargetScope } from './stateRules';
 import { declaredRegressionPaths, regressionPathCoverage } from './regressionPaths';
 import { isTick } from './time';
 import { resolveReuseContent, reuseAuthorContent, reuseOrigin, reuseRuleContexts, reuseExecutionAnchor } from './reuse';
+import { checkPresentationForeshadows, type NarrativeOccurrence } from './narrative';
 
 export interface PresentationTarget { nodeId?: ID; sceneId?: ID; worldTick?: string; externalValues?: Record<ID, TypedValue>; referenceEntities?: Entity[] }
 export type ContentPresentation = { ok: true; state: RuntimeState; observationState: RuntimeState; conditions: PresentationConditionResult[] } | { ok: false; issues: ValidationIssue[] };
 const active = <K extends Entity['kind']>(project: ProjectData, kind: K): Entity<K>[] => project.entities.filter((entity): entity is Entity<K> => entity.kind === kind && adoptedRecord(entity));
 const problem = (path: string, message: string, code: ValidationIssue['code'] = 'REFERENCE_INVALID'): ContentPresentation => ({ ok: false, issues: [{ code, path, message }] });
 
-export function presentationRuleContext(project: ProjectData, target: PresentationTarget) {
+export function presentationRuleContext(project: ProjectData, target: PresentationTarget): NonNullable<RuntimeContext['ruleContext']> {
   const node = active(project, 'flow_node').find(item => item.id === target.nodeId);
   const scene = active(project, 'scene').find(item => item.id === (target.sceneId ?? node?.data.sceneId));
   return { projectId: project.projectId, worldTick: target.worldTick, graphId: node ? active(project, 'flow_graph').find(graph => graph.data.nodeIds.includes(node.id))?.id : undefined, chapterId: scene?.data.chapterId ?? (scene ? active(project, 'chapter').find(chapter => chapter.data.sceneIds.includes(scene.id))?.id : undefined) };
+}
+
+/** Choice text is presented only by a manual choice, including disabled candidates shown to the author. */
+export function presentationLineIds(project: ProjectData, target: PresentationTarget): ID[] {
+  const node = active(project, 'flow_node').find(item => item.id === target.nodeId);
+  const scene = active(project, 'scene').find(item => item.id === (target.sceneId ?? node?.data.sceneId));
+  const policy = node?.data.executionPolicy ?? (node?.data.nodeType === 'automatic' ? 'first_match' : 'manual_choice');
+  return [...new Set([...(scene?.data.dialogueLineIds ?? []), ...(node && policy === 'manual_choice' ? active(project, 'flow_edge').filter(edge => edge.data.fromId === node.id).flatMap(edge => edge.data.choiceLineId ? [edge.data.choiceLineId] : []) : [])])];
 }
 
 export function presentationAnchorApplies(project: ProjectData, state: RuntimeState, anchor: ContentAnchor, target: PresentationTarget, declarationId?: ID): boolean {
@@ -32,7 +41,7 @@ export function presentationAnchorApplies(project: ProjectData, state: RuntimeSt
   const node = active(project, 'flow_node').find(item => item.id === target.nodeId);
   const sceneId = target.sceneId ?? node?.data.sceneId;
   const scene = active(project, 'scene').find(item => item.id === sceneId);
-  const lines = (scene?.data as Entity<'scene'>['data'] & { dialogueLineIds?: ID[] | null })?.dialogueLineIds ?? [];
+  const lines = presentationLineIds(project, target);
   if (![target.nodeId, sceneId, ...lines].includes(anchor.entityId)) return false;
   return [anchor.entityId, anchor.blockId, anchor.lineId].filter((id): id is ID => !!id).every(id => state.seenIds.includes(id));
 }
@@ -42,7 +51,7 @@ export function presentationAnchorOrder(project: ProjectData, left: ContentAncho
   if (left.positionStatus === 'unresolved' || right.positionStatus === 'unresolved') return undefined;
   const node = active(project, 'flow_node').find(item => item.id === target.nodeId);
   const scene = active(project, 'scene').find(item => item.id === (target.sceneId ?? node?.data.sceneId));
-  const lineIds = (scene?.data as Entity<'scene'>['data'] & { dialogueLineIds?: ID[] | null })?.dialogueLineIds ?? [];
+  const lineIds = presentationLineIds(project, target);
   const positions = [...(scene?.data.body ?? []).map(block => block.id)];
   for (const lineId of lineIds) positions.push(lineId, ...(active(project, 'dialogue_line').find(line => line.id === lineId)?.data.text ?? []).map(block => block.id));
   const leftBlock = left.blockId ?? left.lineId ?? (lineIds.includes(left.entityId) ? left.entityId : undefined);
@@ -74,13 +83,12 @@ export function presentContent(project: ProjectData, state: RuntimeState, target
       seen.add(scene.id); next.visitCounts[scene.id] = (next.visitCounts[scene.id] ?? 0) + 1;
       for (const id of scene.data.blockIds ?? []) seen.add(id);
       for (const block of scene.data.body) seen.add(block.id);
-      for (const lineId of (scene.data as Entity<'scene'>['data'] & { dialogueLineIds?: ID[] | null }).dialogueLineIds ?? []) {
-        const line = active(project, 'dialogue_line').find(item => item.id === lineId);
-        if (!line) return problem(`${scene.id}.dialogueLineIds`, '提示する台詞が存在しないか、削除・不採用です。');
-        seen.add(line.id); next.visitCounts[line.id] = (next.visitCounts[line.id] ?? 0) + 1; for (const block of line.data.text) seen.add(block.id);
-      }
     }
-    if (node) for (const edge of active(project, 'flow_edge').filter(item => item.data.fromId === node.id)) if (edge.data.choiceLineId) seen.add(edge.data.choiceLineId);
+    for (const lineId of presentationLineIds(project, resolved)) {
+      const line = active(project, 'dialogue_line').find(item => item.id === lineId);
+      if (!line) return problem(`${node?.id ?? scene?.id}.dialogueLineIds`, '提示する台詞が存在しないか、削除・不採用です。');
+      seen.add(line.id); next.visitCounts[line.id] = (next.visitCounts[line.id] ?? 0) + 1; for (const block of line.data.text) seen.add(block.id);
+    }
     next.seenIds = [...seen];
     const variables = [...active(project, 'variable'), ...(target.referenceEntities ?? []).filter((entity): entity is Entity<'variable'> => entity.kind === 'variable' && adoptedRecord(entity))], ruleContext = presentationRuleContext(project, resolved), context = { state: next, variables, entities: project.entities, referenceEntities: target.referenceEntities, externalValues: target.externalValues, ruleContext, ruleContexts: reuseRuleContexts(project, ruleContext) };
     const conditions: PresentationConditionResult[] = [], disclosures: Entity<'disclosure'>[] = [];
@@ -91,7 +99,7 @@ export function presentContent(project: ProjectData, state: RuntimeState, target
       const scopeResult = scope ? evaluateTargetScope(scope, disclosureContext) : { value: 'true' };
       if (scopeResult.value === 'false') continue;
       if (anchor.sourceVersionId && ![project.projectId, state.contentVersionId, reuseOrigin(project, anchor.entityId)?.sourceVersionId, reuseOrigin(project, disclosure.id)?.sourceVersionId].includes(anchor.sourceVersionId)) continue;
-      const lineIds = (scene?.data as Entity<'scene'>['data'] & { dialogueLineIds?: ID[] | null })?.dialogueLineIds ?? [];
+      const lineIds = presentationLineIds(project, resolved);
       if (![node?.id, scene?.id, ...lineIds].includes(anchor.entityId)) continue;
       if (scopeResult.value === 'unknown') return problem(`${disclosure.id}.targetScope`, '開示の対象範囲・経路を確認できません。', 'CONDITION_UNKNOWN');
       if (anchor.positionStatus === 'unresolved' && [node?.id, scene?.id, ...lineIds].includes(anchor.entityId)) return problem(`${disclosure.id}.anchor`, anchor.positionReason || '提示位置が不明です。本文へ再リンクしてください。', 'CONDITION_UNKNOWN');
@@ -104,13 +112,13 @@ export function presentContent(project: ProjectData, state: RuntimeState, target
     const ordered = disclosures.filter(disclosure => (disclosure.data.knowledgeEffects?.length ?? 0) > 0);
     for (let i = 0; i < ordered.length; i++) for (let j = i + 1; j < ordered.length; j++) if (presentationAnchorOrder(project, reuseExecutionAnchor(project, ordered[i].data.anchor, ordered[i].id), reuseExecutionAnchor(project, ordered[j].data.anchor, ordered[j].id), resolved) === undefined) return problem(`${node?.id ?? scene?.id}.disclosures`, '複数の開示効果の提示順が確定していません。段落と文字位置を指定してください。', 'CONDITION_UNKNOWN');
     ordered.sort((left, right) => presentationAnchorOrder(project, reuseExecutionAnchor(project, left.data.anchor, left.id), reuseExecutionAnchor(project, right.data.anchor, right.id), resolved) ? -1 : 1);
-    const effects: Entity<'effect'>[] = [];
+    const effects: Entity<'effect'>[] = [], effectPresentations: NonNullable<RuntimeContext['effectPresentations']> = [];
     for (const disclosure of ordered) for (const effectId of disclosure.data.knowledgeEffects ?? []) {
       const effect = [...project.entities, ...(target.referenceEntities ?? [])].find((item): item is Entity<'effect'> => item.kind === 'effect' && item.id === effectId && adoptedRecord(item));
       if (!effect) return problem(`${disclosure.id}.knowledgeEffects`, '開示に指定した効果が存在しないか、削除・不採用です。');
-      effects.push(effect);
+      effects.push(effect); effectPresentations.push({ project, target: resolved, anchor: reuseExecutionAnchor(project, disclosure.data.anchor, disclosure.id) });
     }
-    const applied = applyEffectsAtomic(next, effects, context); if (!applied.ok) return applied;
+    const applied = applyEffectsAtomic(next, effects, { ...context, effectPresentations }); if (!applied.ok) return applied;
     applied.state.seenIds = [...new Set([...applied.state.seenIds, ...disclosures.map(disclosure => disclosure.id)])];
     return { ok: true, state: applied.state, observationState: structuredClone(next), conditions };
   } catch (error) { return { ok: false, issues: error instanceof DomainValidationError ? error.issues : [{ code: 'VALIDATION_FAILED', path: 'presentation', message: error instanceof Error ? error.message : '提示を検証できません。' }] }; }
@@ -124,6 +132,12 @@ export interface ChapterReadingSession {
   occurrences: PresentationOccurrence[]; externalValues: Record<ID, TypedValue>; referenceEntities: Entity[];
   worldTick?: string;
   status: 'ready' | 'terminal' | 'unknown' | 'error'; issues: ValidationIssue[];
+}
+export function chapterNarrativeOccurrences(session: ChapterReadingSession): NarrativeOccurrence[] {
+  return session.occurrences.map(occurrence => ({ state: occurrence.after, observationState: occurrence.presentationState ?? undefined, conditions: occurrence.conditionResults, target: { sceneId: occurrence.entityId }, worldTick: session.worldTick, externalValues: occurrence.externalValues ?? session.externalValues }));
+}
+export function checkChapterForeshadows(session: ChapterReadingSession) {
+  return checkPresentationForeshadows(session.content, chapterNarrativeOccurrences(session), session.startState, session.status === 'terminal', session.referenceEntities, session.issues);
 }
 export async function startChapterReading(project: ProjectData, options: ChapterReadingOptions = {}): Promise<ChapterReadingSession> {
   const declarationProject = structuredClone({ ...project, history: [], snapshots: [], authorAlternatives: undefined, entities: project.entities.filter(entity => ['collection', 'trace', 'checkpoint'].includes(entity.kind)) });

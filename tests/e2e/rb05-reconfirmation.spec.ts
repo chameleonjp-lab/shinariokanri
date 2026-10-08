@@ -1,0 +1,37 @@
+import { expect, test, type Page } from '@playwright/test';
+import { createEntity, createProject, newId } from '../../src/domain/model';
+import { preparePartialCheckpoint } from '../../src/domain/checkpoints';
+import { pinTrialRecord, startTrial, stepTrial } from '../../src/domain/runtime';
+import { exportScenario } from '../../src/storage/archive';
+import { jsonBytes, sha256 } from '../../src/storage/json';
+async function navigate(page: Page, name: RegExp) { const menu = page.getByRole('button', { name: 'メニューを開く' }); if (await menu.isVisible()) await menu.click(); await page.locator('.sidebar').getByRole('button', { name }).first().click(); }
+async function fixture() {
+  const p = createProject('版移行・再確認の通常操作'), variable = createEntity(p.projectId, 'variable', '持ち越す金額', { key: 'amount', valueType: 'integer', initial: { type: 'integer', value: 2 }, allowed: { min: 0, max: 100 }, scope: 'across_runs' }), scene = createEntity(p.projectId, 'scene', '本文', { body: [{ id: newId(), kind: 'paragraph', text: '読み始める。' }] }), entry = createEntity(p.projectId, 'flow_node', '入口', { nodeType: 'entry', sceneId: scene.id }), end = createEntity(p.projectId, 'flow_node', '終了', { nodeType: 'terminal', terminalReason: '終わる' }), effect = createEntity(p.projectId, 'effect', '金額を1増やす', { operation: 'add', targetId: variable.id, value: { type: 'integer', value: 1 } }), edge = createEntity(p.projectId, 'flow_edge', '終了へ', { fromId: entry.id, toId: end.id, label: '終了へ', effectIds: [effect.id] });
+  p.entities.push(variable, scene, entry, end, effect, edge);
+  const partial = await preparePartialCheckpoint(p, { entryId: entry.id }); partial.checkpoint.name = '旧版の途中開始'; partial.checkpoint.data.runtimeState.variableValues[variable.id] = { type: 'integer', value: 8 };
+  const ids = { checkpointId: newId(), snapshotId: newId() }, record = pinTrialRecord(stepTrial(p, startTrial(p), { edgeId: edge.id }), ids), cp = { ...createEntity(p.projectId, 'checkpoint', '旧経路の開始', record.checkpoint), id: ids.checkpointId }, trace = createEntity(p.projectId, 'trace', '旧金額の経路', record.trace), collection = createEntity(p.projectId, 'collection', '回帰集合', { mode: 'fixed', purpose: 'regression', memberIds: [trace.id] });
+  p.entities.push(partial.checkpoint, cp, trace, collection); p.snapshots.push(...partial.snapshots, { id: ids.snapshotId, content: record.content, contentHash: await sha256(jsonBytes(record.content)), createdAt: '2026-10-08T00:00:00Z', versionLabel: '旧金額の固定版' });
+  return { p, entry, variable, trace };
+}
+async function seed(page: Page, p: Awaited<ReturnType<typeof fixture>>['p']) { await page.goto('./'); await page.getByRole('button', { name: '保存ファイルを読み込む', exact: true }).click(); await page.locator('input[type=file]').setInputFiles({ name: 'reconfirm.scenario', mimeType: 'application/octet-stream', buffer: Buffer.from(await exportScenario(p)) }); await page.getByLabel('復元方法と対象への影響を確認しました').check(); await page.getByRole('button', { name: 'この内容で復元する', exact: true }).click(); await expect(page.locator('.sidebar')).toBeVisible(); await navigate(page, /^構成/); await page.getByRole('tab', { name: '試読・検査', exact: true }).click(); }
+test('別版の途中開始を差分確認・原子保存・再読込し、移行した状態から試読する', async ({ page }) => {
+  const f = await fixture(); await seed(page, f.p); await page.getByLabel('試読の開始点', { exact: true }).selectOption(f.entry.id);
+  const tool = page.getByRole('region', { name: '開始版の移行と経路の再確認' }); await tool.locator('summary').filter({ hasText: '別版の開始状態を移行する' }).click(); await tool.getByRole('radio', { name: /旧版の途中開始/ }).check(); await tool.getByRole('button', { name: '開始状態の移行差分を確認', exact: true }).click(); await expect(tool).toContainText('宣言が同じ状態値を移行します。');
+  await navigate(page, /^資料/); await navigate(page, /^構成/); await page.getByRole('tab', { name: '試読・検査', exact: true }).click(); await expect(tool).toContainText('確認基底revision');
+  await tool.getByRole('button', { name: '確認した状態を新しい途中開始へ移行', exact: true }).click(); await expect(tool).toContainText('旧版の証跡も保持しています。'); await page.reload(); await navigate(page, /^構成/); await page.getByRole('tab', { name: '試読・検査', exact: true }).click();
+  const version = await page.getByLabel('試読する作品版', { exact: true }).locator('option').last().getAttribute('value'); await page.getByLabel('試読する作品版', { exact: true }).selectOption(version!); await page.getByLabel('保存した開始状態', { exact: true }).selectOption({ label: '版移行した途中開始の状態' }); await page.getByRole('button', { name: '試読を始める', exact: true }).click(); await expect(page.locator('.reader-trial-heading')).toContainText('途中開始の経路'); await expect(page.locator('.runtime-variable').filter({ hasText: '持ち越す金額' })).toContainText('8'); await page.getByRole('button', { name: '終了へ', exact: true }).click(); await expect(page.locator('.runtime-variable').filter({ hasText: '持ち越す金額' })).toContainText('9');
+});
+test('改訂稿の経路を再実行・別証跡保存・再読込し、旧金額3と新金額7をそれぞれ再生する', async ({ page }) => {
+  const f = await fixture(); f.variable.data.initial = { type: 'integer', value: 6 }; f.p.revision = '2'; await seed(page, f.p);
+  const tool = page.getByRole('region', { name: '開始版の移行と経路の再確認' }); await tool.locator('summary').filter({ hasText: '保存した経路を改訂稿で再確認する' }).click(); await tool.getByRole('radio', { name: /旧金額の経路/ }).check(); await expect(tool).toContainText('再確認待ち'); await tool.getByRole('button', { name: '旧経路を改訂稿で再実行して確認', exact: true }).click(); await expect(tool).toContainText('再実行基底revision'); await tool.getByRole('button', { name: '再実行した新しい経路と証跡を保存', exact: true }).click(); await expect(tool).toContainText('旧版の証跡も保持しています。');
+  await page.reload(); await navigate(page, /^構成/); await page.getByRole('tab', { name: '試読・検査', exact: true }).click();
+  const saved = page.locator('.saved-traces'); await saved.getByRole('button', { name: '旧金額の経路 再実行して状態を比較', exact: true }).click(); await expect(page.locator('.runtime-variable').filter({ hasText: '持ち越す金額' })).toContainText('3'); await saved.getByRole('button', { name: '改訂稿の再確認 · 旧金額の経路 再実行して状態を比較', exact: true }).click(); await expect(page.locator('.runtime-variable').filter({ hasText: '持ち越す金額' })).toContainText('7'); await expect(page.locator('.regression-paths')).toContainText('宣言経路 2件');
+});
+
+test('保存失敗で移行差分を保持し、再試行後にだけ保存完了を表示する', async ({ page }) => {
+  const f = await fixture(); await seed(page, f.p); await page.getByLabel('試読の開始点', { exact: true }).selectOption(f.entry.id);
+  const tool = page.getByRole('region', { name: '開始版の移行と経路の再確認' }); await tool.locator('summary').filter({ hasText: '別版の開始状態を移行する' }).click(); await tool.getByRole('radio', { name: /旧版の途中開始/ }).check(); await tool.getByRole('button', { name: '開始状態の移行差分を確認', exact: true }).click(); await expect(tool).toContainText('確認基底revision');
+  await page.evaluate(() => { const original = IDBObjectStore.prototype.put; (window as any).__failMigrationSave = true; IDBObjectStore.prototype.put = function (...args: Parameters<IDBObjectStore['put']>) { if ((window as any).__failMigrationSave && this.name === 'projects') { (window as any).__failMigrationSave = false; throw new DOMException('試験で保存を失敗させました', 'QuotaExceededError'); } return original.apply(this, args); }; });
+  await tool.getByRole('button', { name: '確認した状態を新しい途中開始へ移行', exact: true }).click(); await expect(tool.getByRole('alert')).toBeVisible(); await expect(tool).toContainText('確認基底revision'); await expect(tool).not.toContainText('旧版の証跡も保持しています。');
+  await tool.getByRole('button', { name: '確認した状態を新しい途中開始へ移行', exact: true }).click(); await expect(tool).toContainText('旧版の証跡も保持しています。');
+});

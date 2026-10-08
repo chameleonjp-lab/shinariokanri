@@ -26,3 +26,5 @@ RB05追加で `variable.exclusions`、`foreshadow.alternativeInfo`、`scene.dial
 `scene.reuse`、`reuse.bindings`は旧形式にない場合も維持する任意項目。実行namespaceのID対応を完全保存・履歴・clone・明示別作品ID対応に含める。参照元と推移依存のsnapshotをhash確認し、借用した本文や状態は正本／経路snapshotへ複製しない。本文・段落／台詞・固定リンクは対象版を保持する。欠落した旧reference/overrideの対応は確認して再設定し、無断で現在稿へ置換しない。
 
 固定参照／部分上書きの公開投影はRV22の残実装である。公開出力で`reuse`を無視することを防ぎ、選択した参照／上書きには`EXPORT_UNSUPPORTED`を返す。完全保存と公開投影は別の検査結果として記録する。
+
+RB05提示順追加では、foreshadow.presentationDeadline、checkpoint.migration、trace.reconfirmationを既存1.0.0の任意欄として扱う。既存データでの欠落は従来の意味を保ち、移行元checkpoint/trace・固定版は型付きIDとしてnative/clone/明示ID対応の対象とする。公開投影のpresentationDeadlineは既存anchorの公開ID・位置規則を用いる。未対応の実行期限・例外・認識等は既存の互換検査で明示拒否し、silent dropを完成扱いにしない。内部実行と同じ規則を提供する試遊・汎用受渡しはRB08/RV22〜RV23で継続する。

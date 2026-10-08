@@ -169,9 +169,10 @@ export default function App() {
     setDrafts(previous => reconcileSavedDrafts(previous, entity, stored));
     return stored;
   });
-  const saveMany = (entities: Entity[], reason: string, assets?: AssetInput[], snapshots?: ProjectSnapshot[]) => enqueue(async () => {
+  const saveMany = (entities: Entity[], reason: string, assets?: AssetInput[], snapshots?: ProjectSnapshot[], expectedRevision?: string) => enqueue(async () => {
     const latest = projectRef.current;
     if (!latest || entities.some(e => e.projectId !== latest.projectId)) throw new Error('対象の作品を開いてください。');
+    if (expectedRevision !== undefined && latest.revision !== expectedRevision) throw new Error('影響確認後に作品が更新されました。入力を保持して差分を再確認してください。');
     if (new Set(entities.map(entity => entity.id)).size !== entities.length) throw new Error('保存する情報のIDが重複しています。');
     for (const entity of entities) { const prior = latest.entities.find(candidate => candidate.id === entity.id); if (prior && prior.revision !== entity.revision) throw new Error('対象が別の操作で更新されました。入力を保持し、現在版を確認して再試行してください。'); }
     const next = [...latest.entities]; entities.forEach(entity => { const i = next.findIndex(e => e.id === entity.id); if (i >= 0) next[i] = entity; else next.push(entity); });
