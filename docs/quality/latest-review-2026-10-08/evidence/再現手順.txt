@@ -1,0 +1,43 @@
+シナリオ管理・最新実装レビューの検証資料
+レビュー日：2026-10-08
+対象：chameleonjp-lab/shinariokanri
+commit：0474856124129a6237f4f37bc4b79e0ca985b335
+tree：9ddebf40d080a6530217bd7a1662523ce725463d
+
+review-matrix.json：104要件の全文・元の失敗条件・REQ/AT/工程対応、現在実装、不足、RV01〜RV30、参照コード74ファイルのSHA-256。
+observations.json：実際のドメイン／React部品で確認した結果。本文や認証情報などの実ユーザーデータは使わず、検査用の小さなfixtureを作成。
+latest-review.test.ts：今回だけの観察検査。製品リポジトリには追加／コミットしていない。
+unit-review.log：既存541件の検査。539成功、2件はChromium実行ファイル未取得のため失敗。製品の不具合検出ではない。
+build-review.log：今回のproduction build成功ログ。
+latest-review-reproductions.log：追加14件の観察検査成功ログ。
+original-*.json：対象commitの当初要件、受入ケース、全機能完成計画。
+
+重要：追加観察検査は「現在の悪い挙動」を期待して成功します。成功を修正合格と扱わないでください。修正作業では正しい結果を期待する回帰検査に置き換える必要があります。Node＋jsdomの結果であり、実ブラウザー、CSS、IME、タッチ、Files、実機アクセシビリティの検証ではありません。
+
+再現する場合：
+1. 対象repoの指定commitを独立した一時checkoutへ取得。
+2. Node 24でnpm ci。
+3. 一時checkoutだけにjsdomを一時依存として用意する（例：npm install --no-save --package-lock=false jsdom）。本番依存／lockfileへ採用する意図はありません。
+4. この資料のlatest-review.test.tsをそのcheckoutのtests/へ置く。
+5. afterAllの出力先を任意の一時ディレクトリに調整。今回の絶対パスは元セッション固有です。
+6. npx vitest run tests/latest-review.test.ts。
+7. 使用したNode／jsdom／OS等の実版と結果を追加記録する。異なる依存版での再現一致はここでは保証していません。
+8. 修正の受入は正しい結果を期待する検査、通常App保存／再読込、実ブラウザーを別に実行。
+
+観察キー → 報告書RV番号
+R01／R01-loop → RV01：scene_end／new_loopの宣言reset未実行
+R02 → RV02：通常effect.reasonによる禁止遷移回避
+R03／R03-graph → RV03：rejected世界assertion／独立関係の有効評価
+R04 → RV04：借用した固定世界変数の分岐実行未解決
+R05 → RV05：現稿ノードが空のとき旧版開始UIが無効
+R06 → RV06：分岐本文リンクの版／本文位置欠落
+R11 → RV07：分岐保存中に進行し、完了時に古い位置へ戻る
+R07 → RV08：ProjectInfoの入力が移動で消える
+R08 → RV09：暦確認後のrevision更新を再承認しない
+R12 → RV10：章と分岐のdisclosure.targetScope評価不一致
+R09 → RV19：source.accessedAtの通常入力欄なし（静的確認）
+R10 → RV28：診断の本番App／WorkPage未接続（静的確認）
+
+14検査は12の挙動ケース（10種類）＋2の静的確認です。
+元の計画で使われるR01〜R06／RG-R01〜RG-R06とは別のキーです。
+元のbad-repro検査の合格やCI成功だけで、全104要件／116受入、実端末、実同期、実権限の完成を宣言しないでください。
