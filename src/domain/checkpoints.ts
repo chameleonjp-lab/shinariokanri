@@ -1,15 +1,18 @@
-import type { ID, ProjectContent, ProjectData, ProjectSnapshot } from './types';
+import type { ID, ProjectContent, ProjectData, ProjectSnapshot, Tick } from './types';
 import { createEntity, newId, validateVariableValue, collectReferences } from './model';
 import { evaluateExpression, initializeRuntimeState, runtimeExclusionIssues } from './conditions';
 import { captureRuntimeContent } from './runtimeVersions';
 import { resolvePinnedWorlds } from './pinnedWorlds';
 import { adoptedRecord } from './adoption';
 import { canonicalJson, jsonBytes, sha256 } from '../storage/json';
-import { resolveReuseContent } from './reuse';
+import { resolveReuseContent, reuseRuleContexts } from './reuse';
+import { presentationRuleContext } from './presentation';
+import { isTick } from './time';
 
 /** New author-supplied starts are always partial; the normal editor retains their drafts. */
-export async function preparePartialCheckpoint(project: ProjectData, options: { contentVersionId?: ID; entryId?: ID; chapterStart?: boolean; worldSnapshots?: Record<ID, ProjectContent> } = {}) {
+export async function preparePartialCheckpoint(project: ProjectData, options: { contentVersionId?: ID; entryId?: ID; chapterStart?: boolean; sceneId?: ID; worldTick?: Tick; worldSnapshots?: Record<ID, ProjectContent> } = {}) {
   const source = structuredClone(project), requested = structuredClone(options), version = requested.contentVersionId ?? source.projectId;
+  if (requested.worldTick !== undefined && !isTick(requested.worldTick)) throw new Error('開始時点には整数の世界内tickを指定してください。');
   const content = await captureRuntimeContent(source, version, { worldSnapshots: requested.worldSnapshots });
   if (requested.entryId && !content.entities.some(entity => entity.id === requested.entryId && entity.kind === 'flow_node' && adoptedRecord(entity))) throw new Error('選んだ開始点が対象版にありません。');
   const fixedVersion = version === source.projectId ? newId() : version;
@@ -19,12 +22,12 @@ export async function preparePartialCheckpoint(project: ProjectData, options: { 
   state.provenance = 'partial'; state.presentationPosition = requested.entryId ?? null;
   const { snapshots: _snapshots, history: _history, authorAlternatives: _alternatives, ...fixedContent } = content;
   const snapshots: ProjectSnapshot[] = version === source.projectId ? [{ id: fixedVersion, content: fixedContent, contentHash: await sha256(jsonBytes(fixedContent)), createdAt: new Date().toISOString(), versionLabel: `途中開始の固定版 ${content.revision}` }] : [];
-  const checkpoint = createEntity(source.projectId, 'checkpoint', '途中開始の状態', { contentVersionId: fixedVersion, contentRevision: content.revision, runtimeState: state, origin: 'partial' });
+  const checkpoint = createEntity(source.projectId, 'checkpoint', '途中開始の状態', { contentVersionId: fixedVersion, contentRevision: content.revision, runtimeState: state, origin: 'partial', ...(requested.worldTick !== undefined ? { worldTick: requested.worldTick } : {}) });
   return { checkpoint, snapshots };
 }
 
 export interface CheckpointMigrationPlan {
-  projectId: ID; baseRevision: string; sourceCheckpointId: ID; sourceVersionId: ID; targetVersionId: ID; targetEntryId: ID | null; targetMode: 'flow' | 'chapters';
+  projectId: ID; baseRevision: string; sourceCheckpointId: ID; sourceVersionId: ID; targetVersionId: ID; targetEntryId: ID | null; targetSceneId: ID | null; targetWorldTick: Tick | null; targetMode: 'flow' | 'chapters';
   changes: { id: ID; action: 'carry' | 'reset' | 'drop'; reason: string }[];
   migrated: Awaited<ReturnType<typeof preparePartialCheckpoint>>;
   recreated: Awaited<ReturnType<typeof preparePartialCheckpoint>>;
@@ -49,7 +52,11 @@ export async function previewCheckpointMigration(project: ProjectData, checkpoin
   const chapterStart = requested.chapterStart || !checkpoint.data.runtimeState.presentationPosition && source.entities.some(entity => entity.kind === 'trace' && entity.data.mode === 'chapters' && entity.data.startCheckpointId === checkpointId && adoptedRecord(entity));
   const entryId = chapterStart ? undefined : requested.entryId ?? (checkpoint.data.runtimeState.presentationPosition && nextById.get(checkpoint.data.runtimeState.presentationPosition)?.kind === 'flow_node' ? checkpoint.data.runtimeState.presentationPosition : undefined);
   if (!entryId && !chapterStart) throw new Error('移行先の開始点を選択してください。');
-  const recreated = await preparePartialCheckpoint(source, { ...requested, entryId });
+  const ticks = [...new Set(source.entities.flatMap(entity => entity.kind === 'trace' && entity.data.startCheckpointId === checkpointId && entity.data.initialWorldTick != null && adoptedRecord(entity) ? [entity.data.initialWorldTick] : []))];
+  if (requested.worldTick === undefined && checkpoint.data.worldTick == null && ticks.length > 1) throw new Error('元の開始状態に複数の提示時点があります。移行先の世界内tickを明示してください。');
+  const worldTick = requested.worldTick ?? checkpoint.data.worldTick ?? ticks[0], sceneId = chapterStart ? requested.sceneId ?? next.find(entity => entity.kind === 'scene')?.id : undefined;
+  if (sceneId && nextById.get(sceneId)?.kind !== 'scene') throw new Error('確認する章の開始場面が対象版にありません。');
+  const recreated = await preparePartialCheckpoint(source, { ...requested, entryId, worldTick });
   const migrated = structuredClone(recreated), initial = migrated.checkpoint.data.runtimeState, old = checkpoint.data.runtimeState;
   const changes: CheckpointMigrationPlan['changes'] = [];
   for (const [id, value] of Object.entries(old.variableValues)) {
@@ -66,13 +73,14 @@ export async function previewCheckpointMigration(project: ProjectData, checkpoin
   initial.rngSeed = old.rngSeed; initial.rngPosition = old.rngPosition; initial.loopNumber = old.loopNumber;
   if (old.callStack.length || old.onceTriggers.length) changes.push({ id: checkpointId, action: 'drop', reason: '呼出し途中と一度限りの発火記録は持ち越さず、新しい開始状態から確認します。' });
   initial.callStack = []; initial.onceTriggers = []; initial.resetCauses = []; initial.provenance = 'partial';
-  const context = { state: initial, entities: targetView.entities, referenceEntities: refs(targetView), ruleContext: { projectId: source.projectId } };
+  const ruleContext = presentationRuleContext(targetView, { nodeId: entryId, sceneId, worldTick });
+  const context = { state: initial, entities: targetView.entities, referenceEntities: refs(targetView), ruleContext, ruleContexts: reuseRuleContexts(targetView, ruleContext) };
   for (const variable of next) if (variable.kind === 'variable' && variable.data.derived) initial.variableValues[variable.id] = evaluateExpression(variable.data.derived, context);
   const prohibited = runtimeExclusionIssues(context).filter(issue => issue.code !== 'CONDITION_UNKNOWN'); if (prohibited.length) throw new Error(prohibited.map(issue => issue.message).join('、'));
   migrated.checkpoint.name = '版移行した途中開始の状態';
   recreated.checkpoint.name = '対象版から再作成した途中開始の状態';
   for (const prepared of [migrated, recreated]) prepared.checkpoint.data.migration = { sourceCheckpointId: checkpointId, sourceVersionId: checkpoint.data.contentVersionId, baseRevision: source.revision, method: prepared === migrated ? 'migrate' : 'recreate' };
-  const payload = { projectId: source.projectId, baseRevision: source.revision, sourceCheckpointId: checkpointId, sourceVersionId: checkpoint.data.contentVersionId, targetVersionId: requested.contentVersionId ?? source.projectId, targetEntryId: entryId ?? null, targetMode: chapterStart && !entryId ? 'chapters' as const : 'flow' as const, changes, migrated, recreated };
+  const payload = { projectId: source.projectId, baseRevision: source.revision, sourceCheckpointId: checkpointId, sourceVersionId: checkpoint.data.contentVersionId, targetVersionId: requested.contentVersionId ?? source.projectId, targetEntryId: entryId ?? null, targetSceneId: sceneId ?? null, targetWorldTick: worldTick ?? null, targetMode: chapterStart && !entryId ? 'chapters' as const : 'flow' as const, changes, migrated, recreated };
   return { ...payload, confirmationHash: await sha256(jsonBytes(payload)) };
 }
 export async function confirmedCheckpointMigration(project: ProjectData, plan: CheckpointMigrationPlan, method: 'migrate' | 'recreate', worldSnapshots: Record<ID, ProjectContent> = {}) {
@@ -84,7 +92,7 @@ export async function confirmedCheckpointMigration(project: ProjectData, plan: C
   const candidate = { ...source, entities: [...source.entities, prepared.checkpoint], snapshots: [...source.snapshots, ...prepared.snapshots] };
   if (!prepared.checkpoint.data.runtimeState.presentationPosition) {
     const { startChapterReading } = await import('./presentation');
-    const session = await startChapterReading(candidate, { contentVersionId: prepared.checkpoint.data.contentVersionId, state: prepared.checkpoint.data.runtimeState, worldSnapshots });
+    const session = await startChapterReading(candidate, { contentVersionId: prepared.checkpoint.data.contentVersionId, state: prepared.checkpoint.data.runtimeState, worldTick: approved.targetWorldTick ?? undefined, ...(approved.targetSceneId ? { sceneIds: [approved.targetSceneId] } : {}), worldSnapshots });
     if (session.status === 'error') throw new Error(session.issues.map(issue => issue.message).join('、'));
     return prepared;
   }
