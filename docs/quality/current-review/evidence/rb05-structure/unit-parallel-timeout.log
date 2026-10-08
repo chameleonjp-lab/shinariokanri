@@ -1,0 +1,35 @@
+
+> shinariokanri@0.1.0 test
+> vitest run
+
+
+ RUN  v5.0.3 /workspace/shinariokanri
+
+ ❯ tests/timeResolver.test.ts (5 tests | 1 failed) 23091ms
+   ❯ canonical iterative time resolution (5)
+     × validates, saves, reloads and restores a real 5,001-event relative chain 23084ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/timeResolver.test.ts > canonical iterative time resolution > validates, saves, reloads and restores a real 5,001-event relative chain
+Error: Test timed out in 20000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ tests/timeResolver.test.ts:13:3
+     11|
+     12| describe('canonical iterative time resolution', () => {
+     13|   it('validates, saves, reloads and restores a real 5,001-event relati…
+       |   ^
+     14|     const project = createProject('長い相対日時の作品'); let previous = event(p…
+     15|     for (let i = 1; i <= 5000; i++) previous = event(project, relative…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 59 passed (60)
+      Tests  1 failed | 586 passed (587)
+   Start at  05:01:29
+   Duration  26.88s (tests 78%, import 11%, transform 10%, worker 1%)
+
+    Isolate  60 workers spawned · ~175ms startup each (spawn + environment, per file)
+             at least ~3.33s faster with isolate: false — reuses workers across files instead of one per file
+
