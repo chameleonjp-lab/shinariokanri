@@ -33,6 +33,8 @@ export async function rebuildGameExecution(input:ProjectData,evidence:GameHandof
  evidence=structuredClone(evidence);
  const project=structuredClone(input),worlds=structuredClone(inputWorlds),pin=project.snapshots.find(pin=>pin.id===evidence.verificationVersionId);
  if(!pin||await sha256(jsonBytes(pin.content))!==pin.contentHash)fail('保存したゲーム受領の公開確認版を検証できません。');
+ const approval=pin!.content.entities.find(entity=>entity.id===evidence.approval.entityId);
+ if(evidence.approval.sourceVersionId!==pin!.id||approval?.kind!=='note'||approval.visibility!=='private'||approval.status!=='confirmed'||approval.customValues.gamePackageHash!==evidence.packageHash||approval.customValues.gameReceiptHash!==evidence.receiptHash)fail('保存したゲーム受領hashが固定承認と一致しません。');
  const source=project.snapshots.find(pin=>pin.id===evidence.sourceVersionId)?.content;
  if(!source||source.revision!==evidence.sourceRevision)fail('保存したゲーム受領の対象revisionが一致しません。');
  const captured:ProjectData={...structuredClone(pin!.content),snapshots:project.snapshots,history:[]};
