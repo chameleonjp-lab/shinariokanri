@@ -66,7 +66,7 @@ export async function verifyProductionSources(input:ProjectData):Promise<Set<ID>
 
 /** A read-only production view resolves reuse and the same verified fixed world registry as trials. */
 export async function productionCheckView(input:ProjectData,worldSnapshots:Record<ID,ProjectContent>={},worldPins:readonly Pick<ProjectSnapshot,'id'|'contentHash'|'content'>[]=[],contentVersionId:ID=input.projectId){
- const author=reuseAuthorContent(input),source=structuredClone({...input,history:[]}),registry=structuredClone(worldSnapshots),provided=structuredClone(worldPins);
+ const author=structuredClone({...reuseAuthorContent(input),history:[]}),source=structuredClone({...input,history:[]}),registry=structuredClone(worldSnapshots),provided=structuredClone(worldPins);
  if(contentVersionId!==source.projectId){const pin=source.snapshots.find(pin=>pin.id===contentVersionId),{history:_history,snapshots:_snapshots,authorAlternatives:_alternatives,...content}=author;if(!pin||await sha256(jsonBytes(pin.content))!==pin.contentHash||await sha256(jsonBytes(content))!==pin.contentHash)throw new Error('INTEGRITY_FAILED: 制作検査の経路状態と採用世界を同じ固定作品版へ結合できません。');}
  await verifyReusePins(source,source.snapshots);
  const view=resolveReuseContent(source,source.snapshots),issues=await verifyPinnedWorlds(view,registry);if(issues.length)throw new Error(issues.map(issue=>issue.message).join(' '));
