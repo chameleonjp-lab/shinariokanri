@@ -1,0 +1,48 @@
+S5U01 reaction delayed save remains locked across navigation and completes once complete
+S5U02 reaction failed save retains input across navigation for a successful retry complete
+S5U03 reaction preview stays bound to the confirmed revision after another author save passed
+S5U03 reaction preview stays bound to the confirmed revision after another author save complete
+S5U04 partial checkpoint delayed save stays locked after navigation and latest props acknowledge it complete
+S5U05 partial checkpoint save failure after navigation explains the failure near the resumed input complete
+S5U06 partial checkpoint pending save acknowledges latest props and survives a cold reload passed
+S5U06 partial checkpoint pending save acknowledges latest props and survives a cold reload complete
+{
+  "passed": 2,
+  "failed": 4,
+  "results": [
+    {
+      "id": "S5U01 reaction delayed save remains locked across navigation and completes once",
+      "status": "failed",
+      "error": "expect(locator).toHaveValue(expected) failed\n\nLocator:  getByLabel('反応の系列名', { exact: true })\nExpected: \"\"\nReceived: \"独立した挨拶\"\nTimeout:  5000ms\n\nCall log:\n  - Expect \"toHaveValue\" getByLabel('反応の系列名', { exact: true }) with timeout 5000ms\n  - waiting for getByLabel('反応の系列名', { exact: true })\n    14 × locator resolved to <input value=\"独立した挨拶\" aria-label=\"反応の系列名\"/>\n       - unexpected value \"独立した挨拶\"\n",
+      "pageErrors": []
+    },
+    {
+      "id": "S5U02 reaction failed save retains input across navigation for a successful retry",
+      "status": "failed",
+      "error": "expect(locator).toHaveText(expected) failed\n\nLocator: locator('.detail-panel h2')\nExpected: \"独立した挨拶\"\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n  - Expect \"toHaveText\" locator('.detail-panel h2') with timeout 5000ms\n  - waiting for locator('.detail-panel h2')\n",
+      "pageErrors": []
+    },
+    {
+      "id": "S5U03 reaction preview stays bound to the confirmed revision after another author save",
+      "status": "passed",
+      "pageErrors": []
+    },
+    {
+      "id": "S5U04 partial checkpoint delayed save stays locked after navigation and latest props acknowledge it",
+      "status": "failed",
+      "error": "expect(locator).toBeDisabled() failed\n\nLocator:  getByRole('button', { name: '途中開始の状態を作成', exact: true })\nExpected: disabled\nReceived: enabled\nTimeout:  5000ms\n\nCall log:\n  - Expect \"toBeDisabled\" getByRole('button', { name: '途中開始の状態を作成', exact: true }) with timeout 5000ms\n  - waiting for getByRole('button', { name: '途中開始の状態を作成', exact: true })\n    14 × locator resolved to <button class=\"button secondary\">途中開始の状態を作成</button>\n       - unexpected value \"enabled\"\n",
+      "pageErrors": []
+    },
+    {
+      "id": "S5U05 partial checkpoint save failure after navigation explains the failure near the resumed input",
+      "status": "failed",
+      "error": "expect(locator).toBeVisible() failed\n\nLocator: getByRole('alert').filter({ hasText: 'INTENTIONAL_STORAGE_FAILURE' })\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n  - Expect \"toBeVisible\" getByRole('alert').filter({ hasText: 'INTENTIONAL_STORAGE_FAILURE' }) with timeout 5000ms\n  - waiting for getByRole('alert').filter({ hasText: 'INTENTIONAL_STORAGE_FAILURE' })\n",
+      "pageErrors": []
+    },
+    {
+      "id": "S5U06 partial checkpoint pending save acknowledges latest props and survives a cold reload",
+      "status": "passed",
+      "pageErrors": []
+    }
+  ]
+}
