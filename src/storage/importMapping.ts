@@ -6,7 +6,7 @@ import { attachmentMetadata, validateAsset, verifySnapshotHashes, verifyWorlds, 
 import { checkCancelled, StorageError } from './errors';
 import { equalJson, jsonBytes, sha256 } from './json';
 
-export type ImportIdRole = 'project' | 'relation' | 'snapshot' | 'view' | 'operation' | 'alternative' | 'alternative_version' | 'alternative_receipt' | 'block' | 'alias' | 'trigger' | 'map_pin' | 'runtime_item' | 'public_id' | `entity:${EntityKind}`;
+export type ImportIdRole = 'project' | 'relation' | 'snapshot' | 'view' | 'operation' | 'alternative' | 'alternative_version' | 'alternative_receipt' | 'block' | 'alias' | 'trigger' | 'map_pin' | 'runtime_item' | 'public_id' | 'reuse_binding' | `entity:${EntityKind}`;
 export interface ImportId { id: string; role: ImportIdRole; ownerId?: string }
 export interface MappedImportConflict { id: string; kind: 'project' | 'entity' | 'relation' | 'snapshot' | 'view' | 'alternative'; existing: unknown; incoming: unknown }
 export interface MappedImportChange { id: string; kind: MappedImportConflict['kind']; action: 'add' | 'update' | 'keep'; sourceId?: string; fields: string[] }
@@ -31,6 +31,7 @@ export interface CrossProjectImportPlan {
 /** Enumerates owned IDs in current content, immutable editions and restoration history, never prose. */
 export function collectImportIds(project: ProjectData): ImportId[] {
   const found = new Map<string, ImportId>();
+  const bindings: { id: string; ownerId: string }[] = [];
   const add = (id: string, role: ImportIdRole, ownerId?: string) => {
     const old = found.get(id);
     if (old && (old.role !== role || old.ownerId !== ownerId)) throw new StorageError('IMPORT_CONFLICT', '同じIDが別の種別・所有者で使われています。', id);
@@ -48,6 +49,7 @@ export function collectImportIds(project: ProjectData): ImportId[] {
     if (record.mode === 'anonymize' && typeof record.publicId === 'string') add(record.publicId, 'public_id');
     for (const [key, item] of Object.entries(record)) {
       if (key === 'publicIds' && item && typeof item === 'object') for (const id of Object.values(item)) if (typeof id === 'string') add(id, 'public_id');
+      if (key === 'bindings' && item && typeof item === 'object' && !Array.isArray(item)) for (const id of Object.values(item)) if (typeof id === 'string') bindings.push({ id, ownerId });
       declarations(item, ownerId);
     }
   };
@@ -71,6 +73,7 @@ export function collectImportIds(project: ProjectData): ImportId[] {
   };
   state(project);
   for (const command of project.history) { add(command.operationId, 'operation'); state(command.before); state(command.after); }
+  for (const binding of bindings) if (!found.has(binding.id)) add(binding.id, 'reuse_binding', binding.ownerId);
   return [...found.values()];
 }
 

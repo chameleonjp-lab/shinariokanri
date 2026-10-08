@@ -1,5 +1,6 @@
 import { DialoguePresentation } from './DialoguePresentation';
 import { preparePartialCheckpoint } from '../domain/checkpoints';
+import { reuseTargetAnchor } from '../domain/reuse';
 import { resolvePinnedWorlds } from '../domain/pinnedWorlds';
 import { NarrativeClaims } from './NarrativeClaims';
 import { stateUsage } from '../domain/stateUsage';
@@ -85,6 +86,7 @@ export function Reader({ project, worldSnapshots = {}, onOpen, onOpenTarget, onS
   const stale = !!session && (version ? !project.snapshots.some(s => s.id === version) : session.contentRevision !== project.revision);
 
   const openTarget = (anchor: ContentAnchor) => {
+    anchor = reuseTargetAnchor(content, anchor);
     const closure = resolvePinnedWorlds(content, worldSnapshots);
     const borrowed = (session?.referenceEntities ?? []).find(entity => entity.id === anchor.entityId);
     const borrowedVersion = borrowed ? closure.references.find(reference => reference.projectId === borrowed.projectId)?.immutableSnapshotId : undefined;

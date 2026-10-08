@@ -145,6 +145,7 @@ export function createProjection(project: ProjectData, profileId: string, option
     if (entity.deletedAt || !statuses.includes(entity.status) || (options.confirmedOnly && entity.status !== 'confirmed')) { omit(id, '削除済み、未確定、没案または別案'); continue; }
     if (!Array.isArray(allowedKinds) || !allowedKinds.includes(entity.kind)) { omit(id, '許可されていない種類'); continue; }
     if (!hasOwn(PROJECTION_FIELDS, entity.kind)) { fail('EXPORT_UNSUPPORTED', 'この種類の安全な投影は未対応です。', id); continue; }
+    if (['scene', 'flow_node'].includes(entity.kind) && object(entity.data.reuse)?.mode !== undefined && object(entity.data.reuse)?.mode !== 'clone') { fail('EXPORT_UNSUPPORTED', '固定共通元と使用先を合わせた公開範囲・公開名・本文を確認する出力は未対応です。再利用を省略した出力は作成できません。', id, 'reuse'); continue; }
     const byEntityId = object(own(namePolicies, 'byEntityId'));
     const namePolicy = object(own(byEntityId, id)) ?? object(own(namePolicies, 'defaultPolicy')) ?? (typeof namePolicies?.mode === 'string' ? namePolicies : undefined);
     if (namePolicy?.mode === 'exclude') { omit(id, '作者が非公開を選択'); continue; }

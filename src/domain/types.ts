@@ -57,7 +57,7 @@ export type TimeConstraint =
   | { type: 'end_gap'; targetEventId: ID; minimumTicks: Tick; maximumTicks: Tick };
 export interface Trigger { id?: ID; event: 'enter' | 'talk' | 'battle_result' | 'manual' | 'custom'; eventKey: string; repeat: 'once' | 'repeatable'; scope?: Scope; deadline?: TimeSpec | null }
 export type Policy = 'manual_choice' | 'first_match' | 'all_match';
-export interface Reuse { mode: 'reference' | 'clone' | 'override'; sourceId: ID; pinnedSnapshotId: ID; overrideFields: string[] }
+export interface Reuse { mode: 'reference' | 'clone' | 'override'; sourceId: ID; pinnedSnapshotId: ID; overrideFields: string[]; bindings?: Record<ID, ID> | null }
 export interface Parameter { key: string; type: 'boolean' | 'integer' | 'enum'; default?: TypedValue | null }
 export interface Transition { from: TypedValue; to: TypedValue; reason?: string; exception?: boolean; exceptionDetails?: ScenarioException | null }
 export interface ResetRule { on: 'scene_end' | 'chapter_end' | 'run_end' | 'new_loop' | 'full_reset'; value: TypedValue; reason?: string }
@@ -115,7 +115,7 @@ export interface PlaceData { parentId?: ID | null; reading?: string | null; alia
 export interface ItemData { itemMode: 'type' | 'instance'; typeId?: ID | null; body?: RichText | null; properties?: CustomValue | null; changes?: ID[] | null }
 export interface NoteData { body: RichText; attachmentIds?: ID[] | null; convertedToIds?: ID[] | null; originNoteId?: ID | null }
 export interface ChapterData { sceneIds: ID[]; summary?: RichText | null; authorNotes?: RichText | null; structureRole?: string | null }
-export interface SceneData { summary: RichText; body: RichText; authorNotes: RichText; eventIds: ID[]; dialogueLineIds?: ID[] | null; chapterId?: ID | null; threadIds?: ID[] | null; povId?: ID | null; goals?: RichText | null; conflicts?: RichText | null; results?: RichText | null; newInformation?: RichText | null; tension?: number | null; importance?: number | null; blockIds?: ID[] | null }
+export interface SceneData { summary: RichText; body: RichText; authorNotes: RichText; eventIds: ID[]; dialogueLineIds?: ID[] | null; chapterId?: ID | null; threadIds?: ID[] | null; povId?: ID | null; goals?: RichText | null; conflicts?: RichText | null; results?: RichText | null; newInformation?: RichText | null; tension?: number | null; importance?: number | null; blockIds?: ID[] | null; reuse?: Reuse | null }
 export interface GoalData { ownerId: ID; description: RichText; changes?: ID[] | null; evidenceSceneIds?: ID[] | null; validity?: Validity | null }
 export interface FlowNodeData { nodeType: 'scene' | 'choice' | 'automatic' | 'call' | 'entry' | 'exit' | 'terminal'; sceneId?: ID | null; childGraphId?: ID | null; terminalReason?: string | null; trigger?: Trigger | null; gate?: Condition | null; executionPolicy?: Policy | null; fallbackId?: ID | null; reuse?: Reuse | null }
 export interface FlowEdgeData { fromId: ID; toId: ID | UnresolvedReference; edgeType: 'choice' | 'automatic' | 'call_return'; label?: string | null; condition?: Condition | null; effectIds?: ID[] | null; priority?: number | null; choiceLineId?: ID | null }
@@ -200,5 +200,5 @@ export interface AuthorAlternative {
 export type DomainErrorCode = 'VALIDATION_FAILED' | 'REFERENCE_INVALID' | 'TIME_CONSTRAINT_CONFLICT' | 'CONDITION_UNKNOWN' | 'TRANSITION_BLOCKED' | 'LOCAL_SAVE_FAILED' | 'QUOTA_EXCEEDED' | 'SYNC_CONFLICT' | 'AUTH_REQUIRED' | 'FORBIDDEN' | 'FORMAT_UNSUPPORTED' | 'INTEGRITY_FAILED' | 'IMPORT_LIMIT' | 'ANALYSIS_LIMIT' | 'EXPORT_UNSUPPORTED';
 export interface ValidationIssue { code: DomainErrorCode; path: string; message: string }
 export type ValidationResult<T> = { ok: true; value: T } | { ok: false; issues: ValidationIssue[] };
-export interface RuntimeContext { state: RuntimeState; variables?: Entity<'variable'>[]; entities?: Entity[]; referenceEntities?: Entity[]; externalValues?: Record<ID, TypedValue>; ruleContext?: { projectId: ID; graphId?: ID; chapterId?: ID; worldTick?: Tick } }
+export interface RuntimeContext { state: RuntimeState; variables?: Entity<'variable'>[]; entities?: Entity[]; referenceEntities?: Entity[]; externalValues?: Record<ID, TypedValue>; ruleContext?: { projectId: ID; graphId?: ID; chapterId?: ID; worldTick?: Tick; sourceVersionId?: ID; anchorBindings?: Record<ID, ID> }; ruleContexts?: Record<ID, NonNullable<RuntimeContext['ruleContext']>> }
 export interface ConditionResult { value: TruthValue; reasons: string[] }

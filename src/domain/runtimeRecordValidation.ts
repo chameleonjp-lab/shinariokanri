@@ -5,9 +5,11 @@ import { canonicalJson } from '../storage/json';
 import { validateExternalInput } from './externalInputs';
 import { resolvePinnedWorlds } from './pinnedWorlds';
 import type { ProjectValidationOptions } from './model';
+import { resolveReuseContent } from './reuse';
 
 /** Model/import hook: chapter evidence is verified by the same shared presentation engine. */
 export function validateReadingTraceRecord(content: ProjectData, trace: TraceData & RuntimeTraceExtensions, checkpoint: CheckpointData, path = 'trace', options: Pick<ProjectValidationOptions, 'worldSnapshots'> = {}): ValidationIssue[] {
+  try { content = resolveReuseContent(content, content.snapshots); } catch (error) { return [{ code: 'REFERENCE_INVALID', path, message: (error as Error).message }]; }
   const issues: ValidationIssue[] = [];
   const fail = (field: string, message: string, code: ValidationIssue['code'] = 'VALIDATION_FAILED') => issues.push({ code, path: `${path}.${field}`, message });
   if (trace.mode !== 'chapters') { if (trace.readingPath) fail('readingPath', '章の提示経路はmode:chaptersの記録に指定してください。'); return issues; }

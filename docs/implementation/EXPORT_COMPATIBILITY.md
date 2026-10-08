@@ -20,3 +20,9 @@ RB05追加で `variable.exclusions`、`foreshadow.alternativeInfo`、`scene.dial
 # RB05第2追加の保存互換
 
 階層表示と反応系列は既存の章・場面・台詞ID／flow graph／条件を使用し、新たな出力専用の実行規則を追加しない。型付き途中開始は既存checkpointと固定snapshotの一操作保存であり、native保存／clone／再読込後も`partial`を保つ。実行が未知／未完の場合は回帰確認済みへ数えない。試遊ZIPの既存未対応機能は引き続き明示拒否し、未対応を合格・silent dropへ変えない。
+
+# RB05第3追加の保存互換
+
+`scene.reuse`、`reuse.bindings`は旧形式にない場合も維持する任意項目。実行namespaceのID対応を完全保存・履歴・clone・明示別作品ID対応に含める。参照元と推移依存のsnapshotをhash確認し、借用した本文や状態は正本／経路snapshotへ複製しない。本文・段落／台詞・固定リンクは対象版を保持する。欠落した旧reference/overrideの対応は確認して再設定し、無断で現在稿へ置換しない。
+
+固定参照／部分上書きの公開投影はRV22の残実装である。公開出力で`reuse`を無視することを防ぎ、選択した参照／上書きには`EXPORT_UNSUPPORTED`を返す。完全保存と公開投影は別の検査結果として記録する。

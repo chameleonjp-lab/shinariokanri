@@ -4952,6 +4952,65 @@
                   "type": "null"
                 }
               ]
+            },
+            "reuse": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "mode": {
+                      "enum": [
+                        "reference",
+                        "clone",
+                        "override"
+                      ]
+                    },
+                    "sourceId": {
+                      "$ref": "#/$defs/ID",
+                      "$comment": "{\"referenceScope\":\"entity\"}"
+                    },
+                    "pinnedSnapshotId": {
+                      "$ref": "#/$defs/ID",
+                      "$comment": "{\"referenceScope\":\"snapshot\"}"
+                    },
+                    "overrideFields": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "maxItems": 100000,
+                      "uniqueItems": true
+                    },
+                    "bindings": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "additionalProperties": {
+                            "$ref": "#/$defs/ID"
+                          },
+                          "propertyNames": {
+                            "$ref": "#/$defs/ID"
+                          }
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "mode",
+                    "sourceId",
+                    "pinnedSnapshotId",
+                    "overrideFields"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "null"
+                }
+              ]
             }
           },
           "required": [
@@ -5630,6 +5689,22 @@
                       },
                       "maxItems": 100000,
                       "uniqueItems": true
+                    },
+                    "bindings": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "additionalProperties": {
+                            "$ref": "#/$defs/ID"
+                          },
+                          "propertyNames": {
+                            "$ref": "#/$defs/ID"
+                          }
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
                     }
                   },
                   "required": [

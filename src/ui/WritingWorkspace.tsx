@@ -1,3 +1,4 @@
+import { reuseTargetAnchor } from '../domain/reuse';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ContentAnchor, Entity, ProjectContent, ProjectData, ProjectSnapshot } from '../domain/types';
 import {
@@ -220,7 +221,8 @@ export function ChapterReadingView({ project, chapterIds, scenePath, currentVers
   }, [readingSource, effectiveChapterIds, effectiveRouteMode, effectiveRoute]);
   const entries = readingPreview.entries;
   const openReadingTarget = (anchor: ContentAnchor, versionId = contentVersionId) => {
-    const target = { ...anchor, ...(anchor.sourceVersionId ? {} : versionId && versionId !== project.projectId ? { sourceVersionId: versionId } : {}) };
+    const inherited = session ? reuseTargetAnchor(session.content, anchor) : anchor;
+    const target = { ...inherited, ...(inherited.sourceVersionId ? {} : versionId && versionId !== project.projectId ? { sourceVersionId: versionId } : {}) };
     if (onOpenTarget) onOpenTarget(target);
     else if (!target.sourceVersionId || target.sourceVersionId === project.projectId) onOpenEntity?.(target.entityId);
   };

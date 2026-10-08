@@ -5,6 +5,7 @@ import { DomainValidationError } from './conditions';
 import type { ProjectValidationOptions } from './model';
 import { freezePinnedWorldRegistry, verifyPinnedWorlds } from './pinnedWorlds';
 import type { PinnedWorldDigestCache } from './pinnedWorlds';
+import { resolveReuseContent } from './reuse';
 
 /** Verify immutable bytes before interpreting any captured references or runtime state. */
 export async function captureRuntimeContent(project: ProjectData, contentVersionId: ID = project.projectId, validationOptions: ProjectValidationOptions = {}, digestCache?: PinnedWorldDigestCache): Promise<ProjectData> {
@@ -25,7 +26,14 @@ export async function captureRuntimeContent(project: ProjectData, contentVersion
   const { authorAlternatives: _authorAlternatives, snapshots: _sourceSnapshots, history: _history, ...branchFreeContent } = sourceContent;
   const captured = { ...branchFreeContent, snapshots, history: [] } as ProjectData;
   if (sourceHash && await sha256(jsonBytes(branchFreeContent)) !== sourceHash) throw new DomainValidationError([{ code: 'INTEGRITY_FAILED', path: `snapshots.${sourceId}.contentHash`, message: '固定版の内容ハッシュが一致しません。実行を停止しました。' }]);
-  const worldIssues = await verifyPinnedWorlds(captured, worldSnapshots, 'worldReferences', digestCache);
+  const pins = new Set<ID>(), queue = [captured];
+  for (let cursor = 0; cursor < queue.length; cursor++) for (const entity of queue[cursor].entities) if ((entity.kind === 'scene' || entity.kind === 'flow_node') && entity.data.reuse && entity.data.reuse.mode !== 'clone') {
+    const pin = entity.data.reuse.pinnedSnapshotId; if (pins.has(pin)) continue; pins.add(pin);
+    const snapshot = snapshots.find(item => item.id === pin);
+    if (!snapshot || await sha256(jsonBytes(snapshot.content)) !== snapshot.contentHash) throw new DomainValidationError([{ code: 'INTEGRITY_FAILED', path: `snapshots.${pin}`, message: '共通元の固定版がないか、内容hashが一致しません。' }]);
+    queue.push({ ...snapshot.content, snapshots, history: [] });
+  }
+  const worldIssues = await verifyPinnedWorlds(resolveReuseContent(captured, snapshots), worldSnapshots, 'worldReferences', digestCache);
   if (worldIssues.length) throw new DomainValidationError(worldIssues);
   const checked = validateProject(captured, safeOptions);
   if (!checked.ok) throw new DomainValidationError(checked.issues);

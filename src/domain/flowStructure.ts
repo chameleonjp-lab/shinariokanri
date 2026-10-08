@@ -2,6 +2,7 @@ import type { Entity, ID, ProjectData } from './types';
 import { adoptedRecord } from './adoption';
 import { initializeRuntimeState, evaluateCondition } from './conditions';
 import { validateEntity } from './model';
+import { resolveReuseContent } from './reuse';
 
 export interface FlowStructureItem {
   id: ID; name: string; kind: Entity['kind'] | 'unplaced';
@@ -10,6 +11,8 @@ export interface FlowStructureItem {
 }
 /** This is a structural summary, not a substitute for bounded path analysis. */
 export function flowStructure(project: ProjectData, referenceEntities: Entity[] = []): FlowStructureItem[] {
+  try { project = resolveReuseContent(project, project.snapshots); }
+  catch (error) { const target = project.entities.find(entity => (entity.kind === 'scene' || entity.kind === 'flow_node') && entity.data.reuse?.mode !== 'clone' && entity.data.reuse); return [{ id: target?.id ?? 'reuse-errors', name: target?.name || '固定共通元を確認してください', kind: target?.kind ?? 'unplaced', children: [], entries: [], exits: [], problems: [{ targetId: target?.id ?? '', category: 'error', message: (error as Error).message }] }]; }
   const records = [...new Map([...referenceEntities, ...project.entities].map(entity => [entity.id, entity])).values()];
   const byId = new Map(records.filter(adoptedRecord).map(entity => [entity.id, entity]));
   const local = project.entities.filter(adoptedRecord);
