@@ -1,0 +1,904 @@
+{
+  "project": {
+    "projectId": "a92b001a-a932-4d5d-9e17-3e318d59e71f",
+    "name": "型付き個別状態+stubの独立境界",
+    "formatVersion": "1.0.0",
+    "revision": "0",
+    "calendarId": "proleptic-gregorian-second",
+    "mainStart": "0",
+    "calendars": [
+      {
+        "id": "proleptic-gregorian-second",
+        "name": "先発グレゴリオ暦",
+        "kind": "gregorian",
+        "originLabel": "0000-01-01 00:00:00",
+        "ticksPerDay": "86400"
+      }
+    ],
+    "worldReferences": [],
+    "entities": [
+      {
+        "id": "f1fc9e71-1572-458e-b18d-e69736274b24",
+        "projectId": "a92b001a-a932-4d5d-9e17-3e318d59e71f",
+        "kind": "variable",
+        "revision": "0",
+        "name": "variable",
+        "status": "provisional",
+        "visibility": "private",
+        "createdAt": "2026-10-08T09:12:33.491Z",
+        "updatedAt": "2026-10-08T09:12:33.491Z",
+        "customValues": {},
+        "data": {
+          "key": "money",
+          "valueType": "integer",
+          "scope": "across_runs",
+          "initial": {
+            "type": "integer",
+            "value": 2
+          },
+          "allowed": {
+            "min": 0,
+            "max": 100
+          },
+          "description": [],
+          "ownerId": null,
+          "externalContractId": null,
+          "resetRules": [],
+          "transitionRules": [],
+          "externalUseDeclared": false
+        }
+      },
+      {
+        "id": "d45f8721-da64-4239-9a77-bc7f653ae5ed",
+        "projectId": "a92b001a-a932-4d5d-9e17-3e318d59e71f",
+        "kind": "variable",
+        "revision": "0",
+        "name": "variable",
+        "status": "provisional",
+        "visibility": "private",
+        "createdAt": "2026-10-08T09:12:33.491Z",
+        "updatedAt": "2026-10-08T09:12:33.491Z",
+        "customValues": {},
+        "data": {
+          "key": "untouched",
+          "valueType": "integer",
+          "scope": "across_runs",
+          "initial": {
+            "type": "integer",
+            "value": 4
+          },
+          "allowed": {
+            "min": 0,
+            "max": 100
+          },
+          "description": [],
+          "ownerId": null,
+          "externalContractId": null,
+          "resetRules": [],
+          "transitionRules": [],
+          "externalUseDeclared": false
+        }
+      },
+      {
+        "id": "ab759217-8119-43ab-a804-13d6bae057f9",
+        "projectId": "a92b001a-a932-4d5d-9e17-3e318d59e71f",
+        "kind": "external_contract",
+        "revision": "0",
+        "name": "external_contract",
+        "status": "provisional",
+        "visibility": "private",
+        "createdAt": "2026-10-08T09:12:33.491Z",
+        "updatedAt": "2026-10-08T09:12:33.491Z",
+        "customValues": {},
+        "data": {
+          "key": "item_gate",
+          "owner": "game",
+          "inputType": "boolean",
+          "outputType": "boolean",
+          "missingPolicy": "unknown",
+          "description": [],
+          "stubValues": [],
+          "adapterProfileIds": [],
+          "version": "1.0.0"
+        }
+      },
+      {
+        "id": "52a2d24b-3d48-464b-b524-b386667ab5bc",
+        "projectId": "a92b001a-a932-4d5d-9e17-3e318d59e71f",
+        "kind": "item",
+        "revision": "0",
+        "name": "item",
+        "status": "provisional",
+        "visibility": "private",
+        "createdAt": "2026-10-08T09:12:33.491Z",
+        "updatedAt": "2026-10-08T09:12:33.491Z",
+        "customValues": {},
+        "data": {
+          "itemMode": "type",
+          "typeId": null,
+          "body": [],
+          "properties": null,
+          "changes": []
+        }
+      },
+      {
+        "id": "49314919-8d3c-43ff-b7f0-977622662e4c",
+        "projectId": "a92b001a-a932-4d5d-9e17-3e318d59e71f",
+        "kind": "item",
+        "revision": "0",
+        "name": "item",
+        "status": "provisional",
+        "visibility": "private",
+        "createdAt": "2026-10-08T09:12:33.491Z",
+        "updatedAt": "2026-10-08T09:12:33.491Z",
+        "customValues": {},
+        "data": {
+          "itemMode": "instance",
+          "typeId": "52a2d24b-3d48-464b-b524-b386667ab5bc",
+          "body": [],
+          "properties": null,
+          "changes": []
+        }
+      },
+      {
+        "id": "ad16dcaf-9fc9-4c35-a1ce-97c7613921d6",
+        "projectId": "a92b001a-a932-4d5d-9e17-3e318d59e71f",
+        "kind": "flow_node",
+        "revision": "0",
+        "name": "flow_node",
+        "status": "provisional",
+        "visibility": "private",
+        "createdAt": "2026-10-08T09:12:33.491Z",
+        "updatedAt": "2026-10-08T09:12:33.491Z",
+        "customValues": {},
+        "data": {
+          "nodeType": "entry",
+          "sceneId": null,
+          "childGraphId": null,
+          "terminalReason": "",
+          "gate": {
+            "op": "constant",
+            "value": true
+          },
+          "executionPolicy": "manual_choice",
+          "fallbackId": null
+        }
+      },
+      {
+        "id": "8ed5f197-ff22-4a52-a15b-3673062b8be4",
+        "projectId": "a92b001a-a932-4d5d-9e17-3e318d59e71f",
+        "kind": "flow_node",
+        "revision": "0",
+        "name": "flow_node",
+        "status": "provisional",
+        "visibility": "private",
+        "createdAt": "2026-10-08T09:12:33.491Z",
+        "updatedAt": "2026-10-08T09:12:33.491Z",
+        "customValues": {},
+        "data": {
+          "nodeType": "terminal",
+          "sceneId": null,
+          "childGraphId": null,
+          "terminalReason": "宣言終端",
+          "gate": {
+            "op": "constant",
+            "value": true
+          },
+          "executionPolicy": "manual_choice",
+          "fallbackId": null
+        }
+      },
+      {
+        "id": "541aafe4-e6ba-43c8-982c-7cdb093aa066",
+        "projectId": "a92b001a-a932-4d5d-9e17-3e318d59e71f",
+        "kind": "flow_edge",
+        "revision": "0",
+        "name": "flow_edge",
+        "status": "provisional",
+        "visibility": "private",
+        "createdAt": "2026-10-08T09:12:33.491Z",
+        "updatedAt": "2026-10-08T09:12:33.491Z",
+        "customValues": {},
+        "data": {
+          "fromId": "ad16dcaf-9fc9-4c35-a1ce-97c7613921d6",
+          "toId": "8ed5f197-ff22-4a52-a15b-3673062b8be4",
+          "edgeType": "choice",
+          "label": "",
+          "condition": {
+            "op": "constant",
+            "value": true
+          },
+          "effectIds": [],
+          "priority": 0,
+          "choiceLineId": null
+        }
+      },
+      {
+        "id": "86bc7197-4e6a-4546-89e2-8ce74dfe2fe0",
+        "projectId": "a92b001a-a932-4d5d-9e17-3e318d59e71f",
+        "kind": "flow_graph",
+        "revision": "0",
+        "name": "flow_graph",
+        "status": "provisional",
+        "visibility": "private",
+        "createdAt": "2026-10-08T09:12:33.491Z",
+        "updatedAt": "2026-10-08T09:12:33.491Z",
+        "customValues": {},
+        "data": {
+          "nodeIds": [
+            "ad16dcaf-9fc9-4c35-a1ce-97c7613921d6",
+            "8ed5f197-ff22-4a52-a15b-3673062b8be4"
+          ],
+          "edgeIds": [
+            "541aafe4-e6ba-43c8-982c-7cdb093aa066"
+          ],
+          "entryIds": [
+            "ad16dcaf-9fc9-4c35-a1ce-97c7613921d6"
+          ],
+          "exitIds": [
+            "8ed5f197-ff22-4a52-a15b-3673062b8be4"
+          ],
+          "parentGraphId": null,
+          "parameters": []
+        }
+      },
+      {
+        "id": "4f6dc4f4-dc22-4854-90c4-84aaea69b286",
+        "projectId": "a92b001a-a932-4d5d-9e17-3e318d59e71f",
+        "kind": "trace",
+        "revision": "0",
+        "name": "trace",
+        "status": "provisional",
+        "visibility": "private",
+        "createdAt": "2026-10-08T09:12:33.492Z",
+        "updatedAt": "2026-10-08T09:12:33.492Z",
+        "customValues": {},
+        "data": {
+          "contentVersionId": "1dbb5e7e-80e4-441a-b3dc-3b6756bfb4ab",
+          "startCheckpointId": "74fca8be-5633-4541-afd6-8c929936fd35",
+          "steps": [
+            {
+              "nodeId": "ad16dcaf-9fc9-4c35-a1ce-97c7613921d6",
+              "edgeIds": [
+                "541aafe4-e6ba-43c8-982c-7cdb093aa066"
+              ],
+              "before": {
+                "contentVersionId": "1dbb5e7e-80e4-441a-b3dc-3b6756bfb4ab",
+                "variableValues": {
+                  "f1fc9e71-1572-458e-b18d-e69736274b24": {
+                    "type": "integer",
+                    "value": 8
+                  },
+                  "d45f8721-da64-4239-9a77-bc7f653ae5ed": {
+                    "type": "integer",
+                    "value": 12
+                  }
+                },
+                "itemInstances": [
+                  {
+                    "instanceId": "49314919-8d3c-43ff-b7f0-977622662e4c",
+                    "typeId": "52a2d24b-3d48-464b-b524-b386667ab5bc",
+                    "quantity": 1,
+                    "ownerId": null,
+                    "locationId": null,
+                    "consumed": false
+                  }
+                ],
+                "assertions": [],
+                "seenIds": [
+                  "ad16dcaf-9fc9-4c35-a1ce-97c7613921d6"
+                ],
+                "visitCounts": {
+                  "ad16dcaf-9fc9-4c35-a1ce-97c7613921d6": 1
+                },
+                "onceTriggers": [],
+                "rngSeed": "scenario-1",
+                "rngPosition": 0,
+                "callStack": [],
+                "presentationPosition": "ad16dcaf-9fc9-4c35-a1ce-97c7613921d6",
+                "loopNumber": 3,
+                "provenance": "stub"
+              },
+              "after": {
+                "contentVersionId": "1dbb5e7e-80e4-441a-b3dc-3b6756bfb4ab",
+                "variableValues": {
+                  "f1fc9e71-1572-458e-b18d-e69736274b24": {
+                    "type": "integer",
+                    "value": 8
+                  },
+                  "d45f8721-da64-4239-9a77-bc7f653ae5ed": {
+                    "type": "integer",
+                    "value": 12
+                  }
+                },
+                "itemInstances": [
+                  {
+                    "instanceId": "49314919-8d3c-43ff-b7f0-977622662e4c",
+                    "typeId": "52a2d24b-3d48-464b-b524-b386667ab5bc",
+                    "quantity": 1,
+                    "ownerId": null,
+                    "locationId": null,
+                    "consumed": false
+                  }
+                ],
+                "assertions": [],
+                "seenIds": [
+                  "ad16dcaf-9fc9-4c35-a1ce-97c7613921d6",
+                  "8ed5f197-ff22-4a52-a15b-3673062b8be4"
+                ],
+                "visitCounts": {
+                  "ad16dcaf-9fc9-4c35-a1ce-97c7613921d6": 1,
+                  "8ed5f197-ff22-4a52-a15b-3673062b8be4": 1
+                },
+                "onceTriggers": [],
+                "rngSeed": "scenario-1",
+                "rngPosition": 0,
+                "callStack": [],
+                "presentationPosition": "8ed5f197-ff22-4a52-a15b-3673062b8be4",
+                "loopNumber": 3,
+                "provenance": "stub"
+              },
+              "conditionResults": [
+                {
+                  "targetId": "ad16dcaf-9fc9-4c35-a1ce-97c7613921d6",
+                  "value": "true",
+                  "reasons": []
+                },
+                {
+                  "targetId": "541aafe4-e6ba-43c8-982c-7cdb093aa066",
+                  "value": "true",
+                  "reasons": []
+                }
+              ],
+              "presentationState": {
+                "contentVersionId": "1dbb5e7e-80e4-441a-b3dc-3b6756bfb4ab",
+                "variableValues": {
+                  "f1fc9e71-1572-458e-b18d-e69736274b24": {
+                    "type": "integer",
+                    "value": 8
+                  },
+                  "d45f8721-da64-4239-9a77-bc7f653ae5ed": {
+                    "type": "integer",
+                    "value": 12
+                  }
+                },
+                "itemInstances": [
+                  {
+                    "instanceId": "49314919-8d3c-43ff-b7f0-977622662e4c",
+                    "typeId": "52a2d24b-3d48-464b-b524-b386667ab5bc",
+                    "quantity": 1,
+                    "ownerId": null,
+                    "locationId": null,
+                    "consumed": false
+                  }
+                ],
+                "assertions": [],
+                "seenIds": [
+                  "ad16dcaf-9fc9-4c35-a1ce-97c7613921d6",
+                  "8ed5f197-ff22-4a52-a15b-3673062b8be4"
+                ],
+                "visitCounts": {
+                  "ad16dcaf-9fc9-4c35-a1ce-97c7613921d6": 1,
+                  "8ed5f197-ff22-4a52-a15b-3673062b8be4": 1
+                },
+                "onceTriggers": [],
+                "rngSeed": "scenario-1",
+                "rngPosition": 0,
+                "callStack": [],
+                "presentationPosition": "8ed5f197-ff22-4a52-a15b-3673062b8be4",
+                "loopNumber": 3,
+                "provenance": "stub"
+              },
+              "operation": "advance",
+              "externalValues": {
+                "ab759217-8119-43ab-a804-13d6bae057f9": {
+                  "type": "boolean",
+                  "value": true
+                }
+              },
+              "externalMode": "stub"
+            }
+          ],
+          "seed": "scenario-1",
+          "engineVersion": "1.0.0",
+          "externalMode": "stub",
+          "contentRevision": "0",
+          "initialExternalValues": {
+            "ab759217-8119-43ab-a804-13d6bae057f9": {
+              "type": "boolean",
+              "value": true
+            }
+          },
+          "initialStubValues": {
+            "variables": {
+              "f1fc9e71-1572-458e-b18d-e69736274b24": {
+                "type": "integer",
+                "value": 8
+              }
+            },
+            "external": {
+              "ab759217-8119-43ab-a804-13d6bae057f9": {
+                "type": "boolean",
+                "value": true
+              }
+            }
+          },
+          "initialStubBaseState": {
+            "contentVersionId": "1dbb5e7e-80e4-441a-b3dc-3b6756bfb4ab",
+            "variableValues": {
+              "f1fc9e71-1572-458e-b18d-e69736274b24": {
+                "type": "integer",
+                "value": 7
+              },
+              "d45f8721-da64-4239-9a77-bc7f653ae5ed": {
+                "type": "integer",
+                "value": 12
+              }
+            },
+            "itemInstances": [
+              {
+                "instanceId": "49314919-8d3c-43ff-b7f0-977622662e4c",
+                "typeId": "52a2d24b-3d48-464b-b524-b386667ab5bc",
+                "quantity": 1,
+                "ownerId": null,
+                "locationId": null,
+                "consumed": false
+              }
+            ],
+            "assertions": [],
+            "seenIds": [
+              "ad16dcaf-9fc9-4c35-a1ce-97c7613921d6"
+            ],
+            "visitCounts": {
+              "ad16dcaf-9fc9-4c35-a1ce-97c7613921d6": 1
+            },
+            "onceTriggers": [],
+            "rngSeed": "scenario-1",
+            "rngPosition": 0,
+            "callStack": [],
+            "presentationPosition": "ad16dcaf-9fc9-4c35-a1ce-97c7613921d6",
+            "loopNumber": 3,
+            "provenance": "partial"
+          },
+          "initialWorldTick": "5",
+          "coverage": {
+            "scenes": {
+              "checked": 0,
+              "total": 0,
+              "excluded": 0
+            },
+            "dialogue": {
+              "checked": 0,
+              "total": 0,
+              "excluded": 0
+            },
+            "choices": {
+              "checked": 1,
+              "total": 1,
+              "excluded": 0
+            },
+            "conditionTrue": {
+              "checked": 3,
+              "total": 3,
+              "unknown": 0
+            },
+            "conditionFalse": {
+              "checked": 0,
+              "total": 3,
+              "unknown": 0
+            },
+            "declaredTests": {
+              "checked": 0,
+              "total": 0,
+              "unknown": 0,
+              "byProvenance": {
+                "full_play": {
+                  "checked": 0,
+                  "total": 0
+                },
+                "partial": {
+                  "checked": 0,
+                  "total": 0
+                },
+                "imported": {
+                  "checked": 0,
+                  "total": 0
+                },
+                "stub": {
+                  "checked": 0,
+                  "total": 0
+                }
+              },
+              "byExternalMode": {
+                "internal": {
+                  "checked": 0,
+                  "total": 0
+                },
+                "stub": {
+                  "checked": 0,
+                  "total": 0
+                },
+                "actual": {
+                  "checked": 0,
+                  "total": 0
+                },
+                "mixed": {
+                  "checked": 0,
+                  "total": 0
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "id": "74fca8be-5633-4541-afd6-8c929936fd35",
+        "projectId": "a92b001a-a932-4d5d-9e17-3e318d59e71f",
+        "kind": "checkpoint",
+        "revision": "0",
+        "name": "部分開始+stub",
+        "status": "provisional",
+        "visibility": "private",
+        "createdAt": "2026-10-08T09:12:33.492Z",
+        "updatedAt": "2026-10-08T09:12:33.492Z",
+        "customValues": {},
+        "data": {
+          "contentVersionId": "1dbb5e7e-80e4-441a-b3dc-3b6756bfb4ab",
+          "runtimeState": {
+            "contentVersionId": "1dbb5e7e-80e4-441a-b3dc-3b6756bfb4ab",
+            "variableValues": {
+              "f1fc9e71-1572-458e-b18d-e69736274b24": {
+                "type": "integer",
+                "value": 8
+              },
+              "d45f8721-da64-4239-9a77-bc7f653ae5ed": {
+                "type": "integer",
+                "value": 12
+              }
+            },
+            "itemInstances": [
+              {
+                "instanceId": "49314919-8d3c-43ff-b7f0-977622662e4c",
+                "typeId": "52a2d24b-3d48-464b-b524-b386667ab5bc",
+                "quantity": 1,
+                "ownerId": null,
+                "locationId": null,
+                "consumed": false
+              }
+            ],
+            "assertions": [],
+            "seenIds": [
+              "ad16dcaf-9fc9-4c35-a1ce-97c7613921d6"
+            ],
+            "visitCounts": {
+              "ad16dcaf-9fc9-4c35-a1ce-97c7613921d6": 1
+            },
+            "onceTriggers": [],
+            "rngSeed": "scenario-1",
+            "rngPosition": 0,
+            "callStack": [],
+            "presentationPosition": "ad16dcaf-9fc9-4c35-a1ce-97c7613921d6",
+            "loopNumber": 3,
+            "provenance": "stub"
+          },
+          "origin": "partial",
+          "traceId": null,
+          "contentRevision": "0",
+          "worldTick": "5"
+        }
+      }
+    ],
+    "relations": [],
+    "snapshots": [
+      {
+        "id": "1dbb5e7e-80e4-441a-b3dc-3b6756bfb4ab",
+        "content": {
+          "projectId": "a92b001a-a932-4d5d-9e17-3e318d59e71f",
+          "name": "型付き個別状態+stubの独立境界",
+          "formatVersion": "1.0.0",
+          "revision": "0",
+          "calendarId": "proleptic-gregorian-second",
+          "mainStart": "0",
+          "calendars": [
+            {
+              "id": "proleptic-gregorian-second",
+              "name": "先発グレゴリオ暦",
+              "kind": "gregorian",
+              "originLabel": "0000-01-01 00:00:00",
+              "ticksPerDay": "86400"
+            }
+          ],
+          "worldReferences": [],
+          "entities": [
+            {
+              "id": "f1fc9e71-1572-458e-b18d-e69736274b24",
+              "projectId": "a92b001a-a932-4d5d-9e17-3e318d59e71f",
+              "kind": "variable",
+              "revision": "0",
+              "name": "variable",
+              "status": "provisional",
+              "visibility": "private",
+              "createdAt": "2026-10-08T09:12:33.491Z",
+              "updatedAt": "2026-10-08T09:12:33.491Z",
+              "customValues": {},
+              "data": {
+                "key": "money",
+                "valueType": "integer",
+                "scope": "across_runs",
+                "initial": {
+                  "type": "integer",
+                  "value": 2
+                },
+                "allowed": {
+                  "min": 0,
+                  "max": 100
+                },
+                "description": [],
+                "ownerId": null,
+                "externalContractId": null,
+                "resetRules": [],
+                "transitionRules": [],
+                "externalUseDeclared": false
+              }
+            },
+            {
+              "id": "d45f8721-da64-4239-9a77-bc7f653ae5ed",
+              "projectId": "a92b001a-a932-4d5d-9e17-3e318d59e71f",
+              "kind": "variable",
+              "revision": "0",
+              "name": "variable",
+              "status": "provisional",
+              "visibility": "private",
+              "createdAt": "2026-10-08T09:12:33.491Z",
+              "updatedAt": "2026-10-08T09:12:33.491Z",
+              "customValues": {},
+              "data": {
+                "key": "untouched",
+                "valueType": "integer",
+                "scope": "across_runs",
+                "initial": {
+                  "type": "integer",
+                  "value": 4
+                },
+                "allowed": {
+                  "min": 0,
+                  "max": 100
+                },
+                "description": [],
+                "ownerId": null,
+                "externalContractId": null,
+                "resetRules": [],
+                "transitionRules": [],
+                "externalUseDeclared": false
+              }
+            },
+            {
+              "id": "ab759217-8119-43ab-a804-13d6bae057f9",
+              "projectId": "a92b001a-a932-4d5d-9e17-3e318d59e71f",
+              "kind": "external_contract",
+              "revision": "0",
+              "name": "external_contract",
+              "status": "provisional",
+              "visibility": "private",
+              "createdAt": "2026-10-08T09:12:33.491Z",
+              "updatedAt": "2026-10-08T09:12:33.491Z",
+              "customValues": {},
+              "data": {
+                "key": "item_gate",
+                "owner": "game",
+                "inputType": "boolean",
+                "outputType": "boolean",
+                "missingPolicy": "unknown",
+                "description": [],
+                "stubValues": [],
+                "adapterProfileIds": [],
+                "version": "1.0.0"
+              }
+            },
+            {
+              "id": "52a2d24b-3d48-464b-b524-b386667ab5bc",
+              "projectId": "a92b001a-a932-4d5d-9e17-3e318d59e71f",
+              "kind": "item",
+              "revision": "0",
+              "name": "item",
+              "status": "provisional",
+              "visibility": "private",
+              "createdAt": "2026-10-08T09:12:33.491Z",
+              "updatedAt": "2026-10-08T09:12:33.491Z",
+              "customValues": {},
+              "data": {
+                "itemMode": "type",
+                "typeId": null,
+                "body": [],
+                "properties": null,
+                "changes": []
+              }
+            },
+            {
+              "id": "49314919-8d3c-43ff-b7f0-977622662e4c",
+              "projectId": "a92b001a-a932-4d5d-9e17-3e318d59e71f",
+              "kind": "item",
+              "revision": "0",
+              "name": "item",
+              "status": "provisional",
+              "visibility": "private",
+              "createdAt": "2026-10-08T09:12:33.491Z",
+              "updatedAt": "2026-10-08T09:12:33.491Z",
+              "customValues": {},
+              "data": {
+                "itemMode": "instance",
+                "typeId": "52a2d24b-3d48-464b-b524-b386667ab5bc",
+                "body": [],
+                "properties": null,
+                "changes": []
+              }
+            },
+            {
+              "id": "ad16dcaf-9fc9-4c35-a1ce-97c7613921d6",
+              "projectId": "a92b001a-a932-4d5d-9e17-3e318d59e71f",
+              "kind": "flow_node",
+              "revision": "0",
+              "name": "flow_node",
+              "status": "provisional",
+              "visibility": "private",
+              "createdAt": "2026-10-08T09:12:33.491Z",
+              "updatedAt": "2026-10-08T09:12:33.491Z",
+              "customValues": {},
+              "data": {
+                "nodeType": "entry",
+                "sceneId": null,
+                "childGraphId": null,
+                "terminalReason": "",
+                "gate": {
+                  "op": "constant",
+                  "value": true
+                },
+                "executionPolicy": "manual_choice",
+                "fallbackId": null
+              }
+            },
+            {
+              "id": "8ed5f197-ff22-4a52-a15b-3673062b8be4",
+              "projectId": "a92b001a-a932-4d5d-9e17-3e318d59e71f",
+              "kind": "flow_node",
+              "revision": "0",
+              "name": "flow_node",
+              "status": "provisional",
+              "visibility": "private",
+              "createdAt": "2026-10-08T09:12:33.491Z",
+              "updatedAt": "2026-10-08T09:12:33.491Z",
+              "customValues": {},
+              "data": {
+                "nodeType": "terminal",
+                "sceneId": null,
+                "childGraphId": null,
+                "terminalReason": "宣言終端",
+                "gate": {
+                  "op": "constant",
+                  "value": true
+                },
+                "executionPolicy": "manual_choice",
+                "fallbackId": null
+              }
+            },
+            {
+              "id": "541aafe4-e6ba-43c8-982c-7cdb093aa066",
+              "projectId": "a92b001a-a932-4d5d-9e17-3e318d59e71f",
+              "kind": "flow_edge",
+              "revision": "0",
+              "name": "flow_edge",
+              "status": "provisional",
+              "visibility": "private",
+              "createdAt": "2026-10-08T09:12:33.491Z",
+              "updatedAt": "2026-10-08T09:12:33.491Z",
+              "customValues": {},
+              "data": {
+                "fromId": "ad16dcaf-9fc9-4c35-a1ce-97c7613921d6",
+                "toId": "8ed5f197-ff22-4a52-a15b-3673062b8be4",
+                "edgeType": "choice",
+                "label": "",
+                "condition": {
+                  "op": "constant",
+                  "value": true
+                },
+                "effectIds": [],
+                "priority": 0,
+                "choiceLineId": null
+              }
+            },
+            {
+              "id": "86bc7197-4e6a-4546-89e2-8ce74dfe2fe0",
+              "projectId": "a92b001a-a932-4d5d-9e17-3e318d59e71f",
+              "kind": "flow_graph",
+              "revision": "0",
+              "name": "flow_graph",
+              "status": "provisional",
+              "visibility": "private",
+              "createdAt": "2026-10-08T09:12:33.491Z",
+              "updatedAt": "2026-10-08T09:12:33.491Z",
+              "customValues": {},
+              "data": {
+                "nodeIds": [
+                  "ad16dcaf-9fc9-4c35-a1ce-97c7613921d6",
+                  "8ed5f197-ff22-4a52-a15b-3673062b8be4"
+                ],
+                "edgeIds": [
+                  "541aafe4-e6ba-43c8-982c-7cdb093aa066"
+                ],
+                "entryIds": [
+                  "ad16dcaf-9fc9-4c35-a1ce-97c7613921d6"
+                ],
+                "exitIds": [
+                  "8ed5f197-ff22-4a52-a15b-3673062b8be4"
+                ],
+                "parentGraphId": null,
+                "parameters": []
+              }
+            }
+          ],
+          "relations": [],
+          "views": []
+        },
+        "contentHash": "1c42c6d1d3bc77149418bdc79551b700b24c7209fbd6a05412a336f67bbb545b",
+        "createdAt": "2026-10-08T08:30:00Z",
+        "versionLabel": "型付き個別開始"
+      }
+    ],
+    "history": [],
+    "views": []
+  },
+  "cases": [
+    {
+      "mode": "base-value",
+      "status": "error",
+      "issues": [
+        {
+          "code": "INTEGRITY_FAILED",
+          "message": "保存した初期stub入力と固定版の開始状態が一致しません。",
+          "path": "project.entities[9].data.4f6dc4f4-dc22-4854-90c4-84aaea69b286.initialStubValues"
+        }
+      ],
+      "accepted": false,
+      "error": "project.entities[9].data.4f6dc4f4-dc22-4854-90c4-84aaea69b286.initialStubValues: 保存した初期stub入力と固定版の開始状態が一致しません。"
+    },
+    {
+      "mode": "base-edition",
+      "status": "error",
+      "issues": [
+        {
+          "code": "INTEGRITY_FAILED",
+          "message": "保存した初期stub入力と固定版の開始状態が一致しません。",
+          "path": "project.entities[9].data.4f6dc4f4-dc22-4854-90c4-84aaea69b286.initialStubValues"
+        }
+      ],
+      "accepted": false,
+      "error": "project.entities[9].data.4f6dc4f4-dc22-4854-90c4-84aaea69b286.initialStubValues: 保存した初期stub入力と固定版の開始状態が一致しません。"
+    },
+    {
+      "mode": "external-input",
+      "status": "error",
+      "issues": [
+        {
+          "code": "INTEGRITY_FAILED",
+          "message": "保存した初期stub入力と固定版の開始状態が一致しません。",
+          "path": "project.entities[9].data.4f6dc4f4-dc22-4854-90c4-84aaea69b286.initialStubValues"
+        }
+      ],
+      "accepted": false,
+      "error": "project.entities[9].data.4f6dc4f4-dc22-4854-90c4-84aaea69b286.initialStubValues: 保存した初期stub入力と固定版の開始状態が一致しません。"
+    },
+    {
+      "mode": "external-captured",
+      "status": "error",
+      "issues": [
+        {
+          "code": "INTEGRITY_FAILED",
+          "message": "保存した初期stub入力と固定版の開始状態が一致しません。",
+          "path": "project.entities[9].data.4f6dc4f4-dc22-4854-90c4-84aaea69b286.initialStubValues"
+        }
+      ],
+      "accepted": false,
+      "error": "project.entities[9].data.4f6dc4f4-dc22-4854-90c4-84aaea69b286.initialStubValues: 保存した初期stub入力と固定版の開始状態が一致しません。"
+    }
+  ]
+}

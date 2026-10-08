@@ -1,0 +1,65 @@
+
+ RUN  v5.0.3 /tmp/shinariokanri-independent-rb05-narrative-f51f6b9
+
+ ❯ tests/independent-scoped-reuse-extended.test.ts (3 tests | 1 failed) 891ms
+   × CTX-child-independent keeps real virtual child scope and rejects expired/unknown effects as an entire group 565ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/independent-scoped-reuse-extended.test.ts > CTX-child-independent keeps real virtual child scope and rejects expired/unknown effects as an entire group
+AssertionError: expected [ { status: 'terminal', …(8) }, …(2) ] to deeply equal [ { status: 'terminal', …(8) }, …(2) ]
+
+- Expected
++ Received
+
+@@ -1,11 +1,11 @@
+  [
+    {
+      "borrowedRecordsCopied": false,
+      "clock": "5",
+      "depth": 0,
+-     "externalMode": null,
++     "externalMode": undefined,
+      "limited": {
+        "type": "integer",
+        "value": 2,
+      },
+      "money": {
+@@ -18,11 +18,11 @@
+    },
+    {
+      "borrowedRecordsCopied": false,
+      "clock": "5",
+      "depth": 0,
+-     "externalMode": null,
++     "externalMode": undefined,
+      "limited": {
+        "type": "integer",
+        "value": 2,
+      },
+      "money": {
+@@ -35,11 +35,11 @@
+    },
+    {
+      "borrowedRecordsCopied": false,
+      "clock": "5",
+      "depth": 0,
+-     "externalMode": null,
++     "externalMode": undefined,
+      "limited": {
+        "type": "integer",
+        "value": 2,
+      },
+      "money": {
+
+ ❯ tests/independent-scoped-reuse-extended.test.ts:53:322
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 2 passed (3)
+   Start at  09:14:06
+   Duration  1.98s (tests 51%, transform 38%, import 12%)
+

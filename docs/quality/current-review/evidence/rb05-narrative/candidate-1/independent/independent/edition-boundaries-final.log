@@ -1,0 +1,83 @@
+
+ RUN  v5.0.3 /tmp/shinariokanri-independent-rb05-narrative-a21a5d3
+
+ ❯ tests/independent-edition-boundaries.test.ts (7 tests | 4 failed) 539ms
+   × EN01 initial variable stubs remain declared stubs when reconfirming the same path 56ms
+   × EN02 a rejected named item instance is not carried into the changed edition 20ms
+   × EN03 a selected two-scene chapter path is not expanded to its whole chapter during reconfirmation 28ms
+   × EN04 a chapter path with author supplied initial knowledge or values needs explicit migration or recreation 14ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/independent-edition-boundaries.test.ts > EN01 initial variable stubs remain declared stubs when reconfirming the same path
+AssertionError: expected 'full_play' to be 'stub' // Object.is equality
+
+Expected: "stub"
+Received: "full_play"
+
+ ❯ tests/independent-edition-boundaries.test.ts:24:641
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  tests/independent-edition-boundaries.test.ts > EN02 a rejected named item instance is not carried into the changed edition
+AssertionError: expected [ { …(6) } ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   {
++     "consumed": false,
++     "instanceId": "be4c6c47-e891-4082-8237-e48f4ea8c070",
++     "locationId": null,
++     "ownerId": null,
++     "quantity": 1,
++     "typeId": "acc4cdb0-45a9-4959-8acc-798337679dc8",
++   },
++ ]
+
+ ❯ tests/independent-edition-boundaries.test.ts:27:795
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  tests/independent-edition-boundaries.test.ts > EN03 a selected two-scene chapter path is not expanded to its whole chapter during reconfirmation
+AssertionError: expected [ …(3) ] to deeply equal [ …(2) ]
+
+- Expected
++ Received
+
+  [
++   "4fe6c66b-7096-4332-89fd-79f3415b1506",
+    "b49cef6d-3163-41ee-9943-c422e9f493f9",
+-   "4fe6c66b-7096-4332-89fd-79f3415b1506",
++   "39b8a89b-bafc-4a4c-91c5-6d0c83dbe820",
+  ]
+
+ ❯ tests/independent-edition-boundaries.test.ts:30:1222
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  tests/independent-edition-boundaries.test.ts > EN04 a chapter path with author supplied initial knowledge or values needs explicit migration or recreation
+AssertionError: expected '' to match /途中|開始状態|移行|再作成/
+
+- Expected:
+/途中|開始状態|移行|再作成/
+
++ Received:
+""
+
+ ❯ tests/independent-edition-boundaries.test.ts:33:1043
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  4 failed | 3 passed (7)
+   Start at  07:47:21
+   Duration  1.29s (tests 46%, transform 45%, import 9%)
+

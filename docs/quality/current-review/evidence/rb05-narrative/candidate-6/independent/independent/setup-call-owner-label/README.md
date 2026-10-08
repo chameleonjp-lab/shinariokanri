@@ -1,0 +1,1 @@
+新規UI harnessの初回は使用先ノードの見出しへ元ノード名を期待した。参照の使用先name保持が正しいため、使用先名へ観測文字列のみ修正。call→child→exit→return→atomic記録→cold reloadの期待は変更していない。初回源/logを保持。

@@ -1,0 +1,1 @@
+初回の新規trigger fixtureは元固定版に存在しない任意trigger欄をoverrideし、現在の型検証に拒否された。Readerの停止を検証するgivenはschema-validなauthor callへ変更し、同じmanual-trigger/unknown条件停止を試す。固定元scope/native/cloneの別12件と元CTX fixtureは変更しない。invalid setupを製品不具合/受入結果に換算しない。

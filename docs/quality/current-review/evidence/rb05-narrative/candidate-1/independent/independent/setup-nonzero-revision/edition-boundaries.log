@@ -1,0 +1,92 @@
+
+ RUN  v5.0.3 /tmp/shinariokanri-independent-rb05-narrative-a21a5d3
+
+ ❯ tests/independent-edition-boundaries.test.ts (7 tests | 5 failed) 190ms
+   × EN01 initial variable stubs remain declared stubs when reconfirming the same path 60ms
+   × EN02 a rejected named item instance is not carried into the changed edition 19ms
+   × EN03 a selected two-scene chapter path is not expanded to its whole chapter during reconfirmation 24ms
+   × EN04 a chapter path with author supplied initial knowledge or values needs explicit migration or recreation 13ms
+   × EN07 migrated partial starts, old proof and new proof survive atomic reload, native restore and clone 54ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/independent-edition-boundaries.test.ts > EN01 initial variable stubs remain declared stubs when reconfirming the same path
+AssertionError: expected 'full_play' to be 'stub' // Object.is equality
+
+Expected: "stub"
+Received: "full_play"
+
+ ❯ tests/independent-edition-boundaries.test.ts:24:641
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+ FAIL  tests/independent-edition-boundaries.test.ts > EN02 a rejected named item instance is not carried into the changed edition
+AssertionError: expected [ { …(6) } ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   {
++     "consumed": false,
++     "instanceId": "60c29e17-8450-4344-9848-4a141abec902",
++     "locationId": null,
++     "ownerId": null,
++     "quantity": 1,
++     "typeId": "0464fec5-fe63-47f5-a1a6-2ed95313f9b2",
++   },
++ ]
+
+ ❯ tests/independent-edition-boundaries.test.ts:27:795
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+
+ FAIL  tests/independent-edition-boundaries.test.ts > EN03 a selected two-scene chapter path is not expanded to its whole chapter during reconfirmation
+AssertionError: expected [ …(3) ] to deeply equal [ …(2) ]
+
+- Expected
++ Received
+
+  [
++   "12fa0c4d-a9a9-4c60-b3af-e108a7ac5051",
+    "9c6f34e6-9a1b-4107-a301-f89fdb62ff6b",
+-   "12fa0c4d-a9a9-4c60-b3af-e108a7ac5051",
++   "93916aa7-d2d3-4924-b5ae-31d3071639c1",
+  ]
+
+ ❯ tests/independent-edition-boundaries.test.ts:30:1222
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+
+ FAIL  tests/independent-edition-boundaries.test.ts > EN04 a chapter path with author supplied initial knowledge or values needs explicit migration or recreation
+AssertionError: expected '' to match /途中|開始状態|移行|再作成/
+
+- Expected:
+/途中|開始状態|移行|再作成/
+
++ Received:
+""
+
+ ❯ tests/independent-edition-boundaries.test.ts:33:1043
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
+
+ FAIL  tests/independent-edition-boundaries.test.ts > EN07 migrated partial starts, old proof and new proof survive atomic reload, native restore and clone
+StorageError: 別の編集が先に保存されています。現在版を読み直して変更を比較してください。
+ ❯ ScenarioStore.saveProject src/storage/store.ts:597:122
+
+ ❯ tests/independent-edition-boundaries.test.ts:42:1069
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  5 failed | 2 passed (7)
+   Start at  07:45:41
+   Duration  901ms (transform 63%, tests 24%, import 13%)
+

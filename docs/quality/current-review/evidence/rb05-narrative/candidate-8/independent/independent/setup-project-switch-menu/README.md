@@ -1,0 +1,1 @@
+初回RD-start-otherは1024幅のsidebar drawerを開かず作品切替をクリックしてviewport外でtimeoutした。通常メニューボタンを開く手順のみ追加し、開始待ち/別作品分離/同じ作品に結果保持の期待はそのまま。RD-replay-reenter/RD-version-selectionの同run内の製品差の負記録も保持。

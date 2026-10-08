@@ -1,0 +1,238 @@
+{
+  "target": {
+    "commit": "fcc06ca57e8e046b87d231ff0fec65a02099137a",
+    "tree": "7871b36eedabb838c474fb61c838519471065b80",
+    "base": "b310800c98bc9a89b93182ad721380a0be99d2d3",
+    "source155Match": true,
+    "frozenAt": "2026-10-08T09:44:05.816787+00:00",
+    "verifiedAt": "2026-10-08T10:05:02.452135+00:00"
+  },
+  "decision": "Same-fixture pending-save navigation/failure/retry repaired. Independent operation lifecycle scope otherwise passes; two edition selection/display differences remain. No global acceptance/RB05 pass.",
+  "historicalEvidenceUnchanged": {
+    "candidate7ReportSha256": "832da15df2b563ff6025108ae77cfbef7c3916a12f5511b12c3b22c6cdd479d8",
+    "candidate7OriginalReportSha256": "832da15df2b563ff6025108ae77cfbef7c3916a12f5511b12c3b22c6cdd479d8",
+    "candidate7Failure": "CTX-UI-child-away-failure preserved",
+    "earlier": "candidate6 child-return gap, candidate5 scoped failures, a21/5c/32 negatives and 0917 freeze-only retained"
+  },
+  "verification": {
+    "independentParts": {
+      "passed": 12,
+      "failed": 0,
+      "log": "independent/scoped-reuse-and-preservation.log",
+      "cases": {
+        "scopedOriginal": 2,
+        "scopedAtomicNativeClone": 3,
+        "EN14_18": 5,
+        "genuineLegacy": 2
+      }
+    },
+    "fixtureValidation": {
+      "passed": 1,
+      "failed": 0,
+      "classification": "Input schema/hash/native validity and typed trigger/unknown givens; not counted as acceptance completion",
+      "log": "independent/reader-fixtures.log"
+    },
+    "actualApp": {
+      "passed": 10,
+      "failed": 2,
+      "results": [
+        {
+          "id": "CTX-UI-child",
+          "status": "passed",
+          "pageErrors": []
+        },
+        {
+          "id": "CTX-UI-child-save-failure",
+          "status": "passed",
+          "pageErrors": []
+        },
+        {
+          "id": "CTX-UI-child-away-failure",
+          "status": "passed",
+          "pageErrors": []
+        },
+        {
+          "id": "RD-start-other",
+          "status": "passed",
+          "pageErrors": []
+        },
+        {
+          "id": "RD-replay-reenter",
+          "status": "failed",
+          "pageErrors": []
+        },
+        {
+          "id": "RD-version-selection",
+          "status": "failed",
+          "pageErrors": []
+        },
+        {
+          "id": "RD-save-conflict",
+          "status": "passed",
+          "pageErrors": []
+        },
+        {
+          "id": "RD-trigger",
+          "status": "passed",
+          "pageErrors": []
+        },
+        {
+          "id": "RD-unknown",
+          "status": "passed",
+          "pageErrors": []
+        },
+        {
+          "id": "RD-start-away-failure",
+          "status": "passed",
+          "pageErrors": []
+        },
+        {
+          "id": "RD-replay-other",
+          "status": "passed",
+          "pageErrors": []
+        },
+        {
+          "id": "RD-ack-stale-replay",
+          "status": "passed",
+          "pageErrors": []
+        }
+      ],
+      "logs": [
+        "independent/browser-scoped-reuse.log",
+        "independent/browser-reader-lifecycle.log",
+        "independent/browser-reader-ack.log"
+      ],
+      "browser": "Chromium151.0.7922.173 /usr/bin/chromium",
+      "build": "Vite dev exact commit source; actual App/ScenarioStore/native IndexedDB; controlled native save and real crypto.subtle.digest wait/rejection",
+      "viewport": "1024x768"
+    }
+  },
+  "repairResults": [
+    "Same original CTX-child fixture and correct usual call/exit/return/back/save/cold/native/clone expected outcomes pass",
+    "Same-screen and away-screen pending save block conflicting actions, preserve exit/callStack1/state9+item1, retain failure notice and same-route retry; latest props replay completes before release",
+    "Begin pending guard remains across navigation; other projectB starts independently; A result/error and original tick5 inputs remain on return; hash failure retry ready succeeds",
+    "Saved replay completing before reenteringA after usingB preserves its fixed edition and does not modify B. Reenter-before-completion timing is the separate failed case",
+    "Hash wait during record captures original base0. Ordinary settings save advances canonical revision1; original record is refused before store call and no trace/snapshot added. Explicit retry records the same old contentRevision0 and retains new canonical name",
+    "Manual trigger leaves call progression disabled until explicit event; same-turn event advance executes once. Unknown gate hides progression and remains unknown",
+    "After real atomic trace acknowledgment, delay the old verification replay; navigate/reenter to complete fresh verification, then return to terminal. Releasing canceled old replay does not rewind the newer operation",
+    "Domain current12 rerun parts retain fixed use-site scope/finite exceptions/whole effect atomicity/world clocks/stub tamper refusal/genuine legacy/native/clone"
+  ],
+  "findings": [
+    {
+      "id": "RD-replay-reenter",
+      "classification": "reproduced_normal_ui_edition_selection_difference",
+      "requirements": [
+        "REQ-B16",
+        "REQ-F15",
+        "REQ-F17",
+        "REQ-N18",
+        "REQ-N19"
+      ],
+      "reviewReferences": [
+        "RV05",
+        "RV07"
+      ],
+      "given": "A stored full/internal trace pins old editionA revision0; current draft has revision2. Snapshot hashes and native validation succeed.",
+      "when": "Pause real saved replay digest, navigate to 資料, reenter Reader before digest finishes, then complete it.",
+      "expected": "The fixed session result and its selected editionA must update together; old-version replay must not receive a current-draft stale warning.",
+      "actual": {
+        "selectedVersion": "",
+        "expectedSavedVersion": "9e0ae22e-b095-407b-98a9-4ad3891cc829",
+        "status": "意図した終端\n初期状態からの経路 · 周回 0\n縦書き",
+        "staleNotice": [
+          "編集稿の版が変わりました。開始し直して変更内容を確認してください。記録した経路は保持されています。"
+        ],
+        "heading": "呼出元終端"
+      },
+      "impact": "Domain replay remains fixed toA; the displayed and next-start edition is inconsistent. No unsafe current-draft substitution in the replay itself is claimed.",
+      "cause": {
+        "file": "src/ui/Reader.tsx",
+        "sha256": "4e282466331efa023bab3e7aaff70adadf392dba4e780e36985be5658cdd1405",
+        "detail": "Saved replay updates the shared session and plain readerPreferences, but only old live.current allows local setVersion. Replacement Reader initializes before completion and never receives the version update."
+      },
+      "source": "independent-app-reader-lifecycle.mjs",
+      "evidence": [
+        "independent/fixtures/RD-replay-reenter-observation.json",
+        "independent/browser-reader-lifecycle.json",
+        "independent/browser-reader-lifecycle.log"
+      ]
+    },
+    {
+      "id": "RD-version-selection",
+      "classification": "reproduced_normal_ui_edition_selection_difference",
+      "requirements": [
+        "REQ-B16",
+        "REQ-F15",
+        "REQ-F17",
+        "REQ-N18",
+        "REQ-N19"
+      ],
+      "reviewReferences": [
+        "RV05",
+        "RV07"
+      ],
+      "given": "Replay editionA, then explicitly select immutable editionB as the next trial target while retaining the old session.",
+      "when": "Navigate to 資料 and reenter Reader.",
+      "expected": "Keep the explicitly selected editionB and its start/checkpoint candidates; preserve the old executed sessionA as separate run evidence.",
+      "actual": {
+        "selectedBeforeNavigation": "744e2c9b-46fe-4f9c-81cd-750e53ae9a13",
+        "selectedAfterNavigation": "9e0ae22e-b095-407b-98a9-4ad3891cc829",
+        "oldSessionVersion": "9e0ae22e-b095-407b-98a9-4ad3891cc829",
+        "heading": "呼出元終端"
+      },
+      "impact": "Domain replay remains fixed toA; the displayed and next-start edition is inconsistent. No unsafe current-draft substitution in the replay itself is claimed.",
+      "cause": {
+        "file": "src/ui/Reader.tsx",
+        "sha256": "4e282466331efa023bab3e7aaff70adadf392dba4e780e36985be5658cdd1405",
+        "detail": "Initial version prefers a fixed stored session over readerPreferences, silently replacing explicit next-targetB with executed editionA."
+      },
+      "source": "independent-app-reader-lifecycle.mjs",
+      "evidence": [
+        "independent/fixtures/RD-version-selection-observation.json",
+        "independent/browser-reader-lifecycle.json",
+        "independent/browser-reader-lifecycle.log"
+      ]
+    }
+  ],
+  "harnessSetupCorrections": [
+    {
+      "source": "independent/SELECTOR_ADAPTATION.md",
+      "detail": "Start button selector accounts for retained session label, same pending/state/failure/retry expectations."
+    },
+    {
+      "source": "independent/setup-invalid-trigger-override",
+      "detail": "New optional trigger absent in original pin made a proposed override fixture invalid. Replaced setup with native/schema-valid typed author call for Reader trigger/unknown guards; fixed-scope12 and original CTX unchanged. Invalid setup is not a product/AT result."
+    },
+    {
+      "source": "independent/setup-project-switch-menu",
+      "detail": "Open the normal1024px menu before project card navigation; first outside-viewport harness timeout retained separately, along with two actual edition negatives from that run."
+    }
+  ],
+  "environment": {
+    "os": "Debian GNU/Linux13.6",
+    "kernel": "6.18.44",
+    "architecture": "x86_64",
+    "node": "v24.19.0",
+    "vitest": "5.0.3",
+    "componentStore": "fake-indexeddb",
+    "appStore": "native Chromium151 IndexedDB",
+    "promiseControl": "Harness delays/resolves/rejects actual digest promises without changing digest outputs; actual native save wrapper delays/rejects operations; product source untouched"
+  },
+  "unexecuted": [
+    "Original104 whole requirement grade/116 entire original acceptance cases/24 stages/6 regression groups not run to completion",
+    "Prior NP14/EN01-13/UI01-10/53+8 etc remain historical and are not reused as candidate8 pass results",
+    "Parent production build/full suite and production browsers are separate",
+    "Physical iPhone/iPad/OS browser matrix/assistive tech/IME/Files/long offline/Standard-Large timing and real Auth/RLS/Storage not run",
+    "Cold browser restart during a pending unsaved tab-only Reader operation is not claimed preserved",
+    "The two displayed/selected edition expectations are failed and completion remains pending"
+  ],
+  "originalPlan": {
+    "requirements": 104,
+    "acceptanceCases": 116,
+    "stages": 24,
+    "regressionGroups": 6,
+    "notReduced": true,
+    "baselineRegistryNotCurrentGrade": true
+  },
+  "productRepositoryWrites": false
+}

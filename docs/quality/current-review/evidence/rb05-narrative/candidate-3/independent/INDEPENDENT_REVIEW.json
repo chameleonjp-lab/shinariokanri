@@ -1,0 +1,182 @@
+{
+  "target": {
+    "commit": "32c1608cce042a24f9ae95685cd8ef7ac1c8f40f",
+    "tree": "1a57efba5b1f86c3dd600fbe9c34d6f90c433c3b",
+    "base": "b310800c98bc9a89b93182ad721380a0be99d2d3",
+    "source154Match": true,
+    "frozenAt": "2026-10-08T08:28:55.182342+00:00"
+  },
+  "decision": "EN09 initial fixed context repaired; EN10/11 repaired; EN16/17/UI10 remain; no entire RB05 or original AT verdict",
+  "historicalEvidenceUnchanged": [
+    "/tmp/shinariokanri-independent-rb05-narrative-a21a5d3",
+    "/tmp/shinariokanri-independent-rb05-narrative-5c28c04"
+  ],
+  "verification": {
+    "NP14": {
+      "passed": 14,
+      "failed": 0,
+      "log": "independent/narrative-original.log"
+    },
+    "originalEN01_08": {
+      "passed": 8,
+      "failed": 0,
+      "log": "independent/edition-original.log"
+    },
+    "submittedRelated": {
+      "passed": 13,
+      "failed": 0,
+      "log": "independent/edition-original.log"
+    },
+    "EN09_13": {
+      "passed": 4,
+      "failed": 1,
+      "failedIDs": [
+        "EN09 terminal assertion; EN16 shared cause"
+      ],
+      "log": "independent/edition-repaired.log"
+    },
+    "independentEN14_18": {
+      "passed": 3,
+      "failed": 2,
+      "failedIDs": [
+        "EN16",
+        "EN17"
+      ],
+      "log": "independent/context-clock-extra.log"
+    },
+    "totals": {
+      "independentParts": {
+        "passed": 29,
+        "failed": 3,
+        "failureCauseCount": 2
+      },
+      "submittedParts": {
+        "passed": 13,
+        "failed": 0
+      },
+      "actualApp": {
+        "passed": 9,
+        "failed": 1,
+        "failureCause": "UI10"
+      }
+    },
+    "actualApp": {
+      "UI01_07": "all passed independently at32c1608",
+      "UI08": "passed independently; migration partial8 delay/nav/cold/native/clone",
+      "UI09": "passed; tick5 frozen approval, tick changes disabled, flow navigation keeps input, saved/reloaded cp starts5",
+      "UI10": "failed; chapter tick5 lost on navigation",
+      "browser": "Chromium151.0.7922.173 /usr/bin/chromium",
+      "build": "Vite development, actual App/ScenarioStore/native IndexedDB; controlled save boundary delay/failure",
+      "viewport": "1024x768",
+      "logs": [
+        "independent/browser-review.log",
+        "independent/browser-chapter-extra.log",
+        "independent/browser-clock-extra.log"
+      ]
+    }
+  },
+  "repairResults": {
+    "EN09_initial_exclusion": "flow and chapter both ready; original fixed-source exception cause repaired, final whole case still fails selection scope",
+    "EN10": "same original expected migration successful with typed target clock and fixed reuse context",
+    "EN11": "same legal99 vs captured8 contradiction now error+durable issue+native reject",
+    "EN12_13": "new stub references/native/clone preserved; genuine a21 stub old replay remains, missing original input blocks reconfirmation",
+    "EN14": "independent explicit partial base7, untouched12, item identity, loop3, initial stub8/externaltrue/clock5 retain across atomic store close/new store/native/clone; provenance stub with partial base",
+    "EN15": "unknown flow/chapter stays unknown; half-open0/9 ready10 denied; copied clock5 restores; forged migration clock hash denied; ambiguous old5/6 source requires input",
+    "EN18": "untouched base value, wrong base edition, external input and captured external value contradictions all reject replay/durable/native"
+  },
+  "findings": [
+    {
+      "id": "EN16",
+      "duplicateFailedCase": "EN09 final terminal assertion",
+      "classification": "reproduced_scope_difference",
+      "requirements": [
+        "REQ-F06",
+        "REQ-F15",
+        "REQ-F43",
+        "REQ-N19"
+      ],
+      "given": "A source scene is unassigned; the selected chapter contains only the use scene. Fixed permission/tick5 valid.",
+      "when": "Start chapterIds=[selected chapter] or explicit [] and present its intended sole scene.",
+      "expected": "Explicit chosen chapter includes only its scenes; [] includes no scenes; first and only presentation terminates. Default whole-work reading and explicit scene path remain available.",
+      "actual": "The explicit chapter and empty set both append orphan source scene. EN09 now starts ready correctly but stays ready after the one intended scene.",
+      "cause": "buildChapterReadingSequence tail emits orphan scene regardless of whether chapterIds is explicit.",
+      "fixtures": [
+        "independent/fixtures/EN09.json",
+        "independent/fixtures/EN16.json"
+      ]
+    },
+    {
+      "id": "EN17",
+      "classification": "reproduced_durable_clock_difference",
+      "requirements": [
+        "REQ-F15",
+        "REQ-F17",
+        "REQ-N19"
+      ],
+      "given": "Full/internal ordinary flow recorded with checkpoint.worldTick5 and trace.initialWorldTick5; no initialStubValues.",
+      "when": "Change only trace initialWorldTick to6, then replay, durable integrity and checksummed native roundtrip.",
+      "expected": "All replay/durable/native boundaries reject contradictory frozen start clocks.",
+      "actual": "Direct replay error, validateProjectIntegrity [] and native export/inspect accepts.",
+      "cause": "projectRecordValidation flow replay validation runs only when initialStubValues exists.",
+      "fixture": "independent/fixtures/EN17.json"
+    },
+    {
+      "id": "UI10",
+      "classification": "reproduced_actual_app_input_loss",
+      "requirements": [
+        "REQ-F15",
+        "REQ-F17",
+        "REQ-N18"
+      ],
+      "given": "In ordinary chapter UI enter tick5, choose author-specific chapter checkpoint and prepare migration. Approved preview shows5; save enabled.",
+      "when": "Navigate to sources and reenter the chapter UI without editing project or input.",
+      "expected": "Keep the project-specific typed tick5 and its preview; save remains eligible for the same captured target.",
+      "actual": "Input becomes empty, preview retains5 and save becomes disabled.",
+      "cause": "Chapter UI parameters live only in component state; flow Reader keeps project preferences.",
+      "fixture": "independent/fixtures/UI10-clock-observation.json"
+    }
+  ],
+  "environment": {
+    "os": "Linux-6.18.44-x86_64-with-glibc2.41",
+    "distribution": "13.6",
+    "node": "v24.19.0",
+    "vitest": "5.0.3",
+    "unitStorage": "fake-indexeddb",
+    "browserStorage": "native Chromium IndexedDB"
+  },
+  "unexecuted": [
+    "full original116 acceptance procedures and all104/24/6 gate completion",
+    "real iPhone/iPad/desktop OS matrix, assistive technology, IME/Files/rotation",
+    "real remote Auth/RLS/Storage and two-device sync",
+    "Standard/Large performance and long-duration editing",
+    "complete release gate with same final target version"
+  ],
+  "noCompletionPromotion": [
+    "historical53+8 reuse evidence not reused as current success",
+    "parent clean production/unit/browser evidence separate",
+    "part success and actual Vite App are not original AT or real-device pass",
+    "partial/stub/actual/mixed never converted to full evidence"
+  ],
+  "originalContractHashChecks": [
+    {
+      "file": "docs/data/requirements.json",
+      "sha256": "df11649ab7ec25c31ae2aad6aacdca98d7324aba2e701352f9a78136c3bed0dc",
+      "baseMatches": true
+    },
+    {
+      "file": "docs/data/acceptance_cases.json",
+      "sha256": "e1e4b06a3bb1cd79fc590239ab6350103323335f2e1ee87a2e6a283755834c4f",
+      "baseMatches": true
+    },
+    {
+      "file": "docs/spec/BEHAVIOR_CONTRACT.md",
+      "sha256": "685feaf6de80b9b424460d0ce9e422247d773053089232a9be8c993e33e42d5f",
+      "baseMatches": true
+    },
+    {
+      "file": "docs/spec/DATA_MODEL.md",
+      "sha256": "1aa5a8a6ffebf354e4089164987de32fdd3cf81c342834f287dfbdb213f4b389",
+      "baseMatches": true
+    }
+  ]
+}

@@ -1,0 +1,168 @@
+{
+  "target": {
+    "commit": "7812804f4b727656c09904a5ffb25379da1955bc",
+    "tree": "a9c48d2fcd7863d6daba3a5b3aac1ad0417fad0c",
+    "base": "b310800c98bc9a89b93182ad721380a0be99d2d3",
+    "source154Match": true,
+    "frozenAt": "2026-10-08T09:23:33.331603+00:00",
+    "verifiedAt": "2026-10-08T09:31:07.506384+00:00"
+  },
+  "decision": "Original CTX child normal-return gap repaired for the exact preserved fixture; navigation during a failed pending Reader save still loses the path and prevents retry. No RB05/AT-wide pass.",
+  "historicalEvidenceUnchanged": {
+    "candidate6ReportSha256": "9d61b155c3932ae5d51dad51beb4d94e052c898c4941838deca2f74210dd694f",
+    "candidate6Failure": "CTX-UI-child exit ready/callStack1/no progression button kept unchanged",
+    "candidate5Failure": "original CTX graph/chapter negative records retained",
+    "earlier": "a21/5c/32 original negatives and 0917 freeze-only unchanged"
+  },
+  "sourceDiffFromCandidate6": {
+    "changedFiles": [
+      "src/ui/Reader.tsx"
+    ],
+    "unchangedSourceFiles": 153,
+    "domainCodeIdentical": true
+  },
+  "verification": {
+    "independentParts": {
+      "passed": 12,
+      "failed": 0,
+      "log": "independent/scoped-reuse-and-preservation.log",
+      "cases": {
+        "originalScopedPositive": 2,
+        "scopedExtendedAtomicNativeClone": 3,
+        "EN14_18ScopeClockStubBoundary": 5,
+        "genuineLegacyFlowChapterNativeClone": 2
+      }
+    },
+    "actualApp": {
+      "passed": 2,
+      "failed": 1,
+      "results": [
+        {
+          "id": "CTX-UI-child",
+          "status": "passed",
+          "pageErrors": []
+        },
+        {
+          "id": "CTX-UI-child-save-failure",
+          "status": "passed",
+          "pageErrors": []
+        },
+        {
+          "id": "CTX-UI-child-away-failure",
+          "status": "failed",
+          "pageErrors": []
+        }
+      ],
+      "browser": {
+        "browser": "151.0.7922.173",
+        "executable": "/usr/bin/chromium",
+        "viewport": "1024x768",
+        "build": "Vite development; isolated commit 7812804; actual App and native IndexedDB store with controlled save delay/failure"
+      },
+      "log": "independent/browser-scoped-reuse.log"
+    }
+  },
+  "repairResults": [
+    "Exact candidate6 fixture bytes retained; dedicated call and return buttons run the real fixed virtual child graph at tick5",
+    "Same-turn double call and return operate once; terminal has call depth0 and5 displayed route positions; back restores exit/depth1; repeat return succeeds",
+    "Normal terminal trace save acknowledges real latest props; cold reload replays same terminal; native and clone keep terminal, full-origin, tick5, depth0 and item1",
+    "At child exit, same-screen delayed record disables return/back/version selection; same-turn record submits once; failed save leaves original trace count0 and runtime exit state usable; retry acknowledges latest props, then return succeeds",
+    "CTX graph/chapter same caller allowed and different caller/unknown/expired refused; checkpoint clock5 migration, immutable pins, legacy and typed stub/base native/clone remain protected by current12 rerun parts"
+  ],
+  "findings": [
+    {
+      "id": "CTX-UI-child-away-failure",
+      "classification": "existing_normal_ui_save_lifecycle_gap_newly_reproduced_on_candidate7",
+      "reviewReference": "RV07 screen navigation plus save failure",
+      "requirements": [
+        "REQ-B16",
+        "REQ-F17",
+        "REQ-N18",
+        "REQ-N19"
+      ],
+      "acceptanceReferences": [
+        "AT-B16",
+        "AT-F17",
+        "AT-N18",
+        "AT-N19"
+      ],
+      "given": "Reader has reached the fixed virtual child exit at tick5, money9/item1/limited2/call stack1. Ordinary trace save is pending.",
+      "when": "Navigate to 資料, reenter Reader while save is pending, then fail storage.",
+      "expected": "Pending phase guards further conflicting commands; path, runtime state, fixed edition, input and save failure survive navigation. On failure the original database is unchanged and the same path can be retried. Successful acknowledgment must wait for matching trace/checkpoint/snapshot props.",
+      "actual": {
+        "pending": {
+          "startDisabled": false,
+          "returnButtonCount": 0,
+          "sessionHeadingCount": 0
+        },
+        "failed": {
+          "readerText": "試読の開始状態\n作者メモを含めずに確認\n開始点\n宣言した入口を使う\n固定子の入口\n固定子の出口\n固定呼出元\n呼出元入口\n固定呼出し使用先\n呼出元終端\n作品版\n現在の編集稿 · 版 0\n共通元の固定版 0\n保存した開始状態\n初期値から開始\n初期提示の世界内tick\n抽選種\n試読を始める途中開始の状態を作成\n回帰経路と合流比較\n\n宣言経路 0件。保存版・開始由来・仮値を保持し、改訂後の確認とは区別します。\n\n選んだ二経路を再生して比較選んだ経路を回帰集合へ保存\n状態の読取・更新・初期化\n子内の限定値 · across_runs · 1箇所\n子内の金額 · across_runs · 1箇所\n分岐の検査\n到達性と行き止まりを検査\n\n最大100,000状態・10,000遷移・30秒の範囲を探索します。未確定値と探索打切りを確認済みとして扱いません。",
+          "returnButtonCount": 0,
+          "sessionHeadingCount": 0,
+          "traceCount": 0
+        }
+      },
+      "impact": "Unsaved path and its call-stack state vanish, pending guard is absent, and failed save has no Reader retry path. Database trace remains0, so component persistence success cannot recover this ordinary operation.",
+      "sourceLocations": [
+        {
+          "file": "src/ui/Reader.tsx",
+          "line": 26,
+          "sha256": "6028f48d4270d736ac644324280d52c6425b1121f85b2bda89eb8762f68ba7fc",
+          "detail": "session, busy, error and pendingReplay are component state; shared project-keyed maps cover partial preparation and preferences only."
+        },
+        {
+          "file": "src/ui/Reader.tsx",
+          "line": 145,
+          "sha256": "6028f48d4270d736ac644324280d52c6425b1121f85b2bda89eb8762f68ba7fc",
+          "detail": "persist completion/error updates only live.current; unmounted operation has no project-keyed saved phase or failure to give the replacement Reader."
+        }
+      ],
+      "evidence": [
+        "independent/fixtures/CTX-UI-child-away-failure-observation.json",
+        "independent/browser-scoped-reuse.json",
+        "independent/browser-scoped-reuse.log"
+      ],
+      "source": "independent-app-scoped-reuse.mjs",
+      "unrunDependentSteps": [
+        "Reenter restored exit and retry the failed same path",
+        "Navigation during successful save acknowledgment and latest-props reconciliation need the same lifecycle repair"
+      ]
+    }
+  ],
+  "harnessAdaptations": [
+    {
+      "source": "independent/SELECTOR_ADAPTATION.md",
+      "meaning": "Only dedicated call/return button labels changed from candidate6; the same original fixture and normal completion/save/reload expectations were retained. New failure/navigation checks are additional."
+    },
+    {
+      "source": "independent/setup-normalized-state-text",
+      "meaning": "Initial added dt/dd count assertion fixed exact DOM newline expectation to whitespace-tolerant regex, retaining numeric1/0 and raw first log/source."
+    }
+  ],
+  "environment": {
+    "os": "Debian GNU/Linux13.6",
+    "kernel": "6.18.44",
+    "architecture": "x86_64",
+    "node": "v24.19.0",
+    "vitest": "5.0.3",
+    "componentStore": "fake-indexeddb",
+    "appStore": "native Chromium151 IndexedDB",
+    "appBuild": "Vite dev isolated exact commit source, controlled save failure/delay; parent clean production/full-suite is separate"
+  },
+  "unexecuted": [
+    "Original104 whole requirements,116 whole acceptance cases,24 stages and6 regression groups are not judged complete",
+    "NP14/EN01-13/UI01-10 and other prior runs are historical evidence, not candidate7 executions; source domain identical but results are not promoted",
+    "Physical iPhone/iPad/desktop OS matrix, IME/assistive tech/Files/long offline/Standard/Large performance and real Auth/RLS/Storage not run",
+    "Parent build/all npm/production browser suite is separate",
+    "Away-save failure blocks same-path retry and normal navigation acknowledgment; these are not called passed"
+  ],
+  "originalPlan": {
+    "requirements": 104,
+    "acceptanceCases": 116,
+    "stages": 24,
+    "regressionGroups": 6,
+    "notReduced": true,
+    "baselineRegistryNotCurrentGrade": true
+  },
+  "productRepositoryWrites": false
+}

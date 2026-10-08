@@ -1,0 +1,3088 @@
+{
+  "project": {
+    "projectId": "6a280b2e-ed84-42e7-9eaa-d3e101608fcd",
+    "name": "独立 版境界",
+    "formatVersion": "1.0.0",
+    "revision": "2",
+    "calendarId": "proleptic-gregorian-second",
+    "mainStart": "0",
+    "calendars": [
+      {
+        "id": "proleptic-gregorian-second",
+        "name": "先発グレゴリオ暦",
+        "kind": "gregorian",
+        "originLabel": "0000-01-01 00:00:00",
+        "ticksPerDay": "86400"
+      }
+    ],
+    "worldReferences": [],
+    "entities": [
+      {
+        "id": "e531a74b-65bc-4245-b712-34f9335d6d0a",
+        "projectId": "6a280b2e-ed84-42e7-9eaa-d3e101608fcd",
+        "kind": "scene",
+        "revision": "0",
+        "name": "開始場面",
+        "status": "provisional",
+        "visibility": "private",
+        "createdAt": "2026-10-08T07:55:48.640Z",
+        "updatedAt": "2026-10-08T07:55:48.640Z",
+        "customValues": {},
+        "data": {
+          "summary": [],
+          "body": [
+            {
+              "id": "4357ddcf-f304-48a3-8894-fa2099f217dd",
+              "kind": "paragraph",
+              "text": "章の改訂"
+            }
+          ],
+          "authorNotes": [],
+          "eventIds": [],
+          "chapterId": "e39b4783-1df6-4afb-bff0-61ac553b2b69",
+          "threadIds": [],
+          "povId": null,
+          "goals": [],
+          "conflicts": [],
+          "results": [],
+          "newInformation": [],
+          "tension": null,
+          "importance": null,
+          "blockIds": []
+        }
+      },
+      {
+        "id": "6f6eb08b-9acd-470c-af19-64080b0a8b8e",
+        "projectId": "6a280b2e-ed84-42e7-9eaa-d3e101608fcd",
+        "kind": "variable",
+        "revision": "0",
+        "name": "金額",
+        "status": "provisional",
+        "visibility": "private",
+        "createdAt": "2026-10-08T07:55:48.640Z",
+        "updatedAt": "2026-10-08T07:55:48.640Z",
+        "customValues": {},
+        "data": {
+          "key": "money",
+          "valueType": "integer",
+          "scope": "across_runs",
+          "initial": {
+            "type": "integer",
+            "value": 2
+          },
+          "allowed": {
+            "min": 0,
+            "max": 100
+          },
+          "description": [],
+          "ownerId": null,
+          "externalContractId": null,
+          "resetRules": [],
+          "transitionRules": [],
+          "externalUseDeclared": false
+        }
+      },
+      {
+        "id": "8e19306e-dd8e-44c3-b203-22b33d5d089f",
+        "projectId": "6a280b2e-ed84-42e7-9eaa-d3e101608fcd",
+        "kind": "flow_node",
+        "revision": "0",
+        "name": "入口",
+        "status": "provisional",
+        "visibility": "private",
+        "createdAt": "2026-10-08T07:55:48.640Z",
+        "updatedAt": "2026-10-08T07:55:48.640Z",
+        "customValues": {},
+        "data": {
+          "nodeType": "entry",
+          "sceneId": "e531a74b-65bc-4245-b712-34f9335d6d0a",
+          "childGraphId": null,
+          "terminalReason": "",
+          "gate": {
+            "op": "constant",
+            "value": true
+          },
+          "executionPolicy": "manual_choice",
+          "fallbackId": null
+        }
+      },
+      {
+        "id": "2ec6399f-7818-46c4-a074-fb082aa00da4",
+        "projectId": "6a280b2e-ed84-42e7-9eaa-d3e101608fcd",
+        "kind": "flow_node",
+        "revision": "0",
+        "name": "終端",
+        "status": "provisional",
+        "visibility": "private",
+        "createdAt": "2026-10-08T07:55:48.640Z",
+        "updatedAt": "2026-10-08T07:55:48.640Z",
+        "customValues": {},
+        "data": {
+          "nodeType": "terminal",
+          "sceneId": null,
+          "childGraphId": null,
+          "terminalReason": "作者が定めた終わり",
+          "gate": {
+            "op": "constant",
+            "value": true
+          },
+          "executionPolicy": "manual_choice",
+          "fallbackId": null
+        }
+      },
+      {
+        "id": "9c377381-a6fb-479a-9dcd-eb7ec82abc84",
+        "projectId": "6a280b2e-ed84-42e7-9eaa-d3e101608fcd",
+        "kind": "effect",
+        "revision": "0",
+        "name": "金額+1",
+        "status": "provisional",
+        "visibility": "private",
+        "createdAt": "2026-10-08T07:55:48.640Z",
+        "updatedAt": "2026-10-08T07:55:48.640Z",
+        "customValues": {},
+        "data": {
+          "operation": "add",
+          "targetId": "6f6eb08b-9acd-470c-af19-64080b0a8b8e",
+          "value": {
+            "type": "integer",
+            "value": 1
+          },
+          "condition": {
+            "op": "constant",
+            "value": true
+          },
+          "instanceId": null,
+          "reason": ""
+        }
+      },
+      {
+        "id": "32869e5b-1a4c-4ed0-a342-ab16285259f6",
+        "projectId": "6a280b2e-ed84-42e7-9eaa-d3e101608fcd",
+        "kind": "flow_edge",
+        "revision": "0",
+        "name": "終端へ",
+        "status": "provisional",
+        "visibility": "private",
+        "createdAt": "2026-10-08T07:55:48.640Z",
+        "updatedAt": "2026-10-08T07:55:48.640Z",
+        "customValues": {},
+        "data": {
+          "fromId": "8e19306e-dd8e-44c3-b203-22b33d5d089f",
+          "toId": "2ec6399f-7818-46c4-a074-fb082aa00da4",
+          "edgeType": "choice",
+          "label": "",
+          "condition": {
+            "op": "constant",
+            "value": true
+          },
+          "effectIds": [
+            "9c377381-a6fb-479a-9dcd-eb7ec82abc84"
+          ],
+          "priority": 0,
+          "choiceLineId": null
+        }
+      },
+      {
+        "id": "ebf8595d-3628-46ed-82f6-1957bb13319f",
+        "projectId": "6a280b2e-ed84-42e7-9eaa-d3e101608fcd",
+        "kind": "flow_graph",
+        "revision": "0",
+        "name": "本編",
+        "status": "provisional",
+        "visibility": "private",
+        "createdAt": "2026-10-08T07:55:48.640Z",
+        "updatedAt": "2026-10-08T07:55:48.640Z",
+        "customValues": {},
+        "data": {
+          "nodeIds": [
+            "8e19306e-dd8e-44c3-b203-22b33d5d089f",
+            "2ec6399f-7818-46c4-a074-fb082aa00da4"
+          ],
+          "edgeIds": [
+            "32869e5b-1a4c-4ed0-a342-ab16285259f6"
+          ],
+          "entryIds": [
+            "8e19306e-dd8e-44c3-b203-22b33d5d089f"
+          ],
+          "exitIds": [
+            "2ec6399f-7818-46c4-a074-fb082aa00da4"
+          ],
+          "parentGraphId": null,
+          "parameters": []
+        }
+      },
+      {
+        "id": "4fcdfd91-da06-44ad-8204-4f8035923a8b",
+        "projectId": "6a280b2e-ed84-42e7-9eaa-d3e101608fcd",
+        "kind": "scene",
+        "revision": "0",
+        "name": "第二場面",
+        "status": "provisional",
+        "visibility": "private",
+        "createdAt": "2026-10-08T07:55:48.640Z",
+        "updatedAt": "2026-10-08T07:55:48.640Z",
+        "customValues": {},
+        "data": {
+          "summary": [],
+          "body": [],
+          "authorNotes": [],
+          "eventIds": [],
+          "chapterId": "e39b4783-1df6-4afb-bff0-61ac553b2b69",
+          "threadIds": [],
+          "povId": null,
+          "goals": [],
+          "conflicts": [],
+          "results": [],
+          "newInformation": [],
+          "tension": null,
+          "importance": null,
+          "blockIds": []
+        }
+      },
+      {
+        "id": "eb9ab0d5-1736-49fe-80cb-44e00ee0c30d",
+        "projectId": "6a280b2e-ed84-42e7-9eaa-d3e101608fcd",
+        "kind": "scene",
+        "revision": "0",
+        "name": "選択していない第三場面",
+        "status": "provisional",
+        "visibility": "private",
+        "createdAt": "2026-10-08T07:55:48.640Z",
+        "updatedAt": "2026-10-08T07:55:48.640Z",
+        "customValues": {},
+        "data": {
+          "summary": [],
+          "body": [],
+          "authorNotes": [],
+          "eventIds": [],
+          "chapterId": "e39b4783-1df6-4afb-bff0-61ac553b2b69",
+          "threadIds": [],
+          "povId": null,
+          "goals": [],
+          "conflicts": [],
+          "results": [],
+          "newInformation": [],
+          "tension": null,
+          "importance": null,
+          "blockIds": []
+        }
+      },
+      {
+        "id": "e39b4783-1df6-4afb-bff0-61ac553b2b69",
+        "projectId": "6a280b2e-ed84-42e7-9eaa-d3e101608fcd",
+        "kind": "chapter",
+        "revision": "0",
+        "name": "章",
+        "status": "provisional",
+        "visibility": "private",
+        "createdAt": "2026-10-08T07:55:48.640Z",
+        "updatedAt": "2026-10-08T07:55:48.640Z",
+        "customValues": {},
+        "data": {
+          "sceneIds": [
+            "e531a74b-65bc-4245-b712-34f9335d6d0a",
+            "4fcdfd91-da06-44ad-8204-4f8035923a8b",
+            "eb9ab0d5-1736-49fe-80cb-44e00ee0c30d"
+          ],
+          "summary": [],
+          "authorNotes": [],
+          "structureRole": ""
+        }
+      },
+      {
+        "id": "1db1db62-1ea3-4c9f-9ec0-95d79c4f814b",
+        "projectId": "6a280b2e-ed84-42e7-9eaa-d3e101608fcd",
+        "kind": "checkpoint",
+        "revision": "0",
+        "name": "旧章開始",
+        "status": "provisional",
+        "visibility": "private",
+        "createdAt": "2026-10-08T07:55:48.643Z",
+        "updatedAt": "2026-10-08T07:55:48.643Z",
+        "customValues": {},
+        "data": {
+          "contentVersionId": "40abe6c8-810f-409f-9d8f-5396ab9dc6de",
+          "runtimeState": {
+            "contentVersionId": "40abe6c8-810f-409f-9d8f-5396ab9dc6de",
+            "variableValues": {
+              "6f6eb08b-9acd-470c-af19-64080b0a8b8e": {
+                "type": "integer",
+                "value": 2
+              }
+            },
+            "itemInstances": [],
+            "assertions": [],
+            "seenIds": [],
+            "visitCounts": {},
+            "onceTriggers": [],
+            "rngSeed": "scenario-1",
+            "rngPosition": 0,
+            "callStack": [],
+            "presentationPosition": null,
+            "loopNumber": 0,
+            "provenance": "partial"
+          },
+          "origin": "partial",
+          "traceId": null,
+          "contentRevision": "0"
+        }
+      },
+      {
+        "id": "f57996e8-0ceb-4937-9c13-5af82d8af31c",
+        "projectId": "6a280b2e-ed84-42e7-9eaa-d3e101608fcd",
+        "kind": "trace",
+        "revision": "0",
+        "name": "二場面だけの順序",
+        "status": "provisional",
+        "visibility": "private",
+        "createdAt": "2026-10-08T07:55:48.643Z",
+        "updatedAt": "2026-10-08T07:55:48.643Z",
+        "customValues": {},
+        "data": {
+          "contentVersionId": "40abe6c8-810f-409f-9d8f-5396ab9dc6de",
+          "startCheckpointId": "1db1db62-1ea3-4c9f-9ec0-95d79c4f814b",
+          "steps": [],
+          "seed": "scenario-1",
+          "engineVersion": "1.0.0",
+          "externalMode": null,
+          "contentRevision": "0",
+          "initialExternalValues": {},
+          "mode": "chapters",
+          "readingPath": {
+            "chapterIds": [
+              "e39b4783-1df6-4afb-bff0-61ac553b2b69"
+            ],
+            "sceneIds": [
+              "4fcdfd91-da06-44ad-8204-4f8035923a8b",
+              "e531a74b-65bc-4245-b712-34f9335d6d0a"
+            ],
+            "occurrences": [
+              {
+                "entityId": "4fcdfd91-da06-44ad-8204-4f8035923a8b",
+                "occurrenceId": "4fcdfd91-da06-44ad-8204-4f8035923a8b:1",
+                "before": {
+                  "contentVersionId": "40abe6c8-810f-409f-9d8f-5396ab9dc6de",
+                  "variableValues": {
+                    "6f6eb08b-9acd-470c-af19-64080b0a8b8e": {
+                      "type": "integer",
+                      "value": 2
+                    }
+                  },
+                  "itemInstances": [],
+                  "assertions": [],
+                  "seenIds": [],
+                  "visitCounts": {},
+                  "onceTriggers": [],
+                  "rngSeed": "scenario-1",
+                  "rngPosition": 0,
+                  "callStack": [],
+                  "presentationPosition": null,
+                  "loopNumber": 0,
+                  "provenance": "partial"
+                },
+                "after": {
+                  "contentVersionId": "40abe6c8-810f-409f-9d8f-5396ab9dc6de",
+                  "variableValues": {
+                    "6f6eb08b-9acd-470c-af19-64080b0a8b8e": {
+                      "type": "integer",
+                      "value": 2
+                    }
+                  },
+                  "itemInstances": [],
+                  "assertions": [],
+                  "seenIds": [
+                    "4fcdfd91-da06-44ad-8204-4f8035923a8b"
+                  ],
+                  "visitCounts": {
+                    "4fcdfd91-da06-44ad-8204-4f8035923a8b": 1
+                  },
+                  "onceTriggers": [],
+                  "rngSeed": "scenario-1",
+                  "rngPosition": 0,
+                  "callStack": [],
+                  "presentationPosition": null,
+                  "loopNumber": 0,
+                  "provenance": "partial"
+                },
+                "presentationState": {
+                  "contentVersionId": "40abe6c8-810f-409f-9d8f-5396ab9dc6de",
+                  "variableValues": {
+                    "6f6eb08b-9acd-470c-af19-64080b0a8b8e": {
+                      "type": "integer",
+                      "value": 2
+                    }
+                  },
+                  "itemInstances": [],
+                  "assertions": [],
+                  "seenIds": [
+                    "4fcdfd91-da06-44ad-8204-4f8035923a8b"
+                  ],
+                  "visitCounts": {
+                    "4fcdfd91-da06-44ad-8204-4f8035923a8b": 1
+                  },
+                  "onceTriggers": [],
+                  "rngSeed": "scenario-1",
+                  "rngPosition": 0,
+                  "callStack": [],
+                  "presentationPosition": null,
+                  "loopNumber": 0,
+                  "provenance": "partial"
+                },
+                "conditionResults": [],
+                "externalValues": {}
+              },
+              {
+                "entityId": "e531a74b-65bc-4245-b712-34f9335d6d0a",
+                "occurrenceId": "e531a74b-65bc-4245-b712-34f9335d6d0a:2",
+                "before": {
+                  "contentVersionId": "40abe6c8-810f-409f-9d8f-5396ab9dc6de",
+                  "variableValues": {
+                    "6f6eb08b-9acd-470c-af19-64080b0a8b8e": {
+                      "type": "integer",
+                      "value": 2
+                    }
+                  },
+                  "itemInstances": [],
+                  "assertions": [],
+                  "seenIds": [
+                    "4fcdfd91-da06-44ad-8204-4f8035923a8b"
+                  ],
+                  "visitCounts": {
+                    "4fcdfd91-da06-44ad-8204-4f8035923a8b": 1
+                  },
+                  "onceTriggers": [],
+                  "rngSeed": "scenario-1",
+                  "rngPosition": 0,
+                  "callStack": [],
+                  "presentationPosition": null,
+                  "loopNumber": 0,
+                  "provenance": "partial"
+                },
+                "after": {
+                  "contentVersionId": "40abe6c8-810f-409f-9d8f-5396ab9dc6de",
+                  "variableValues": {
+                    "6f6eb08b-9acd-470c-af19-64080b0a8b8e": {
+                      "type": "integer",
+                      "value": 2
+                    }
+                  },
+                  "itemInstances": [],
+                  "assertions": [],
+                  "seenIds": [
+                    "4fcdfd91-da06-44ad-8204-4f8035923a8b",
+                    "e531a74b-65bc-4245-b712-34f9335d6d0a",
+                    "4357ddcf-f304-48a3-8894-fa2099f217dd"
+                  ],
+                  "visitCounts": {
+                    "4fcdfd91-da06-44ad-8204-4f8035923a8b": 1,
+                    "e531a74b-65bc-4245-b712-34f9335d6d0a": 1
+                  },
+                  "onceTriggers": [],
+                  "rngSeed": "scenario-1",
+                  "rngPosition": 0,
+                  "callStack": [],
+                  "presentationPosition": null,
+                  "loopNumber": 0,
+                  "provenance": "partial"
+                },
+                "presentationState": {
+                  "contentVersionId": "40abe6c8-810f-409f-9d8f-5396ab9dc6de",
+                  "variableValues": {
+                    "6f6eb08b-9acd-470c-af19-64080b0a8b8e": {
+                      "type": "integer",
+                      "value": 2
+                    }
+                  },
+                  "itemInstances": [],
+                  "assertions": [],
+                  "seenIds": [
+                    "4fcdfd91-da06-44ad-8204-4f8035923a8b",
+                    "e531a74b-65bc-4245-b712-34f9335d6d0a",
+                    "4357ddcf-f304-48a3-8894-fa2099f217dd"
+                  ],
+                  "visitCounts": {
+                    "4fcdfd91-da06-44ad-8204-4f8035923a8b": 1,
+                    "e531a74b-65bc-4245-b712-34f9335d6d0a": 1
+                  },
+                  "onceTriggers": [],
+                  "rngSeed": "scenario-1",
+                  "rngPosition": 0,
+                  "callStack": [],
+                  "presentationPosition": null,
+                  "loopNumber": 0,
+                  "provenance": "partial"
+                },
+                "conditionResults": [],
+                "externalValues": {}
+              }
+            ]
+          },
+          "coverage": {
+            "scenes": {
+              "checked": 2,
+              "total": 3
+            },
+            "dialogue": {
+              "checked": 0,
+              "total": 0
+            },
+            "choices": {
+              "checked": 0,
+              "total": 0
+            },
+            "conditionTrue": {
+              "checked": 0,
+              "total": 0
+            },
+            "conditionFalse": {
+              "checked": 0,
+              "total": 0
+            },
+            "declaredTests": {
+              "checked": 0,
+              "total": 0,
+              "unknown": 0,
+              "byProvenance": {
+                "full_play": {
+                  "checked": 0,
+                  "total": 0
+                },
+                "partial": {
+                  "checked": 0,
+                  "total": 0
+                },
+                "imported": {
+                  "checked": 0,
+                  "total": 0
+                },
+                "stub": {
+                  "checked": 0,
+                  "total": 0
+                }
+              },
+              "byExternalMode": {
+                "internal": {
+                  "checked": 0,
+                  "total": 0
+                },
+                "stub": {
+                  "checked": 0,
+                  "total": 0
+                },
+                "actual": {
+                  "checked": 0,
+                  "total": 0
+                },
+                "mixed": {
+                  "checked": 0,
+                  "total": 0
+                }
+              }
+            }
+          }
+        }
+      }
+    ],
+    "relations": [],
+    "snapshots": [
+      {
+        "id": "40abe6c8-810f-409f-9d8f-5396ab9dc6de",
+        "content": {
+          "projectId": "6a280b2e-ed84-42e7-9eaa-d3e101608fcd",
+          "name": "独立 版境界",
+          "formatVersion": "1.0.0",
+          "revision": "0",
+          "calendarId": "proleptic-gregorian-second",
+          "mainStart": "0",
+          "calendars": [
+            {
+              "id": "proleptic-gregorian-second",
+              "name": "先発グレゴリオ暦",
+              "kind": "gregorian",
+              "originLabel": "0000-01-01 00:00:00",
+              "ticksPerDay": "86400"
+            }
+          ],
+          "worldReferences": [],
+          "entities": [
+            {
+              "id": "e531a74b-65bc-4245-b712-34f9335d6d0a",
+              "projectId": "6a280b2e-ed84-42e7-9eaa-d3e101608fcd",
+              "kind": "scene",
+              "revision": "0",
+              "name": "開始場面",
+              "status": "provisional",
+              "visibility": "private",
+              "createdAt": "2026-10-08T07:55:48.640Z",
+              "updatedAt": "2026-10-08T07:55:48.640Z",
+              "customValues": {},
+              "data": {
+                "summary": [],
+                "body": [
+                  {
+                    "id": "4357ddcf-f304-48a3-8894-fa2099f217dd",
+                    "kind": "paragraph",
+                    "text": "😀世界の旧稿。"
+                  }
+                ],
+                "authorNotes": [],
+                "eventIds": [],
+                "chapterId": "e39b4783-1df6-4afb-bff0-61ac553b2b69",
+                "threadIds": [],
+                "povId": null,
+                "goals": [],
+                "conflicts": [],
+                "results": [],
+                "newInformation": [],
+                "tension": null,
+                "importance": null,
+                "blockIds": []
+              }
+            },
+            {
+              "id": "6f6eb08b-9acd-470c-af19-64080b0a8b8e",
+              "projectId": "6a280b2e-ed84-42e7-9eaa-d3e101608fcd",
+              "kind": "variable",
+              "revision": "0",
+              "name": "金額",
+              "status": "provisional",
+              "visibility": "private",
+              "createdAt": "2026-10-08T07:55:48.640Z",
+              "updatedAt": "2026-10-08T07:55:48.640Z",
+              "customValues": {},
+              "data": {
+                "key": "money",
+                "valueType": "integer",
+                "scope": "across_runs",
+                "initial": {
+                  "type": "integer",
+                  "value": 2
+                },
+                "allowed": {
+                  "min": 0,
+                  "max": 100
+                },
+                "description": [],
+                "ownerId": null,
+                "externalContractId": null,
+                "resetRules": [],
+                "transitionRules": [],
+                "externalUseDeclared": false
+              }
+            },
+            {
+              "id": "8e19306e-dd8e-44c3-b203-22b33d5d089f",
+              "projectId": "6a280b2e-ed84-42e7-9eaa-d3e101608fcd",
+              "kind": "flow_node",
+              "revision": "0",
+              "name": "入口",
+              "status": "provisional",
+              "visibility": "private",
+              "createdAt": "2026-10-08T07:55:48.640Z",
+              "updatedAt": "2026-10-08T07:55:48.640Z",
+              "customValues": {},
+              "data": {
+                "nodeType": "entry",
+                "sceneId": "e531a74b-65bc-4245-b712-34f9335d6d0a",
+                "childGraphId": null,
+                "terminalReason": "",
+                "gate": {
+                  "op": "constant",
+                  "value": true
+                },
+                "executionPolicy": "manual_choice",
+                "fallbackId": null
+              }
+            },
+            {
+              "id": "2ec6399f-7818-46c4-a074-fb082aa00da4",
+              "projectId": "6a280b2e-ed84-42e7-9eaa-d3e101608fcd",
+              "kind": "flow_node",
+              "revision": "0",
+              "name": "終端",
+              "status": "provisional",
+              "visibility": "private",
+              "createdAt": "2026-10-08T07:55:48.640Z",
+              "updatedAt": "2026-10-08T07:55:48.640Z",
+              "customValues": {},
+              "data": {
+                "nodeType": "terminal",
+                "sceneId": null,
+                "childGraphId": null,
+                "terminalReason": "作者が定めた終わり",
+                "gate": {
+                  "op": "constant",
+                  "value": true
+                },
+                "executionPolicy": "manual_choice",
+                "fallbackId": null
+              }
+            },
+            {
+              "id": "9c377381-a6fb-479a-9dcd-eb7ec82abc84",
+              "projectId": "6a280b2e-ed84-42e7-9eaa-d3e101608fcd",
+              "kind": "effect",
+              "revision": "0",
+              "name": "金額+1",
+              "status": "provisional",
+              "visibility": "private",
+              "createdAt": "2026-10-08T07:55:48.640Z",
+              "updatedAt": "2026-10-08T07:55:48.640Z",
+              "customValues": {},
+              "data": {
+                "operation": "add",
+                "targetId": "6f6eb08b-9acd-470c-af19-64080b0a8b8e",
+                "value": {
+                  "type": "integer",
+                  "value": 1
+                },
+                "condition": {
+                  "op": "constant",
+                  "value": true
+                },
+                "instanceId": null,
+                "reason": ""
+              }
+            },
+            {
+              "id": "32869e5b-1a4c-4ed0-a342-ab16285259f6",
+              "projectId": "6a280b2e-ed84-42e7-9eaa-d3e101608fcd",
+              "kind": "flow_edge",
+              "revision": "0",
+              "name": "終端へ",
+              "status": "provisional",
+              "visibility": "private",
+              "createdAt": "2026-10-08T07:55:48.640Z",
+              "updatedAt": "2026-10-08T07:55:48.640Z",
+              "customValues": {},
+              "data": {
+                "fromId": "8e19306e-dd8e-44c3-b203-22b33d5d089f",
+                "toId": "2ec6399f-7818-46c4-a074-fb082aa00da4",
+                "edgeType": "choice",
+                "label": "",
+                "condition": {
+                  "op": "constant",
+                  "value": true
+                },
+                "effectIds": [
+                  "9c377381-a6fb-479a-9dcd-eb7ec82abc84"
+                ],
+                "priority": 0,
+                "choiceLineId": null
+              }
+            },
+            {
+              "id": "ebf8595d-3628-46ed-82f6-1957bb13319f",
+              "projectId": "6a280b2e-ed84-42e7-9eaa-d3e101608fcd",
+              "kind": "flow_graph",
+              "revision": "0",
+              "name": "本編",
+              "status": "provisional",
+              "visibility": "private",
+              "createdAt": "2026-10-08T07:55:48.640Z",
+              "updatedAt": "2026-10-08T07:55:48.640Z",
+              "customValues": {},
+              "data": {
+                "nodeIds": [
+                  "8e19306e-dd8e-44c3-b203-22b33d5d089f",
+                  "2ec6399f-7818-46c4-a074-fb082aa00da4"
+                ],
+                "edgeIds": [
+                  "32869e5b-1a4c-4ed0-a342-ab16285259f6"
+                ],
+                "entryIds": [
+                  "8e19306e-dd8e-44c3-b203-22b33d5d089f"
+                ],
+                "exitIds": [
+                  "2ec6399f-7818-46c4-a074-fb082aa00da4"
+                ],
+                "parentGraphId": null,
+                "parameters": []
+              }
+            },
+            {
+              "id": "4fcdfd91-da06-44ad-8204-4f8035923a8b",
+              "projectId": "6a280b2e-ed84-42e7-9eaa-d3e101608fcd",
+              "kind": "scene",
+              "revision": "0",
+              "name": "第二場面",
+              "status": "provisional",
+              "visibility": "private",
+              "createdAt": "2026-10-08T07:55:48.640Z",
+              "updatedAt": "2026-10-08T07:55:48.640Z",
+              "customValues": {},
+              "data": {
+                "summary": [],
+                "body": [],
+                "authorNotes": [],
+                "eventIds": [],
+                "chapterId": "e39b4783-1df6-4afb-bff0-61ac553b2b69",
+                "threadIds": [],
+                "povId": null,
+                "goals": [],
+                "conflicts": [],
+                "results": [],
+                "newInformation": [],
+                "tension": null,
+                "importance": null,
+                "blockIds": []
+              }
+            },
+            {
+              "id": "eb9ab0d5-1736-49fe-80cb-44e00ee0c30d",
+              "projectId": "6a280b2e-ed84-42e7-9eaa-d3e101608fcd",
+              "kind": "scene",
+              "revision": "0",
+              "name": "選択していない第三場面",
+              "status": "provisional",
+              "visibility": "private",
+              "createdAt": "2026-10-08T07:55:48.640Z",
+              "updatedAt": "2026-10-08T07:55:48.640Z",
+              "customValues": {},
+              "data": {
+                "summary": [],
+                "body": [],
+                "authorNotes": [],
+                "eventIds": [],
+                "chapterId": "e39b4783-1df6-4afb-bff0-61ac553b2b69",
+                "threadIds": [],
+                "povId": null,
+                "goals": [],
+                "conflicts": [],
+                "results": [],
+                "newInformation": [],
+                "tension": null,
+                "importance": null,
+                "blockIds": []
+              }
+            },
+            {
+              "id": "e39b4783-1df6-4afb-bff0-61ac553b2b69",
+              "projectId": "6a280b2e-ed84-42e7-9eaa-d3e101608fcd",
+              "kind": "chapter",
+              "revision": "0",
+              "name": "章",
+              "status": "provisional",
+              "visibility": "private",
+              "createdAt": "2026-10-08T07:55:48.640Z",
+              "updatedAt": "2026-10-08T07:55:48.640Z",
+              "customValues": {},
+              "data": {
+                "sceneIds": [
+                  "e531a74b-65bc-4245-b712-34f9335d6d0a",
+                  "4fcdfd91-da06-44ad-8204-4f8035923a8b",
+                  "eb9ab0d5-1736-49fe-80cb-44e00ee0c30d"
+                ],
+                "summary": [],
+                "authorNotes": [],
+                "structureRole": ""
+              }
+            }
+          ],
+          "relations": [],
+          "views": []
+        },
+        "contentHash": "392cdbc655b2757434873be48555600b211c3c980759d9f972618a1abb05a674",
+        "createdAt": "2026-10-08T07:00:00Z",
+        "versionLabel": "選択経路"
+      }
+    ],
+    "history": [],
+    "views": []
+  },
+  "validation": {
+    "ok": true,
+    "value": {
+      "projectId": "6a280b2e-ed84-42e7-9eaa-d3e101608fcd",
+      "name": "独立 版境界",
+      "formatVersion": "1.0.0",
+      "revision": "2",
+      "calendarId": "proleptic-gregorian-second",
+      "mainStart": "0",
+      "calendars": [
+        {
+          "id": "proleptic-gregorian-second",
+          "name": "先発グレゴリオ暦",
+          "kind": "gregorian",
+          "originLabel": "0000-01-01 00:00:00",
+          "ticksPerDay": "86400"
+        }
+      ],
+      "worldReferences": [],
+      "entities": [
+        {
+          "id": "e531a74b-65bc-4245-b712-34f9335d6d0a",
+          "projectId": "6a280b2e-ed84-42e7-9eaa-d3e101608fcd",
+          "kind": "scene",
+          "revision": "0",
+          "name": "開始場面",
+          "status": "provisional",
+          "visibility": "private",
+          "createdAt": "2026-10-08T07:55:48.640Z",
+          "updatedAt": "2026-10-08T07:55:48.640Z",
+          "customValues": {},
+          "data": {
+            "summary": [],
+            "body": [
+              {
+                "id": "4357ddcf-f304-48a3-8894-fa2099f217dd",
+                "kind": "paragraph",
+                "text": "章の改訂"
+              }
+            ],
+            "authorNotes": [],
+            "eventIds": [],
+            "chapterId": "e39b4783-1df6-4afb-bff0-61ac553b2b69",
+            "threadIds": [],
+            "povId": null,
+            "goals": [],
+            "conflicts": [],
+            "results": [],
+            "newInformation": [],
+            "tension": null,
+            "importance": null,
+            "blockIds": []
+          }
+        },
+        {
+          "id": "6f6eb08b-9acd-470c-af19-64080b0a8b8e",
+          "projectId": "6a280b2e-ed84-42e7-9eaa-d3e101608fcd",
+          "kind": "variable",
+          "revision": "0",
+          "name": "金額",
+          "status": "provisional",
+          "visibility": "private",
+          "createdAt": "2026-10-08T07:55:48.640Z",
+          "updatedAt": "2026-10-08T07:55:48.640Z",
+          "customValues": {},
+          "data": {
+            "key": "money",
+            "valueType": "integer",
+            "scope": "across_runs",
+            "initial": {
+              "type": "integer",
+              "value": 2
+            },
+            "allowed": {
+              "min": 0,
+              "max": 100
+            },
+            "description": [],
+            "ownerId": null,
+            "externalContractId": null,
+            "resetRules": [],
+            "transitionRules": [],
+            "externalUseDeclared": false
+          }
+        },
+        {
+          "id": "8e19306e-dd8e-44c3-b203-22b33d5d089f",
+          "projectId": "6a280b2e-ed84-42e7-9eaa-d3e101608fcd",
+          "kind": "flow_node",
+          "revision": "0",
+          "name": "入口",
+          "status": "provisional",
+          "visibility": "private",
+          "createdAt": "2026-10-08T07:55:48.640Z",
+          "updatedAt": "2026-10-08T07:55:48.640Z",
+          "customValues": {},
+          "data": {
+            "nodeType": "entry",
+            "sceneId": "e531a74b-65bc-4245-b712-34f9335d6d0a",
+            "childGraphId": null,
+            "terminalReason": "",
+            "gate": {
+              "op": "constant",
+              "value": true
+            },
+            "executionPolicy": "manual_choice",
+            "fallbackId": null
+          }
+        },
+        {
+          "id": "2ec6399f-7818-46c4-a074-fb082aa00da4",
+          "projectId": "6a280b2e-ed84-42e7-9eaa-d3e101608fcd",
+          "kind": "flow_node",
+          "revision": "0",
+          "name": "終端",
+          "status": "provisional",
+          "visibility": "private",
+          "createdAt": "2026-10-08T07:55:48.640Z",
+          "updatedAt": "2026-10-08T07:55:48.640Z",
+          "customValues": {},
+          "data": {
+            "nodeType": "terminal",
+            "sceneId": null,
+            "childGraphId": null,
+            "terminalReason": "作者が定めた終わり",
+            "gate": {
+              "op": "constant",
+              "value": true
+            },
+            "executionPolicy": "manual_choice",
+            "fallbackId": null
+          }
+        },
+        {
+          "id": "9c377381-a6fb-479a-9dcd-eb7ec82abc84",
+          "projectId": "6a280b2e-ed84-42e7-9eaa-d3e101608fcd",
+          "kind": "effect",
+          "revision": "0",
+          "name": "金額+1",
+          "status": "provisional",
+          "visibility": "private",
+          "createdAt": "2026-10-08T07:55:48.640Z",
+          "updatedAt": "2026-10-08T07:55:48.640Z",
+          "customValues": {},
+          "data": {
+            "operation": "add",
+            "targetId": "6f6eb08b-9acd-470c-af19-64080b0a8b8e",
+            "value": {
+              "type": "integer",
+              "value": 1
+            },
+            "condition": {
+              "op": "constant",
+              "value": true
+            },
+            "instanceId": null,
+            "reason": ""
+          }
+        },
+        {
+          "id": "32869e5b-1a4c-4ed0-a342-ab16285259f6",
+          "projectId": "6a280b2e-ed84-42e7-9eaa-d3e101608fcd",
+          "kind": "flow_edge",
+          "revision": "0",
+          "name": "終端へ",
+          "status": "provisional",
+          "visibility": "private",
+          "createdAt": "2026-10-08T07:55:48.640Z",
+          "updatedAt": "2026-10-08T07:55:48.640Z",
+          "customValues": {},
+          "data": {
+            "fromId": "8e19306e-dd8e-44c3-b203-22b33d5d089f",
+            "toId": "2ec6399f-7818-46c4-a074-fb082aa00da4",
+            "edgeType": "choice",
+            "label": "",
+            "condition": {
+              "op": "constant",
+              "value": true
+            },
+            "effectIds": [
+              "9c377381-a6fb-479a-9dcd-eb7ec82abc84"
+            ],
+            "priority": 0,
+            "choiceLineId": null
+          }
+        },
+        {
+          "id": "ebf8595d-3628-46ed-82f6-1957bb13319f",
+          "projectId": "6a280b2e-ed84-42e7-9eaa-d3e101608fcd",
+          "kind": "flow_graph",
+          "revision": "0",
+          "name": "本編",
+          "status": "provisional",
+          "visibility": "private",
+          "createdAt": "2026-10-08T07:55:48.640Z",
+          "updatedAt": "2026-10-08T07:55:48.640Z",
+          "customValues": {},
+          "data": {
+            "nodeIds": [
+              "8e19306e-dd8e-44c3-b203-22b33d5d089f",
+              "2ec6399f-7818-46c4-a074-fb082aa00da4"
+            ],
+            "edgeIds": [
+              "32869e5b-1a4c-4ed0-a342-ab16285259f6"
+            ],
+            "entryIds": [
+              "8e19306e-dd8e-44c3-b203-22b33d5d089f"
+            ],
+            "exitIds": [
+              "2ec6399f-7818-46c4-a074-fb082aa00da4"
+            ],
+            "parentGraphId": null,
+            "parameters": []
+          }
+        },
+        {
+          "id": "4fcdfd91-da06-44ad-8204-4f8035923a8b",
+          "projectId": "6a280b2e-ed84-42e7-9eaa-d3e101608fcd",
+          "kind": "scene",
+          "revision": "0",
+          "name": "第二場面",
+          "status": "provisional",
+          "visibility": "private",
+          "createdAt": "2026-10-08T07:55:48.640Z",
+          "updatedAt": "2026-10-08T07:55:48.640Z",
+          "customValues": {},
+          "data": {
+            "summary": [],
+            "body": [],
+            "authorNotes": [],
+            "eventIds": [],
+            "chapterId": "e39b4783-1df6-4afb-bff0-61ac553b2b69",
+            "threadIds": [],
+            "povId": null,
+            "goals": [],
+            "conflicts": [],
+            "results": [],
+            "newInformation": [],
+            "tension": null,
+            "importance": null,
+            "blockIds": []
+          }
+        },
+        {
+          "id": "eb9ab0d5-1736-49fe-80cb-44e00ee0c30d",
+          "projectId": "6a280b2e-ed84-42e7-9eaa-d3e101608fcd",
+          "kind": "scene",
+          "revision": "0",
+          "name": "選択していない第三場面",
+          "status": "provisional",
+          "visibility": "private",
+          "createdAt": "2026-10-08T07:55:48.640Z",
+          "updatedAt": "2026-10-08T07:55:48.640Z",
+          "customValues": {},
+          "data": {
+            "summary": [],
+            "body": [],
+            "authorNotes": [],
+            "eventIds": [],
+            "chapterId": "e39b4783-1df6-4afb-bff0-61ac553b2b69",
+            "threadIds": [],
+            "povId": null,
+            "goals": [],
+            "conflicts": [],
+            "results": [],
+            "newInformation": [],
+            "tension": null,
+            "importance": null,
+            "blockIds": []
+          }
+        },
+        {
+          "id": "e39b4783-1df6-4afb-bff0-61ac553b2b69",
+          "projectId": "6a280b2e-ed84-42e7-9eaa-d3e101608fcd",
+          "kind": "chapter",
+          "revision": "0",
+          "name": "章",
+          "status": "provisional",
+          "visibility": "private",
+          "createdAt": "2026-10-08T07:55:48.640Z",
+          "updatedAt": "2026-10-08T07:55:48.640Z",
+          "customValues": {},
+          "data": {
+            "sceneIds": [
+              "e531a74b-65bc-4245-b712-34f9335d6d0a",
+              "4fcdfd91-da06-44ad-8204-4f8035923a8b",
+              "eb9ab0d5-1736-49fe-80cb-44e00ee0c30d"
+            ],
+            "summary": [],
+            "authorNotes": [],
+            "structureRole": ""
+          }
+        },
+        {
+          "id": "1db1db62-1ea3-4c9f-9ec0-95d79c4f814b",
+          "projectId": "6a280b2e-ed84-42e7-9eaa-d3e101608fcd",
+          "kind": "checkpoint",
+          "revision": "0",
+          "name": "旧章開始",
+          "status": "provisional",
+          "visibility": "private",
+          "createdAt": "2026-10-08T07:55:48.643Z",
+          "updatedAt": "2026-10-08T07:55:48.643Z",
+          "customValues": {},
+          "data": {
+            "contentVersionId": "40abe6c8-810f-409f-9d8f-5396ab9dc6de",
+            "runtimeState": {
+              "contentVersionId": "40abe6c8-810f-409f-9d8f-5396ab9dc6de",
+              "variableValues": {
+                "6f6eb08b-9acd-470c-af19-64080b0a8b8e": {
+                  "type": "integer",
+                  "value": 2
+                }
+              },
+              "itemInstances": [],
+              "assertions": [],
+              "seenIds": [],
+              "visitCounts": {},
+              "onceTriggers": [],
+              "rngSeed": "scenario-1",
+              "rngPosition": 0,
+              "callStack": [],
+              "presentationPosition": null,
+              "loopNumber": 0,
+              "provenance": "partial"
+            },
+            "origin": "partial",
+            "traceId": null,
+            "contentRevision": "0"
+          }
+        },
+        {
+          "id": "f57996e8-0ceb-4937-9c13-5af82d8af31c",
+          "projectId": "6a280b2e-ed84-42e7-9eaa-d3e101608fcd",
+          "kind": "trace",
+          "revision": "0",
+          "name": "二場面だけの順序",
+          "status": "provisional",
+          "visibility": "private",
+          "createdAt": "2026-10-08T07:55:48.643Z",
+          "updatedAt": "2026-10-08T07:55:48.643Z",
+          "customValues": {},
+          "data": {
+            "contentVersionId": "40abe6c8-810f-409f-9d8f-5396ab9dc6de",
+            "startCheckpointId": "1db1db62-1ea3-4c9f-9ec0-95d79c4f814b",
+            "steps": [],
+            "seed": "scenario-1",
+            "engineVersion": "1.0.0",
+            "externalMode": null,
+            "contentRevision": "0",
+            "initialExternalValues": {},
+            "mode": "chapters",
+            "readingPath": {
+              "chapterIds": [
+                "e39b4783-1df6-4afb-bff0-61ac553b2b69"
+              ],
+              "sceneIds": [
+                "4fcdfd91-da06-44ad-8204-4f8035923a8b",
+                "e531a74b-65bc-4245-b712-34f9335d6d0a"
+              ],
+              "occurrences": [
+                {
+                  "entityId": "4fcdfd91-da06-44ad-8204-4f8035923a8b",
+                  "occurrenceId": "4fcdfd91-da06-44ad-8204-4f8035923a8b:1",
+                  "before": {
+                    "contentVersionId": "40abe6c8-810f-409f-9d8f-5396ab9dc6de",
+                    "variableValues": {
+                      "6f6eb08b-9acd-470c-af19-64080b0a8b8e": {
+                        "type": "integer",
+                        "value": 2
+                      }
+                    },
+                    "itemInstances": [],
+                    "assertions": [],
+                    "seenIds": [],
+                    "visitCounts": {},
+                    "onceTriggers": [],
+                    "rngSeed": "scenario-1",
+                    "rngPosition": 0,
+                    "callStack": [],
+                    "presentationPosition": null,
+                    "loopNumber": 0,
+                    "provenance": "partial"
+                  },
+                  "after": {
+                    "contentVersionId": "40abe6c8-810f-409f-9d8f-5396ab9dc6de",
+                    "variableValues": {
+                      "6f6eb08b-9acd-470c-af19-64080b0a8b8e": {
+                        "type": "integer",
+                        "value": 2
+                      }
+                    },
+                    "itemInstances": [],
+                    "assertions": [],
+                    "seenIds": [
+                      "4fcdfd91-da06-44ad-8204-4f8035923a8b"
+                    ],
+                    "visitCounts": {
+                      "4fcdfd91-da06-44ad-8204-4f8035923a8b": 1
+                    },
+                    "onceTriggers": [],
+                    "rngSeed": "scenario-1",
+                    "rngPosition": 0,
+                    "callStack": [],
+                    "presentationPosition": null,
+                    "loopNumber": 0,
+                    "provenance": "partial"
+                  },
+                  "presentationState": {
+                    "contentVersionId": "40abe6c8-810f-409f-9d8f-5396ab9dc6de",
+                    "variableValues": {
+                      "6f6eb08b-9acd-470c-af19-64080b0a8b8e": {
+                        "type": "integer",
+                        "value": 2
+                      }
+                    },
+                    "itemInstances": [],
+                    "assertions": [],
+                    "seenIds": [
+                      "4fcdfd91-da06-44ad-8204-4f8035923a8b"
+                    ],
+                    "visitCounts": {
+                      "4fcdfd91-da06-44ad-8204-4f8035923a8b": 1
+                    },
+                    "onceTriggers": [],
+                    "rngSeed": "scenario-1",
+                    "rngPosition": 0,
+                    "callStack": [],
+                    "presentationPosition": null,
+                    "loopNumber": 0,
+                    "provenance": "partial"
+                  },
+                  "conditionResults": [],
+                  "externalValues": {}
+                },
+                {
+                  "entityId": "e531a74b-65bc-4245-b712-34f9335d6d0a",
+                  "occurrenceId": "e531a74b-65bc-4245-b712-34f9335d6d0a:2",
+                  "before": {
+                    "contentVersionId": "40abe6c8-810f-409f-9d8f-5396ab9dc6de",
+                    "variableValues": {
+                      "6f6eb08b-9acd-470c-af19-64080b0a8b8e": {
+                        "type": "integer",
+                        "value": 2
+                      }
+                    },
+                    "itemInstances": [],
+                    "assertions": [],
+                    "seenIds": [
+                      "4fcdfd91-da06-44ad-8204-4f8035923a8b"
+                    ],
+                    "visitCounts": {
+                      "4fcdfd91-da06-44ad-8204-4f8035923a8b": 1
+                    },
+                    "onceTriggers": [],
+                    "rngSeed": "scenario-1",
+                    "rngPosition": 0,
+                    "callStack": [],
+                    "presentationPosition": null,
+                    "loopNumber": 0,
+                    "provenance": "partial"
+                  },
+                  "after": {
+                    "contentVersionId": "40abe6c8-810f-409f-9d8f-5396ab9dc6de",
+                    "variableValues": {
+                      "6f6eb08b-9acd-470c-af19-64080b0a8b8e": {
+                        "type": "integer",
+                        "value": 2
+                      }
+                    },
+                    "itemInstances": [],
+                    "assertions": [],
+                    "seenIds": [
+                      "4fcdfd91-da06-44ad-8204-4f8035923a8b",
+                      "e531a74b-65bc-4245-b712-34f9335d6d0a",
+                      "4357ddcf-f304-48a3-8894-fa2099f217dd"
+                    ],
+                    "visitCounts": {
+                      "4fcdfd91-da06-44ad-8204-4f8035923a8b": 1,
+                      "e531a74b-65bc-4245-b712-34f9335d6d0a": 1
+                    },
+                    "onceTriggers": [],
+                    "rngSeed": "scenario-1",
+                    "rngPosition": 0,
+                    "callStack": [],
+                    "presentationPosition": null,
+                    "loopNumber": 0,
+                    "provenance": "partial"
+                  },
+                  "presentationState": {
+                    "contentVersionId": "40abe6c8-810f-409f-9d8f-5396ab9dc6de",
+                    "variableValues": {
+                      "6f6eb08b-9acd-470c-af19-64080b0a8b8e": {
+                        "type": "integer",
+                        "value": 2
+                      }
+                    },
+                    "itemInstances": [],
+                    "assertions": [],
+                    "seenIds": [
+                      "4fcdfd91-da06-44ad-8204-4f8035923a8b",
+                      "e531a74b-65bc-4245-b712-34f9335d6d0a",
+                      "4357ddcf-f304-48a3-8894-fa2099f217dd"
+                    ],
+                    "visitCounts": {
+                      "4fcdfd91-da06-44ad-8204-4f8035923a8b": 1,
+                      "e531a74b-65bc-4245-b712-34f9335d6d0a": 1
+                    },
+                    "onceTriggers": [],
+                    "rngSeed": "scenario-1",
+                    "rngPosition": 0,
+                    "callStack": [],
+                    "presentationPosition": null,
+                    "loopNumber": 0,
+                    "provenance": "partial"
+                  },
+                  "conditionResults": [],
+                  "externalValues": {}
+                }
+              ]
+            },
+            "coverage": {
+              "scenes": {
+                "checked": 2,
+                "total": 3
+              },
+              "dialogue": {
+                "checked": 0,
+                "total": 0
+              },
+              "choices": {
+                "checked": 0,
+                "total": 0
+              },
+              "conditionTrue": {
+                "checked": 0,
+                "total": 0
+              },
+              "conditionFalse": {
+                "checked": 0,
+                "total": 0
+              },
+              "declaredTests": {
+                "checked": 0,
+                "total": 0,
+                "unknown": 0,
+                "byProvenance": {
+                  "full_play": {
+                    "checked": 0,
+                    "total": 0
+                  },
+                  "partial": {
+                    "checked": 0,
+                    "total": 0
+                  },
+                  "imported": {
+                    "checked": 0,
+                    "total": 0
+                  },
+                  "stub": {
+                    "checked": 0,
+                    "total": 0
+                  }
+                },
+                "byExternalMode": {
+                  "internal": {
+                    "checked": 0,
+                    "total": 0
+                  },
+                  "stub": {
+                    "checked": 0,
+                    "total": 0
+                  },
+                  "actual": {
+                    "checked": 0,
+                    "total": 0
+                  },
+                  "mixed": {
+                    "checked": 0,
+                    "total": 0
+                  }
+                }
+              }
+            }
+          }
+        }
+      ],
+      "relations": [],
+      "snapshots": [
+        {
+          "id": "40abe6c8-810f-409f-9d8f-5396ab9dc6de",
+          "content": {
+            "projectId": "6a280b2e-ed84-42e7-9eaa-d3e101608fcd",
+            "name": "独立 版境界",
+            "formatVersion": "1.0.0",
+            "revision": "0",
+            "calendarId": "proleptic-gregorian-second",
+            "mainStart": "0",
+            "calendars": [
+              {
+                "id": "proleptic-gregorian-second",
+                "name": "先発グレゴリオ暦",
+                "kind": "gregorian",
+                "originLabel": "0000-01-01 00:00:00",
+                "ticksPerDay": "86400"
+              }
+            ],
+            "worldReferences": [],
+            "entities": [
+              {
+                "id": "e531a74b-65bc-4245-b712-34f9335d6d0a",
+                "projectId": "6a280b2e-ed84-42e7-9eaa-d3e101608fcd",
+                "kind": "scene",
+                "revision": "0",
+                "name": "開始場面",
+                "status": "provisional",
+                "visibility": "private",
+                "createdAt": "2026-10-08T07:55:48.640Z",
+                "updatedAt": "2026-10-08T07:55:48.640Z",
+                "customValues": {},
+                "data": {
+                  "summary": [],
+                  "body": [
+                    {
+                      "id": "4357ddcf-f304-48a3-8894-fa2099f217dd",
+                      "kind": "paragraph",
+                      "text": "😀世界の旧稿。"
+                    }
+                  ],
+                  "authorNotes": [],
+                  "eventIds": [],
+                  "chapterId": "e39b4783-1df6-4afb-bff0-61ac553b2b69",
+                  "threadIds": [],
+                  "povId": null,
+                  "goals": [],
+                  "conflicts": [],
+                  "results": [],
+                  "newInformation": [],
+                  "tension": null,
+                  "importance": null,
+                  "blockIds": []
+                }
+              },
+              {
+                "id": "6f6eb08b-9acd-470c-af19-64080b0a8b8e",
+                "projectId": "6a280b2e-ed84-42e7-9eaa-d3e101608fcd",
+                "kind": "variable",
+                "revision": "0",
+                "name": "金額",
+                "status": "provisional",
+                "visibility": "private",
+                "createdAt": "2026-10-08T07:55:48.640Z",
+                "updatedAt": "2026-10-08T07:55:48.640Z",
+                "customValues": {},
+                "data": {
+                  "key": "money",
+                  "valueType": "integer",
+                  "scope": "across_runs",
+                  "initial": {
+                    "type": "integer",
+                    "value": 2
+                  },
+                  "allowed": {
+                    "min": 0,
+                    "max": 100
+                  },
+                  "description": [],
+                  "ownerId": null,
+                  "externalContractId": null,
+                  "resetRules": [],
+                  "transitionRules": [],
+                  "externalUseDeclared": false
+                }
+              },
+              {
+                "id": "8e19306e-dd8e-44c3-b203-22b33d5d089f",
+                "projectId": "6a280b2e-ed84-42e7-9eaa-d3e101608fcd",
+                "kind": "flow_node",
+                "revision": "0",
+                "name": "入口",
+                "status": "provisional",
+                "visibility": "private",
+                "createdAt": "2026-10-08T07:55:48.640Z",
+                "updatedAt": "2026-10-08T07:55:48.640Z",
+                "customValues": {},
+                "data": {
+                  "nodeType": "entry",
+                  "sceneId": "e531a74b-65bc-4245-b712-34f9335d6d0a",
+                  "childGraphId": null,
+                  "terminalReason": "",
+                  "gate": {
+                    "op": "constant",
+                    "value": true
+                  },
+                  "executionPolicy": "manual_choice",
+                  "fallbackId": null
+                }
+              },
+              {
+                "id": "2ec6399f-7818-46c4-a074-fb082aa00da4",
+                "projectId": "6a280b2e-ed84-42e7-9eaa-d3e101608fcd",
+                "kind": "flow_node",
+                "revision": "0",
+                "name": "終端",
+                "status": "provisional",
+                "visibility": "private",
+                "createdAt": "2026-10-08T07:55:48.640Z",
+                "updatedAt": "2026-10-08T07:55:48.640Z",
+                "customValues": {},
+                "data": {
+                  "nodeType": "terminal",
+                  "sceneId": null,
+                  "childGraphId": null,
+                  "terminalReason": "作者が定めた終わり",
+                  "gate": {
+                    "op": "constant",
+                    "value": true
+                  },
+                  "executionPolicy": "manual_choice",
+                  "fallbackId": null
+                }
+              },
+              {
+                "id": "9c377381-a6fb-479a-9dcd-eb7ec82abc84",
+                "projectId": "6a280b2e-ed84-42e7-9eaa-d3e101608fcd",
+                "kind": "effect",
+                "revision": "0",
+                "name": "金額+1",
+                "status": "provisional",
+                "visibility": "private",
+                "createdAt": "2026-10-08T07:55:48.640Z",
+                "updatedAt": "2026-10-08T07:55:48.640Z",
+                "customValues": {},
+                "data": {
+                  "operation": "add",
+                  "targetId": "6f6eb08b-9acd-470c-af19-64080b0a8b8e",
+                  "value": {
+                    "type": "integer",
+                    "value": 1
+                  },
+                  "condition": {
+                    "op": "constant",
+                    "value": true
+                  },
+                  "instanceId": null,
+                  "reason": ""
+                }
+              },
+              {
+                "id": "32869e5b-1a4c-4ed0-a342-ab16285259f6",
+                "projectId": "6a280b2e-ed84-42e7-9eaa-d3e101608fcd",
+                "kind": "flow_edge",
+                "revision": "0",
+                "name": "終端へ",
+                "status": "provisional",
+                "visibility": "private",
+                "createdAt": "2026-10-08T07:55:48.640Z",
+                "updatedAt": "2026-10-08T07:55:48.640Z",
+                "customValues": {},
+                "data": {
+                  "fromId": "8e19306e-dd8e-44c3-b203-22b33d5d089f",
+                  "toId": "2ec6399f-7818-46c4-a074-fb082aa00da4",
+                  "edgeType": "choice",
+                  "label": "",
+                  "condition": {
+                    "op": "constant",
+                    "value": true
+                  },
+                  "effectIds": [
+                    "9c377381-a6fb-479a-9dcd-eb7ec82abc84"
+                  ],
+                  "priority": 0,
+                  "choiceLineId": null
+                }
+              },
+              {
+                "id": "ebf8595d-3628-46ed-82f6-1957bb13319f",
+                "projectId": "6a280b2e-ed84-42e7-9eaa-d3e101608fcd",
+                "kind": "flow_graph",
+                "revision": "0",
+                "name": "本編",
+                "status": "provisional",
+                "visibility": "private",
+                "createdAt": "2026-10-08T07:55:48.640Z",
+                "updatedAt": "2026-10-08T07:55:48.640Z",
+                "customValues": {},
+                "data": {
+                  "nodeIds": [
+                    "8e19306e-dd8e-44c3-b203-22b33d5d089f",
+                    "2ec6399f-7818-46c4-a074-fb082aa00da4"
+                  ],
+                  "edgeIds": [
+                    "32869e5b-1a4c-4ed0-a342-ab16285259f6"
+                  ],
+                  "entryIds": [
+                    "8e19306e-dd8e-44c3-b203-22b33d5d089f"
+                  ],
+                  "exitIds": [
+                    "2ec6399f-7818-46c4-a074-fb082aa00da4"
+                  ],
+                  "parentGraphId": null,
+                  "parameters": []
+                }
+              },
+              {
+                "id": "4fcdfd91-da06-44ad-8204-4f8035923a8b",
+                "projectId": "6a280b2e-ed84-42e7-9eaa-d3e101608fcd",
+                "kind": "scene",
+                "revision": "0",
+                "name": "第二場面",
+                "status": "provisional",
+                "visibility": "private",
+                "createdAt": "2026-10-08T07:55:48.640Z",
+                "updatedAt": "2026-10-08T07:55:48.640Z",
+                "customValues": {},
+                "data": {
+                  "summary": [],
+                  "body": [],
+                  "authorNotes": [],
+                  "eventIds": [],
+                  "chapterId": "e39b4783-1df6-4afb-bff0-61ac553b2b69",
+                  "threadIds": [],
+                  "povId": null,
+                  "goals": [],
+                  "conflicts": [],
+                  "results": [],
+                  "newInformation": [],
+                  "tension": null,
+                  "importance": null,
+                  "blockIds": []
+                }
+              },
+              {
+                "id": "eb9ab0d5-1736-49fe-80cb-44e00ee0c30d",
+                "projectId": "6a280b2e-ed84-42e7-9eaa-d3e101608fcd",
+                "kind": "scene",
+                "revision": "0",
+                "name": "選択していない第三場面",
+                "status": "provisional",
+                "visibility": "private",
+                "createdAt": "2026-10-08T07:55:48.640Z",
+                "updatedAt": "2026-10-08T07:55:48.640Z",
+                "customValues": {},
+                "data": {
+                  "summary": [],
+                  "body": [],
+                  "authorNotes": [],
+                  "eventIds": [],
+                  "chapterId": "e39b4783-1df6-4afb-bff0-61ac553b2b69",
+                  "threadIds": [],
+                  "povId": null,
+                  "goals": [],
+                  "conflicts": [],
+                  "results": [],
+                  "newInformation": [],
+                  "tension": null,
+                  "importance": null,
+                  "blockIds": []
+                }
+              },
+              {
+                "id": "e39b4783-1df6-4afb-bff0-61ac553b2b69",
+                "projectId": "6a280b2e-ed84-42e7-9eaa-d3e101608fcd",
+                "kind": "chapter",
+                "revision": "0",
+                "name": "章",
+                "status": "provisional",
+                "visibility": "private",
+                "createdAt": "2026-10-08T07:55:48.640Z",
+                "updatedAt": "2026-10-08T07:55:48.640Z",
+                "customValues": {},
+                "data": {
+                  "sceneIds": [
+                    "e531a74b-65bc-4245-b712-34f9335d6d0a",
+                    "4fcdfd91-da06-44ad-8204-4f8035923a8b",
+                    "eb9ab0d5-1736-49fe-80cb-44e00ee0c30d"
+                  ],
+                  "summary": [],
+                  "authorNotes": [],
+                  "structureRole": ""
+                }
+              }
+            ],
+            "relations": [],
+            "views": []
+          },
+          "contentHash": "392cdbc655b2757434873be48555600b211c3c980759d9f972618a1abb05a674",
+          "createdAt": "2026-10-08T07:00:00Z",
+          "versionLabel": "選択経路"
+        }
+      ],
+      "history": [],
+      "views": []
+    }
+  },
+  "old": {
+    "id": "f57996e8-0ceb-4937-9c13-5af82d8af31c",
+    "projectId": "6a280b2e-ed84-42e7-9eaa-d3e101608fcd",
+    "kind": "trace",
+    "revision": "0",
+    "name": "二場面だけの順序",
+    "status": "provisional",
+    "visibility": "private",
+    "createdAt": "2026-10-08T07:55:48.643Z",
+    "updatedAt": "2026-10-08T07:55:48.643Z",
+    "customValues": {},
+    "data": {
+      "contentVersionId": "40abe6c8-810f-409f-9d8f-5396ab9dc6de",
+      "startCheckpointId": "1db1db62-1ea3-4c9f-9ec0-95d79c4f814b",
+      "steps": [],
+      "seed": "scenario-1",
+      "engineVersion": "1.0.0",
+      "externalMode": null,
+      "contentRevision": "0",
+      "initialExternalValues": {},
+      "mode": "chapters",
+      "readingPath": {
+        "chapterIds": [
+          "e39b4783-1df6-4afb-bff0-61ac553b2b69"
+        ],
+        "sceneIds": [
+          "4fcdfd91-da06-44ad-8204-4f8035923a8b",
+          "e531a74b-65bc-4245-b712-34f9335d6d0a"
+        ],
+        "occurrences": [
+          {
+            "entityId": "4fcdfd91-da06-44ad-8204-4f8035923a8b",
+            "occurrenceId": "4fcdfd91-da06-44ad-8204-4f8035923a8b:1",
+            "before": {
+              "contentVersionId": "40abe6c8-810f-409f-9d8f-5396ab9dc6de",
+              "variableValues": {
+                "6f6eb08b-9acd-470c-af19-64080b0a8b8e": {
+                  "type": "integer",
+                  "value": 2
+                }
+              },
+              "itemInstances": [],
+              "assertions": [],
+              "seenIds": [],
+              "visitCounts": {},
+              "onceTriggers": [],
+              "rngSeed": "scenario-1",
+              "rngPosition": 0,
+              "callStack": [],
+              "presentationPosition": null,
+              "loopNumber": 0,
+              "provenance": "partial"
+            },
+            "after": {
+              "contentVersionId": "40abe6c8-810f-409f-9d8f-5396ab9dc6de",
+              "variableValues": {
+                "6f6eb08b-9acd-470c-af19-64080b0a8b8e": {
+                  "type": "integer",
+                  "value": 2
+                }
+              },
+              "itemInstances": [],
+              "assertions": [],
+              "seenIds": [
+                "4fcdfd91-da06-44ad-8204-4f8035923a8b"
+              ],
+              "visitCounts": {
+                "4fcdfd91-da06-44ad-8204-4f8035923a8b": 1
+              },
+              "onceTriggers": [],
+              "rngSeed": "scenario-1",
+              "rngPosition": 0,
+              "callStack": [],
+              "presentationPosition": null,
+              "loopNumber": 0,
+              "provenance": "partial"
+            },
+            "presentationState": {
+              "contentVersionId": "40abe6c8-810f-409f-9d8f-5396ab9dc6de",
+              "variableValues": {
+                "6f6eb08b-9acd-470c-af19-64080b0a8b8e": {
+                  "type": "integer",
+                  "value": 2
+                }
+              },
+              "itemInstances": [],
+              "assertions": [],
+              "seenIds": [
+                "4fcdfd91-da06-44ad-8204-4f8035923a8b"
+              ],
+              "visitCounts": {
+                "4fcdfd91-da06-44ad-8204-4f8035923a8b": 1
+              },
+              "onceTriggers": [],
+              "rngSeed": "scenario-1",
+              "rngPosition": 0,
+              "callStack": [],
+              "presentationPosition": null,
+              "loopNumber": 0,
+              "provenance": "partial"
+            },
+            "conditionResults": [],
+            "externalValues": {}
+          },
+          {
+            "entityId": "e531a74b-65bc-4245-b712-34f9335d6d0a",
+            "occurrenceId": "e531a74b-65bc-4245-b712-34f9335d6d0a:2",
+            "before": {
+              "contentVersionId": "40abe6c8-810f-409f-9d8f-5396ab9dc6de",
+              "variableValues": {
+                "6f6eb08b-9acd-470c-af19-64080b0a8b8e": {
+                  "type": "integer",
+                  "value": 2
+                }
+              },
+              "itemInstances": [],
+              "assertions": [],
+              "seenIds": [
+                "4fcdfd91-da06-44ad-8204-4f8035923a8b"
+              ],
+              "visitCounts": {
+                "4fcdfd91-da06-44ad-8204-4f8035923a8b": 1
+              },
+              "onceTriggers": [],
+              "rngSeed": "scenario-1",
+              "rngPosition": 0,
+              "callStack": [],
+              "presentationPosition": null,
+              "loopNumber": 0,
+              "provenance": "partial"
+            },
+            "after": {
+              "contentVersionId": "40abe6c8-810f-409f-9d8f-5396ab9dc6de",
+              "variableValues": {
+                "6f6eb08b-9acd-470c-af19-64080b0a8b8e": {
+                  "type": "integer",
+                  "value": 2
+                }
+              },
+              "itemInstances": [],
+              "assertions": [],
+              "seenIds": [
+                "4fcdfd91-da06-44ad-8204-4f8035923a8b",
+                "e531a74b-65bc-4245-b712-34f9335d6d0a",
+                "4357ddcf-f304-48a3-8894-fa2099f217dd"
+              ],
+              "visitCounts": {
+                "4fcdfd91-da06-44ad-8204-4f8035923a8b": 1,
+                "e531a74b-65bc-4245-b712-34f9335d6d0a": 1
+              },
+              "onceTriggers": [],
+              "rngSeed": "scenario-1",
+              "rngPosition": 0,
+              "callStack": [],
+              "presentationPosition": null,
+              "loopNumber": 0,
+              "provenance": "partial"
+            },
+            "presentationState": {
+              "contentVersionId": "40abe6c8-810f-409f-9d8f-5396ab9dc6de",
+              "variableValues": {
+                "6f6eb08b-9acd-470c-af19-64080b0a8b8e": {
+                  "type": "integer",
+                  "value": 2
+                }
+              },
+              "itemInstances": [],
+              "assertions": [],
+              "seenIds": [
+                "4fcdfd91-da06-44ad-8204-4f8035923a8b",
+                "e531a74b-65bc-4245-b712-34f9335d6d0a",
+                "4357ddcf-f304-48a3-8894-fa2099f217dd"
+              ],
+              "visitCounts": {
+                "4fcdfd91-da06-44ad-8204-4f8035923a8b": 1,
+                "e531a74b-65bc-4245-b712-34f9335d6d0a": 1
+              },
+              "onceTriggers": [],
+              "rngSeed": "scenario-1",
+              "rngPosition": 0,
+              "callStack": [],
+              "presentationPosition": null,
+              "loopNumber": 0,
+              "provenance": "partial"
+            },
+            "conditionResults": [],
+            "externalValues": {}
+          }
+        ]
+      },
+      "coverage": {
+        "scenes": {
+          "checked": 2,
+          "total": 3
+        },
+        "dialogue": {
+          "checked": 0,
+          "total": 0
+        },
+        "choices": {
+          "checked": 0,
+          "total": 0
+        },
+        "conditionTrue": {
+          "checked": 0,
+          "total": 0
+        },
+        "conditionFalse": {
+          "checked": 0,
+          "total": 0
+        },
+        "declaredTests": {
+          "checked": 0,
+          "total": 0,
+          "unknown": 0,
+          "byProvenance": {
+            "full_play": {
+              "checked": 0,
+              "total": 0
+            },
+            "partial": {
+              "checked": 0,
+              "total": 0
+            },
+            "imported": {
+              "checked": 0,
+              "total": 0
+            },
+            "stub": {
+              "checked": 0,
+              "total": 0
+            }
+          },
+          "byExternalMode": {
+            "internal": {
+              "checked": 0,
+              "total": 0
+            },
+            "stub": {
+              "checked": 0,
+              "total": 0
+            },
+            "actual": {
+              "checked": 0,
+              "total": 0
+            },
+            "mixed": {
+              "checked": 0,
+              "total": 0
+            }
+          }
+        }
+      }
+    }
+  },
+  "plan": {
+    "projectId": "6a280b2e-ed84-42e7-9eaa-d3e101608fcd",
+    "baseRevision": "2",
+    "sourceTraceId": "f57996e8-0ceb-4937-9c13-5af82d8af31c",
+    "targetVersionId": "5538068d-b061-4a2c-99f8-6306e1cefdad",
+    "startCheckpointId": null,
+    "changes": [
+      {
+        "id": "e531a74b-65bc-4245-b712-34f9335d6d0a",
+        "reason": "宣言・本文・採用状態が変更されました。"
+      }
+    ],
+    "entities": [
+      {
+        "id": "26c2a43e-048f-4f3e-aa68-548e19f07809",
+        "projectId": "6a280b2e-ed84-42e7-9eaa-d3e101608fcd",
+        "kind": "checkpoint",
+        "revision": "0",
+        "name": "再確認した開始状態",
+        "status": "provisional",
+        "visibility": "private",
+        "createdAt": "2026-10-08T07:55:48.653Z",
+        "updatedAt": "2026-10-08T07:55:48.653Z",
+        "customValues": {},
+        "data": {
+          "contentVersionId": "5538068d-b061-4a2c-99f8-6306e1cefdad",
+          "runtimeState": {
+            "contentVersionId": "5538068d-b061-4a2c-99f8-6306e1cefdad",
+            "variableValues": {
+              "6f6eb08b-9acd-470c-af19-64080b0a8b8e": {
+                "type": "integer",
+                "value": 2
+              }
+            },
+            "itemInstances": [],
+            "assertions": [],
+            "seenIds": [],
+            "visitCounts": {},
+            "onceTriggers": [],
+            "rngSeed": "scenario-1",
+            "rngPosition": 0,
+            "callStack": [],
+            "presentationPosition": null,
+            "loopNumber": 0,
+            "provenance": "partial"
+          },
+          "origin": "partial",
+          "traceId": null,
+          "contentRevision": "2"
+        }
+      },
+      {
+        "id": "0a81a5cb-256c-42fa-9f08-dbaf70b506c4",
+        "projectId": "6a280b2e-ed84-42e7-9eaa-d3e101608fcd",
+        "kind": "trace",
+        "revision": "0",
+        "name": "改訂稿の再確認 · 二場面だけの順序",
+        "status": "provisional",
+        "visibility": "private",
+        "createdAt": "2026-10-08T07:55:48.653Z",
+        "updatedAt": "2026-10-08T07:55:48.653Z",
+        "customValues": {},
+        "data": {
+          "contentVersionId": "5538068d-b061-4a2c-99f8-6306e1cefdad",
+          "startCheckpointId": "26c2a43e-048f-4f3e-aa68-548e19f07809",
+          "steps": [],
+          "seed": "scenario-1",
+          "engineVersion": "1.0.0",
+          "externalMode": null,
+          "contentRevision": "2",
+          "initialExternalValues": {},
+          "mode": "chapters",
+          "readingPath": {
+            "chapterIds": [
+              "e39b4783-1df6-4afb-bff0-61ac553b2b69"
+            ],
+            "sceneIds": [
+              "e531a74b-65bc-4245-b712-34f9335d6d0a",
+              "4fcdfd91-da06-44ad-8204-4f8035923a8b",
+              "eb9ab0d5-1736-49fe-80cb-44e00ee0c30d"
+            ],
+            "occurrences": [
+              {
+                "entityId": "e531a74b-65bc-4245-b712-34f9335d6d0a",
+                "occurrenceId": "e531a74b-65bc-4245-b712-34f9335d6d0a:1",
+                "before": {
+                  "contentVersionId": "5538068d-b061-4a2c-99f8-6306e1cefdad",
+                  "variableValues": {
+                    "6f6eb08b-9acd-470c-af19-64080b0a8b8e": {
+                      "type": "integer",
+                      "value": 2
+                    }
+                  },
+                  "itemInstances": [],
+                  "assertions": [],
+                  "seenIds": [],
+                  "visitCounts": {},
+                  "onceTriggers": [],
+                  "rngSeed": "scenario-1",
+                  "rngPosition": 0,
+                  "callStack": [],
+                  "presentationPosition": null,
+                  "loopNumber": 0,
+                  "provenance": "partial"
+                },
+                "after": {
+                  "contentVersionId": "5538068d-b061-4a2c-99f8-6306e1cefdad",
+                  "variableValues": {
+                    "6f6eb08b-9acd-470c-af19-64080b0a8b8e": {
+                      "type": "integer",
+                      "value": 2
+                    }
+                  },
+                  "itemInstances": [],
+                  "assertions": [],
+                  "seenIds": [
+                    "e531a74b-65bc-4245-b712-34f9335d6d0a",
+                    "4357ddcf-f304-48a3-8894-fa2099f217dd"
+                  ],
+                  "visitCounts": {
+                    "e531a74b-65bc-4245-b712-34f9335d6d0a": 1
+                  },
+                  "onceTriggers": [],
+                  "rngSeed": "scenario-1",
+                  "rngPosition": 0,
+                  "callStack": [],
+                  "presentationPosition": null,
+                  "loopNumber": 0,
+                  "provenance": "partial"
+                },
+                "presentationState": {
+                  "contentVersionId": "5538068d-b061-4a2c-99f8-6306e1cefdad",
+                  "variableValues": {
+                    "6f6eb08b-9acd-470c-af19-64080b0a8b8e": {
+                      "type": "integer",
+                      "value": 2
+                    }
+                  },
+                  "itemInstances": [],
+                  "assertions": [],
+                  "seenIds": [
+                    "e531a74b-65bc-4245-b712-34f9335d6d0a",
+                    "4357ddcf-f304-48a3-8894-fa2099f217dd"
+                  ],
+                  "visitCounts": {
+                    "e531a74b-65bc-4245-b712-34f9335d6d0a": 1
+                  },
+                  "onceTriggers": [],
+                  "rngSeed": "scenario-1",
+                  "rngPosition": 0,
+                  "callStack": [],
+                  "presentationPosition": null,
+                  "loopNumber": 0,
+                  "provenance": "partial"
+                },
+                "conditionResults": [],
+                "externalValues": {}
+              },
+              {
+                "entityId": "4fcdfd91-da06-44ad-8204-4f8035923a8b",
+                "occurrenceId": "4fcdfd91-da06-44ad-8204-4f8035923a8b:2",
+                "before": {
+                  "contentVersionId": "5538068d-b061-4a2c-99f8-6306e1cefdad",
+                  "variableValues": {
+                    "6f6eb08b-9acd-470c-af19-64080b0a8b8e": {
+                      "type": "integer",
+                      "value": 2
+                    }
+                  },
+                  "itemInstances": [],
+                  "assertions": [],
+                  "seenIds": [
+                    "e531a74b-65bc-4245-b712-34f9335d6d0a",
+                    "4357ddcf-f304-48a3-8894-fa2099f217dd"
+                  ],
+                  "visitCounts": {
+                    "e531a74b-65bc-4245-b712-34f9335d6d0a": 1
+                  },
+                  "onceTriggers": [],
+                  "rngSeed": "scenario-1",
+                  "rngPosition": 0,
+                  "callStack": [],
+                  "presentationPosition": null,
+                  "loopNumber": 0,
+                  "provenance": "partial"
+                },
+                "after": {
+                  "contentVersionId": "5538068d-b061-4a2c-99f8-6306e1cefdad",
+                  "variableValues": {
+                    "6f6eb08b-9acd-470c-af19-64080b0a8b8e": {
+                      "type": "integer",
+                      "value": 2
+                    }
+                  },
+                  "itemInstances": [],
+                  "assertions": [],
+                  "seenIds": [
+                    "e531a74b-65bc-4245-b712-34f9335d6d0a",
+                    "4357ddcf-f304-48a3-8894-fa2099f217dd",
+                    "4fcdfd91-da06-44ad-8204-4f8035923a8b"
+                  ],
+                  "visitCounts": {
+                    "e531a74b-65bc-4245-b712-34f9335d6d0a": 1,
+                    "4fcdfd91-da06-44ad-8204-4f8035923a8b": 1
+                  },
+                  "onceTriggers": [],
+                  "rngSeed": "scenario-1",
+                  "rngPosition": 0,
+                  "callStack": [],
+                  "presentationPosition": null,
+                  "loopNumber": 0,
+                  "provenance": "partial"
+                },
+                "presentationState": {
+                  "contentVersionId": "5538068d-b061-4a2c-99f8-6306e1cefdad",
+                  "variableValues": {
+                    "6f6eb08b-9acd-470c-af19-64080b0a8b8e": {
+                      "type": "integer",
+                      "value": 2
+                    }
+                  },
+                  "itemInstances": [],
+                  "assertions": [],
+                  "seenIds": [
+                    "e531a74b-65bc-4245-b712-34f9335d6d0a",
+                    "4357ddcf-f304-48a3-8894-fa2099f217dd",
+                    "4fcdfd91-da06-44ad-8204-4f8035923a8b"
+                  ],
+                  "visitCounts": {
+                    "e531a74b-65bc-4245-b712-34f9335d6d0a": 1,
+                    "4fcdfd91-da06-44ad-8204-4f8035923a8b": 1
+                  },
+                  "onceTriggers": [],
+                  "rngSeed": "scenario-1",
+                  "rngPosition": 0,
+                  "callStack": [],
+                  "presentationPosition": null,
+                  "loopNumber": 0,
+                  "provenance": "partial"
+                },
+                "conditionResults": [],
+                "externalValues": {}
+              },
+              {
+                "entityId": "eb9ab0d5-1736-49fe-80cb-44e00ee0c30d",
+                "occurrenceId": "eb9ab0d5-1736-49fe-80cb-44e00ee0c30d:3",
+                "before": {
+                  "contentVersionId": "5538068d-b061-4a2c-99f8-6306e1cefdad",
+                  "variableValues": {
+                    "6f6eb08b-9acd-470c-af19-64080b0a8b8e": {
+                      "type": "integer",
+                      "value": 2
+                    }
+                  },
+                  "itemInstances": [],
+                  "assertions": [],
+                  "seenIds": [
+                    "e531a74b-65bc-4245-b712-34f9335d6d0a",
+                    "4357ddcf-f304-48a3-8894-fa2099f217dd",
+                    "4fcdfd91-da06-44ad-8204-4f8035923a8b"
+                  ],
+                  "visitCounts": {
+                    "e531a74b-65bc-4245-b712-34f9335d6d0a": 1,
+                    "4fcdfd91-da06-44ad-8204-4f8035923a8b": 1
+                  },
+                  "onceTriggers": [],
+                  "rngSeed": "scenario-1",
+                  "rngPosition": 0,
+                  "callStack": [],
+                  "presentationPosition": null,
+                  "loopNumber": 0,
+                  "provenance": "partial"
+                },
+                "after": {
+                  "contentVersionId": "5538068d-b061-4a2c-99f8-6306e1cefdad",
+                  "variableValues": {
+                    "6f6eb08b-9acd-470c-af19-64080b0a8b8e": {
+                      "type": "integer",
+                      "value": 2
+                    }
+                  },
+                  "itemInstances": [],
+                  "assertions": [],
+                  "seenIds": [
+                    "e531a74b-65bc-4245-b712-34f9335d6d0a",
+                    "4357ddcf-f304-48a3-8894-fa2099f217dd",
+                    "4fcdfd91-da06-44ad-8204-4f8035923a8b",
+                    "eb9ab0d5-1736-49fe-80cb-44e00ee0c30d"
+                  ],
+                  "visitCounts": {
+                    "e531a74b-65bc-4245-b712-34f9335d6d0a": 1,
+                    "4fcdfd91-da06-44ad-8204-4f8035923a8b": 1,
+                    "eb9ab0d5-1736-49fe-80cb-44e00ee0c30d": 1
+                  },
+                  "onceTriggers": [],
+                  "rngSeed": "scenario-1",
+                  "rngPosition": 0,
+                  "callStack": [],
+                  "presentationPosition": null,
+                  "loopNumber": 0,
+                  "provenance": "partial"
+                },
+                "presentationState": {
+                  "contentVersionId": "5538068d-b061-4a2c-99f8-6306e1cefdad",
+                  "variableValues": {
+                    "6f6eb08b-9acd-470c-af19-64080b0a8b8e": {
+                      "type": "integer",
+                      "value": 2
+                    }
+                  },
+                  "itemInstances": [],
+                  "assertions": [],
+                  "seenIds": [
+                    "e531a74b-65bc-4245-b712-34f9335d6d0a",
+                    "4357ddcf-f304-48a3-8894-fa2099f217dd",
+                    "4fcdfd91-da06-44ad-8204-4f8035923a8b",
+                    "eb9ab0d5-1736-49fe-80cb-44e00ee0c30d"
+                  ],
+                  "visitCounts": {
+                    "e531a74b-65bc-4245-b712-34f9335d6d0a": 1,
+                    "4fcdfd91-da06-44ad-8204-4f8035923a8b": 1,
+                    "eb9ab0d5-1736-49fe-80cb-44e00ee0c30d": 1
+                  },
+                  "onceTriggers": [],
+                  "rngSeed": "scenario-1",
+                  "rngPosition": 0,
+                  "callStack": [],
+                  "presentationPosition": null,
+                  "loopNumber": 0,
+                  "provenance": "partial"
+                },
+                "conditionResults": [],
+                "externalValues": {}
+              }
+            ]
+          },
+          "coverage": {
+            "scenes": {
+              "checked": 3,
+              "total": 3
+            },
+            "dialogue": {
+              "checked": 0,
+              "total": 0
+            },
+            "choices": {
+              "checked": 0,
+              "total": 0
+            },
+            "conditionTrue": {
+              "checked": 0,
+              "total": 0
+            },
+            "conditionFalse": {
+              "checked": 0,
+              "total": 0
+            },
+            "declaredTests": {
+              "checked": 0,
+              "total": 0,
+              "unknown": 0,
+              "byProvenance": {
+                "full_play": {
+                  "checked": 0,
+                  "total": 0
+                },
+                "partial": {
+                  "checked": 0,
+                  "total": 0
+                },
+                "imported": {
+                  "checked": 0,
+                  "total": 0
+                },
+                "stub": {
+                  "checked": 0,
+                  "total": 0
+                }
+              },
+              "byExternalMode": {
+                "internal": {
+                  "checked": 0,
+                  "total": 0
+                },
+                "stub": {
+                  "checked": 0,
+                  "total": 0
+                },
+                "actual": {
+                  "checked": 0,
+                  "total": 0
+                },
+                "mixed": {
+                  "checked": 0,
+                  "total": 0
+                }
+              }
+            }
+          },
+          "reconfirmation": {
+            "sourceTraceId": "f57996e8-0ceb-4937-9c13-5af82d8af31c",
+            "sourceVersionId": "40abe6c8-810f-409f-9d8f-5396ab9dc6de",
+            "baseRevision": "2",
+            "startCheckpointId": null
+          }
+        }
+      },
+      {
+        "id": "87618624-8cc6-4e3f-b94c-3d3d66102599",
+        "projectId": "6a280b2e-ed84-42e7-9eaa-d3e101608fcd",
+        "kind": "review",
+        "revision": "0",
+        "name": "経路の変更確認 · 二場面だけの順序",
+        "status": "provisional",
+        "visibility": "private",
+        "createdAt": "2026-10-08T07:55:48.654Z",
+        "updatedAt": "2026-10-08T07:55:48.654Z",
+        "customValues": {
+          "traceReconfirmation.sourceTraceId": "f57996e8-0ceb-4937-9c13-5af82d8af31c",
+          "traceReconfirmation.newTraceId": "0a81a5cb-256c-42fa-9f08-dbaf70b506c4",
+          "traceReconfirmation.baseRevision": "2"
+        },
+        "data": {
+          "target": "f57996e8-0ceb-4937-9c13-5af82d8af31c",
+          "targetVersionId": "40abe6c8-810f-409f-9d8f-5396ab9dc6de",
+          "body": [
+            {
+              "id": "627fa4a5-e234-4ee8-a45a-3c6e88ae4fc5",
+              "kind": "paragraph",
+              "text": "旧版の証跡を保持して改訂稿を再実行しました。"
+            }
+          ],
+          "stage": "verified",
+          "assigneeId": null,
+          "quotedText": "",
+          "resolution": [
+            {
+              "id": "004ce95d-20c1-42fd-bbea-cb51b750a5dc",
+              "kind": "paragraph",
+              "text": "確認対象の作品改訂 2。新しい経路 0a81a5cb-256c-42fa-9f08-dbaf70b506c4 / 固定版 5538068d-b061-4a2c-99f8-6306e1cefdad。人物と読者の理解は自動認定していません。"
+            }
+          ]
+        }
+      }
+    ],
+    "snapshots": [
+      {
+        "id": "5538068d-b061-4a2c-99f8-6306e1cefdad",
+        "content": {
+          "projectId": "6a280b2e-ed84-42e7-9eaa-d3e101608fcd",
+          "name": "独立 版境界",
+          "formatVersion": "1.0.0",
+          "revision": "2",
+          "calendarId": "proleptic-gregorian-second",
+          "mainStart": "0",
+          "calendars": [
+            {
+              "id": "proleptic-gregorian-second",
+              "name": "先発グレゴリオ暦",
+              "kind": "gregorian",
+              "originLabel": "0000-01-01 00:00:00",
+              "ticksPerDay": "86400"
+            }
+          ],
+          "worldReferences": [],
+          "entities": [
+            {
+              "id": "e531a74b-65bc-4245-b712-34f9335d6d0a",
+              "projectId": "6a280b2e-ed84-42e7-9eaa-d3e101608fcd",
+              "kind": "scene",
+              "revision": "0",
+              "name": "開始場面",
+              "status": "provisional",
+              "visibility": "private",
+              "createdAt": "2026-10-08T07:55:48.640Z",
+              "updatedAt": "2026-10-08T07:55:48.640Z",
+              "customValues": {},
+              "data": {
+                "summary": [],
+                "body": [
+                  {
+                    "id": "4357ddcf-f304-48a3-8894-fa2099f217dd",
+                    "kind": "paragraph",
+                    "text": "章の改訂"
+                  }
+                ],
+                "authorNotes": [],
+                "eventIds": [],
+                "chapterId": "e39b4783-1df6-4afb-bff0-61ac553b2b69",
+                "threadIds": [],
+                "povId": null,
+                "goals": [],
+                "conflicts": [],
+                "results": [],
+                "newInformation": [],
+                "tension": null,
+                "importance": null,
+                "blockIds": []
+              }
+            },
+            {
+              "id": "6f6eb08b-9acd-470c-af19-64080b0a8b8e",
+              "projectId": "6a280b2e-ed84-42e7-9eaa-d3e101608fcd",
+              "kind": "variable",
+              "revision": "0",
+              "name": "金額",
+              "status": "provisional",
+              "visibility": "private",
+              "createdAt": "2026-10-08T07:55:48.640Z",
+              "updatedAt": "2026-10-08T07:55:48.640Z",
+              "customValues": {},
+              "data": {
+                "key": "money",
+                "valueType": "integer",
+                "scope": "across_runs",
+                "initial": {
+                  "type": "integer",
+                  "value": 2
+                },
+                "allowed": {
+                  "min": 0,
+                  "max": 100
+                },
+                "description": [],
+                "ownerId": null,
+                "externalContractId": null,
+                "resetRules": [],
+                "transitionRules": [],
+                "externalUseDeclared": false
+              }
+            },
+            {
+              "id": "8e19306e-dd8e-44c3-b203-22b33d5d089f",
+              "projectId": "6a280b2e-ed84-42e7-9eaa-d3e101608fcd",
+              "kind": "flow_node",
+              "revision": "0",
+              "name": "入口",
+              "status": "provisional",
+              "visibility": "private",
+              "createdAt": "2026-10-08T07:55:48.640Z",
+              "updatedAt": "2026-10-08T07:55:48.640Z",
+              "customValues": {},
+              "data": {
+                "nodeType": "entry",
+                "sceneId": "e531a74b-65bc-4245-b712-34f9335d6d0a",
+                "childGraphId": null,
+                "terminalReason": "",
+                "gate": {
+                  "op": "constant",
+                  "value": true
+                },
+                "executionPolicy": "manual_choice",
+                "fallbackId": null
+              }
+            },
+            {
+              "id": "2ec6399f-7818-46c4-a074-fb082aa00da4",
+              "projectId": "6a280b2e-ed84-42e7-9eaa-d3e101608fcd",
+              "kind": "flow_node",
+              "revision": "0",
+              "name": "終端",
+              "status": "provisional",
+              "visibility": "private",
+              "createdAt": "2026-10-08T07:55:48.640Z",
+              "updatedAt": "2026-10-08T07:55:48.640Z",
+              "customValues": {},
+              "data": {
+                "nodeType": "terminal",
+                "sceneId": null,
+                "childGraphId": null,
+                "terminalReason": "作者が定めた終わり",
+                "gate": {
+                  "op": "constant",
+                  "value": true
+                },
+                "executionPolicy": "manual_choice",
+                "fallbackId": null
+              }
+            },
+            {
+              "id": "9c377381-a6fb-479a-9dcd-eb7ec82abc84",
+              "projectId": "6a280b2e-ed84-42e7-9eaa-d3e101608fcd",
+              "kind": "effect",
+              "revision": "0",
+              "name": "金額+1",
+              "status": "provisional",
+              "visibility": "private",
+              "createdAt": "2026-10-08T07:55:48.640Z",
+              "updatedAt": "2026-10-08T07:55:48.640Z",
+              "customValues": {},
+              "data": {
+                "operation": "add",
+                "targetId": "6f6eb08b-9acd-470c-af19-64080b0a8b8e",
+                "value": {
+                  "type": "integer",
+                  "value": 1
+                },
+                "condition": {
+                  "op": "constant",
+                  "value": true
+                },
+                "instanceId": null,
+                "reason": ""
+              }
+            },
+            {
+              "id": "32869e5b-1a4c-4ed0-a342-ab16285259f6",
+              "projectId": "6a280b2e-ed84-42e7-9eaa-d3e101608fcd",
+              "kind": "flow_edge",
+              "revision": "0",
+              "name": "終端へ",
+              "status": "provisional",
+              "visibility": "private",
+              "createdAt": "2026-10-08T07:55:48.640Z",
+              "updatedAt": "2026-10-08T07:55:48.640Z",
+              "customValues": {},
+              "data": {
+                "fromId": "8e19306e-dd8e-44c3-b203-22b33d5d089f",
+                "toId": "2ec6399f-7818-46c4-a074-fb082aa00da4",
+                "edgeType": "choice",
+                "label": "",
+                "condition": {
+                  "op": "constant",
+                  "value": true
+                },
+                "effectIds": [
+                  "9c377381-a6fb-479a-9dcd-eb7ec82abc84"
+                ],
+                "priority": 0,
+                "choiceLineId": null
+              }
+            },
+            {
+              "id": "ebf8595d-3628-46ed-82f6-1957bb13319f",
+              "projectId": "6a280b2e-ed84-42e7-9eaa-d3e101608fcd",
+              "kind": "flow_graph",
+              "revision": "0",
+              "name": "本編",
+              "status": "provisional",
+              "visibility": "private",
+              "createdAt": "2026-10-08T07:55:48.640Z",
+              "updatedAt": "2026-10-08T07:55:48.640Z",
+              "customValues": {},
+              "data": {
+                "nodeIds": [
+                  "8e19306e-dd8e-44c3-b203-22b33d5d089f",
+                  "2ec6399f-7818-46c4-a074-fb082aa00da4"
+                ],
+                "edgeIds": [
+                  "32869e5b-1a4c-4ed0-a342-ab16285259f6"
+                ],
+                "entryIds": [
+                  "8e19306e-dd8e-44c3-b203-22b33d5d089f"
+                ],
+                "exitIds": [
+                  "2ec6399f-7818-46c4-a074-fb082aa00da4"
+                ],
+                "parentGraphId": null,
+                "parameters": []
+              }
+            },
+            {
+              "id": "4fcdfd91-da06-44ad-8204-4f8035923a8b",
+              "projectId": "6a280b2e-ed84-42e7-9eaa-d3e101608fcd",
+              "kind": "scene",
+              "revision": "0",
+              "name": "第二場面",
+              "status": "provisional",
+              "visibility": "private",
+              "createdAt": "2026-10-08T07:55:48.640Z",
+              "updatedAt": "2026-10-08T07:55:48.640Z",
+              "customValues": {},
+              "data": {
+                "summary": [],
+                "body": [],
+                "authorNotes": [],
+                "eventIds": [],
+                "chapterId": "e39b4783-1df6-4afb-bff0-61ac553b2b69",
+                "threadIds": [],
+                "povId": null,
+                "goals": [],
+                "conflicts": [],
+                "results": [],
+                "newInformation": [],
+                "tension": null,
+                "importance": null,
+                "blockIds": []
+              }
+            },
+            {
+              "id": "eb9ab0d5-1736-49fe-80cb-44e00ee0c30d",
+              "projectId": "6a280b2e-ed84-42e7-9eaa-d3e101608fcd",
+              "kind": "scene",
+              "revision": "0",
+              "name": "選択していない第三場面",
+              "status": "provisional",
+              "visibility": "private",
+              "createdAt": "2026-10-08T07:55:48.640Z",
+              "updatedAt": "2026-10-08T07:55:48.640Z",
+              "customValues": {},
+              "data": {
+                "summary": [],
+                "body": [],
+                "authorNotes": [],
+                "eventIds": [],
+                "chapterId": "e39b4783-1df6-4afb-bff0-61ac553b2b69",
+                "threadIds": [],
+                "povId": null,
+                "goals": [],
+                "conflicts": [],
+                "results": [],
+                "newInformation": [],
+                "tension": null,
+                "importance": null,
+                "blockIds": []
+              }
+            },
+            {
+              "id": "e39b4783-1df6-4afb-bff0-61ac553b2b69",
+              "projectId": "6a280b2e-ed84-42e7-9eaa-d3e101608fcd",
+              "kind": "chapter",
+              "revision": "0",
+              "name": "章",
+              "status": "provisional",
+              "visibility": "private",
+              "createdAt": "2026-10-08T07:55:48.640Z",
+              "updatedAt": "2026-10-08T07:55:48.640Z",
+              "customValues": {},
+              "data": {
+                "sceneIds": [
+                  "e531a74b-65bc-4245-b712-34f9335d6d0a",
+                  "4fcdfd91-da06-44ad-8204-4f8035923a8b",
+                  "eb9ab0d5-1736-49fe-80cb-44e00ee0c30d"
+                ],
+                "summary": [],
+                "authorNotes": [],
+                "structureRole": ""
+              }
+            },
+            {
+              "id": "1db1db62-1ea3-4c9f-9ec0-95d79c4f814b",
+              "projectId": "6a280b2e-ed84-42e7-9eaa-d3e101608fcd",
+              "kind": "checkpoint",
+              "revision": "0",
+              "name": "旧章開始",
+              "status": "provisional",
+              "visibility": "private",
+              "createdAt": "2026-10-08T07:55:48.643Z",
+              "updatedAt": "2026-10-08T07:55:48.643Z",
+              "customValues": {},
+              "data": {
+                "contentVersionId": "40abe6c8-810f-409f-9d8f-5396ab9dc6de",
+                "runtimeState": {
+                  "contentVersionId": "40abe6c8-810f-409f-9d8f-5396ab9dc6de",
+                  "variableValues": {
+                    "6f6eb08b-9acd-470c-af19-64080b0a8b8e": {
+                      "type": "integer",
+                      "value": 2
+                    }
+                  },
+                  "itemInstances": [],
+                  "assertions": [],
+                  "seenIds": [],
+                  "visitCounts": {},
+                  "onceTriggers": [],
+                  "rngSeed": "scenario-1",
+                  "rngPosition": 0,
+                  "callStack": [],
+                  "presentationPosition": null,
+                  "loopNumber": 0,
+                  "provenance": "partial"
+                },
+                "origin": "partial",
+                "traceId": null,
+                "contentRevision": "0"
+              }
+            },
+            {
+              "id": "f57996e8-0ceb-4937-9c13-5af82d8af31c",
+              "projectId": "6a280b2e-ed84-42e7-9eaa-d3e101608fcd",
+              "kind": "trace",
+              "revision": "0",
+              "name": "二場面だけの順序",
+              "status": "provisional",
+              "visibility": "private",
+              "createdAt": "2026-10-08T07:55:48.643Z",
+              "updatedAt": "2026-10-08T07:55:48.643Z",
+              "customValues": {},
+              "data": {
+                "contentVersionId": "40abe6c8-810f-409f-9d8f-5396ab9dc6de",
+                "startCheckpointId": "1db1db62-1ea3-4c9f-9ec0-95d79c4f814b",
+                "steps": [],
+                "seed": "scenario-1",
+                "engineVersion": "1.0.0",
+                "externalMode": null,
+                "contentRevision": "0",
+                "initialExternalValues": {},
+                "mode": "chapters",
+                "readingPath": {
+                  "chapterIds": [
+                    "e39b4783-1df6-4afb-bff0-61ac553b2b69"
+                  ],
+                  "sceneIds": [
+                    "4fcdfd91-da06-44ad-8204-4f8035923a8b",
+                    "e531a74b-65bc-4245-b712-34f9335d6d0a"
+                  ],
+                  "occurrences": [
+                    {
+                      "entityId": "4fcdfd91-da06-44ad-8204-4f8035923a8b",
+                      "occurrenceId": "4fcdfd91-da06-44ad-8204-4f8035923a8b:1",
+                      "before": {
+                        "contentVersionId": "40abe6c8-810f-409f-9d8f-5396ab9dc6de",
+                        "variableValues": {
+                          "6f6eb08b-9acd-470c-af19-64080b0a8b8e": {
+                            "type": "integer",
+                            "value": 2
+                          }
+                        },
+                        "itemInstances": [],
+                        "assertions": [],
+                        "seenIds": [],
+                        "visitCounts": {},
+                        "onceTriggers": [],
+                        "rngSeed": "scenario-1",
+                        "rngPosition": 0,
+                        "callStack": [],
+                        "presentationPosition": null,
+                        "loopNumber": 0,
+                        "provenance": "partial"
+                      },
+                      "after": {
+                        "contentVersionId": "40abe6c8-810f-409f-9d8f-5396ab9dc6de",
+                        "variableValues": {
+                          "6f6eb08b-9acd-470c-af19-64080b0a8b8e": {
+                            "type": "integer",
+                            "value": 2
+                          }
+                        },
+                        "itemInstances": [],
+                        "assertions": [],
+                        "seenIds": [
+                          "4fcdfd91-da06-44ad-8204-4f8035923a8b"
+                        ],
+                        "visitCounts": {
+                          "4fcdfd91-da06-44ad-8204-4f8035923a8b": 1
+                        },
+                        "onceTriggers": [],
+                        "rngSeed": "scenario-1",
+                        "rngPosition": 0,
+                        "callStack": [],
+                        "presentationPosition": null,
+                        "loopNumber": 0,
+                        "provenance": "partial"
+                      },
+                      "presentationState": {
+                        "contentVersionId": "40abe6c8-810f-409f-9d8f-5396ab9dc6de",
+                        "variableValues": {
+                          "6f6eb08b-9acd-470c-af19-64080b0a8b8e": {
+                            "type": "integer",
+                            "value": 2
+                          }
+                        },
+                        "itemInstances": [],
+                        "assertions": [],
+                        "seenIds": [
+                          "4fcdfd91-da06-44ad-8204-4f8035923a8b"
+                        ],
+                        "visitCounts": {
+                          "4fcdfd91-da06-44ad-8204-4f8035923a8b": 1
+                        },
+                        "onceTriggers": [],
+                        "rngSeed": "scenario-1",
+                        "rngPosition": 0,
+                        "callStack": [],
+                        "presentationPosition": null,
+                        "loopNumber": 0,
+                        "provenance": "partial"
+                      },
+                      "conditionResults": [],
+                      "externalValues": {}
+                    },
+                    {
+                      "entityId": "e531a74b-65bc-4245-b712-34f9335d6d0a",
+                      "occurrenceId": "e531a74b-65bc-4245-b712-34f9335d6d0a:2",
+                      "before": {
+                        "contentVersionId": "40abe6c8-810f-409f-9d8f-5396ab9dc6de",
+                        "variableValues": {
+                          "6f6eb08b-9acd-470c-af19-64080b0a8b8e": {
+                            "type": "integer",
+                            "value": 2
+                          }
+                        },
+                        "itemInstances": [],
+                        "assertions": [],
+                        "seenIds": [
+                          "4fcdfd91-da06-44ad-8204-4f8035923a8b"
+                        ],
+                        "visitCounts": {
+                          "4fcdfd91-da06-44ad-8204-4f8035923a8b": 1
+                        },
+                        "onceTriggers": [],
+                        "rngSeed": "scenario-1",
+                        "rngPosition": 0,
+                        "callStack": [],
+                        "presentationPosition": null,
+                        "loopNumber": 0,
+                        "provenance": "partial"
+                      },
+                      "after": {
+                        "contentVersionId": "40abe6c8-810f-409f-9d8f-5396ab9dc6de",
+                        "variableValues": {
+                          "6f6eb08b-9acd-470c-af19-64080b0a8b8e": {
+                            "type": "integer",
+                            "value": 2
+                          }
+                        },
+                        "itemInstances": [],
+                        "assertions": [],
+                        "seenIds": [
+                          "4fcdfd91-da06-44ad-8204-4f8035923a8b",
+                          "e531a74b-65bc-4245-b712-34f9335d6d0a",
+                          "4357ddcf-f304-48a3-8894-fa2099f217dd"
+                        ],
+                        "visitCounts": {
+                          "4fcdfd91-da06-44ad-8204-4f8035923a8b": 1,
+                          "e531a74b-65bc-4245-b712-34f9335d6d0a": 1
+                        },
+                        "onceTriggers": [],
+                        "rngSeed": "scenario-1",
+                        "rngPosition": 0,
+                        "callStack": [],
+                        "presentationPosition": null,
+                        "loopNumber": 0,
+                        "provenance": "partial"
+                      },
+                      "presentationState": {
+                        "contentVersionId": "40abe6c8-810f-409f-9d8f-5396ab9dc6de",
+                        "variableValues": {
+                          "6f6eb08b-9acd-470c-af19-64080b0a8b8e": {
+                            "type": "integer",
+                            "value": 2
+                          }
+                        },
+                        "itemInstances": [],
+                        "assertions": [],
+                        "seenIds": [
+                          "4fcdfd91-da06-44ad-8204-4f8035923a8b",
+                          "e531a74b-65bc-4245-b712-34f9335d6d0a",
+                          "4357ddcf-f304-48a3-8894-fa2099f217dd"
+                        ],
+                        "visitCounts": {
+                          "4fcdfd91-da06-44ad-8204-4f8035923a8b": 1,
+                          "e531a74b-65bc-4245-b712-34f9335d6d0a": 1
+                        },
+                        "onceTriggers": [],
+                        "rngSeed": "scenario-1",
+                        "rngPosition": 0,
+                        "callStack": [],
+                        "presentationPosition": null,
+                        "loopNumber": 0,
+                        "provenance": "partial"
+                      },
+                      "conditionResults": [],
+                      "externalValues": {}
+                    }
+                  ]
+                },
+                "coverage": {
+                  "scenes": {
+                    "checked": 2,
+                    "total": 3
+                  },
+                  "dialogue": {
+                    "checked": 0,
+                    "total": 0
+                  },
+                  "choices": {
+                    "checked": 0,
+                    "total": 0
+                  },
+                  "conditionTrue": {
+                    "checked": 0,
+                    "total": 0
+                  },
+                  "conditionFalse": {
+                    "checked": 0,
+                    "total": 0
+                  },
+                  "declaredTests": {
+                    "checked": 0,
+                    "total": 0,
+                    "unknown": 0,
+                    "byProvenance": {
+                      "full_play": {
+                        "checked": 0,
+                        "total": 0
+                      },
+                      "partial": {
+                        "checked": 0,
+                        "total": 0
+                      },
+                      "imported": {
+                        "checked": 0,
+                        "total": 0
+                      },
+                      "stub": {
+                        "checked": 0,
+                        "total": 0
+                      }
+                    },
+                    "byExternalMode": {
+                      "internal": {
+                        "checked": 0,
+                        "total": 0
+                      },
+                      "stub": {
+                        "checked": 0,
+                        "total": 0
+                      },
+                      "actual": {
+                        "checked": 0,
+                        "total": 0
+                      },
+                      "mixed": {
+                        "checked": 0,
+                        "total": 0
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          ],
+          "relations": [],
+          "views": []
+        },
+        "contentHash": "c4243625b5d156c77c802b40b9c50835d412df179e5ca022107ff40cb8395c02",
+        "createdAt": "2026-10-08T07:55:48.654Z",
+        "versionLabel": "改訂稿の経路再確認 2"
+      }
+    ],
+    "findings": [],
+    "confirmationHash": "08b1f1cadd30fe06a6a89ead61f2eb8c0ff7261667d243329e9759ae7146e47c"
+  }
+}
