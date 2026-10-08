@@ -6,16 +6,18 @@
   "base_commit": "3099c9d487fbabe8342ad8c4ee2c8dc4d4156b88",
   "base_tree": "4fdc292ee4a973fbb6ae5cd8d57710066dabaeb4",
   "candidate": {
-    "snapshot": "independent-candidate-20261008-5",
-    "commit": null,
-    "tree": null,
-    "reason": "parent has not fixed final candidate commit; immutable local copy and every source SHA256 identify inspected code",
-    "source_hashes_file": "evidence/independent-candidate-5-source-hashes.json",
+    "snapshot": "independent-candidate-20261008-6",
+    "commit": "773e7554f381c8e3a7c93e142350f181328f014e",
+    "tree": "d89ceec5f439c0b711ce73c13500cffd6544c1b1",
+    "draft_pr": "https://github.com/chameleonjp-lab/shinariokanri/pull/9",
+    "reason": "immutable reviewed source matches the fixed RV01-RV10 correction commit; subsequent RB05 implementation is a separate scope",
+    "source_hashes_file": "evidence/independent-candidate-6-source-hashes.json",
     "source_files": 138,
-    "working_tree_source_hash_comparison": {
-      "result": "all 138 matched",
-      "checked_at_utc": "2026-10-08T02:53:11.606057+00:00",
-      "scope": "src files only; final commit binding is still pending"
+    "commit_source_hash_comparison": {
+      "result": "all 138 source files matched; no extra or missing source paths",
+      "checked_at_utc": "2026-10-08T03:05:17.302925+00:00",
+      "evidence": "evidence/independent-candidate-6-commit-binding.json",
+      "scope": "git commit source content only; later working-tree RB05 changes are not reviewed by this evidence"
     }
   },
   "original_registries": {
@@ -36,10 +38,12 @@
         "vitest": "5.0.3",
         "OS": "Debian GNU/Linux 13 (trixie) 13.6, Linux 6.18.44 x86_64"
       },
-      "result": "31 passed across five targeted files",
-      "passed": 31,
+      "result": "33 passed across six targeted files",
+      "passed": 33,
       "failed": 0,
-      "log": "evidence/independent-candidate-5-regressions.log"
+      "log": "evidence/independent-candidate-6-regressions.log",
+      "source_commit": "773e7554f381c8e3a7c93e142350f181328f014e",
+      "source_tree": "d89ceec5f439c0b711ce73c13500cffd6544c1b1"
     },
     {
       "kind": "actual_headless_Chromium_component_integration",
@@ -56,15 +60,17 @@
       "result": "5 passed",
       "passed": 5,
       "failed": 0,
-      "evidence": "evidence/independent-candidate-5-ui-review.json",
-      "limitations": "React components mounted with callbacks matching App; this is not a usual full App workflow, physical device, support technology, Auth/RLS/Storage, or complete original acceptance evidence"
+      "evidence": "evidence/independent-candidate-6-ui-review.json",
+      "limitations": "React components mounted with callbacks matching App; this is not a usual full App workflow, physical device, support technology, Auth/RLS/Storage, or complete original acceptance evidence",
+      "source_commit": "773e7554f381c8e3a7c93e142350f181328f014e",
+      "source_tree": "d89ceec5f439c0b711ce73c13500cffd6544c1b1"
     }
   ],
   "findings": [
     {
       "id": "IC01",
       "finding": "resetCauses loses scene/chapter causes when run_end overwrites them",
-      "status": "resolved_by_candidate_5",
+      "status": "resolved_at_reviewed_correction_commit",
       "requirements": [
         "REQ-B15",
         "REQ-F38",
@@ -82,12 +88,13 @@
           "path": "src/domain/conditions.ts",
           "sha256": "43d42b54260865e98ac62159a459403e730f291ec76dcac67bb658a590be06db"
         }
-      ]
+      ],
+      "first_resolution_snapshot": 5
     },
     {
       "id": "IC02",
       "finding": "a terminal in the same scene does not run its scene/chapter ending declarations",
-      "status": "resolved_by_candidate_5",
+      "status": "resolved_at_reviewed_correction_commit",
       "requirements": [
         "REQ-B15",
         "REQ-F38"
@@ -100,12 +107,13 @@
           "path": "src/domain/runtime.ts",
           "sha256": "d67429d532e102fc115e98e47ec47b0df63dcbee76333a41d56698e3cedfe0f2"
         }
-      ]
+      ],
+      "first_resolution_snapshot": 5
     },
     {
       "id": "IC03",
       "finding": "chapter reading omits declared scene/chapter/run lifecycle resets",
-      "status": "resolved_by_candidate_5",
+      "status": "resolved_at_reviewed_correction_commit",
       "requirements": [
         "REQ-B13",
         "REQ-B15",
@@ -119,14 +127,15 @@
       "files": [
         {
           "path": "src/domain/presentation.ts",
-          "sha256": "528667fba5be9ce2912f09306b5207949755396644360e4561b5e202476060c7"
+          "sha256": "d15e2293242784c3e576e3838ebd9549fab082dabbc7bff1ce0303f906067aa4"
         }
-      ]
+      ],
+      "first_resolution_snapshot": 5
     },
     {
       "id": "IC04",
       "finding": "a missing partial state value records undefined as a reset cause and fails presentation",
-      "status": "resolved_by_candidate_5",
+      "status": "resolved_at_reviewed_correction_commit",
       "requirements": [
         "REQ-B15",
         "REQ-F38"
@@ -140,12 +149,13 @@
           "path": "src/domain/conditions.ts",
           "sha256": "43d42b54260865e98ac62159a459403e730f291ec76dcac67bb658a590be06db"
         }
-      ]
+      ],
+      "first_resolution_snapshot": 5
     },
     {
       "id": "IC07",
       "finding": "unknown graph dimension masks a known out-of-scope chapter",
-      "status": "resolved_by_candidate_5",
+      "status": "resolved_at_reviewed_correction_commit",
       "requirements": [
         "REQ-B16",
         "REQ-F43",
@@ -159,12 +169,13 @@
           "path": "src/domain/stateRules.ts",
           "sha256": "26572ed1a28bc83aae8d4327512e282a30f18ce86a81087a03fcdacd285988fc"
         }
-      ]
+      ],
+      "first_resolution_snapshot": 5
     },
     {
       "id": "IC08a",
       "finding": "remounted ProjectInfo allows a second save while an earlier save remains pending",
-      "status": "resolved_by_candidate_5",
+      "status": "resolved_at_reviewed_correction_commit",
       "requirements": [
         "REQ-B06",
         "REQ-F02",
@@ -183,12 +194,13 @@
           "path": "src/ui/WorkPage.tsx",
           "sha256": "19340c35aaecc94081284563a22abec20efdc8bd91a994eef41c767286729f6c"
         }
-      ]
+      ],
+      "first_resolution_snapshot": 5
     },
     {
       "id": "IC08b",
       "finding": "remounted ProjectInfo fails to reconcile the original save acknowledgment",
-      "status": "resolved_by_candidate_5",
+      "status": "resolved_at_reviewed_correction_commit",
       "requirements": [
         "REQ-B06",
         "REQ-F02",
@@ -211,12 +223,13 @@
           "path": "src/ui/projectSettingsDraft.ts",
           "sha256": "35a2c6fe0d4c995015b4845a1d364510e727b99067fc2cd1b2952f639369de60"
         }
-      ]
+      ],
+      "first_resolution_snapshot": 5
     },
     {
       "id": "IC09",
       "finding": "invalid calendar JSON raw input disappears when ProjectInfo remounts",
-      "status": "resolved_by_candidate_5",
+      "status": "resolved_at_reviewed_correction_commit",
       "requirements": [
         "REQ-N18"
       ],
@@ -232,12 +245,13 @@
           "path": "src/ui/projectSettingsDraft.ts",
           "sha256": "35a2c6fe0d4c995015b4845a1d364510e727b99067fc2cd1b2952f639369de60"
         }
-      ]
+      ],
+      "first_resolution_snapshot": 5
     },
     {
       "id": "IC10",
       "finding": "borrowed variable stub modal dereferences only local entities",
-      "status": "resolved_by_candidate_5",
+      "status": "resolved_at_reviewed_correction_commit",
       "requirements": [
         "REQ-F09",
         "REQ-B15",
@@ -251,12 +265,13 @@
           "path": "src/ui/Reader.tsx",
           "sha256": "87c9ac64e3899a64514592af969ffe67047697440938b1e06638bd700440ce32"
         }
-      ]
+      ],
+      "first_resolution_snapshot": 5
     },
     {
       "id": "IC11",
       "finding": "an empty new resetCauses property breaks an unchanged successful historical flow trace",
-      "status": "resolved_by_candidate_5",
+      "status": "resolved_at_reviewed_correction_commit",
       "requirements": [
         "REQ-B16",
         "REQ-F15",
@@ -276,12 +291,13 @@
           "path": "src/domain/conditions.ts",
           "sha256": "43d42b54260865e98ac62159a459403e730f291ec76dcac67bb658a590be06db"
         }
-      ]
+      ],
+      "first_resolution_snapshot": 5
     },
     {
       "id": "IC12",
       "finding": "an empty new resetCauses property breaks an unchanged successful historical chapter trace",
-      "status": "resolved_by_candidate_5",
+      "status": "resolved_at_reviewed_correction_commit",
       "requirements": [
         "REQ-B13",
         "REQ-B16",
@@ -296,18 +312,19 @@
       "files": [
         {
           "path": "src/domain/presentation.ts",
-          "sha256": "528667fba5be9ce2912f09306b5207949755396644360e4561b5e202476060c7"
+          "sha256": "d15e2293242784c3e576e3838ebd9549fab082dabbc7bff1ce0303f906067aa4"
         },
         {
           "path": "src/domain/conditions.ts",
           "sha256": "43d42b54260865e98ac62159a459403e730f291ec76dcac67bb658a590be06db"
         }
-      ]
+      ],
+      "first_resolution_snapshot": 5
     },
     {
       "id": "IC13",
       "finding": "a borrowed quest transition table is omitted from shared presentation effect validation",
-      "status": "resolved_by_candidate_5",
+      "status": "resolved_at_reviewed_correction_commit",
       "requirements": [
         "REQ-B15",
         "REQ-F09",
@@ -325,14 +342,15 @@
         },
         {
           "path": "src/domain/presentation.ts",
-          "sha256": "528667fba5be9ce2912f09306b5207949755396644360e4561b5e202476060c7"
+          "sha256": "d15e2293242784c3e576e3838ebd9549fab082dabbc7bff1ce0303f906067aa4"
         }
-      ]
+      ],
+      "first_resolution_snapshot": 5
     },
     {
       "id": "IC14",
       "finding": "valid finite transition exceptions cannot receive initial world tick or a no-trigger Reader tick; opening world-time context must survive save/replay/clone",
-      "status": "resolved_by_candidate_5",
+      "status": "resolved_at_reviewed_correction_commit",
       "requirements": [
         "REQ-B15",
         "REQ-B16",
@@ -351,7 +369,7 @@
         },
         {
           "path": "src/domain/presentation.ts",
-          "sha256": "528667fba5be9ce2912f09306b5207949755396644360e4561b5e202476060c7"
+          "sha256": "d15e2293242784c3e576e3838ebd9549fab082dabbc7bff1ce0303f906067aa4"
         },
         {
           "path": "src/domain/types.ts",
@@ -365,7 +383,8 @@
           "path": "src/ui/Reader.tsx",
           "sha256": "87c9ac64e3899a64514592af969ffe67047697440938b1e06638bd700440ce32"
         }
-      ]
+      ],
+      "first_resolution_snapshot": 5
     }
   ],
   "RV01_to_RV10": [
@@ -464,13 +483,17 @@
     }
   },
   "remaining_environment_conditions": [
-    "final candidate commit and tree must be fixed and inspected-source hashes matched before final evidence reuse",
+    "this fixed correction commit is not the all-feature completion commit; the final release candidate must have all original gates at its own target commit",
     "all original 116 normal/negative acceptance cases at one final target",
     "physical iPhone/iPad and specified desktop browsers/OS versions, rotation/IME/Files/recording/offline, VoiceOver/NVDA",
     "specified Standard/Large repeated performance intervals, progress/cancel and two-hour continuation",
     "dedicated actual sync endpoint, Auth accounts/roles and private Storage/API tests; no credentials or endpoint were provisioned to reviewer"
   ],
   "artifact_hashes": [
+    {
+      "file": "evidence/independent-async-capture-regressions.ts",
+      "sha256": "d2b122db2616fe75105f0734948a1e3eb183ca0ee61eec4f567fbeafc5adc8f6"
+    },
     {
       "file": "evidence/independent-borrowed-quest-regression.ts",
       "sha256": "825a5a2ad94314dc3daeaa67cbd262396e53f29622e0779b4a2aea6a26553695"
@@ -532,6 +555,30 @@
       "sha256": "ad2c51ed71126ba8e9d607310515af11ddfbeade796427cd5014641552001db0"
     },
     {
+      "file": "evidence/independent-candidate-6-capture.log",
+      "sha256": "cedb32fb1aaa8e6310330f0eb7f6abf611d3f7f4a0c588aaacf04b70841ef64b"
+    },
+    {
+      "file": "evidence/independent-candidate-6-commit-binding.json",
+      "sha256": "9b0126b410f6f5594f3693e45596930168b45a5a5ec253abffb3ee6f6f90b1cb"
+    },
+    {
+      "file": "evidence/independent-candidate-6-regressions.log",
+      "sha256": "5937046d589dd65001e823bff71e4ae4c3a53d959c4be94c1a3ec827eb7c4061"
+    },
+    {
+      "file": "evidence/independent-candidate-6-source-hashes.json",
+      "sha256": "8315961091891a8aef86943e6e27e3604a06e957c62622312387415015279bca"
+    },
+    {
+      "file": "evidence/independent-candidate-6-ui-review-vite.log",
+      "sha256": "a429533907a9f1ae6bd8cfc9a8fde547beb63fbefbd7d3aa5985fa4a69f6c69f"
+    },
+    {
+      "file": "evidence/independent-candidate-6-ui-review.json",
+      "sha256": "ef78879b5da140a9107f3a1ebb5c22deef0edcf07064f779f156cd469554101a"
+    },
+    {
       "file": "evidence/independent-candidate-boundaries.ts",
       "sha256": "3c67a85f91ea28059967b48f7c1511834ca4e57440e3154e0195a7444383e687"
     },
@@ -581,10 +628,10 @@
     },
     {
       "file": "evidence/independent-ui-review.mjs",
-      "sha256": "632bce8070f1d06c9ebdcf54e726028554885f5562a9d310e0b8fb8c60e68701"
+      "sha256": "0ba4b04c61c154db4ee70cb35fcadcfb1e1b352dfef74cb2299c87be9f4a1536"
     }
   ],
-  "updated_at_utc": "2026-10-08T02:53:11.606057+00:00",
+  "updated_at_utc": "2026-10-08T03:05:17.302925+00:00",
   "prior_candidate_observations": [
     {
       "snapshot": 1,
@@ -615,8 +662,26 @@
   ],
   "reviewed_scope_open_findings": [],
   "evidence_reexecution_procedure": {
-    "domain": "copy the five evidence regression .ts files to tests/*.test.ts in an isolated source copy, legacy/ to tests/fixtures/independent-legacy/, and run Vitest for those five files",
+    "domain": "copy the six evidence regression .ts files (including independent-async-capture-regressions.ts) to tests/*.test.ts in an isolated git archive of the correction commit, legacy/ to tests/fixtures/independent-legacy/, and run Vitest for those six files",
     "browser": "copy independent-ui-review.mjs, independent-settings-harness.tsx and independent-harness.html to isolated copy root; node independent-ui-review.mjs launches local Vite port5229 and /usr/bin/chromium",
     "limitations": "historical source generation and actual baseline replay use isolated git archive 3099c9d; browser is a component harness, not full App or physical device; Node clone tests use fake IndexedDB runtime"
-  }
+  },
+  "final_capture_contracts": [
+    {
+      "id": "IC16",
+      "description": "chapter world tick and selected scene IDs are captured before asynchronous verification; caller option mutation does not change the requested start",
+      "status": "passed",
+      "file": "src/domain/presentation.ts",
+      "sha256": "d15e2293242784c3e576e3838ebd9549fab082dabbc7bff1ce0303f906067aa4",
+      "evidence": "evidence/independent-async-capture-regressions.ts"
+    },
+    {
+      "id": "IC17",
+      "description": "verified analysis captures entry, nested state, stub values and presentation results before asynchronous verification; cancellation signal and progress callback remain live controls",
+      "status": "passed",
+      "file": "src/domain/runtimeVerified.ts",
+      "sha256": "f78e589bc36aa6cbfcd52bdbff8ce6b4df8540f0efe0d74fa5d750967b93c3b5",
+      "evidence": "evidence/independent-async-capture-regressions.ts"
+    }
+  ]
 }
