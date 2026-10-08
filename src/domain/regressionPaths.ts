@@ -7,14 +7,21 @@ export function declaredRegressionPaths(project: ProjectData): { ids: ID[]; path
   const paths = ids.map(id => project.entities.find((entity): entity is Entity<'trace'> => entity.id === id && entity.kind === 'trace' && adoptedRecord(entity))).filter((entity): entity is Entity<'trace'> => !!entity);
   return { ids, paths, missing: ids.filter(id => !paths.some(path => path.id === id)) };
 }
-export function regressionPathCoverage(project: ProjectData, candidate: Pick<TraceData, 'contentVersionId' | 'steps' | 'readingPath' | 'mode' | 'externalMode'>, start: RuntimeState) {
+export function regressionPathCoverage(project: ProjectData, candidate: Pick<TraceData, 'contentVersionId' | 'steps' | 'readingPath' | 'mode' | 'externalMode'>, start: RuntimeState, executionStatus?: string) {
   const declarations = declaredRegressionPaths(project);
   const equal = (left: unknown, right: unknown) => left === undefined || right === undefined ? left === right : canonicalJson(left) === canonicalJson(right);
-  const matched = declarations.paths.filter(path => {
+  const observedUnknown = candidate.steps.some(step => step.conditionResults?.some(result => result.value === 'unknown')) || candidate.readingPath?.occurrences.some(occurrence => occurrence.conditionResults.some(result => result.value === 'unknown'));
+  const lastPosition = candidate.steps.at(-1)?.after.presentationPosition ?? start.presentationPosition;
+  const content = project.snapshots.find(snapshot => snapshot.id === candidate.contentVersionId)?.content ?? project;
+  const complete = executionStatus ? executionStatus === 'terminal' : candidate.mode === 'chapters'
+    ? !!candidate.readingPath?.sceneIds.length && candidate.readingPath.occurrences.length === candidate.readingPath.sceneIds.length
+    : content.entities.some(entity => entity.id === lastPosition && entity.kind === 'flow_node' && adoptedRecord(entity) && entity.data.nodeType === 'terminal');
+  const matchingPaths = declarations.paths.filter(path => {
     if (path.data.contentVersionId !== candidate.contentVersionId || (path.data.mode ?? 'flow') !== (candidate.mode ?? 'flow')) return false;
     if ((path.data.externalMode ?? 'internal') !== (candidate.externalMode ?? 'internal') || ['actual', 'mixed'].includes(candidate.externalMode ?? 'internal')) return false;
     const checkpoint = project.entities.find((entity): entity is Entity<'checkpoint'> => entity.id === path.data.startCheckpointId && entity.kind === 'checkpoint');
     if (!checkpoint || !equal(checkpoint.data.runtimeState, start)) return false;
+    if (checkpoint.data.presentationResults?.some(result => result.value === 'unknown')) return false;
     // A declaration names a complete path and start state. Matching a prefix or
     // merely ticking a label never supplies verification evidence.
     if (candidate.mode === 'chapters') return equal(path.data.readingPath, candidate.readingPath && {
@@ -34,6 +41,7 @@ export function regressionPathCoverage(project: ProjectData, candidate: Pick<Tra
       return normalized;
     }));
   });
+  const matched = complete && !observedUnknown ? matchingPaths : [];
   const provenance = (path: Entity<'trace'>) => {
     const checkpoint = project.entities.find((entity): entity is Entity<'checkpoint'> => entity.kind === 'checkpoint' && entity.id === path.data.startCheckpointId);
     return checkpoint?.data.runtimeState.provenance ?? 'partial';
@@ -41,6 +49,6 @@ export function regressionPathCoverage(project: ProjectData, candidate: Pick<Tra
   const mode = (path: Entity<'trace'>) => path.data.externalMode ?? 'internal';
   const byProvenance = Object.fromEntries((['full_play', 'partial', 'imported', 'stub'] as const).map(origin => [origin, { checked: matched.filter(path => provenance(path) === origin).length, total: declarations.paths.filter(path => provenance(path) === origin).length }]));
   const byExternalMode = Object.fromEntries((['internal', 'stub', 'actual', 'mixed'] as const).map(external => [external, { checked: external === 'actual' || external === 'mixed' ? 0 : matched.filter(path => mode(path) === external).length, total: declarations.paths.filter(path => mode(path) === external).length }]));
-  const unknown = declarations.missing.length + declarations.paths.filter(path => path.data.contentVersionId !== candidate.contentVersionId || ['actual', 'mixed'].includes(mode(path))).length;
+  const unknown = declarations.missing.length + declarations.paths.filter(path => path.data.contentVersionId !== candidate.contentVersionId || ['actual', 'mixed'].includes(mode(path)) || project.entities.some(entity => entity.id === path.data.startCheckpointId && entity.kind === 'checkpoint' && entity.data.presentationResults?.some(result => result.value === 'unknown')) || (!complete || observedUnknown) && matchingPaths.includes(path)).length;
   return { checked: matched.filter(path => provenance(path) === 'full_play' && mode(path) === 'internal' && start.provenance === 'full_play').length, total: declarations.ids.length, unknown, byProvenance, byExternalMode };
 }

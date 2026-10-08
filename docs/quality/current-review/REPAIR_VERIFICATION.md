@@ -28,3 +28,6 @@
 完成対象commitの116受入、24工程、6回帰群、実iPhone/iPad/PC全ブラウザー、IME/Files/録音/回転/200%/VoiceOver/NVDA、Standard全指標30回と素材付きLarge/2時間、専用接続先の実Auth/RLS/private Storageは未実行。RV11〜RV30の独立して進められる残実装は現在照合へ残す。公開gateを変更しない。
 
 最終補修対象の単体・保存検査553件とproduction Chromium38件が成功した。build、schema生成、文書検査、計画検査、Python15件も検査する。原仕様へ追加説明を挿入した際は計画の凍結hash検査が拒否したため、原文を復元し、[追加実装契約](../../implementation/RUNTIME_REPAIR_CONTRACT.md)へ説明を分離した。検査条件を変更して通したものではない。非同期開始の時点・解析条件はhash確認前に捕捉する。
+# RB05第2追加の検査
+
+階層・反応系列・途中開始は[追加契約](../../implementation/RB05_STRUCTURE_READING.md)と`evidence/rb05-structure`を参照。通常production3件は固定版付き途中状態の通常編集→保存→再読込→開始→巻戻、反応下書き→画面移動→cold reload→作成→保存→初回／再訪、階層→未接続の通常修正→再読込を検査する。Node/保存の587件も成功。並列の独立ブラウザー検査と全60 workerを同時に実行した回では既存5,001イベントの20秒上限が一度切れた。上限や期待値は変えず、worker4で587件を再実行して成功し、失敗logも保持する。実端末や116受入の完成結果へ換算しない。

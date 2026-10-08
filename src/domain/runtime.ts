@@ -306,6 +306,15 @@ function startTrialInternal(project: ProjectData, options: TrialStartOptions = {
   }
   if (options.seed !== undefined) state.rngSeed = options.seed;
   const entry = options.entryId ?? state.presentationPosition ?? declaredEntry(project);
+  if (checkpointId && state.provenance === 'full_play') {
+    // A hand-edited origin label cannot turn an arbitrary checkpoint into a
+    // declared initial play. Reconstruct its opening from the captured edition.
+    const fresh = entry && declaredEntrypoints(project).includes(entry) ? startTrialInternal(source, {
+      contentVersionId: version, entryId: entry, seed: state.rngSeed,
+      worldTick: options.worldTick, referenceEntities: capturedReferences.get(project),
+    }) : undefined;
+    if (!fresh || fresh.status === 'error' || !sameRuntimeValue(fresh.startState, state)) state.provenance = 'partial';
+  }
   if (options.entryId && !declaredEntrypoints(project).includes(options.entryId) && !checkpointId) state.provenance = 'partial';
   if (!failure && !entry) failure = issue('VALIDATION_FAILED', '開始点が一つに決まりません。入口を指定してください。', 'entryId');
   if (!failure && !findNode(project, entry ?? null)) failure = issue('REFERENCE_INVALID', '指定した開始点が存在しません。', 'entryId');
@@ -782,7 +791,7 @@ export function trialRecordData(project: ProjectData, session: TrialSession, che
       },
     },
   };
-  record.trace.coverage!.declaredTests = regressionPathCoverage(project, { ...record.trace, contentVersionId: session.state.contentVersionId, steps: record.trace.steps.map(step => ({ ...step, before: { ...step.before, contentVersionId: session.state.contentVersionId }, after: { ...step.after, contentVersionId: session.state.contentVersionId }, ...(step.presentationState ? { presentationState: { ...step.presentationState, contentVersionId: session.state.contentVersionId } } : {}) })) }, session.startState);
+  record.trace.coverage!.declaredTests = regressionPathCoverage(project, { ...record.trace, contentVersionId: session.state.contentVersionId, steps: record.trace.steps.map(step => ({ ...step, before: { ...step.before, contentVersionId: session.state.contentVersionId }, after: { ...step.after, contentVersionId: session.state.contentVersionId }, ...(step.presentationState ? { presentationState: { ...step.presentationState, contentVersionId: session.state.contentVersionId } } : {}) })) }, session.startState, session.status);
   const declarations = declaredRegressionPaths(project);
   if (declarations.ids.length) record.trace.regressionDeclarations = { projectRevision: project.revision, traceIds: declarations.ids };
   return record;
