@@ -30,6 +30,9 @@ export function referenceChoices(project: ProjectData, scope: ReferenceScope = '
     Object.values(object).forEach(child => walk(child, name));
   };
   if (['block', 'alias', 'presentation', 'projection_record'].includes(scope)) active.forEach(entity => walk(entity.data, entity.name));
+  // Public paragraph identities belong to the editable policy, while its source
+  // records and source paragraphs still resolve exclusively in the declared pin.
+  if (scope === 'projection_record' && source !== project) for (const policy of project.entities) if (policy.kind === 'projection_profile' && !policy.deletedAt) walk(policy.data.publicTexts, policy.name);
   if (scope === 'projection_record') for (const entity of active) if (entity.kind === 'flow_node' && entity.data.trigger?.id) triggers.push({ id: entity.data.trigger.id, label: `${entity.name} · 起動条件` });
   let choices: ReferenceChoice[];
   switch (scope) {

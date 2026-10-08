@@ -880,7 +880,8 @@ export function StructuredDataField({
   const rootSchema = suppliedRoot ?? GENERATED_SCHEMA;
   const versionId = entity?.kind === 'review' && fieldKey === 'target' ? entity.data.targetVersionId
     : entity?.kind === 'checkpoint' && ['runtimeState', 'presentationResults'].includes(fieldKey ?? '') ? entity.data.contentVersionId
-    : entity?.kind === 'trace' && ['steps', 'initialExternalValues'].includes(fieldKey ?? '') ? entity.data.contentVersionId : undefined;
+    : entity?.kind === 'trace' && ['steps', 'initialExternalValues'].includes(fieldKey ?? '') ? entity.data.contentVersionId
+    : entity?.kind === 'projection_profile' && ['includedIds','publicTexts','blockSources','publicIds','publicValues','namePolicy','allowedRelationIds','approvedAttachmentIds'].includes(fieldKey ?? '') ? entity.data.sourceVersionId : undefined;
   const schema = useMemo(() => suppliedSchema ?? (entityKind && fieldKey ? entityDataFieldSchema(entityKind, fieldKey, rootSchema) : undefined), [suppliedSchema, entityKind, fieldKey, rootSchema]);
   const fieldRequired = required ?? (!!entityKind && !!fieldKey && entityDataFieldRequired(entityKind, fieldKey, rootSchema));
   const [numberDrafts, setNumberDrafts] = useState<StructuredNumberDrafts>(() => parseStructuredNumberDrafts(rawOverride));

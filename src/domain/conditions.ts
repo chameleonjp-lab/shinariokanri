@@ -115,10 +115,10 @@ export function evaluateExpression(expression: Expression, context: RuntimeConte
   const checked = validateExpression(expression); if (!checked.ok) throw new DomainValidationError(checked.issues);
   return expressionValue(checked.value, context, []);
 }
-export function initializeRuntimeState(project: ProjectData, contentVersionId: ID = project.projectId, referenceEntities: Entity[] = []): RuntimeState {
+export function initializeRuntimeState(project: ProjectData, contentVersionId: ID = project.projectId, referenceEntities: Entity[] = [],externalValues:Record<ID,TypedValue>={}): RuntimeState {
   const state = emptyRuntimeState(contentVersionId), variables = [...project.entities, ...referenceEntities].filter((entity): entity is Entity<'variable'> => entity.kind === 'variable' && adoptedRecord(entity));
   for (const variable of variables) state.variableValues[variable.id] = structuredClone(variable.data.initial);
-  for (const variable of variables) if (variable.data.derived) state.variableValues[variable.id] = variableValue(variable.id, { state, variables, entities: project.entities, referenceEntities }, []);
+  for (const variable of variables) if (variable.data.derived||variable.data.externalContractId&&externalValues[variable.data.externalContractId]) state.variableValues[variable.id] = variableValue(variable.id, { state, variables, entities: project.entities, referenceEntities,externalValues }, []);
   // Authors' world assertions and event participation never grant runtime knowledge.
   return state;
 }

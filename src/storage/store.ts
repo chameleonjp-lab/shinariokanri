@@ -1186,6 +1186,7 @@ export async function cloneProject(input: ProjectData): Promise<{ project: Proje
     if (typeof value === 'string') {
       if (key === 'onceTriggers') return value.replace(/[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/g, id => idMap[id] ?? id);
       if (key === 'key' && parent && typeof parent.scope === 'string' && Array.isArray(parent.path)) return [parent.scope, typeof parent.itemId === 'string' ? idMap[parent.itemId] ?? parent.itemId : '', ...parent.path.map(part => String(part))].map(part => encodeURIComponent(part)).join(':');
+      if(key==='publicId'&&parent&&typeof parent.entityId==='string'&&typeof parent.sourceVersionId==='string')return value;
       return (/(?:Id|Ids)$/.test(key) || ['id', 'operationId'].includes(key) || key === 'value' && parent?.type === 'ref') && idMap[value] ? idMap[value] : value;
     }
     if (key === 'importOrigin' && value && typeof value === 'object') { const origin = value as NonNullable<CommandRecord['importOrigin']>; return { ...origin, importOperationId: idMap[origin.importOperationId] ?? origin.importOperationId }; }

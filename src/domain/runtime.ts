@@ -86,6 +86,8 @@ export interface TrialSession {
   initialWorldTick?: string;
 }
 export interface TrialStartOptions {
+  /** Read-only adapter measurements. Evidence classification is performed by the receipt verifier, never by this input. */
+  externalValues?:Record<ID,TypedValue>;
   /** Internal capture input; browser callers use the hash-verifying runtimeVerified entry points. */
   referenceEntities?: Entity[];
   worldTick?: string;
@@ -279,13 +281,14 @@ function startTrialInternal(project: ProjectData, options: TrialStartOptions = {
   const content = alreadyCaptured ? project : versionContent(project, version);
   if (content) project = content;
   if (!alreadyCaptured) project = captureContent(project, options.referenceEntities);
-  let state = initializeRuntimeState(project, version, options.referenceEntities);
+  let state = initializeRuntimeState(project, version, options.referenceEntities,options.externalValues);
   let startConditionResults = clone(options.presentationResults ?? []);
   let startPresentationState = options.presentationState ? clone(options.presentationState) : undefined;
   let checkpointId: ID | undefined;
   let presentationIssues: RuntimeIssue[] | undefined;
   let pendingPresentation: ID | undefined;
   let failure: RuntimeIssue | undefined = content && (!project.worldReferences.length || options.referenceEntities) ? undefined : issue('REFERENCE_INVALID', '指定した不変作品版が見つかりません。', 'contentVersionId');
+  for(const [id,value]of Object.entries(options.externalValues??{})){const contract=project.entities.find(entity=>entity.id===id&&entity.kind==='external_contract'&&adoptedRecord(entity));if(!contract||contract.kind!=='external_contract'||value.type!==contract.data.outputType||value.type==='integer'&&!Number.isSafeInteger(value.value)||value.type==='enum'&&typeof value.value!=='string'||value.type==='boolean'&&typeof value.value!=='boolean')failure=issue('VALIDATION_FAILED','外部管理値の契約・型・範囲が不正です。',id);}
   if (options.worldTick !== undefined && !isTick(options.worldTick)) failure = issue('VALIDATION_FAILED', '提示時点には整数の世界内tickを入力してください。', 'worldTick');
   if (options.checkpointId) {
     const checkpoint = getEntity(source, options.checkpointId);
@@ -323,13 +326,13 @@ function startTrialInternal(project: ProjectData, options: TrialStartOptions = {
       if (errors.length) { failure = errors[0]; break; }
     }
     const ruleContext = presentationRuleContext(project, { nodeId: entry ?? undefined, worldTick: options.worldTick });
-    if (!failure) failure = runtimeExclusionIssues({ state, variables: variables(project), entities: runtimeEntities(project), ruleContext, ruleContexts: reuseRuleContexts(project, ruleContext) })[0];
+    if (!failure) failure = runtimeExclusionIssues({ state, variables: variables(project), entities: runtimeEntities(project), externalValues:options.externalValues,ruleContext, ruleContexts: reuseRuleContexts(project, ruleContext) })[0];
   }
   if (checkpointId && state.provenance === 'full_play') {
     // A hand-edited origin label cannot turn an arbitrary checkpoint into a
     // declared initial play. Reconstruct its opening from the captured edition.
     const fresh = entry && declaredEntrypoints(project).includes(entry) ? startTrialInternal(source, {
-      contentVersionId: version, entryId: entry, seed: state.rngSeed,
+      contentVersionId: version, entryId: entry, seed: state.rngSeed,externalValues:options.externalValues,
       worldTick: options.worldTick, referenceEntities: capturedReferences.get(project),
     }) : undefined;
     if (!fresh || fresh.status === 'error' || !sameRuntimeValue(fresh.startState, state)) state.provenance = 'partial';
@@ -342,7 +345,7 @@ function startTrialInternal(project: ProjectData, options: TrialStartOptions = {
     // A checkpoint already includes its current visit; do not replay entering effects or visits.
     if ((checkpointId || options.state) && state.presentationPosition && entry !== state.presentationPosition && state.provenance !== 'stub') state.provenance = 'partial';
     if (!(checkpointId || options.state) || entry !== state.presentationPosition || ((state.visitCounts[entry] ?? 0) === 0 && !state.seenIds.includes(entry))) {
-      const arrival = present(project, state, entry, undefined, options.worldTick);
+      const arrival = present(project, state, entry, options.externalValues, options.worldTick);
       if (arrival.ok) {
         state = arrival.state; startConditionResults = arrival.conditions; startPresentationState = arrival.observationState;
         const target = findNode(project, entry);
@@ -361,7 +364,7 @@ function startTrialInternal(project: ProjectData, options: TrialStartOptions = {
     declarationProject: clone({ ...source, history: [], snapshots: [], authorAlternatives: undefined, entities: source.entities.filter(entity => ['collection', 'trace', 'checkpoint'].includes(entity.kind)) }),
     state, nodeId: state.presentationPosition, contentRevision: project.revision,
     startState: clone(state), startConditionResults, startPresentationState, startCheckpointId: checkpointId,
-    status: 'ready', history: [], trace: [], issues: [], lastDiff: [], externalValues: {}, startExternalValues: {},
+    status: 'ready', history: [], trace: [], issues: [], lastDiff: [], externalValues: clone(options.externalValues??{}), startExternalValues: clone(options.externalValues??{}),
     pendingPresentation,
   };
   if (failure) return resultSession(session, failure.code === 'CONDITION_UNKNOWN' ? 'unknown' : 'error', [failure]);
@@ -643,7 +646,7 @@ export function restartTrial(project: ProjectData, session: TrialSession, mode: 
   const context = { state: session.state, variables: variables(content), entities: runtimeEntities(content), externalValues: session.externalValues, ruleContext: presentationRuleContext(content, { nodeId: session.nodeId ?? undefined, worldTick: contextOptions ? contextOptions.worldTick : session.initialWorldTick }), ruleContexts: reuseRuleContexts(content, presentationRuleContext(content, { nodeId: session.nodeId ?? undefined, worldTick: contextOptions ? contextOptions.worldTick : session.initialWorldTick })) };
   const reset = resetRuntimeLifecycle(session.state, mode === 'next_run' ? ['run_end', 'new_loop'] : ['full_reset'], context);
   if (!reset.ok) return resultSession(session, reset.issues.some(value => value.code === 'CONDITION_UNKNOWN') ? 'unknown' : 'error', reset.issues);
-  const initial = initializeRuntimeState(content, session.state.contentVersionId, session.referenceEntities);
+  const initial = initializeRuntimeState(content, session.state.contentVersionId, session.referenceEntities,session.startExternalValues);
   initial.variableValues = reset.state.variableValues;
   if (reset.state.resetCauses) initial.resetCauses = reset.state.resetCauses;
   if (mode === 'next_run') {
@@ -652,7 +655,7 @@ export function restartTrial(project: ProjectData, session: TrialSession, mode: 
   }
   initial.rngSeed = session.state.rngSeed;
   initial.provenance = session.state.provenance;
-  const restarted = startTrial(project, { state: initial, contentVersionId: initial.contentVersionId, entryId, referenceEntities: session.referenceEntities, worldTick: contextOptions ? contextOptions.worldTick : session.initialWorldTick });
+  const restarted = startTrial(project, { state: initial, contentVersionId: initial.contentVersionId, entryId, externalValues:session.startExternalValues, referenceEntities: session.referenceEntities, worldTick: contextOptions ? contextOptions.worldTick : session.initialWorldTick });
   restarted.state.provenance = initial.provenance;
   restarted.startState.provenance = initial.provenance;
   return restarted;
