@@ -1,4 +1,5 @@
 import type { Entity, ID, ProjectData } from './types';
+import { collectReferences } from './model';
 
 function stable(value: unknown): string {
  if(value===null || typeof value!=='object') return JSON.stringify(value);
@@ -44,7 +45,15 @@ export async function reconcileDeliverables(before: ProjectData, candidate: Proj
   if(entity.kind==='media_variant'&&(entity.data.sourceIds??[]).some(id=>changedData.has(id))&&!entity.data.needsReview)return {...entity,data:{...entity.data,needsReview:true}} as Entity;
   return entity;
  });
- const next={...candidate,entities};
+ // Follow typed production dependencies once. Historical ancestry does not change copied content.
+ const reverse=new Map<ID,ID[]>();for(const entity of entities)if(!entity.deletedAt&&!['rejected','alternate'].includes(entity.status))for(const reference of collectReferences(entity))if(!reference.path.startsWith('data.lineage')&&!reference.path.startsWith('data.originLineIds'))reverse.set(reference.id,[...reverse.get(reference.id)??[],entity.id]);
+ const affected=new Set(changedData),queue=[...affected];for(let at=0;at<queue.length;at++)for(const id of reverse.get(queue[at])??[])if(!affected.has(id)){affected.add(id);queue.push(id);}
+ const next={...candidate,entities:entities.map(entity=>{if(!affected.has(entity.id)||entity.deletedAt||['rejected','alternate'].includes(entity.status))return entity;
+  if(entity.kind==='storyboard_frame'&&previous.has(entity.id))return {...entity,status:'needs_review' as const};
+  if(entity.kind==='media_variant'&&previous.has(entity.id))return {...entity,data:{...entity.data,needsReview:true}};
+  if(entity.kind==='production_task'&&previous.has(entity.id)&&entity.data.progress==='done')return {...entity,data:{...entity.data,progress:'needs_review' as const}};
+  return entity;
+ })};
  return next;
 }
 export function productionCounts(project: ProjectData, routeSceneIds: readonly ID[] = []) {

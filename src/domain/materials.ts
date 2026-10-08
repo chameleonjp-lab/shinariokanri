@@ -7,6 +7,7 @@ import { jsonBytes, sha256 } from '../storage/json';
 const contentHash = ({ history: _history, ...content }: ProjectData) => sha256(jsonBytes(content));
 export interface MaterialPlan { projectId: ID; baseRevision: string; oldAttachmentId?: ID; sourceId?: ID; replacementIds: ID[]; newAttachmentId: ID; candidate: ProjectData; candidateHash: string; asset: PreparedAsset; confirmationHash: string }
 export async function previewMaterial(project: ProjectData, asset: PreparedAsset, oldAttachmentId?: ID, replacementIds: ID[] = [], sourceId?: ID): Promise<MaterialPlan> {
+  project={...structuredClone({...project,history:[]}),history:project.history};asset=structuredClone(asset);replacementIds=[...replacementIds];
   const verified = await prepareAsset(asset.bytes, asset.displayName, asset.mediaType);
   if (verified.contentHash !== asset.contentHash || verified.byteSize !== asset.byteSize || verified.assetPath !== asset.assetPath || verified.mediaType !== asset.mediaType) throw new Error('INTEGRITY_FAILED: 素材の検査結果とbytesが一致しません。');
   const old = oldAttachmentId ? project.entities.find(entity => entity.id === oldAttachmentId) : undefined;
