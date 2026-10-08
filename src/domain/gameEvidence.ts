@@ -30,6 +30,7 @@ export async function captureGameExecutionBindings(project:ProjectData,options:E
 
 /** Rebuild from the original immutable author approval, using stable public IDs after native clone ID rewrites. */
 export async function rebuildGameExecution(input:ProjectData,evidence:GameHandoffEvidence,inputWorlds:Record<ID,ProjectContent>){
+ evidence=structuredClone(evidence);
  const project=structuredClone(input),worlds=structuredClone(inputWorlds),pin=project.snapshots.find(pin=>pin.id===evidence.verificationVersionId);
  if(!pin||await sha256(jsonBytes(pin.content))!==pin.contentHash)fail('保存したゲーム受領の公開確認版を検証できません。');
  const source=project.snapshots.find(pin=>pin.id===evidence.sourceVersionId)?.content;

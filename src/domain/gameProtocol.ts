@@ -50,8 +50,8 @@ export function parseGameReceipt(bytes:Uint8Array){return parseStrictJson(bytes,
 
 /** Durable records replay from an immutable private approval, including stable public IDs and pinned citations. */
 export async function verifyStoredGameEvidence(input:ProjectData,inputWorlds:Record<ID,import('./types').ProjectContent>={}) {
- const project=structuredClone({...input,history:[]}),worldSnapshots=structuredClone(inputWorlds);
- const images=[project,...input.snapshots.map(pin=>pin.content),...input.history.flatMap(command=>[command.before,command.after]),...input.authorAlternatives?.flatMap(alternative=>[alternative.baseContent,...alternative.versions.map(version=>version.content)])??[]],seen=new Set<string>();
+ const project=structuredClone(input),worldSnapshots=structuredClone(inputWorlds);
+ const images=[project,...project.snapshots.map(pin=>pin.content),...project.history.flatMap(command=>[command.before,command.after]),...project.authorAlternatives?.flatMap(alternative=>[alternative.baseContent,...alternative.versions.map(version=>version.content)])??[]],seen=new Set<string>();
  for(const image of images)for(const note of image.entities){
   if(note.kind!=='note'||!note.data.handoffReceipt)continue;
   const identity=canonicalJson(note.data.handoffReceipt);if(seen.has(identity))continue;seen.add(identity);
