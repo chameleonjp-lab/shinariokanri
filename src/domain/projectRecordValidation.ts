@@ -100,11 +100,11 @@ async function checkAlternatives(project: ProjectData, validationOptions: Projec
 async function checkChapterTraces(project: ProjectData, validationOptions: ProjectValidationOptions, digestCache: PinnedWorldDigestCache): Promise<ValidationIssue[]> {
   const issues: ValidationIssue[] = [];
   for (const [index, entity] of project.entities.entries()) {
-    if (entity.kind !== 'trace' || entity.data.mode !== 'chapters' && !entity.data.initialStubValues) continue;
+    if (entity.kind !== 'trace') continue;
     const location = `project.entities[${index}].data`;
     const checkpoint = project.entities.find(candidate => candidate.id === entity.data.startCheckpointId && candidate.kind === 'checkpoint');
     if (!checkpoint || checkpoint.kind !== 'checkpoint') {
-      issues.push({ code: 'REFERENCE_INVALID', path: `${location}.startCheckpointId`, message: '章読み通しの開始状態が見つかりません。' });
+      issues.push({ code: 'REFERENCE_INVALID', path: `${location}.startCheckpointId`, message: '経路の開始状態が見つかりません。' });
       continue;
     }
     try {

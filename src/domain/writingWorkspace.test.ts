@@ -134,6 +134,15 @@ describe('writing workspace projections and branch changes', () => {
     expect(chapterA.data.sceneIds).toContain(all[1]!.scene.id);
   });
 
+  it('keeps unassigned scenes outside an explicit chapter range including an explicitly empty selection', () => {
+    const { project, chapterA, scenes } = fixture();
+    const orphan = createEntity(project.projectId, 'scene', '未所属の参照元'); project.entities.push(orphan);
+    expect(buildChapterReadingSequence(project, [chapterA.id]).map(entry => entry.scene.id)).toEqual([scenes[1]!.id, scenes[0]!.id]);
+    expect(buildChapterReadingSequence(project, []).map(entry => entry.scene.id)).toEqual([]);
+    expect(buildChapterReadingSequence(project).map(entry => entry.scene.id)).toContain(orphan.id);
+    expect(buildChapterReadingSequence(project, [], [orphan.id]).map(entry => entry.scene.id)).toEqual([orphan.id]);
+  });
+
   it('uses canonical chapter scene order across story lanes, deduplicates membership and skips rejected defaults', () => {
     const { project, chapterA, chapterB, scenes } = fixture();
     chapterA.data.sceneIds = [scenes[1]!.id, scenes[0]!.id, scenes[1]!.id];
