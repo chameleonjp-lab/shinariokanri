@@ -1,3 +1,4 @@
+import { reconcileDeliverables } from '../domain/production';
 import 'fake-indexeddb/auto';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createEntity, createProject, newId, textToRichText, validateProject } from '../domain/model';
@@ -87,4 +88,12 @@ describe('RB07 authored production workflow and complete recovery',()=>{
   try{const ids:string[]=[],pending=previewMaterial(f.p,asset,undefined,ids);f.p.revision='9';f.p.name='後発名';ids.push(f.cue.id);asset.bytes[0]=0;release();const plan=await pending;expect(plan.baseRevision).toBe('0');expect(plan.candidate.name).toBe(original.name);expect(plan.replacementIds).toEqual([]);expect(plan.asset.bytes[0]).toBe(137);await expect(confirmMaterial(f.p,plan)).rejects.toThrow('確認後');}finally{spy.mockRestore();}
   f.p=original;held=false;const second=vi.spyOn(crypto.subtle,'digest').mockImplementation(async(...args)=>{if(!held){held=true;await new Promise<void>(resolve=>{release=resolve;});}return digest(...args);});try{const pending=previewSourceApproval(f.p,f.loc.id);f.p.revision='9';release();expect((await pending).baseRevision).toBe('0');}finally{second.mockRestore();}
  });
+});
+
+it('keeps a storyboard fixed to an unchanged old edition confirmed while live cue dependents require review',async()=>{
+ const project=createProject('版付き依存'),line=createEntity(project.projectId,'dialogue_line','元台詞',{text:textToRichText('旧版の台詞')}),cue=createEntity(project.projectId,'cue','現稿の演出',{anchor:{entityId:line.id},cueType:'sound',expression:'初稿'});line.data.cueIds=[cue.id];line.status=cue.status='confirmed';project.entities.push(line,cue);
+ const snapshotProject=await createWorldSnapshot(project,'固定した旧版');const pin=snapshotProject.snapshots.at(-1)!;
+ const fixed=createEntity(project.projectId,'storyboard_frame','旧版だけのコマ',{anchor:{entityId:line.id,blockId:line.data.text[0].id,sourceVersionId:pin.id},cueIds:[]}),live=createEntity(project.projectId,'storyboard_frame','現稿の演出に依存',{anchor:{entityId:line.id},cueIds:[cue.id]});fixed.status=live.status='confirmed';snapshotProject.entities.push(fixed,live);
+ const candidate=structuredClone(snapshotProject),changed=candidate.entities.find(e=>e.id===cue.id)!;if(changed.kind==='cue')changed.data.expression='新稿';const result=await reconcileDeliverables(snapshotProject,candidate);
+ expect(result.entities.find(e=>e.id===fixed.id)?.status).toBe('confirmed');expect(result.entities.find(e=>e.id===live.id)?.status).toBe('needs_review');expect(result.snapshots[0]).toEqual(pin);expect(result.entities.find(e=>e.id===fixed.id)?.data).toEqual(fixed.data);
 });
