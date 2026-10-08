@@ -90,7 +90,7 @@ export const PROJECTION_FIELDS: Readonly<Partial<Record<EntityKind, Readonly<Rec
 });
 export const PROJECTABLE_KINDS = Object.freeze(Object.keys(PROJECTION_FIELDS) as EntityKind[]);
 const BEHAVIOR_REFS = new Set(['fromId', 'toId', 'effectIds', 'nodeIds', 'edgeIds', 'entryIds', 'exitIds', 'childGraphId', 'fallbackId', 'targetId', 'instanceId', 'stateVariableId', 'externalContractId', 'shownInformationIds', 'knowledgeEffects']);
-const FORBIDDEN_FIELDS = new Set(['authorNotes', 'aliases', 'quotedText', 'originLineIds', 'customValues', 'assetPath', 'licenseNote', 'history', 'query', 'sourceHash']);
+const FORBIDDEN_FIELDS = new Set(['authorNotes', 'aliases', 'quotedText', 'originLineIds', 'replacedByLineIds', 'lineage', 'customValues', 'assetPath', 'licenseNote', 'history', 'query', 'sourceHash']);
 const BLOCK_KINDS = new Set(['paragraph', 'heading', 'list_item', 'quote']);
 const ASSET_TYPES: Record<string, string> = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/gif': 'gif', 'image/webp': 'webp', 'audio/wav': 'wav', 'audio/mpeg': 'mp3', 'application/pdf': 'pdf' };
 const TICK = /^(?:0|-[1-9][0-9]{0,37}|[1-9][0-9]{0,37})$/;

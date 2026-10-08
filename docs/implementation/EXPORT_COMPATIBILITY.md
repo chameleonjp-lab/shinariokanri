@@ -34,3 +34,7 @@ RB05再確認の追加契約：`trace.initialStubValues`は状態変数／外部
 RB05追加互換: checkpoint.worldTick と trace.initialStubBaseState は任意の型付き情報として保存する。日時なしの旧記録は引き続き検証し、矛盾する経路時点は拒否する。initialStubValues が記録された経路は固定版の入力から開始状態を再構成して照合する。入力のない旧stubの再生証跡を保持するが、新版再確認には明示した開始状態の移行・再作成を要求する。本文のID文字列は型付き参照へ置換しない。
 
 RB06の運用情報往復は[完全保存・任意履歴・明示対応](RB06_RECOVERY.md)の互換表を参照する。送信待ちがある1.0.0ファイルには必須機能 `portable-recovery-v1` と `data/recovery.json` を付ける。未知の旧readerが送信待ちを黙って落とすことを防ぐ。元サーバーrevisionは接続時の参考記録であり、ローカル履歴をサーバー共通元へ転用せず、元操作を隔離して接続・権限・確定基底を再検証する。
+
+## RB07追加（最終受入は保留）
+
+台詞lineage/split/merge/copyの旧→新位置対応はstrict native1.0/schema/cloneへ保持し、作者情報として公開投影から除外する。担当別翻訳/収録は公開文・公開ID・公開hashと選んだ成果物の依存素材のみを出力する。新資料形式の動画MP4/WebM/Ogg・UTF-8文章・JSON・非実行binaryは署名/bytes/hash検査と安全な保存表示へ接続。旧readerの未対応必須機能/未知版拒否は維持する。v3→v4はauthorToolDrafts追加、入力bytesは完成した素材bytesの合格へ換算しない。

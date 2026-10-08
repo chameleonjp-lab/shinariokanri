@@ -28,13 +28,19 @@ export async function reconcileDeliverables(before: ProjectData, candidate: Proj
  for(const entity of candidate.entities) {
   if(entity.kind!=='dialogue_line'||entity.deletedAt)continue;
   const old=previous.get(entity.id);
-  if(!old||old.kind!=='dialogue_line'||old.deletedAt)changed.add(entity.id);
+  if(!old||old.kind!=='dialogue_line'||old.deletedAt||['rejected','alternate'].includes(old.status)!==['rejected','alternate'].includes(entity.status))changed.add(entity.id);
   else if((changedData.has(entity.id)||(entity.data.cueIds??[]).some(id=>changedData.has(id)))&&content(old,previous)!==content(entity,current))changed.add(entity.id);
  }
  for(const old of before.entities)if(old.kind==='dialogue_line'&&!old.deletedAt){const line=current.get(old.id);if(!line||line.deletedAt||line.kind!=='dialogue_line')changed.add(old.id);}
+ // A manual stage change cannot approve an old or retired source hash.
+ const staleApprovals=new Set<ID>();
+ for(const entity of candidate.entities)if(!entity.deletedAt&&(entity.kind==='localization'||entity.kind==='recording')&&['reviewed','recorded'].includes(entity.data.stage??'')&&(changed.has(entity.data.sourceLineId)||changedData.has(entity.id))){
+  const line=current.get(entity.data.sourceLineId);
+  if(!line||line.kind!=='dialogue_line'||line.deletedAt||['rejected','alternate'].includes(line.status)||entity.data.sourceHash!==await dialogueContentHash(candidate,line))staleApprovals.add(entity.id);
+ }
  const entities=candidate.entities.map(entity=>{
   if(entity.deletedAt)return entity;
-  if((entity.kind==='localization'||entity.kind==='recording')&&changed.has(entity.data.sourceLineId)&&entity.data.stage!=='needs_review')return {...entity,data:{...entity.data,stage:'needs_review' as const}} as Entity;
+  if((entity.kind==='localization'||entity.kind==='recording')&&(changed.has(entity.data.sourceLineId)||staleApprovals.has(entity.id))&&entity.data.stage!=='needs_review')return {...entity,data:{...entity.data,stage:'needs_review' as const}} as Entity;
   if(entity.kind==='media_variant'&&(entity.data.sourceIds??[]).some(id=>changedData.has(id))&&!entity.data.needsReview)return {...entity,data:{...entity.data,needsReview:true}} as Entity;
   return entity;
  });
@@ -50,7 +56,7 @@ export function productionCounts(project: ProjectData, routeSceneIds: readonly I
 }
 export function pendingSourceHashes(project: ProjectData) {
  return Promise.all(project.entities.filter((e):e is Entity<'localization'|'recording'>=>(e.kind==='localization'||e.kind==='recording')&&!e.deletedAt).map(async entity=>{
-  const line=project.entities.find((e):e is Entity<'dialogue_line'>=>e.kind==='dialogue_line'&&e.id===entity.data.sourceLineId&&!e.deletedAt);
+  const line=project.entities.find((e):e is Entity<'dialogue_line'>=>e.kind==='dialogue_line'&&e.id===entity.data.sourceLineId&&!e.deletedAt&&!['rejected','alternate'].includes(e.status));
   return {id:entity.id,sourceLineId:entity.data.sourceLineId,stale:!line||entity.data.sourceHash!==await dialogueContentHash(project,line)};
  }));
 }

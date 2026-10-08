@@ -6395,6 +6395,278 @@
                 }
               ]
             },
+            "replacedByLineIds": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/ID",
+                    "$comment": "{\"targetKinds\":[\"dialogue_line\"],\"referenceScope\":\"entity\"}"
+                  },
+                  "maxItems": 100000,
+                  "uniqueItems": true
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "lineage": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "mode": {
+                      "enum": [
+                        "split",
+                        "merge",
+                        "copy"
+                      ]
+                    },
+                    "baseRevision": {
+                      "$ref": "#/$defs/Revision"
+                    },
+                    "reason": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "segments": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "source": {
+                            "type": "object",
+                            "properties": {
+                              "entityId": {
+                                "$ref": "#/$defs/ID",
+                                "$comment": "{\"referenceScope\":\"entity\"}"
+                              },
+                              "blockId": {
+                                "anyOf": [
+                                  {
+                                    "$ref": "#/$defs/ID",
+                                    "$comment": "{\"referenceScope\":\"block\"}"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "lineId": {
+                                "anyOf": [
+                                  {
+                                    "$ref": "#/$defs/ID",
+                                    "$comment": "{\"targetKinds\":[\"dialogue_line\"],\"referenceScope\":\"entity\"}"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "start": {
+                                "anyOf": [
+                                  {
+                                    "type": "integer",
+                                    "minimum": 0,
+                                    "maximum": 9007199254740991
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "end": {
+                                "anyOf": [
+                                  {
+                                    "type": "integer",
+                                    "minimum": 0,
+                                    "maximum": 9007199254740991
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "sourceVersionId": {
+                                "anyOf": [
+                                  {
+                                    "$ref": "#/$defs/ID",
+                                    "$comment": "{\"referenceScope\":\"snapshot\"}"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "positionStatus": {
+                                "anyOf": [
+                                  {
+                                    "enum": [
+                                      "unresolved"
+                                    ]
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "positionReason": {
+                                "anyOf": [
+                                  {
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "quotedText": {
+                                "anyOf": [
+                                  {
+                                    "type": "string",
+                                    "minLength": 0
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              }
+                            },
+                            "required": [
+                              "entityId"
+                            ],
+                            "additionalProperties": false
+                          },
+                          "target": {
+                            "type": "object",
+                            "properties": {
+                              "entityId": {
+                                "$ref": "#/$defs/ID",
+                                "$comment": "{\"referenceScope\":\"entity\"}"
+                              },
+                              "blockId": {
+                                "anyOf": [
+                                  {
+                                    "$ref": "#/$defs/ID",
+                                    "$comment": "{\"referenceScope\":\"block\"}"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "lineId": {
+                                "anyOf": [
+                                  {
+                                    "$ref": "#/$defs/ID",
+                                    "$comment": "{\"targetKinds\":[\"dialogue_line\"],\"referenceScope\":\"entity\"}"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "start": {
+                                "anyOf": [
+                                  {
+                                    "type": "integer",
+                                    "minimum": 0,
+                                    "maximum": 9007199254740991
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "end": {
+                                "anyOf": [
+                                  {
+                                    "type": "integer",
+                                    "minimum": 0,
+                                    "maximum": 9007199254740991
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "sourceVersionId": {
+                                "anyOf": [
+                                  {
+                                    "$ref": "#/$defs/ID",
+                                    "$comment": "{\"referenceScope\":\"snapshot\"}"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "positionStatus": {
+                                "anyOf": [
+                                  {
+                                    "enum": [
+                                      "unresolved"
+                                    ]
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "positionReason": {
+                                "anyOf": [
+                                  {
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "quotedText": {
+                                "anyOf": [
+                                  {
+                                    "type": "string",
+                                    "minLength": 0
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              }
+                            },
+                            "required": [
+                              "entityId"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "required": [
+                          "source",
+                          "target"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "minItems": 1,
+                      "maxItems": 100000
+                    }
+                  },
+                  "required": [
+                    "mode",
+                    "baseRevision",
+                    "reason",
+                    "segments"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
             "claimAssertionIds": {
               "anyOf": [
                 {
