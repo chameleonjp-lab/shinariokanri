@@ -2,6 +2,8 @@
 
 RB05第2追加は [階層・反応系列・型付き途中開始](RB05_STRUCTURE_READING.md) を参照。下位call図を含む階層集計、短い反応の3方式、作品別下書き、固定版付き途中状態の通常フォームを保存・再読込・巻戻へ接続する。未知の経路を回帰確認済みに数える問題とcold start時の履歴token／保存待ち再入を独立レビューで確認し修正した。固定再利用と伏線方針等の残実装、原116受入は保持する。
 
+第2追加の候補 `01d73eb`（tree `b2cfef8`）、[Draft PR #11](https://github.com/chameleonjp-lab/shinariokanri/pull/11) を作成した。587単体／保存、production Chromium42通常操作、独立30部品／保存＋6実App操作が成功。build-infoは同候補・dirty=false・base `/shinariokanri/` を記録する。Draft #10を基底とした追加であり、マージや公開は実行していない。
+
 RB05の追加は [状態・全入口探索の契約](RB05_STATE_EXPLORATION.md) を参照。相互排他・提示前状態・全宣言入口・代替提示・回帰集合・二経路比較を追加し、通常Appの原子拒否→保存→再読込→再生を検査した。階層・固定再利用等の残実装は明示したまま進める。RV01〜RV10補修PR [#9](https://github.com/chameleonjp-lab/shinariokanri/pull/9)は外部で取り込まれ、最新mainは2efd4be、CI run 37722834807がsuccess。この作業からマージは実行していない。検証済みf077c9eとの製品差分はない。RB05や24工程全体の完成とは区別する。
 
 2026-10-08の現在照合は[104要件の照合表](../quality/current-review/CURRENT_REQUIREMENTS.md)と[116原受入を保持した現在記録](../quality/current-review/current-implementation.json)を参照。開始時の最新mainは `3099c9d487fbabe8342ad8c4ee2c8dc4d4156b88`、tree `4fdc292ee4a973fbb6ae5cd8d57710066dabaeb4`、PR #8取り込み後。PR #8はレビュー文書だけで、製品コードはレビュー基準0474856から変わっていない。CI run 37715506253はsuccess。AGENTS.mdはworkspaceとrepoに存在しない。
