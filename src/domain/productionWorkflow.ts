@@ -30,9 +30,10 @@ function anchorsIn(value: unknown, transform: (anchor: ContentAnchor) => Content
   if (!value || typeof value !== 'object') return value;
   const object = value as Record<string, unknown>;
   if (typeof object.entityId === 'string') return transform(object as unknown as ContentAnchor);
-  return Object.fromEntries(Object.entries(object).map(([key, item]) => [key, anchorsIn(item, transform)]));
+  return Object.fromEntries(Object.entries(object).map(([key, item]) => [key, key==='lineage'?structuredClone(item):anchorsIn(item, transform)]));
 }
 export async function previewDialogueChange(project: ProjectData, request: DialogueChangeRequest): Promise<DialogueChangePlan> {
+  project={...structuredClone({...project,history:[]}),history:project.history};
   request = structuredClone(request);
   if (!request.reason.trim() || new Set(request.sourceIds).size !== request.sourceIds.length || request.sourceIds.length > 50) throw new Error('VALIDATION_FAILED: 理由と重複しない台詞を指定してください（最大50件）。');
   const sources = request.sourceIds.map(id => lineOf(project, id)), first = sources[0];
@@ -60,6 +61,7 @@ export async function previewDialogueChange(project: ProjectData, request: Dialo
   let entities = project.entities.map(entity => {
     if (request.mode === 'copy') return entity;
     if (sourceSet.has(entity.id)) return { ...entity, status: 'rejected' as const, data: { ...entity.data, replacedByLineIds: newLineIds } } as Entity;
+    if(!active(entity))return entity;
     let next = { ...entity, data: anchorsIn(entity.data, transform) } as Entity;
     if (entity.kind === 'scene' && entity.data.dialogueLineIds?.some(id => sourceSet.has(id)) && (!entity.data.reuse || entity.data.reuse.mode === 'clone' || entity.data.reuse.overrideFields.includes('dialogueLineIds'))) {
       const ids = entity.data.dialogueLineIds, firstIndex = ids.findIndex(id => sourceSet.has(id));
@@ -101,6 +103,7 @@ export async function confirmDialogueChange(project: ProjectData, plan: Dialogue
   return { ...candidate, history: project.history };
 }
 export async function previewSourceApproval(project: ProjectData, deliverableId: ID) {
+  project={...structuredClone({...project,history:[]}),history:project.history};
   const deliverable = project.entities.find(entity => entity.id === deliverableId);
   if (!active(deliverable) || !['localization', 'recording'].includes(deliverable.kind)) throw new Error('REFERENCE_INVALID: 翻訳または収録を選んでください。');
   const target = deliverable as Entity<'localization' | 'recording'>, line = lineOf(project, target.data.sourceLineId), sourceHash = await dialogueContentHash(project, line);
