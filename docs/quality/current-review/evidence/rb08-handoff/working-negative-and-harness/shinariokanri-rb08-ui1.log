@@ -1,0 +1,91 @@
+[WebServer] (node:226533) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 4 tests using 1 worker
+
+(node:226739) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [chromium] › tests/e2e/rb08-handoff.spec.ts:16:1 › 制作見積の入力を移動とcold再開から保持し、quota拒否後の原子保存を完全ファイルへつなぐ (3.3s)
+  ✓  2 [chromium] › tests/e2e/rb08-handoff.spec.ts:18:1 › 旧媒体と元pinを保持し、未保存候補を再開して独立改訂・予定日・完全復元を確認する (2.2s)
+  ✘  3 [chromium] › tests/e2e/rb08-handoff.spec.ts:20:1 › 相談MDの出所と対象版をcold再開し、作者別案へ保存・選択採用して正本と採用記録を復元する (30.1s)
+(node:227369) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  4 [chromium] › tests/e2e/rb08-handoff.spec.ts:22:1 › 通常出力を独立ゲームへ渡し、実勝利・経路・受領証跡を戻して原子保存・cold・完全復元する (30.1s)
+
+
+  1) [chromium] › tests/e2e/rb08-handoff.spec.ts:20:1 › 相談MDの出所と対象版をcold再開し、作者別案へ保存・選択採用して正本と採用記録を復元する 
+
+    Test timeout of 30000ms exceeded.
+
+    Error: locator.click: Test timeout of 30000ms exceeded.
+    Call log:
+      - waiting for getByRole('tab', { name: '書き出し', exact: true })
+
+
+      10 | async function quota(page:Page){await page.evaluate(()=>{const put=IDBObjectStore.prototype.put;let fail=true;IDBObjectStore.prototype.put=function(...args:Parameters<IDBObjectStore['put']>){if(fail&&this.name==='projects'){fail=false;throw new DOMException('fixture quota','QuotaExceededError');}return put.apply(this,args);};});}
+      11 | async function production(page:Page){await nav(page,/^構成/);await page.getByRole('tab',{name:'制作',exact:true}).click();}
+    > 12 | async function output(page:Page){await nav(page,/^作品・保存/);await page.getByRole('tab',{name:'書き出し',exact:true}).click();}
+         |                                                                                                                ^
+      13 | function story(){const p=createProject('受渡しの通常操作'),scene=createEntity(p.projectId,'scene','制作する場面',{body:textToRichText('😀門で勝利を確かめる')}),line=createEntity(p.projectId,'dialogue_line','受渡し台詞',{text:textToRichText('😀帰ってきた')}),task=createEntity(p.projectId,'production_task','場面の実装',{targetIds:[scene.id],stage:'implementation',progress:'doing',deadline:{date:'2026-10-10',timeZone:'Asia/Tokyo'}}),entry=createEntity(p.projectId,'flow_node','ゲーム入口',{nodeType:'automatic',executionPolicy:'first_match',sceneId:scene.id}),terminal=createEntity(p.projectId,'flow_node','ゲーム終端',{nodeType:'terminal',terminalReason:'完了'}),edge=createEntity(p.projectId,'flow_edge','ゲーム進行',{fromId:entry.id,toId:terminal.id,edgeType:'automatic'}),graph=createEntity(p.projectId,'flow_graph','ゲーム経路',{nodeIds:[entry.id,terminal.id],entryIds:[entry.id],exitIds:[terminal.id],edgeIds:[edge.id]});scene.data.dialogueLineIds=[line.id];p.entities.push(scene,line,task,entry,terminal,edge,graph);p.entities.forEach(e=>e.status='confirmed');return {p,scene,line,task,entry,edge,terminal};}
+      14 | function publicPolicy(p:ProjectData){const selected=p.entities.filter(e=>['scene','dialogue_line','flow_node','flow_edge','flow_graph','external_contract'].includes(e.kind)),publicTexts=Object.fromEntries(selected.map(e=>[e.id,Object.fromEntries(Object.entries(e.data).filter(([field])=>['body','text','key','label','terminalReason','description'].includes(field)))]));const profile=createEntity(p.projectId,'projection_profile','確認したゲーム公開範囲',{audience:'reader',publicTitle:'公開したゲーム',publicVersionLabel:'公開一版',includedIds:selected.map(e=>e.id),allowedKinds:[...new Set(selected.map(e=>e.kind))],idPolicy:'preserve',namePolicy:{defaultPolicy:{mode:'replace',replacement:'公開対象'}},publicTexts});profile.status='confirmed';p.entities.push(profile);return profile;}
+      15 |
+        at output (/workspace/shinariokanri-rb08/tests/e2e/rb08-handoff.spec.ts:12:112)
+        at /workspace/shinariokanri-rb08/tests/e2e/rb08-handoff.spec.ts:20:171
+
+    Error Context: test-results/rb08-handoff-相談MDの出所と対象版をcold再開し、作者別案へ保存・選択採用して正本と採用記録を復元する-chromium/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/rb08-handoff-相談MDの出所と対象版をcold再開し、作者別案へ保存・選択採用して正本と採用記録を復元する-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/rb08-handoff-相談MDの出所と対象版をcold再開し、作者別案へ保存・選択採用して正本と採用記録を復元する-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) [chromium] › tests/e2e/rb08-handoff.spec.ts:22:1 › 通常出力を独立ゲームへ渡し、実勝利・経路・受領証跡を戻して原子保存・cold・完全復元する 
+
+    Test timeout of 30000ms exceeded.
+
+    Error: locator.check: Test timeout of 30000ms exceeded.
+    Call log:
+      - waiting for getByLabel('復元方法と対象への影響を確認しました')
+        - locator resolved to <input disabled type="checkbox"/>
+      - attempting click action
+        2 × waiting for element to be visible, enabled and stable
+          - element is not enabled
+        - retrying click action
+        - waiting 20ms
+        2 × waiting for element to be visible, enabled and stable
+          - element is not enabled
+        - retrying click action
+          - waiting 100ms
+        55 × waiting for element to be visible, enabled and stable
+           - element is not enabled
+         - retrying click action
+           - waiting 500ms
+
+
+       6 | import type {ProjectData} from '../../src/domain/types';
+       7 | async function nav(page:Page,name:RegExp){const menu=page.getByRole('button',{name:'メニューを開く'});if(await menu.isVisible())await menu.click();await page.getByRole('button',{name}).first().click();}
+    >  8 | async function seed(page:Page,p:ProjectData){await page.goto('./');await page.getByRole('button',{name:'保存ファイルを読み込む',exact:true}).click();await page.locator('input[type=file]').setInputFiles({name:'handoff.scenario',mimeType:'application/zip',buffer:Buffer.from(await exportScenario(p))});await page.getByLabel('復元方法と対象への影響を確認しました').check();await page.getByRole('button',{name:'この内容で復元する',exact:true}).click();await expect(page.locator('.project-switch')).toBeVisible();}
+         |                                                                                                                                                                                                                                                                                                                                              ^
+       9 | async function backup(page:Page){await nav(page,/^作品・保存/);await page.getByRole('tab',{name:'完全保存・復元',exact:true}).click();const pending=page.waitForEvent('download');await page.getByRole('button',{name:'完全保存ファイルを作成',exact:true}).click();return inspectScenario(new Uint8Array(await readFile((await (await pending).path())!)),{worker:false});}
+      10 | async function quota(page:Page){await page.evaluate(()=>{const put=IDBObjectStore.prototype.put;let fail=true;IDBObjectStore.prototype.put=function(...args:Parameters<IDBObjectStore['put']>){if(fail&&this.name==='projects'){fail=false;throw new DOMException('fixture quota','QuotaExceededError');}return put.apply(this,args);};});}
+      11 | async function production(page:Page){await nav(page,/^構成/);await page.getByRole('tab',{name:'制作',exact:true}).click();}
+        at seed (/workspace/shinariokanri-rb08/tests/e2e/rb08-handoff.spec.ts:8:334)
+        at /workspace/shinariokanri-rb08/tests/e2e/rb08-handoff.spec.ts:22:485
+
+    Error Context: test-results/rb08-handoff-通常出力を独立ゲームへ渡し、実勝利・経路・受領証跡を戻して原子保存・cold・完全復元する-chromium/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/rb08-handoff-通常出力を独立ゲームへ渡し、実勝利・経路・受領証跡を戻して原子保存・cold・完全復元する-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/rb08-handoff-通常出力を独立ゲームへ渡し、実勝利・経路・受領証跡を戻して原子保存・cold・完全復元する-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2 failed
+    [chromium] › tests/e2e/rb08-handoff.spec.ts:20:1 › 相談MDの出所と対象版をcold再開し、作者別案へ保存・選択採用して正本と採用記録を復元する 
+    [chromium] › tests/e2e/rb08-handoff.spec.ts:22:1 › 通常出力を独立ゲームへ渡し、実勝利・経路・受領証跡を戻して原子保存・cold・完全復元する 
+  2 passed (1.1m)

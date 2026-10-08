@@ -1,0 +1,38 @@
+
+> shinariokanri@0.1.0 pretest
+> node scripts/build/portable-runtime.mjs
+
+Production portable runtime generated: 138218 characters
+
+> shinariokanri@0.1.0 test
+> vitest run src/storage/rb08Handoff.test.ts tests/exports.test.ts --maxWorkers=2 --testTimeout=30000
+
+
+ RUN  v5.0.3 /workspace/shinariokanri-rb08
+
+ ❯ src/storage/rb08Handoff.test.ts (10 tests | 2 failed) 1103ms
+   × exports independently approved old citations with Unicode positions and distinct old/new asset bytes, verifies receipt, and empty-restores native policies 13ms
+   × counts replayed old-edition scenes after current archiving and flags real-deadline inconsistency without changing old route evidence 2ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/storage/rb08Handoff.test.ts > exports independently approved old citations with Unicode positions and distinct old/new asset bytes, verifies receipt, and empty-restores native policies
+Error: [{"code":"REFERENCE_INVALID","message":"参照先が存在しないか、指定した作品・共通世界の範囲外です。","field":"project.entities[9].data.blockSources.170ea508-eccb-46d2-9f73-2d838c390d1e"},{"code":"REFERENCE_INVALID","message":"参照先が存在しないか、指定した作品・共通世界の範囲外です。","field":"project.entities[10].data.body[0].links[0].target.blockId"},{"code":"REFERENCE_INVALID","message":"参照先が存在しないか、指定した作品・共通世界の範囲外です。","field":"project.entities[12].data.publicTexts.213e0af1-0712-4fd3-8023-62f22a9091ad.body[0].links[0].target.blockId"},{"code":"VALIDATION_FAILED","message":"文字範囲には本文ブロックまたは台詞への参照が必要です。","field":"project.entities[10].data.body[0].links[0].target"}]
+ ❯ src/storage/rb08Handoff.test.ts:47:100
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/storage/rb08Handoff.test.ts > counts replayed old-edition scenes after current archiving and flags real-deadline inconsistency without changing old route evidence
+TypeError: traceData is not a function
+ ❯ src/storage/rb08Handoff.test.ts:56:67
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  2 failed | 29 passed (31)
+   Start at  14:13:40
+   Duration  2.54s (tests 61%, transform 24%, import 14%)
+

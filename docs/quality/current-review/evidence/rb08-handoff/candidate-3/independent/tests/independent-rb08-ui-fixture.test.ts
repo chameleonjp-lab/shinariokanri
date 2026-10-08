@@ -1,0 +1,6 @@
+import {it,expect} from 'vitest';
+import {existsSync,readFileSync,writeFileSync} from 'node:fs';
+import {createEntity,textToRichText,validateProject} from '../src/domain/model';
+import {createWorldSnapshot} from '../src/domain/world';
+import type {ProjectData} from '../src/domain/types';
+it('independent RB08 normal App fixture keeps old media source/body and a separate edited draft',async()=>{const root='/tmp/shinariokanri-independent-rb08-22db870/independent/fixtures',path=root+'/ui-production-handoff.json';if(!existsSync(path)){const input=JSON.parse(readFileSync(root+'/production-handoff.json','utf8'))as{project:ProjectData;ids:Record<string,string>},pinned=await createWorldSnapshot(input.project,'独立の旧公開元設定'),pin=pinned.snapshots.at(-1)!,media=createEntity(pinned.projectId,'media_variant','独立の公開済み小説',{medium:'novel',baseSnapshotId:pin.id,sourceIds:[input.ids.scene],body:textToRichText('旧小説の本文を保持する'),releaseAt:'2026-11-01T12:00:00Z'});media.status='confirmed';pinned.entities.push(media);const scene=pinned.entities.find(e=>e.id===input.ids.scene);if(scene?.kind!=='scene')throw Error('fixture');scene.data.body[0].text='😀現稿では門の設定を改訂';writeFileSync(path,JSON.stringify({project:pinned,ids:{...input.ids,media:media.id,oldPin:pin.id}},null,2)+'\n');}const input=JSON.parse(readFileSync(path,'utf8'));expect(validateProject(input.project).ok).toBe(true);});

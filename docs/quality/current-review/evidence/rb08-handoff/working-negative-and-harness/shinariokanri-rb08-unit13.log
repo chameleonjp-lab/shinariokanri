@@ -1,0 +1,50 @@
+
+> shinariokanri@0.1.0 pretest
+> node scripts/build/portable-runtime.mjs
+
+Production portable runtime generated: 138218 characters
+
+> shinariokanri@0.1.0 test
+> vitest run src/storage/rb08Handoff.test.ts tests/exports.test.ts --maxWorkers=2 --testTimeout=30000
+
+
+ RUN  v5.0.3 /workspace/shinariokanri-rb08
+
+ ❯ tests/exports.test.ts (21 tests | 2 failed) 1278ms
+   ❯ purpose-specific export (21)
+     × runs the exported HTML in Chromium, renders active text safely, and restores the complete state 526ms
+     × rolls back every exported effect when a later effect violates an integer bound 405ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/exports.test.ts > purpose-specific export > runs the exported HTML in Chromium, renders active text safely, and restores the complete state
+Error: page.goto: net::ERR_BLOCKED_BY_ADMINISTRATOR at file:///tmp/scenario-playable-test-Z11bsU/index.html
+Call log:
+[2m  - navigating to "file:///tmp/scenario-playable-test-Z11bsU/index.html", waiting until "load"[22m
+
+ ❯ tests/exports.test.ts:298:154
+    296|     try {
+    297|       const page = await browser.newPage();
+    298|       const htmlPath=join(await mkdtemp(join(tmpdir(),'scenario-playab…
+       |                                                                                                                                                          ^
+    299|       await page.waitForFunction(()=>!!document.getElementById('state'…
+    300|       expect(await page.locator('#scene').textContent()).toBe(content);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  tests/exports.test.ts > purpose-specific export > rolls back every exported effect when a later effect violates an integer bound
+Error: page.goto: net::ERR_BLOCKED_BY_ADMINISTRATOR at file:///tmp/scenario-playable-test-mQ9A16/index.html
+Call log:
+[2m  - navigating to "file:///tmp/scenario-playable-test-mQ9A16/index.html", waiting until "load"[22m
+
+ ❯ tests/exports.test.ts:329:192
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  2 failed | 27 passed (29)
+   Start at  14:11:21
+   Duration  2.18s (tests 62%, transform 24%, import 14%)
+

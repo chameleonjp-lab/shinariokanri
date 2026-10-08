@@ -1,0 +1,592 @@
+{
+  "requirements": [
+    {
+      "id": "REQ-F24",
+      "title": "目的に応じて書き出す",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP22",
+      "shall": "保存用の完全な作品、読みやすい資料、選択して読める簡易体験版、ゲーム制作向けの構造化データを別々に出力すること。",
+      "failure_behavior": "完全保存・公開資料・試遊・制作データの各プロファイルを選択する。未対応の条件や外部コマンドは制作出力を拒否し説明する。",
+      "acceptance_ids": [
+        "AT-F24"
+      ],
+      "source_refs": [
+        "S06",
+        "S11",
+        "S26",
+        "S29"
+      ],
+      "source_feature_id": "F24"
+    },
+    {
+      "id": "REQ-F36",
+      "title": "相談用に必要な情報だけ集める",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP22",
+      "shall": "人物や場面を指定して、確定設定、関連する出来事、前後の状態、未確定事項、参照番号をまとめて書き出す。提案の文章は別案として取り込むこと。",
+      "failure_behavior": "相談用出力にも公開範囲を適用する。AIサービスへ自動送信せず、取り込む文章は出所と対象版を持つ別案とする。",
+      "acceptance_ids": [
+        "AT-F36"
+      ],
+      "source_refs": [
+        "S06",
+        "S07",
+        "S11"
+      ],
+      "source_feature_id": "F36"
+    },
+    {
+      "id": "REQ-F42",
+      "title": "ゲーム側との受け渡しを定める",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP22",
+      "shall": "体力や戦闘結果など外部の値について、どちらが管理するか、入力と出力、想定する処理を記録する。仮の値で確認し、実装結果との対応を残すこと。",
+      "failure_behavior": "外部値の管理元・型・欠損時の扱いを固定する。仮の外部応答とゲーム実機の確認結果は別証跡とする。",
+      "acceptance_ids": [
+        "AT-F42"
+      ],
+      "source_refs": [
+        "S06",
+        "S28",
+        "S30"
+      ],
+      "source_feature_id": "F42"
+    },
+    {
+      "id": "REQ-F49",
+      "title": "企画の基準と判断理由を残す",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP21",
+      "shall": "想定する読み手・プレイヤー、届けたい体験、主題、作風、制作範囲、成果物をまとめる。重要な変更の判断、理由、優先度、対象の版を記録すること。",
+      "failure_behavior": "企画・判断には対象版と根拠を保存する。却下・保留を削除せず、方針変更を公開済み版へ自動反映しない。",
+      "acceptance_ids": [
+        "AT-F49"
+      ],
+      "source_refs": [
+        "S38"
+      ],
+      "source_feature_id": "F49"
+    },
+    {
+      "id": "REQ-F50",
+      "title": "物語とプレイヤーの行動を結ぶ",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP21",
+      "shall": "場面で知ることと、実際に行う探索・選択・戦闘・操作を並べる。必要なゲーム機能、クエスト、チュートリアル、報酬、実装担当の作業と結ぶこと。",
+      "failure_behavior": "遊びの仕様と物語の記述の差は意図付き確認候補にする。ゲーム機能の未実装を執筆未完了と混同しない。",
+      "acceptance_ids": [
+        "AT-F50"
+      ],
+      "source_refs": [
+        "S06",
+        "S28",
+        "S30"
+      ],
+      "source_feature_id": "F50"
+    },
+    {
+      "id": "REQ-F51",
+      "title": "制作日程と依存する作業を持つ",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP21",
+      "shall": "執筆、レビュー、実装、翻訳、収録、確認、公開の状態を別々に記録する。担当、現実の期限、先に必要な素材や作業を場面へ結ぶこと。",
+      "failure_behavior": "執筆・実装・翻訳・収録・確認・公開の状態と実日付を別々に保存する。依存作業の循環と期限不整合を示す。",
+      "acceptance_ids": [
+        "AT-F51"
+      ],
+      "source_refs": [
+        "S35",
+        "S36"
+      ],
+      "source_feature_id": "F51"
+    },
+    {
+      "id": "REQ-F52",
+      "title": "制作量と一経路の量を分ける",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP21",
+      "shall": "固有の場面・台詞・素材の数、再利用部分、分岐ごとの読める量を別々に集計する。制作の見積もりと根拠、未決定の範囲も残すこと。",
+      "failure_behavior": "制作数は安定IDの集合、体験量は経路ごとの出現回数で集計する。速度・重複・未確定箇所・対象版を明示する。",
+      "acceptance_ids": [
+        "AT-F52"
+      ],
+      "source_refs": [
+        "S12",
+        "S36"
+      ],
+      "source_feature_id": "F52"
+    },
+    {
+      "id": "REQ-F54",
+      "title": "媒体ごとの派生内容を管理する",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP21",
+      "shall": "共通の世界設定を参照しながら、ゲーム、小説、動画、音声、告知用の文章を別に持つ。媒体別の公開範囲、版、公開予定日、変更後の確認先を記録すること。",
+      "failure_behavior": "派生作品は共通設定の版を参照する。媒体別文章と公開済みスナップショットは保持し、変更候補だけを伝える。",
+      "acceptance_ids": [
+        "AT-F54"
+      ],
+      "source_refs": [
+        "S38",
+        "S39"
+      ],
+      "source_feature_id": "F54"
+    },
+    {
+      "id": "REQ-N20",
+      "title": "持ち出しと互換性",
+      "provenance": "仕様を成立させる品質条件・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP22",
+      "shall": "完全保存・汎用JSON・読み物等の出力に仕様版と対象版を付け、未対応機能と除外項目を表示すること。互換性の検証範囲を記録すること。",
+      "failure_behavior": "Unity・Unreal・ink・Yarn等すべてに対応済みと仮定しない",
+      "acceptance_ids": [
+        "AT-N20"
+      ],
+      "source_refs": []
+    }
+  ],
+  "acceptance": [
+    {
+      "id": "AT-F24",
+      "requirement_ids": [
+        "REQ-F24"
+      ],
+      "package_id": "WP22",
+      "given": "作者メモ、没案、公開名、分岐、添付、未対応外部処理を持つ版",
+      "when": "完全保存の往復、reader、playable、runtimeの各出力を選び除外と拒否を確認する",
+      "then": "保存用の読み戻しでは情報を保つ。制作・公開用には作者メモや秘密を必要に応じて除く。",
+      "negative_or_edge": "完全保存・公開資料・試遊・制作データの各プロファイルを選択する。未対応の条件や外部コマンドは制作出力を拒否し説明する。",
+      "result": "not_run"
+    },
+    {
+      "id": "AT-F36",
+      "requirement_ids": [
+        "REQ-F36"
+      ],
+      "package_id": "WP22",
+      "given": "確定設定と未確定設定、秘密、前後状態を持つ場面S",
+      "when": "S周辺だけ相談用に出力し、提案文章を別案として取り込み、正本との比較を開く",
+      "then": "相談で出た案が、自動で確定設定を書き換えず、変更候補として比較できる。",
+      "negative_or_edge": "相談用出力にも公開範囲を適用する。AIサービスへ自動送信せず、取り込む文章は出所と対象版を持つ別案とする。",
+      "result": "not_run"
+    },
+    {
+      "id": "AT-F42",
+      "requirement_ids": [
+        "REQ-F42"
+      ],
+      "package_id": "WP22",
+      "given": "ゲーム管理の戦闘結果enum契約とstub勝利、実ゲーム証跡未登録",
+      "when": "stubで通った道を出力し、後にactual結果をline/flow ID対応付きで記録して比較する",
+      "then": "仮の戦闘結果で通れた道と、ゲーム上で実際に確認した道を区別する。番号と値の対応を保つ。",
+      "negative_or_edge": "外部値の管理元・型・欠損時の扱いを固定する。仮の外部応答とゲーム実機の確認結果は別証跡とする。",
+      "result": "not_run"
+    },
+    {
+      "id": "AT-F49",
+      "requirement_ids": [
+        "REQ-F49"
+      ],
+      "package_id": "WP21",
+      "given": "企画に対象/体験/主題と版1の採用判断がある",
+      "when": "修正指摘を企画目的へ結び付け、却下案の理由と版2の別判断を登録する",
+      "then": "修正依頼から企画のどの目的に関わるかを確認できる。却下した案の理由も後から分かる。",
+      "negative_or_edge": "企画・判断には対象版と根拠を保存する。却下・保留を削除せず、方針変更を公開済み版へ自動反映しない。",
+      "result": "not_run"
+    },
+    {
+      "id": "AT-F50",
+      "requirement_ids": [
+        "REQ-F50"
+      ],
+      "package_id": "WP21",
+      "given": "危険と説明する場面、実装仕様では無条件通過、意図は未入力",
+      "when": "探索/戦闘/報酬/チュートリアルと作業を関連付け、食い違いに意図を追記する",
+      "then": "物語で危険な場所が、実際には安全に通れるなどの食い違いを、意図も含めて確認できる。",
+      "negative_or_edge": "遊びの仕様と物語の記述の差は意図付き確認候補にする。ゲーム機能の未実装を執筆未完了と混同しない。",
+      "result": "not_run"
+    },
+    {
+      "id": "AT-F51",
+      "requirement_ids": [
+        "REQ-F51"
+      ],
+      "package_id": "WP21",
+      "given": "執筆done、実装todoの場面と現実の期限、素材待ち作業",
+      "when": "場面の世界日付を変更し未実装を抽出、作業依存の循環を作ろうとする",
+      "then": "物語内の日付を変えても制作期限は動かない。本文が完成していても未実装の場面を抽出できる。",
+      "negative_or_edge": "執筆・実装・翻訳・収録・確認・公開の状態と実日付を別々に保存する。依存作業の循環と期限不整合を示す。",
+      "result": "not_run"
+    },
+    {
+      "id": "AT-F52",
+      "requirement_ids": [
+        "REQ-F52"
+      ],
+      "package_id": "WP21",
+      "given": "二経路で共通場面一件を再利用し速度が未設定",
+      "when": "固有場面/台詞/素材数と各経路の出現数を集計し、速度を設定して時間を再見積もりする",
+      "then": "二つの経路に出る共通場面を制作量では二重に数えない。所要時間は速度などの仮定を示す。",
+      "negative_or_edge": "制作数は安定IDの集合、体験量は経路ごとの出現回数で集計する。速度・重複・未確定箇所・対象版を明示する。",
+      "result": "not_run"
+    },
+    {
+      "id": "AT-F54",
+      "requirement_ids": [
+        "REQ-F54"
+      ],
+      "package_id": "WP21",
+      "given": "共通設定版1を参照する公開済み小説/動画と未公開ゲーム",
+      "when": "共通設定を版2へ改訂し、媒体ごとの変更候補と旧公開原稿を比較する",
+      "then": "元設定を変えても各媒体の文章を自動で同じ文へ置換せず、公開済みの版と修正候補を比べられる。",
+      "negative_or_edge": "派生作品は共通設定の版を参照する。媒体別文章と公開済みスナップショットは保持し、変更候補だけを伝える。",
+      "result": "not_run"
+    },
+    {
+      "id": "AT-N20",
+      "requirement_ids": [
+        "REQ-N20"
+      ],
+      "package_id": "WP22",
+      "given": "未対応の外部コマンドがある作品",
+      "when": "対応先別の制作出力を選ぶ",
+      "then": "不一致の箇所を示し安全な出力だけを生成する",
+      "negative_or_edge": "Unity・Unreal・ink・Yarn等すべてに対応済みと仮定しない",
+      "result": "not_run"
+    },
+    {
+      "id": "AT-E09",
+      "title": "制作量と公開済み媒体版",
+      "requirement_ids": [
+        "REQ-F09",
+        "REQ-F51",
+        "REQ-F52",
+        "REQ-F54"
+      ],
+      "package_id": "WP23",
+      "given": "二経路で再利用する場面と公開済み小説版",
+      "when": "世界設定改訂と制作集計、場面の日付変更を行う",
+      "then": "固有制作数は一回、体験量は各経路で算出し、小説旧版と実期限は不変",
+      "negative_or_edge": "未設定速度の所要時間は不明とし、執筆済でも実装未完了を抽出する",
+      "result": "not_run"
+    },
+    {
+      "id": "AT-E10",
+      "title": "解析の上限・仮実の区別",
+      "requirement_ids": [
+        "REQ-F17",
+        "REQ-F18",
+        "REQ-F20",
+        "REQ-F42",
+        "REQ-N05",
+        "REQ-N12"
+      ],
+      "package_id": "WP23",
+      "given": "抽選・無制限ループ・外部戦闘を含む作品",
+      "when": "同じ記録を再実行して探索上限まで解析する",
+      "then": "抽選は再現され、未確認の範囲と分母を示し、仮戦闘結果と実ゲーム結果を別に記録する",
+      "negative_or_edge": "対象版の変更で再確認待ちになり、打切りを到達不能の証明としない",
+      "result": "not_run"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "REQ-F24",
+      "title": "目的に応じて書き出す",
+      "original_package_id": "WP22",
+      "batch_id": "RB08",
+      "status": "planned",
+      "baseline_assessment": "部分実装",
+      "retained_implementation": "完全保存・reader・runtime JSON・翻訳・相談・簡易試遊ZIPを実装。未対応機能を拒否する。",
+      "review_gap": "簡易試遊には物品/知識/外部値/呼出等の制限あり。全profileの総合互換受入は未完了。",
+      "required_behavior": "保存用の完全な作品、読みやすい資料、選択して読める簡易体験版、ゲーム制作向けの構造化データを別々に出力すること。",
+      "implementation_action": "完全保存・読み物・簡易体験・汎用実行データ・翻訳/制作出力を目的別に完成させる。簡易体験はv1の内部条件・物品・知識・共通場面を共有処理で扱い、外部処理だけ仮値または説明付き停止にする。",
+      "code_paths": [
+        "src/domain/exports.ts",
+        "docs/implementation/EXPORT_COMPATIBILITY.md"
+      ],
+      "acceptance_ids": [
+        "AT-F24"
+      ],
+      "integration_ids": [],
+      "finding_ids": [],
+      "done_when": [
+        "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+        "完全保存・公開資料・試遊・制作データの各プロファイルを選択する。未対応の条件や外部コマンドは制作出力を拒否し説明する。",
+        "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+      ],
+      "result": "not_run",
+      "evidence": [],
+      "final_acceptance_batch": "RB10"
+    },
+    {
+      "id": "REQ-F36",
+      "title": "相談用に必要な情報だけ集める",
+      "original_package_id": "WP22",
+      "batch_id": "RB08",
+      "status": "planned",
+      "baseline_assessment": "部分実装",
+      "retained_implementation": "相談用範囲/前後値出力とcreateConsultationProposalの別案生成関数を持つ。",
+      "review_gap": "提案文章の取り込みと正本との差分比較はUIへ未接続。外部AIへの自動送信はない。",
+      "required_behavior": "人物や場面を指定して、確定設定、関連する出来事、前後の状態、未確定事項、参照番号をまとめて書き出す。提案の文章は別案として取り込むこと。",
+      "implementation_action": "選んだ人物・場面から確定設定、前後状態、未確定事項、参照IDを相談用に出力する。提案文章を出所・対象版付きの作者別案として取り込み、差分比較後に採用できるようにする。",
+      "code_paths": [
+        "src/domain/exports.ts",
+        "src/ui/WorkPage.tsx"
+      ],
+      "acceptance_ids": [
+        "AT-F36"
+      ],
+      "integration_ids": [],
+      "finding_ids": [],
+      "done_when": [
+        "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+        "相談用出力にも公開範囲を適用する。AIサービスへ自動送信せず、取り込む文章は出所と対象版を持つ別案とする。",
+        "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+      ],
+      "result": "not_run",
+      "evidence": [],
+      "final_acceptance_batch": "RB10"
+    },
+    {
+      "id": "REQ-F42",
+      "title": "ゲーム側との受け渡しを定める",
+      "original_package_id": "WP22",
+      "batch_id": "RB08",
+      "status": "planned",
+      "baseline_assessment": "部分実装",
+      "retained_implementation": "external_contractの管理元/型/欠損方針、stub入力と証跡区分、汎用runtime JSONがある。",
+      "review_gap": "実ゲームadapterと実測結果の接続・対応版検証は未実装。",
+      "required_behavior": "体力や戦闘結果など外部の値について、どちらが管理するか、入力と出力、想定する処理を記録する。仮の値で確認し、実装結果との対応を残すこと。",
+      "implementation_action": "管理元・型・入力/出力・欠損方針を持つ外部値契約を出力する。一つの汎用ブラウザーゲーム受取処理で実際の結果を返して対応版を検証し、仮値と実測証跡を区別する。既存ランキングへ接続しない。",
+      "code_paths": [
+        "src/domain/exports.ts",
+        "src/domain/runtime.ts",
+        "src/ui/Reader.tsx"
+      ],
+      "acceptance_ids": [
+        "AT-F42"
+      ],
+      "integration_ids": [
+        "AT-E10"
+      ],
+      "finding_ids": [],
+      "done_when": [
+        "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+        "外部値の管理元・型・欠損時の扱いを固定する。仮の外部応答とゲーム実機の確認結果は別証跡とする。",
+        "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+      ],
+      "result": "not_run",
+      "evidence": [],
+      "final_acceptance_batch": "RB10"
+    },
+    {
+      "id": "REQ-F49",
+      "title": "企画の基準と判断理由を残す",
+      "original_package_id": "WP21",
+      "batch_id": "RB08",
+      "status": "planned",
+      "baseline_assessment": "主要動作あり",
+      "retained_implementation": "企画の対象/体験/主題/範囲と判断の対象版/理由/結果を独立レコードで持つ。",
+      "review_gap": "企画と制作の横断画面、全参照操作の受入は未完了。",
+      "required_behavior": "想定する読み手・プレイヤー、届けたい体験、主題、作風、制作範囲、成果物をまとめる。重要な変更の判断、理由、優先度、対象の版を記録すること。",
+      "implementation_action": "企画と重要判断を制作画面から参照し、対象・体験・主題・作風・範囲・成果物、理由・優先度・対象版を関連場面と作業に結ぶ。決定履歴を残す。",
+      "code_paths": [
+        "src/ui/fieldSpecs.ts",
+        "src/domain/model.ts"
+      ],
+      "acceptance_ids": [
+        "AT-F49"
+      ],
+      "integration_ids": [],
+      "finding_ids": [],
+      "done_when": [
+        "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+        "企画・判断には対象版と根拠を保存する。却下・保留を削除せず、方針変更を公開済み版へ自動反映しない。",
+        "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+      ],
+      "result": "not_run",
+      "evidence": [],
+      "final_acceptance_batch": "RB10"
+    },
+    {
+      "id": "REQ-F50",
+      "title": "物語とプレイヤーの行動を結ぶ",
+      "original_package_id": "WP21",
+      "batch_id": "RB08",
+      "status": "planned",
+      "baseline_assessment": "登録・土台のみ",
+      "retained_implementation": "gameplay_specに行動/仕組み/導入/報酬/quest/task/意図差分を記録。",
+      "review_gap": "場面の物語とプレイ行動を並べる専用表示、実装との確認候補と受渡しが不足。",
+      "required_behavior": "場面で知ることと、実際に行う探索・選択・戦闘・操作を並べる。必要なゲーム機能、クエスト、チュートリアル、報酬、実装担当の作業と結ぶこと。",
+      "implementation_action": "場面の物語と探索・選択・戦闘等の行動を並べ、機能・クエスト・チュートリアル・報酬・実装作業を関連付ける。想定と実装の違いを確認候補へつなぎ、制作出力に含める。",
+      "code_paths": [
+        "src/ui/fieldSpecs.ts",
+        "src/domain/types.ts"
+      ],
+      "acceptance_ids": [
+        "AT-F50"
+      ],
+      "integration_ids": [],
+      "finding_ids": [],
+      "done_when": [
+        "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+        "遊びの仕様と物語の記述の差は意図付き確認候補にする。ゲーム機能の未実装を執筆未完了と混同しない。",
+        "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+      ],
+      "result": "not_run",
+      "evidence": [],
+      "final_acceptance_batch": "RB10"
+    },
+    {
+      "id": "REQ-F51",
+      "title": "制作日程と依存する作業を持つ",
+      "original_package_id": "WP21",
+      "batch_id": "RB08",
+      "status": "planned",
+      "baseline_assessment": "部分実装",
+      "retained_implementation": "工程別task、進捗board、実期限/依存/見積型、循環検査がある。",
+      "review_gap": "担当/先行素材の一連操作、依存を可視化して期限の不整合を扱う機能が不足。",
+      "required_behavior": "執筆、レビュー、実装、翻訳、収録、確認、公開の状態を別々に記録する。担当、現実の期限、先に必要な素材や作業を場面へ結ぶこと。",
+      "implementation_action": "担当・先行素材・依存作業・現実の期限を編集し、制作依存図と一覧を用意する。執筆・レビュー・実装・翻訳・収録・確認・公開を別状態で保持し、循環と期限不整合を根拠付きで示す。",
+      "code_paths": [
+        "src/ui/Lists.tsx",
+        "src/domain/model.ts",
+        "src/ui/fieldSpecs.ts"
+      ],
+      "acceptance_ids": [
+        "AT-F51"
+      ],
+      "integration_ids": [
+        "AT-E09"
+      ],
+      "finding_ids": [],
+      "done_when": [
+        "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+        "執筆・実装・翻訳・収録・確認・公開の状態と実日付を別々に保存する。依存作業の循環と期限不整合を示す。",
+        "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+      ],
+      "result": "not_run",
+      "evidence": [],
+      "final_acceptance_batch": "RB10"
+    },
+    {
+      "id": "REQ-F52",
+      "title": "制作量と一経路の量を分ける",
+      "original_package_id": "WP21",
+      "batch_id": "RB08",
+      "status": "planned",
+      "baseline_assessment": "部分実装",
+      "retained_implementation": "固有scene集合と経路出現数を分けるproductionCountsがありboardは固有対象数を表示。",
+      "review_gap": "台詞・素材・再利用量、読書/プレイ時間と速度仮定、見積の範囲をまとめる集計画面がない。",
+      "required_behavior": "固有の場面・台詞・素材の数、再利用部分、分岐ごとの読める量を別々に集計する。制作の見積もりと根拠、未決定の範囲も残すこと。",
+      "implementation_action": "固有場面・台詞・素材・共通再利用量と経路ごとの体験量を別に集計する。読書/プレイ時間は速度仮定と範囲を表示し、未設定を不明にする。見積根拠と未決定量を保存する。",
+      "code_paths": [
+        "src/domain/production.ts",
+        "src/ui/Lists.tsx"
+      ],
+      "acceptance_ids": [
+        "AT-F52"
+      ],
+      "integration_ids": [
+        "AT-E09"
+      ],
+      "finding_ids": [],
+      "done_when": [
+        "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+        "制作数は安定IDの集合、体験量は経路ごとの出現回数で集計する。速度・重複・未確定箇所・対象版を明示する。",
+        "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+      ],
+      "result": "not_run",
+      "evidence": [],
+      "final_acceptance_batch": "RB10"
+    },
+    {
+      "id": "REQ-F54",
+      "title": "媒体ごとの派生内容を管理する",
+      "original_package_id": "WP21",
+      "batch_id": "RB08",
+      "status": "planned",
+      "baseline_assessment": "部分実装",
+      "retained_implementation": "media_variantの媒体/元snapshot/本文/範囲と元データ変更時needsReviewがある。",
+      "review_gap": "公開予定日等の通常入力、公開済み媒体との差分比較、共通世界版の選択が不足。",
+      "required_behavior": "共通の世界設定を参照しながら、ゲーム、小説、動画、音声、告知用の文章を別に持つ。媒体別の公開範囲、版、公開予定日、変更後の確認先を記録すること。",
+      "implementation_action": "媒体別の文章・公開範囲・公開予定日・固定版を編集し、公開済み版と改訂案を比較する。参照世界版を選べるようにし、設定改訂は影響先を示してから適用する。",
+      "code_paths": [
+        "src/domain/production.ts",
+        "src/ui/fieldSpecs.ts"
+      ],
+      "acceptance_ids": [
+        "AT-F54"
+      ],
+      "integration_ids": [
+        "AT-E09"
+      ],
+      "finding_ids": [],
+      "done_when": [
+        "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+        "派生作品は共通設定の版を参照する。媒体別文章と公開済みスナップショットは保持し、変更候補だけを伝える。",
+        "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+      ],
+      "result": "not_run",
+      "evidence": [],
+      "final_acceptance_batch": "RB10"
+    },
+    {
+      "id": "REQ-N20",
+      "title": "持ち出しと互換性",
+      "original_package_id": "WP22",
+      "batch_id": "RB08",
+      "status": "planned",
+      "baseline_assessment": "部分実装",
+      "retained_implementation": "専用形式/汎用runtime等の仕様版と対象版、除外preview、互換性文書、未対応拒否を実装。",
+      "review_gap": "全profile総合検証と実ゲームengine adapterはない。すべてのengineへの対応ではない。",
+      "required_behavior": "完全保存・汎用JSON・読み物等の出力に仕様版と対象版を付け、未対応機能と除外項目を表示すること。互換性の検証範囲を記録すること。",
+      "implementation_action": "出力の仕様版・対象版・全項目の対応/除外/未対応を画面と互換表へ記録する。汎用JSONと一つの実受取処理を試験し、未対応engineは対応済みと書かず、完全保存の往復は維持する。",
+      "code_paths": [
+        "src/domain/exports.ts",
+        "docs/implementation/EXPORT_COMPATIBILITY.md"
+      ],
+      "acceptance_ids": [
+        "AT-N20"
+      ],
+      "integration_ids": [],
+      "finding_ids": [],
+      "done_when": [
+        "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+        "Unity・Unreal・ink・Yarn等すべてに対応済みと仮定しない",
+        "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+      ],
+      "result": "not_run",
+      "evidence": [],
+      "final_acceptance_batch": "RB10"
+    }
+  ]
+}

@@ -39,3 +39,7 @@ runtime.jsonを出力し、「ゲーム受領と実結果を取り込む」に�
 ## 残る環境
 
 原116受入、実端末Files／録音／IME／支援技術、全性能・Large／2時間、実Auth／RLS／private Storage、最終同一commitのrelease evidenceは後続RB09／RB10で判定する。専用接続先・実試験アカウント・quota／現行費用が未指定で、外部接続が必要な結果は未実行のまま保持する。公開・マージ・課金・外部DB変更は実行しない。
+
+保存した受領hashは、確認snapshot内の非公開承認記録にも固定する。wireとメモのhashをまとめて再計算しても、元の承認と違えば保存全体を拒否する。履歴・snapshot・別案を含む検証入力を開始時に固定し、後からの操作は進行中の検証へ混ぜない。
+
+候補5 `bf0f6b07d4a3f782870ab11894d410936e7e1eff` / tree `10e62dbf528d2290a5d18222216498faaf992908` は703単体・結合、68 production Chromium153、Python15、build/docs/plan/schemaが成功。独立レビューは選択部品22・通常App6・production7、実ダウンロードの空環境new/cloneを確認。原116全体と実機・実API・全性能の判定は未実行。

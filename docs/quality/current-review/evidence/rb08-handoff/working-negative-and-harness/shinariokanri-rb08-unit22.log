@@ -1,0 +1,42 @@
+
+> shinariokanri@0.1.0 pretest
+> node scripts/build/portable-runtime.mjs
+
+Production portable runtime generated: 141520 characters
+
+> shinariokanri@0.1.0 test
+> vitest run --maxWorkers=2 --testTimeout=30000 src/storage/rb08Handoff.test.ts tests/exports.test.ts
+
+
+ RUN  v5.0.3 /workspace/shinariokanri-rb08
+
+ ❯ src/storage/rb08Handoff.test.ts (12 tests | 1 failed) 1542ms
+   × keeps explicit old-edition links inside reused content while normalizing only executing rule anchors 33ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/storage/rb08Handoff.test.ts > keeps explicit old-edition links inside reused content while normalizing only executing rule anchors
+AssertionError: expected { start: +0, end: 1, …(5) } to match object { …(4) }
+(4 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "entityId": "d2b6c0e7-467e-4d38-889a-42b5bacb562f",
+    "sourceVersionId": "22705a87-ea25-4abe-8c40-09b93338cf4b",
+    "targetEnd": 1,
+    "targetStart": 0,
+  }
+
+ ❯ src/storage/rb08Handoff.test.ts:69:342
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  1 failed | 32 passed (33)
+   Start at  14:52:42
+   Duration  2.58s (tests 68%, transform 21%, import 11%)
+

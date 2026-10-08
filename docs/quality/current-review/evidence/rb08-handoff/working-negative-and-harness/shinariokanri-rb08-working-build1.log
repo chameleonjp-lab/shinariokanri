@@ -1,0 +1,33 @@
+
+> shinariokanri@0.1.0 prebuild
+> node scripts/build/portable-runtime.mjs
+
+Production portable runtime generated: 137551 characters
+
+> shinariokanri@0.1.0 build
+> tsc -b && vite build && node scripts/build/service-worker.mjs
+
+vite v8.3.2 building client environment for production...
+transforming...
+✓ 143 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                             0.65 kB │ gzip:   0.44 kB
+dist/assets/archive.worker-wtbcdypU.js    247.26 kB
+dist/assets/index-Hji0zUF5.css             75.52 kB │ gzip:  14.99 kB
+dist/assets/world--SNgXo7B.js             209.02 kB │ gzip:  64.98 kB
+dist/assets/index-vVlrvDks.js           1,586.85 kB │ gzip: 467.93 kB
+
+[33m[INEFFECTIVE_DYNAMIC_IMPORT] [0msrc/domain/runtime.ts is dynamically imported by src/domain/projectRecordValidation.ts but also statically imported by src/domain/gameProtocol.ts, src/domain/runtimeVerified.ts, src/domain/traceReconfirmation.ts, src/ui/Reader.tsx, dynamic import will not move module into another chunk.
+
+[plugin builtin:vite-reporter] 
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+[33m[INEFFECTIVE_DYNAMIC_IMPORT] [0msrc/domain/runtimeVerified.ts is dynamically imported by src/domain/checkpoints.ts but also statically imported by src/domain/gameProtocol.ts, src/domain/traceReconfirmation.ts, src/ui/ProductionReviewPanel.tsx, src/ui/Reader.tsx, dynamic import will not move module into another chunk.
+
+[33m[INEFFECTIVE_DYNAMIC_IMPORT] [0msrc/domain/gameProtocol.ts is dynamically imported by src/domain/projectRecordValidation.ts but also statically imported by src/domain/gameHandoff.ts, dynamic import will not move module into another chunk.
+
+✓ built in 587ms
+Offline shell generated: 880f910e51f984eef250, /shinariokanri/
