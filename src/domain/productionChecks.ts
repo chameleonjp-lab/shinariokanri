@@ -57,7 +57,7 @@ export function checkProductionRules(project: ProjectData, point: WorldPoint & {
   }
  }
  const subjectsById=new Map(subjects.map(subject=>[subject.id,subject]));
- return output.map(check=>{const subject=subjectsById.get(check.lineId),ruleAnchor:ContentAnchor={entityId:check.ruleId,...subject?.sourceProject&&subject.sourceProject.projectId!==project.projectId&&subject.sourceVersionId!==project.projectId?{sourceVersionId:subject.sourceVersionId}:{}};return {...check,anchor:check.anchor?point.mapAnchor?.(check.anchor)??check.anchor:undefined,ruleAnchor:point.mapAnchor?.(ruleAnchor)??ruleAnchor};});
+ return output.map(check=>{const subject=subjectsById.get(check.lineId),ruleAnchor:ContentAnchor={entityId:check.ruleId,...subject?.sourceProject&&subject.sourceProject.projectId!==project.projectId&&subject.sourceVersionId!==project.projectId&&!rules.some(rule=>rule.id===check.ruleId&&rule.projectId===project.projectId)?{sourceVersionId:subject.sourceVersionId}:{}};return {...check,anchor:check.anchor?point.mapAnchor?.(check.anchor)??check.anchor:undefined,ruleAnchor:point.mapAnchor?.(ruleAnchor)??ruleAnchor};});
 }
 
 /** Fixed source subjects use only digest-verified immutable editions in the normal UI. */
