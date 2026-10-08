@@ -185,25 +185,35 @@ export interface ChapterReadingViewProps {
   onSaveMany?: (entities: Entity[], reason: string, assets?: undefined, snapshots?: ProjectSnapshot[], expectedRevision?: string) => Promise<void>;
 }
 
+interface ReadingPreferences { contentVersionId: string; worldTick: string; selectedCheckpointId: string; selectedChapterIds: string[]; routeMode: 'chapters' | 'custom'; routeSceneIds: string[] }
+const readingPreferences = new Map<string, Partial<ReadingPreferences>>();
+function getReadingPreferences(projectId: string): Partial<ReadingPreferences> {
+  let value = readingPreferences.get(projectId);
+  if (!value) { value = {}; try { const saved = JSON.parse(localStorage.getItem(`scenario-chapter-reading:v1:${projectId}`) ?? '{}'); for (const key of ['contentVersionId', 'worldTick', 'selectedCheckpointId'] as const) if (typeof saved[key] === 'string') value[key] = saved[key]; for (const key of ['selectedChapterIds', 'routeSceneIds'] as const) if (Array.isArray(saved[key]) && saved[key].every((id: unknown) => typeof id === 'string')) value[key] = saved[key]; if (saved.routeMode === 'chapters' || saved.routeMode === 'custom') value.routeMode = saved.routeMode; } catch { /* In-memory input remains available when preferences cannot be read. */ } readingPreferences.set(projectId, value); } return value;
+}
+
 export function ChapterReadingView({ project, chapterIds, scenePath, currentVersionLabel = '現在の編集稿', worldSnapshots = {}, onOpenEntity, onOpenTarget, onSaveMany }: ChapterReadingViewProps) {
   const [vertical, setVertical] = useState(false);
-  const [contentVersionId, setContentVersionId] = useState('');
-  const [worldTick, setWorldTick] = useState('');
-  const [selectedCheckpointId, setSelectedCheckpointId] = useState('');
+  const [contentVersionId, setContentVersionId] = useState(() => getReadingPreferences(project.projectId).contentVersionId ?? '');
+  const [worldTick, setWorldTick] = useState(() => getReadingPreferences(project.projectId).worldTick ?? '');
+  const [selectedCheckpointId, setSelectedCheckpointId] = useState(() => getReadingPreferences(project.projectId).selectedCheckpointId ?? '');
   const checkpoints = project.entities.filter((entity): entity is Entity<'checkpoint'> => entity.kind === 'checkpoint' && adoptedRecord(entity) && !entity.data.runtimeState.presentationPosition);
   const selectedSnapshot = project.snapshots.find(snapshot => snapshot.id === contentVersionId);
   const readingSource = useMemo(() => selectedSnapshot ? { ...project, ...selectedSnapshot.content } : project, [project, selectedSnapshot]);
   const chapters = readingSource.entities.filter((entity): entity is Entity<'chapter'> => entity.kind === 'chapter' && !entity.deletedAt && entity.status !== 'rejected');
-  const [selectedChapterIds, setSelectedChapterIds] = useState<string[]>(() => [...(chapterIds ?? chapters.map(chapter => chapter.id))]);
-  const [routeMode, setRouteMode] = useState<'chapters' | 'custom'>(scenePath === undefined ? 'chapters' : 'custom');
-  const [routeSceneIds, setRouteSceneIds] = useState<string[]>(() => [...(scenePath ?? [])]);
+  const [selectedChapterIds, setSelectedChapterIds] = useState<string[]>(() => [...(chapterIds ?? getReadingPreferences(project.projectId).selectedChapterIds ?? chapters.map(chapter => chapter.id))]);
+  const [routeMode, setRouteMode] = useState<'chapters' | 'custom'>(() => scenePath === undefined ? getReadingPreferences(project.projectId).routeMode ?? 'chapters' : 'custom');
+  const [routeSceneIds, setRouteSceneIds] = useState<string[]>(() => [...(scenePath ?? getReadingPreferences(project.projectId).routeSceneIds ?? [])]);
   const [routeSceneToAdd, setRouteSceneToAdd] = useState('');
   const [session, setSession] = useState<ChapterReadingSession | null>(null);
   const [busy, setBusy] = useState(() => runtimeReconfirmationBusy(project.projectId));
   const operation = useRef(runtimeReconfirmationBusy(project.projectId));
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
+  const previousVersion = useRef(contentVersionId);
   useEffect(() => {
+    if (previousVersion.current === contentVersionId) return;
+    previousVersion.current = contentVersionId;
     if (contentVersionId && session?.contentVersionId === contentVersionId) {
       setSelectedChapterIds([...session.chapterIds]);
       setRouteMode('custom'); setRouteSceneIds([...session.sceneIds]);
@@ -213,6 +223,7 @@ export function ChapterReadingView({ project, chapterIds, scenePath, currentVers
     }
     setRouteSceneToAdd('');
   }, [contentVersionId]);
+  useEffect(() => { const next = { contentVersionId, worldTick, selectedCheckpointId, selectedChapterIds, routeMode, routeSceneIds }; readingPreferences.set(project.projectId, next); try { localStorage.setItem(`scenario-chapter-reading:v1:${project.projectId}`, JSON.stringify(next)); } catch { /* Navigation still retains the selected scope and clock in memory. */ } }, [project.projectId, contentVersionId, worldTick, selectedCheckpointId, selectedChapterIds, routeMode, routeSceneIds]);
   const savedReadingRecords = project.entities.filter((entity): entity is Entity<'trace'> => entity.kind === 'trace' && !entity.deletedAt && entity.data.mode === 'chapters');
 
   const effectiveChapterIds = chapterIds ?? selectedChapterIds.filter(id => chapters.some(chapter => chapter.id === id));
