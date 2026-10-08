@@ -4,6 +4,7 @@ import { immutableReferenceVersion } from './maintenance';
 import { evaluateCondition } from './conditions';
 import { compareTicks, isTick, parseTick, sameCalendarDefinition } from './time';
 import { equalJson, jsonBytes, sha256 } from '../storage/json';
+import { adoptedRecord, adoptionAssessment } from './adoption';
 
 /** These predicates are authored explicitly by the world-history form, never guessed from prose. */
 export const WORLD_PREDICATES = {
@@ -49,7 +50,7 @@ export function assertionValueLabel(value: TypedValue | ID, index: Map<ID, Entit
 export interface WorldStateCandidate { assertion: Entity<'assertion'>; assessment: ValidityAssessment; targetId?: ID }
 export interface WorldStateResult { candidates: WorldStateCandidate[]; definite: WorldStateCandidate[]; status: 'known' | 'multiple' | 'possible' | 'unknown'; reason?: string }
 function assessStateCandidates(assertions: Entity<'assertion'>[], point: WorldPoint, holderId?: ID): WorldStateResult {
-  const candidates = assertions.filter(entity => holderId ? entity.data.truthKind !== 'author_truth' && entity.data.holderId === holderId : entity.data.truthKind === 'author_truth').map(assertion => ({ assertion, assessment: assessWorldValidity(assertion.data.validity, point), targetId: assertionReference(assertion.data.value) })).filter(candidate => candidate.assessment.value !== 'false');
+  const candidates = assertions.filter(entity => adoptedRecord(entity) && (holderId ? entity.data.truthKind !== 'author_truth' && entity.data.holderId === holderId : entity.data.truthKind === 'author_truth')).map(assertion => ({ assertion, assessment: adoptionAssessment(assertion, assessWorldValidity(assertion.data.validity, point)), targetId: assertionReference(assertion.data.value) })).filter(candidate => candidate.assessment.value !== 'false');
   const definite = candidates.filter(candidate => candidate.assessment.value === 'true');
   const unique = new Set(definite.map(candidate => candidate.targetId ? `ref:${candidate.targetId}` : JSON.stringify(candidate.assertion.data.value)));
   return { candidates, definite, status: !candidates.length ? 'unknown' : unique.size > 1 ? 'multiple' : candidates.some(candidate => candidate.assessment.value === 'unknown') ? 'possible' : 'known', ...(!candidates.length ? { reason: 'この時点・経路の情報は登録されていません。' } : {}) };

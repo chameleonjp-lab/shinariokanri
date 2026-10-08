@@ -58,7 +58,7 @@ export interface Trigger { id?: ID; event: 'enter' | 'talk' | 'battle_result' | 
 export type Policy = 'manual_choice' | 'first_match' | 'all_match';
 export interface Reuse { mode: 'reference' | 'clone' | 'override'; sourceId: ID; pinnedSnapshotId: ID; overrideFields: string[] }
 export interface Parameter { key: string; type: 'boolean' | 'integer' | 'enum'; default?: TypedValue | null }
-export interface Transition { from: TypedValue; to: TypedValue; reason?: string; exception?: boolean }
+export interface Transition { from: TypedValue; to: TypedValue; reason?: string; exception?: boolean; exceptionDetails?: ScenarioException | null }
 export interface ResetRule { on: 'scene_end' | 'chapter_end' | 'run_end' | 'new_loop' | 'full_reset'; value: TypedValue; reason?: string }
 export interface Allowed { min?: number; max?: number; values?: (string | boolean)[] }
 export type UnresolvedReference = { unresolved: { label: string; reason: string } };
@@ -70,6 +70,7 @@ export interface RuntimeState {
   contentVersionId: ID; variableValues: Record<ID, TypedValue>; itemInstances: RuntimeItem[]; assertions: RuntimeAssertion[];
   seenIds: ID[]; visitCounts: Record<ID, number>; onceTriggers: string[]; rngSeed: string; rngPosition: number;
   callStack: RuntimeCallFrame[]; presentationPosition: ID | null; loopNumber: number; provenance: 'full_play' | 'partial' | 'imported' | 'stub';
+  resetCauses?: { variableId: ID; on: ResetRule['on']; before: TypedValue; after: TypedValue; reason: string }[];
 }
 export interface PresentationConditionResult { targetId: ID; value: TruthValue; reasons: string[] }
 export interface TraceStep { nodeId: ID; edgeIds: ID[]; before: RuntimeState; after: RuntimeState; conditionResults?: PresentationConditionResult[] | null; operation?: 'advance' | 'stub'; occurrenceId?: string; worldTick?: Tick; externalMode?: 'stub' | 'actual' | 'mixed'; externalValues?: Record<ID, TypedValue> }
@@ -122,12 +123,12 @@ export interface DialogueData { text: RichText; speakerId?: ID | null; choiceEdg
 export interface QuestData { key: string; stateVariableId: ID; description?: RichText | null; flowIds?: ID[] | null; transitionRules?: Transition[] | null; gameplaySpecIds?: ID[] | null }
 export interface LoreData { body: RichText; assertionIds?: ID[] | null; sourceIds?: ID[] | null; reading?: string | null; aliases?: Alias[] | null }
 export interface VariableData { key: string; valueType: 'boolean' | 'integer' | 'enum'; scope: Scope; initial: TypedValue; allowed: Allowed; description?: RichText | null; ownerId?: ID | null; derived?: Expression | null; externalContractId?: ID | null; resetRules?: ResetRule[] | null; transitionRules?: Transition[] | null; externalUseDeclared?: boolean | null }
-export interface EffectData { operation: 'set' | 'add' | 'grant' | 'consume' | 'move' | 'assert' | 'mark_seen' | 'reset'; targetId: ID; value?: TypedValue | null; condition?: Condition | null; instanceId?: ID | null; reason?: string | null }
+export interface EffectData { operation: 'set' | 'add' | 'grant' | 'consume' | 'move' | 'assert' | 'mark_seen' | 'reset'; targetId: ID; value?: TypedValue | null; condition?: Condition | null; instanceId?: ID | null; reason?: string | null; exceptionDetails?: ScenarioException | null }
 export interface AssertionData { subjectId: ID; predicate: string; value: TypedValue | ID; truthKind: 'author_truth' | 'testimony' | 'belief' | 'hypothesis'; holderId?: ID | null; sourceIds?: ID[] | null; evidenceLocation?: ContentAnchor | null; validity?: Validity | null; reason?: string | null }
 export interface ForeshadowData { question: RichText; intent: RichText; resolutionPolicy: ResolutionPolicy; truthAssertionIds?: ID[] | null; clueIds?: ID[] | null; payoffIds?: ID[] | null; requiredInfo?: ID[] | null; deadline?: TargetScope | null; exceptions?: ScenarioException[] | null }
 export interface DisclosureData { foreshadowId: ID; anchor: ContentAnchor; stage: 'hint' | 'suspicion' | 'reinforce' | 'reveal' | 'alternative'; role: 'clue' | 'payoff'; condition?: Condition | null; knowledgeEffects?: ID[] | null; targetScope?: TargetScope | null }
 export interface CheckpointData { contentVersionId: ID; runtimeState: RuntimeState; presentationResults?: PresentationConditionResult[] | null; contentRevision?: Revision | null; origin?: 'full_play' | 'partial' | 'imported' | null; traceId?: ID | null }
-export interface TraceData { contentVersionId: ID; startCheckpointId: ID; steps: TraceStep[]; contentRevision?: Revision | null; initialExternalValues?: Record<ID, TypedValue> | null; seed?: string | null; engineVersion?: string | null; externalMode?: 'stub' | 'actual' | 'mixed' | null; coverage?: Coverage | null; mode?: 'flow' | 'chapters' | null; readingPath?: ReadingPath | null }
+export interface TraceData { contentVersionId: ID; startCheckpointId: ID; steps: TraceStep[]; contentRevision?: Revision | null; initialExternalValues?: Record<ID, TypedValue> | null; initialWorldTick?: Tick | null; seed?: string | null; engineVersion?: string | null; externalMode?: 'stub' | 'actual' | 'mixed' | null; coverage?: Coverage | null; mode?: 'flow' | 'chapters' | null; readingPath?: ReadingPath | null }
 export interface AttachmentData { mediaType: string; contentHash: string; byteSize: number; assetPath: string; displayName?: string | null; provenanceId?: ID | null; licenseNote?: string | null; stage?: 'reference' | 'temporary' | 'final' | null; revisionHistory?: ID[] | null }
 export interface SourceData { sourceType: 'web' | 'file' | 'book' | 'observation'; locator: string; accessedAt?: RealTime | null; excerptLocation?: string | null; interpretation?: RichText | null; attachmentId?: ID | null; redistributionAllowed?: boolean | null }
 export interface CueData { anchor: ContentAnchor; cueType: string; attachmentId?: ID | null; speakerId?: ID | null; expression?: string | null; waitMs?: MediaTime | null; camera?: CustomValue | null; mediaTime?: MediaTime | null; stage?: string | null }
@@ -198,5 +199,5 @@ export interface AuthorAlternative {
 export type DomainErrorCode = 'VALIDATION_FAILED' | 'REFERENCE_INVALID' | 'TIME_CONSTRAINT_CONFLICT' | 'CONDITION_UNKNOWN' | 'TRANSITION_BLOCKED' | 'LOCAL_SAVE_FAILED' | 'QUOTA_EXCEEDED' | 'SYNC_CONFLICT' | 'AUTH_REQUIRED' | 'FORBIDDEN' | 'FORMAT_UNSUPPORTED' | 'INTEGRITY_FAILED' | 'IMPORT_LIMIT' | 'ANALYSIS_LIMIT' | 'EXPORT_UNSUPPORTED';
 export interface ValidationIssue { code: DomainErrorCode; path: string; message: string }
 export type ValidationResult<T> = { ok: true; value: T } | { ok: false; issues: ValidationIssue[] };
-export interface RuntimeContext { state: RuntimeState; variables?: Entity<'variable'>[]; entities?: Entity[]; referenceEntities?: Entity[]; externalValues?: Record<ID, TypedValue> }
+export interface RuntimeContext { state: RuntimeState; variables?: Entity<'variable'>[]; entities?: Entity[]; referenceEntities?: Entity[]; externalValues?: Record<ID, TypedValue>; ruleContext?: { projectId: ID; graphId?: ID; chapterId?: ID; worldTick?: Tick } }
 export interface ConditionResult { value: TruthValue; reasons: string[] }

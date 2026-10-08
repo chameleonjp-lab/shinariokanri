@@ -182,6 +182,7 @@ export interface ChapterReadingViewProps {
 export function ChapterReadingView({ project, chapterIds, scenePath, currentVersionLabel = '現在の編集稿', worldSnapshots = {}, onOpenEntity, onOpenTarget, onSaveMany }: ChapterReadingViewProps) {
   const [vertical, setVertical] = useState(false);
   const [contentVersionId, setContentVersionId] = useState('');
+  const [worldTick, setWorldTick] = useState('');
   const selectedSnapshot = project.snapshots.find(snapshot => snapshot.id === contentVersionId);
   const readingSource = useMemo(() => selectedSnapshot ? { ...project, ...selectedSnapshot.content } : project, [project, selectedSnapshot]);
   const chapters = readingSource.entities.filter((entity): entity is Entity<'chapter'> => entity.kind === 'chapter' && !entity.deletedAt && entity.status !== 'rejected');
@@ -248,7 +249,7 @@ export function ChapterReadingView({ project, chapterIds, scenePath, currentVers
     setError(''); setNotice(''); setBusy(true);
     try {
       setSession(await startChapterReading(project, {
-        ...{ worldSnapshots },
+        ...{ worldSnapshots, worldTick: worldTick || undefined },
         ...(effectiveRouteMode === 'custom' ? { sceneIds: [...(effectiveRoute ?? [])] } : { chapterIds: [...effectiveChapterIds] }),
         ...(contentVersionId ? { contentVersionId } : {}),
       }));
@@ -273,7 +274,7 @@ export function ChapterReadingView({ project, chapterIds, scenePath, currentVers
       const checkpoint = project.entities.find((entity): entity is Entity<'checkpoint'> => entity.kind === 'checkpoint' && !entity.deletedAt && entity.id === trace.data.startCheckpointId);
       if (!checkpoint) throw new Error('保存した章読み通しの開始状態を確認できません。');
       const restored = await replayChapterReading(project, trace.data, checkpoint.data, { worldSnapshots });
-      setSession(restored); setContentVersionId(trace.data.contentVersionId);
+      setSession(restored); setWorldTick(restored.worldTick ?? ''); setContentVersionId(trace.data.contentVersionId);
       setSelectedChapterIds([...restored.chapterIds]); setRouteMode('custom'); setRouteSceneIds([...restored.sceneIds]);
       setNotice('保存した章読み通しを再実行し、提示順と状態を検証しました。');
     } catch (reason) { setError(reason instanceof Error ? reason.message : '保存した章読み通しを再開できませんでした。'); }
@@ -327,7 +328,7 @@ export function ChapterReadingView({ project, chapterIds, scenePath, currentVers
       <label className="form-field"><span>読む作品の版</span><select aria-label="読む作品の版" disabled={busy} value={contentVersionId} onChange={event => setContentVersionId(event.target.value)}>
         <option value="">{currentVersionLabel} · 版 {project.revision}</option>{project.snapshots.map(snapshot => <option value={snapshot.id} key={snapshot.id}>固定版：{snapshot.versionLabel}</option>)}
       </select></label>
-      <button type="button" className="button primary small" disabled={busy || !entries.length} onClick={() => void startReading()}>{session ? '読み直す' : '記録付き読書を始める'}</button>
+      <label>提示する世界内tick<input aria-label="章試読の世界内tick" disabled={busy} inputMode="numeric" value={worldTick} onChange={event => setWorldTick(event.target.value)}/></label><button type="button" className="button primary small" disabled={busy || !entries.length} onClick={() => void startReading()}>{session ? '読み直す' : '記録付き読書を始める'}</button>
       <p className="field-hint">一覧を表示しただけでは提示証拠は残りません。記録付き読書では「次の場面を提示」を押した場面だけが状態・伏線判定へ進みます。</p>
     </div>
     {savedReadingRecords.length > 0 && <section className="saved-reading-records" aria-label="保存した章読み通しの再開">

@@ -1,0 +1,37 @@
+
+ RUN  v5.0.3 /tmp/shinariokanri-independent-candidate-20261008-2
+
+ × tests/independent-historical-trace.test.ts > IC11 replays a successful unchanged baseline snapshot trace after a complete-file roundtrip 43ms
+   → expected 'error' to be 'terminal' // Object.is equality
+ × tests/independent-historical-trace.test.ts > IC12 replays a successful unchanged baseline chapter trace after a complete-file roundtrip 19ms
+   → 記録された提示根拠と再実行が一致しません。
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/independent-historical-trace.test.ts > IC11 replays a successful unchanged baseline snapshot trace after a complete-file roundtrip
+AssertionError: expected 'error' to be 'terminal' // Object.is equality
+
+Expected: "terminal"
+Received: "error"
+
+ ❯ tests/independent-historical-trace.test.ts:9:402
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  tests/independent-historical-trace.test.ts > IC12 replays a successful unchanged baseline chapter trace after a complete-file roundtrip
+DomainValidationError: 記録された提示根拠と再実行が一致しません。
+ ❯ replayChapterReading src/domain/presentation.ts:193:186
+
+ ❯ tests/independent-historical-trace.test.ts:14:15
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { issues: [ { code: 'INTEGRITY_FAILED', path: 'readingPath.occurrences[0]', message: '記録された提示根拠と再実行が一致しません。' } ] }
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed (2)
+   Start at  02:32:57
+   Duration  644ms (transform 73%, import 14%, tests 12%, worker 1%)
+

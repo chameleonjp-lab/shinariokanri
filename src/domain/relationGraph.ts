@@ -3,6 +3,7 @@ import { collectReferences, emptyValidity, RELATION_LABELS } from './model';
 import { compareTicks } from './time';
 import { resolveEventTimes } from './timeEditing';
 import { assessWorldValidity, type ValidityAssessment, type WorldPoint } from './world';
+import { adoptedRecord, adoptionAssessment } from './adoption';
 
 export type GraphCategory = 'all' | 'characters' | 'family' | 'causal' | 'foreshadow' | 'progress' | 'reference' | 'production';
 export const GRAPH_CATEGORY_LABELS: Record<GraphCategory, string> = { all: '作品全体', characters: '人物関係', family: '家系・師弟・血統', causal: '因果・前提', foreshadow: '伏線・回収', progress: '進行', reference: '参照', production: '制作の依存' };
@@ -25,7 +26,7 @@ function categoryOf(type: string, a?: Entity, b?: Entity): Exclude<GraphCategory
 }
 /** The graph projects recorded sources. A neighbourhood is a scope, never an inferred relation. */
 export function buildRelationGraph(project: ProjectData, options: RelationGraphOptions = {}): RelationGraphResult {
-  const active = project.entities.filter(entity => !entity.deletedAt), index = new Map(active.map(entity => [entity.id, entity]));
+  const active = project.entities.filter(adoptedRecord), index = new Map(active.map(entity => [entity.id, entity]));
   const allLines: GraphLine[] = [], covered = new Set<string>(), lineIds = new Set<string>(); let missingEndpoints = 0;
   const times = resolveEventTimes(active.filter((entity): entity is Entity<'event'> => entity.kind === 'event'));
   const add = (source: Entity, fromId: ID, toId: ID, label: string, path: string, category: Exclude<GraphCategory, 'all'> = 'reference', hierarchy = false, validity?: Validity | null, evidenceIds: ID[] = [], assessment?: ValidityAssessment) => {
@@ -33,12 +34,12 @@ export function buildRelationGraph(project: ProjectData, options: RelationGraphO
     const id = `derived:${source.id}:${path}:${fromId}:${toId}`;
     if (lineIds.has(id)) return; lineIds.add(id);
     covered.add(`${source.id}:${toId}`);
-    allLines.push({ id, fromId, toId, label, meaning: path.split(/[.[]/).filter(Boolean).join('.'), category, direction: 'forward', origin: 'derived', hierarchy, sourceId: source.id, sourcePath: path, evidenceIds: [...new Set([source.id, ...evidenceIds])], assessment: assessment ?? assessWorldValidity(validity, options) });
+    allLines.push({ id, fromId, toId, label, meaning: path.split(/[.[]/).filter(Boolean).join('.'), category, direction: 'forward', origin: 'derived', hierarchy, sourceId: source.id, sourcePath: path, evidenceIds: [...new Set([source.id, ...evidenceIds])], assessment: adoptionAssessment(source, assessment ?? assessWorldValidity(validity, options)) });
   };
-  for (const relation of project.relations) if (!relation.deletedAt) {
+  for (const relation of project.relations) if (adoptedRecord(relation)) {
     const a = index.get(relation.fromId), b = index.get(relation.toId);
     if (!a || !b) { missingEndpoints++; continue; }
-    allLines.push({ id: relation.id, fromId: relation.fromId, toId: relation.toId, label: RELATION_LABELS[relation.relationType] ?? relation.relationType, meaning: relation.relationType, category: categoryOf(relation.relationType, a, b), direction: relation.direction, origin: 'manual', hierarchy: false, sourceId: relation.id, sourcePath: 'relation', evidenceIds: relation.evidenceIds, relation, assessment: assessWorldValidity(relation.validity, options) });
+    allLines.push({ id: relation.id, fromId: relation.fromId, toId: relation.toId, label: RELATION_LABELS[relation.relationType] ?? relation.relationType, meaning: relation.relationType, category: categoryOf(relation.relationType, a, b), direction: relation.direction, origin: 'manual', hierarchy: false, sourceId: relation.id, sourcePath: 'relation', evidenceIds: relation.evidenceIds, relation, assessment: adoptionAssessment(relation, assessWorldValidity(relation.validity, options)) });
   }
   for (const entity of active) {
     if (entity.kind === 'event') {

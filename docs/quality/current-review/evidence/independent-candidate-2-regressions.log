@@ -1,0 +1,48 @@
+
+ RUN  v5.0.3 /tmp/shinariokanri-independent-candidate-20261008-2
+
+ ✓ tests/independent-candidate-boundaries.test.ts > Independent candidate boundary checks: Node only > IC01 records every scene/chapter/run reset cause in a terminal transition 22ms
+ ✓ tests/independent-candidate-boundaries.test.ts > Independent candidate boundary checks: Node only > IC02 closing a run also closes its final scene even when terminal reuses that scene 3ms
+ ✓ tests/independent-candidate-boundaries.test.ts > Independent candidate boundary checks: Node only > IC03 chapter reading executes the same scene boundary declaration as flow reading 4ms
+ ✓ tests/independent-candidate-boundaries.test.ts > Independent candidate boundary checks: Node only > IC04 a valid partial state remains valid after a declaration initializes its missing value 2ms
+ ✓ tests/independent-candidate-boundaries.test.ts > Independent candidate boundary checks: Node only > IC05 observes all disclosure conditions before any disclosure effects 2ms
+ ✓ tests/independent-candidate-boundaries.test.ts > Independent candidate boundary checks: Node only > IC06 evaluates explicit transition exception valid atomically 1ms
+ ✓ tests/independent-candidate-boundaries.test.ts > Independent candidate boundary checks: Node only > IC06 evaluates explicit transition exception expired atomically 1ms
+ ✓ tests/independent-candidate-boundaries.test.ts > Independent candidate boundary checks: Node only > IC06 evaluates explicit transition exception out_of_scope atomically 1ms
+ ✓ tests/independent-candidate-boundaries.test.ts > Independent candidate boundary checks: Node only > IC06 evaluates explicit transition exception unknown_route atomically 1ms
+ ✓ tests/independent-candidate-boundaries.test.ts > Independent candidate boundary checks: Node only > IC06 evaluates explicit transition exception missing_tick atomically 1ms
+ ✓ tests/independent-candidate-boundaries.test.ts > Independent candidate boundary checks: Node only > IC06 evaluates explicit transition exception missing_evidence atomically 1ms
+ × tests/independent-candidate-boundaries.test.ts > Independent candidate boundary checks: Node only > IC07 a known different chapter stays out of scope when graph context is unavailable 7ms
+   → expected false to be true // Object.is equality
+ ✓ tests/independent-contract-regressions.test.ts > Independent audit: expected original contracts > IR01 rejected state definitions do not initialize effective trial values 14ms
+ ✓ tests/independent-contract-regressions.test.ts > Independent audit: expected original contracts > IR02 unresolved presentation outside the current chapter cannot block arrival 3ms
+ ✓ tests/independent-contract-regressions.test.ts > Independent audit: expected original contracts > RV01 scene_end resets, back/replay obligation remains separate 5ms
+ ✓ tests/independent-contract-regressions.test.ts > Independent audit: expected original contracts > RV01 explicit new_loop supersedes carryover 1ms
+ ✓ tests/independent-contract-regressions.test.ts > Independent audit: expected original contracts > RV02 free reason cannot authorize forbidden transition or accompanying money 1ms
+ ✓ tests/independent-contract-regressions.test.ts > Independent audit: expected original contracts > RV03 rejected world assertions are excluded from effective candidates and index 1ms
+ ✓ tests/independent-contract-regressions.test.ts > Independent audit: expected original contracts > RV03 rejected trust is not an active effective relationship 1ms
+ ✓ tests/independent-contract-regressions.test.ts > Independent audit: expected original contracts > RV04 trial resolves adopted variable from the pinned registry 8ms
+ ✓ tests/independent-contract-regressions.test.ts > Independent audit: expected original contracts > RV10 another chapter disclosure is ignored consistently without effects 2ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/independent-candidate-boundaries.test.ts > Independent candidate boundary checks: Node only > IC07 a known different chapter stays out of scope when graph context is unavailable
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ tests/independent-candidate-boundaries.test.ts:51:135
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  1 failed | 20 passed (21)
+   Start at  02:25:47
+   Duration  500ms (transform 74%, import 13%, tests 12%, worker 1%)
+

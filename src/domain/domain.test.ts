@@ -349,7 +349,7 @@ describe('typed three-valued conditions and atomic effects', () => {
     const state = initializeRuntimeState(project), context = { state, entities: project.entities }, effect: EffectData = { operation: 'set', targetId: status.id, value: { type: 'enum', value: 'unaccepted' } };
     const blocked = applyEffectsAtomic(state, [effect], context); expect(blocked.ok).toBe(false); expect(blocked.state).toBe(state);
     const reset = applyEffectsAtomic(state, [{ ...effect, operation: 'reset' }], context); expect(reset.ok).toBe(true);
-    const explained = applyEffectsAtomic(state, [{ ...effect, reason: '意図した再受注の例外' }], context); expect(explained.ok).toBe(true);
+    const explained = applyEffectsAtomic(state, [{ ...effect, reason: '意図した再受注の例外' }], context); expect(explained.ok).toBe(false); expect(explained.state).toBe(state);
   });
   it('uses sequential effect conditions and rolls back an unknown condition', () => {
     const project = createProject(), flag = add(project, 'variable', { key: 'flag', initial: { type: 'boolean', value: false } }), seen = add(project, 'note');

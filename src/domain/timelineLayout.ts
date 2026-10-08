@@ -1,3 +1,4 @@
+import { adoptedRecord } from './adoption';
 import type { Entity, ID, ProjectData, Tick } from './types';
 import { compareTicks, parseTick, type TimeResolution } from './time';
 
@@ -11,7 +12,7 @@ export interface TimelineLayout { rows: TimelineRow[]; height: number; positions
 export function buildTimelineLanes(project: ProjectData, collapsedIds: ID[] = []): TimelineLane[] {
   const characters = new Map<ID, Entity<'character'>>(), groups: Entity<'group'>[] = [], common: ID[] = [], byCharacter = new Map<ID, ID[]>();
   for (const entity of project.entities) {
-    if (entity.deletedAt) continue;
+    if (!adoptedRecord(entity)) continue;
     if (entity.kind === 'character') characters.set(entity.id, entity);
     else if (entity.kind === 'group' && ['display', 'faction'].includes(entity.data.groupType)) groups.push(entity);
     else if (entity.kind === 'event') {

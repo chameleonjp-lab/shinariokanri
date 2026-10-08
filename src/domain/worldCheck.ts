@@ -3,6 +3,7 @@ import { collectReferences } from './model';
 import { compareTicks, isTick, parseTick, type ResolvedTime } from './time';
 import { resolveEventTimes } from './timeEditing';
 import { assessWorldValidity, assertionReference, compatibleLocations, WORLD_PREDICATES, worldPeriodsOverlap, type WorldPoint } from './world';
+import { adoptedRecord } from './adoption';
 
 export type WorldCheckKind = 'time' | 'location' | 'travel' | 'ownership' | 'condition' | 'after_death' | 'analysis_limit';
 export interface WorldCheckCandidate {
@@ -58,7 +59,7 @@ export function conditionContradiction(condition: Condition | null | undefined):
 
 /** Review candidates carry their source IDs and missing evidence; this never changes a project. */
 export function inspectWorldCandidates(project: ProjectData, options: WorldCheckOptions = {}): WorldCheckReport {
-  const active = project.entities.filter(entity => !entity.deletedAt), index = new Map(active.map(entity => [entity.id, entity])), events = active.filter((entity): entity is Entity<'event'> => entity.kind === 'event'), times = resolveEventTimes(events);
+  const active = project.entities.filter(adoptedRecord), index = new Map(active.map(entity => [entity.id, entity])), events = active.filter((entity): entity is Entity<'event'> => entity.kind === 'event'), times = resolveEventTimes(events);
   const candidates: WorldCheckCandidate[] = [], assertions = active.filter((entity): entity is Entity<'assertion'> => entity.kind === 'assertion' && entity.data.truthKind === 'author_truth');
   const deathProxies: Entity<'event'>[] = active.filter((entity): entity is Entity<'character'> => entity.kind === 'character' && !!entity.data.death).map(person => ({ ...person, kind: 'event', data: { summary: [], time: person.data.death!, laneRole: 'participants', participants: [] } }));
   const deathTimes = resolveEventTimes([...events, ...deathProxies]);

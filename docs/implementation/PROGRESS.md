@@ -1,5 +1,9 @@
 # 実装進捗（完成版は未公開）
 
+2026-10-08の現在照合は[104要件の照合表](../quality/current-review/CURRENT_REQUIREMENTS.md)と[116原受入を保持した現在記録](../quality/current-review/current-implementation.json)を参照。開始時の最新mainは `3099c9d487fbabe8342ad8c4ee2c8dc4d4156b88`、tree `4fdc292ee4a973fbb6ae5cd8d57710066dabaeb4`、PR #8取り込み後。PR #8はレビュー文書だけで、製品コードはレビュー基準0474856から変わっていない。CI run 37715506253はsuccess。AGENTS.mdはworkspaceとrepoに存在しない。
+
+RV01〜RV10の局所差分と追加の独立境界指摘を補修中。宣言reset・原因・禁止遷移の明示例外・採用状態・固定世界hash・選択版の入口・本文位置参照・保存待ち・設定下書き・暦確認基底・共通提示を通常画面と保存へ接続した。結果の範囲は[補修検証](../quality/current-review/REPAIR_VERIFICATION.md)に記録する。原104要件、24工程、116受入、RB05〜RB10全体の完成を宣言しない。歴史的baselineと段階証拠を保持し、残実装を環境待ちへ付け替えない。
+
 PR #2レビュー後の残作業は[全機能の完成計画](../plan/COMPLETION_PLAN.md)、要件別の不足は[104件の作業カード](../plan/COMPLETION_TASKS.md)を参照。PR #3は計画を追加した基準版であり、以下は実装中の状態を記録する。
 
 対象は計画書の全104要件・24工程。下表は実装中の成果物と残る完了条件であり、工程完了の宣言ではない。最終的な部品・結合検査結果はこの文書へ追記する。要件/受入レジストリの `planned` / `not_run` は設計時点の基準を保持しており、現在の部品試験の結果と同一ではない。
