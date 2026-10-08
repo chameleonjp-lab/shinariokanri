@@ -2,14 +2,14 @@ import {parseStrictJson} from '../storage/json';
 import {parseInputRecovery} from './inputRecovery';
 import {richTextWithText} from './Fields';
 import {useEffect,useMemo,useRef,useState} from 'react';
-import {ScopedEditorStore,type EditorWork,type EditorImage} from '../sync/editorStore';
+import {ScopedEditorStore,permittedEditorDocuments,type EditorWork,type EditorImage} from '../sync/editorStore';
 import {useScenarioStore,useAuthorScope} from './StoreContext';
 import {useSyncClient} from './SyncContext';
 import {useAuthorField,authorField,useAuthorInput} from './authorOperation';
 import {ListPager,useListWindow} from './ListWindow';
 import {downloadBytes} from './components';
 export function ScopedEditorPanel({projectId}:{projectId:string}){
- const ownerStore=useScenarioStore(),client=useSyncClient(),store=useMemo(()=>new ScopedEditorStore(ownerStore.accountId!),[ownerStore.accountId]),scope=useAuthorScope(`scoped-editor:${projectId}`),[work,setWork]=useState<EditorWork>(),[busy,setBusy]=useAuthorField(scope,'busy',false),[error,setError]=useState(''),[notice,setNotice]=useState(''),[inputs,setInputs]=useAuthorInput<Record<string,string>>(scope,'inputs',{},projectId,'0'),[choices,setChoices]=useAuthorInput<Record<string,'local'|'server'>>(scope,'choices',{},projectId,'0'),[approved,setApproved]=useState<number|null>(null),[recoveryPlan,setRecoveryPlan]=useState<Awaited<ReturnType<ScopedEditorStore['previewRecovery']>>|null>(null),lock=useRef(false),view=useListWindow({items:work?.documents??[],scope, size:20});
+ const ownerStore=useScenarioStore(),client=useSyncClient(),store=useMemo(()=>new ScopedEditorStore(ownerStore.accountId!),[ownerStore.accountId]),scope=useAuthorScope(`scoped-editor:${projectId}`),[work,setWork]=useState<EditorWork>(),[busy,setBusy]=useAuthorField(scope,'busy',false),[error,setError]=useState(''),[notice,setNotice]=useState(''),[inputs,setInputs]=useAuthorInput<Record<string,string>>(scope,'inputs',{},projectId,'0'),[choices,setChoices]=useAuthorInput<Record<string,'local'|'server'>>(scope,'choices',{},projectId,'0'),[approved,setApproved]=useState<number|null>(null),[recoveryPlan,setRecoveryPlan]=useState<Awaited<ReturnType<ScopedEditorStore['previewRecovery']>>|null>(null),lock=useRef(false),view=useListWindow({items:work?permittedEditorDocuments(work):[],scope, size:20});
  useEffect(()=>{let live=true;void store.get(projectId).then(w=>{if(live)setWork(w);});return()=>{live=false;};},[store,projectId]);
  async function run(task:()=>Promise<void>){if(lock.current)return;lock.current=true;setBusy(true);setError('');try{await task();setWork(await store.get(projectId));}catch(cause){setError((cause as Error).message);}finally{setBusy(false);lock.current=false;}}
  async function synchronize(){const expected=client!.getSession(),op=await store.prepare(projectId);if(op)await store.acknowledge(await client!.send(op,expected));setNotice('許可された項目だけを検証し、ACKと編集待ちを端末に保存しました。');}
