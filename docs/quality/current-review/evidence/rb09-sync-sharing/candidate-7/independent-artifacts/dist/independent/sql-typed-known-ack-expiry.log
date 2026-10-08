@@ -1,0 +1,32 @@
+
+ RUN  v5.0.3 /tmp/shinariokanri-independent-rb09-cfaebcb
+
+ ❯ tests/independent-rb09-sql-expiry-renewal.test.ts (1 test | 1 failed) 6471ms
+   × R9SQL-expiry-current an applied ACK at content2/auth2 before finite B expiry must not replace the freshly read same-content/auth A-only null-expiry descriptor; A edit is allowed 6470ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/independent-rb09-sql-expiry-renewal.test.ts > R9SQL-expiry-current an applied ACK at content2/auth2 before finite B expiry must not replace the freshly read same-content/auth A-only null-expiry descriptor; A edit is allowed
+AssertionError: expected SyncProtocolError: FORBIDDEN { …(1) } to be undefined
+
+- Expected:
+undefined
+
++ Received:
+SyncProtocolError {
+  "message": "FORBIDDEN",
+  "code": "FORBIDDEN",
+  "name": "SyncProtocolError",
+}
+
+ ❯ tests/independent-rb09-sql-expiry-renewal.test.ts:27:944
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 6 passed (7)
+      Tests  1 failed | 20 passed (21)
+   Start at  21:29:29
+   Duration  19.93s (tests 94%, import 3%, transform 3%)
+

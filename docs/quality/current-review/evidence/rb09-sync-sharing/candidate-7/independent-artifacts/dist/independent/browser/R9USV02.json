@@ -1,0 +1,40 @@
+{
+  "id": "R9USV02",
+  "status": "pass",
+  "expected": "Correct behavior, not observed-bad success",
+  "failure": "",
+  "observation": {
+    "fixedEdition": "public-edition-old",
+    "targetStart": 1,
+    "targetEnd": 2,
+    "returnedToOriginal": true
+  },
+  "calls": [
+    {
+      "type": "auth-fixture",
+      "role": "reviewer"
+    },
+    {
+      "type": "edge",
+      "action": "projects",
+      "input": {}
+    },
+    {
+      "type": "public-list"
+    },
+    {
+      "type": "edge",
+      "action": "shared_snapshot",
+      "input": {
+        "snapshotId": "40000000-0000-4000-8000-000000000005"
+      }
+    },
+    {
+      "type": "comments",
+      "method": "GET",
+      "body": null
+    }
+  ],
+  "pageErrors": [],
+  "environment": "Production Chromium153 at isolated5397, HTTPS backend mocks"
+}

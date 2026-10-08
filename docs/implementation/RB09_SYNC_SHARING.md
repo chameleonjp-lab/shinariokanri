@@ -39,3 +39,18 @@ private素材とarchiveは現在session/member/grantを取得前後で確認す�
 実API planの雛形は `scripts/sync/live-plan.example.json`。fixtureで既存作品を使わず、UUID・hash・対象source commit/treeを全て埋める。撤回・指摘はfixtureへ書込み、終了後の復旧は専用環境管理者が確認する。費用はproject/tier/region/quotaが未指定なので未確認。pricingの表示だけで当該projectの無料枠や課金を合格にしない。
 
 受信した確定画像の整合確認は `origin: received_image` とし、サーバーがprepared操作を適用したACKとは区別する。固定世界の推移依存素材bytesもupload/download対象へ含める。限定版の直リンクは一覧取得後に開き、一覧とのbusy競合で要求を捨てない。自分の指摘の本文修正・対応状態・削除は同じ対象版とサーバー所有権検査へ通す。
+
+
+## 最終局所候補と入力・権限の境界
+
+候補C8 `af0c2b983f1146cc7977f13d119b8748c867db2f` / tree `134fc3adb342600bebc8dccaa93ff5cec9254c08`。735単体/結合、75 production Chromium153、Python15、schema/build/docs/plan、8migration+23模擬SQL契約を実行。独立レビューは別の源・raw・hashを封印し、古い候補の失敗を保持する。原116の最終受入や実API/実機の合格とは別である。
+
+native DBv6のworkspaceInputsとauthorToolDraftsは同じtransactionで入力復元する。DB失敗では両方の現在入力を保持し、任意の表示キャッシュだけが失敗した場合はDBに確定した入力をcold再開する。保存・復元・画面移動のintent世代を保持し、通信完了で後の画面を奪わない。アカウント操作欄はPC/狭幅でも到達でき、logoutは対象アカウントの入力・限定版・私有bytesを明示確認して消去する。guest領域は保持する。
+
+限定編集DBv2は古いstampなしのv1入力・common・二案・prepared・ACKを元の再接続待ち証跡として保持し、active許可へ昇格しない。内容revisionとauthorizationRevisionは別々に単調評価し、遅れた旧応答と同権限版での項目拡大を拒否する。明示的な新しい権限版だけが再付与する。authorizationExpiresAtを受信、保存、prepared、ACK、競合解決、復元の確認/承認、DB確定内で再検証する。期限後の解決・承認では現在の全入力・基底・prepared・ACKが不変である。Edgeもmembership_revisionと現在scopeをSQLlockと応答時に再確認する。
+
+公表料金の確認は[外部条件](EXTERNAL_CONDITIONS.md)へ記す。公表値と実tenantのquota/費用確認は別であり、料金承認や有料機能の有効化は行っていない。
+
+C8は確定ACKの内容版と認可観測を別に保持する。内容版が古く認可だけ新しい受信では、既知の最新本文へ受信許可maskを適用し、未知の新項目本文は利用しない。`permissionObservation`には元の許可観測を保持し、同じ認可の現行本文を取得してもそのmask外へ拡大しない。同じ内容版・認可番号の現行取得は期限到来による縮小を優先する。復旧は保存baseとの差分入力だけを適用し、旧workの未変更値で最新リモート値を上書きしない。旧work全体・未ACK操作・共通元・二案は証跡として保持し、自動再送へ転用しない。
+
+独立C8は105部品（実ネットワークを遮断したPostgreSQLのtyped RPC21を含む）と18通常production群、8migration・模擬RLS23・NULL2に成功。C1〜C7の失敗と元期待を保持したままE07〜E10を補修した。これは実Supabase Auth/RLS/Storageの証明ではない。

@@ -1,0 +1,30 @@
+import type {ProjectData,ProjectContent} from '../domain/types';
+import {validateProject,ID_PATTERN} from '../domain/model';
+import {validateProjectIntegrity} from '../domain/projectRecordValidation';
+import {assertOperation,assertDocumentTarget,isRevision,sameValue,valueHash,clone,SyncProtocolError,type SyncDocument} from '../sync/protocol';
+import {threeWayMerge} from '../sync/merge';
+import {assertAck} from '../sync/validation';
+import {nativeFromDocuments,type ConfirmedSyncBase,type PreparedNativeOperation,type PreservedNativeConflict,type NativeSyncAck} from '../sync/nativeBridge';
+import {checkCancelled,StorageError} from './errors';
+export interface NativeSyncRecovery {
+ format:'scenario-sync-recovery';version:1;state:'needs_reconnect';origin:ProjectData;
+ base?:ConfirmedSyncBase;prepared:PreparedNativeOperation[];conflicts:PreservedNativeConflict[];acknowledgements:NativeSyncAck[];assetAcknowledgements?:{key:string;projectId:string;contentHash:string;byteSize:number;mediaType:string}[];contentHash:string;
+}
+export interface RetainedSyncRecovery {key:string;projectId:string;evidence:NativeSyncRecovery;status:'needs_reconnect'}
+/** Historical protocol IDs and hashes are preserved verbatim across clone and ID-mapped import. */
+export function syncRecoveryImages(items:NativeSyncRecovery[]=[]):ProjectData[]{
+ return items.flatMap(item=>{const all:SyncDocument[][]=[];if(item.base)all.push(item.base.documents);for(const p of item.prepared)all.push(p.localDocuments);for(const c of item.conflicts){all.push(c.prepared.localDocuments);if(c.ack.confirmedDocuments)all.push(c.ack.confirmedDocuments);}for(const a of item.acknowledgements)if(a.ack.confirmedDocuments)all.push(a.ack.confirmedDocuments);return [clone(item.origin),...all.map(d=>nativeFromDocuments(item.origin,d,'1970-01-01T00:00:00.000Z'))].map(p=>({...p,history:[]}));});
+}
+export async function validateSyncRecovery(input:unknown,worlds:Record<string,ProjectContent>,signal?:AbortSignal):Promise<NativeSyncRecovery[]>{
+ if(!Array.isArray(input)||input.length>100000)throw new StorageError('VALIDATION_FAILED','同期復元証跡の形式・件数が不正です。');const captured=clone(input) as NativeSyncRecovery[],seen=new Set<string>();
+ try{for(const item of captured){checkCancelled(signal);if(!item||item.format!=='scenario-sync-recovery'||item.version!==1||item.state!=='needs_reconnect'||!item.origin||!ID_PATTERN.test(item.origin.projectId)||!Array.isArray(item.prepared)||!Array.isArray(item.conflicts)||!Array.isArray(item.acknowledgements)||Object.keys(item).some(k=>!['format','version','state','origin','base','prepared','conflicts','acknowledgements','assetAcknowledgements','contentHash'].includes(k)))throw new SyncProtocolError('PROTOCOL_INVALID');const {contentHash,...payload}=item;if(await valueHash(payload)!==contentHash||seen.has(contentHash))throw new SyncProtocolError('PROTOCOL_INVALID');seen.add(contentHash);
+  if(item.base&&(!isRevision(item.base.serverRevision)||!Array.isArray(item.base.documents)||item.base.documents.length>100001||item.base.projectId!==item.origin.projectId||await valueHash(item.base.documents)!==item.base.contentHash))throw new SyncProtocolError('PROTOCOL_INVALID');
+  if(item.base)for(const doc of item.base.documents)assertDocumentTarget(doc,{accountId:'00000000-0000-4000-8000-000000000001',projectId:item.origin.projectId},doc.id);
+  if(item.assetAcknowledgements){if(!Array.isArray(item.assetAcknowledgements))throw new SyncProtocolError('PROTOCOL_INVALID');for(const a of item.assetAcknowledgements)if(a.projectId!==item.origin.projectId||a.key!==`${a.projectId}:${a.contentHash}`||!/^[0-9a-f]{64}$/.test(a.contentHash)||!Number.isSafeInteger(a.byteSize)||a.byteSize<0||a.byteSize>32*1024*1024||typeof a.mediaType!=='string')throw new SyncProtocolError('PROTOCOL_INVALID');}
+  for(const p of [...item.prepared,...item.conflicts.map(c=>c.prepared)]){await assertOperation(p.operation);if(p.operationId!==p.operation.operationId||p.projectId!==item.origin.projectId||p.operation.scope.projectId!==p.projectId||!isRevision(p.localRevision)||!Array.isArray(p.localDocuments)||p.localDocuments.length>100001||!Array.isArray(p.outboxIds)||p.outboxIds.length>100000||new Set(p.outboxIds).size!==p.outboxIds.length||p.outboxIds.some(id=>!ID_PATTERN.test(id))||!Number.isFinite(Date.parse(p.createdAt)))throw new SyncProtocolError('PROTOCOL_INVALID');if(p.origin!==undefined&&!['prepared_operation','received_image'].includes(p.origin))throw new SyncProtocolError('PROTOCOL_INVALID');for(const d of p.localDocuments)assertDocumentTarget(d,p.operation.scope,d.id);for(const t of p.operation.targets)if(!sameValue(t.local,p.localDocuments.find(d=>d.id===t.targetId)))throw new SyncProtocolError('PROTOCOL_INVALID');}
+  for(const c of item.conflicts){if(c.operationId!==c.prepared.operationId||c.projectId!==item.origin.projectId)throw new SyncProtocolError('PROTOCOL_INVALID');await assertAck(c.prepared.operation,c.ack);if(!Array.isArray(c.conflicts)||c.conflicts.some(conflict=>{const merged=threeWayMerge(conflict.base,conflict.local,conflict.server);return merged.status!=='conflict'||!sameValue(merged.conflict,conflict);}))throw new SyncProtocolError('PROTOCOL_INVALID');if(c.ack.status==='conflict'&&JSON.stringify(c.conflicts)!==JSON.stringify(c.ack.conflicts))throw new SyncProtocolError('PROTOCOL_INVALID');}
+  for(const a of item.acknowledgements){if(a.origin!==undefined&&!['prepared_operation','received_image'].includes(a.origin))throw new SyncProtocolError('PROTOCOL_INVALID');if(a.projectId!==item.origin.projectId||a.operationId!==a.operation.operationId)throw new SyncProtocolError('PROTOCOL_INVALID');await assertOperation(a.operation);await assertAck(a.operation,a.ack);}
+  for(const image of syncRecoveryImages([item])){checkCancelled(signal);if(!validateProject(image,{worldSnapshots:worlds}).ok||(await validateProjectIntegrity(image,{worldSnapshots:worlds},false)).length)throw new SyncProtocolError('PROTOCOL_INVALID');}
+ }}catch(cause){if(signal?.aborted)checkCancelled(signal);throw new StorageError('VALIDATION_FAILED','同期の共通元・二案・ACK・hashの整合性を確認できません。');}
+ return captured;
+}

@@ -1,0 +1,125 @@
+
+ RUN  v5.0.3 /tmp/shinariokanri-independent-rb09-35d34a8
+
+ ❯ tests/independent-rb09-sql-editor.test.ts (5 tests | 5 failed) 1424ms
+   × R9ESV01 fieldset RPC→typed editor apply→duplicate ACK keeps private canonical fields only in the internal engine and returns a valid scoped receipt 395ms
+   × R9ESV02 one forbidden private ID in an otherwise valid batch refuses every editor update and operation evidence 250ms
+   × R9ESV03 scope revocation after typed validation is enforced again under the locked SQL commit 261ms
+   × R9ESV04 stale membership approval and direct authenticated access to the canonical engine RPC are both refused 255ms
+   × R9E03 a repeated editor operation after its field grant is revoked returns FORBIDDEN rather than an invalid applied ACK 260ms
+ ❯ tests/independent-rb09-edge-bytes.test.ts (4 tests | 4 failed) 331ms
+   × R9BV01 Edge owner asset upload→SQL metadata→download verifies actual bytes and never returns storage credentials 91ms
+   × R9BV02 Edge detects corrupted private object bytes before returning them, despite matching SQL metadata 79ms
+   × R9BV03 Edge checks live SQL session again after private bytes load and refuses a session revoked during retrieval 83ms
+   × R9BV04 Edge refuses a foreign Origin before Auth or Storage access 77ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 9 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/independent-rb09-edge-bytes.test.ts > R9BV01 Edge owner asset upload→SQL metadata→download verifies actual bytes and never returns storage credentials
+Error: ENOENT: no such file or directory, open '/tmp/shinariokanri-independent-rb09-35d34a8/independent/fixtures/remote-native.json'
+ ❯ setup tests/independent-rb09-edge-bytes.test.ts:13:46
+
+ ❯ tests/independent-rb09-edge-bytes.test.ts:14:143
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/9]⎯
+
+ FAIL  tests/independent-rb09-edge-bytes.test.ts > R9BV02 Edge detects corrupted private object bytes before returning them, despite matching SQL metadata
+Error: ENOENT: no such file or directory, open '/tmp/shinariokanri-independent-rb09-35d34a8/independent/fixtures/remote-native.json'
+ ❯ setup tests/independent-rb09-edge-bytes.test.ts:13:46
+
+ ❯ tests/independent-rb09-edge-bytes.test.ts:15:134
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/9]⎯
+
+ FAIL  tests/independent-rb09-edge-bytes.test.ts > R9BV03 Edge checks live SQL session again after private bytes load and refuses a session revoked during retrieval
+Error: ENOENT: no such file or directory, open '/tmp/shinariokanri-independent-rb09-35d34a8/independent/fixtures/remote-native.json'
+ ❯ setup tests/independent-rb09-edge-bytes.test.ts:13:46
+
+ ❯ tests/independent-rb09-edge-bytes.test.ts:16:144
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/9]⎯
+
+ FAIL  tests/independent-rb09-edge-bytes.test.ts > R9BV04 Edge refuses a foreign Origin before Auth or Storage access
+Error: ENOENT: no such file or directory, open '/tmp/shinariokanri-independent-rb09-35d34a8/independent/fixtures/remote-native.json'
+ ❯ setup tests/independent-rb09-edge-bytes.test.ts:13:46
+
+ ❯ tests/independent-rb09-edge-bytes.test.ts:17:97
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/9]⎯
+
+ FAIL  tests/independent-rb09-sql-editor.test.ts > R9ESV01 fieldset RPC→typed editor apply→duplicate ACK keeps private canonical fields only in the internal engine and returns a valid scoped receipt
+Error: ERROR:  function public.scenario_editor_grants(unknown, unknown, unknown, unknown, jsonb, unknown) does not exist
+LINE 1: select public.scenario_editor_grants('00000000-0000-4000-800...
+               ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+ ❯ sql tests/independent-rb09-sql-editor.test.ts:12:370
+
+ ❯ rpc tests/independent-rb09-sql-editor.test.ts:13:54
+ ❯ seed tests/independent-rb09-sql-editor.test.ts:16:648
+ ❯ tests/independent-rb09-sql-editor.test.ts:18:172
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/9]⎯
+
+ FAIL  tests/independent-rb09-sql-editor.test.ts > R9ESV02 one forbidden private ID in an otherwise valid batch refuses every editor update and operation evidence
+Error: ERROR:  function public.scenario_editor_grants(unknown, unknown, unknown, unknown, jsonb, unknown) does not exist
+LINE 1: select public.scenario_editor_grants('00000000-0000-4000-800...
+               ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+ ❯ sql tests/independent-rb09-sql-editor.test.ts:12:370
+
+ ❯ rpc tests/independent-rb09-sql-editor.test.ts:13:54
+ ❯ seed tests/independent-rb09-sql-editor.test.ts:16:648
+ ❯ tests/independent-rb09-sql-editor.test.ts:19:136
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/9]⎯
+
+ FAIL  tests/independent-rb09-sql-editor.test.ts > R9ESV03 scope revocation after typed validation is enforced again under the locked SQL commit
+Error: ERROR:  function public.scenario_editor_grants(unknown, unknown, unknown, unknown, jsonb, unknown) does not exist
+LINE 1: select public.scenario_editor_grants('00000000-0000-4000-800...
+               ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+ ❯ sql tests/independent-rb09-sql-editor.test.ts:12:370
+
+ ❯ rpc tests/independent-rb09-sql-editor.test.ts:13:54
+ ❯ seed tests/independent-rb09-sql-editor.test.ts:16:648
+ ❯ tests/independent-rb09-sql-editor.test.ts:20:118
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/9]⎯
+
+ FAIL  tests/independent-rb09-sql-editor.test.ts > R9ESV04 stale membership approval and direct authenticated access to the canonical engine RPC are both refused
+Error: ERROR:  function public.scenario_editor_grants(unknown, unknown, unknown, unknown, jsonb, unknown) does not exist
+LINE 1: select public.scenario_editor_grants('00000000-0000-4000-800...
+               ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+ ❯ sql tests/independent-rb09-sql-editor.test.ts:12:370
+
+ ❯ rpc tests/independent-rb09-sql-editor.test.ts:13:54
+ ❯ seed tests/independent-rb09-sql-editor.test.ts:16:648
+ ❯ tests/independent-rb09-sql-editor.test.ts:21:135
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/9]⎯
+
+ FAIL  tests/independent-rb09-sql-editor.test.ts > R9E03 a repeated editor operation after its field grant is revoked returns FORBIDDEN rather than an invalid applied ACK
+Error: ERROR:  function public.scenario_editor_grants(unknown, unknown, unknown, unknown, jsonb, unknown) does not exist
+LINE 1: select public.scenario_editor_grants('00000000-0000-4000-800...
+               ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+ ❯ sql tests/independent-rb09-sql-editor.test.ts:12:370
+
+ ❯ rpc tests/independent-rb09-sql-editor.test.ts:13:54
+ ❯ seed tests/independent-rb09-sql-editor.test.ts:16:648
+ ❯ tests/independent-rb09-sql-editor.test.ts:22:144
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/9]⎯
+
+
+ Test Files  2 failed | 1 passed (3)
+      Tests  9 failed | 4 passed (13)
+   Start at  19:25:08
+   Duration  4.94s (tests 87%, transform 9%, import 4%)
+

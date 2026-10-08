@@ -1,0 +1,50 @@
+
+ RUN  v5.0.3 /tmp/shinariokanri-independent-rb09-73a279a
+
+ ❯ tests/independent-rb09-known-ack-authority.test.ts (2 tests | 2 failed) 228ms
+   × R9E08 a delayed fieldset authority2/content1 cannot replace the content2 already proved by a valid scoped conflict ACK2 185ms
+   × R9E09 a valid conflict ACK with current authority2 and confirmed A-only fieldset withdraws B from active writes without losing the original command/conflict evidence 33ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/independent-rb09-known-ack-authority.test.ts > R9E08 a delayed fieldset authority2/content1 cannot replace the content2 already proved by a valid scoped conflict ACK2
+AssertionError: expected undefined to match object { code: 'REVISION_CHANGED' }
+
+- Expected:
+{
+  "code": "REVISION_CHANGED",
+}
+
++ Received:
+undefined
+
+ ❯ tests/independent-rb09-known-ack-authority.test.ts:16:842
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  tests/independent-rb09-known-ack-authority.test.ts > R9E09 a valid conflict ACK with current authority2 and confirmed A-only fieldset withdraws B from active writes without losing the original command/conflict evidence
+AssertionError: expected undefined to match object { code: 'FORBIDDEN' }
+
+- Expected:
+{
+  "code": "FORBIDDEN",
+}
+
++ Received:
+undefined
+
+ ❯ tests/independent-rb09-known-ack-authority.test.ts:17:632
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed | 12 passed (13)
+      Tests  2 failed | 72 passed (74)
+   Start at  21:12:51
+   Duration  13.22s (tests 57%, import 24%, transform 18%, worker 1%)
+
+    Isolate  13 workers spawned · ~298ms startup each (spawn + environment, per file)
+             at least ~3.58s faster with isolate: false — reuses workers across files instead of one per file
+

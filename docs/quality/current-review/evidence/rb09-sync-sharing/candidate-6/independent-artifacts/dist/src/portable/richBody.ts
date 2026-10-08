@@ -1,0 +1,19 @@
+import type { ContentAnchor, ProjectData, RichText } from '../domain/types';
+import type { ShowMaterial } from './material';
+
+/** A citation resolves exclusively in its declared immutable edition. All positions use code points. */
+export function richBody(project:ProjectData,text:RichText,parent:HTMLElement,anchor?:ContentAnchor,defaultVersion=project.projectId,showMaterial?:ShowMaterial){
+ for(const block of text??[]){
+  const paragraph=document.createElement(block.kind==='heading'?'h3':'p');paragraph.dataset.blockId=block.id;const letters=[...block.text];let at=0;
+  for(const ruby of [...block.ruby??[]].sort((a,b)=>a.start-b.start)){if(ruby.start<at||ruby.end>letters.length)continue;paragraph.append(document.createTextNode(letters.slice(at,ruby.start).join('')));const element=document.createElement('ruby'),reading=document.createElement('rt');element.textContent=letters.slice(ruby.start,ruby.end).join('');reading.textContent=ruby.text;element.append(reading);paragraph.append(element);at=ruby.end;}
+  paragraph.append(document.createTextNode(letters.slice(at).join('')));
+  if(anchor?.blockId===block.id&&anchor.start!=null){paragraph.dataset.targetStart=String(anchor.start);paragraph.dataset.targetEnd=String(anchor.end);paragraph.tabIndex=-1;const mark=document.createElement('mark');mark.textContent=letters.slice(anchor.start,anchor.end??letters.length).join('');mark.setAttribute('aria-label','参照した文字位置');paragraph.append(mark);}
+  for(const link of block.links??[]){const button=document.createElement('button');button.type='button';button.textContent=`関連: ${letters.slice(link.start,link.end).join('')}`;button.onclick=()=>openContentAnchor(project,{...link.target,sourceVersionId:link.target.sourceVersionId??defaultVersion},button,showMaterial);paragraph.append(button);}parent.append(paragraph);
+ }
+}
+export function openContentAnchor(project:ProjectData,anchor:ContentAnchor,source:HTMLElement,showMaterial?:ShowMaterial){
+ const edition=anchor.sourceVersionId&&anchor.sourceVersionId!==project.projectId?project.snapshots.find(pin=>pin.id===anchor.sourceVersionId)?.content:project,target=edition?.entities.find(entity=>entity.id===anchor.entityId&&!entity.deletedAt&&entity.status==='confirmed'),savedScroll=scrollY;
+ const dialog=document.createElement('dialog'),heading=document.createElement('h2'),dispose:(()=>void)[]=[];heading.textContent=target?.name??'参照先を確認できません';dialog.append(heading);
+ if(target){const version=anchor.sourceVersionId??project.projectId,label=document.createElement('p');label.textContent=`対象版 ${version}`;dialog.append(label);const data=target.data as unknown as Record<string,unknown>;for(const field of ['body','text','summary','description','caption','interpretation','action','tutorial'])if(Array.isArray(data[field]))richBody(project,data[field] as RichText,dialog,anchor,version,showMaterial);const ids=[...(target.kind==='attachment'?[target.id]:[]),...['attachmentId','finalAssetId','referenceAssetId'].flatMap(field=>typeof data[field]==='string'?[data[field] as string]:[]),...['assetIds','attachmentIds'].flatMap(field=>Array.isArray(data[field])?(data[field] as unknown[]).filter((id):id is string=>typeof id==='string'):[])];if(showMaterial)for(const id of new Set(ids))dispose.push(showMaterial(id,version,dialog));}else{const error=document.createElement('p');error.textContent='REFERENCE_INVALID: 指定した固定版・公開対象がありません。';dialog.append(error);}
+ const close=document.createElement('button');close.type='button';close.textContent='元の読み位置へ戻る';close.onclick=()=>dialog.close();dialog.append(close);dialog.onclose=()=>{dispose.forEach(cleanup=>cleanup());dialog.remove();source.focus({preventScroll:true});scrollTo(0,savedScroll);};document.body.append(dialog);dialog.showModal();dialog.querySelector<HTMLElement>('[data-target-start]')?.focus();
+}

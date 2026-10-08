@@ -9,3 +9,5 @@
 `testing.ts`のメモリサーバー、fakeIndexedDB、ローカルPostgreSQLのmock Auth/Storage、ブラウザーHTTP fixtureの成功を実Auth/RLS/private Storageや二端末の合格へ流用しない。専用URL/実試験アカウント/quota/費用は未指定。接続先作成・migration適用・deploy・課金・別用途DB変更は未実行。
 
 単体: `npm test -- tests/sync.test.ts src/storage/rb09Sync.test.ts tests/rb09Features.test.ts`。SQL: 隔離コンテナ限定 `scripts/sync/check-sql-local.sh`。server bundle: `npm run sync:build`。実API用opt-in driverはガイド参照。WP17/18・AT-E05/E06・RB09全体の受入完了は別判定する。
+
+最終局所候補はnative DBv6、限定編集DBv2、8migration。内容版とauthorizationRevision/ExpiresAtを別評価し、解決/復元のDB確定時にも期限を再検証する。workspaceInputs+authorToolDraftsの原子復元とキャッシュ失敗後のcold再開を保持する。詳細は実装ガイド参照。

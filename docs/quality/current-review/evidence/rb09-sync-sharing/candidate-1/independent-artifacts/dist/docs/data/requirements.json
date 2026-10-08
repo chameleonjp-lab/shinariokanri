@@ -1,0 +1,1826 @@
+[
+  {
+    "id": "REQ-B01",
+    "title": "作品の作成と情報の登録",
+    "provenance": "元の依頼に必要な基盤",
+    "decision_status": "previously_adopted",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP04",
+    "shall": "作品を作成し、人物・出来事・場所・物品・メモを追加・編集・アーカイブできること。名前だけで登録して詳細を後から補えること。",
+    "failure_behavior": "必須項目や参照先が不正な変更は保存せず、入力途中の文章と修正箇所を保持する",
+    "acceptance_ids": [
+      "AT-B01"
+    ],
+    "source_refs": []
+  },
+  {
+    "id": "REQ-B02",
+    "title": "共通の出来事と人物別の出来事",
+    "provenance": "元の依頼",
+    "decision_status": "previously_adopted",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP07",
+    "shall": "横軸を世界内時間、縦軸をグループと人物にした年表を持つこと。共通出来事は共通レーンへ、人物別出来事は対象人物のレーンへ表示すること。",
+    "failure_behavior": "共通レーンへの表示だけでは全員を関係者や知識の保有者に登録しない",
+    "acceptance_ids": [
+      "AT-B02"
+    ],
+    "source_refs": []
+  },
+  {
+    "id": "REQ-B03",
+    "title": "グループと人物レーン",
+    "provenance": "元の依頼",
+    "decision_status": "previously_adopted",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP07",
+    "shall": "グループを追加・改名・並べ替え・折りたたみでき、人物を複数グループから参照できること。",
+    "failure_behavior": "グループ削除では人物を連鎖削除せず、表示への影響を確認する",
+    "acceptance_ids": [
+      "AT-B03"
+    ],
+    "source_refs": []
+  },
+  {
+    "id": "REQ-B04",
+    "title": "人物ラベルを固定して横移動",
+    "provenance": "元の依頼",
+    "decision_status": "previously_adopted",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP07",
+    "shall": "年表の横移動中も人物名とグループ名を固定し、時間方向の位置と選択を保持すること。",
+    "failure_behavior": "ページ全体の横ずれや、編集欄のスクロールとの取り違えが起きない",
+    "acceptance_ids": [
+      "AT-B04"
+    ],
+    "source_refs": []
+  },
+  {
+    "id": "REQ-B05",
+    "title": "年表の表示単位",
+    "provenance": "元の依頼",
+    "decision_status": "previously_adopted",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP06",
+    "shall": "時刻・日・月・年・独自単位を表示上で切り替え、表示範囲を拡大・縮小できること。",
+    "failure_behavior": "現在の暦に存在しない単位は理由付きで選択不可とし、暗黙の換算をしない",
+    "acceptance_ids": [
+      "AT-B05"
+    ],
+    "source_refs": []
+  },
+  {
+    "id": "REQ-B06",
+    "title": "過去への延長と本編開始",
+    "provenance": "元の依頼",
+    "decision_status": "previously_adopted",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP06",
+    "shall": "負の世界時間を含めて過去へ延長でき、本編開始を独立した基準点として設定できること。",
+    "failure_behavior": "本編開始を動かしただけで全出来事を移動しない",
+    "acceptance_ids": [
+      "AT-B06"
+    ],
+    "source_refs": []
+  },
+  {
+    "id": "REQ-B07",
+    "title": "出来事間の意味付き矢印",
+    "provenance": "元の依頼",
+    "decision_status": "previously_adopted",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP08",
+    "shall": "因果・前提・伏線・回収など種類と向きを持つ関係線を作成・編集し、元情報へ移動できること。",
+    "failure_behavior": "存在しない終点や型の異なる関係を保存せず理由を示す",
+    "acceptance_ids": [
+      "AT-B07"
+    ],
+    "source_refs": []
+  },
+  {
+    "id": "REQ-B08",
+    "title": "出来事の関係者とメモ",
+    "provenance": "元の依頼",
+    "decision_status": "previously_adopted",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP04",
+    "shall": "出来事ごとに関係者・役割・場所・物品・作者メモを関連付けること。",
+    "failure_behavior": "登場、目撃、伝聞、知識取得を同じ関係として扱わない",
+    "acceptance_ids": [
+      "AT-B08"
+    ],
+    "source_refs": []
+  },
+  {
+    "id": "REQ-B09",
+    "title": "人物関係図との連携",
+    "provenance": "元の依頼",
+    "decision_status": "previously_adopted",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP08",
+    "shall": "人物別と作品全体の関係図を持ち、図・年表・詳細から同じ人物と関係を参照すること。",
+    "failure_behavior": "図上の配置変更は人物の所属・時期・関係を変更しない",
+    "acceptance_ids": [
+      "AT-B09"
+    ],
+    "source_refs": []
+  },
+  {
+    "id": "REQ-B10",
+    "title": "名前からのリンクと逆参照",
+    "provenance": "元の依頼",
+    "decision_status": "previously_adopted",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP05",
+    "shall": "本文・メモの確定リンクから人物等と段落へ移動し、対象から利用箇所へ戻れること。",
+    "failure_behavior": "同名や一般語を自動で一人へ確定しない",
+    "acceptance_ids": [
+      "AT-B10"
+    ],
+    "source_refs": []
+  },
+  {
+    "id": "REQ-B11",
+    "title": "場所と物品の一覧",
+    "provenance": "元の依頼",
+    "decision_status": "previously_adopted",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP04",
+    "shall": "人物とは別に場所と物品の一覧・詳細・メモ・参照元を持つこと。",
+    "failure_behavior": "物品の種類と個体を区別し、一つの個体の複製で所有を二重化しない",
+    "acceptance_ids": [
+      "AT-B11"
+    ],
+    "source_refs": []
+  },
+  {
+    "id": "REQ-B12",
+    "title": "専用ファイルへの出力と読み込み",
+    "provenance": "元の依頼",
+    "decision_status": "previously_adopted",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP16",
+    "shall": "完全な作品を版付き専用ファイルへ出力し、事前検査・確認を経て読み戻せること。",
+    "failure_behavior": "破損・未対応版・危険なパス・参照不整合は既存作品を変更せず拒否する",
+    "acceptance_ids": [
+      "AT-B12"
+    ],
+    "source_refs": []
+  },
+  {
+    "id": "REQ-B13",
+    "title": "世界の出来事と提示順の分離",
+    "provenance": "以前から採用済みの拡張",
+    "decision_status": "previously_adopted",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP10",
+    "shall": "世界の出来事と章・場面・提示順を別情報にし、一つの出来事を複数場面から参照すること。",
+    "failure_behavior": "場面の並べ替えを出来事の日付変更として保存しない",
+    "acceptance_ids": [
+      "AT-B13"
+    ],
+    "source_refs": []
+  },
+  {
+    "id": "REQ-B14",
+    "title": "分岐・合流と条件・効果",
+    "provenance": "以前から採用済みの拡張",
+    "decision_status": "previously_adopted",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP12",
+    "shall": "選択肢・条件・効果・合流・意図した終端を編集できること。条件と効果の実行規則は動作契約に従うこと。",
+    "failure_behavior": "選択肢ゼロや不正な効果は終端と区別し、途中までの更新を残さない",
+    "acceptance_ids": [
+      "AT-B14"
+    ],
+    "source_refs": []
+  },
+  {
+    "id": "REQ-B15",
+    "title": "状態とフラグの管理",
+    "provenance": "以前から採用済みの拡張",
+    "decision_status": "previously_adopted",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP11",
+    "shall": "状態の型・初期値・条件・更新を作品内で管理し、未定義と偽を区別すること。",
+    "failure_behavior": "未定義の値を暗黙に偽またはゼロにせず未確認と表示する",
+    "acceptance_ids": [
+      "AT-B15"
+    ],
+    "source_refs": []
+  },
+  {
+    "id": "REQ-B16",
+    "title": "試し読みと操作の巻き戻し",
+    "provenance": "以前から採用済みの拡張",
+    "decision_status": "previously_adopted",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP13",
+    "shall": "提示順または分岐を試し読みし、選択を戻すと対応する状態も戻せること。",
+    "failure_behavior": "試し読みの操作で作者の正本や公開版を上書きしない",
+    "acceptance_ids": [
+      "AT-B16"
+    ],
+    "source_refs": []
+  },
+  {
+    "id": "REQ-B17",
+    "title": "真実・人物の認識・プレイヤーの認識",
+    "provenance": "以前から採用済みの拡張",
+    "decision_status": "previously_adopted",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP15",
+    "shall": "作者が定める真実、証言、人物の認識、プレイヤーへの提示を分けて記録すること。",
+    "failure_behavior": "同じ場面に居るだけで真相を全員へ伝播しない",
+    "acceptance_ids": [
+      "AT-B17"
+    ],
+    "source_refs": []
+  },
+  {
+    "id": "REQ-B18",
+    "title": "関係・所属・位置・所有の変化",
+    "provenance": "以前から採用済みの拡張",
+    "decision_status": "previously_adopted",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP09",
+    "shall": "関係・所属・場所・物品の所有を世界時点と経路の範囲に応じて表示すること。",
+    "failure_behavior": "順序や経路が不明な場合は複数候補または不明とし唯一の状態を作らない",
+    "acceptance_ids": [
+      "AT-B18"
+    ],
+    "source_refs": []
+  },
+  {
+    "id": "REQ-B19",
+    "title": "伏線と回収の管理",
+    "provenance": "以前から採用済みの拡張",
+    "decision_status": "previously_adopted",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP15",
+    "shall": "伏線・手掛かり・回収の関連と状態を記録し、未回収を対象作品と経路に応じて一覧化すること。",
+    "failure_behavior": "プレイヤーに提示しただけで理解・推理済みと判定しない",
+    "acceptance_ids": [
+      "AT-B19"
+    ],
+    "source_refs": []
+  },
+  {
+    "id": "REQ-B20",
+    "title": "人物の目的と変化",
+    "provenance": "以前から採用済みの拡張",
+    "decision_status": "previously_adopted",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP10",
+    "shall": "人物の目的・葛藤・変化を場面と関連付け、提示順と時点から確認できること。",
+    "failure_behavior": "役割を未入力の場面を作成不能にしない",
+    "acceptance_ids": [
+      "AT-B20"
+    ],
+    "source_refs": []
+  },
+  {
+    "id": "REQ-B21",
+    "title": "不確かな日時と独自暦",
+    "provenance": "以前から採用済みの拡張",
+    "decision_status": "previously_adopted",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP06",
+    "shall": "確定・期間・概算・未定・相対日時を扱い、独自暦で一貫して表示すること。",
+    "failure_behavior": "循環する相対制約や存在しない日付は拒否または未解決とし、日時を捏造しない",
+    "acceptance_ids": [
+      "AT-B21"
+    ],
+    "source_refs": []
+  },
+  {
+    "id": "REQ-B22",
+    "title": "クエスト・会話・設定資料",
+    "provenance": "以前から採用済みの拡張",
+    "decision_status": "previously_adopted",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP12",
+    "shall": "クエスト、会話、世界設定を場面・人物・条件へ結び付け、未完了箇所を一覧にできること。",
+    "failure_behavior": "クエストの完了と本文・実装の完成を一つの状態に統合しない",
+    "acceptance_ids": [
+      "AT-B22"
+    ],
+    "source_refs": []
+  },
+  {
+    "id": "REQ-B23",
+    "title": "安定ID・保存・取り消し・履歴",
+    "provenance": "以前から採用済みの拡張",
+    "decision_status": "previously_adopted",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP03",
+    "shall": "改名・並べ替えで変わらないIDを使用し、端末内保存・取り消し・履歴・版の復元を提供すること。",
+    "failure_behavior": "容量不足や書き込み失敗を保存済みと表示せず、元データを失わせない",
+    "acceptance_ids": [
+      "AT-B23"
+    ],
+    "source_refs": []
+  },
+  {
+    "id": "REQ-B24",
+    "title": "検索・絞り込み・確認候補・タッチ操作",
+    "provenance": "以前から採用済みの拡張",
+    "decision_status": "previously_adopted",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP05",
+    "shall": "全文検索と複合絞り込みを持ち、参照切れや矛盾候補を根拠付きで提示すること。全編集にはタッチと一覧での操作方法を用意すること。",
+    "failure_behavior": "根拠が不足する候補を確定不具合と断定せず、色だけで意味を伝えない",
+    "acceptance_ids": [
+      "AT-B24"
+    ],
+    "source_refs": []
+  },
+  {
+    "id": "REQ-F01",
+    "title": "思いつきを一時置きする",
+    "provenance": "調査提案の仕様化・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP04",
+    "shall": "作品内の受け皿へ、短い文章・画像・音声メモを保存する。あとから人物、場面、伏線へ変換し、元のメモも参照できること。",
+    "failure_behavior": "録音を拒否した端末でも文章を保存できる。変換は元メモを消さず、元と変換先のIDを結ぶ。",
+    "acceptance_ids": [
+      "AT-F01"
+    ],
+    "source_refs": [
+      "S13",
+      "S22"
+    ],
+    "source_feature_id": "F01"
+  },
+  {
+    "id": "REQ-F02",
+    "title": "入力項目と雛形を変える",
+    "provenance": "調査提案の仕様化・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP04",
+    "shall": "人物や場面の項目を作品ごとに追加する。必須にする項目、説明文、初期値を選べる。使わない項目や画面を隠すこと。",
+    "failure_behavior": "必須項目の追加や型変更は既存値の影響を事前表示する。不適合値を黙って削除・変換しない。",
+    "acceptance_ids": [
+      "AT-F02"
+    ],
+    "source_refs": [
+      "S06",
+      "S12",
+      "S19"
+    ],
+    "source_feature_id": "F02"
+  },
+  {
+    "id": "REQ-F03",
+    "title": "人物以外の筋で並べる",
+    "provenance": "調査提案の仕様化・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP10",
+    "shall": "縦軸を人物、組織、場所、章、恋愛や戦争などの物語の筋へ切り替える。一つの場面を複数の筋から参照すること。",
+    "failure_behavior": "筋から外しても本文を消さない。表示レーンと実際の参加関係は別に保持する。",
+    "acceptance_ids": [
+      "AT-F03"
+    ],
+    "source_refs": [
+      "S02",
+      "S12"
+    ],
+    "source_feature_id": "F03"
+  },
+  {
+    "id": "REQ-F04",
+    "title": "場面の役割を記録する",
+    "provenance": "調査提案の仕様化・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP10",
+    "shall": "視点、人物の目標、対立、結果、新しく分かること、前後で変わることを短く記録する。役割のない場面も許容すること。",
+    "failure_behavior": "未記入を許し、作者が定めた役割を評価の正解として自動判定しない。",
+    "acceptance_ids": [
+      "AT-F04"
+    ],
+    "source_refs": [
+      "S12"
+    ],
+    "source_feature_id": "F04"
+  },
+  {
+    "id": "REQ-F05",
+    "title": "構成の雛形と盛り上がりを見る",
+    "provenance": "調査提案の仕様化・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP10",
+    "shall": "物語の構成を雛形から選び、自由に変更する。場面の緊張度や重要度を自分で付け、選んだ進行順で偏りを確認すること。",
+    "failure_behavior": "雛形適用は別案または差分確認を経る。緊張度の未入力をゼロと集計せず算出母数を示す。",
+    "acceptance_ids": [
+      "AT-F05"
+    ],
+    "source_refs": [
+      "S12",
+      "S13"
+    ],
+    "source_feature_id": "F05"
+  },
+  {
+    "id": "REQ-F06",
+    "title": "要約と本文を行き来する",
+    "provenance": "調査提案の仕様化・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP10",
+    "shall": "カードには要約、執筆画面には本文を出す。章や選んだ道を通して読む。要約、本文、作者メモを分け、小説用にはルビ・縦書きの確認表示も用意すること。",
+    "failure_behavior": "要約の更新は本文を上書きしない。公開用読み物へ作者メモを混ぜず、ルビと縦書きでも元の段落IDを保つ。",
+    "acceptance_ids": [
+      "AT-F06"
+    ],
+    "source_refs": [
+      "S06",
+      "S23",
+      "S27"
+    ],
+    "source_feature_id": "F06"
+  },
+  {
+    "id": "REQ-F07",
+    "title": "年齢と生涯を表示する",
+    "provenance": "調査提案の仕様化・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP06",
+    "shall": "生年月日、寿命、状態の変化を出来事と結ぶ。年表で選んだ時点の年齢、存命、所属を表示する。独自暦で計算すること。",
+    "failure_behavior": "生年月日や暦の対応が未定なら年齢は範囲または不明とする。回想・復活の例外を時期と経路付きで記録する。",
+    "acceptance_ids": [
+      "AT-F07"
+    ],
+    "source_refs": [
+      "S03",
+      "S19"
+    ],
+    "source_feature_id": "F07"
+  },
+  {
+    "id": "REQ-F08",
+    "title": "時間差と前後関係を守る",
+    "provenance": "調査提案の仕様化・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP06",
+    "shall": "「先に起こる」「終了後から何日以上」「同時に始まる」を登録する。日付変更前に連動先を見せ、移動か指摘だけか選ぶこと。",
+    "failure_behavior": "循環制約・固定日時との衝突は影響一覧を示す。承認された可動日時だけを一括変更し、取消時は全変更を戻す。",
+    "acceptance_ids": [
+      "AT-F08"
+    ],
+    "source_refs": [
+      "S04"
+    ],
+    "source_feature_id": "F08"
+  },
+  {
+    "id": "REQ-F09",
+    "title": "一つの世界を複数作品で使う",
+    "provenance": "調査提案の仕様化・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP09",
+    "shall": "共通設定を参照しながら、作品ごとの開始時期、採用設定、登場人物、章を管理する。改訂した設定の影響先を一覧にすること。",
+    "failure_behavior": "共通設定の公開版は不変とし作品が参照する版を固定する。続編の改訂を旧作へ自動適用しない。",
+    "acceptance_ids": [
+      "AT-F09"
+    ],
+    "source_refs": [
+      "S12"
+    ],
+    "source_feature_id": "F09"
+  },
+  {
+    "id": "REQ-F10",
+    "title": "地図と年表を連動する",
+    "provenance": "調査提案の仕様化・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP09",
+    "shall": "地図の場所から出来事を絞り、出来事から地図の位置へ移動する。世界→地方→街→建物の地図をつなぐこと。",
+    "failure_behavior": "地図画像がない場合は場所の一覧を同等に使う。地図階層の循環と無効な座標参照を拒否する。",
+    "acceptance_ids": [
+      "AT-F10"
+    ],
+    "source_refs": [
+      "S13",
+      "S15"
+    ],
+    "source_feature_id": "F10"
+  },
+  {
+    "id": "REQ-F11",
+    "title": "移動と場所の変化を記録する",
+    "provenance": "調査提案の仕様化・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP09",
+    "shall": "登録した移動経路、手段、所要時間から時期を確認する。場所の改名、破壊、再建、支配組織の変化も時点で切り替えること。",
+    "failure_behavior": "移動手段・距離・所要時間の根拠がない場合は未確認とする。時点による改名や支配の違いを恒久上書きしない。",
+    "acceptance_ids": [
+      "AT-F11"
+    ],
+    "source_refs": [
+      "S15"
+    ],
+    "source_feature_id": "F11"
+  },
+  {
+    "id": "REQ-F12",
+    "title": "家系・別名・正体を扱う",
+    "provenance": "調査提案の仕様化・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP09",
+    "shall": "家系、師弟、血統などを専用表示にする。同じ人物の本名・偽名を時期と認識者に結び付け、作者向けと公開向けの名前を分けること。",
+    "failure_behavior": "家系は関係種類と根拠を持つ。正体の公開前は本名だけでなく、索引・画像名・リンク・親子関係からも漏らさない。",
+    "acceptance_ids": [
+      "AT-F12"
+    ],
+    "source_refs": [
+      "S17",
+      "S20"
+    ],
+    "source_feature_id": "F12"
+  },
+  {
+    "id": "REQ-F13",
+    "title": "図を章・場面・会話へ分ける",
+    "provenance": "調査提案の仕様化・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP12",
+    "shall": "大きな図では章だけを表示し、選ぶと場面、さらに会話へ掘り下げる。小さな図の入口と出口を明示してつなぐこと。",
+    "failure_behavior": "下位図の未解決入口・出口・条件エラーは上位図の件数に反映し、折りたたみでエラーを隠さない。",
+    "acceptance_ids": [
+      "AT-F13"
+    ],
+    "source_refs": [
+      "S06",
+      "S07"
+    ],
+    "source_feature_id": "F13"
+  },
+  {
+    "id": "REQ-F14",
+    "title": "発生のきっかけと条件を分ける",
+    "provenance": "調査提案の仕様化・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP12",
+    "shall": "場所に入る、話しかける、戦闘に勝つなどのきっかけと、所持品・生存などの条件を別に登録する。一度だけ、繰り返し、期限も扱うこと。",
+    "failure_behavior": "条件評価だけでは効果を実行しない。自動発火は明示設定とし、重複した同一トリガーでは一度だけ規則を守る。",
+    "acceptance_ids": [
+      "AT-F14"
+    ],
+    "source_refs": [
+      "S06",
+      "S19",
+      "S28"
+    ],
+    "source_feature_id": "F14"
+  },
+  {
+    "id": "REQ-F15",
+    "title": "途中状態から試し読みする",
+    "provenance": "調査提案の仕様化・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP13",
+    "shall": "所持品、人物の状態、既読情報などをまとめた開始状態を保存する。そこから試し読みし、選択を戻すと状態も戻すこと。",
+    "failure_behavior": "版不一致の開始状態は移行確認が必要。不足値は未確認とし、途中開始の証跡を通しプレイの証跡として扱わない。",
+    "acceptance_ids": [
+      "AT-F15"
+    ],
+    "source_refs": [
+      "S08",
+      "S25"
+    ],
+    "source_feature_id": "F15"
+  },
+  {
+    "id": "REQ-F16",
+    "title": "選択前後と別の道を比べる",
+    "provenance": "調査提案の仕様化・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP13",
+    "shall": "試し読みの前後で、知識、好感度、所持品など何が変わったかを表示する。同じ場面に到達した別の道の状態とも比べること。",
+    "failure_behavior": "合流時は自動初期化しない。差を解消するには明示効果を登録し、差分から変更元へ戻れるようにする。",
+    "acceptance_ids": [
+      "AT-F16"
+    ],
+    "source_refs": [
+      "S05",
+      "S08"
+    ],
+    "source_feature_id": "F16"
+  },
+  {
+    "id": "REQ-F17",
+    "title": "確認した経路を保存する",
+    "provenance": "調査提案の仕様化・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP14",
+    "shall": "選択の履歴と開始状態、作品の版を保存して再実行する。通った場面・選択肢と未確認箇所を一覧にし、変更後の再確認に使うこと。",
+    "failure_behavior": "台詞到達率・選択肢到達率・条件結果の網羅率を別々に算出する。版変更後の経路は再確認待ちとする。",
+    "acceptance_ids": [
+      "AT-F17"
+    ],
+    "source_refs": [
+      "S08",
+      "S25"
+    ],
+    "source_feature_id": "F17"
+  },
+  {
+    "id": "REQ-F18",
+    "title": "条件と行き止まりを検査する",
+    "provenance": "調査提案の仕様化・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP14",
+    "shall": "参照切れ、出られない繰り返し、選択肢の消失、到達できない終わりの候補を調べる。根拠になる条件と経路を添えること。",
+    "failure_behavior": "外部値・無制限ループ・探索打切りは未確認とする。不具合候補には再現経路または不成立の根拠を添える。",
+    "acceptance_ids": [
+      "AT-F18"
+    ],
+    "source_refs": [
+      "S06",
+      "S28",
+      "S32"
+    ],
+    "source_feature_id": "F18"
+  },
+  {
+    "id": "REQ-F19",
+    "title": "共通の会話や場面を再利用する",
+    "provenance": "調査提案の仕様化・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP12",
+    "shall": "参照して共通部分を使う、独立した複製を作る、一部だけ変える、を選ぶ。再利用先と変更の影響を一覧にすること。",
+    "failure_behavior": "参照・複製・差分上書きの方式を保存する。元を削除する前に全参照先を示し、更新の適用範囲を固定する。",
+    "acceptance_ids": [
+      "AT-F19"
+    ],
+    "source_refs": [
+      "S07",
+      "S28"
+    ],
+    "source_feature_id": "F19"
+  },
+  {
+    "id": "REQ-F20",
+    "title": "短い反応と周回を扱う",
+    "provenance": "調査提案の仕様化・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP13",
+    "shall": "条件で変わる短い台詞、初回と再訪、順番に出す反応、抽選する反応を登録する。周回で残す情報と初期化する情報を選ぶこと。",
+    "failure_behavior": "乱数種・抽選位置・既読・周回持越しを保存する。抽選候補ゼロを無言で進行せず不成立時の処理に従う。",
+    "acceptance_ids": [
+      "AT-F20"
+    ],
+    "source_refs": [
+      "S06",
+      "S28"
+    ],
+    "source_feature_id": "F20"
+  },
+  {
+    "id": "REQ-F21",
+    "title": "台詞に変わらない番号を付ける",
+    "provenance": "調査提案の仕様化・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP19",
+    "shall": "台詞と選択肢の一つずつに、表示しない番号を付ける。文章を変更しても翻訳、音声、ゲーム側の参照との対応を保つこと。",
+    "failure_behavior": "既存台詞の編集はID維持、コピーは新ID、分割は元から二つの新IDへの対応履歴を残す。IDの手動再利用を拒否する。",
+    "acceptance_ids": [
+      "AT-F21"
+    ],
+    "source_refs": [
+      "S31"
+    ],
+    "source_feature_id": "F21"
+  },
+  {
+    "id": "REQ-F22",
+    "title": "演出と必要な素材を結ぶ",
+    "provenance": "調査提案の仕様化・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP20",
+    "shall": "話者、表情、立ち絵、背景、音楽、効果音、間、カメラなどを台詞や場面に結ぶ。仮素材・完成素材と不足を確認すること。",
+    "failure_behavior": "欠落素材と仮素材を別状態にし、素材がなくても本文を読める。素材IDの取り替えで台詞IDを変えない。",
+    "acceptance_ids": [
+      "AT-F22"
+    ],
+    "source_refs": [
+      "S06",
+      "S07",
+      "S30"
+    ],
+    "source_feature_id": "F22"
+  },
+  {
+    "id": "REQ-F23",
+    "title": "翻訳と音声の見直しを管理する",
+    "provenance": "調査提案の仕様化・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP19",
+    "shall": "言語ごとの本文と用語、収録メモ、音声を対応させる。元の文章を変えたら翻訳・音声を見直し対象にし、担当別に書き出すこと。",
+    "failure_behavior": "原文の内容ハッシュが変わった場合のみ依存成果物を確認待ちにする。音声・翻訳の版と確認者を保持する。",
+    "acceptance_ids": [
+      "AT-F23"
+    ],
+    "source_refs": [
+      "S06",
+      "S10",
+      "S31"
+    ],
+    "source_feature_id": "F23"
+  },
+  {
+    "id": "REQ-F24",
+    "title": "目的に応じて書き出す",
+    "provenance": "調査提案の仕様化・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP22",
+    "shall": "保存用の完全な作品、読みやすい資料、選択して読める簡易体験版、ゲーム制作向けの構造化データを別々に出力すること。",
+    "failure_behavior": "完全保存・公開資料・試遊・制作データの各プロファイルを選択する。未対応の条件や外部コマンドは制作出力を拒否し説明する。",
+    "acceptance_ids": [
+      "AT-F24"
+    ],
+    "source_refs": [
+      "S06",
+      "S11",
+      "S26",
+      "S29"
+    ],
+    "source_feature_id": "F24"
+  },
+  {
+    "id": "REQ-F25",
+    "title": "採用状態と別案を記録する",
+    "provenance": "調査提案の仕様化・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP10",
+    "shall": "確定、仮、要確認、没、別案を設定する。確定稿を保って別の展開を試す。作者の別案とゲーム内で選べる分岐を別に表示すること。",
+    "failure_behavior": "作者別案とゲーム内経路を別ID・別種として保存する。没・仮の情報が正本の制作出力へ混入しない。",
+    "acceptance_ids": [
+      "AT-F25"
+    ],
+    "source_refs": [
+      "S23",
+      "S24"
+    ],
+    "source_feature_id": "F25"
+  },
+  {
+    "id": "REQ-F26",
+    "title": "変更で見直す箇所を示す",
+    "provenance": "調査提案の仕様化・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP05",
+    "shall": "設定変更後、関連する場面、条件、伏線、翻訳、素材を確認待ちにする。直接の参照と意味上の関連を区別し、変更理由を残すこと。",
+    "failure_behavior": "ID参照の改名反映と意味の見直しを区別する。見直し候補を確定修正として本文へ適用しない。",
+    "acceptance_ids": [
+      "AT-F26"
+    ],
+    "source_refs": [
+      "S06",
+      "S21"
+    ],
+    "source_feature_id": "F26"
+  },
+  {
+    "id": "REQ-F27",
+    "title": "未リンクの名前と参照元を探す",
+    "provenance": "調査提案の仕様化・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP05",
+    "shall": "本文内の名前・別名からリンク候補を作り、同名なら選択する。設定を開くと使用箇所を表示する。不要な候補は除外できること。",
+    "failure_behavior": "リンク候補の除外を保持し、同名では識別情報を示す。普通の単語や引用資料を無断で置換しない。",
+    "acceptance_ids": [
+      "AT-F27"
+    ],
+    "source_refs": [
+      "S16",
+      "S21"
+    ],
+    "source_feature_id": "F27"
+  },
+  {
+    "id": "REQ-F28",
+    "title": "資料と設定の根拠を残す",
+    "provenance": "調査提案の仕様化・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP20",
+    "shall": "画像、音声、動画、PDF、Web資料を設定や場面へ結ぶ。参照した箇所、日付、作者の解釈を記録すること。",
+    "failure_behavior": "添付と外部URLを区別し、参照箇所・取得日・解釈を分ける。外部資料の再配布権限がない場合はリンクと書誌情報だけを出す。",
+    "acceptance_ids": [
+      "AT-F28"
+    ],
+    "source_refs": [
+      "S13",
+      "S22",
+      "S23"
+    ],
+    "source_feature_id": "F28"
+  },
+  {
+    "id": "REQ-F29",
+    "title": "指摘と次の作業を場面に結ぶ",
+    "provenance": "調査提案の仕様化・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP18",
+    "shall": "人物、台詞、場面、関係線へコメントや確認事項を付ける。未対応、修正済み、再確認済みを区別する。担当者は任意とすること。",
+    "failure_behavior": "指摘時の対象版と引用範囲を保持する。対象段落が削除されても元指摘は残し、最新位置は不明と表示する。",
+    "acceptance_ids": [
+      "AT-F29"
+    ],
+    "source_refs": [
+      "S07",
+      "S23"
+    ],
+    "source_feature_id": "F29"
+  },
+  {
+    "id": "REQ-F30",
+    "title": "秘密を隠して確認してもらう",
+    "provenance": "調査提案の仕様化・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP18",
+    "shall": "読むだけ、指摘する、編集する範囲を選ぶ。章・人物・分岐に限定した資料を作り、名前、地図、リンク先も同じ公開範囲で扱うこと。",
+    "failure_behavior": "権限はサーバー側と出力時に検証する。非公開データを送ってCSSで隠す方式を禁止し、検索・素材・参照数にも同じ投影を適用する。",
+    "acceptance_ids": [
+      "AT-F30"
+    ],
+    "source_refs": [
+      "S07",
+      "S15",
+      "S20"
+    ],
+    "source_feature_id": "F30"
+  },
+  {
+    "id": "REQ-F31",
+    "title": "画面の広さに合わせて編集する",
+    "provenance": "調査提案の仕様化・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP02",
+    "shall": "広い画面は一覧・図・詳細、iPadは二画面、スマートフォンは図と詳細を切り替える。縦横と分割表示にも合わせること。",
+    "failure_behavior": "端末の幅で表示を切り替え、重要操作をPCに限定しない。分割表示やソフトキーボードで確定ボタンが隠れない。",
+    "acceptance_ids": [
+      "AT-F31"
+    ],
+    "source_refs": [
+      "S06",
+      "S23",
+      "S33"
+    ],
+    "source_feature_id": "F31"
+  },
+  {
+    "id": "REQ-F32",
+    "title": "指・マウス・キーボードに対応する",
+    "provenance": "調査提案の仕様化・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP02",
+    "shall": "ドラッグ、タップでの始点と終点指定、一覧からの選択を併用する。まとめて編集、整列、検索、移動をキーボードでも行えること。",
+    "failure_behavior": "ドラッグ・ホバー・右クリック・長押しの各操作は常時アクセスできるボタンと一覧で代替する。ブラウザーの文字拡大を妨げない。",
+    "acceptance_ids": [
+      "AT-F32"
+    ],
+    "source_refs": [
+      "S01",
+      "S06",
+      "S23"
+    ],
+    "source_feature_id": "F32"
+  },
+  {
+    "id": "REQ-F33",
+    "title": "表示と作業の続きへ戻る",
+    "provenance": "調査提案の仕様化・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP02",
+    "shall": "名前を付けた絞り込みや配置を保存する。最近開いた対象、お気に入り、図の位置、選択中の場面を保持する。表示設定は端末別にすること。",
+    "failure_behavior": "内容と端末別の表示設定を分ける。削除された対象への再開リンクは履歴または復元案内へ移し白画面にしない。",
+    "acceptance_ids": [
+      "AT-F33"
+    ],
+    "source_refs": [
+      "S06",
+      "S19"
+    ],
+    "source_feature_id": "F33"
+  },
+  {
+    "id": "REQ-F34",
+    "title": "通信なしの編集と同期を区別する",
+    "provenance": "調査提案の仕様化・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP17",
+    "shall": "開いて保存済みの作品を通信なしでも編集できるようにする。端末内保存済み、送信待ち、同期済み、食い違いありを表示すること。",
+    "failure_behavior": "同一項目の競合は双方と共通元を保持する。保存済みと同期済みを混同せず、再送・削除対編集でも黙って上書きしない。",
+    "acceptance_ids": [
+      "AT-F34"
+    ],
+    "source_refs": [
+      "S12"
+    ],
+    "source_feature_id": "F34"
+  },
+  {
+    "id": "REQ-F35",
+    "title": "履歴とファイルを確実に持ち出す",
+    "provenance": "調査提案の仕様化・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP16",
+    "shall": "作品全体と対象一つの復元を分ける。専用ファイルに素材も含められるようにし、形式の版、読み込み前の確認、追加か置換かを扱うこと。",
+    "failure_behavior": "単体復元は最新の関連情報への影響を提示する。追加・置換・統合のID規則を適用し、失敗時は全体をロールバックする。",
+    "acceptance_ids": [
+      "AT-F35"
+    ],
+    "source_refs": [
+      "S09",
+      "S24",
+      "S26"
+    ],
+    "source_feature_id": "F35"
+  },
+  {
+    "id": "REQ-F36",
+    "title": "相談用に必要な情報だけ集める",
+    "provenance": "調査提案の仕様化・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP22",
+    "shall": "人物や場面を指定して、確定設定、関連する出来事、前後の状態、未確定事項、参照番号をまとめて書き出す。提案の文章は別案として取り込むこと。",
+    "failure_behavior": "相談用出力にも公開範囲を適用する。AIサービスへ自動送信せず、取り込む文章は出所と対象版を持つ別案とする。",
+    "acceptance_ids": [
+      "AT-F36"
+    ],
+    "source_refs": [
+      "S06",
+      "S07",
+      "S11"
+    ],
+    "source_feature_id": "F36"
+  },
+  {
+    "id": "REQ-F37",
+    "title": "状態の意味と初期値を登録する",
+    "provenance": "調査提案の仕様化・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP11",
+    "shall": "状態ごとに表示名、説明、型、初期値、許容値を定める。オン・オフ、数値、選択肢から選ぶ状態を使い分け、関連する人物やクエストと結ぶこと。",
+    "failure_behavior": "同義語・反対語は同じ状態の値として表現する候補を示す。型違い、許容値外、未定義の使用は拒否または未確認とする。",
+    "acceptance_ids": [
+      "AT-F37"
+    ],
+    "source_refs": [
+      "S06",
+      "S41"
+    ],
+    "source_feature_id": "F37"
+  },
+  {
+    "id": "REQ-F38",
+    "title": "有効範囲・初期化・算出を決める",
+    "provenance": "調査提案の仕様化・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP11",
+    "shall": "一場面、章、人物、今回のプレイ、周回をまたぐ情報を区別する。初期化する時点を決め、ほかの値から判定する状態は式として定義すること。",
+    "failure_behavior": "算出状態への直接代入と循環式を拒否する。周回初期化と全リセットを別コマンドとし、持ち越し対象を一覧化する。",
+    "acceptance_ids": [
+      "AT-F38"
+    ],
+    "source_refs": [
+      "S28",
+      "S42"
+    ],
+    "source_feature_id": "F38"
+  },
+  {
+    "id": "REQ-F39",
+    "title": "読む箇所・変更箇所・理由を追う",
+    "provenance": "調査提案の仕様化・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP11",
+    "shall": "ある状態を条件に使う場面、変更する場面、初期化する処理を一覧にする。試し読みでは、いつ何が原因で値が変わったかを記録すること。",
+    "failure_behavior": "値の参照元と書込元を安定IDで追う。未使用状態は削除候補だけを示し、外部で使う宣言がある値を誤削除しない。",
+    "acceptance_ids": [
+      "AT-F39"
+    ],
+    "source_refs": [
+      "S08",
+      "S41"
+    ],
+    "source_feature_id": "F39"
+  },
+  {
+    "id": "REQ-F40",
+    "title": "条件を組み立て、成立理由を見る",
+    "provenance": "調査提案の仕様化・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP11",
+    "shall": "「すべて」「どれか」「否定」を入れ子で選び、条件を自然文と式で確認する。複数成立時の優先順、全実行か一つか、不成立時の行き先を決めること。",
+    "failure_behavior": "括弧・優先順・不成立時処理を明示する。未知を偽にしない三値評価を行い、任意のコードを条件として実行しない。",
+    "acceptance_ids": [
+      "AT-F40"
+    ],
+    "source_refs": [
+      "S06",
+      "S41"
+    ],
+    "source_feature_id": "F40"
+  },
+  {
+    "id": "REQ-F41",
+    "title": "状態が変わる順番を定義する",
+    "provenance": "調査提案の仕様化・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP11",
+    "shall": "未受注→進行中→完了・失敗など、許す変化を表にする。両立しない状態と意図した例外を登録し、変更前後を確認すること。",
+    "failure_behavior": "禁止遷移は一連の効果を原子的に拒否する。例外は理由・対象経路・期限付きで明示し、以前の状態を記録する。",
+    "acceptance_ids": [
+      "AT-F41"
+    ],
+    "source_refs": [
+      "S19",
+      "S41"
+    ],
+    "source_feature_id": "F41"
+  },
+  {
+    "id": "REQ-F42",
+    "title": "ゲーム側との受け渡しを定める",
+    "provenance": "調査提案の仕様化・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP22",
+    "shall": "体力や戦闘結果など外部の値について、どちらが管理するか、入力と出力、想定する処理を記録する。仮の値で確認し、実装結果との対応を残すこと。",
+    "failure_behavior": "外部値の管理元・型・欠損時の扱いを固定する。仮の外部応答とゲーム実機の確認結果は別証跡とする。",
+    "acceptance_ids": [
+      "AT-F42"
+    ],
+    "source_refs": [
+      "S06",
+      "S28",
+      "S30"
+    ],
+    "source_feature_id": "F42"
+  },
+  {
+    "id": "REQ-F43",
+    "title": "伏線を独立した項目として持つ",
+    "provenance": "調査提案の仕様化・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP15",
+    "shall": "謎や期待、真相、意図を持つ伏線の項目を作る。複数の手掛かりと複数の回収を結び、一つの場面が複数の伏線を扱えるようにすること。",
+    "failure_behavior": "場面を削除しても伏線本体は残す。複数の手掛かり・回収と代替説明を別IDで対応付ける。",
+    "acceptance_ids": [
+      "AT-F43"
+    ],
+    "source_refs": [
+      "S40"
+    ],
+    "source_feature_id": "F43"
+  },
+  {
+    "id": "REQ-F44",
+    "title": "体験順に開示の段階を確認する",
+    "provenance": "調査提案の仕様化・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP15",
+    "shall": "初めて示す、疑わせる、補強する、真相を明かすなどを本文の箇所へ結ぶ。選んだ章順やプレイ経路で、人物と読み手の認識を並べること。",
+    "failure_behavior": "開示の段階は経路上の提示位置で評価する。章の並べ替えは世界時間を変えず開示評価だけを再確認待ちにする。",
+    "acceptance_ids": [
+      "AT-F44"
+    ],
+    "source_refs": [
+      "S01",
+      "S40"
+    ],
+    "source_feature_id": "F44"
+  },
+  {
+    "id": "REQ-F45",
+    "title": "手掛かりを見られる道を調べる",
+    "provenance": "調査提案の仕様化・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP15",
+    "shall": "回収へ進むために必要と作者が指定した情報について、経路上で提示されるかを確認する。任意の手掛かり、代わりの説明、別経路の回収も登録すること。",
+    "failure_behavior": "作者が必要とした情報の提示有無だけを評価する。探索の制限超過や外部条件は未確認、プレイヤーの理解は自動認定しない。",
+    "acceptance_ids": [
+      "AT-F45"
+    ],
+    "source_refs": [
+      "S25",
+      "S28",
+      "S40"
+    ],
+    "source_feature_id": "F45"
+  },
+  {
+    "id": "REQ-F46",
+    "title": "知識・証言・誤解の出所を残す",
+    "provenance": "調査提案の仕様化・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP15",
+    "shall": "誰から聞いたか、何を見たか、何を根拠に信じるかを記録する。世界の真の設定、作中の証言、人物の認識、作者の未確定案を結び付けて区別すること。",
+    "failure_behavior": "証言の誤り、意図した嘘、未確定案を真実から分離する。知識取得には出所と時点または経路位置を必要とする。",
+    "acceptance_ids": [
+      "AT-F46"
+    ],
+    "source_refs": [
+      "S02",
+      "S13"
+    ],
+    "source_feature_id": "F46"
+  },
+  {
+    "id": "REQ-F47",
+    "title": "未回収の意図と期限を記録する",
+    "provenance": "調査提案の仕様化・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP15",
+    "shall": "この作品で回収、続編で回収、意図して残す、誤誘導、検討中、没を区別する。作品・分岐ごとの対象を定め、回収先の変更を確認待ちにすること。",
+    "failure_behavior": "今作・分岐・続編など対象範囲と意図を明示する。回収先変更時は再確認待ちにし、意図した未回収は警告の集計から分ける。",
+    "acceptance_ids": [
+      "AT-F47"
+    ],
+    "source_refs": [
+      "S12",
+      "S40"
+    ],
+    "source_feature_id": "F47"
+  },
+  {
+    "id": "REQ-F48",
+    "title": "人物の声と用語の基準を持つ",
+    "provenance": "調査提案の仕様化・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP19",
+    "shall": "人物ごとの一人称、呼び方、口調、使う語、台詞例を記録する。用語の表記・読み・意図した例外をまとめ、本文と字幕・翻訳の確認に使うこと。",
+    "failure_behavior": "表記・口調の期間と例外を保持する。指摘は置換候補であり、本文や翻訳を自動修正しない。",
+    "acceptance_ids": [
+      "AT-F48"
+    ],
+    "source_refs": [
+      "S13",
+      "S31",
+      "S44"
+    ],
+    "source_feature_id": "F48"
+  },
+  {
+    "id": "REQ-F49",
+    "title": "企画の基準と判断理由を残す",
+    "provenance": "調査提案の仕様化・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP21",
+    "shall": "想定する読み手・プレイヤー、届けたい体験、主題、作風、制作範囲、成果物をまとめる。重要な変更の判断、理由、優先度、対象の版を記録すること。",
+    "failure_behavior": "企画・判断には対象版と根拠を保存する。却下・保留を削除せず、方針変更を公開済み版へ自動反映しない。",
+    "acceptance_ids": [
+      "AT-F49"
+    ],
+    "source_refs": [
+      "S38"
+    ],
+    "source_feature_id": "F49"
+  },
+  {
+    "id": "REQ-F50",
+    "title": "物語とプレイヤーの行動を結ぶ",
+    "provenance": "調査提案の仕様化・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP21",
+    "shall": "場面で知ることと、実際に行う探索・選択・戦闘・操作を並べる。必要なゲーム機能、クエスト、チュートリアル、報酬、実装担当の作業と結ぶこと。",
+    "failure_behavior": "遊びの仕様と物語の記述の差は意図付き確認候補にする。ゲーム機能の未実装を執筆未完了と混同しない。",
+    "acceptance_ids": [
+      "AT-F50"
+    ],
+    "source_refs": [
+      "S06",
+      "S28",
+      "S30"
+    ],
+    "source_feature_id": "F50"
+  },
+  {
+    "id": "REQ-F51",
+    "title": "制作日程と依存する作業を持つ",
+    "provenance": "調査提案の仕様化・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP21",
+    "shall": "執筆、レビュー、実装、翻訳、収録、確認、公開の状態を別々に記録する。担当、現実の期限、先に必要な素材や作業を場面へ結ぶこと。",
+    "failure_behavior": "執筆・実装・翻訳・収録・確認・公開の状態と実日付を別々に保存する。依存作業の循環と期限不整合を示す。",
+    "acceptance_ids": [
+      "AT-F51"
+    ],
+    "source_refs": [
+      "S35",
+      "S36"
+    ],
+    "source_feature_id": "F51"
+  },
+  {
+    "id": "REQ-F52",
+    "title": "制作量と一経路の量を分ける",
+    "provenance": "調査提案の仕様化・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP21",
+    "shall": "固有の場面・台詞・素材の数、再利用部分、分岐ごとの読める量を別々に集計する。制作の見積もりと根拠、未決定の範囲も残すこと。",
+    "failure_behavior": "制作数は安定IDの集合、体験量は経路ごとの出現回数で集計する。速度・重複・未確定箇所・対象版を明示する。",
+    "acceptance_ids": [
+      "AT-F52"
+    ],
+    "source_refs": [
+      "S12",
+      "S36"
+    ],
+    "source_feature_id": "F52"
+  },
+  {
+    "id": "REQ-F53",
+    "title": "本文と絵コンテ・演出を並べる",
+    "provenance": "調査提案の仕様化・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP20",
+    "shall": "場面・台詞へ絵コンテのコマ、カメラ、音声、字幕、演出上の時刻を結ぶ。参照画像と完成素材を区別し、差し替え後の確認対象を示すこと。",
+    "failure_behavior": "演出時刻はミリ秒、世界時刻は暦のtickとして分離する。素材差替え後は依存コマを確認待ちにする。",
+    "acceptance_ids": [
+      "AT-F53"
+    ],
+    "source_refs": [
+      "S35",
+      "S37",
+      "S38"
+    ],
+    "source_feature_id": "F53"
+  },
+  {
+    "id": "REQ-F54",
+    "title": "媒体ごとの派生内容を管理する",
+    "provenance": "調査提案の仕様化・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP21",
+    "shall": "共通の世界設定を参照しながら、ゲーム、小説、動画、音声、告知用の文章を別に持つ。媒体別の公開範囲、版、公開予定日、変更後の確認先を記録すること。",
+    "failure_behavior": "派生作品は共通設定の版を参照する。媒体別文章と公開済みスナップショットは保持し、変更候補だけを伝える。",
+    "acceptance_ids": [
+      "AT-F54"
+    ],
+    "source_refs": [
+      "S38",
+      "S39"
+    ],
+    "source_feature_id": "F54"
+  },
+  {
+    "id": "REQ-F55",
+    "title": "共通の情報と意味付きの関係を持つ",
+    "provenance": "調査提案の仕様化・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP08",
+    "shall": "人物、出来事、場面、場所、物品、状態、伏線、素材を一度登録する。関係には種類、向き、有効な時期・分岐、根拠の場面を付けること。",
+    "failure_behavior": "方向と時期・経路と根拠を検証する。自己関係を許す種類だけ認め、対称性や推移性を勝手に補わない。",
+    "acceptance_ids": [
+      "AT-F55"
+    ],
+    "source_refs": [
+      "S02",
+      "S06",
+      "S19"
+    ],
+    "source_feature_id": "F55"
+  },
+  {
+    "id": "REQ-F56",
+    "title": "項目の型と入力規則を定める",
+    "provenance": "調査提案の仕様化・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP04",
+    "shall": "日付、数値、選択、文章、ほかの項目への参照を使い分ける。雛形の変更は既存データへの影響を確認して適用し、読み込み時も型を検査すること。",
+    "failure_behavior": "同名は原則許可しIDで識別する。キー項目だけ所定スコープで一意とする。型変更に適合しない値を消さず影響を示す。",
+    "acceptance_ids": [
+      "AT-F56"
+    ],
+    "source_refs": [
+      "S06",
+      "S43",
+      "S45"
+    ],
+    "source_feature_id": "F56"
+  },
+  {
+    "id": "REQ-F57",
+    "title": "日本語の索引と用語集を作る",
+    "provenance": "調査提案の仕様化・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP05",
+    "shall": "読み、表記揺れ、略称、旧名、別名、分類から項目を探す。五十音順・分類別の索引を持ち、同名を選び分け、本文の段落や台詞へ移動できること。",
+    "failure_behavior": "原文を保持し検索用正規化を別に持つ。作者索引と自動検索を分け、秘匿対象の読み・別名・参照数を公開側へ出さない。",
+    "acceptance_ids": [
+      "AT-F57"
+    ],
+    "source_refs": [
+      "S21",
+      "S44"
+    ],
+    "source_feature_id": "F57"
+  },
+  {
+    "id": "REQ-F58",
+    "title": "一覧・カード・図を同じ情報で使う",
+    "provenance": "調査提案の仕様化・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP05",
+    "shall": "表、カード、年表、図を切り替えて編集する。「この人物が出て、未実装の場面」など複数条件の検索を保存する。まとめて編集した変更も取り消せること。",
+    "failure_behavior": "動的条件一覧と固定ID集合の一覧を区別する。一括編集は変更前後を確認し、一部だけ失敗した更新を確定しない。",
+    "acceptance_ids": [
+      "AT-F58"
+    ],
+    "source_refs": [
+      "S02",
+      "S45",
+      "S46"
+    ],
+    "source_feature_id": "F58"
+  },
+  {
+    "id": "REQ-F59",
+    "title": "線の意味を選んで可視化する",
+    "provenance": "調査提案の仕様化・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP08",
+    "shall": "人物関係、因果、伏線、進行、参照、制作の依存を別表示にする。選んだ項目から一段・二段の範囲だけ開き、階層、凡例、一覧・関係表も用意すること。",
+    "failure_behavior": "凡例・線種・矢印・ラベルを持ち、色以外でも意味を伝える。表示範囲と隠れた件数を示すが公開側の秘密の件数は漏らさない。",
+    "acceptance_ids": [
+      "AT-F59"
+    ],
+    "source_refs": [
+      "S02",
+      "S06",
+      "S22"
+    ],
+    "source_feature_id": "F59"
+  },
+  {
+    "id": "REQ-F60",
+    "title": "重複・未参照・変更待ちを整理する",
+    "provenance": "調査提案の仕様化・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP05",
+    "shall": "重複候補の統合時は残す項目と参照の変更を確認する。未参照の設定、未使用の状態、読み未登録、未確認の変更を一覧にし、削除前に影響を見せること。",
+    "failure_behavior": "統合の残すIDと全参照書換えを事前表示する。背景設定・外部利用を保持指定でき、統合・削除・一括変更は補償操作で戻せる。",
+    "acceptance_ids": [
+      "AT-F60"
+    ],
+    "source_refs": [
+      "S06",
+      "S21",
+      "S43"
+    ],
+    "source_feature_id": "F60"
+  },
+  {
+    "id": "REQ-N01",
+    "title": "全端末での編集",
+    "provenance": "仕様を成立させる品質条件・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP02",
+    "shall": "スマートフォンの幅320 CSS px以上で、人物・本文・日時・条件・関係線・履歴・ファイル読み込みを完了できること。",
+    "failure_behavior": "PC専用操作やページ全体の不要な横スクロールを残さない",
+    "acceptance_ids": [
+      "AT-N01"
+    ],
+    "source_refs": []
+  },
+  {
+    "id": "REQ-N02",
+    "title": "対応ブラウザーと実端末",
+    "provenance": "仕様を成立させる品質条件・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP23",
+    "shall": "iPhone Safari・Chrome、iPad Safari・分割表示、PC Chrome・Edge・Firefox・Safariの対象環境表を検証し、OSとブラウザーの実バージョンを記録すること。",
+    "failure_behavior": "自動ブラウザー試験だけを実端末の合格証拠にしない",
+    "acceptance_ids": [
+      "AT-N02"
+    ],
+    "source_refs": []
+  },
+  {
+    "id": "REQ-N03",
+    "title": "アクセシビリティ",
+    "provenance": "仕様を成立させる品質条件・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP23",
+    "shall": "WCAG 2.2 AAを受入目標とし、キーボード・スクリーンリーダー・文字拡大200%・色以外の意味表現・ドラッグ代替を提供すること。",
+    "failure_behavior": "図だけで編集を強制せず、見える焦点や拡大を無効にしない",
+    "acceptance_ids": [
+      "AT-N03"
+    ],
+    "source_refs": [
+      "T02"
+    ]
+  },
+  {
+    "id": "REQ-N04",
+    "title": "標準データの応答目標",
+    "provenance": "仕様を成立させる品質条件・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP23",
+    "shall": "標準データの操作応答p95≤200 ms、ローカル検索p95≤500 ms、保存完了p95≤1000 ms、キャッシュ済み起動≤3秒を目標とすること。測定条件は性能仕様に従うこと。",
+    "failure_behavior": "実測前の数値を達成済みとしない。超過を要件削減で黙って隠さない",
+    "acceptance_ids": [
+      "AT-N04"
+    ],
+    "source_refs": []
+  },
+  {
+    "id": "REQ-N05",
+    "title": "大規模データと処理の中断",
+    "provenance": "仕様を成立させる品質条件・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP14",
+    "shall": "大規模データを分割表示し、全件をDOMへ描画しないこと。解析・入出力は進捗と取消を持ち、探索上限を表示すること。",
+    "failure_behavior": "探索の途中終了を全経路の安全証明にしない",
+    "acceptance_ids": [
+      "AT-N05"
+    ],
+    "source_refs": []
+  },
+  {
+    "id": "REQ-N06",
+    "title": "保存と移行の原子性",
+    "provenance": "仕様を成立させる品質条件・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP03",
+    "shall": "端末内の一操作は本体・参照・履歴・送信待ちを同じトランザクションで保存し、形式更新前に復元点を作ること。",
+    "failure_behavior": "一部更新・未検証のマイグレーション・偽の保存表示を残さない",
+    "acceptance_ids": [
+      "AT-N06"
+    ],
+    "source_refs": [
+      "T01"
+    ]
+  },
+  {
+    "id": "REQ-N07",
+    "title": "同期の競合と再送",
+    "provenance": "仕様を成立させる品質条件・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP17",
+    "shall": "共通元のrevisionを使い、同じ項目の競合・削除対編集・操作の重複を検知すること。未解決は双方を保持すること。",
+    "failure_behavior": "端末時計や最終書込だけで片方を消さない",
+    "acceptance_ids": [
+      "AT-N07"
+    ],
+    "source_refs": []
+  },
+  {
+    "id": "REQ-N08",
+    "title": "権限と秘密の投影",
+    "provenance": "仕様を成立させる品質条件・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP18",
+    "shall": "作品の閲覧・指摘・編集・管理権限と共有範囲をサーバー側で検証し、本文・検索・図・素材・リンクで一致させること。",
+    "failure_behavior": "secretキーの公開、UIのみの非表示、他作品のID差替えを許さない",
+    "acceptance_ids": [
+      "AT-N08"
+    ],
+    "source_refs": []
+  },
+  {
+    "id": "REQ-N09",
+    "title": "読み込みの制限と検証",
+    "provenance": "仕様を成立させる品質条件・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP16",
+    "shall": "専用ファイルの版・構造・型・参照・ハッシュ・展開後量・パスを確認後に一括確定すること。数値上限はファイル仕様に従うこと。",
+    "failure_behavior": "一時解析の失敗を既存作品の一部置換として残さない",
+    "acceptance_ids": [
+      "AT-N09"
+    ],
+    "source_refs": []
+  },
+  {
+    "id": "REQ-N10",
+    "title": "入力と添付の安全な表示",
+    "provenance": "仕様を成立させる品質条件・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP20",
+    "shall": "本文・外部URL・添付を非実行データとして扱い、HTML・SVG等の能動内容や危険URLを実行しないこと。",
+    "failure_behavior": "ファイル名だけの種類判定や任意コードの条件実行を許さない",
+    "acceptance_ids": [
+      "AT-N10"
+    ],
+    "source_refs": []
+  },
+  {
+    "id": "REQ-N11",
+    "title": "通信なしでの継続",
+    "provenance": "仕様を成立させる品質条件・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP03",
+    "shall": "取得済み作品とキャッシュ済みアプリで、通信なしの編集・検索・試読・ファイル出力を可能にすること。未取得の素材は明示すること。",
+    "failure_behavior": "初回取得や未キャッシュ添付を利用済みと偽表示しない",
+    "acceptance_ids": [
+      "AT-N11"
+    ],
+    "source_refs": [
+      "T01"
+    ]
+  },
+  {
+    "id": "REQ-N12",
+    "title": "再現可能な確認記録",
+    "provenance": "仕様を成立させる品質条件・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP14",
+    "shall": "作品版・開始状態・経路・条件結果・乱数種・外部応答の仮実区分を確認記録へ含めること。",
+    "failure_behavior": "新しい版の結果を古い版の合格証跡として扱わない",
+    "acceptance_ids": [
+      "AT-N12"
+    ],
+    "source_refs": []
+  },
+  {
+    "id": "REQ-N13",
+    "title": "日本語と時間の正確性",
+    "provenance": "仕様を成立させる品質条件・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP05",
+    "shall": "UTF-8、日本語IME、ルビ、読み、別名、絵文字を破損なく保持し、世界時間と実日時を別型にすること。",
+    "failure_behavior": "IME変換を操作キーで確定前に破壊したり、tickを浮動小数で丸めない",
+    "acceptance_ids": [
+      "AT-N13"
+    ],
+    "source_refs": []
+  },
+  {
+    "id": "REQ-N14",
+    "title": "復元手順の完了",
+    "provenance": "仕様を成立させる品質条件・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP16",
+    "shall": "最新完全保存ファイルと公開スナップショットの復元方法を利用者に提示し、空環境への復元試験を行うこと。",
+    "failure_behavior": "端末内履歴だけを外部バックアップの代わりとして保証しない",
+    "acceptance_ids": [
+      "AT-N14"
+    ],
+    "source_refs": [
+      "T01"
+    ]
+  },
+  {
+    "id": "REQ-N15",
+    "title": "診断とプライバシー",
+    "provenance": "仕様を成立させる品質条件・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP24",
+    "shall": "診断にはエラーコード・操作ID・版・環境を記録し、本文・個人情報・秘密・認証情報を既定で含めないこと。送信は任意とすること。",
+    "failure_behavior": "ログや分析サービスへ作品本文を自動送信しない",
+    "acceptance_ids": [
+      "AT-N15"
+    ],
+    "source_refs": []
+  },
+  {
+    "id": "REQ-N16",
+    "title": "拡張性と検証可能性",
+    "provenance": "仕様を成立させる品質条件・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP01",
+    "shall": "時間・状態評価・投影・ファイル移行をUIと保存製品から分け、固定データと決定的試験で検証すること。",
+    "failure_behavior": "画面ごとに別の条件評価や独自のID管理を作らない",
+    "acceptance_ids": [
+      "AT-N16"
+    ],
+    "source_refs": []
+  },
+  {
+    "id": "REQ-N17",
+    "title": "公開構成と費用の明示",
+    "provenance": "仕様を成立させる品質条件・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP24",
+    "shall": "公開時はデプロイ対象commitと基底パスを確認し、同期・保存容量・送信等の上限と費用を記録すること。新規有料機能の自動有効化をしないこと。",
+    "failure_behavior": "この資料の作成だけで公開済みや費用ゼロと宣言しない",
+    "acceptance_ids": [
+      "AT-N17"
+    ],
+    "source_refs": []
+  },
+  {
+    "id": "REQ-N18",
+    "title": "失敗時の説明と入力保持",
+    "provenance": "仕様を成立させる品質条件・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP02",
+    "shall": "エラーは何が失敗したか・未保存範囲・修正方法を対象近傍と通知へ表示し、入力を保持すること。",
+    "failure_behavior": "白画面・無言の失敗・黙ったデータ削除を残さない",
+    "acceptance_ids": [
+      "AT-N18"
+    ],
+    "source_refs": []
+  },
+  {
+    "id": "REQ-N19",
+    "title": "正本と公開版の保護",
+    "provenance": "仕様を成立させる品質条件・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP10",
+    "shall": "正本・作者別案・ゲーム内経路・公開スナップショットを区別し、公開版の更新は新しい版として作ること。",
+    "failure_behavior": "別案の編集で公開済み本文や参照設定を上書きしない",
+    "acceptance_ids": [
+      "AT-N19"
+    ],
+    "source_refs": []
+  },
+  {
+    "id": "REQ-N20",
+    "title": "持ち出しと互換性",
+    "provenance": "仕様を成立させる品質条件・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP22",
+    "shall": "完全保存・汎用JSON・読み物等の出力に仕様版と対象版を付け、未対応機能と除外項目を表示すること。互換性の検証範囲を記録すること。",
+    "failure_behavior": "Unity・Unreal・ink・Yarn等すべてに対応済みと仮定しない",
+    "acceptance_ids": [
+      "AT-N20"
+    ],
+    "source_refs": []
+  }
+]

@@ -1,0 +1,53 @@
+
+ RUN  v5.0.3 /tmp/shinariokanri-independent-rb09-cfaebcb
+
+ ❯ tests/independent-rb09-pending-authority.test.ts (2 tests | 1 failed) 48ms
+   × R9E07-conflict a newly verified field withdrawal must stop active writes while preserving the old prepared/conflict evidence 20ms
+ ❯ tests/independent-rb09-current-expiry-renewal.test.ts (1 test | 1 failed) 35ms
+   × R9E10 an expired old ACK cannot override a newly verified same-content/same-authority current A-only fieldset after B expires; current A remains writable and old evidence is exact 33ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/independent-rb09-current-expiry-renewal.test.ts > R9E10 an expired old ACK cannot override a newly verified same-content/same-authority current A-only fieldset after B expires; current A remains writable and old evidence is exact
+AssertionError: expected SyncProtocolError: FORBIDDEN { …(1) } to be undefined
+
+- Expected:
+undefined
+
++ Received:
+SyncProtocolError {
+  "message": "FORBIDDEN",
+  "code": "FORBIDDEN",
+  "name": "SyncProtocolError",
+}
+
+ ❯ tests/independent-rb09-current-expiry-renewal.test.ts:19:16
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  tests/independent-rb09-pending-authority.test.ts > R9E07-conflict a newly verified field withdrawal must stop active writes while preserving the old prepared/conflict evidence
+AssertionError: expected undefined to match object { code: 'FORBIDDEN' }
+
+- Expected:
+{
+  "code": "FORBIDDEN",
+}
+
++ Received:
+undefined
+
+ ❯ tests/independent-rb09-pending-authority.test.ts:21:16
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  2 failed | 13 passed (15)
+      Tests  2 failed | 76 passed (78)
+   Start at  21:24:33
+   Duration  17.53s (tests 65%, transform 18%, import 17%, worker 1%)
+
+    Isolate  15 workers spawned · ~192ms startup each (spawn + environment, per file)
+             at least ~2.69s faster with isolate: false — reuses workers across files instead of one per file
+

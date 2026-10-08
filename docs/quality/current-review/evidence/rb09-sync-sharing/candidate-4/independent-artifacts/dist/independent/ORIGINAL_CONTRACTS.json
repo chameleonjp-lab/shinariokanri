@@ -1,0 +1,362 @@
+{
+  "requirements": [
+    {
+      "id": "REQ-F29",
+      "title": "指摘と次の作業を場面に結ぶ",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP18",
+      "shall": "人物、台詞、場面、関係線へコメントや確認事項を付ける。未対応、修正済み、再確認済みを区別する。担当者は任意とすること。",
+      "failure_behavior": "指摘時の対象版と引用範囲を保持する。対象段落が削除されても元指摘は残し、最新位置は不明と表示する。",
+      "acceptance_ids": [
+        "AT-F29"
+      ],
+      "source_refs": [
+        "S07",
+        "S23"
+      ],
+      "source_feature_id": "F29"
+    },
+    {
+      "id": "REQ-F30",
+      "title": "秘密を隠して確認してもらう",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP18",
+      "shall": "読むだけ、指摘する、編集する範囲を選ぶ。章・人物・分岐に限定した資料を作り、名前、地図、リンク先も同じ公開範囲で扱うこと。",
+      "failure_behavior": "権限はサーバー側と出力時に検証する。非公開データを送ってCSSで隠す方式を禁止し、検索・素材・参照数にも同じ投影を適用する。",
+      "acceptance_ids": [
+        "AT-F30"
+      ],
+      "source_refs": [
+        "S07",
+        "S15",
+        "S20"
+      ],
+      "source_feature_id": "F30"
+    },
+    {
+      "id": "REQ-F34",
+      "title": "通信なしの編集と同期を区別する",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP17",
+      "shall": "開いて保存済みの作品を通信なしでも編集できるようにする。端末内保存済み、送信待ち、同期済み、食い違いありを表示すること。",
+      "failure_behavior": "同一項目の競合は双方と共通元を保持する。保存済みと同期済みを混同せず、再送・削除対編集でも黙って上書きしない。",
+      "acceptance_ids": [
+        "AT-F34"
+      ],
+      "source_refs": [
+        "S12"
+      ],
+      "source_feature_id": "F34"
+    },
+    {
+      "id": "REQ-N07",
+      "title": "同期の競合と再送",
+      "provenance": "仕様を成立させる品質条件・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP17",
+      "shall": "共通元のrevisionを使い、同じ項目の競合・削除対編集・操作の重複を検知すること。未解決は双方を保持すること。",
+      "failure_behavior": "端末時計や最終書込だけで片方を消さない",
+      "acceptance_ids": [
+        "AT-N07"
+      ],
+      "source_refs": []
+    },
+    {
+      "id": "REQ-N08",
+      "title": "権限と秘密の投影",
+      "provenance": "仕様を成立させる品質条件・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP18",
+      "shall": "作品の閲覧・指摘・編集・管理権限と共有範囲をサーバー側で検証し、本文・検索・図・素材・リンクで一致させること。",
+      "failure_behavior": "secretキーの公開、UIのみの非表示、他作品のID差替えを許さない",
+      "acceptance_ids": [
+        "AT-N08"
+      ],
+      "source_refs": []
+    }
+  ],
+  "acceptance": [
+    {
+      "id": "AT-F29",
+      "requirement_ids": [
+        "REQ-F29"
+      ],
+      "package_id": "WP18",
+      "given": "版1の台詞Lにreviewerが指摘したコメント",
+      "when": "本文改訂、対象段落削除、修正済み、再確認済みを順に行い元版の引用を開く",
+      "then": "指摘から対象を開け、対象が変わっても何についての指摘だったか追える。",
+      "negative_or_edge": "指摘時の対象版と引用範囲を保持する。対象段落が削除されても元指摘は残し、最新位置は不明と表示する。",
+      "result": "not_run"
+    },
+    {
+      "id": "AT-F30",
+      "requirement_ids": [
+        "REQ-F30"
+      ],
+      "package_id": "WP18",
+      "given": "chapter限定reader、reviewer、editorと秘密の本名/関係/添付",
+      "when": "各役割で本文、検索、図、リンク、素材と直接APIを操作し、秘密の取得と本文更新を試す",
+      "then": "秘密を隠した本文から、検索や関連図、リンク先を使って秘密が見えない。",
+      "negative_or_edge": "権限はサーバー側と出力時に検証する。非公開データを送ってCSSで隠す方式を禁止し、検索・素材・参照数にも同じ投影を適用する。",
+      "result": "not_run"
+    },
+    {
+      "id": "AT-F34",
+      "requirement_ids": [
+        "REQ-F34"
+      ],
+      "package_id": "WP17",
+      "given": "二端末が同じbaseRevisionの作品を取得済み",
+      "when": "機内モードで同じ本文を別々に編集し、順不同で同期して競合を選び再送する",
+      "then": "二つの端末で同じ項目を変えた場合、片方を黙って消さずに両方を確認して選べる。",
+      "negative_or_edge": "同一項目の競合は双方と共通元を保持する。保存済みと同期済みを混同せず、再送・削除対編集でも黙って上書きしない。",
+      "result": "not_run"
+    },
+    {
+      "id": "AT-N07",
+      "requirement_ids": [
+        "REQ-N07"
+      ],
+      "package_id": "WP17",
+      "given": "オフラインの二端末",
+      "when": "同じ本文を変更し順不同で同期する",
+      "then": "二案を比較して解決でき再送しても効果が二重化しない",
+      "negative_or_edge": "端末時計や最終書込だけで片方を消さない",
+      "result": "not_run"
+    },
+    {
+      "id": "AT-N08",
+      "requirement_ids": [
+        "REQ-N08"
+      ],
+      "package_id": "WP18",
+      "given": "非メンバーと限定閲覧者",
+      "when": "直接APIと検索と素材へアクセスする",
+      "then": "許可した投影以外の本文・名称・ID・メタデータが取得できない",
+      "negative_or_edge": "secretキーの公開、UIのみの非表示、他作品のID差替えを許さない",
+      "result": "not_run"
+    },
+    {
+      "id": "AT-E05",
+      "title": "公開範囲と正体の漏れ",
+      "requirement_ids": [
+        "REQ-F12",
+        "REQ-F30",
+        "REQ-F57",
+        "REQ-N08"
+      ],
+      "package_id": "WP23",
+      "given": "非公開の本名と家系と添付がある限定共有snapshot",
+      "when": "閲覧者が本文、検索、索引、図、リンク、素材、直接APIを調べる",
+      "then": "許可した別名だけが出て秘密のID・名前・関係・件数・ファイル名が取得できない",
+      "negative_or_edge": "IDやproject_idを差替えたアクセスと権限撤回後の新規取得は拒否する",
+      "result": "not_run"
+    },
+    {
+      "id": "AT-E06",
+      "title": "二端末の競合と削除",
+      "requirement_ids": [
+        "REQ-F34",
+        "REQ-N06",
+        "REQ-N07"
+      ],
+      "package_id": "WP23",
+      "given": "共通revisionを取得した二端末",
+      "when": "両方オフラインで同じ本文を編集、片方削除、重複と順逆で送信する",
+      "then": "双方と共通元を比較でき、解決後は同じ結果、二重効果と勝手な復活はない",
+      "negative_or_edge": "容量不足と認証失効時にも未送信を失わず、同期済みと表示しない",
+      "result": "not_run"
+    },
+    {
+      "id": "AT-E12",
+      "title": "保存失敗とアプリ更新からの復帰",
+      "requirement_ids": [
+        "REQ-B23",
+        "REQ-F34",
+        "REQ-F35",
+        "REQ-N06",
+        "REQ-N11",
+        "REQ-N18"
+      ],
+      "package_id": "WP23",
+      "given": "キャッシュ済みアプリと未送信作品",
+      "when": "機内モード、保存容量不足、途中更新、移行失敗、専用出力からの再開を行う",
+      "then": "失敗と未保存を明示し、更新は安全地点で適用し、書き出しと復元で再開できる",
+      "negative_or_edge": "初回未取得・未取得素材・保存先取消を成功と扱わない",
+      "result": "not_run"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "REQ-F29",
+      "title": "指摘と次の作業を場面に結ぶ",
+      "original_package_id": "WP18",
+      "batch_id": "RB09",
+      "status": "planned",
+      "baseline_assessment": "部分実装",
+      "retained_implementation": "reviewレコードの対象版、引用、本文、工程、対応内容の型と入力がある。",
+      "review_gap": "関係線からの指摘導線、対象段落削除後の位置追跡、共有レビューと作業への接続が不足。",
+      "required_behavior": "人物、台詞、場面、関係線へコメントや確認事項を付ける。未対応、修正済み、再確認済みを区別する。担当者は任意とすること。",
+      "implementation_action": "人物・台詞・段落・場面・関係線から指摘を作り、対象版と引用位置を保存する。移動・削除後は対応先か位置不明を表示し、指摘から制作作業を作成して対応・再確認を追う。",
+      "code_paths": [
+        "src/ui/fieldSpecs.ts",
+        "src/domain/model.ts"
+      ],
+      "acceptance_ids": [
+        "AT-F29"
+      ],
+      "integration_ids": [],
+      "finding_ids": [],
+      "done_when": [
+        "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+        "指摘時の対象版と引用範囲を保持する。対象段落が削除されても元指摘は残し、最新位置は不明と表示する。",
+        "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+      ],
+      "result": "not_run",
+      "evidence": [],
+      "final_acceptance_batch": "RB10"
+    },
+    {
+      "id": "REQ-F30",
+      "title": "秘密を隠して確認してもらう",
+      "original_package_id": "WP18",
+      "batch_id": "RB09",
+      "status": "planned",
+      "baseline_assessment": "部分実装",
+      "retained_implementation": "作者指定の公開名/文章・ID変換・allowlist投影と限定範囲出力がある。",
+      "review_gap": "実Auth/membership/RLS/Storageと閲覧/指摘/編集/管理の共有画面はない。直接APIの漏れ試験も未実行。",
+      "required_behavior": "読むだけ、指摘する、編集する範囲を選ぶ。章・人物・分岐に限定した資料を作り、名前、地図、リンク先も同じ公開範囲で扱うこと。",
+      "implementation_action": "閲覧・指摘・編集・管理の範囲と期限を選択できる共有画面を作る。正本を送らず許可した投影だけ渡し、本文・検索・索引・図・地図・素材・リンク・件数を同じ公開範囲にする。",
+      "code_paths": [
+        "src/domain/projection.ts",
+        "src/sync/README.md",
+        "src/ui/WorkPage.tsx"
+      ],
+      "acceptance_ids": [
+        "AT-F30"
+      ],
+      "integration_ids": [
+        "AT-E05"
+      ],
+      "finding_ids": [],
+      "done_when": [
+        "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+        "権限はサーバー側と出力時に検証する。非公開データを送ってCSSで隠す方式を禁止し、検索・素材・参照数にも同じ投影を適用する。",
+        "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+      ],
+      "result": "not_run",
+      "evidence": [],
+      "final_acceptance_batch": "RB10"
+    },
+    {
+      "id": "REQ-F34",
+      "title": "通信なしの編集と同期を区別する",
+      "original_package_id": "WP17",
+      "batch_id": "RB09",
+      "status": "planned",
+      "baseline_assessment": "部分実装",
+      "retained_implementation": "端末内保存とoutboxを分離し、offlineキャッシュ再開を検査。UIは接続先未設定と表示する。",
+      "review_gap": "実端末間の送信/競合/解決/同期済み表示と認証がない。outboxの準備操作への自動変換も未接続。",
+      "required_behavior": "開いて保存済みの作品を通信なしでも編集できるようにする。端末内保存済み、送信待ち、同期済み、食い違いありを表示すること。",
+      "implementation_action": "実際の接続先で保存コマンドから送信待ちを準備し、認証・送信・受信・再送・食い違い解決を画面へ接続する。端末内保存済み、未送信、添付送信待ち、同期済みを別に表示する。",
+      "code_paths": [
+        "src/storage/store.ts",
+        "src/sync/README.md",
+        "src/App.tsx"
+      ],
+      "acceptance_ids": [
+        "AT-F34"
+      ],
+      "integration_ids": [
+        "AT-E06",
+        "AT-E12"
+      ],
+      "finding_ids": [],
+      "done_when": [
+        "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+        "同一項目の競合は双方と共通元を保持する。保存済みと同期済みを混同せず、再送・削除対編集でも黙って上書きしない。",
+        "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+      ],
+      "result": "not_run",
+      "evidence": [],
+      "final_acceptance_batch": "RB10"
+    },
+    {
+      "id": "REQ-N07",
+      "title": "同期の競合と再送",
+      "original_package_id": "WP17",
+      "batch_id": "RB09",
+      "status": "planned",
+      "baseline_assessment": "登録・土台のみ",
+      "retained_implementation": "三方向merge、冪等ack、未解決競合停止、アカウント境界を契約試験。",
+      "review_gap": "実DB・認証・二端末同期・依存outbox rebaseと解決UIは未接続。メモリ試験を実同期の証拠にできない。",
+      "required_behavior": "共通元のrevisionを使い、同じ項目の競合・削除対編集・操作の重複を検知すること。未解決は双方を保持すること。",
+      "implementation_action": "実サーバー確定revisionを共通元に送信待ちを準備し、依存操作の組み直し、冪等再送、削除対編集、再並べ替えを扱う。解決中の第三変更も再比較し、二端末の結果と未送信を照合する。",
+      "code_paths": [
+        "src/sync/README.md",
+        "src/sync/outbox.ts",
+        "tests/sync.test.ts"
+      ],
+      "acceptance_ids": [
+        "AT-N07"
+      ],
+      "integration_ids": [
+        "AT-E06"
+      ],
+      "finding_ids": [],
+      "done_when": [
+        "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+        "端末時計や最終書込だけで片方を消さない",
+        "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+      ],
+      "result": "not_run",
+      "evidence": [],
+      "final_acceptance_batch": "RB10"
+    },
+    {
+      "id": "REQ-N08",
+      "title": "権限と秘密の投影",
+      "original_package_id": "WP18",
+      "batch_id": "RB09",
+      "status": "planned",
+      "baseline_assessment": "登録・土台のみ",
+      "retained_implementation": "公開投影のallowlistとID変換、名前/本文指定、契約membership検査がある。",
+      "review_gap": "サーバーAuth/RLS/private Storage、直接API、検索/素材/件数の実権限試験は存在しない。",
+      "required_behavior": "作品の閲覧・指摘・編集・管理権限と共有範囲をサーバー側で検証し、本文・検索・図・素材・リンクで一致させること。",
+      "implementation_action": "作品membership・private/team・投影・役割をサーバーと素材取得で検査する。非メンバーやID差替えの直接API、全CRUD、共有失効、秘密の検索/図/素材名/件数、公開buildのsecret混入を試験する。",
+      "code_paths": [
+        "src/domain/projection.ts",
+        "src/sync/testing.ts",
+        "src/sync/README.md"
+      ],
+      "acceptance_ids": [
+        "AT-N08"
+      ],
+      "integration_ids": [
+        "AT-E05"
+      ],
+      "finding_ids": [],
+      "done_when": [
+        "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+        "secretキーの公開、UIのみの非表示、他作品のID差替えを許さない",
+        "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+      ],
+      "result": "not_run",
+      "evidence": [],
+      "final_acceptance_batch": "RB10"
+    }
+  ]
+}

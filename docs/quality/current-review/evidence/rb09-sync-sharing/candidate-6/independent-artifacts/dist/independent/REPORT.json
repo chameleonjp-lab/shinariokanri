@@ -1,0 +1,159 @@
+{
+  "stage": "RB09 candidate6 independent review; known-ACK permission/content boundaries failed",
+  "candidateCommit": "73a279ae565c86fe25024d5bdedb5ad7e0c5eda8",
+  "candidateTree": "600f86880027abfd6508980e4cde46d59e91d5f5",
+  "sourceCount": 319,
+  "sourceBindingSHA256": "a6901a7577c510497dd9777bae7f8ffb31a85eff52720fb420fdef3bab820d7f",
+  "finalSourceBindingSHA256": "738a2d0cfcf22045757bfc01032cbd1822b6cefbf76542ff29a80effd5f2330d",
+  "original104_116_24_6Preserved": true,
+  "original15Unchanged": true,
+  "old53_76_175_521_363_534Unchanged": true,
+  "originalRegistryStatusesNotChanged": true,
+  "actualIndependentRuns": [
+    {
+      "scope": "core/native/editor/transfer/world/repository24 plus authority/atomic-expiry/originalE07/exact old-work continuity/known ACK authority",
+      "tests": 74,
+      "pass": 72,
+      "fail": 2,
+      "failedIDs": [
+        "R9E08",
+        "R9E09"
+      ],
+      "log": "independent/core-authority-known-ack.log"
+    },
+    {
+      "scope": "typed owner/editor/derived/Edge and authorization SQL19 plus actual SQL-generated grant/read/ownerchange/scoped ACK boundary1",
+      "tests": 20,
+      "pass": 19,
+      "fail": 1,
+      "failedIDs": [
+        "R9SQL-authority-content"
+      ],
+      "log": "independent/sql-typed-editor-derived-edge-authority-known.log",
+      "newGroupFirstFailure": "E09 FORBIDDEN assertion failed; both saveField/receive mutations were executed and observed; later E08 assertion not reached"
+    },
+    {
+      "scope": "fresh network-none all8migrations/original mockRLS/NULL Unicode positions",
+      "migrations": 8,
+      "migrationPass": 8,
+      "mockRLSAssertions": 23,
+      "mockRLSPass": 23,
+      "nullBoundaryAssertions": 2,
+      "nullBoundaryPass": 2,
+      "logs": [
+        "independent/sql-setup-results.json",
+        "independent/sql-original-rls.log",
+        "independent/sql-null-comment-refusal.log"
+      ]
+    },
+    {
+      "scope": "clean production Chromium153 isolated5396 HTTP mocks",
+      "finalGroups": 16,
+      "pass": 16,
+      "fail": 0,
+      "log": "independent/browser-execution.json",
+      "includes": "original13 plus prepared/conflict withdrawal2 plus coherent current-content2 conflict recovery/explicit adoption/cold1",
+      "noFetchNormalization": true,
+      "noForcedClick": true
+    }
+  ],
+  "finalComponentTotal": {
+    "tests": 94,
+    "pass": 91,
+    "fail": 3,
+    "includesRepositorySuite24": true,
+    "excludesOriginal116": true
+  },
+  "productFindings": [
+    {
+      "id": "R9E08",
+      "expected": "Delayed content1 image cannot replace content2 already proved by a valid scoped ACK; old work/evidence remains intact",
+      "actual": "New authority2 while base is authority1 causes receive to drop conflict and activate old content1 even though ACK proves content2/authority2",
+      "proof": "independent/fixtures/R9E08.json",
+      "raw": "independent/core-authority-known-ack.log"
+    },
+    {
+      "id": "R9E09",
+      "expected": "Current scoped ACK that removes B stops active new B writes, while full original common/local/prepared/conflict/ACK remain evidence",
+      "actual": "Conflicting ACK authorization2/current A-only image is stored but active permission remains base authorization1; new B save succeeds",
+      "proof": "independent/fixtures/R9E09.json",
+      "raw": "independent/core-authority-known-ack.log"
+    },
+    {
+      "id": "R9SQL-authority-content",
+      "supports": [
+        "R9E08",
+        "R9E09"
+      ],
+      "observedTimeline": "Real isolated SQL: initial content1/auth2(A+B)→grant3 removesB/read1-auth3 captured→owner changesA content2→valid editor conflict ACK2-auth3(A only)→client newB save succeeds and delayed read1-auth3 activates content1/共通A/conflict absent",
+      "proof": "independent/fixtures/R9SQL-authority-content.json",
+      "rawCalls": "independent/sql-known-authority-calls.json",
+      "raw": "independent/sql-typed-editor-derived-edge-authority-known.log",
+      "firstAssertionFail": "E09 FORBIDDEN; E08 mutation observed but later assertion not reached",
+      "notActualSupabaseAuth": true
+    }
+  ],
+  "priorRepairsOnThisSource": {
+    "E00": "pass independent clones",
+    "E02": "pass monotonic content/common field guards",
+    "E03": "pass current grant before cached ACK",
+    "E04": "pass stamped rev1→withdraw2→old1 refusal/same2 expansion refusal/regrant3, missing/expired refusal and legacy evidence recovery",
+    "U00": "pass normal fetch receiver",
+    "US01": "pass limited deep link and Unicode old version",
+    "SQL04": "pass derived reference and needs_review atomic save",
+    "UI05": "pass aggregate TX failure allB unchanged+retryA, cache failure canonical successA+coldA",
+    "UI06": "pass normal pointer at1280/390/768/1440",
+    "UR02": "pass later area retained",
+    "E05/E06": "pass original C4 inputs/expectations in component and normal UI, plus six deadline-crossing atomic operations",
+    "E07": "pass original prepared/conflict expected refusal; exact entire old work retained→component DB reopen→permitted later B only adopted→new B operation only; production current-content2 recovery/adoption/cold/no automatic old send also pass"
+  },
+  "preservedInitialAttempts": [],
+  "c3CommunicationCorrection": "C3 actual 48core+3epoch(2pass1E04fail)+16typedSQL+7migrations/mock23/NULL2+11finalnormalApp are sealed in C3 REPORT db5c962... and binding534 24a249b...; earlier claim that C3 SQL/browser were unexecuted was explicitly corrected. Parent726/75 remains separate.",
+  "environment": {
+    "os": "Debian13.6 / Linux6.18.44 x86_64",
+    "node": "24.19.0",
+    "vitest": "5.0.3",
+    "browser": "Chromium153.0.8010.12",
+    "appOrigin": "http://127.0.0.1:5396/shinariokanri/",
+    "sql": "own fresh PostgreSQL17.11 network-none, no published ports",
+    "AuthStorage": "synthetic fixtures / intercepted HTTPS mocks",
+    "buildInfo": {
+      "commit": "73a279ae565c86fe25024d5bdedb5ad7e0c5eda8",
+      "dirty": false,
+      "base": "/shinariokanri/",
+      "builtAt": "2026-10-08T21:13:06.239Z",
+      "versionHashScope": "sorted paths and bytes plus build info before version",
+      "version": "ab4fcdabbfed930a3543"
+    },
+    "root4173Used": false,
+    "sharedProductTrackedChanges": false,
+    "rawWhitespacePreserved": true
+  },
+  "notRun": [
+    {
+      "scope": "Actual Auth/DataAPI/RLS/private Storage/two real devices",
+      "reason": "Dedicated endpoint/project/accounts/roles/configuration/quota/currentcost unspecified. SQL/Auth/Storage fixtures and intercepted HTTP are not live evidence"
+    },
+    {
+      "scope": "Full104REQ/116AT/24packages/6regressiongroups, physicalOS/assistive/performance/final release",
+      "reason": "Focused stage review, required physical/provider/final-target evidence pending"
+    },
+    {
+      "scope": "Root full suite and C7 repair",
+      "reason": "Root results kept separate. C7 graded only after separate source seal"
+    }
+  ],
+  "cleanup": {
+    "own5396Stopped": true,
+    "ownPostgreSQLRemoved": true
+  },
+  "sealedAt": "2026-10-08T21:19:46.188109+00:00",
+  "old53_76_175_521_363_534_565Unchanged": true,
+  "old53_76_175_521_363_534_565_590Unchanged": true,
+  "previousAutomaticReview": {
+    "action": "setup classification file creation",
+    "rejectionReason": "Concern about overwriting old classification history",
+    "resolved": "Read-only check showed C5 target absent and C4 classification unchanged. Safe alternative exclusively created a distinct new classification and new harness file. No old evidence edited; no remaining blocker."
+  },
+  "fixtureCoherenceDisclosure": "Original historical conflict withdrawal mock has response header1 after ACK2 and is retained only as client-defensive boundary, not latest real SQL response. Additional current-header2 positive and actual SQL legitimate delayed-read1/auth3→ACK2/auth3 timeline are recorded separately. No historic input/log/result changed."
+}

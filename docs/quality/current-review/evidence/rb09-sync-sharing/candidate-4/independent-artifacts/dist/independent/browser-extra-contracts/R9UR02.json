@@ -1,0 +1,46 @@
+{
+  "id": "R9UR02",
+  "status": "pass",
+  "expected": "Correct behavior, not observed-bad success",
+  "failure": "",
+  "observation": {
+    "laterNavigationRetained": true,
+    "restoredConfirmedProject": true
+  },
+  "calls": [
+    {
+      "type": "auth-fixture",
+      "role": "owner"
+    },
+    {
+      "type": "edge",
+      "action": "projects",
+      "input": {}
+    },
+    {
+      "type": "edge",
+      "action": "projects",
+      "input": {}
+    },
+    {
+      "type": "edge",
+      "action": "download_archive",
+      "input": {
+        "projectId": "3e5f9a2d-1fc5-4e96-b9ca-208288f4e811",
+        "serverRevision": "1"
+      }
+    },
+    {
+      "type": "public-list"
+    },
+    {
+      "type": "edge",
+      "action": "pull",
+      "input": {
+        "projectId": "3e5f9a2d-1fc5-4e96-b9ca-208288f4e811"
+      }
+    }
+  ],
+  "pageErrors": [],
+  "environment": "Production Chromium153 at isolated5394, HTTPS backend mocks"
+}

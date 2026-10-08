@@ -1,0 +1,9 @@
+# RB09 C6 独立レビュー
+
+対象 73a279ae565c86fe25024d5bdedb5ad7e0c5eda8 / tree 600f86880027abfd6508980e4cde46d59e91d5f5。319入力全SHAはgit blobと一致し、原15資料・旧53/76/175/521/363/534/565/590成果物が不変です。
+
+部品94件＝91成功・3失敗。通常production16群、8migration、模擬RLS23、NULL位置2は成功。E07は旧work全体の保持、現在許可の後発Bだけの確認再開、cold、旧操作の自動再送防止まで成功しました。
+
+E08は既知ACKcontent2の後に遅延content1応答がactiveへ採用される差、E09はcurrent ACKで撤回されたBを旧権限で新規保存できる差です。同じ時系列を実隔離SQLのgrant/read/owner改稿/scoped ACKから生成して両更新を観察しました。SQL1群の最初のE09期待で失敗し、後のE08assertionは未到達として別記しています。
+
+旧header1/ACK2のmockは防御境界として保持し、現在content2のpositiveと実SQL時系列を別に記録しました。元104/116・実Auth/Storage・実端末・性能の合格へ換算しません。C7は別対象です。

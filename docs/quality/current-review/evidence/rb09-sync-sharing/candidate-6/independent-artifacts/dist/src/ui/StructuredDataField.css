@@ -1,0 +1,48 @@
+.structured-data-field { display: grid; gap: 12px; min-width: 0; }
+.structured-data-field > .sd-section-heading { margin-bottom: 2px; }
+.structured-data-field .sd-section-heading h3 { margin: 0; font-size: 12px; }
+.structured-data-field .sd-section-heading > span { flex: 0 0 auto; color: var(--muted); font-size: 10px; }
+.structured-data-field .sd-section-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.sd-object, .sd-array, .sd-union, .sd-record-rows { display: grid; gap: 10px; min-width: 0; }
+.sd-object { padding: 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
+.sd-object > .sd-section-heading { margin: 0 0 2px; }
+.sd-object > .sd-section-heading > strong, .sd-array > .sd-section-heading > strong { font-size: 11px; }
+.sd-object > .sd-section-heading > span, .sd-array > .sd-section-heading > span { color: var(--muted); font-size: 10px; }
+.sd-property { display: grid; gap: 8px; min-width: 0; padding: 9px; border: 1px solid var(--border); border-radius: 9px; background: var(--soft); }
+.sd-property-label, .sd-presence > label { font-size: 11px; font-weight: 600; line-height: 1.7; }
+.sd-presence { display: grid; gap: 6px; grid-template-columns: minmax(0, 1fr) minmax(115px, .8fr); align-items: center; }
+.sd-control { display: grid; gap: 6px; min-width: 0; }
+.sd-control > label { color: var(--muted); font-size: 10px; font-weight: 600; line-height: 1.7; }
+.sd-control input, .sd-control select, .sd-presence select, .sd-add-row input, .sd-record-row > input { width: 100%; min-width: 0; }
+.sd-check { min-height: 44px; }
+.sd-union { padding: 10px; border: 1px solid var(--border); border-radius: 9px; background: var(--surface); }
+.sd-switch-preview { display: grid; gap: 8px; padding: 12px; border: 1px solid var(--warning, #ba8b32); border-radius: 9px; background: var(--warning-soft, #fff8e8); color: var(--text); font-size: 11px; line-height: 1.7; }
+.sd-switch-preview > strong { color: var(--text); }
+.sd-switch-preview p { margin: 0; }
+.sd-switch-preview ul { margin: 0; padding-left: 20px; }
+.sd-switch-preview .reference-controls { flex-wrap: wrap; }
+.sd-array { padding: 10px; border: 1px solid var(--border); border-radius: 9px; background: var(--surface); }
+.sd-array-item { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: 9px; padding: 9px; border: 1px solid var(--border); border-radius: 9px; background: var(--soft); }
+.sd-array-item > .sd-property { border: 0; padding: 0; background: transparent; }
+.sd-array-controls { display: flex; align-items: center; gap: 2px; }
+.sd-array-pages { display: flex; align-items: center; justify-content: space-between; gap: 8px; color: var(--muted); font-size: 10px; }
+.sd-array-pages .text-button { min-width: 64px; }
+.sd-record { padding: 10px; }
+.sd-record-rows { grid-column: 1 / -1; }
+.sd-record-row { display: grid; grid-template-columns: minmax(100px, .7fr) minmax(0, 1.4fr) auto; align-items: start; gap: 8px; padding: 9px; border: 1px solid var(--border); border-radius: 9px; background: var(--soft); }
+.sd-record-row > .sd-property { border: 0; padding: 0; background: transparent; }
+.sd-add-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center; }
+.sd-unknown { display: grid; gap: 8px; padding: 10px; border: 1px dashed var(--border); border-radius: 9px; }
+.sd-unknown summary { min-height: 38px; color: var(--muted); font-size: 10px; cursor: pointer; }
+.sd-unknown-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 8px; }
+.sd-unsupported { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; padding: 9px; border: 1px dashed var(--border); border-radius: 8px; color: var(--muted); font-size: 10px; }
+.sd-validation { padding: 10px 12px; border: 1px solid var(--danger); border-radius: 9px; background: var(--danger-soft); color: var(--danger); font-size: 10px; line-height: 1.7; }
+.sd-validation ul { margin: 5px 0 0; padding-left: 18px; }
+
+@media (max-width: 520px) {
+  .sd-presence { grid-template-columns: minmax(0, 1fr); }
+  .sd-array-item { grid-template-columns: minmax(0, 1fr); }
+  .sd-array-controls { justify-content: flex-end; }
+  .sd-record-row { grid-template-columns: minmax(0, 1fr); }
+  .sd-unknown-row { grid-template-columns: minmax(0, 1fr); }
+}

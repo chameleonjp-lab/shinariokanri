@@ -1,0 +1,20 @@
+{
+  "origin": "Generated locally by author using ffmpeg lavfi; no third-party media; test fixture use allowed",
+  "fixture_type": "native decode media; not physical OS recording evidence",
+  "commands": [
+    "ffmpeg -f lavfi -i color=c=blue:s=160x90:d=0.5 -an -c:v libx264 -pix_fmt yuv420p fixture-blue.mp4",
+    "ffmpeg -f lavfi -i sine=frequency=440:duration=0.25:sample_rate=8000 -c:a pcm_s16le fixture-tone.wav"
+  ],
+  "files": [
+    {
+      "path": "tests/fixtures/media/fixture-blue.mp4",
+      "sha256": "c72fcb46361caa5f0ea5267101ebace3627157da2dd92872c1cb0335466fff05",
+      "bytes": 1734
+    },
+    {
+      "path": "tests/fixtures/media/fixture-tone.wav",
+      "sha256": "9d32f6d21a9c5da7a62fe802f9e30f2f4467e0e91ec21641ebfeb97cadbeaebd",
+      "bytes": 4078
+    }
+  ]
+}

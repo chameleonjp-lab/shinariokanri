@@ -1,0 +1,50 @@
+import { describe, expect, it } from 'vitest';
+import { createDemoProject, createEntity, createProject, newId, textToRichText } from './model';
+import { referenceChoices, referenceProject } from './referenceChoices';
+import { jsonBytes, sha256 } from '../storage/json';
+describe('schema-scoped reference choices', () => {
+  it('offers actual resource IDs rather than substituting entity IDs', () => {
+    const p = createDemoProject();
+    const note = createEntity(p.projectId, 'note', 'メモ', { body: textToRichText('段落') });
+    p.entities.push(note);
+    const snapshotId = newId();
+    const { history: _history, snapshots: _snapshots, ...content } = structuredClone(p);
+    p.snapshots.push({ id: snapshotId, content, contentHash: 'a'.repeat(64), createdAt: new Date().toISOString(), versionLabel: '固定版' });
+    expect(referenceChoices(p, 'snapshot').map(choice => choice.id)).toEqual([p.projectId, snapshotId]);
+    expect(referenceChoices(p, 'calendar').map(choice => choice.id)).toEqual(p.calendars.map(calendar => calendar.id));
+    expect(referenceChoices(p, 'block').map(choice => choice.id)).toContain(note.data.body[0].id);
+    expect(referenceChoices(p, 'block').map(choice => choice.id)).not.toContain(note.id);
+    expect(referenceChoices(p, 'record').map(choice => choice.id)).toContain(p.relations[0].id);
+    expect(referenceChoices(p, 'entity', ['variable']).map(choice => choice.id)).toEqual(p.entities.filter(e => e.kind === 'variable').map(e => e.id));
+    expect(referenceChoices(p, 'identity')).toEqual([]);
+  });
+  it('resolves captured resources and validates saved archived IDs without falling back from a missing pin', async () => {
+    const project = createProject('保存版の参照');
+    const note = createEntity(project.projectId, 'note', '旧本文', { body: textToRichText('版固定の段落') });
+    project.entities = [note];
+    const { history: _history, snapshots: _snapshots, ...content } = structuredClone(project);
+    const snapshotId = newId(), blockId = note.data.body[0].id;
+    project.snapshots.push({ id: snapshotId, content, contentHash: await sha256(jsonBytes(content)), createdAt: new Date().toISOString(), versionLabel: '公開版' });
+    note.deletedAt = new Date().toISOString();
+    expect(referenceChoices(project, 'entity')).toEqual([]);
+    expect(referenceChoices(project, 'entity', undefined, { includeArchived: true }).map(choice => choice.id)).toContain(note.id);
+    note.data.body = textToRichText('現在版の別の段落');
+    expect(referenceChoices(project, 'block', undefined, { versionId: snapshotId }).map(choice => choice.id)).toEqual([blockId]);
+    expect(referenceProject(project, project.projectId)).toBe(project);
+    expect(referenceProject(project, newId())).toBeUndefined();
+    expect(referenceChoices(project, 'entity', undefined, { versionId: newId() })).toEqual([]);
+  });
+  it('offers only model-valid projection records including trigger and public text blocks', () => {
+    const project = createProject('公開IDの範囲');
+    const character = createEntity(project.projectId, 'character', '人物', { aliases: [{ id: newId(), text: '別名', reading: '', validity: { worldRange: null, routeCondition: null, presentationAnchor: null }, audienceHolderIds: [], isPublicDefault: true }] });
+    const triggerId = newId();
+    const node = createEntity(project.projectId, 'flow_node', '起動点', { trigger: { id: triggerId, event: 'manual', eventKey: 'publish', repeat: 'once' } });
+    const publicText = textToRichText('公開本文');
+    const profile = createEntity(project.projectId, 'projection_profile', '公開', { publicTexts: { [character.id]: { body: publicText } } });
+    project.entities = [character, node, profile];
+    const ids = referenceChoices(project, 'projection_record').map(choice => choice.id);
+    expect(ids).toContain(triggerId); expect(ids).toContain(publicText[0].id);
+    expect(ids).not.toContain(character.data.aliases?.[0].id);
+    expect(referenceChoices(project, 'alias').map(choice => choice.id)).toEqual([character.data.aliases?.[0].id]);
+  });
+});

@@ -1,0 +1,15 @@
+
+> shinariokanri@0.1.0 prebuild
+> node scripts/build/portable-runtime.mjs
+
+Production portable runtime generated: 142833 characters
+
+> shinariokanri@0.1.0 build
+> tsc -b && vite build && node scripts/build/service-worker.mjs
+
+tests/independent-rb09-transaction-expiry.test.ts(24,10): error TS2322: Type '{ schemaVersion: 1; operationId: string; scope: SyncScope; operationHash: string; status: "applied" | "conflict"; serverRevision: string; authorizationRevision: string; authorizationExpiresAt: string; documents: SyncDocument[]; confirmedDocuments: SyncDocument[]; conflicts: [] | [...]; }' is not assignable to type 'SyncAck'.
+  Type '{ schemaVersion: 1; operationId: string; scope: SyncScope; operationHash: string; status: "applied" | "conflict"; serverRevision: string; authorizationRevision: string; authorizationExpiresAt: string; documents: SyncDocument[]; confirmedDocuments: SyncDocument[]; conflicts: [] | [...]; }' is not assignable to type 'AckBase & { status: "conflict"; conflicts: SyncConflict[]; }'.
+    Type '{ schemaVersion: 1; operationId: string; scope: SyncScope; operationHash: string; status: "applied" | "conflict"; serverRevision: string; authorizationRevision: string; authorizationExpiresAt: string; documents: SyncDocument[]; confirmedDocuments: SyncDocument[]; conflicts: [] | [...]; }' is not assignable to type '{ status: "conflict"; conflicts: SyncConflict[]; }'.
+      Types of property 'status' are incompatible.
+        Type '"applied" | "conflict"' is not assignable to type '"conflict"'.
+          Type '"applied"' is not assignable to type '"conflict"'.

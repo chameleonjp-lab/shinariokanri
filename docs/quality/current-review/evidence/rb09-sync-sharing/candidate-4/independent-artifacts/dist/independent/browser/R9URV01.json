@@ -1,0 +1,61 @@
+{
+  "id": "R9URV01",
+  "status": "pass",
+  "expected": "Correct behavior, not observed-bad success",
+  "failure": "",
+  "observation": {
+    "restoredProject": "3e5f9a2d-1fc5-4e96-b9ca-208288f4e811",
+    "coldReauthenticationRetainsProject": true,
+    "databaseNames": [
+      "scenario-manager-account-00000000-0000-4000-8000-000000000001",
+      "scenario-manager-local-v1"
+    ]
+  },
+  "calls": [
+    {
+      "type": "auth-fixture",
+      "role": "owner"
+    },
+    {
+      "type": "edge",
+      "action": "projects",
+      "input": {}
+    },
+    {
+      "type": "edge",
+      "action": "projects",
+      "input": {}
+    },
+    {
+      "type": "edge",
+      "action": "download_archive",
+      "input": {
+        "projectId": "3e5f9a2d-1fc5-4e96-b9ca-208288f4e811",
+        "serverRevision": "1"
+      }
+    },
+    {
+      "type": "edge",
+      "action": "pull",
+      "input": {
+        "projectId": "3e5f9a2d-1fc5-4e96-b9ca-208288f4e811"
+      }
+    },
+    {
+      "type": "edge",
+      "action": "projects",
+      "input": {}
+    },
+    {
+      "type": "auth-fixture",
+      "role": "owner"
+    },
+    {
+      "type": "edge",
+      "action": "projects",
+      "input": {}
+    }
+  ],
+  "pageErrors": [],
+  "environment": "Production Chromium153 at isolated5394, HTTPS backend mocks"
+}

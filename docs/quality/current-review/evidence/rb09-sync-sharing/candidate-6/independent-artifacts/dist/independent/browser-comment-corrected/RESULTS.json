@@ -1,0 +1,66 @@
+{
+  "generatedAt": "2026-10-08T21:16:23.910Z",
+  "sourceCommit": "73a279ae565c86fe25024d5bdedb5ad7e0c5eda8",
+  "sourceTree": "600f86880027abfd6508980e4cde46d59e91d5f5",
+  "counts": {
+    "pass": 1,
+    "fail": 0
+  },
+  "results": [
+    {
+      "id": "R9USC03",
+      "status": "pass",
+      "expected": "Correct behavior, not observed-bad success",
+      "failure": "",
+      "observation": {
+        "wire": {
+          "snapshot_id": "40000000-0000-4000-8000-000000000005",
+          "public_version_id": "public-edition-old",
+          "public_entity_id": "public-target",
+          "public_block_id": "old-public-block",
+          "start_cp": 1,
+          "end_cp": 2,
+          "body": "旧版の😀だけへの指摘"
+        }
+      },
+      "calls": [
+        {
+          "type": "auth-fixture",
+          "role": "reviewer"
+        },
+        {
+          "type": "edge",
+          "action": "projects",
+          "input": {}
+        },
+        {
+          "type": "public-list"
+        },
+        {
+          "type": "edge",
+          "action": "shared_snapshot",
+          "input": {
+            "snapshotId": "40000000-0000-4000-8000-000000000005"
+          }
+        },
+        {
+          "type": "comments",
+          "method": "GET",
+          "body": null
+        },
+        {
+          "type": "comments",
+          "method": "POST",
+          "body": "{\"snapshot_id\":\"40000000-0000-4000-8000-000000000005\",\"public_version_id\":\"public-edition-old\",\"public_entity_id\":\"public-target\",\"public_block_id\":\"old-public-block\",\"start_cp\":1,\"end_cp\":2,\"body\":\"旧版の😀だけへの指摘\"}"
+        },
+        {
+          "type": "comments",
+          "method": "GET",
+          "body": null
+        }
+      ],
+      "pageErrors": [],
+      "environment": "Production Chromium153 at isolated5396, HTTPS backend mocks"
+    }
+  ]
+}

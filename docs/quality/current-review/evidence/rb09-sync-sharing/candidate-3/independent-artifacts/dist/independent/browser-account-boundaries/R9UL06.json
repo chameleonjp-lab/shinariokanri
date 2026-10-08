@@ -1,0 +1,55 @@
+{
+  "id": "R9UL06",
+  "status": "pass",
+  "expected": "Correct behavior, not observed-bad success",
+  "failure": "",
+  "observation": {
+    "staleApprovalRefused": true,
+    "newInputRetainedUntilReapproval": true,
+    "guestProjectRetained": true,
+    "deletedOnlyCurrentAccount": true,
+    "state": {
+      "keys": [
+        "scenario-theme",
+        "scenario-workspace-input:v1:guest",
+        "scenario-last-project:guest",
+        "scenario-dedicated-sync:v1",
+        "scenario-timeline:v1:guest:dfdfe35f-0c46-4c76-9f6a-ebf421cc3b80",
+        "scenario-workspace-view:v1:b12f9077-46bf-4075-b0cb-c57fec734ae4:dfdfe35f-0c46-4c76-9f6a-ebf421cc3b80:desktop",
+        "scenario-local-view-user"
+      ],
+      "text": "{\"scenario-theme\":\"system\",\"scenario-workspace-input:v1:guest\":\"{\\\"drafts\\\":{},\\\"jsonBuffers\\\":{},\\\"settingsDrafts\\\":{},\\\"alternativeDrafts\\\":{}}\",\"scenario-last-project:guest\":\"dfdfe35f-0c46-4c76-9f6a-ebf421cc3b80\",\"scenario-dedicated-sync:v1\":\"{\\\"url\\\":\\\"https://review.invalid\\\",\\\"publishableKey\\\":\\\"sb_publishable_independent_fixture_only\\\",\\\"allowLocalHTTP\\\":true}\",\"scenario-timeline:v1:guest:dfdfe35f-0c46-4c76-9f6a-ebf421cc3b80\":\"{\\\"center\\\":\\\"0\\\",\\\"unit\\\":\\\"tick\\\",\\\"zoom\\\":1,\\\"span\\\":null,\\\"collapsed\\\":[],\\\"scrollTop\\\":0,\\\"scrollLeft\\\":0,\\\"calendarId\\\":\\\"proleptic-gregorian-second\\\",\\\"customTicks\\\":\\\"1\\\",\\\"customName\\\":\\\"独自単位\\\",\\\"selectedId\\\":null}\",\"scenario-workspace-view:v1:b12f9077-46bf-4075-b0cb-c57fec734ae4:dfdfe35f-0c46-4c76-9f6a-ebf421cc3b80:desktop\":\"{\\\"filters\\\":{\\\"world.tick\\\":\\\"\\\",\\\"world.checkpoint\\\":\\\"\\\",\\\"world.place\\\":\\\"\\\",\\\"workspace.hiddenPages\\\":\\\"[]\\\",\\\"workspace.page\\\":\\\"timeline\\\",\\\"workspace.structureTab\\\":\\\"chapters\\\",\\\"workspace.workTab\\\":\\\"backup\\\",\\\"workspace.timelineTab\\\":\\\"timeline\\\",\\\"workspace.kind\\\":\\\"character\\\",\\\"workspace.searchKind\\\":\\\"all\\\",\\\"workspace.statusFilter\\\":\\\"all\\\",\\\"workspace.query\\\":\\\"\\\",\\\"workspace.scrollY\\\":\\\"0\\\"},\\\"lastOpenedId\\\":null}\",\"scenario-local-view-user\":\"b12f9077-46bf-4075-b0cb-c57fec734ae4\"}",
+      "databaseNames": [
+        "scenario-manager-local-v1"
+      ]
+    }
+  },
+  "calls": [
+    {
+      "type": "auth-fixture",
+      "role": "editor"
+    },
+    {
+      "type": "edge",
+      "action": "projects",
+      "input": {}
+    },
+    {
+      "type": "edge",
+      "action": "projects",
+      "input": {}
+    },
+    {
+      "type": "edge",
+      "action": "team_read",
+      "input": {
+        "projectId": "16d364d4-e2ba-4563-b99d-675db95f8ec7"
+      }
+    },
+    {
+      "type": "auth-logout"
+    }
+  ],
+  "pageErrors": [],
+  "environment": "Production Chromium153 at isolated5393, HTTPS backend mocks"
+}

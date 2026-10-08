@@ -1,0 +1,1017 @@
+{
+  "schema_version": "1.0.0",
+  "plan_date": "2026-10-05",
+  "scope_basis": "2026-10-05 user requested implementation plan and PR for all intended features; all 104 requirements remain complete_v1 targets.",
+  "baseline_path": "docs/quality/pr2/review_baseline.json",
+  "baseline_commit": "ec0eaab51eba96a75eeccc9f2e9c585263a747f8",
+  "baseline_tree": "100b2886c0578d44430e0afebcaf99184fc92d63",
+  "requirements_total": 104,
+  "original_work_packages_total": 24,
+  "acceptance_total": 116,
+  "regression_groups_total": 6,
+  "batches": [
+    {
+      "id": "RB01",
+      "title": "不具合5件と保存速度の改善",
+      "packages": [],
+      "depends_on": [],
+      "outcome": "本文を直しても注記がずれず、条件を保存し、代替経路へ進める。伏線を見逃さず、不採用効果が実行されない。少量変更の保存で作品全体と全履歴を毎回処理しない。",
+      "work": [
+        "R02は提示時の証跡、R03は採用状態と原子効果、R01は文字範囲変換、R04は代替進行、R05は型付き複数値を直す。",
+        "R06はUI→検査→hash→DB→履歴の区間を計測してから、変更単位保存・依存範囲再検査・検証済み不変版・遅延読込を導入する。破損データの検査は取り込み/移行時に維持する。",
+        "R01–R06の再現を、正しい結果を期待する回帰検査へ置き換える。古い不具合を再現できた検査の成功は修正合格にしない。"
+      ],
+      "gate": "RG-R01–R05の正常/境界/画面検査が合格。RG-R06の区間計測、変更件数比例の保存、原子性・復元が合格。実端末p95の最終判定はRB10へ残す。",
+      "paths": [
+        "src/ui/Fields.tsx",
+        "src/ui/Reader.tsx",
+        "src/domain/runtime.ts",
+        "src/storage/store.ts",
+        "src/domain/production.ts"
+      ],
+      "risk": "保存方式の変更で履歴・取消・送信待ちの原子性を壊す。本文の重なる編集に誤った注記を残す。",
+      "size": "大",
+      "status": "planned",
+      "estimate_status": "unestimated",
+      "requirement_ids": []
+    },
+    {
+      "id": "RB02",
+      "title": "共通編集・参照・検索・索引を完成",
+      "packages": [
+        "WP01",
+        "WP02",
+        "WP04",
+        "WP05"
+      ],
+      "depends_on": [
+        "RB01"
+      ],
+      "outcome": "作品と資料を通常フォームで作成し、本文の名前から移動して戻れる。日本語索引、保存検索、一括編集、統合、作業位置の再開を全端末で使える。",
+      "work": [
+        "型/schema/共通コマンドを再利用し、雛形・追加項目・メモ変換・録音・候補リンク・段落移動を画面へ接続する。",
+        "五十音/分類索引、固定/動的一覧、複合検索、統合、変更影響を実操作へつなぐ。削除・型変更・一括変更は差分→原子確定→取消にする。",
+        "幅320/390/768/1024/1440とタップ/ドラッグ/キーボードで、戻り位置・入力保持・表示保存を共通部品へ統一する。"
+      ],
+      "gate": "担当20要件の本段階の実装・局所確認を完了する。後続結合を含む要件全体の受入はRB10で最終判定する。 通常操作と失敗操作を実行し、データ記法の手入力なしで保存→再読込→該当箇所への移動を完了する。AT-E01の前半とRG-R01/R05を再確認する。",
+      "paths": [
+        "src/App.tsx",
+        "src/ui/EntityEditor.tsx",
+        "src/ui/Fields.tsx",
+        "src/ui/components.tsx",
+        "src/domain/maintenance.ts",
+        "src/domain/model.ts"
+      ],
+      "risk": "名前の一致だけで同名人物を統合する。候補リンク、正本、表示位置を混同する。",
+      "size": "大",
+      "status": "planned",
+      "estimate_status": "unestimated",
+      "requirement_ids": [
+        "REQ-B01",
+        "REQ-B08",
+        "REQ-B10",
+        "REQ-B11",
+        "REQ-B24",
+        "REQ-F01",
+        "REQ-F02",
+        "REQ-F26",
+        "REQ-F27",
+        "REQ-F31",
+        "REQ-F32",
+        "REQ-F33",
+        "REQ-F56",
+        "REQ-F57",
+        "REQ-F58",
+        "REQ-F60",
+        "REQ-N01",
+        "REQ-N13",
+        "REQ-N16",
+        "REQ-N18"
+      ]
+    },
+    {
+      "id": "RB03",
+      "title": "暦・年表・関係図・共通世界を完成",
+      "packages": [
+        "WP06",
+        "WP07",
+        "WP08",
+        "WP09"
+      ],
+      "depends_on": [
+        "RB02"
+      ],
+      "outcome": "独自暦の年表で人物名を固定し、出来事を矢印で結ぶ。人物関係・家系・地図から年表へ往復し、選択時点の所属・所有・正体を確認する。",
+      "work": [
+        "暦単位、年齢、相対制約、日時変更の連動差分と取消、未定/不確定/負時刻を通常入力にする。",
+        "レーンの順序/階層/重なり、年表矢印、人物中心図、一段/二段/時点/経路、派生線の編集先への移動を実装する。",
+        "共通世界版の選択/更新、地図ピン、移動・場所履歴・所有・家系・認識者を接続する。後続で作る伏線/進行/制作の派生図も受け入れる共通描画口を用意する。"
+      ],
+      "gate": "担当17要件の本段階の実装・局所確認を完了する。後続結合を含む要件全体の受入はRB10で最終判定する。 日時/関係/図/地図を通常操作で編集でき、同じIDの表示が一致する。AT-E02とAT-E09の世界版部分、AT-E05の公開名ローカル投影を確認する。",
+      "paths": [
+        "src/domain/time.ts",
+        "src/ui/Timeline.tsx",
+        "src/ui/Lists.tsx",
+        "src/domain/projection.ts",
+        "src/ui/WorkPage.tsx"
+      ],
+      "risk": "暦の表示変更で世界日時を動かす。共通出来事への全員参加、正体・家系の漏れ、世界版の自動上書き。",
+      "size": "大",
+      "status": "planned",
+      "estimate_status": "unestimated",
+      "requirement_ids": [
+        "REQ-B02",
+        "REQ-B03",
+        "REQ-B04",
+        "REQ-B05",
+        "REQ-B06",
+        "REQ-B07",
+        "REQ-B09",
+        "REQ-B18",
+        "REQ-B21",
+        "REQ-F07",
+        "REQ-F08",
+        "REQ-F09",
+        "REQ-F10",
+        "REQ-F11",
+        "REQ-F12",
+        "REQ-F55",
+        "REQ-F59"
+      ]
+    },
+    {
+      "id": "RB04",
+      "title": "執筆・章順・作者別案・正本を完成",
+      "packages": [
+        "WP10"
+      ],
+      "depends_on": [
+        "RB02"
+      ],
+      "outcome": "筋別に場面を組み立て、要約と本文を往復し、章順で通読する。構成雛形・人物の変化・盛り上がりを確認し、別案を比較して正本を選べる。",
+      "work": [
+        "章/場面/出来事/筋の別情報と参照を保ち、雛形適用・カード/本文・場面前後の変化・ルビ/縦書きを通常操作にする。",
+        "作者別案を版付きで分離し、差分→採用範囲→正本指定を実装する。公開済みsnapshotを変更しない。",
+        "章順通読の提示記録を試読と同じ契約で生成し、RB05の伏線確認へ渡す。"
+      ],
+      "gate": "担当8要件の本段階の実装・局所確認を完了する。後続結合を含む要件全体の受入はRB10で最終判定する。 回想や章移動で世界日付を変えず、別案編集と正本採用でも旧公開版・台詞/段落ID対応を保持する。",
+      "paths": [
+        "src/ui/Lists.tsx",
+        "src/ui/EntityEditor.tsx",
+        "src/domain/types.ts",
+        "src/domain/production.ts",
+        "src/storage/store.ts"
+      ],
+      "risk": "作者の別案とゲーム分岐が混ざる。本文分割で参照位置と公開版を失う。",
+      "size": "大",
+      "status": "planned",
+      "estimate_status": "unestimated",
+      "requirement_ids": [
+        "REQ-B13",
+        "REQ-B20",
+        "REQ-F03",
+        "REQ-F04",
+        "REQ-F05",
+        "REQ-F06",
+        "REQ-F25",
+        "REQ-N19"
+      ]
+    },
+    {
+      "id": "RB05",
+      "title": "状態・分岐・試読・全経路の伏線確認を完成",
+      "packages": [
+        "WP11",
+        "WP12",
+        "WP13",
+        "WP14",
+        "WP15"
+      ],
+      "depends_on": [
+        "RB03",
+        "RB04"
+      ],
+      "outcome": "階層分岐や共通会話を作り、開始状態と二経路の差を確認する。初期化・周回・巻戻・保存経路を使い、手掛かり不足の経路や人物認識の候補を根拠付きで調べる。",
+      "work": [
+        "状態辞書・算出・遷移・相互排他・場面/章reset、型付き条件と効果を通常フォームから同一実行処理へつなぐ。",
+        "階層図、きっかけ/単発/期限、クエスト/会話、共通場面の固定参照/複製/上書き、短い反応、途中開始・合流比較を完成させる。",
+        "全入口の上限付き探索に提示時伏線評価を接続し、任意/代替情報、回収方針/期限、知識の出所、回帰経路集合と変更再確認を実装する。RB03の伏線・進行図へ投影する。"
+      ],
+      "gate": "担当26要件の本段階の実装・局所確認を完了する。後続結合を含む要件全体の受入はRB10で最終判定する。 正常/未知/禁止/上限/取消を確認する。AT-E03/E04/E10を通し、RG-R02–R05を再実行する。未探索を問題なしと表示しない。",
+      "paths": [
+        "src/domain/conditions.ts",
+        "src/domain/runtime.ts",
+        "src/ui/Reader.tsx",
+        "src/ui/Lists.tsx",
+        "src/ui/Fields.tsx"
+      ],
+      "risk": "提示順と世界時点の混同。状態を持たない到達性検査で伏線安全を断定する。未知や途中開始を通し確認へ換算する。",
+      "size": "特大",
+      "status": "planned",
+      "estimate_status": "unestimated",
+      "requirement_ids": [
+        "REQ-B14",
+        "REQ-B15",
+        "REQ-B16",
+        "REQ-B17",
+        "REQ-B19",
+        "REQ-B22",
+        "REQ-F13",
+        "REQ-F14",
+        "REQ-F15",
+        "REQ-F16",
+        "REQ-F17",
+        "REQ-F18",
+        "REQ-F19",
+        "REQ-F20",
+        "REQ-F37",
+        "REQ-F38",
+        "REQ-F39",
+        "REQ-F40",
+        "REQ-F41",
+        "REQ-F43",
+        "REQ-F44",
+        "REQ-F45",
+        "REQ-F46",
+        "REQ-F47",
+        "REQ-N05",
+        "REQ-N12"
+      ]
+    },
+    {
+      "id": "RB06",
+      "title": "完全保存・移行・履歴・通信なしの復元を完成",
+      "packages": [
+        "WP03",
+        "WP16"
+      ],
+      "depends_on": [
+        "RB02",
+        "RB03",
+        "RB04",
+        "RB05"
+      ],
+      "outcome": "全作品情報と素材を持ち出し、空環境へ復元できる。別作品のID対応統合、単体復元、過去形式移行、再起動・容量不足・更新から復帰できる。",
+      "work": [
+        "RB01の変更単位保存を全種類へ広げ、履歴の復元必要量、固定版、削除/取消、送信待ち、移行復元点を一つの整合単位にする。",
+        "全種類・共通世界・別案・公開版・添付・復元用履歴の往復fixtureを用意し、別作品統合の明示ID対応と差分を実装する。",
+        "旧1.0.0ファイルを固定して移行互換表を作り、未知版拒否、上限、破損、途中取消、素材不足、オフライン更新と再開を確認する。"
+      ],
+      "gate": "担当7要件の本段階の実装・局所確認を完了する。後続結合を含む要件全体の受入はRB10で最終判定する。 関連するAT-E07/E12のローカル部分が合格。空環境へ意味情報と素材hashが一致し、拒否/取消時は既存作品・履歴・素材が不変。RB01の保存改善を再計測する。",
+      "paths": [
+        "src/storage/store.ts",
+        "src/storage/archive.ts",
+        "src/storage/archive.worker.ts",
+        "src/ui/WorkPage.tsx",
+        "scripts/build/service-worker.mjs"
+      ],
+      "risk": "完全保存と軽量出力の混同。容量超過や移行取消で一部置換する。履歴改善で旧公開版を復元できなくする。",
+      "size": "大",
+      "status": "planned",
+      "estimate_status": "unestimated",
+      "requirement_ids": [
+        "REQ-B12",
+        "REQ-B23",
+        "REQ-F35",
+        "REQ-N06",
+        "REQ-N09",
+        "REQ-N11",
+        "REQ-N14"
+      ]
+    },
+    {
+      "id": "RB07",
+      "title": "台詞・翻訳・収録・素材・絵コンテを完成",
+      "packages": [
+        "WP19",
+        "WP20"
+      ],
+      "depends_on": [
+        "RB04",
+        "RB06"
+      ],
+      "outcome": "台詞分割/統合後も翻訳・音声を追え、原文変更だけを見直せる。本文と素材・演出・絵コンテを並べ、口調・用語の候補と不足素材を確認できる。",
+      "work": [
+        "旧→新台詞/選択肢ID対応、原文hashの承認、担当別出力、人物の声/用語/例外を通常操作へ接続する。",
+        "全資料形式、出所/取得日/再配布、演出時刻、仮/完成/不足素材、差替え影響と確認待ちを実装する。",
+        "台詞・素材の型追加があれば、RB06の完全保存往復と公開名/安全表示へ同時に反映する。"
+      ],
+      "gate": "担当7要件の本段階の実装・局所確認を完了する。後続結合を含む要件全体の受入はRB10で最終判定する。 関連するAT-E08が合格。改名/並べ替えでは音声対応が不変、内容変更/分割/復元は見直し対象になる。素材込みAT-E07を再実行する。",
+      "paths": [
+        "src/domain/production.ts",
+        "src/ui/AssetPreview.tsx",
+        "src/ui/fieldSpecs.ts",
+        "src/domain/attachments.ts",
+        "src/domain/exports.ts"
+      ],
+      "risk": "原文IDと内容確認の混同。資料の能動内容実行。演出秒数と世界時刻の混同。",
+      "size": "大",
+      "status": "planned",
+      "estimate_status": "unestimated",
+      "requirement_ids": [
+        "REQ-F21",
+        "REQ-F22",
+        "REQ-F23",
+        "REQ-F28",
+        "REQ-F48",
+        "REQ-F53",
+        "REQ-N10"
+      ]
+    },
+    {
+      "id": "RB08",
+      "title": "制作進行・媒体・出力・ゲーム受渡しを完成",
+      "packages": [
+        "WP21",
+        "WP22"
+      ],
+      "depends_on": [
+        "RB03",
+        "RB05",
+        "RB07"
+      ],
+      "outcome": "物語と実際の遊びを結び、制作工程・依存・見積・媒体版を管理する。用途別出力と提案別案取り込みを使い、汎用ゲーム受取処理で同じ分岐結果を確認する。",
+      "work": [
+        "企画/判断と場面のプレイ行動、工程別状態、制作依存図、固有数/経路量、仮定付き時間、旧公開媒体版との比較を作る。",
+        "完全/読み物/簡易体験/runtime/翻訳/制作/相談の全profileを検証し、内部条件・物品・知識・再利用を簡易体験にも同じ規則で提供する。",
+        "外部値契約と一つの汎用ブラウザーゲーム受取例を用意し、実際の処理結果と台詞/素材ID・仕様版を往復する。相談提案は作者別案へ取り込み、正本へ自動適用しない。"
+      ],
+      "gate": "担当9要件の本段階の実装・局所確認を完了する。後続結合を含む要件全体の受入はRB10で最終判定する。 関連するAT-E09/E10の受渡し部分が合格。媒体の旧公開版と実期限が不変、再利用は固有制作数で一回、仮値と実測が区別される。全出力の除外/互換表を記録する。",
+      "paths": [
+        "src/domain/production.ts",
+        "src/domain/exports.ts",
+        "src/ui/WorkPage.tsx",
+        "src/ui/Lists.tsx",
+        "docs/implementation/EXPORT_COMPATIBILITY.md"
+      ],
+      "risk": "全engineへの対応を宣言する。作者メモ/秘密を公開出力へ含める。執筆完了を実装/収録完了へ流用する。",
+      "size": "大",
+      "status": "planned",
+      "estimate_status": "unestimated",
+      "requirement_ids": [
+        "REQ-F24",
+        "REQ-F36",
+        "REQ-F42",
+        "REQ-F49",
+        "REQ-F50",
+        "REQ-F51",
+        "REQ-F52",
+        "REQ-F54",
+        "REQ-N20"
+      ]
+    },
+    {
+      "id": "RB09",
+      "title": "実際の端末間同期・共有・指摘を完成",
+      "packages": [
+        "WP17",
+        "WP18"
+      ],
+      "depends_on": [
+        "RB06",
+        "RB08"
+      ],
+      "outcome": "同じ作品を二端末で通信なしに編集し、同じ本文の食い違いを共通元と二案から解決できる。限定共有と役割別の取得・指摘・編集を実サーバーで使える。",
+      "work": [
+        "専用接続先/認証/現行quota/費用を具体化し、サーバーmembership・revision・冪等操作・型/参照検査・非公開素材を実装する。準備できるコードと構成資料を先に作る。",
+        "確定サーバー版からoutboxを準備し、依存操作rebase、ackの端末確定、失敗再送、添付bytes同期、競合解決と解決中更新を画面へつなぐ。",
+        "公開/限定投影、指摘の段落/線位置、role変更/期限/失効、アカウント切替、索引/地図/ファイル名/件数の直接API漏れを検証する。"
+      ],
+      "gate": "担当5要件の本段階の実装・局所確認を完了する。後続結合を含む要件全体の受入はRB10で最終判定する。 関連するAT-E05/E06の実接続証拠が合格。メモリサーバー試験の成功を実同期・権限の合格へ流用しない。未送信・認証失効・権限撤回と私有素材の試験を含む。",
+      "paths": [
+        "src/sync/adapter.ts",
+        "src/sync/outbox.ts",
+        "src/sync/merge.ts",
+        "src/sync/validation.ts",
+        "src/domain/projection.ts",
+        "src/App.tsx"
+      ],
+      "risk": "別用途の実験場DB利用。最終書込で片方を消す。RLSだけ設定してAPI公開権限を忘れる。私有正本を閲覧者へ渡す。",
+      "size": "特大",
+      "status": "planned",
+      "estimate_status": "unestimated",
+      "requirement_ids": [
+        "REQ-F29",
+        "REQ-F30",
+        "REQ-F34",
+        "REQ-N07",
+        "REQ-N08"
+      ]
+    },
+    {
+      "id": "RB10",
+      "title": "全受入・実端末・性能・復元・完成候補を確認",
+      "packages": [
+        "WP23",
+        "WP24"
+      ],
+      "depends_on": [
+        "RB01",
+        "RB02",
+        "RB03",
+        "RB04",
+        "RB05",
+        "RB06",
+        "RB07",
+        "RB08",
+        "RB09"
+      ],
+      "outcome": "全104要件・12総合ケースに同じ完成候補版の証拠が揃い、使い方・復元・互換性・容量/費用を説明できる。独立レビュー後に公開候補を提出する。",
+      "work": [
+        "116受入の正常・失敗、6回帰検査群、実端末/支援技術、Standard/Large・30回p95・2時間、全情報復元、二端末/直接APIを統合する。",
+        "診断の実接続と任意持出し、利用/復元/競合ガイド、対応版/ライセンス、現行費用、完成commit/base/build-info/cache/直リンクの証拠を整える。",
+        "別レビューで仕様/コード/通常操作/証拠を照合し、指摘を修正して影響範囲を再検査する。公開後の版確認手順を完成候補に添える。"
+      ],
+      "gate": "116ケースと24工程が元の条件で完了し、6回帰検査群と全品質gateに失敗/未実行がない。scripts/check_release.pyに同じcommitの実証拠を渡して成功する。公開操作は完成候補確認後の別工程。",
+      "paths": [
+        "docs/implementation/USER_GUIDE.md",
+        "docs/implementation/RELEASE.md",
+        "scripts/check_release.py",
+        ".github/workflows/release.yml",
+        "src/diagnostics.ts"
+      ],
+      "risk": "自動試験数を受入完了へ換算する。別commitの証拠、架空の実端末合格、費用未確認で公開する。",
+      "size": "特大",
+      "status": "planned",
+      "estimate_status": "unestimated",
+      "requirement_ids": [
+        "REQ-N02",
+        "REQ-N03",
+        "REQ-N04",
+        "REQ-N15",
+        "REQ-N17"
+      ]
+    }
+  ],
+  "work_packages": [
+    {
+      "id": "WP01",
+      "batch_id": "RB02",
+      "original_deliverables": "型定義、版付きschema、整数tick・条件の三値評価・投影の純粋処理、試験固定データ、文書検査とアプリ検査のCIを用意する。",
+      "original_completion_gate": "必須型・参照・ID・三値評価の試験があり、文書の追跡とアプリ結果を別報告する。",
+      "requirement_ids": [
+        "REQ-N16"
+      ],
+      "acceptance_ids": [
+        "AT-N16"
+      ],
+      "status": "planned",
+      "result": "not_run"
+    },
+    {
+      "id": "WP02",
+      "batch_id": "RB02",
+      "original_deliverables": "画面幅別ナビゲーション、詳細編集、一覧代替、キーボードとタッチ、エラー表示、端末別ビュー状態、キャッシュ起動を実装する。",
+      "original_completion_gate": "スマートフォン単独の作成・条件・線編集・読み込み操作の導線があり、文字拡大とIMEを妨げない。",
+      "requirement_ids": [
+        "REQ-F31",
+        "REQ-F32",
+        "REQ-F33",
+        "REQ-N01",
+        "REQ-N18"
+      ],
+      "acceptance_ids": [
+        "AT-F31",
+        "AT-F32",
+        "AT-F33",
+        "AT-N01",
+        "AT-N18"
+      ],
+      "status": "planned",
+      "result": "not_run"
+    },
+    {
+      "id": "WP03",
+      "batch_id": "RB06",
+      "original_deliverables": "原子的コマンド、IndexedDB保存、安定ID、履歴・取消・単体復元入口、送信待ち箱、移行復元点を実装する。",
+      "original_completion_gate": "容量不足・再起動・重複操作・取消を含む保存試験が成功し、成功前に保存済みを出さない。",
+      "requirement_ids": [
+        "REQ-B23",
+        "REQ-N06",
+        "REQ-N11"
+      ],
+      "acceptance_ids": [
+        "AT-B23",
+        "AT-N06",
+        "AT-N11"
+      ],
+      "status": "planned",
+      "result": "not_run"
+    },
+    {
+      "id": "WP04",
+      "batch_id": "RB02",
+      "original_deliverables": "人物・出来事・場所・物品・メモのCRUD、参加役割、型付き項目、追加雛形、原メモからの変換を実装する。",
+      "original_completion_gate": "名前または要約のみから始められ、不正な型変更を拒否し、参照のある削除は影響を示す。",
+      "requirement_ids": [
+        "REQ-B01",
+        "REQ-B08",
+        "REQ-B11",
+        "REQ-F01",
+        "REQ-F02",
+        "REQ-F56"
+      ],
+      "acceptance_ids": [
+        "AT-B01",
+        "AT-B08",
+        "AT-B11",
+        "AT-F01",
+        "AT-F02",
+        "AT-F56"
+      ],
+      "status": "planned",
+      "result": "not_run"
+    },
+    {
+      "id": "WP05",
+      "batch_id": "RB02",
+      "original_deliverables": "IDリンク・段落リンク・逆参照、日本語検索、索引、固定/動的一覧、一括変更、統合、変更影響を実装する。",
+      "original_completion_gate": "同名・別名・改名・削除・一般語の候補除外を検証し、統合後も全参照を追える。",
+      "requirement_ids": [
+        "REQ-B10",
+        "REQ-B24",
+        "REQ-F26",
+        "REQ-F27",
+        "REQ-F57",
+        "REQ-F58",
+        "REQ-F60",
+        "REQ-N13"
+      ],
+      "acceptance_ids": [
+        "AT-B10",
+        "AT-B24",
+        "AT-F26",
+        "AT-F27",
+        "AT-F57",
+        "AT-F58",
+        "AT-F60",
+        "AT-N13"
+      ],
+      "status": "planned",
+      "result": "not_run"
+    },
+    {
+      "id": "WP06",
+      "batch_id": "RB03",
+      "original_deliverables": "独自暦、負tick、不確定範囲、相対制約、年齢、基準点、変更影響と取消を実装する。",
+      "original_completion_gate": "表示単位と基準点変更では日時が不変。循環・閏・未定・固定日時の衝突試験を通す。",
+      "requirement_ids": [
+        "REQ-B05",
+        "REQ-B06",
+        "REQ-B21",
+        "REQ-F07",
+        "REQ-F08"
+      ],
+      "acceptance_ids": [
+        "AT-B05",
+        "AT-B06",
+        "AT-B21",
+        "AT-F07",
+        "AT-F08"
+      ],
+      "status": "planned",
+      "result": "not_run"
+    },
+    {
+      "id": "WP07",
+      "batch_id": "RB03",
+      "original_deliverables": "固定ラベル、共通/人物レーン、グループ、多重参照、期間表示、選択同期、局所横移動と一覧編集を実装する。",
+      "original_completion_gate": "スマートフォンで横移動しながら人物を識別でき、多重表示の編集は一つの本体へ反映する。",
+      "requirement_ids": [
+        "REQ-B02",
+        "REQ-B03",
+        "REQ-B04"
+      ],
+      "acceptance_ids": [
+        "AT-B02",
+        "AT-B03",
+        "AT-B04"
+      ],
+      "status": "planned",
+      "result": "not_run"
+    },
+    {
+      "id": "WP08",
+      "batch_id": "RB03",
+      "original_deliverables": "方向・時期・経路・根拠付き関係、図の種別、凡例、階層、一段/二段表示、タップによる線編集、関係表を実装する。",
+      "original_completion_gate": "図配置は表示状態だけを変え、色を見分けなくても関係を読み編集できる。",
+      "requirement_ids": [
+        "REQ-B07",
+        "REQ-B09",
+        "REQ-F55",
+        "REQ-F59"
+      ],
+      "acceptance_ids": [
+        "AT-B07",
+        "AT-B09",
+        "AT-F55",
+        "AT-F59"
+      ],
+      "status": "planned",
+      "result": "not_run"
+    },
+    {
+      "id": "WP09",
+      "batch_id": "RB03",
+      "original_deliverables": "共通設定の版参照、地図階層、場所変化、移動、所有履歴、家系・別名・認識者を実装する。",
+      "original_completion_gate": "地図なしでも使え、時期/経路で表示を切替え、共通設定更新で旧作品を壊さない。",
+      "requirement_ids": [
+        "REQ-B18",
+        "REQ-F09",
+        "REQ-F10",
+        "REQ-F11",
+        "REQ-F12"
+      ],
+      "acceptance_ids": [
+        "AT-B18",
+        "AT-F09",
+        "AT-F10",
+        "AT-F11",
+        "AT-F12"
+      ],
+      "status": "planned",
+      "result": "not_run"
+    },
+    {
+      "id": "WP10",
+      "batch_id": "RB04",
+      "original_deliverables": "世界出来事と場面の対応、章順、筋、目標・変化、雛形・緊張値、要約/本文/メモ、ルビ/縦書き確認、正本/別案/公開版を実装する。",
+      "original_completion_gate": "回想を移動しても世界日付は不変。別案と公開版が独立し、未入力場面も作れる。",
+      "requirement_ids": [
+        "REQ-B13",
+        "REQ-B20",
+        "REQ-F03",
+        "REQ-F04",
+        "REQ-F05",
+        "REQ-F06",
+        "REQ-F25",
+        "REQ-N19"
+      ],
+      "acceptance_ids": [
+        "AT-B13",
+        "AT-B20",
+        "AT-F03",
+        "AT-F04",
+        "AT-F05",
+        "AT-F06",
+        "AT-F25",
+        "AT-N19"
+      ],
+      "status": "planned",
+      "result": "not_run"
+    },
+    {
+      "id": "WP11",
+      "batch_id": "RB05",
+      "original_deliverables": "状態辞書、型/範囲/初期化/算出、条件AST、三値説明、遷移表、参照/書込一覧、効果の原子適用を実装する。",
+      "original_completion_gate": "括弧、未定義、禁止遷移、循環算出、重複トリガーを固定データで検証する。",
+      "requirement_ids": [
+        "REQ-B15",
+        "REQ-F37",
+        "REQ-F38",
+        "REQ-F39",
+        "REQ-F40",
+        "REQ-F41"
+      ],
+      "acceptance_ids": [
+        "AT-B15",
+        "AT-F37",
+        "AT-F38",
+        "AT-F39",
+        "AT-F40",
+        "AT-F41"
+      ],
+      "status": "planned",
+      "result": "not_run"
+    },
+    {
+      "id": "WP12",
+      "batch_id": "RB05",
+      "original_deliverables": "入口/出口のある階層分岐、選択/自動/終端、トリガー、会話/クエスト、共通場面の参照・複製・上書きを実装する。",
+      "original_completion_gate": "条件・効果の規則に一致し、入口不整合と選択肢ゼロを終端から分ける。",
+      "requirement_ids": [
+        "REQ-B14",
+        "REQ-B22",
+        "REQ-F13",
+        "REQ-F14",
+        "REQ-F19"
+      ],
+      "acceptance_ids": [
+        "AT-B14",
+        "AT-B22",
+        "AT-F13",
+        "AT-F14",
+        "AT-F19"
+      ],
+      "status": "planned",
+      "result": "not_run"
+    },
+    {
+      "id": "WP13",
+      "batch_id": "RB05",
+      "original_deliverables": "途中開始スナップショット、選択戻し、状態差分、合流比較、既読/抽選/周回、記録付き試読を実装する。",
+      "original_completion_gate": "鍵有無の二経路と抽選が巻き戻せ、合流で状態を初期化しない。",
+      "requirement_ids": [
+        "REQ-B16",
+        "REQ-F15",
+        "REQ-F16",
+        "REQ-F20"
+      ],
+      "acceptance_ids": [
+        "AT-B16",
+        "AT-F15",
+        "AT-F16",
+        "AT-F20"
+      ],
+      "status": "planned",
+      "result": "not_run"
+    },
+    {
+      "id": "WP14",
+      "batch_id": "RB05",
+      "original_deliverables": "参照/行止まり/到達性候補、探索上限、根拠経路、複数の網羅率、回帰経路・変更後再確認を実装する。",
+      "original_completion_gate": "未確認・意図した終端・探索打切り・外部応答仮実が明確である。",
+      "requirement_ids": [
+        "REQ-F17",
+        "REQ-F18",
+        "REQ-N05",
+        "REQ-N12"
+      ],
+      "acceptance_ids": [
+        "AT-F17",
+        "AT-F18",
+        "AT-N05",
+        "AT-N12"
+      ],
+      "status": "planned",
+      "result": "not_run"
+    },
+    {
+      "id": "WP15",
+      "batch_id": "RB05",
+      "original_deliverables": "独立伏線、手掛かり/回収/段階、経路上の提示検査、真実/証言/知識、回収方針と期限を実装する。",
+      "original_completion_gate": "手掛かりなしで真相へ行く証人経路を示し、理解を自動判定しない。",
+      "requirement_ids": [
+        "REQ-B17",
+        "REQ-B19",
+        "REQ-F43",
+        "REQ-F44",
+        "REQ-F45",
+        "REQ-F46",
+        "REQ-F47"
+      ],
+      "acceptance_ids": [
+        "AT-B17",
+        "AT-B19",
+        "AT-F43",
+        "AT-F44",
+        "AT-F45",
+        "AT-F46",
+        "AT-F47"
+      ],
+      "status": "planned",
+      "result": "not_run"
+    },
+    {
+      "id": "WP16",
+      "batch_id": "RB06",
+      "original_deliverables": "版付き専用archive、manifest/ハッシュ、素材包含、事前検査、追加/置換/統合、移行、バックアップと復元を実装する。",
+      "original_completion_gate": "空環境への全情報往復、破損/危険パス/上限超過拒否、既存データ不変を確認する。",
+      "requirement_ids": [
+        "REQ-B12",
+        "REQ-F35",
+        "REQ-N09",
+        "REQ-N14"
+      ],
+      "acceptance_ids": [
+        "AT-B12",
+        "AT-F35",
+        "AT-N09",
+        "AT-N14"
+      ],
+      "status": "planned",
+      "result": "not_run"
+    },
+    {
+      "id": "WP17",
+      "batch_id": "RB09",
+      "original_deliverables": "認証・作品membership、revision比較、冪等操作、三方向差分、削除対編集、添付同期、権限撤回を実装する。",
+      "original_completion_gate": "二端末同時編集/再送/通信断の試験と非メンバーRLS試験を通し、秘密キーを前面へ出さない。",
+      "requirement_ids": [
+        "REQ-F34",
+        "REQ-N07"
+      ],
+      "acceptance_ids": [
+        "AT-F34",
+        "AT-N07"
+      ],
+      "status": "planned",
+      "result": "not_run"
+    },
+    {
+      "id": "WP18",
+      "batch_id": "RB09",
+      "original_deliverables": "閲覧/指摘/編集/管理、限定共有snapshot、公開投影、コメント版追跡、secretデータ/素材/検索の除外を実装する。",
+      "original_completion_gate": "正体の本名・家系・ファイル名・参照数まで限定閲覧者から取れない。",
+      "requirement_ids": [
+        "REQ-F29",
+        "REQ-F30",
+        "REQ-N08"
+      ],
+      "acceptance_ids": [
+        "AT-F29",
+        "AT-F30",
+        "AT-N08"
+      ],
+      "status": "planned",
+      "result": "not_run"
+    },
+    {
+      "id": "WP19",
+      "batch_id": "RB07",
+      "original_deliverables": "不変台詞/選択肢ID、分割対応、言語別原稿、内容ハッシュ、音声/収録版、口調・用語・例外と担当別出力を実装する。",
+      "original_completion_gate": "並替/改名で音声がずれず、原文の変更は翻訳/収録を確認待ちにする。",
+      "requirement_ids": [
+        "REQ-F21",
+        "REQ-F23",
+        "REQ-F48"
+      ],
+      "acceptance_ids": [
+        "AT-F21",
+        "AT-F23",
+        "AT-F48"
+      ],
+      "status": "planned",
+      "result": "not_run"
+    },
+    {
+      "id": "WP20",
+      "batch_id": "RB07",
+      "original_deliverables": "素材版/不足/仮完成、資料の出所、台詞演出、絵コンテ、秒単位timecode、安全な添付表示を実装する。",
+      "original_completion_gate": "本文だけで読め、素材変更先を追え、演出時間と世界時間を混同しない。",
+      "requirement_ids": [
+        "REQ-F22",
+        "REQ-F28",
+        "REQ-F53",
+        "REQ-N10"
+      ],
+      "acceptance_ids": [
+        "AT-F22",
+        "AT-F28",
+        "AT-F53",
+        "AT-N10"
+      ],
+      "status": "planned",
+      "result": "not_run"
+    },
+    {
+      "id": "WP21",
+      "batch_id": "RB08",
+      "original_deliverables": "企画意図/判断、プレイ行動/実装対応、工程別状態、期限/依存、固有制作量と経路量、媒体版を実装する。",
+      "original_completion_gate": "共通場面を制作数で二重計上せず、公開済み媒体版と改訂案を比較できる。",
+      "requirement_ids": [
+        "REQ-F49",
+        "REQ-F50",
+        "REQ-F51",
+        "REQ-F52",
+        "REQ-F54"
+      ],
+      "acceptance_ids": [
+        "AT-F49",
+        "AT-F50",
+        "AT-F51",
+        "AT-F52",
+        "AT-F54"
+      ],
+      "status": "planned",
+      "result": "not_run"
+    },
+    {
+      "id": "WP22",
+      "batch_id": "RB08",
+      "original_deliverables": "完全/公開/試遊/制作/相談プロファイル、汎用runtime JSON、外部値契約、対応表、AI相談用手動出力・別案取り込みを実装する。",
+      "original_completion_gate": "未対応機能を黙って落とさず、秘密・没案・作者メモの除外と対象版が確認できる。",
+      "requirement_ids": [
+        "REQ-F24",
+        "REQ-F36",
+        "REQ-F42",
+        "REQ-N20"
+      ],
+      "acceptance_ids": [
+        "AT-F24",
+        "AT-F36",
+        "AT-F42",
+        "AT-N20"
+      ],
+      "status": "planned",
+      "result": "not_run"
+    },
+    {
+      "id": "WP23",
+      "batch_id": "RB10",
+      "original_deliverables": "全受入試験の結果、iPhone/iPad/PC、アクセシビリティ、標準/大規模性能、障害注入、復元訓練を収集する。",
+      "original_completion_gate": "104要件と総合経路の結果に未実行・失敗が残らず、端末と版付き証拠がある。",
+      "requirement_ids": [
+        "REQ-N02",
+        "REQ-N03",
+        "REQ-N04"
+      ],
+      "acceptance_ids": [
+        "AT-N02",
+        "AT-N03",
+        "AT-N04",
+        "AT-E01",
+        "AT-E02",
+        "AT-E03",
+        "AT-E04",
+        "AT-E05",
+        "AT-E06",
+        "AT-E07",
+        "AT-E08",
+        "AT-E09",
+        "AT-E10",
+        "AT-E11",
+        "AT-E12"
+      ],
+      "status": "planned",
+      "result": "not_run"
+    },
+    {
+      "id": "WP24",
+      "batch_id": "RB10",
+      "original_deliverables": "利用ガイド、診断/バックアップ/移行手順、公開候補build、構成/費用/commit確認、互換表と次版規則を整理する。",
+      "original_completion_gate": "完成版の対象commitと試験結果を対応させ、公開前のレビューで費用と変更点を確認できる。",
+      "requirement_ids": [
+        "REQ-N15",
+        "REQ-N17"
+      ],
+      "acceptance_ids": [
+        "AT-N15",
+        "AT-N17"
+      ],
+      "status": "planned",
+      "result": "not_run"
+    }
+  ],
+  "status": "planned",
+  "full_acceptance_declared": false,
+  "implementation_in_this_pr": false,
+  "quality_gates": [
+    "data_behavior",
+    "real_devices",
+    "accessibility_manual",
+    "performance",
+    "restore",
+    "sync_live",
+    "permissions_live",
+    "compatibility",
+    "independent_review",
+    "hosting_costs"
+  ],
+  "external_prerequisites": [
+    {
+      "id": "ENV-SYNC",
+      "needed_by": "RB09",
+      "status": "unresolved",
+      "needed": "専用接続先・認証方法・実権限試験用アカウント・現行容量/費用。",
+      "prepare_now": "構成表、migration計画、adapter、RLS/Storage試験、競合UIを先に作る。",
+      "rule": "別用途の実験場DBを利用しない。新規課金は自動有効化しない。未解決でも要件を削除せず、実接続受入は未実行のまま保持する。"
+    },
+    {
+      "id": "ENV-DEVICES",
+      "needed_by": "RB10",
+      "status": "unresolved",
+      "needed": "実iPhone/iPadとPC/各OSブラウザー、VoiceOver/NVDAの検証機会。",
+      "prepare_now": "候補build、短い操作手順、fixture、証拠記録を用意する。iPhoneで行える確認を分離する。",
+      "rule": "PC/iPadのない時点で実機合格を書かない。ユーザーの毎回PC利用を前提にしない。"
+    },
+    {
+      "id": "ENV-CONSUMER",
+      "needed_by": "RB08",
+      "status": "planned",
+      "needed": "汎用runtime JSONを受け取り実結果を返すブラウザーゲーム例と対応版。",
+      "prepare_now": "同じrepo内の独立例と固定往復fixtureを用意する。",
+      "rule": "試読から実ゲーム副作用を直接実行しない。既存ランキングを再開/接続しない。個別engine全対応は約束しない。"
+    }
+  ],
+  "sources": [
+    {
+      "id": "CP-S01",
+      "url": "https://supabase.com/changelog",
+      "checked_at": "2026-10-05",
+      "scope": "実装開始時にData API公開設定と対象版の変更を再確認する。Markdown index取得はContent-Type理由で失敗しHTML一覧を確認した。"
+    },
+    {
+      "id": "CP-S02",
+      "url": "https://supabase.com/docs/guides/database/postgres/row-level-security",
+      "checked_at": "2026-10-05",
+      "scope": "公開schemaでの行権限、UPDATEのUSING/WITH CHECK、user_metadataを権限根拠にしない。"
+    },
+    {
+      "id": "CP-S03",
+      "url": "https://supabase.com/docs/guides/storage/security/access-control",
+      "checked_at": "2026-10-05",
+      "scope": "private素材、Storage操作権限、upsertのSELECT/UPDATE条件。"
+    }
+  ]
+}

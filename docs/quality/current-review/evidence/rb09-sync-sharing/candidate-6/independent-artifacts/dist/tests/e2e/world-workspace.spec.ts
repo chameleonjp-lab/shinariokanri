@@ -1,0 +1,62 @@
+import { readFile } from 'node:fs/promises';
+import { expect, test, type Page } from '@playwright/test';
+import { createEntity, createProject, textToRichText } from '../../src/domain/model';
+import { createWorldSnapshot } from '../../src/domain/world';
+import { exportScenario, inspectScenario } from '../../src/storage/archive';
+import type { ProjectData } from '../../src/domain/types';
+async function importProject(page: Page, project: ProjectData) {
+  await page.getByRole('button', { name: '保存ファイルを読み込む', exact: true }).click();
+  await page.locator('input[type=file]').setInputFiles({ name: 'world.scenario', mimeType: 'application/octet-stream', buffer: Buffer.from(await exportScenario(project)) });
+  await page.getByLabel('復元方法と対象への影響を確認しました').check();
+  await page.getByRole('button', { name: 'この内容で復元する', exact: true }).click();
+}
+async function navigate(page: Page, name: RegExp) {
+  const menu = page.getByRole('button', { name: 'メニューを開く' }); if (await menu.isVisible()) await menu.click();
+  await page.getByRole('button', { name }).first().click();
+}
+test('世界版の選択・借用参照・固定表示を通常画面で保存し、完全保存にも同じ版を保持する', async ({ page }) => {
+  const world = createProject('借りる世界');
+  const place = createEntity(world.projectId, 'place', '旧版の城', { body: textToRichText('旧版だけにある城の説明。') }); world.entities.push(place);
+  const frozenEvent = createEntity(world.projectId, 'event', '固定版の出来事'); world.entities.push(frozenEvent);
+  const fixed = await createWorldSnapshot(world, '世界の第一版');
+  fixed.entities = fixed.entities.map(entity => entity.id === place.id ? { ...entity, name: '現在版で改名された城' } : entity);
+  const work = createProject('世界を借りる本編'), event = createEntity(work.projectId, 'event', '城に到着'); work.entities.push(event);
+  await page.goto('./'); await importProject(page, fixed); await page.locator('.project-switch').click(); await importProject(page, work);
+  await navigate(page, /^年表/); await page.getByRole('tab', { name: '世界・地図・履歴', exact: true }).click();
+  await page.getByRole('tab', { name: '共通世界の固定版', exact: true }).click();
+  await page.getByLabel('参照する共通世界').selectOption(world.projectId);
+  await page.getByLabel('固定する共通世界版').selectOption(fixed.snapshots[0].id);
+  await page.getByRole('checkbox', { name: place.name, exact: true }).check();
+  await page.getByRole('button', { name: '共通世界の元情報を開く', exact: true }).click();
+  const frozen = page.getByRole('dialog', { name: '固定版の参照先' });
+  await expect(frozen.getByRole('heading', { name: place.name, exact: true })).toBeVisible();
+  await expect(frozen).toContainText('旧版だけにある城の説明。');
+  await frozen.getByRole('button', { name: '閉じる', exact: true }).click();
+  await page.getByRole('button', { name: '適用前の差分・影響を確認', exact: true }).click();
+  await page.getByRole('button', { name: '確認した固定版・採用設定を保存', exact: true }).click();
+  await expect(page.getByText('参照版：世界の第一版', { exact: true })).toBeVisible();
+  await page.getByRole('tab', { name: '世界内年表', exact: true }).click();
+  await page.getByRole('button', { name: '出来事一覧', exact: true }).click();
+  await page.locator(`.event-table-row[data-event-id="${event.id}"]`).click();
+  await expect(page.getByRole('button', { name: '選択した出来事の日時・制約', exact: true })).toBeEnabled();
+  await page.locator(`.event-table-row[data-event-id="${frozenEvent.id}"]`).click();
+  await page.getByRole('dialog', { name: '固定版の参照先' }).getByRole('button', { name: '閉じる', exact: true }).click();
+  await expect(page.locator(`.event-table-row[data-event-id="${frozenEvent.id}"]`)).toHaveClass(/selected/);
+  await expect(page.getByRole('button', { name: '選択した出来事の日時・制約', exact: true })).toBeDisabled();
+  await expect(page.getByRole('button', { name: '固定版の出来事を開く', exact: true })).toBeVisible();
+  await navigate(page, /^検索/); await page.getByLabel('作品内を検索').fill(event.name);
+  await page.locator('.entity-card').filter({ hasText: event.name }).first().click();
+  const detail = page.getByRole('complementary', { name: '出来事の詳細', exact: true });
+  await detail.getByLabel('場所', { exact: true }).selectOption(place.id);
+  await detail.getByRole('button', { name: '保存する', exact: true }).click();
+  await expect(detail.getByRole('status')).toContainText('端末内保存済み');
+  await expect(detail.locator('.revision-label')).toHaveText('版 1');
+  await page.reload(); await navigate(page, /^作品・保存/); await page.getByRole('tab', { name: '完全保存・復元', exact: true }).click();
+  const pending = page.waitForEvent('download'); await page.getByRole('button', { name: '完全保存ファイルを作成', exact: true }).click();
+  const download = await pending; const archive = await inspectScenario(new Uint8Array(await readFile((await download.path())!)), { worker: false });
+  const saved = archive.project.entities.find(entity => entity.id === event.id)!;
+  expect(saved.kind === 'event' && saved.data.locationId).toBe(place.id);
+  expect(archive.project.entities.some(entity => entity.id === place.id)).toBe(false);
+  expect(archive.worlds[fixed.snapshots[0].id].entities.find(entity => entity.id === place.id)?.name).toBe(place.name);
+  expect(archive.project.views.find(view => view.view === `world-adoption:${world.projectId}`)?.entityIds).toEqual([place.id]);
+});

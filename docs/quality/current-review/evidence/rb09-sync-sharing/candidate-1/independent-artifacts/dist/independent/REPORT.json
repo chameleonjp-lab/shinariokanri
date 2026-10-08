@@ -1,0 +1,619 @@
+{
+  "stage": "RB09 fixed product candidate1 independent read-only review",
+  "candidateCommit": "35d34a8e66110bcf2bbbdc8b33e3692d1fffac67",
+  "candidateTree": "0b77a065c9f8222681e59950c0291d44b60a23de",
+  "baseCommit": "f64104ab09461342852609bab6029242ef536ae4",
+  "verdict": "not_complete_product_failures_and_external_verification_not_run",
+  "sourceCount": 317,
+  "sourceBindingSHA256": "9b95e43bb1b15ff3d9ba2684e9d2cfedf9901ad9be8d2c6dfb2856d3ff11e889",
+  "finalSourceBindingSHA256": "ed36fbc78a6239fd6e6e8b409c575a6869b7e3d5abe8135f81f11a20c5356785",
+  "originalScope": {
+    "requirements": 104,
+    "individualAndIntegratedAcceptanceCases": 116,
+    "workPackages": 24,
+    "regressionGroups": 6,
+    "completionStages": [
+      "RB01",
+      "RB02",
+      "RB03",
+      "RB04",
+      "RB05",
+      "RB06",
+      "RB07",
+      "RB08",
+      "RB09",
+      "RB10"
+    ],
+    "noScopeReduction": true,
+    "noBaselineCountsAsCurrentCompletion": true,
+    "originalGivenWhenThenNegativeOrEdgePreservedIn": "independent/ORIGINAL_CONTRACTS.json",
+    "originalDocuments15Unchanged": true,
+    "originalCaseResultsNotRunUnchanged": true
+  },
+  "originalRB09Requirements": [
+    {
+      "id": "REQ-F29",
+      "title": "指摘と次の作業を場面に結ぶ",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP18",
+      "shall": "人物、台詞、場面、関係線へコメントや確認事項を付ける。未対応、修正済み、再確認済みを区別する。担当者は任意とすること。",
+      "failure_behavior": "指摘時の対象版と引用範囲を保持する。対象段落が削除されても元指摘は残し、最新位置は不明と表示する。",
+      "acceptance_ids": [
+        "AT-F29"
+      ],
+      "source_refs": [
+        "S07",
+        "S23"
+      ],
+      "source_feature_id": "F29"
+    },
+    {
+      "id": "REQ-F30",
+      "title": "秘密を隠して確認してもらう",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP18",
+      "shall": "読むだけ、指摘する、編集する範囲を選ぶ。章・人物・分岐に限定した資料を作り、名前、地図、リンク先も同じ公開範囲で扱うこと。",
+      "failure_behavior": "権限はサーバー側と出力時に検証する。非公開データを送ってCSSで隠す方式を禁止し、検索・素材・参照数にも同じ投影を適用する。",
+      "acceptance_ids": [
+        "AT-F30"
+      ],
+      "source_refs": [
+        "S07",
+        "S15",
+        "S20"
+      ],
+      "source_feature_id": "F30"
+    },
+    {
+      "id": "REQ-F34",
+      "title": "通信なしの編集と同期を区別する",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP17",
+      "shall": "開いて保存済みの作品を通信なしでも編集できるようにする。端末内保存済み、送信待ち、同期済み、食い違いありを表示すること。",
+      "failure_behavior": "同一項目の競合は双方と共通元を保持する。保存済みと同期済みを混同せず、再送・削除対編集でも黙って上書きしない。",
+      "acceptance_ids": [
+        "AT-F34"
+      ],
+      "source_refs": [
+        "S12"
+      ],
+      "source_feature_id": "F34"
+    },
+    {
+      "id": "REQ-N07",
+      "title": "同期の競合と再送",
+      "provenance": "仕様を成立させる品質条件・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP17",
+      "shall": "共通元のrevisionを使い、同じ項目の競合・削除対編集・操作の重複を検知すること。未解決は双方を保持すること。",
+      "failure_behavior": "端末時計や最終書込だけで片方を消さない",
+      "acceptance_ids": [
+        "AT-N07"
+      ],
+      "source_refs": []
+    },
+    {
+      "id": "REQ-N08",
+      "title": "権限と秘密の投影",
+      "provenance": "仕様を成立させる品質条件・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP18",
+      "shall": "作品の閲覧・指摘・編集・管理権限と共有範囲をサーバー側で検証し、本文・検索・図・素材・リンクで一致させること。",
+      "failure_behavior": "secretキーの公開、UIのみの非表示、他作品のID差替えを許さない",
+      "acceptance_ids": [
+        "AT-N08"
+      ],
+      "source_refs": []
+    }
+  ],
+  "originalRB09Acceptance": [
+    {
+      "id": "AT-F29",
+      "requirement_ids": [
+        "REQ-F29"
+      ],
+      "package_id": "WP18",
+      "given": "版1の台詞Lにreviewerが指摘したコメント",
+      "when": "本文改訂、対象段落削除、修正済み、再確認済みを順に行い元版の引用を開く",
+      "then": "指摘から対象を開け、対象が変わっても何についての指摘だったか追える。",
+      "negative_or_edge": "指摘時の対象版と引用範囲を保持する。対象段落が削除されても元指摘は残し、最新位置は不明と表示する。",
+      "result": "not_run"
+    },
+    {
+      "id": "AT-F30",
+      "requirement_ids": [
+        "REQ-F30"
+      ],
+      "package_id": "WP18",
+      "given": "chapter限定reader、reviewer、editorと秘密の本名/関係/添付",
+      "when": "各役割で本文、検索、図、リンク、素材と直接APIを操作し、秘密の取得と本文更新を試す",
+      "then": "秘密を隠した本文から、検索や関連図、リンク先を使って秘密が見えない。",
+      "negative_or_edge": "権限はサーバー側と出力時に検証する。非公開データを送ってCSSで隠す方式を禁止し、検索・素材・参照数にも同じ投影を適用する。",
+      "result": "not_run"
+    },
+    {
+      "id": "AT-F34",
+      "requirement_ids": [
+        "REQ-F34"
+      ],
+      "package_id": "WP17",
+      "given": "二端末が同じbaseRevisionの作品を取得済み",
+      "when": "機内モードで同じ本文を別々に編集し、順不同で同期して競合を選び再送する",
+      "then": "二つの端末で同じ項目を変えた場合、片方を黙って消さずに両方を確認して選べる。",
+      "negative_or_edge": "同一項目の競合は双方と共通元を保持する。保存済みと同期済みを混同せず、再送・削除対編集でも黙って上書きしない。",
+      "result": "not_run"
+    },
+    {
+      "id": "AT-N07",
+      "requirement_ids": [
+        "REQ-N07"
+      ],
+      "package_id": "WP17",
+      "given": "オフラインの二端末",
+      "when": "同じ本文を変更し順不同で同期する",
+      "then": "二案を比較して解決でき再送しても効果が二重化しない",
+      "negative_or_edge": "端末時計や最終書込だけで片方を消さない",
+      "result": "not_run"
+    },
+    {
+      "id": "AT-N08",
+      "requirement_ids": [
+        "REQ-N08"
+      ],
+      "package_id": "WP18",
+      "given": "非メンバーと限定閲覧者",
+      "when": "直接APIと検索と素材へアクセスする",
+      "then": "許可した投影以外の本文・名称・ID・メタデータが取得できない",
+      "negative_or_edge": "secretキーの公開、UIのみの非表示、他作品のID差替えを許さない",
+      "result": "not_run"
+    },
+    {
+      "id": "AT-E05",
+      "title": "公開範囲と正体の漏れ",
+      "requirement_ids": [
+        "REQ-F12",
+        "REQ-F30",
+        "REQ-F57",
+        "REQ-N08"
+      ],
+      "package_id": "WP23",
+      "given": "非公開の本名と家系と添付がある限定共有snapshot",
+      "when": "閲覧者が本文、検索、索引、図、リンク、素材、直接APIを調べる",
+      "then": "許可した別名だけが出て秘密のID・名前・関係・件数・ファイル名が取得できない",
+      "negative_or_edge": "IDやproject_idを差替えたアクセスと権限撤回後の新規取得は拒否する",
+      "result": "not_run"
+    },
+    {
+      "id": "AT-E06",
+      "title": "二端末の競合と削除",
+      "requirement_ids": [
+        "REQ-F34",
+        "REQ-N06",
+        "REQ-N07"
+      ],
+      "package_id": "WP23",
+      "given": "共通revisionを取得した二端末",
+      "when": "両方オフラインで同じ本文を編集、片方削除、重複と順逆で送信する",
+      "then": "双方と共通元を比較でき、解決後は同じ結果、二重効果と勝手な復活はない",
+      "negative_or_edge": "容量不足と認証失効時にも未送信を失わず、同期済みと表示しない",
+      "result": "not_run"
+    },
+    {
+      "id": "AT-E12",
+      "title": "保存失敗とアプリ更新からの復帰",
+      "requirement_ids": [
+        "REQ-B23",
+        "REQ-F34",
+        "REQ-F35",
+        "REQ-N06",
+        "REQ-N11",
+        "REQ-N18"
+      ],
+      "package_id": "WP23",
+      "given": "キャッシュ済みアプリと未送信作品",
+      "when": "機内モード、保存容量不足、途中更新、移行失敗、専用出力からの再開を行う",
+      "then": "失敗と未保存を明示し、更新は安全地点で適用し、書き出しと復元で再開できる",
+      "negative_or_edge": "初回未取得・未取得素材・保存先取消を成功と扱わない",
+      "result": "not_run"
+    }
+  ],
+  "independentFinalRuns": [
+    {
+      "category": "local domain and fake-indexeddb",
+      "tests": 30,
+      "pass": 29,
+      "fail": 1,
+      "logs": [
+        "independent/core-editor-domain.log",
+        "independent/transfer-and-repository-features.log",
+        "independent/world-closure-domain.log"
+      ],
+      "countNote": "core/editor22 plus independent transfer5 plus new transitive-world3; excludes repository feature16"
+    },
+    {
+      "category": "typed server/editor + real isolated PostgreSQL17.11 with synthetic Auth fixture",
+      "tests": 12,
+      "pass": 11,
+      "fail": 1,
+      "logs": [
+        "independent/sql-typed-domain.log",
+        "independent/sql-editor-edge-corrected.log",
+        "independent/sql-derived-domain.log"
+      ],
+      "countNote": "Owner4+corrected editor5+derived3. Initial9 setup failures are preserved harness-unreached attempts, not product fails"
+    },
+    {
+      "category": "Edge handler + isolated SQL + mock private Storage transport",
+      "tests": 4,
+      "pass": 4,
+      "fail": 0,
+      "logs": [
+        "independent/sql-editor-edge-corrected.log"
+      ],
+      "notActualAuthOrStorage": true
+    },
+    {
+      "category": "repository RB09 positive component suite rerun",
+      "tests": 16,
+      "pass": 16,
+      "fail": 0,
+      "logs": [
+        "independent/transfer-and-repository-features.log"
+      ],
+      "countNote": "These are separate from newly independent fixtures"
+    },
+    {
+      "category": "all6 migrations and mock-RLS assertions",
+      "migrations": 6,
+      "migrationPass": 6,
+      "originalMockRLSAssertions": 23,
+      "assertionPass": 23,
+      "nullCommentBoundaryAssertions": 2,
+      "nullBoundaryPass": 2,
+      "logs": [
+        "independent/sql-setup-results.json",
+        "independent/sql-original-rls.log",
+        "independent/sql-null-comment-refusal.log"
+      ],
+      "notRealSupabaseAuthRLS": true
+    },
+    {
+      "category": "normal production App in real headless Chromium153, HTTPS contract interception",
+      "finalCorrectedCaseIDs": 9,
+      "pass": 7,
+      "fail": 2,
+      "additionalNavigationBlocker": "R9UI06 authentication attempt blocked; same underlying navigation failure observed twice",
+      "caseResults": {
+        "R9US01": "pass",
+        "R9USV02": "pass",
+        "R9UE00": "pass",
+        "R9URV01": "pass",
+        "R9UI05": "fail",
+        "R9UL06_via_library": "pass",
+        "R9UR02": "fail",
+        "R9USC03_corrected_selector": "pass",
+        "R9URBytes04": "pass"
+      },
+      "logs": [
+        "independent/browser-current.log",
+        "independent/browser-account-boundaries.log",
+        "independent/browser-account-logout-from-library.log",
+        "independent/browser-extra-contracts.log",
+        "independent/browser-comment-corrected.log"
+      ],
+      "globalFetchNormalization": false,
+      "forcedClicks": false,
+      "productionCommitBuildInfo": {
+        "commit": "35d34a8e66110bcf2bbbdc8b33e3692d1fffac67",
+        "dirty": false,
+        "base": "/shinariokanri/",
+        "builtAt": "2026-10-08T19:21:46.783Z",
+        "versionHashScope": "sorted paths and bytes plus build info before version",
+        "version": "b6475e7f3bcb75c52b82"
+      },
+      "notActualAuthOrPhysicalDevice": true
+    }
+  ],
+  "aggregateComponentCount": {
+    "tests": 62,
+    "pass": 60,
+    "fail": 2,
+    "separateFromOriginal116": true
+  },
+  "successBoundaries": [
+    "Confirmed server base survives dependent saved local revisions, cold retry, ACK idempotency and native received-image evidence",
+    "Post-ACK outside-target conflict plus later independent body retained; atomic rejection/tampered confirmation/stale approval preserve existing state",
+    "Scoped editor base/local independent after E00 repair; parallel identical ACK and cachedACK withdrawn-grant refusal",
+    "Owner and editor typed SQL normal original targets, duplicate receipt, forbidden target atomic refusal, delete/edit, role/scope/memberRevision changes under lock",
+    "Edge bytes/hash/length guards, synthetic-session revocation after Storage transport, foreign Origin refusal",
+    "Complete archive restores actual local attachment bytes and verified server base in native browser IndexedDB after cold reauthentication",
+    "Transitive two-world pins and old material bytes roundtrip new/clone/cold; missing/wrong expected pins stop without current-world substitute",
+    "Shared deep link automatically opens once after list delay; fixed old Unicode link returns; ordinary comment sends old edition/entity/block/1..2",
+    "Logout confirmation changed by later input refuses Auth call; explicit new approval deletes only selected account caches and keeps guest project"
+  ],
+  "findings": [
+    {
+      "id": "R9E02",
+      "type": "product_failure",
+      "source": [
+        "src/sync/editorStore.ts"
+      ],
+      "given": "Limited editor confirmed image at serverRevision2 after normal ACK; old revision1 response arrives later",
+      "when": "ScopedEditorStore.receive(oldImage)",
+      "expected": "Reject REVISION_CHANGED and preserve base/local/prepared/ACK state",
+      "actual": "Accepted base2→1 and old field values while retaining prior ACK2",
+      "proof": [
+        "independent/fixtures/R9E02.json",
+        "independent/core-editor-domain.log"
+      ],
+      "candidate2_supplied_by_parent": "29a8bb9fa19b18a519c000a8569f91f220e4807b not independently graded here",
+      "sourceSHA256": [
+        {
+          "file": "src/sync/editorStore.ts",
+          "sha256": "70611c470d603ac71bb6598083379f9deaad0fa4ef7022277fd425cf8616b392"
+        }
+      ],
+      "proofSHA256": [
+        {
+          "file": "independent/fixtures/R9E02.json",
+          "sha256": "377362f5a85cfd0ad42d44d1f36bca0179955f1ca40a10d1bbc4d758cdbfafed"
+        },
+        {
+          "file": "independent/core-editor-domain.log",
+          "sha256": "e4d264cf4f969ed073bbe39f5115fd4a934a5557d6cdadc375843739a362652e"
+        }
+      ]
+    },
+    {
+      "id": "R9SQL04",
+      "type": "product_failure",
+      "source": [
+        "supabase/migrations/20261008184618_computed_sync_dependency_commit.sql"
+      ],
+      "given": "Editor granted only dialogue_line.data.text; private translation and private Unicode link depend on the line",
+      "when": "Insert Z at beginning of A😀B through typed editor; engine reconciles link1..2→2..3, localization reviewed→needs_review, new change reviews",
+      "expected": "One atomic accepted SQL update; private derived details excluded from editor ACK",
+      "actual": "TOMBSTONE_REQUIRED although no old document ID is removed; SQL whole-state rollback kept rev1. PL variable old conflicts with final JSON table alias old after last new review record",
+      "proof": [
+        "independent/fixtures/R9SQL04-commit.json",
+        "independent/fixtures/R9SQL04-refused.json",
+        "independent/sql-derived-domain.log",
+        "independent/sql-derived-observed.log"
+      ],
+      "sourceSHA256": [
+        {
+          "file": "supabase/migrations/20261008184618_computed_sync_dependency_commit.sql",
+          "sha256": "06a4f261cc753c3c943f9930b4211c670e40afa655f0485b330dd27bc756d015"
+        }
+      ],
+      "proofSHA256": [
+        {
+          "file": "independent/fixtures/R9SQL04-commit.json",
+          "sha256": "d8ebdf11c60f299a784498076aed96e24b1c381655b71e8693e1619f1c942b89"
+        },
+        {
+          "file": "independent/fixtures/R9SQL04-refused.json",
+          "sha256": "95b0924adab4e565a79eb500ae73698f529ba771163a681a5e8fd5a4d35b5681"
+        },
+        {
+          "file": "independent/sql-derived-domain.log",
+          "sha256": "57e785cea062e4f31eac8c723fd951ba2e1b9afcb7bc9b8bf1d540327faabb60"
+        },
+        {
+          "file": "independent/sql-derived-observed.log",
+          "sha256": "4de74498837ca5c4aa6746c413eadb995e858dabbe85795b995aaa0172d85cf4"
+        }
+      ]
+    },
+    {
+      "id": "R9UI05",
+      "type": "product_failure",
+      "source": [
+        "src/ui/AccountWorkspace.tsx",
+        "src/storage/store.ts"
+      ],
+      "given": "Same-account input file holds A; current durable tool draft and visible field hold B",
+      "when": "Ordinary restore approval; simulated localStorage workspace setItem QuotaExceededError after tool DB transaction",
+      "expected": "Aggregate restoration failure preserves B in both durable inputs and UI, or a coherent fully successful canonical restore",
+      "actual": "Error shown, tool DB changed to A while visible input/local mirror remain B",
+      "proof": [
+        "independent/browser-account-boundaries/R9UI05-observed.json",
+        "independent/browser-account-boundaries/R9UI05.json",
+        "independent/browser-account-boundaries/R9UI05.zip"
+      ],
+      "classification": "Controlled browser fault injection; not an actual device storage/quota measurement",
+      "sourceSHA256": [
+        {
+          "file": "src/ui/AccountWorkspace.tsx",
+          "sha256": "d45ed4711fd4ce4dddae5939603bb07a88740394aa6fbdf96c260494c6e62ea3"
+        },
+        {
+          "file": "src/storage/store.ts",
+          "sha256": "2d102f7a9f140f603dc769922e8d711446e56a9328c896158399d7c85c4812c4"
+        }
+      ],
+      "proofSHA256": [
+        {
+          "file": "independent/browser-account-boundaries/R9UI05-observed.json",
+          "sha256": "725d5c014cf1794b37c520f957fc35085d0d316a8bbc1155769bcc1f27af7e68"
+        },
+        {
+          "file": "independent/browser-account-boundaries/R9UI05.json",
+          "sha256": "cda24ef2672b46a21787acc1dc21855c211705a7d5eb6310d987ed525f11f5e6"
+        },
+        {
+          "file": "independent/browser-account-boundaries/R9UI05.zip",
+          "sha256": "dfc64f919442220a3f9d45f0d18eccbd9d48aa1ba90e23f03c56977e7dfe934a"
+        }
+      ]
+    },
+    {
+      "id": "R9UI06",
+      "type": "product_navigation_failure",
+      "source": [
+        "src/ui/AccountWorkspace.tsx",
+        "src/styles.css"
+      ],
+      "given": "Guest project created and opened, Chromium153 viewport1280x900",
+      "when": "Ordinary pointer click Account/専用同期 toolbar",
+      "expected": "Open connection/account controls",
+      "actual": "Fixed sidebar covers toolbar and intercepts all normal clicks; authentication and downstream logout cases unreached in this route",
+      "proof": [
+        "independent/browser-account-boundaries/R9UL06.json",
+        "independent/browser-account-boundaries/R9UL06.png",
+        "independent/browser-account-boundaries/R9UL06.zip"
+      ],
+      "continuation": "Logout approval scenario independently passed via normal project-library navigation without forced click or CSS/fetch normalization",
+      "sourceSHA256": [
+        {
+          "file": "src/ui/AccountWorkspace.tsx",
+          "sha256": "d45ed4711fd4ce4dddae5939603bb07a88740394aa6fbdf96c260494c6e62ea3"
+        },
+        {
+          "file": "src/styles.css",
+          "sha256": "06ff23943768ee5ff6816ba22682bf2a501dfb20b9b414b2e4a22413cbad8891"
+        }
+      ],
+      "proofSHA256": [
+        {
+          "file": "independent/browser-account-boundaries/R9UL06.json",
+          "sha256": "155be0209e35c02a2ed99b91f802617d6c770d6abacd64af686c1086f1f4c9ee"
+        },
+        {
+          "file": "independent/browser-account-boundaries/R9UL06.png",
+          "sha256": "97c283489ed42923585f7229a7276dc09a7fabf863db74307368513c45f143dc"
+        },
+        {
+          "file": "independent/browser-account-boundaries/R9UL06.zip",
+          "sha256": "2f4f84215c975ca5ea9f9420610c7205c4ded0882d135ec3b507da5c2a7fc2e1"
+        }
+      ]
+    },
+    {
+      "id": "R9UR02",
+      "type": "product_navigation_failure",
+      "source": [
+        "src/ui/RemoteWorks.tsx",
+        "src/ui/AccountWorkspace.tsx"
+      ],
+      "given": "Owner starts complete archive restoration with archive reply delayed1200ms",
+      "when": "Navigate normally to limited-sharing area before restore/confirmed-base binding finishes",
+      "expected": "Earlier restore completion refreshes data while preserving later explicit area selection",
+      "actual": "onImported forces author area and removes later shared view after otherwise successful DB/base restoration",
+      "proof": [
+        "independent/browser-extra-contracts/R9UR02-observed.json",
+        "independent/browser-extra-contracts/R9UR02.json",
+        "independent/browser-extra-contracts/R9UR02.zip"
+      ],
+      "sourceSHA256": [
+        {
+          "file": "src/ui/RemoteWorks.tsx",
+          "sha256": "01413f7995f98453facded41d6439c75cb7b08294e24cffa2108b340130ec3f3"
+        },
+        {
+          "file": "src/ui/AccountWorkspace.tsx",
+          "sha256": "d45ed4711fd4ce4dddae5939603bb07a88740394aa6fbdf96c260494c6e62ea3"
+        }
+      ],
+      "proofSHA256": [
+        {
+          "file": "independent/browser-extra-contracts/R9UR02-observed.json",
+          "sha256": "c4e1953873112c85ededa8dfc24ee7d834cff27e59f5f8233a80a215123ee476"
+        },
+        {
+          "file": "independent/browser-extra-contracts/R9UR02.json",
+          "sha256": "24501d0cfa250ede66ad6ede6b7daadc4953204a8b55408e7cf964b31da64efc"
+        },
+        {
+          "file": "independent/browser-extra-contracts/R9UR02.zip",
+          "sha256": "a899c17e9f31608f52d61c19793c7890dd1c2c603b5bb4ed2612c379019ee86b"
+        }
+      ]
+    }
+  ],
+  "preservedUnreachedOrHarnessAttempts": [
+    {
+      "log": "independent/sql-typed-domain.log",
+      "count": 9,
+      "classification": "5 editor setup calls used obsolete6arg grant RPC;4 Edge setup reads ran before remote fixture generator. Corrected7arg membership revision and sequential fixture dependency only; expected results unchanged",
+      "preservedSources": "independent/setup-sql-harness"
+    },
+    {
+      "log": "independent/browser-extra-contracts/R9USC03.json",
+      "classification": "Exact accessible-label selector did not include nested option text. Prefix selector only corrected in separate source/result; fixed edition/payload expectation unchanged"
+    },
+    {
+      "log": "independent/browser-account-logout-via-library.log",
+      "classification": "The attempted library route reloaded page via login helper and reopened guest project, reproducing R9UI06 again. Separate no-reload normal-library route passed logout expectations"
+    },
+    {
+      "log": "independent/sql-derived-observed.log",
+      "classification": "Same failing DSV01 positive expectation rerun with extra observation; not additional distinct test and no changed requirement"
+    }
+  ],
+  "environment": {
+    "os": "Linux-6.18.44-x86_64-with-glibc2.41",
+    "node": "24.19.0",
+    "vitest": "5.0.3",
+    "playwright": "1.63",
+    "browser": "Chromium153.0.8010.12",
+    "browserExecutable": "/tmp/shinariokanri-browsers/chromium-1243/chrome-linux64/chrome",
+    "origin": "http://127.0.0.1:5391/shinariokanri/",
+    "backend": "Playwright intercepted synthetic https://review.invalid only; Edge Storage/Auth mocked locally",
+    "sql": "PostgreSQL17.11, own network-none/noports fresh tmpfs container only",
+    "sqlContainerEnvironment": "independent/sql-container-environment.txt",
+    "parentPort4173Used": false,
+    "productTrackedFilesChanged": false,
+    "sharedRepoGitChanged": false,
+    "rawLogsWhitespacePreserved": true
+  },
+  "notRun": [
+    {
+      "scope": "Actual two-device Auth/DataAPI/RLS/private Storage integration and quota/cost",
+      "reason": "Dedicated Supabase endpoint/project, enabled Auth fixture accounts/roles, provider configuration, approved live test credentials, actual quota/current cost are unspecified. No actual deployment or paid feature enabled"
+    },
+    {
+      "scope": "Original AT-F29 entire reviewer→edit/delete→fixed→verified→original quote sequence",
+      "reason": "Independent local review covers current old-edition comment coordinates and native review integrity, not this entire cross-role live sequence; original acceptance remains not_run"
+    },
+    {
+      "scope": "Original AT-F30/F34/N07/N08/E05/E06 complete real permission/two-device acceptance",
+      "reason": "Synthetic SQL Auth/session/RLS and HTTPS/Storage transports cannot substitute for actual provider accounts and devices"
+    },
+    {
+      "scope": "Physical iPhone/iPad/PC browser and assistive-tech/IME/Files/microphone tests",
+      "reason": "Only isolated Linux headless Chromium153 executed here; exact physical OS/browser/device environments not supplied"
+    },
+    {
+      "scope": "Standard30-run p95 all intervals, Large assets/two-hour edit, restoration limits and provider outage/capacity",
+      "reason": "Not measured by this focused RB09 review; unit watchdog timings and injected cache fault are not performance or real-device capacity evidence"
+    },
+    {
+      "scope": "All104 requirements,116 acceptance,24packages,6regression groups final release gate",
+      "reason": "Focused review has5 product causes and external tests pending; no completeness/release conversion made"
+    },
+    {
+      "scope": "Parent-reported724unit/71production/Python15",
+      "reason": "Not independently rerun as whole suites here; parent results remain separate evidence"
+    }
+  ],
+  "cleanup": {
+    "own5391PreviewStopped": true,
+    "ownNetworkNoneSQLContainerRemoved": true,
+    "rootContainersAnd4173Untouched": true
+  },
+  "sealedAt": "2026-10-08T19:52:38.390212+00:00"
+}

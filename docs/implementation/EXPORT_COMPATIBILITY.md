@@ -58,3 +58,7 @@ RB06の運用情報往復は[完全保存・任意履歴・明示対応](RB06_RE
 ## RB07追加（最終受入は保留）
 
 台詞lineage/split/merge/copyの旧→新位置対応はstrict native1.0/schema/cloneへ保持し、作者情報として公開投影から除外する。担当別翻訳/収録は公開文・公開ID・公開hashと選んだ成果物の依存素材のみを出力する。新資料形式の動画MP4/WebM/Ogg・UTF-8文章・JSON・非実行binaryは署名/bytes/hash検査と安全な保存表示へ接続。旧readerの未対応必須機能/未知版拒否は維持する。v3→v4はauthorToolDrafts追加、入力bytesは完成した素材bytesの合格へ換算しない。
+
+RB09: 完全専用形式は元protocol ID/hashを保つsync-recovery共通元/prepared/二案/ACK/素材ACKと世界pin推移依存のbytesを含む。clone/ID対応統合後は再接続待ちであり、自動送信しない。限定編集v1証跡はv2で保全し現権限へ再接続する。許可されたteam入力はnative私有履歴へ置き換えない。承認済み投影と公開版/Unicode位置を持つ限定共有、private byte proxy、own段落/線コメントは別の実API受入を必要とする。
+
+RB09 C8の限定編集workでは任意の`permissionObservation`を私的復旧記録へ保持する。旧DBの無認可stampはactiveへ昇格せず、元workを復旧側へ残す。最新内容＋新許可maskの導出は現在の値だけを使用し、未知の新本文は取得まで停止する。公開profileにはこの私的認可・復旧・アカウント入力を含めない。

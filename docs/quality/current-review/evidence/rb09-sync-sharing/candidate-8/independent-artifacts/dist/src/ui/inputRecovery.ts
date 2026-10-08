@@ -1,0 +1,12 @@
+import type {AuthorToolDraft} from '../storage/store';
+import {parseStrictJson,jsonBytes} from '../storage/json';
+import {encodeSyncBytes} from '../sync/archiveTransfer';
+import {ID_PATTERN} from '../domain/model';
+import type {WorkspaceDrafts} from './workspaceDrafts';
+export interface InputRecovery {format:'scenario-unsaved-inputs';version:1;originAccountId:string;workspace:WorkspaceDrafts;tools:AuthorToolDraft[];editorWorks:unknown[]}
+export function authorDraftSummary(tools:AuthorToolDraft[]){return tools.map(t=>({...t,...t.asset?{asset:{contentHash:t.asset.contentHash,byteSize:t.asset.bytes.length}}:{}}));}
+export async function inputRecoveryBytes(accountId:string,workspace:WorkspaceDrafts,tools:AuthorToolDraft[],editorWorks:unknown[],signal?:AbortSignal){const encoded=[];for(const tool of tools)encoded.push({...tool,...tool.asset?{asset:{contentHash:tool.asset.contentHash,bytes:{format:'uint8-bytes',base64:await encodeSyncBytes(tool.asset.bytes,signal)}}}:{}});const bytes=jsonBytes({format:'scenario-unsaved-inputs',version:1,originAccountId:accountId,workspace,tools:encoded,editorWorks});if(bytes.byteLength>64*1024*1024)throw Error('INPUT_BACKUP_LIMIT');return bytes;}
+export function parseInputRecovery(bytes:Uint8Array,accountId:string):InputRecovery{
+ const data=parseStrictJson(bytes,'unsaved-inputs.json') as InputRecovery;if(data?.format!=='scenario-unsaved-inputs'||data.version!==1||data.originAccountId!==accountId||!ID_PATTERN.test(accountId)||Object.keys(data).some(k=>!['format','version','originAccountId','workspace','tools','editorWorks'].includes(k))||!data.workspace||['drafts','jsonBuffers','settingsDrafts','alternativeDrafts'].some(k=>{const v=(data.workspace as unknown as Record<string,unknown>)[k];return !v||typeof v!=='object'||Array.isArray(v);})||!Array.isArray(data.tools)||data.tools.length>100000||!Array.isArray(data.editorWorks))throw Error('INPUT_RECOVERY_INVALID');const keys=new Set<string>();
+ data.tools=data.tools.map(t=>{if(!t.key.startsWith(accountId+':')||keys.has(t.key)||!ID_PATTERN.test(t.projectId)||!/^(0|[1-9]\d*)$/.test(t.baseRevision))throw Error('INPUT_ACCOUNT_SCOPE');keys.add(t.key);if(t.asset){const encoded=t.asset.bytes as unknown as {format:string;base64:string};if(encoded?.format!=='uint8-bytes'||typeof encoded.base64!=='string'||encoded.base64.length>Math.ceil(32*1024*1024/3)*4)throw Error('INPUT_RECOVERY_LIMIT');return {...t,asset:{...t.asset,bytes:Uint8Array.from(atob(encoded.base64),c=>c.charCodeAt(0))}};}return t;});return data;
+}

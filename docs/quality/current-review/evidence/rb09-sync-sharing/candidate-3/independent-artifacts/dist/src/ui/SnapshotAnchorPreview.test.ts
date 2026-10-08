@@ -1,0 +1,54 @@
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { expect, it } from 'vitest';
+import { createEntity, createProject, emptyValidity, newId, validateProject } from '../domain/model';
+import { createWorldSnapshot } from '../domain/world';
+import { prepareReuse } from '../domain/reuse';
+import { resolveSnapshotAnchorPreview, SnapshotAnchorContent } from './SnapshotAnchorPreview';
+
+it('labels a frozen relation from its transitive pinned world rather than a newer world revision', async () => {
+  let nested = createProject('入れ子の世界');
+  const parent = createEntity(nested.projectId, 'character', '保存版の親');
+  const child = createEntity(nested.projectId, 'character', '保存版の子');
+  const evidence = createEntity(nested.projectId, 'note', '保存版の根拠');
+  nested.entities.push(parent, child, evidence);
+  nested = await createWorldSnapshot(nested, '入れ子の第一版');
+  const first = nested.snapshots[0];
+  nested.entities = nested.entities.map(entity => ({ ...entity, name: `改訂版の${entity.name}` }));
+  nested = await createWorldSnapshot(nested, '入れ子の改訂版');
+  const second = nested.snapshots[1];
+  let outer = createProject('外側の世界');
+  outer.worldReferences = [{ projectId: nested.projectId, immutableSnapshotId: first.id, contentHash: first.contentHash }];
+  const relation = { id: newId(), projectId: outer.projectId, revision: '0', fromId: parent.id, toId: child.id, relationType: 'parent_of', direction: 'forward' as const, validity: emptyValidity(), evidenceIds: [evidence.id], status: 'provisional' as const, visibility: 'private' as const };
+  outer.relations.push(relation);
+  const worldSnapshots = { [first.id]: first.content, [second.id]: second.content };
+  expect(validateProject(outer, { worldSnapshots }).ok).toBe(true);
+  outer = await createWorldSnapshot(outer, '外側の固定版');
+  const anchor = { entityId: relation.id, sourceVersionId: outer.snapshots[0].id };
+  const markup = renderToStaticMarkup(createElement(SnapshotAnchorContent, { ...await resolveSnapshotAnchorPreview(outer, anchor, worldSnapshots), worldSnapshots }));
+  expect(markup).toContain('保存版の親 → 保存版の子');
+  expect(markup).toContain('根拠: 保存版の根拠');
+  expect(markup).not.toContain('改訂版の');
+  const symmetric = await createWorldSnapshot({ ...outer, relations: outer.relations.map(value => ({ ...value, direction: 'symmetric' as const, relationType: 'related' })) }, '対称関係の固定版');
+  const symmetricAnchor = { ...anchor, sourceVersionId: symmetric.snapshots.at(-1)!.id };
+  expect(renderToStaticMarkup(createElement(SnapshotAnchorContent, { ...await resolveSnapshotAnchorPreview(symmetric, symmetricAnchor, worldSnapshots), worldSnapshots }))).toContain('保存版の親 ↔ 保存版の子');
+  await expect(resolveSnapshotAnchorPreview(outer, anchor)).rejects.toThrow();
+});
+
+it('verifies an outer fixed reference and its nested pin before rendering inherited old text, and refuses tampered dependencies', async () => {
+  let project = createProject();
+  const source = createEntity(project.projectId, 'scene', '内側の共通元', { body: [{ id: newId(), kind: 'paragraph', text: '旧固定本文 🌸' }] });
+  const outer = createEntity(project.projectId, 'scene', '外側の共通元');
+  project.entities.push(source, outer);
+  project = (await prepareReuse(project, { ownerId: outer.id, sourceId: source.id, mode: 'reference' })).candidate;
+  project = await createWorldSnapshot(project, '外側の固定版');
+  const pin = project.snapshots.at(-1)!;
+  project.entities = project.entities.map(entity => entity.id === source.id ? { ...source, data: { ...source.data, body: [{ id: newId(), kind: 'paragraph', text: '現在稿へ改訂した本文' }] } } : entity);
+  const target = { entityId: outer.id, sourceVersionId: pin.id };
+  const resolved = await resolveSnapshotAnchorPreview(project, target);
+  const markup = renderToStaticMarkup(createElement(SnapshotAnchorContent, resolved));
+  expect(markup).toContain('旧固定本文 🌸');
+  expect(markup).not.toContain('現在稿へ改訂した本文');
+  project.snapshots[0].content.entities.find(entity => entity.id === source.id && entity.kind === 'scene')!.name = '改ざんした共通元';
+  await expect(resolveSnapshotAnchorPreview(project, target)).rejects.toThrow(/hash/);
+});
