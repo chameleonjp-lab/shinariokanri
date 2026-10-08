@@ -1,0 +1,1 @@
+候補7と同じCTX-child-ui-source.json bytesと正期待。画面再入後はsessionが保持され、開始ボタンのlabelが『この状態から開始し直す』へ変わるため、同じ開始操作 .reader-setup > .button.primary を観測する。busy=true/旧exitとstate/失敗通知/trace0/同じ経路再試行の期待は保持。元のfixture/失敗源は候補7で不変保持。修正により可能になったretry→最新props→復帰を追加確認する。
