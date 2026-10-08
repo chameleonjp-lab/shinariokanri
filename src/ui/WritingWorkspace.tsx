@@ -21,6 +21,8 @@ import {
 } from '../domain/writingWorkspace';
 import { createEntity, KIND_LABELS, newId } from '../domain/model';
 import { NarrativeClaims } from './NarrativeClaims';
+import { RuntimeReconfirmation, runtimeReconfirmationBusy } from './RuntimeReconfirmation';
+import { adoptedRecord } from '../domain/adoption';
 import { DialoguePresentation } from './DialoguePresentation';
 import { backChapterReading, pinChapterReadingRecord, presentNextChapterScene, replayChapterReading, startChapterReading, type ChapterReadingSession } from '../domain/presentation';
 import { jsonBytes, sha256 } from '../storage/json';
@@ -180,13 +182,15 @@ export interface ChapterReadingViewProps {
   scenePath?: readonly string[];
   onOpenEntity?: (id: string) => void;
   onOpenTarget?: (anchor: ContentAnchor) => void;
-  onSaveMany?: (entities: Entity[], reason: string, assets?: undefined, snapshots?: ProjectSnapshot[]) => Promise<void>;
+  onSaveMany?: (entities: Entity[], reason: string, assets?: undefined, snapshots?: ProjectSnapshot[], expectedRevision?: string) => Promise<void>;
 }
 
 export function ChapterReadingView({ project, chapterIds, scenePath, currentVersionLabel = '現在の編集稿', worldSnapshots = {}, onOpenEntity, onOpenTarget, onSaveMany }: ChapterReadingViewProps) {
   const [vertical, setVertical] = useState(false);
   const [contentVersionId, setContentVersionId] = useState('');
   const [worldTick, setWorldTick] = useState('');
+  const [selectedCheckpointId, setSelectedCheckpointId] = useState('');
+  const checkpoints = project.entities.filter((entity): entity is Entity<'checkpoint'> => entity.kind === 'checkpoint' && adoptedRecord(entity) && !entity.data.runtimeState.presentationPosition);
   const selectedSnapshot = project.snapshots.find(snapshot => snapshot.id === contentVersionId);
   const readingSource = useMemo(() => selectedSnapshot ? { ...project, ...selectedSnapshot.content } : project, [project, selectedSnapshot]);
   const chapters = readingSource.entities.filter((entity): entity is Entity<'chapter'> => entity.kind === 'chapter' && !entity.deletedAt && entity.status !== 'rejected');
@@ -195,8 +199,8 @@ export function ChapterReadingView({ project, chapterIds, scenePath, currentVers
   const [routeSceneIds, setRouteSceneIds] = useState<string[]>(() => [...(scenePath ?? [])]);
   const [routeSceneToAdd, setRouteSceneToAdd] = useState('');
   const [session, setSession] = useState<ChapterReadingSession | null>(null);
-  const [busy, setBusy] = useState(false);
-  const operation = useRef(false);
+  const [busy, setBusy] = useState(() => runtimeReconfirmationBusy(project.projectId));
+  const operation = useRef(runtimeReconfirmationBusy(project.projectId));
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   useEffect(() => {
@@ -257,6 +261,7 @@ export function ChapterReadingView({ project, chapterIds, scenePath, currentVers
         ...{ worldSnapshots, worldTick: worldTick || undefined },
         ...(effectiveRouteMode === 'custom' ? { sceneIds: [...(effectiveRoute ?? [])] } : { chapterIds: [...effectiveChapterIds] }),
         ...(contentVersionId ? { contentVersionId } : {}),
+        ...(selectedCheckpointId ? { state: checkpoints.find(checkpoint => checkpoint.id === selectedCheckpointId)?.data.runtimeState } : {}),
       }));
     } catch (reason) { setError(reason instanceof Error ? reason.message : '読書を開始できませんでした。'); }
     finally { operation.current = false; setBusy(false); }
@@ -333,9 +338,11 @@ export function ChapterReadingView({ project, chapterIds, scenePath, currentVers
       <label className="form-field"><span>読む作品の版</span><select aria-label="読む作品の版" disabled={busy} value={contentVersionId} onChange={event => setContentVersionId(event.target.value)}>
         <option value="">{currentVersionLabel} · 版 {project.revision}</option>{project.snapshots.map(snapshot => <option value={snapshot.id} key={snapshot.id}>固定版：{snapshot.versionLabel}</option>)}
       </select></label>
-      <label>提示する世界内tick<input aria-label="章試読の世界内tick" disabled={busy} inputMode="numeric" value={worldTick} onChange={event => setWorldTick(event.target.value)}/></label><button type="button" className="button primary small" disabled={busy || !entries.length} onClick={() => void startReading()}>{session ? '読み直す' : '記録付き読書を始める'}</button>
+      <label>開始状態<select aria-label="章試読の開始状態" disabled={busy} value={selectedCheckpointId} onChange={event => { const id = event.target.value; setSelectedCheckpointId(id); const checkpoint = checkpoints.find(item => item.id === id); if (checkpoint) setContentVersionId(checkpoint.data.contentVersionId); }}><option value="">対象版の初期値</option>{checkpoints.map(checkpoint => <option key={checkpoint.id} value={checkpoint.id}>{labelOf(checkpoint)} · {checkpoint.data.origin ?? '途中開始'} · 固定版 {checkpoint.data.contentRevision}</option>)}</select></label>
+      <label>提示する世界内tick<input aria-label="章試読の世界内tick" disabled={busy} inputMode="numeric" value={worldTick} onChange={event => setWorldTick(event.target.value)}/></label><button type="button" className="button primary small" disabled={busy || !entries.length || !!selectedCheckpointId && checkpoints.find(item => item.id === selectedCheckpointId)?.data.contentVersionId !== (contentVersionId || project.projectId)} onClick={() => void startReading()}>{session ? '読み直す' : '記録付き読書を始める'}</button>
       <p className="field-hint">一覧を表示しただけでは提示証拠は残りません。記録付き読書では「次の場面を提示」を押した場面だけが状態・伏線判定へ進みます。</p>
     </div>
+    {onSaveMany && <RuntimeReconfirmation project={project} mode="chapters" version={contentVersionId} entryId="" selectedCheckpointId={selectedCheckpointId} worldSnapshots={worldSnapshots} disabled={busy} onBusy={value => { operation.current = value; setBusy(value); }} onSaveMany={onSaveMany}/>}
     {savedReadingRecords.length > 0 && <section className="saved-reading-records" aria-label="保存した章読み通しの再開">
       <h3>保存した章読み通しを再開</h3>
       <p className="field-hint">保存版で経路を再実行し、提示順と状態を確認して続きから読みます。</p>

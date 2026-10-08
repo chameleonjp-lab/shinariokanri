@@ -69,6 +69,7 @@ export interface TrialSession {
   status: TrialStatus;
   contentRevision: string;
   startState: RuntimeState;
+  startStubValues?: TrialStubValues;
   /** Disclosure conditions captured before the initial presentation's effects. */
   startConditionResults: ConditionObservation[];
   startPresentationState?: RuntimeState;
@@ -364,7 +365,7 @@ function startTrialInternal(project: ProjectData, options: TrialStartOptions = {
   if (options.stub) {
     const stub = setTrialStubValues(project, session, options.stub);
     const observation = stub.trace.at(-1)?.presentationState ?? startPresentationState;
-    return { ...stub, history: [], trace: [], startState: clone(stub.state), startPresentationState: observation ? { ...clone(observation), provenance: stub.state.provenance } : undefined, startConditionResults: stub.trace.at(-1)?.conditionResults.length ? clone(stub.trace.at(-1)!.conditionResults) : startConditionResults, startExternalValues: clone(stub.externalValues) };
+    return { ...stub, history: [], trace: [], startState: clone(stub.state), startStubValues: clone(options.stub), startPresentationState: observation ? { ...clone(observation), provenance: stub.state.provenance } : undefined, startConditionResults: stub.trace.at(-1)?.conditionResults.length ? clone(stub.trace.at(-1)!.conditionResults) : startConditionResults, startExternalValues: clone(stub.externalValues) };
   }
   if (presentationIssues) return resultSession(session, presentationIssues.some(value => value.code === 'CONDITION_UNKNOWN') ? 'unknown' : 'error', presentationIssues);
   return inspect(project, session);
@@ -725,6 +726,7 @@ export function replayTrial(project: ProjectData, recorded: TrialSession): Trial
   replay.startState.provenance = recorded.startState.provenance;
   replay.externalValues = clone(recorded.startExternalValues);
   replay.startExternalValues = clone(recorded.startExternalValues);
+  replay.startStubValues = recorded.startStubValues ? clone(recorded.startStubValues) : undefined;
   for (const step of recorded.trace) {
     replay = stepTrial(project, replay, step.request);
     if (replay.status === 'error') return replay;
@@ -742,6 +744,7 @@ export function replaySavedTrace(project: ProjectData, traceId: ID, referenceEnt
   if (replay.status === 'error') return replay;
   replay.externalValues = clone(trace.data.initialExternalValues ?? {});
   replay.startExternalValues = clone(replay.externalValues);
+  replay.startStubValues = trace.data.initialStubValues ? clone(trace.data.initialStubValues) : undefined;
   for (const [index, step] of trace.data.steps.entries()) {
     if (!sameRuntimeValue(replay.state, step.before)) return resultSession(replay, 'error', [issue('VALIDATION_FAILED', '保存した開始状態と経路の直前状態が一致しません。', `${traceId}.steps[${index}].before`)]);
     let request: TrialRequest = {};
@@ -784,7 +787,7 @@ export function trialRecordData(project: ProjectData, session: TrialSession, che
     },
     trace: {
       contentVersionId: version, startCheckpointId: pinnedVersionId ? checkpointId : session.startCheckpointId ?? checkpointId,
-      contentRevision: session.contentRevision, initialExternalValues: clone(session.startExternalValues), ...(session.initialWorldTick !== undefined ? { initialWorldTick: session.initialWorldTick } : {}),
+      contentRevision: session.contentRevision, initialExternalValues: clone(session.startExternalValues), ...(session.startStubValues ? { initialStubValues: clone(session.startStubValues) } : {}), ...(session.initialWorldTick !== undefined ? { initialWorldTick: session.initialWorldTick } : {}),
       seed: session.startState.rngSeed, engineVersion: '1.0.0',
       externalMode: session.state.provenance === 'stub' ? 'stub' : null,
       steps: session.trace.map(step => ({

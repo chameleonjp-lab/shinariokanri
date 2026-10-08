@@ -12265,6 +12265,54 @@
                 }
               ]
             },
+            "initialStubValues": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "variables": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "additionalProperties": {
+                            "$ref": "#/$defs/TypedValue"
+                          },
+                          "propertyNames": {
+                            "$ref": "#/$defs/ID",
+                            "$comment": "{\"targetKinds\":[\"variable\"],\"referenceScope\":\"entity\"}"
+                          }
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "external": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "additionalProperties": {
+                            "$ref": "#/$defs/TypedValue"
+                          },
+                          "propertyNames": {
+                            "$ref": "#/$defs/ID",
+                            "$comment": "{\"targetKinds\":[\"external_contract\"],\"referenceScope\":\"entity\"}"
+                          }
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
             "initialWorldTick": {
               "anyOf": [
                 {
@@ -13158,6 +13206,19 @@
                             "$comment": "{\"targetKinds\":[\"scene\"],\"referenceScope\":\"entity\"}"
                           },
                           "maxItems": 100000
+                        },
+                        "selection": {
+                          "anyOf": [
+                            {
+                              "enum": [
+                                "chapters",
+                                "scenes"
+                              ]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
                         },
                         "occurrences": {
                           "type": "array",

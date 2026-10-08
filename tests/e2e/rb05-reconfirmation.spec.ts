@@ -2,7 +2,9 @@ import { expect, test, type Page } from '@playwright/test';
 import { createEntity, createProject, newId } from '../../src/domain/model';
 import { preparePartialCheckpoint } from '../../src/domain/checkpoints';
 import { pinTrialRecord, startTrial, stepTrial } from '../../src/domain/runtime';
-import { exportScenario } from '../../src/storage/archive';
+import { exportScenario, inspectScenario } from '../../src/storage/archive';
+import { pinChapterReadingRecord, presentNextChapterScene, startChapterReading } from '../../src/domain/presentation';
+import { readFile } from 'node:fs/promises';
 import { jsonBytes, sha256 } from '../../src/storage/json';
 async function navigate(page: Page, name: RegExp) { const menu = page.getByRole('button', { name: 'メニューを開く' }); if (await menu.isVisible()) await menu.click(); await page.locator('.sidebar').getByRole('button', { name }).first().click(); }
 async function fixture() {
@@ -34,4 +36,26 @@ test('保存失敗で移行差分を保持し、再試行後にだけ保存完�
   await page.evaluate(() => { const original = IDBObjectStore.prototype.put; (window as any).__failMigrationSave = true; IDBObjectStore.prototype.put = function (...args: Parameters<IDBObjectStore['put']>) { if ((window as any).__failMigrationSave && this.name === 'projects') { (window as any).__failMigrationSave = false; throw new DOMException('試験で保存を失敗させました', 'QuotaExceededError'); } return original.apply(this, args); }; });
   await tool.getByRole('button', { name: '確認した状態を新しい途中開始へ移行', exact: true }).click(); await expect(tool.getByRole('alert')).toBeVisible(); await expect(tool).toContainText('確認基底revision'); await expect(tool).not.toContainText('旧版の証跡も保持しています。');
   await tool.getByRole('button', { name: '確認した状態を新しい途中開始へ移行', exact: true }).click(); await expect(tool).toContainText('旧版の証跡も保持しています。');
+});
+
+test('移行差分確認後に入口を切り替えると保存を止め、固定した入口を表示する', async ({ page }) => {
+  const f = await fixture(), second = createEntity(f.p.projectId, 'flow_node', '別の宣言入口', { nodeType: 'entry' }); f.p.entities.push(second);
+  await seed(page, f.p); await page.getByLabel('試読の開始点', { exact: true }).selectOption(f.entry.id);
+  const tool = page.getByRole('region', { name: '開始版の移行と経路の再確認' }); await tool.locator('summary').filter({ hasText: '別版の開始状態を移行する' }).click(); await tool.getByRole('radio', { name: /旧版の途中開始/ }).check(); await tool.getByRole('button', { name: '開始状態の移行差分を確認', exact: true }).click();
+  const save = tool.getByRole('button', { name: '確認した状態を新しい途中開始へ移行', exact: true }); await expect(save).toBeEnabled(); await expect(tool).toContainText(`確認した開始点 入口 · ${f.entry.id}`);
+  await page.getByLabel('試読の開始点', { exact: true }).selectOption(second.id); await expect(save).toBeDisabled(); await expect(tool).toContainText('作品版・開始点・読み方が変わりました'); await expect(tool).toContainText(f.entry.id);
+  await page.getByLabel('試読の開始点', { exact: true }).selectOption(f.entry.id); await expect(save).toBeEnabled();
+});
+
+
+test('個別章開始を明示移行し、通常画面で再確認・原子保存・再読込・完全保存する', async ({ page }) => {
+  const f = await fixture(), scene = f.p.entities.find(entity => entity.kind === 'scene')!, chapter = createEntity(f.p.projectId, 'chapter', '個別開始の章', { sceneIds: [scene.id] }); f.p.entities.push(chapter); if (scene.kind !== 'scene') throw new Error('fixture'); scene.data.chapterId = chapter.id;
+  const initial = await startChapterReading(f.p, { chapterIds: [chapter.id] }); initial.state.variableValues[f.variable.id] = { type: 'integer', value: 8 }; initial.startState.variableValues[f.variable.id] = { type: 'integer', value: 8 };
+  const ids = { checkpointId: newId(), snapshotId: newId() }, record = pinChapterReadingRecord(presentNextChapterScene(f.p, initial), ids), cp = { ...createEntity(f.p.projectId, 'checkpoint', '旧章の個別開始8', record.checkpoint), id: ids.checkpointId }, trace = createEntity(f.p.projectId, 'trace', '個別開始8の章経路', record.trace); f.p.entities.push(cp, trace); f.p.snapshots.push({ id: ids.snapshotId, content: record.content, contentHash: await sha256(jsonBytes(record.content)), createdAt: '2026-10-08T00:00:00Z', versionLabel: '個別開始8の旧章版' }); scene.data.body[0]!.text = '改訂した章の本文。';
+  await seed(page, f.p); await page.getByRole('tab', { name: '章の試読', exact: true }).click();
+  const tool = page.getByRole('region', { name: '開始版の移行と経路の再確認' }); await tool.locator('summary').filter({ hasText: '別版の開始状態を移行する' }).click(); await tool.getByRole('radio', { name: /旧章の個別開始8/ }).check(); await tool.getByRole('button', { name: '開始状態の移行差分を確認', exact: true }).click(); await expect(tool).toContainText('確認した開始点 章の提示開始'); await tool.getByRole('button', { name: '確認した状態を新しい途中開始へ移行', exact: true }).click(); await expect(tool).toContainText('旧版の証跡も保持しています。');
+  const start = page.getByLabel('章試読の開始状態', { exact: true }), id = await start.locator('option').filter({ hasText: '版移行した途中開始の状態' }).getAttribute('value'); await start.selectOption(id!); await tool.locator('summary').filter({ hasText: '保存した経路を改訂稿で再確認する' }).click(); await tool.getByRole('radio', { name: /個別開始8の章経路/ }).check(); await tool.getByRole('button', { name: '旧経路を改訂稿で再実行して確認', exact: true }).click(); await expect(tool).toContainText('再実行基底revision'); await tool.getByRole('button', { name: '再実行した新しい経路と証跡を保存', exact: true }).click(); await expect(tool).toContainText('旧版の証跡も保持しています。');
+  await page.reload(); await navigate(page, /^構成/); await page.getByRole('tab', { name: '章の試読', exact: true }).click(); await page.getByRole('region', { name: '保存した章読み通しの再開', exact: true }).getByRole('button', { name: '改訂稿の再確認 · 個別開始8の章経路', exact: true }).click(); await expect(page.locator('.chapter-reading-presented')).toContainText('改訂した章の本文。');
+  await navigate(page, /^作品・保存/); await page.getByRole('tab', { name: '完全保存・復元', exact: true }).click(); const downloaded = page.waitForEvent('download'); await page.getByRole('button', { name: '完全保存ファイルを作成', exact: true }).click(); const download = await downloaded, restored = (await inspectScenario(new Uint8Array(await readFile((await download.path())!)))).project, renewed = restored.entities.find(entity => entity.kind === 'trace' && entity.name === '改訂稿の再確認 · 個別開始8の章経路')!;
+  if (renewed.kind !== 'trace') throw new Error('saved trace'); const saved = restored.entities.find(entity => entity.id === renewed.data.startCheckpointId)!; if (saved.kind !== 'checkpoint') throw new Error('saved start'); expect(saved.data.runtimeState.variableValues[f.variable.id]).toEqual({ type: 'integer', value: 8 }); expect(saved.data.runtimeState.provenance).toBe('partial'); expect(renewed.data.reconfirmation!.sourceTraceId).toBe(trace.id); expect(renewed.data.readingPath!.selection).toBe('chapters');
 });

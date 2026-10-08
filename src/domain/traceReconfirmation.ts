@@ -43,15 +43,24 @@ export async function prepareTraceReconfirmation(project: ProjectData, traceId: 
     if (performance.now() - started > 30_000) throw new Error('再確認は30秒の上限に達しました。新しい確認証跡は保存していません。');
     if (index % 50 === 0) { options.onProgress?.(index); await new Promise<void>(resolve => setTimeout(resolve, 0)); }
   };
+  const selectedCheckpoint = checkpointId ? source.entities.find((entity): entity is Entity<'checkpoint'> => entity.id === checkpointId && entity.kind === 'checkpoint' && adoptedRecord(entity)) : undefined;
+  if (checkpointId && !selectedCheckpoint) throw new Error('選んだ開始状態がありません。移行・再作成を確認してください。');
+  if (selectedCheckpoint && traceRevisionChanges(source, { ...trace, data: { ...trace.data, contentVersionId: selectedCheckpoint.data.contentVersionId } }).length) throw new Error('選んだ開始状態は改訂稿の宣言と異なります。版移行を再確認してください。');
   let record: ReturnType<typeof pinTrialRecord>, findings: ReconfirmationPlan['findings'];
   if (trace.data.mode === 'chapters') {
     const cp = source.entities.find(entity => entity.id === trace.data.startCheckpointId && entity.kind === 'checkpoint');
     if (!cp || cp.kind !== 'checkpoint') throw new Error('旧章経路の開始状態がありません。');
     const old = await replayChapterReading(source, trace.data, cp.data, { worldSnapshots: worlds });
     if (old.status !== 'terminal') throw new Error('旧版の章提示記録が完了していません。旧証跡を確認してください。');
-    const selected = new Set(trace.data.readingPath?.chapterIds ?? []), chapterIds = current.entities.filter(entity => entity.kind === 'chapter' && adoptedRecord(entity) && selected.has(entity.id)).map(entity => entity.id);
+    const path = trace.data.readingPath!, selection = path.selection ?? 'scenes';
+    if (!selectedCheckpoint) {
+      const originalStart = await startChapterReading(source, { contentVersionId: trace.data.contentVersionId, chapterIds: path.chapterIds, sceneIds: path.sceneIds, selection, worldSnapshots: worlds, externalValues: trace.data.initialExternalValues ?? {}, worldTick: trace.data.initialWorldTick ?? undefined });
+      if (canonicalJson(originalStart.startState) !== canonicalJson(cp.data.runtimeState)) throw new Error('個別の章開始状態には、対象版へ移行・再作成した開始状態を選んでください。');
+    }
+    const selected = new Set(path.chapterIds), chapterIds = current.entities.filter(entity => entity.kind === 'chapter' && adoptedRecord(entity) && selected.has(entity.id)).map(entity => entity.id);
     if (chapterIds.length !== selected.size) throw new Error('対象の章が改訂稿から取り除かれています。開始範囲を再作成してください。');
-    let next = await startChapterReading(source, { chapterIds, worldSnapshots: worlds, externalValues: trace.data.initialExternalValues ?? {}, worldTick: trace.data.initialWorldTick ?? undefined });
+    // An old record without a selection declaration retains its exact scene path.
+    let next = await startChapterReading(source, { ...(selection === 'chapters' ? { chapterIds } : { chapterIds: path.chapterIds, sceneIds: path.sceneIds }), selection, ...(selectedCheckpoint ? { state: selectedCheckpoint.data.runtimeState, contentVersionId: selectedCheckpoint.data.contentVersionId } : {}), worldSnapshots: worlds, externalValues: trace.data.initialExternalValues ?? {}, worldTick: trace.data.initialWorldTick ?? undefined });
     for (let index = 0; index < next.sceneIds.length; index++) { await guard(index); next = presentNextChapterScene(source, next); if (next.status === 'error' || next.status === 'unknown') break; }
     if (next.status !== 'terminal') throw new Error('改訂稿の提示に未知または失敗があります。未実行を確認済みへ変換できません。');
     record = pinChapterReadingRecord(next, ids); findings = checkChapterForeshadows(next);
@@ -63,9 +72,13 @@ export async function prepareTraceReconfirmation(project: ProjectData, traceId: 
     const entryId = old.startState.presentationPosition ?? undefined;
     if (!checkpointId && old.startState.provenance !== 'full_play' && old.startState.provenance !== 'stub') throw new Error('途中開始の経路には、対象版へ移行・再作成した開始状態を選んでください。');
     if (!checkpointId && (!entryId || !declaredEntrypoints(current).includes(entryId))) throw new Error('旧入口が改訂稿の宣言入口にありません。開始状態を再作成してください。');
-    const selectedCheckpoint = checkpointId ? source.entities.find(entity => entity.id === checkpointId && entity.kind === 'checkpoint') : undefined;
-    if (selectedCheckpoint && selectedCheckpoint.kind === 'checkpoint' && traceRevisionChanges(source, { ...trace, data: { ...trace.data, contentVersionId: selectedCheckpoint.data.contentVersionId } }).length) throw new Error('選んだ開始状態は改訂稿の宣言と異なります。版移行を再確認してください。');
-    let next = await startTrialVerified(source, { entryId, checkpointId: checkpointId, contentVersionId: selectedCheckpoint?.kind === 'checkpoint' ? selectedCheckpoint.data.contentVersionId : undefined, seed: old.startState.rngSeed, worldTick: trace.data.initialWorldTick ?? undefined, ...(Object.keys(old.startExternalValues).length ? { stub: { external: old.startExternalValues } } : {}) }, worlds);
+    let initialStub = trace.data.initialStubValues ?? (Object.keys(old.startExternalValues).length ? { external: old.startExternalValues } : undefined);
+    if (!checkpointId && old.startState.provenance === 'stub') {
+      const originalStart = await startTrialVerified(source, { entryId, contentVersionId: trace.data.contentVersionId, seed: old.startState.rngSeed, worldTick: trace.data.initialWorldTick ?? undefined, stub: initialStub ?? {} }, worlds);
+      if (canonicalJson(originalStart.startState) !== canonicalJson(old.startState)) throw new Error('旧stubの個別開始入力が記録されていないか、開始状態と一致しません。開始状態を移行・再作成して選んでください。');
+      initialStub ??= {};
+    }
+    let next = await startTrialVerified(source, { entryId, checkpointId, contentVersionId: selectedCheckpoint?.data.contentVersionId, seed: old.startState.rngSeed, worldTick: trace.data.initialWorldTick ?? undefined, ...(!checkpointId && initialStub ? { stub: initialStub } : {}) }, worlds);
     if (next.status !== 'ready' && next.status !== 'terminal') throw new Error('改訂稿の開始状態を確認できません。未知・対象版・入口を確認してください。');
     for (const [index, step] of old.trace.entries()) {
       await guard(index); const beforeLength = next.trace.length;
