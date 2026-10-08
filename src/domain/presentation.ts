@@ -163,7 +163,8 @@ export async function startChapterReading(project: ProjectData, options: Chapter
     if (!variable || variable.kind !== 'variable') throw new DomainValidationError([{ code: 'REFERENCE_INVALID', path: `state.variableValues.${id}`, message: '開始状態に対象版の宣言がない状態値があります。' }]);
     const issues = validateVariableValue(variable, value, `state.variableValues.${id}`); if (issues.length) throw new DomainValidationError(issues);
   }
-  const exclusions = runtimeExclusionIssues({ state, entities: content.entities, referenceEntities: closure.worlds.flatMap(world => world.entities), ruleContext: presentationRuleContext(content, { sceneId: sequence[0]?.scene.id, worldTick }) });
+  const ruleContext = presentationRuleContext(content, { sceneId: sequence[0]?.scene.id, worldTick });
+  const exclusions = runtimeExclusionIssues({ state, entities: content.entities, referenceEntities: closure.worlds.flatMap(world => world.entities), externalValues, ruleContext, ruleContexts: reuseRuleContexts(content, ruleContext) });
   if (exclusions.some(issue => issue.code !== 'CONDITION_UNKNOWN')) throw new DomainValidationError(exclusions);
   const chapterIds = chapterIdsOption ? [...chapterIdsOption] : [...new Set(sequence.flatMap(entry => entry.chapterId ? [entry.chapterId] : []))];
   return { content, declarationProject, contentVersionId: version, contentRevision: content.revision, contentHash: project.snapshots.find(item => item.id === version)?.contentHash, startState: structuredClone(state), state, worldTick, chapterIds, sceneIds: sequence.map(entry => entry.scene.id), selection: requestedSelection ?? (sceneIdsOption ? 'scenes' : 'chapters'), occurrences: [], externalValues, referenceEntities: structuredClone(closure.worlds.flatMap(world => world.entities)), status: exclusions.length ? 'unknown' : sequence.length ? 'ready' : 'terminal', issues: exclusions };
@@ -210,7 +211,7 @@ export function pinChapterReadingRecord(session: ChapterReadingSession, ids: { c
   const observations = session.occurrences.flatMap(occurrence => occurrence.conditionResults);
   return {
     content: structuredClone(content),
-    checkpoint: { contentVersionId: ids.snapshotId, contentRevision: session.contentRevision, runtimeState: stateForRecord(session.startState), origin: 'partial' },
+    checkpoint: { contentVersionId: ids.snapshotId, contentRevision: session.contentRevision, runtimeState: stateForRecord(session.startState), origin: 'partial', ...(session.worldTick !== undefined ? { worldTick: session.worldTick } : {}) },
     trace: { ...(declaredRegressionPaths(declarationProject).ids.length ? { regressionDeclarations: { projectRevision: declarationProject.revision, traceIds: declaredRegressionPaths(declarationProject).ids } } : {}), contentVersionId: ids.snapshotId, contentRevision: session.contentRevision, startCheckpointId: ids.checkpointId, seed: session.startState.rngSeed, engineVersion: '1.0.0', ...(session.worldTick !== undefined ? { initialWorldTick: session.worldTick } : {}), initialExternalValues: structuredClone(session.externalValues), externalMode: Object.keys(session.externalValues).length ? 'stub' : null, steps: [], mode: 'chapters', readingPath, coverage: {
       scenes: { checked: new Set(session.occurrences.map(occurrence => occurrence.entityId)).size, total: scenes.length },
       dialogue: { checked: dialogue.filter(line => session.state.seenIds.includes(line.id)).length, total: dialogue.length }, choices: { checked: 0, total: 0 },
@@ -223,7 +224,8 @@ export function pinChapterReadingRecord(session: ChapterReadingSession, ids: { c
 /** Replays the captured scene occurrences; recorded assertions cannot substitute for actual execution. */
 export async function replayChapterReading(project: ProjectData, trace: TraceData & RuntimeTraceExtensions, checkpoint: CheckpointData, options: Pick<ProjectValidationOptions, 'worldSnapshots'> = {}): Promise<ChapterReadingSession> {
   if (trace.mode !== 'chapters' || !trace.readingPath || trace.steps.length || trace.contentVersionId !== checkpoint.contentVersionId) throw new DomainValidationError([{ code: 'VALIDATION_FAILED', path: 'readingPath', message: '章読み通し記録の版または形式が一致しません。' }]);
-  let session = await startChapterReading(project, { contentVersionId: trace.contentVersionId, chapterIds: trace.readingPath.chapterIds, sceneIds: trace.readingPath.sceneIds, selection: trace.readingPath.selection ?? 'scenes', state: checkpoint.runtimeState, worldTick: trace.initialWorldTick ?? undefined, externalValues: trace.initialExternalValues ?? {}, worldSnapshots: options.worldSnapshots });
+  if (trace.initialWorldTick != null && checkpoint.worldTick != null && trace.initialWorldTick !== checkpoint.worldTick) throw new DomainValidationError([{ code: 'INTEGRITY_FAILED', path: 'initialWorldTick', message: '章経路の提示時点と保存した開始時点が一致しません。' }]);
+  let session = await startChapterReading(project, { contentVersionId: trace.contentVersionId, chapterIds: trace.readingPath.chapterIds, sceneIds: trace.readingPath.sceneIds, selection: trace.readingPath.selection ?? 'scenes', state: checkpoint.runtimeState, worldTick: trace.initialWorldTick ?? checkpoint.worldTick ?? undefined, externalValues: trace.initialExternalValues ?? {}, worldSnapshots: options.worldSnapshots });
   if (trace.contentRevision && trace.contentRevision !== session.contentRevision || checkpoint.contentRevision && checkpoint.contentRevision !== session.contentRevision) throw new DomainValidationError([{ code: 'VALIDATION_FAILED', path: 'contentRevision', message: '記録した開始状態と内容版の更新番号が違います。' }]);
   const seen = new Set<string>();
   for (const [index, occurrence] of trace.readingPath.occurrences.entries()) {

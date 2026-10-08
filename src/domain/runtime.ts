@@ -1,4 +1,4 @@
-import type { CheckpointData, Condition, Entity, EntityKind, Expression, ID, PresentationConditionResult, ProjectContent, ProjectData, RuntimeState, TraceData, Trigger, TypedValue } from './types';
+import type { CheckpointData, Condition, DomainErrorCode, Entity, EntityKind, Expression, ID, PresentationConditionResult, ProjectContent, ProjectData, RuntimeState, TraceData, Trigger, TypedValue } from './types';
 import { emptyRuntimeState, getEntitiesByKind, getEntity as getAuthorEntity, validateInitialPresentationResults, validateProject, validateRuntimeState, validateVariableValue } from './model';
 import { applyEffectsAtomic, evaluateCondition, initializeRuntimeState, resetRuntimeLifecycle, runtimeExclusionIssues } from './conditions';
 import { isTick, resolveTime } from './time';
@@ -10,7 +10,7 @@ import { checkPresentationForeshadows } from './narrative';
 import { evaluateScenarioException, evaluateTargetScope } from './stateRules';
 
 export type TrialStatus = 'ready' | 'terminal' | 'blocked' | 'unknown' | 'error';
-export interface RuntimeIssue { code: string; message: string; path: string }
+export interface RuntimeIssue { code: DomainErrorCode; message: string; path: string }
 export interface RuntimeDiff { path: string; before: unknown; after: unknown; edgeIds?: ID[] }
 export type ConditionObservation = PresentationConditionResult;
 export interface TrialChoice {
@@ -70,6 +70,7 @@ export interface TrialSession {
   contentRevision: string;
   startState: RuntimeState;
   startStubValues?: TrialStubValues;
+  startStubBaseState?: RuntimeState;
   /** Disclosure conditions captured before the initial presentation's effects. */
   startConditionResults: ConditionObservation[];
   startPresentationState?: RuntimeState;
@@ -109,7 +110,7 @@ function canonicalRuntimeValue(value: unknown): string {
   return `{${Object.keys(record).filter(key => record[key] !== undefined).sort().map(key => `${JSON.stringify(key)}:${canonicalRuntimeValue(record[key])}`).join(',')}}`;
 }
 const sameRuntimeValue = (left: unknown, right: unknown): boolean => canonicalRuntimeValue(left) === canonicalRuntimeValue(right);
-const issue = (code: string, message: string, path = 'runtime'): RuntimeIssue => ({ code, message, path });
+const issue = (code: DomainErrorCode, message: string, path = 'runtime'): RuntimeIssue => ({ code, message, path });
 const active = <T extends { deletedAt?: string | null; status?: string }>(entities: T[]): T[] =>
   entities.filter(adoptedRecord);
 interface ContentIndex {
@@ -272,6 +273,8 @@ export function startTrial(project: ProjectData, options: TrialStartOptions = {}
 }
 function startTrialInternal(project: ProjectData, options: TrialStartOptions = {}, alreadyCaptured = false): TrialSession {
   const source = project;
+  const requestedCheckpoint = options.checkpointId ? source.entities.find((entity): entity is Entity<'checkpoint'> => entity.id === options.checkpointId && entity.kind === 'checkpoint') : undefined;
+  if (options.worldTick === undefined && requestedCheckpoint?.data.worldTick != null) options = { ...options, worldTick: requestedCheckpoint.data.worldTick };
   const version = options.contentVersionId ?? project.projectId;
   const content = alreadyCaptured ? project : versionContent(project, version);
   if (content) project = content;
@@ -365,7 +368,7 @@ function startTrialInternal(project: ProjectData, options: TrialStartOptions = {
   if (options.stub) {
     const stub = setTrialStubValues(project, session, options.stub);
     const observation = stub.trace.at(-1)?.presentationState ?? startPresentationState;
-    return { ...stub, history: [], trace: [], startState: clone(stub.state), startStubValues: clone(options.stub), startPresentationState: observation ? { ...clone(observation), provenance: stub.state.provenance } : undefined, startConditionResults: stub.trace.at(-1)?.conditionResults.length ? clone(stub.trace.at(-1)!.conditionResults) : startConditionResults, startExternalValues: clone(stub.externalValues) };
+    return { ...stub, history: [], trace: [], startState: clone(stub.state), startStubValues: clone(options.stub), ...((options.state || options.checkpointId) ? { startStubBaseState: clone(session.state) } : {}), startPresentationState: observation ? { ...clone(observation), provenance: stub.state.provenance } : undefined, startConditionResults: stub.trace.at(-1)?.conditionResults.length ? clone(stub.trace.at(-1)!.conditionResults) : startConditionResults, startExternalValues: clone(stub.externalValues) };
   }
   if (presentationIssues) return resultSession(session, presentationIssues.some(value => value.code === 'CONDITION_UNKNOWN') ? 'unknown' : 'error', presentationIssues);
   return inspect(project, session);
@@ -727,6 +730,7 @@ export function replayTrial(project: ProjectData, recorded: TrialSession): Trial
   replay.externalValues = clone(recorded.startExternalValues);
   replay.startExternalValues = clone(recorded.startExternalValues);
   replay.startStubValues = recorded.startStubValues ? clone(recorded.startStubValues) : undefined;
+  replay.startStubBaseState = recorded.startStubBaseState ? clone(recorded.startStubBaseState) : undefined;
   for (const step of recorded.trace) {
     replay = stepTrial(project, replay, step.request);
     if (replay.status === 'error') return replay;
@@ -742,9 +746,16 @@ export function replaySavedTrace(project: ProjectData, traceId: ID, referenceEnt
   const content = getTrialContent(project, replay);
   if (trace.data.contentRevision != null && trace.data.contentRevision !== content.revision) return resultSession(replay, 'error', [issue('VALIDATION_FAILED', '経路記録の作品版が変更されました。再確認が必要です。', `${traceId}.contentRevision`)]);
   if (replay.status === 'error') return replay;
+  const checkpoint = project.entities.find((entity): entity is Entity<'checkpoint'> => entity.id === trace.data.startCheckpointId && entity.kind === 'checkpoint');
+  if (trace.data.initialWorldTick != null && checkpoint?.data.worldTick != null && trace.data.initialWorldTick !== checkpoint.data.worldTick) return resultSession(replay, 'error', [issue('INTEGRITY_FAILED', '保存した開始時点と経路の初期提示時点が一致しません。', `${traceId}.initialWorldTick`)]);
+  if (trace.data.initialStubValues) {
+    const fresh = startTrial(project, { ...(trace.data.initialStubBaseState ? { state: clone(trace.data.initialStubBaseState) } : {}), entryId: replay.startState.presentationPosition ?? undefined, contentVersionId: trace.data.contentVersionId, referenceEntities, seed: replay.startState.rngSeed, worldTick: trace.data.initialWorldTick ?? checkpoint?.data.worldTick ?? undefined, stub: clone(trace.data.initialStubValues) });
+    if (fresh.status === 'error' || !sameRuntimeValue(fresh.startState, replay.startState) || !sameRuntimeValue(fresh.startExternalValues, trace.data.initialExternalValues ?? {})) return resultSession(replay, 'error', [issue('INTEGRITY_FAILED', '保存した初期stub入力と固定版の開始状態が一致しません。', `${traceId}.initialStubValues`)]);
+  }
   replay.externalValues = clone(trace.data.initialExternalValues ?? {});
   replay.startExternalValues = clone(replay.externalValues);
   replay.startStubValues = trace.data.initialStubValues ? clone(trace.data.initialStubValues) : undefined;
+  replay.startStubBaseState = trace.data.initialStubBaseState ? clone(trace.data.initialStubBaseState) : undefined;
   for (const [index, step] of trace.data.steps.entries()) {
     if (!sameRuntimeValue(replay.state, step.before)) return resultSession(replay, 'error', [issue('VALIDATION_FAILED', '保存した開始状態と経路の直前状態が一致しません。', `${traceId}.steps[${index}].before`)]);
     let request: TrialRequest = {};
@@ -783,11 +794,12 @@ export function trialRecordData(project: ProjectData, session: TrialSession, che
       contentVersionId: version, contentRevision: session.contentRevision, runtimeState: stateForRecord(session.startState),
       ...(session.startConditionResults.length ? { presentationResults: clone(session.startConditionResults) } : {}),
       ...(session.startPresentationState ? { presentationState: stateForRecord(session.startPresentationState) } : {}),
+      ...(session.initialWorldTick !== undefined ? { worldTick: session.initialWorldTick } : {}),
       origin: session.startState.provenance === 'stub' ? 'partial' : session.startState.provenance,
     },
     trace: {
       contentVersionId: version, startCheckpointId: pinnedVersionId ? checkpointId : session.startCheckpointId ?? checkpointId,
-      contentRevision: session.contentRevision, initialExternalValues: clone(session.startExternalValues), ...(session.startStubValues ? { initialStubValues: clone(session.startStubValues) } : {}), ...(session.initialWorldTick !== undefined ? { initialWorldTick: session.initialWorldTick } : {}),
+      contentRevision: session.contentRevision, initialExternalValues: clone(session.startExternalValues), ...(session.startStubValues ? { initialStubValues: clone(session.startStubValues) } : {}), ...(session.startStubBaseState ? { initialStubBaseState: stateForRecord(session.startStubBaseState) } : {}), ...(session.initialWorldTick !== undefined ? { initialWorldTick: session.initialWorldTick } : {}),
       seed: session.startState.rngSeed, engineVersion: '1.0.0',
       externalMode: session.state.provenance === 'stub' ? 'stub' : null,
       steps: session.trace.map(step => ({

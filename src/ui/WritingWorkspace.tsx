@@ -258,7 +258,7 @@ export function ChapterReadingView({ project, chapterIds, scenePath, currentVers
     setError(''); setNotice(''); setBusy(true);
     try {
       setSession(await startChapterReading(project, {
-        ...{ worldSnapshots, worldTick: worldTick || undefined },
+        ...{ worldSnapshots, worldTick: worldTick || checkpoints.find(checkpoint => checkpoint.id === selectedCheckpointId)?.data.worldTick || undefined },
         ...(effectiveRouteMode === 'custom' ? { sceneIds: [...(effectiveRoute ?? [])] } : { chapterIds: [...effectiveChapterIds] }),
         ...(contentVersionId ? { contentVersionId } : {}),
         ...(selectedCheckpointId ? { state: checkpoints.find(checkpoint => checkpoint.id === selectedCheckpointId)?.data.runtimeState } : {}),
@@ -342,7 +342,7 @@ export function ChapterReadingView({ project, chapterIds, scenePath, currentVers
       <label>提示する世界内tick<input aria-label="章試読の世界内tick" disabled={busy} inputMode="numeric" value={worldTick} onChange={event => setWorldTick(event.target.value)}/></label><button type="button" className="button primary small" disabled={busy || !entries.length || !!selectedCheckpointId && checkpoints.find(item => item.id === selectedCheckpointId)?.data.contentVersionId !== (contentVersionId || project.projectId)} onClick={() => void startReading()}>{session ? '読み直す' : '記録付き読書を始める'}</button>
       <p className="field-hint">一覧を表示しただけでは提示証拠は残りません。記録付き読書では「次の場面を提示」を押した場面だけが状態・伏線判定へ進みます。</p>
     </div>
-    {onSaveMany && <RuntimeReconfirmation project={project} mode="chapters" version={contentVersionId} entryId="" selectedCheckpointId={selectedCheckpointId} worldSnapshots={worldSnapshots} disabled={busy} onBusy={value => { operation.current = value; setBusy(value); }} onSaveMany={onSaveMany}/>}
+    {onSaveMany && <RuntimeReconfirmation project={project} mode="chapters" version={contentVersionId} worldTick={worldTick} sceneId={entries[0]?.scene.id} entryId="" selectedCheckpointId={selectedCheckpointId} worldSnapshots={worldSnapshots} disabled={busy} onBusy={value => { operation.current = value; setBusy(value); }} onSaveMany={onSaveMany}/>}
     {savedReadingRecords.length > 0 && <section className="saved-reading-records" aria-label="保存した章読み通しの再開">
       <h3>保存した章読み通しを再開</h3>
       <p className="field-hint">保存版で経路を再実行し、提示順と状態を確認して続きから読みます。</p>
