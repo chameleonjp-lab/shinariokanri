@@ -1,0 +1,218 @@
+{
+  "target": {
+    "commit": "2f5453e70e3dedde51b0530632cf68e59bed20cb",
+    "tree": "8ea4185ef64059712db7b12fd99305ce1b6593aa",
+    "base": "b310800c98bc9a89b93182ad721380a0be99d2d3",
+    "source154Match": true,
+    "frozenAt": "2026-10-08T08:42:27.417855+00:00"
+  },
+  "decision": "EN09-EN18 and UI01-UI10 pass the preserved checked scope; new CTX graph/chapter namespace differences remain; no global RB05/AT pass",
+  "historicalEvidenceUnchanged": [
+    "a21a5d3 negative records",
+    "5c28c04 negative records",
+    "32c1608 negative records",
+    "0917ab0 freeze only; no evaluation before parent switched target5"
+  ],
+  "verification": {
+    "originalNP14": {
+      "passed": 14,
+      "failed": 0,
+      "log": "independent/narrative-original.log"
+    },
+    "originalEN01_08": {
+      "passed": 8,
+      "failed": 0,
+      "log": "independent/edition-original.log"
+    },
+    "submittedRelated13": {
+      "passed": 13,
+      "failed": 0,
+      "log": "independent/edition-original.log"
+    },
+    "EN09_18": {
+      "passed": 10,
+      "failed": 0,
+      "log": "independent/edition-repaired.log"
+    },
+    "genuineLegacyFrozen": {
+      "passed": 2,
+      "failed": 0,
+      "log": "independent/legacy-frozen.log"
+    },
+    "newScopedReuseContexts": {
+      "passed": 0,
+      "failed": 2,
+      "log": "independent/scoped-reuse-context.log"
+    },
+    "independentParts": {
+      "passed": 34,
+      "failed": 2
+    },
+    "actualApp": {
+      "passed": 10,
+      "failed": 0,
+      "ids": [
+        "UI01",
+        "UI02",
+        "UI03",
+        "UI04",
+        "UI05",
+        "UI06",
+        "UI07",
+        "UI08",
+        "UI09",
+        "UI10"
+      ],
+      "browser": "Chromium151.0.7922.173 /usr/bin/chromium",
+      "build": "Vite development, isolated exact commit source, actual App/ScenarioStore/native IndexedDB; controlled save delay/failure",
+      "viewport": "1024x768",
+      "logs": [
+        "independent/browser-review.log",
+        "independent/browser-chapter-extra.log",
+        "independent/browser-clock-extra.log"
+      ]
+    }
+  },
+  "repairResults": [
+    "EN09 original sole selected scene terminates after1 presentation; finite fixed-source permission ready",
+    "EN10 known target context migration accepted; target clock now typed/captured",
+    "EN11 legal99 vs saved8 initial stub contradiction refused by replay/durable/native",
+    "EN12 healthy typed stub native/clone remains stub; EN13 genuine a21 old stub replays and missing input blocks reconfirmation",
+    "EN14 partial base7/untouched12/item/loop3 + initial stub8/externaltrue/clock5 survive atomic store restart/native/clone",
+    "EN15 unknown stops, half-open0/9 permitted10 denied, clock5 restored, approval tampering and ambiguous old clocks refused",
+    "EN16 explicit chapter selection and empty set retain exact scope; default whole work/explicit scene path retained",
+    "EN17 ordinary non-stub flow start clock mismatch now refused at durable/native as well as replay",
+    "EN18 base-value/base-edition/external-input/external-captured contradictions refused without promoting origin",
+    "LEG flow/chapter genuine main3099 fixtures replay after native/clone, keep original trace, retain full/internal versus partial denominators",
+    "UI01-08 same-turn, pending navigation/reentry, failure retry, stale base revision, latest props, cold reload, normal chapter partial8 native/clone all pass at current source",
+    "UI09 tick5 approval freezes, clock changes disable saving, flow navigation and cold checkpoint replay preserve5",
+    "UI10 chapter tick5 and custom1scene survive navigation and cold reload; new preview6 disables,5 enables"
+  ],
+  "findings": [
+    {
+      "id": "CTX-graph",
+      "classification": "reproduced_scope_namespace_difference",
+      "requirements": [
+        "REQ-B14",
+        "REQ-B15",
+        "REQ-B16",
+        "REQ-F13",
+        "REQ-F15",
+        "REQ-F20",
+        "REQ-F41",
+        "REQ-F43",
+        "REQ-N19"
+      ],
+      "given": "A scene reference has a confirmed source, finite exception [0,10), source snapshot restriction and graph restriction to the unchanged actual caller ID; no childGraph execution dependency.",
+      "when": "Run tick5 from the old fixed edition and through the fixed reference in the same caller scope.",
+      "expected": "Both are ready; a different caller scope or missing/expired context must remain stopped.",
+      "actual": {
+        "validProject": true,
+        "originalFixed": "ready",
+        "sameCallerThroughReference": "error",
+        "chapter": "",
+        "chapterError": ""
+      },
+      "cause": "moduleRecords imports targetScope graph/chapter as dependencies; mapRecord maps those scope-only caller IDs to virtual records, while ruleContext carries the actual use-site ID.",
+      "boundaryConstraint": "Do not indiscriminately revert internal childGraph namespace IDs; distinguish real execution dependencies from caller-context scope references.",
+      "fixture": "independent/fixtures/CTX-graph.json"
+    },
+    {
+      "id": "CTX-chapter",
+      "classification": "reproduced_scope_namespace_difference",
+      "requirements": [
+        "REQ-B14",
+        "REQ-B15",
+        "REQ-B16",
+        "REQ-F13",
+        "REQ-F15",
+        "REQ-F20",
+        "REQ-F41",
+        "REQ-F43",
+        "REQ-N19"
+      ],
+      "given": "A scene reference has a confirmed source, finite exception [0,10), source snapshot restriction and chapter restriction to the unchanged actual caller ID; no childGraph execution dependency.",
+      "when": "Run tick5 from the old fixed edition and through the fixed reference in the same caller scope.",
+      "expected": "Both are ready; a different caller scope or missing/expired context must remain stopped.",
+      "actual": {
+        "validProject": true,
+        "originalFixed": "ready",
+        "sameCallerThroughReference": "error",
+        "chapter": "",
+        "chapterError": "相互排他に反する状態です。限定期間に確定根拠があるときのみ同時採用"
+      },
+      "cause": "moduleRecords imports targetScope graph/chapter as dependencies; mapRecord maps those scope-only caller IDs to virtual records, while ruleContext carries the actual use-site ID.",
+      "boundaryConstraint": "Do not indiscriminately revert internal childGraph namespace IDs; distinguish real execution dependencies from caller-context scope references.",
+      "fixture": "independent/fixtures/CTX-chapter.json"
+    }
+  ],
+  "harnessClarification": {
+    "file": "independent/setup-explicit-chapter-scene-context/README.md",
+    "detail": "EN04 original input is a custom sceneIds=[one orphan scene] path. With EN16 correct explicit-empty chapter semantics, normal UI chooses that same1scene custom path before migration. Expected state/provenance/clock/atomic/cold/native/clone results unchanged; previous harness sources retained. Cold-reload UI10 was added, not substituted for old expectations."
+  },
+  "environment": {
+    "os": "Linux-6.18.44-x86_64-with-glibc2.41",
+    "distribution": "13.6",
+    "node": "v24.19.0",
+    "vitest": "5.0.3",
+    "unitStorage": "fake-indexeddb",
+    "actualBrowserStorage": "native IndexedDB"
+  },
+  "originalContractHashChecks": [
+    {
+      "file": "docs/data/requirements.json",
+      "sha256": "df11649ab7ec25c31ae2aad6aacdca98d7324aba2e701352f9a78136c3bed0dc",
+      "baseMatches": true
+    },
+    {
+      "file": "docs/data/acceptance_cases.json",
+      "sha256": "e1e4b06a3bb1cd79fc590239ab6350103323335f2e1ee87a2e6a283755834c4f",
+      "baseMatches": true
+    },
+    {
+      "file": "docs/spec/BEHAVIOR_CONTRACT.md",
+      "sha256": "685feaf6de80b9b424460d0ce9e422247d773053089232a9be8c993e33e42d5f",
+      "baseMatches": true
+    },
+    {
+      "file": "docs/spec/DATA_MODEL.md",
+      "sha256": "1aa5a8a6ffebf354e4089164987de32fdd3cf81c342834f287dfbdb213f4b389",
+      "baseMatches": true
+    }
+  ],
+  "legacyFrozenFixtureHashes": [
+    {
+      "file": "docs/quality/current-review/evidence/legacy/3099c9d-flow-trace.json",
+      "sha256": "a127ff2ef53d1dbf93e0bc38bc39141aaf9ca4dbfddf29877663d5487d62720d",
+      "commitMatches": true
+    },
+    {
+      "file": "docs/quality/current-review/evidence/legacy/3099c9d-flow-trace.scenario",
+      "sha256": "ab5b4b920b22ebd4453945e4d366bccc8f3c5893357c04993548e0a4359b84e1",
+      "commitMatches": true
+    },
+    {
+      "file": "docs/quality/current-review/evidence/legacy/3099c9d-chapter-trace.json",
+      "sha256": "d054445e49d81fcacb863b01400f6e49ea12e70ff44b1f80686f5f6e3bd77ab2",
+      "commitMatches": true
+    },
+    {
+      "file": "docs/quality/current-review/evidence/legacy/3099c9d-chapter-trace.scenario",
+      "sha256": "3abb9240ff69950407e88c6c1a7f1cd1b53c9fec6dcd2061554305d30ffec502",
+      "commitMatches": true
+    }
+  ],
+  "unexecuted": [
+    "full original116 acceptance case procedures/all104 requirements/all24 phases/all6 groups quality gates",
+    "real iPhone/iPad/PC OS-browser device matrix, IME/Files/assistive technology",
+    "real Auth/RLS/private Storage/two-device sync",
+    "Standard/Large performance and long-term editing",
+    "same final target version complete release gate"
+  ],
+  "noCompletionPromotion": [
+    "historical53+8 and parent clean full suite/production evidence kept separate",
+    "actual Vite App is not clean production or real-device evidence",
+    "partial/stub/actual/mixed are not full safety evidence",
+    "two new CTX failures keep this target from an unqualified checked-scope completion statement"
+  ]
+}

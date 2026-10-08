@@ -1,0 +1,187 @@
+{
+  "target": {
+    "commit": "5c28c04f6cd823694323dc5de78c56e2496c9592",
+    "tree": "87884488bc25d99075ebda8680a5a96f95b2544f",
+    "base": "b310800c98bc9a89b93182ad721380a0be99d2d3",
+    "source154Match": true,
+    "frozenAt": "2026-10-08T08:01:09.198448+00:00"
+  },
+  "decision": "changes EN01-EN04 and UI05 pass the preserved expectations; candidate still has additional EN09-EN11 gaps; no RB05 or original AT completion verdict",
+  "historicalEvidence": {
+    "a21": "/tmp/shinariokanri-independent-rb05-narrative-a21a5d3",
+    "unchanged": true
+  },
+  "verification": {
+    "sameIndependentNP14_EN8": {
+      "passed": 22,
+      "failed": 0,
+      "log": "independent/domain-review.log"
+    },
+    "submittedRelatedTests": {
+      "passed": 13,
+      "failed": 0,
+      "log": "independent/domain-review.log"
+    },
+    "additionalIndependentBoundaries": {
+      "passed": 2,
+      "failed": 3,
+      "failedIDs": [
+        "EN09",
+        "EN10",
+        "EN11"
+      ],
+      "passedIDs": [
+        "EN12",
+        "EN13"
+      ],
+      "logs": [
+        "independent/edition-extra.log",
+        "independent/edition-preservation.log"
+      ]
+    },
+    "actualApp": {
+      "passed": 8,
+      "failed": 0,
+      "IDs": [
+        "UI01",
+        "UI02",
+        "UI03",
+        "UI04",
+        "UI05",
+        "UI06",
+        "UI07",
+        "UI08"
+      ],
+      "logs": [
+        "independent/browser-review.log",
+        "independent/browser-chapter-extra.log"
+      ],
+      "build": "isolated Vite development; source content exactly target commit; real App/ScenarioStore/IndexedDB with controlled storage delay/failure",
+      "browser": {
+        "browser": "151.0.7922.173",
+        "executable": "/usr/bin/chromium",
+        "viewport": "1024x768",
+        "build": "Vite development; isolated commit 5c28c04; actual App and native IndexedDB store with controlled save delay/failure"
+      }
+    },
+    "parentReported": {
+      "unit641": "separate root evidence; not independently rerun full suite",
+      "production5": "separate root evidence; not mixed with dev App evidence"
+    }
+  },
+  "positiveBoundaries": [
+    "NP14 original expected narrative presentation/order/deadline/source conditions all pass",
+    "EN01-EN04 original preserved expectations now pass",
+    "EN05 actual/mixed receipt requirement and EN06 tampered/stale approval rejection pass",
+    "EN07 partial migration state 8->9 and old3 survive atomic reload/native/clone",
+    "EN08 Unicode deadline and disclosure-before-statement acquisition survive cold store/native/clone",
+    "EN12 new typed initial stub reference IDs and stub provenance survive native/clone/reconfirmation",
+    "EN13 genuine a21 legacy initial stub remains old-version replayable; absent input blocks current-edition reconfirmation",
+    "UI01-UI04 controlled delay/failure/same-turn guard/stale revision/latest props/cold reload pass",
+    "UI05 entry change disables previously approved migration",
+    "UI06/UI07 actual App presents acquisition/deadline results",
+    "UI08 chapter partial8 explicit migration, delay/navigation/ack, new path save, cold reload and real browser native/clone replay preserve partial8/scenes"
+  ],
+  "findings": [
+    {
+      "id": "EN09",
+      "classification": "reproduced_behavior_difference",
+      "requirements": [
+        "REQ-B15",
+        "REQ-B16",
+        "REQ-F15",
+        "REQ-F20",
+        "REQ-F41"
+      ],
+      "given": "Schema-valid fixed scene reference owns borrowed boolean exclusions, confirmed source evidence and source snapshot scope; current author variable differs. Finite validity [0,10), execution tick 5.",
+      "when": "Start the same target scene by verified flow and by selected chapter.",
+      "expected": "Both starts apply the fixed source edition exception and are ready; ordinary presentation then runs atomically.",
+      "actual": "Verified flow ready; chapter throws exclusion violation before presentation.",
+      "negative_or_edge": "The exception remains bounded by snapshot, evidence and half-open time range. Missing/expired context must still stop.",
+      "cause": "startChapterReading initial runtimeExclusionIssues omits reuseRuleContexts.",
+      "fixture": "independent/fixtures/EN09.json"
+    },
+    {
+      "id": "EN10",
+      "classification": "reproduced_migration_context_gap",
+      "requirements": [
+        "REQ-B15",
+        "REQ-F15",
+        "REQ-F20",
+        "REQ-F41",
+        "REQ-N19"
+      ],
+      "given": "The same fixed source permission and compatible partial checkpoint are ready in the declared target flow at tick 5.",
+      "when": "Preview migration to that target.",
+      "expected": "Capture and use the target entry/graph/chapter/tick and fixed source per-record scope; retain compatible partial state. Require explicit missing input or recheck rather than misclassifying it as an illegal exception.",
+      "actual": "Migration context contains projectId alone and throws the exclusion violation for a valid source pin exception. No typed worldTick option or UI propagation is available.",
+      "negative_or_edge": "The test worldTick is a proposed missing option, cast to the current parameter type. This case identifies a capability/context gap, not proof that a current typed option is implemented. Do not relax unknown/expired checks.",
+      "cause": "previewCheckpointMigration computes derived/exclusion context without entry/graph/chapter/tick/reuseRuleContexts; confirmation also omits time context.",
+      "fixture": "independent/fixtures/EN10.json"
+    },
+    {
+      "id": "EN11",
+      "classification": "reproduced_durable_proof_difference",
+      "requirements": [
+        "REQ-F15",
+        "REQ-F17",
+        "REQ-N19"
+      ],
+      "given": "Valid saved initial variable stub 8 and captured start 8, finite variable range [0,100], terminal path.",
+      "when": "Replace only typed initialStubValues value with legal value 99, leaving checkpoint/steps unchanged; replay, durable integrity check and checksummed complete native round trip.",
+      "expected": "Reject contradictory initial input evidence in replay and at the durable boundary. Older records without such input remain replayable but require explicit migration for reconfirmation.",
+      "actual": "Replay terminal; validateProjectIntegrity returns []; exportScenario then inspectScenario accepts.",
+      "negative_or_edge": "Healthy new inputs and genuine a21 legacy stubs were independently retained by EN12/13; the expected fix must preserve both.",
+      "cause": "replaySavedTrace copies initialStubValues without proving it reconstructs captured start; durable flow trace checks do not perform this proof.",
+      "fixture": "independent/fixtures/EN11.json"
+    }
+  ],
+  "environment": {
+    "os": "Linux-6.18.44-x86_64-with-glibc2.41",
+    "distribution": "13.6",
+    "node": "v24.19.0",
+    "vitest": "5.0.3",
+    "unitStorage": "fake-indexeddb",
+    "actualAppBrowser": "Chromium 151.0.7922.173 /usr/bin/chromium",
+    "viewport": "1024x768",
+    "rootProductionBrowser": "Chromium153 separate evidence"
+  },
+  "setupAttempts": [
+    "setup-browser-notice-text: old exact notice string replaced by same semantic regex; initial result kept",
+    "setup-browser-chapter-api: independent native/clone replay invoked wrong API signature; corrected to TraceData and CheckpointData without product changes"
+  ],
+  "unexecuted": [
+    "full original116 acceptance procedures",
+    "real iPhone/iPad/desktop OS device coverage, IME, Files, assistive technology",
+    "real remote Auth/RLS/Storage/two-device synchronization",
+    "Standard/Large performance and prolonged editing",
+    "release evidence gate for complete target commit"
+  ],
+  "noCompletionPromotion": [
+    "24 steps,104 requirements,116 AT,RB05 entire stage were not marked complete",
+    "Vite actual App checks are not production/real-device evidence",
+    "partial/stub/actual/mixed are not full-origin evidence"
+  ],
+  "originalContractHashChecks": [
+    {
+      "file": "docs/data/requirements.json",
+      "sha256": "df11649ab7ec25c31ae2aad6aacdca98d7324aba2e701352f9a78136c3bed0dc",
+      "baseMatches": true
+    },
+    {
+      "file": "docs/data/acceptance_cases.json",
+      "sha256": "e1e4b06a3bb1cd79fc590239ab6350103323335f2e1ee87a2e6a283755834c4f",
+      "baseMatches": true
+    },
+    {
+      "file": "docs/spec/BEHAVIOR_CONTRACT.md",
+      "sha256": "685feaf6de80b9b424460d0ce9e422247d773053089232a9be8c993e33e42d5f",
+      "baseMatches": true
+    },
+    {
+      "file": "docs/spec/DATA_MODEL.md",
+      "sha256": "1aa5a8a6ffebf354e4089164987de32fdd3cf81c342834f287dfbdb213f4b389",
+      "baseMatches": true
+    }
+  ]
+}

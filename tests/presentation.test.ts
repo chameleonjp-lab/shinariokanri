@@ -17,6 +17,7 @@ function fixture() {
   const enabled = add('variable', { key: 'enabled', valueType: 'boolean', initial: { type: 'boolean', value: true } });
   const disable = add('effect', { operation: 'set', targetId: enabled.id, value: { type: 'boolean', value: false } });
   const scene = add('scene', { body: [{ id: newId(), kind: 'paragraph', text: '手掛かり。' }, { id: newId(), kind: 'paragraph', text: '回収。' }] });
+  known.data.sourceIds = [scene.id]; known.data.evidenceLocation = { entityId: scene.id, blockId: scene.data.body[0].id, start: 0, end: 2 };
   const next = add('scene', { body: [{ id: newId(), kind: 'paragraph', text: '続き。' }] });
   const chapter = add('chapter', { sceneIds: [scene.id, next.id] }); scene.data.chapterId = chapter.id; next.data.chapterId = chapter.id;
   const question = add('foreshadow', { resolutionPolicy: 'this_work' });

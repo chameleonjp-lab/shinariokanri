@@ -1,0 +1,1 @@
+初回の新規 harness は TrialSession に存在しない externalMode を読み、undefined と trace の内部 mode null を比較した。製品の保存・再生はすべて期待通り。観測先を永続 trace.data.externalMode に直し、状態・full/partial/stub・対象版・時点・原子性の期待は保持した。初回源と log はここに不変保存。

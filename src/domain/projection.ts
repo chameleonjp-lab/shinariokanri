@@ -71,7 +71,7 @@ export const PROJECTION_FIELDS: Readonly<Partial<Record<EntityKind, Readonly<Rec
   variable: { key: text, valueType: oneOf('boolean', 'integer', 'enum'), scope: oneOf('scene', 'chapter', 'character', 'run', 'across_runs'), initial: typed, allowed: { type: 'allowed' }, ownerId: ref, externalContractId: ref, externalUseDeclared: boolean, description: rich, transitionRules: { type: 'transitions' } },
   effect: { operation: oneOf('set', 'add', 'grant', 'consume', 'move', 'assert', 'mark_seen', 'reset'), targetId: ref, value: typed, condition, instanceId: ref, reason: text },
   assertion: { subjectId: ref, predicate: text, value: typed, truthKind: oneOf('author_truth', 'testimony', 'belief', 'hypothesis'), holderId: ref, sourceIds: refs, evidenceLocation: { type: 'anchor' }, reason: text },
-  foreshadow: { question: rich, intent: rich, truthAssertionIds: refs, clueIds: refs, payoffIds: refs, requiredInfo: refs, resolutionPolicy: oneOf('this_work', 'sequel', 'intentional_open', 'red_herring', 'undecided', 'rejected') },
+  foreshadow: { question: rich, intent: rich, truthAssertionIds: refs, clueIds: refs, payoffIds: refs, requiredInfo: refs, presentationDeadline: { type: 'anchor' }, resolutionPolicy: oneOf('this_work', 'sequel', 'intentional_open', 'red_herring', 'undecided', 'rejected') },
   disclosure: { foreshadowId: ref, anchor: { type: 'anchor' }, stage: oneOf('hint', 'suspicion', 'reinforce', 'reveal', 'alternative'), role: oneOf('clue', 'payoff'), condition, knowledgeEffects: refs },
   attachment: { displayName: text },
   source: { sourceType: oneOf('web', 'file', 'book', 'observation'), locator: text, interpretation: rich, redistributionAllowed: boolean },

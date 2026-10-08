@@ -1,7 +1,7 @@
 import type { Condition, ConditionResult, EffectData, Entity, Expression, ID, ProjectData, ResetRule, RuntimeContext, RuntimeItem, RuntimeState, TruthValue, TypedValue, ValidationIssue } from './types';
 import { emptyRuntimeState, validateCondition, validateEffectData, validateExpression, validateRuntimeState, validateTypedValue, validateVariableValue } from './model';
 import { adoptedRecord } from './adoption';
-import { evaluateScenarioException } from './stateRules';
+import { evaluateScenarioException, knowledgeAcquisitionIssue } from './stateRules';
 
 export class DomainValidationError extends Error {
   readonly issues: ValidationIssue[];
@@ -192,6 +192,7 @@ function applyOne(state: RuntimeState, effect: EffectData, context: RuntimeConte
     if (!target || target.kind !== 'assertion') fail('認識効果の対象には事実・認識が必要です。', 'REFERENCE_INVALID');
     if (effect.value && effect.value.type !== 'boolean') fail('認識効果の入力はbooleanです。', 'VALIDATION_FAILED');
     const truth: TruthValue = effect.value?.type === 'boolean' && !effect.value.value ? 'false' : 'true', holderId = target.data.holderId ?? null;
+    if (truth === 'true') { const acquisition = knowledgeAcquisitionIssue(target, context); if (acquisition) fail(acquisition.message, acquisition.code); }
     const existing = state.assertions.find(assertion => assertion.assertionId === target.id && assertion.holderId === holderId);
     if (existing) { existing.truth = truth; if (effectId) existing.sourceEffectId = effectId; }
     else state.assertions.push({ assertionId: target.id, holderId, truth, ...(effectId ? { sourceEffectId: effectId } : {}) });
@@ -247,11 +248,15 @@ export function applyEffectsAtomic(state: RuntimeState, effects: (Entity<'effect
   const checked = validateRuntimeState(state); if (!checked.ok) return { ok: false, state, issues: checked.issues };
   const working = structuredClone(state);
   try {
+    // Reject malformed or unadopted members before any effect in the group executes.
     for (const [index, input] of effects.entries()) {
       if ('data' in input && !adoptedRecord(input)) throw new DomainValidationError([issue('削除・不採用・別案の効果は実行できません。', `effects[${index}]`, 'REFERENCE_INVALID')]);
-      const effect = 'data' in input ? input.data : input, effectId = 'id' in input ? input.id : undefined;
+      const effect = 'data' in input ? input.data : input;
       const checkedEffect = validateEffectData(effect, `effects[${index}]`); if (!checkedEffect.ok) throw new DomainValidationError(checkedEffect.issues);
-      const effectContext = { ...context, state: working, ruleContext: effectId && context.ruleContexts?.[effectId] || context.ruleContext };
+    }
+    for (const [index, input] of effects.entries()) {
+      const effect = 'data' in input ? input.data : input, effectId = 'id' in input ? input.id : undefined;
+      const effectContext = { ...context, currentPresentation: context.effectPresentations?.[index] ?? context.currentPresentation, state: working, ruleContext: effectId && context.ruleContexts?.[effectId] || context.ruleContext };
       const condition = evaluateCondition(effect.condition, effectContext);
       if (condition.value === 'unknown') throw new DomainValidationError([issue(condition.reasons.join('、') || '効果の条件が未定です。', `effects[${index}].condition`, 'CONDITION_UNKNOWN')]);
       if (condition.value === 'false') continue;

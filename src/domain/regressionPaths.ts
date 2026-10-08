@@ -24,8 +24,9 @@ export function regressionPathCoverage(project: ProjectData, candidate: Pick<Tra
     if (checkpoint.data.presentationResults?.some(result => result.value === 'unknown')) return false;
     // A declaration names a complete path and start state. Matching a prefix or
     // merely ticking a label never supplies verification evidence.
-    if (candidate.mode === 'chapters') return equal(path.data.readingPath, candidate.readingPath && {
+    if (candidate.mode === 'chapters') return equal(path.data.readingPath && { ...path.data.readingPath, selection: path.data.readingPath.selection ?? 'scenes' }, candidate.readingPath && {
       ...candidate.readingPath,
+      selection: candidate.readingPath.selection ?? 'scenes',
       occurrences: candidate.readingPath.occurrences.map((occurrence, index) => {
         const expected = path.data.readingPath?.occurrences[index];
         const normalized = { ...occurrence };

@@ -24,6 +24,7 @@ export interface PresentationOccurrence {
 }
 export interface ReadingPath {
   chapterIds: ID[];
+  selection?: 'chapters' | 'scenes' | null;
   /** Repeated scenes are distinct occurrences and must not be deduplicated. */
   sceneIds: ID[];
   occurrences: PresentationOccurrence[];

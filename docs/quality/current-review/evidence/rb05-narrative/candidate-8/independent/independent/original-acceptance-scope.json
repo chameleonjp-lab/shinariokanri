@@ -1,0 +1,297 @@
+{
+  "originalRequirementCount": 104,
+  "originalAcceptanceCount": 116,
+  "requirements": [
+    {
+      "id": "REQ-B14",
+      "title": "分岐・合流と条件・効果",
+      "provenance": "以前から採用済みの拡張",
+      "decision_status": "previously_adopted",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP12",
+      "shall": "選択肢・条件・効果・合流・意図した終端を編集できること。条件と効果の実行規則は動作契約に従うこと。",
+      "failure_behavior": "選択肢ゼロや不正な効果は終端と区別し、途中までの更新を残さない",
+      "acceptance_ids": [
+        "AT-B14"
+      ],
+      "source_refs": []
+    },
+    {
+      "id": "REQ-B16",
+      "title": "試し読みと操作の巻き戻し",
+      "provenance": "以前から採用済みの拡張",
+      "decision_status": "previously_adopted",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP13",
+      "shall": "提示順または分岐を試し読みし、選択を戻すと対応する状態も戻せること。",
+      "failure_behavior": "試し読みの操作で作者の正本や公開版を上書きしない",
+      "acceptance_ids": [
+        "AT-B16"
+      ],
+      "source_refs": []
+    },
+    {
+      "id": "REQ-F13",
+      "title": "図を章・場面・会話へ分ける",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP12",
+      "shall": "大きな図では章だけを表示し、選ぶと場面、さらに会話へ掘り下げる。小さな図の入口と出口を明示してつなぐこと。",
+      "failure_behavior": "下位図の未解決入口・出口・条件エラーは上位図の件数に反映し、折りたたみでエラーを隠さない。",
+      "acceptance_ids": [
+        "AT-F13"
+      ],
+      "source_refs": [
+        "S06",
+        "S07"
+      ],
+      "source_feature_id": "F13"
+    },
+    {
+      "id": "REQ-F14",
+      "title": "発生のきっかけと条件を分ける",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP12",
+      "shall": "場所に入る、話しかける、戦闘に勝つなどのきっかけと、所持品・生存などの条件を別に登録する。一度だけ、繰り返し、期限も扱うこと。",
+      "failure_behavior": "条件評価だけでは効果を実行しない。自動発火は明示設定とし、重複した同一トリガーでは一度だけ規則を守る。",
+      "acceptance_ids": [
+        "AT-F14"
+      ],
+      "source_refs": [
+        "S06",
+        "S19",
+        "S28"
+      ],
+      "source_feature_id": "F14"
+    },
+    {
+      "id": "REQ-F15",
+      "title": "途中状態から試し読みする",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP13",
+      "shall": "所持品、人物の状態、既読情報などをまとめた開始状態を保存する。そこから試し読みし、選択を戻すと状態も戻すこと。",
+      "failure_behavior": "版不一致の開始状態は移行確認が必要。不足値は未確認とし、途中開始の証跡を通しプレイの証跡として扱わない。",
+      "acceptance_ids": [
+        "AT-F15"
+      ],
+      "source_refs": [
+        "S08",
+        "S25"
+      ],
+      "source_feature_id": "F15"
+    },
+    {
+      "id": "REQ-F17",
+      "title": "確認した経路を保存する",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP14",
+      "shall": "選択の履歴と開始状態、作品の版を保存して再実行する。通った場面・選択肢と未確認箇所を一覧にし、変更後の再確認に使うこと。",
+      "failure_behavior": "台詞到達率・選択肢到達率・条件結果の網羅率を別々に算出する。版変更後の経路は再確認待ちとする。",
+      "acceptance_ids": [
+        "AT-F17"
+      ],
+      "source_refs": [
+        "S08",
+        "S25"
+      ],
+      "source_feature_id": "F17"
+    },
+    {
+      "id": "REQ-N18",
+      "title": "失敗時の説明と入力保持",
+      "provenance": "仕様を成立させる品質条件・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP02",
+      "shall": "エラーは何が失敗したか・未保存範囲・修正方法を対象近傍と通知へ表示し、入力を保持すること。",
+      "failure_behavior": "白画面・無言の失敗・黙ったデータ削除を残さない",
+      "acceptance_ids": [
+        "AT-N18"
+      ],
+      "source_refs": []
+    },
+    {
+      "id": "REQ-N19",
+      "title": "正本と公開版の保護",
+      "provenance": "仕様を成立させる品質条件・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP10",
+      "shall": "正本・作者別案・ゲーム内経路・公開スナップショットを区別し、公開版の更新は新しい版として作ること。",
+      "failure_behavior": "別案の編集で公開済み本文や参照設定を上書きしない",
+      "acceptance_ids": [
+        "AT-N19"
+      ],
+      "source_refs": []
+    }
+  ],
+  "acceptanceCases": [
+    {
+      "id": "AT-B14",
+      "requirement_ids": [
+        "REQ-B14"
+      ],
+      "package_id": "WP12",
+      "given": "鍵を得る道と得ない道が合流する",
+      "when": "二経路で同じ合流先へ進む",
+      "then": "所持状態の違いを保ったまま到着する",
+      "negative_or_edge": "選択肢ゼロや不正な効果は終端と区別し、途中までの更新を残さない",
+      "result": "not_run"
+    },
+    {
+      "id": "AT-B16",
+      "requirement_ids": [
+        "REQ-B16"
+      ],
+      "package_id": "WP13",
+      "given": "二つの選択肢と効果がある",
+      "when": "片方へ進み戻って他方へ進む",
+      "then": "所持品・知識・既読・抽選状態を巻き戻した結果で進行する",
+      "negative_or_edge": "試し読みの操作で作者の正本や公開版を上書きしない",
+      "result": "not_run"
+    },
+    {
+      "id": "AT-F13",
+      "requirement_ids": [
+        "REQ-F13"
+      ],
+      "package_id": "WP12",
+      "given": "章内に場面、場面内に会話があり、未接続の出口が一つある階層graph",
+      "when": "章まで折りたたんで未完成件数を確認し、会話へ掘り下げ出口を再接続する",
+      "then": "図を折りたたんでも、中に条件や未完成箇所があることを確認できる。",
+      "negative_or_edge": "下位図の未解決入口・出口・条件エラーは上位図の件数に反映し、折りたたみでエラーを隠さない。",
+      "result": "not_run"
+    },
+    {
+      "id": "AT-F14",
+      "requirement_ids": [
+        "REQ-F14"
+      ],
+      "package_id": "WP12",
+      "given": "gateは鍵あり、triggerは入室、once=runの出来事",
+      "when": "鍵を得るだけの状態更新、入室、同じoccurrenceIdの再送、再入室を順に行う",
+      "then": "前提が成り立つだけで出来事が勝手に起こらず、きっかけが必要か選べる。",
+      "negative_or_edge": "条件評価だけでは効果を実行しない。自動発火は明示設定とし、重複した同一トリガーでは一度だけ規則を守る。",
+      "result": "not_run"
+    },
+    {
+      "id": "AT-F15",
+      "requirement_ids": [
+        "REQ-F15"
+      ],
+      "package_id": "WP13",
+      "given": "鍵あり・好感度5のcheckpointと初期値欠落のcheckpoint",
+      "when": "途中開始で進み戻り、不足値のcheckpointと別版checkpointからの開始を試す",
+      "then": "途中開始で必要な状態がない場合、最初から開始した場合と区別して表示する。",
+      "negative_or_edge": "版不一致の開始状態は移行確認が必要。不足値は未確認とし、途中開始の証跡を通しプレイの証跡として扱わない。",
+      "result": "not_run"
+    },
+    {
+      "id": "AT-F17",
+      "requirement_ids": [
+        "REQ-F17"
+      ],
+      "package_id": "WP14",
+      "given": "場面4、選択肢3、条件真偽4項目の母数を持つ版",
+      "when": "二選択肢だけの経路記録を保存して再実行し、内容変更後の確認待ちを調べる",
+      "then": "確認できた割合は対象を明記する。場面を見ただけで全条件を確認済みにしない。",
+      "negative_or_edge": "台詞到達率・選択肢到達率・条件結果の網羅率を別々に算出する。版変更後の経路は再確認待ちとする。",
+      "result": "not_run"
+    },
+    {
+      "id": "AT-N18",
+      "requirement_ids": [
+        "REQ-N18"
+      ],
+      "package_id": "WP02",
+      "given": "保存・参照・同期の失敗",
+      "when": "修正または再試行を行う",
+      "then": "同じ入力から復帰し成功時だけ完了と表示する",
+      "negative_or_edge": "白画面・無言の失敗・黙ったデータ削除を残さない",
+      "result": "not_run"
+    },
+    {
+      "id": "AT-N19",
+      "requirement_ids": [
+        "REQ-N19"
+      ],
+      "package_id": "WP10",
+      "given": "公開済み作品と別案がある",
+      "when": "改訂して制作出力を行う",
+      "then": "選択した正本版だけが対象となり旧公開版は不変で残る",
+      "negative_or_edge": "別案の編集で公開済み本文や参照設定を上書きしない",
+      "result": "not_run"
+    },
+    {
+      "id": "AT-E03",
+      "title": "分岐・合流・状態・巻き戻し",
+      "requirement_ids": [
+        "REQ-B14",
+        "REQ-B15",
+        "REQ-B16",
+        "REQ-F16",
+        "REQ-F38",
+        "REQ-F40",
+        "REQ-F41"
+      ],
+      "package_id": "WP23",
+      "given": "鍵取得/未取得が同じ合流先へ続く固定作品",
+      "when": "二経路を実行し戻す、禁止遷移を含む一括効果を選ぶ",
+      "then": "合流後も鍵差が残り、戻すと全状態が復元され、不正効果は全体拒否となる",
+      "negative_or_edge": "未知の値は偽にされず、有効選択肢ゼロは意図した終端と区別される",
+      "result": "not_run"
+    },
+    {
+      "id": "AT-E10",
+      "title": "解析の上限・仮実の区別",
+      "requirement_ids": [
+        "REQ-F17",
+        "REQ-F18",
+        "REQ-F20",
+        "REQ-F42",
+        "REQ-N05",
+        "REQ-N12"
+      ],
+      "package_id": "WP23",
+      "given": "抽選・無制限ループ・外部戦闘を含む作品",
+      "when": "同じ記録を再実行して探索上限まで解析する",
+      "then": "抽選は再現され、未確認の範囲と分母を示し、仮戦闘結果と実ゲーム結果を別に記録する",
+      "negative_or_edge": "対象版の変更で再確認待ちになり、打切りを到達不能の証明としない",
+      "result": "not_run"
+    },
+    {
+      "id": "AT-E12",
+      "title": "保存失敗とアプリ更新からの復帰",
+      "requirement_ids": [
+        "REQ-B23",
+        "REQ-F34",
+        "REQ-F35",
+        "REQ-N06",
+        "REQ-N11",
+        "REQ-N18"
+      ],
+      "package_id": "WP23",
+      "given": "キャッシュ済みアプリと未送信作品",
+      "when": "機内モード、保存容量不足、途中更新、移行失敗、専用出力からの再開を行う",
+      "then": "失敗と未保存を明示し、更新は安全地点で適用し、書き出しと復元で再開できる",
+      "negative_or_edge": "初回未取得・未取得素材・保存先取消を成功と扱わない",
+      "result": "not_run"
+    }
+  ],
+  "note": "All original given/when/then/negative_or_edge/result retained verbatim; focused checks do not grade whole original cases."
+}

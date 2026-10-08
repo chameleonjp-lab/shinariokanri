@@ -9513,6 +9513,117 @@
                 }
               ]
             },
+            "presentationDeadline": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "entityId": {
+                      "$ref": "#/$defs/ID",
+                      "$comment": "{\"referenceScope\":\"entity\"}"
+                    },
+                    "blockId": {
+                      "anyOf": [
+                        {
+                          "$ref": "#/$defs/ID",
+                          "$comment": "{\"referenceScope\":\"block\"}"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "lineId": {
+                      "anyOf": [
+                        {
+                          "$ref": "#/$defs/ID",
+                          "$comment": "{\"targetKinds\":[\"dialogue_line\"],\"referenceScope\":\"entity\"}"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "start": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "end": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "sourceVersionId": {
+                      "anyOf": [
+                        {
+                          "$ref": "#/$defs/ID",
+                          "$comment": "{\"referenceScope\":\"snapshot\"}"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "positionStatus": {
+                      "anyOf": [
+                        {
+                          "enum": [
+                            "unresolved"
+                          ]
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "positionReason": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "quotedText": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "minLength": 0
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "entityId"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
             "exceptions": {
               "anyOf": [
                 {
@@ -10269,6 +10380,16 @@
         "data": {
           "type": "object",
           "properties": {
+            "worldTick": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Tick"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
             "contentVersionId": {
               "$ref": "#/$defs/ID",
               "$comment": "{\"referenceScope\":\"snapshot\"}"
@@ -10928,6 +11049,42 @@
                 {
                   "$ref": "#/$defs/ID",
                   "$comment": "{\"targetKinds\":[\"trace\"],\"referenceScope\":\"entity\"}"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "migration": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "sourceCheckpointId": {
+                      "$ref": "#/$defs/ID",
+                      "$comment": "{\"targetKinds\":[\"checkpoint\"],\"referenceScope\":\"entity\"}"
+                    },
+                    "sourceVersionId": {
+                      "$ref": "#/$defs/ID",
+                      "$comment": "{\"referenceScope\":\"snapshot\"}"
+                    },
+                    "baseRevision": {
+                      "$ref": "#/$defs/Revision"
+                    },
+                    "method": {
+                      "enum": [
+                        "migrate",
+                        "recreate"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "sourceCheckpointId",
+                    "sourceVersionId",
+                    "baseRevision",
+                    "method"
+                  ],
+                  "additionalProperties": false
                 },
                 {
                   "type": "null"
@@ -12118,6 +12275,350 @@
                 }
               ]
             },
+            "initialStubBaseState": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "contentVersionId": {
+                      "$ref": "#/$defs/ID",
+                      "$comment": "{\"referenceScope\":\"snapshot\"}"
+                    },
+                    "variableValues": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "$ref": "#/$defs/TypedValue"
+                      },
+                      "propertyNames": {
+                        "$ref": "#/$defs/ID",
+                        "$comment": "{\"targetKinds\":[\"variable\"],\"referenceScope\":\"entity\"}"
+                      }
+                    },
+                    "itemInstances": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "instanceId": {
+                            "$ref": "#/$defs/ID"
+                          },
+                          "typeId": {
+                            "$ref": "#/$defs/ID",
+                            "$comment": "{\"targetKinds\":[\"item\"],\"referenceScope\":\"entity\"}"
+                          },
+                          "quantity": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                          },
+                          "ownerId": {
+                            "anyOf": [
+                              {
+                                "$ref": "#/$defs/ID",
+                                "$comment": "{\"targetKinds\":[\"character\",\"group\"],\"referenceScope\":\"entity\"}"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "locationId": {
+                            "anyOf": [
+                              {
+                                "$ref": "#/$defs/ID",
+                                "$comment": "{\"targetKinds\":[\"place\"],\"referenceScope\":\"entity\"}"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "consumed": {
+                            "type": "boolean"
+                          },
+                          "reason": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "minLength": 0
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          }
+                        },
+                        "required": [
+                          "instanceId",
+                          "typeId",
+                          "quantity",
+                          "consumed"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "maxItems": 100000
+                    },
+                    "assertions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "assertionId": {
+                            "$ref": "#/$defs/ID",
+                            "$comment": "{\"targetKinds\":[\"assertion\"],\"referenceScope\":\"entity\"}"
+                          },
+                          "holderId": {
+                            "anyOf": [
+                              {
+                                "$ref": "#/$defs/ID",
+                                "$comment": "{\"targetKinds\":[\"character\"],\"referenceScope\":\"entity\"}"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "truth": {
+                            "enum": [
+                              "true",
+                              "false",
+                              "unknown"
+                            ]
+                          },
+                          "sourceEffectId": {
+                            "anyOf": [
+                              {
+                                "$ref": "#/$defs/ID",
+                                "$comment": "{\"targetKinds\":[\"effect\"],\"referenceScope\":\"entity\"}"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          }
+                        },
+                        "required": [
+                          "assertionId",
+                          "truth"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "maxItems": 100000
+                    },
+                    "seenIds": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/$defs/ID",
+                        "$comment": "{\"referenceScope\":\"presentation\"}"
+                      },
+                      "maxItems": 100000,
+                      "uniqueItems": true
+                    },
+                    "visitCounts": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      "propertyNames": {
+                        "$ref": "#/$defs/ID",
+                        "$comment": "{\"referenceScope\":\"entity\"}"
+                      }
+                    },
+                    "onceTriggers": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "maxItems": 100000,
+                      "uniqueItems": true
+                    },
+                    "rngSeed": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "rngPosition": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    "callStack": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "graphId": {
+                            "$ref": "#/$defs/ID",
+                            "$comment": "{\"targetKinds\":[\"flow_graph\"],\"referenceScope\":\"entity\"}"
+                          },
+                          "returnNodeId": {
+                            "$ref": "#/$defs/ID",
+                            "$comment": "{\"targetKinds\":[\"flow_node\"],\"referenceScope\":\"entity\"}"
+                          },
+                          "parameters": {
+                            "type": "object",
+                            "additionalProperties": {
+                              "$ref": "#/$defs/TypedValue"
+                            },
+                            "propertyNames": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 128
+                            }
+                          }
+                        },
+                        "required": [
+                          "graphId",
+                          "returnNodeId",
+                          "parameters"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "maxItems": 100000
+                    },
+                    "presentationPosition": {
+                      "anyOf": [
+                        {
+                          "$ref": "#/$defs/ID",
+                          "$comment": "{\"targetKinds\":[\"flow_node\"],\"referenceScope\":\"entity\"}"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "loopNumber": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    "provenance": {
+                      "enum": [
+                        "full_play",
+                        "partial",
+                        "imported",
+                        "stub"
+                      ]
+                    },
+                    "resetCauses": {
+                      "anyOf": [
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "variableId": {
+                                "$ref": "#/$defs/ID",
+                                "$comment": "{\"targetKinds\":[\"variable\"],\"referenceScope\":\"entity\"}"
+                              },
+                              "on": {
+                                "enum": [
+                                  "scene_end",
+                                  "chapter_end",
+                                  "run_end",
+                                  "new_loop",
+                                  "full_reset"
+                                ]
+                              },
+                              "before": {
+                                "$ref": "#/$defs/TypedValue"
+                              },
+                              "after": {
+                                "$ref": "#/$defs/TypedValue"
+                              },
+                              "reason": {
+                                "type": "string",
+                                "minLength": 0
+                              }
+                            },
+                            "required": [
+                              "variableId",
+                              "on",
+                              "before",
+                              "after",
+                              "reason"
+                            ],
+                            "additionalProperties": false
+                          },
+                          "maxItems": 100000
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "contentVersionId",
+                    "variableValues",
+                    "itemInstances",
+                    "assertions",
+                    "seenIds",
+                    "visitCounts",
+                    "onceTriggers",
+                    "rngSeed",
+                    "rngPosition",
+                    "callStack",
+                    "loopNumber",
+                    "provenance"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "initialStubValues": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "variables": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "additionalProperties": {
+                            "$ref": "#/$defs/TypedValue"
+                          },
+                          "propertyNames": {
+                            "$ref": "#/$defs/ID",
+                            "$comment": "{\"targetKinds\":[\"variable\"],\"referenceScope\":\"entity\"}"
+                          }
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "external": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "additionalProperties": {
+                            "$ref": "#/$defs/TypedValue"
+                          },
+                          "propertyNames": {
+                            "$ref": "#/$defs/ID",
+                            "$comment": "{\"targetKinds\":[\"external_contract\"],\"referenceScope\":\"entity\"}"
+                          }
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
             "initialWorldTick": {
               "anyOf": [
                 {
@@ -12934,6 +13435,46 @@
                 }
               ]
             },
+            "reconfirmation": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "sourceTraceId": {
+                      "$ref": "#/$defs/ID",
+                      "$comment": "{\"targetKinds\":[\"trace\"],\"referenceScope\":\"entity\"}"
+                    },
+                    "sourceVersionId": {
+                      "$ref": "#/$defs/ID",
+                      "$comment": "{\"referenceScope\":\"snapshot\"}"
+                    },
+                    "baseRevision": {
+                      "$ref": "#/$defs/Revision"
+                    },
+                    "startCheckpointId": {
+                      "anyOf": [
+                        {
+                          "$ref": "#/$defs/ID",
+                          "$comment": "{\"targetKinds\":[\"checkpoint\"],\"referenceScope\":\"entity\"}"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "sourceTraceId",
+                    "sourceVersionId",
+                    "baseRevision"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
             "mode": {
               "anyOf": [
                 {
@@ -12971,6 +13512,19 @@
                             "$comment": "{\"targetKinds\":[\"scene\"],\"referenceScope\":\"entity\"}"
                           },
                           "maxItems": 100000
+                        },
+                        "selection": {
+                          "anyOf": [
+                            {
+                              "enum": [
+                                "chapters",
+                                "scenes"
+                              ]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
                         },
                         "occurrences": {
                           "type": "array",

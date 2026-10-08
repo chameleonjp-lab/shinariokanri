@@ -1,0 +1,1 @@
+新規章native観測はChapterReadingSessionへ存在しないinitialWorldTickを読んだためundefinedとした。正しいworldTickを読む。保存章checkpointのorigin=partialは既存契約・pinの保守的分類のため、選択一場面章経路をfull_playへ期待しない。期待をpartialへ明記し、tick5・固定本文・一場面だけ・terminal・atomic/cold/native/cloneの正期待は維持。初回源/log/実trace cp tick5は不変保存。

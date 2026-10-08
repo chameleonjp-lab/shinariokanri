@@ -4,9 +4,10 @@ import { validateProject } from './model';
 import { validateAuthorAlternatives } from './authorAlternativeIntegrity';
 import { validateReadingTraceRecord } from './runtimeRecordValidation';
 import { captureRuntimeContent } from './runtimeVersions';
+import { resolveReuseContent } from './reuse';
 import { receiptPatchValue } from './authorAlternativeIntegrity';
 import { canonicalJson } from '../storage/json';
-import { createPinnedWorldDigestCache, freezePinnedWorldRegistry, verifyPinnedWorlds } from './pinnedWorlds';
+import { createPinnedWorldDigestCache, freezePinnedWorldRegistry, verifyPinnedWorlds, resolvePinnedWorlds } from './pinnedWorlds';
 import type { PinnedWorldDigestCache } from './pinnedWorlds';
 
 function projectFromState(state: ContentState): ProjectData {
@@ -99,16 +100,22 @@ async function checkAlternatives(project: ProjectData, validationOptions: Projec
 async function checkChapterTraces(project: ProjectData, validationOptions: ProjectValidationOptions, digestCache: PinnedWorldDigestCache): Promise<ValidationIssue[]> {
   const issues: ValidationIssue[] = [];
   for (const [index, entity] of project.entities.entries()) {
-    if (entity.kind !== 'trace' || entity.data.mode !== 'chapters') continue;
+    if (entity.kind !== 'trace') continue;
     const location = `project.entities[${index}].data`;
     const checkpoint = project.entities.find(candidate => candidate.id === entity.data.startCheckpointId && candidate.kind === 'checkpoint');
     if (!checkpoint || checkpoint.kind !== 'checkpoint') {
-      issues.push({ code: 'REFERENCE_INVALID', path: `${location}.startCheckpointId`, message: '章読み通しの開始状態が見つかりません。' });
+      issues.push({ code: 'REFERENCE_INVALID', path: `${location}.startCheckpointId`, message: '経路の開始状態が見つかりません。' });
       continue;
     }
     try {
       const content = await captureRuntimeContent(project, entity.data.contentVersionId, validationOptions, digestCache);
-      issues.push(...validateReadingTraceRecord(content, entity.data, checkpoint.data, location, validationOptions));
+      if (entity.data.mode === 'chapters') issues.push(...validateReadingTraceRecord(content, entity.data, checkpoint.data, location, validationOptions));
+      else {
+        const { replaySavedTrace } = await import('./runtime');
+        const closure = resolvePinnedWorlds(resolveReuseContent(content, content.snapshots), validationOptions.worldSnapshots ?? {});
+        const replay = replaySavedTrace(project, entity.id, closure.worlds.flatMap(world => world.entities));
+        if (replay.status === 'error') issues.push(...replay.issues.map(issue => ({ ...issue, path: `${location}.${issue.path}` })));
+      }
     } catch (error) {
       const inner = (error as { issues?: ValidationIssue[] }).issues;
       if (inner?.length) issues.push(...inner.map(issue => ({ ...issue, path: `${location}.${issue.path}` })));

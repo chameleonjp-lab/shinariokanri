@@ -194,7 +194,8 @@ function rejectedEffectFixture(policy: Policy, mixed: boolean) {
   const key = f.add('variable', { key: 'key', valueType: 'boolean', initial: { type: 'boolean', value: false } });
   const item = f.add('item', { itemMode: 'type' });
   const holder = f.add('character');
-  const fact = f.add('assertion', { subjectId: holder.id, holderId: holder.id, predicate: '秘密', value: { type: 'boolean', value: true }, truthKind: 'belief' });
+    const acquisitionSource = f.add('source', { sourceType: 'observation', locator: '入口で示した情報' });
+  const fact = f.add('assertion', { subjectId: holder.id, holderId: holder.id, predicate: '秘密', value: { type: 'boolean', value: true }, truthKind: 'belief', sourceIds: [acquisitionSource.id], evidenceLocation: { entityId: f.entry.id } });
   const seen = f.add('note');
   const valid = [
     f.add('effect', { operation: 'set', targetId: key.id, value: { type: 'boolean', value: true } }),
