@@ -3,6 +3,7 @@ import {readFile} from 'node:fs/promises';
 import {prepareAsset} from '../domain/attachments';
 import {productionTraceWorkload} from '../domain/productionPlanning';
 import {trialRecordData} from '../domain/runtime';
+import {rebuildGameExecution} from '../domain/gameEvidence';
 import { afterEach,describe,it,expect,vi } from 'vitest';
 import { receiveGamePackage,appendGameAction,buildGameReceipt,verifyGameReceipt,previewGameReceiptImport,confirmGameReceiptImport,verifyStoredGameEvidence } from '../domain/gameHandoff';
 import { runInNewContext } from 'node:vm';
@@ -81,4 +82,12 @@ it('rejects a rehashed forged terminal state at atomic save and archive boundari
 
 it('checks receiver conditions inside conditional derived values and scope rules, while preserving the full generic profile',async()=>{
  const f=program();f.total.data.valueType='boolean';f.total.data.initial={type:'boolean',value:false};f.total.data.allowed={};f.total.data.derived={op:'if',condition:{op:'visited',entityId:f.entry.id,count:1},then:{op:'value',value:{type:'boolean',value:true}},else:{op:'value',value:{type:'boolean',value:false}}};const foreshadow=createEntity(f.p.projectId,'foreshadow','提示'),disclosure=createEntity(f.p.projectId,'disclosure','提示条件',{foreshadowId:foreshadow.id,anchor:{entityId:f.s.id,blockId:f.s.data.body[0].id,start:0,end:1},stage:'hint',role:'clue',targetScope:{projectId:f.p.projectId,routeCondition:{op:'visited',entityId:f.entry.id,count:1}}});foreshadow.status=disclosure.status='confirmed';f.p.entities.push(foreshadow,disclosure);const profile=policy(f.p),options={profile:'runtime_json' as const,projectionProfileId:profile.id,targetRevision:f.p.revision};const full=await exportProject(f.p,options);expect(full.ok,JSON.stringify(full)).toBe(true);const narrow=await exportProject(f.p,{...options,runtimeProfile:{...GENERIC_RUNTIME_PROFILE,supportedConditions:['constant']}});expect(narrow.ok).toBe(false);if(!narrow.ok){expect(narrow.issues).toContainEqual(expect.objectContaining({code:'EXPORT_UNSUPPORTED',entityId:f.total.id,field:'derived.condition'}));expect(narrow.issues).toContainEqual(expect.objectContaining({code:'EXPORT_UNSUPPORTED',entityId:disclosure.id,field:'targetScope.routeCondition'}));}
+});
+
+it('freezes historical receipt images and rebuild bindings before hashing, while retaining later caller edits',async()=>{
+ const f=program(),profile=policy(f.p),output=await exportProject(f.p,{profile:'runtime_json',projectionProfileId:profile.id,targetRevision:f.p.revision});if(!output.ok)throw Error(JSON.stringify(output.issues));
+ const pkg=await receiveGamePackage(JSON.parse(output.artifact.content)),receipt=await buildGameReceipt(pkg,{entryId:f.entry.id,actions:[],requests:[{}]}),plan=await previewGameReceiptImport(f.p,receipt,{projectionProfileId:profile.id,targetRevision:f.p.revision}),candidate=await confirmGameReceiptImport(f.p,plan),pinned=await createWorldSnapshot(candidate,'受領を含む履歴版');
+ const historic=pinned.snapshots.at(-1)!.content.entities.find(e=>e.kind==='note'&&e.data.handoffReceipt);if(historic?.kind!=='note'||!historic.data.handoffReceipt)throw Error('fixture');
+ const checking=verifyStoredGameEvidence(pinned);historic.data.handoffReceipt.mode='actual';await expect(checking).resolves.toBeUndefined();expect(historic.data.handoffReceipt.mode).toBe('actual');
+ const note=candidate.entities.find(e=>e.kind==='note'&&e.data.handoffReceipt);if(note?.kind!=='note'||!note.data.handoffReceipt)throw Error('fixture');const evidence=structuredClone(note.data.handoffReceipt),rebuilding=rebuildGameExecution(candidate,evidence,{});evidence.sourceRevision='99';expect((await rebuilding).runtimeProjectHash).toBe(receipt.runtimeProjectHash);expect(evidence.sourceRevision).toBe('99');
 });
