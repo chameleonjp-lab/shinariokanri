@@ -22705,6 +22705,33 @@
             }
           ]
         },
+        "importOrigin": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "sourceProjectId": {
+                  "$ref": "#/$defs/ID"
+                },
+                "sourceOperationId": {
+                  "$ref": "#/$defs/ID"
+                },
+                "importOperationId": {
+                  "$ref": "#/$defs/ID"
+                }
+              },
+              "required": [
+                "sourceProjectId",
+                "sourceOperationId",
+                "importOperationId"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "before": {
           "$ref": "#/$defs/ContentState"
         },

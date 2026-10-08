@@ -1,0 +1,61 @@
+import { useEffect, useState, useSyncExternalStore } from 'react';
+import type { CommandRecord, ProjectData } from '../domain/types';
+import { scenarioStore, type HistoryPage } from '../storage';
+import { EmptyState, Icon } from './components';
+import { labelOf } from './Fields';
+import { ListPager, useListWindow } from './ListWindow';
+import { PagedSelect } from './PagedSelect';
+
+type PointPreview = Awaited<ReturnType<typeof scenarioStore.previewRestorePoint>>;
+type WholePreview = Awaited<ReturnType<typeof scenarioStore.previewRestoreVersion>>;
+interface UnitPreview { baseRevision: string; sourceId: string; relation: boolean; source: unknown; warnings: string[] }
+interface Draft { query: string; page: number; operationId: string; side: 'before' | 'after'; targetId: string; busy: boolean; error: string; notice: string; whole?: WholePreview; point?: PointPreview; pointPage: number; unit?: UnitPreview; savedRevision?: string }
+const states = new Map<string, Draft>(), listeners = new Set<() => void>();
+const subscribe = (listener: () => void) => { listeners.add(listener); return () => listeners.delete(listener); };
+function load(projectId: string): Draft {
+  let value = states.get(projectId);
+  if (!value) { let saved: Partial<Draft> = {}; try { const data = JSON.parse(localStorage.getItem(`scenario-history-selection:v1:${projectId}`) ?? '{}'); saved = { query: typeof data.query === 'string' ? data.query : '', page: Number.isSafeInteger(data.page) && data.page >= 0 ? data.page : 0, operationId: typeof data.operationId === 'string' ? data.operationId : '', targetId: typeof data.targetId === 'string' ? data.targetId : '', side: data.side === 'before' ? 'before' : 'after' }; } catch { /* A missing preference does not prevent history access. */ } value = { query: '', page: 0, operationId: '', targetId: '', side: 'after', busy: false, error: '', notice: '', pointPage: 0, ...saved }; states.set(projectId, value); } return value;
+}
+function update(projectId: string, patch: Partial<Draft>) { const next = { ...load(projectId), ...patch }; states.set(projectId, next); try { const { query, page, operationId, side, targetId } = next; localStorage.setItem(`scenario-history-selection:v1:${projectId}`, JSON.stringify({ query, page, operationId, side, targetId })); } catch { /* The selection remains in memory. */ } listeners.forEach(listener => listener()); }
+
+export function HistoryPanel({ project, onUpdated, onOpen }: { project: ProjectData; onUpdated: (project: ProjectData) => void; onOpen: (id: string) => void }) {
+  const draft = useSyncExternalStore(subscribe, () => load(project.projectId)), key = project.projectId;
+  const [history, setHistory] = useState<HistoryPage>({ entries: [], page: 0, maximum: 0, total: 0, size: 30 });
+  const [points, setPoints] = useState<Awaited<ReturnType<typeof scenarioStore.restorePointPage>>>({ entries: [], page: 0, maximum: 0, total: 0, size: 30 });
+  const [command, setCommand] = useState<CommandRecord>(), [loading, setLoading] = useState(false);
+  const archived = useListWindow({ items: project.entities.filter(entity => entity.deletedAt), scope: `${key}:archived` });
+  const whole = draft.whole ?? draft.point;
+  const changes = useListWindow({ items: whole?.changes ?? [], scope: `${key}:whole-restore-diff` });
+  const source = command?.[draft.side];
+  const stale = !!(whole || draft.unit) && (whole?.baseRevision ?? draft.unit!.baseRevision) !== project.revision;
+  const choose = (patch: Partial<Draft>) => { if (!load(key).busy) update(key, { ...patch, whole: undefined, point: undefined, unit: undefined, error: '', notice: '' }); };
+  useEffect(() => { let live = true; setLoading(true); void scenarioStore.historyPage(key, { query: draft.query, page: draft.page, size: 30 }).then(result => { if (live) setHistory(result); }).catch(cause => { if (live) update(key, { error: (cause as Error).message }); }).finally(() => { if (live) setLoading(false); }); return () => { live = false; }; }, [key, project.revision, draft.query, draft.page]);
+  useEffect(() => { let live = true; void scenarioStore.restorePointPage(key, draft.pointPage).then(value => { if (live) setPoints(value); }).catch(cause => { if (live) update(key, { error: (cause as Error).message }); }); return () => { live = false; }; }, [key, project.revision, draft.pointPage]);
+  useEffect(() => { let live = true; setCommand(undefined); if (draft.operationId) void scenarioStore.historyCommand(key, draft.operationId).then(value => { if (live) setCommand(value); }).catch(cause => { if (live) update(key, { error: (cause as Error).message }); }); return () => { live = false; }; }, [key, draft.operationId]);
+  useEffect(() => { const saved = load(key).savedRevision; if (saved && BigInt(project.revision) >= BigInt(saved)) update(key, { busy: false, savedRevision: undefined, whole: undefined, point: undefined, unit: undefined, notice: '確認した対象を新しい版へ復元し、保存した版を確認しました。' }); }, [key, project.revision]);
+  async function preview(scope: 'unit' | 'whole') {
+    const submitted = load(key); if (submitted.busy || !submitted.operationId || !source) return;
+    update(key, { busy: true, error: '', whole: undefined, point: undefined, unit: undefined });
+    try {
+      if (scope === 'whole') update(key, { whole: await scenarioStore.previewRestoreVersion(key, submitted.operationId, submitted.side) });
+      else if (source.entities.some(entity => entity.id === submitted.targetId)) { const preview = await scenarioStore.previewRestoreEntity(key, submitted.operationId, submitted.targetId, submitted.side); update(key, { unit: { baseRevision: preview.project.revision, sourceId: submitted.targetId, relation: false, source: preview.source, warnings: preview.warnings } }); }
+      else { const relation = source.relations.find(item => item.id === submitted.targetId); if (!relation) throw new Error('復元する対象がこの版にありません。'); const current = await scenarioStore.getProjectForEditing(key); if (!current) throw new Error('復元先がありません。'); update(key, { unit: { baseRevision: current.revision, sourceId: relation.id, relation: true, source: relation, warnings: ['関係だけを復元します。現在の対象・採用状態・参照を保存時に再検証します。'] } }); }
+    } catch (cause) { update(key, { error: (cause as Error).message }); }
+    finally { update(key, { busy: false }); }
+  }
+  async function commit() {
+    const submitted = load(key); if (submitted.busy || !submitted.whole && !submitted.point && !submitted.unit || stale) return;
+    update(key, { busy: true, error: '', notice: '' });
+    try { const result = submitted.point ? await scenarioStore.restorePoint(key, submitted.point.restorePointId, submitted.point) : submitted.whole ? await scenarioStore.restoreHistoryVersion(key, submitted.whole) : submitted.unit!.relation ? await scenarioStore.restoreRelation(key, submitted.operationId, submitted.unit!.sourceId, submitted.side, submitted.unit!.baseRevision) : await scenarioStore.restoreEntity(key, submitted.operationId, submitted.unit!.sourceId, submitted.side, submitted.unit!.baseRevision); update(key, { savedRevision: result.project.revision }); onUpdated(result.project); }
+    catch (cause) { update(key, { busy: false, error: (cause as Error).message }); }
+  }
+  async function previewPoint(id: string) { if (load(key).busy) return; update(key, { busy: true, whole: undefined, point: undefined, unit: undefined, error: '', notice: '' }); try { update(key, { point: await scenarioStore.previewRestorePoint(key, id) }); } catch (cause) { update(key, { error: (cause as Error).message }); } finally { update(key, { busy: false }); } }
+  async function undo() { if (load(key).busy) return; update(key, { busy: true, error: '' }); try { const result = await scenarioStore.undo(key, history.entries[0]?.operationId); update(key, { savedRevision: result.project.revision }); onUpdated(result.project); } catch (cause) { update(key, { busy: false, error: (cause as Error).message }); } }
+  return <section className="history-page"><h3>保存した履歴を選ぶ</h3><p>理由・版・操作ID・対象ID・日時で全履歴を検索できます。過去の版は残し、復元を新しい変更として原子保存します。</p><label>履歴を検索<input type="search" aria-label="履歴を検索" disabled={draft.busy} value={draft.query} onChange={event => choose({ query: event.target.value, page: 0 })}/></label>{loading && <p role="status">変更履歴を読み込んでいます…</p>}{draft.busy && <p role="status">対象版を確認・保存中…</p>}{draft.error && <p role="alert" className="error-notice">{draft.error}</p>}{draft.notice && <p role="status" className="success-notice">{draft.notice}</p>}
+    <ListPager {...history} setPage={page => choose({ page })} label="保存履歴"/>{!history.total && !loading ? <EmptyState icon="clock" title={draft.query ? '一致する履歴がありません' : '変更履歴はまだありません'}/> : <ol className="history-list">{history.entries.map((entry, index) => <li key={entry.operationId}><Icon name={entry.compensatesOperationId ? 'back' : 'check'} size={16}/><div className="history-entry"><button className="reference-link" disabled={draft.busy} onClick={() => choose({ operationId: entry.operationId, targetId: '' })}>{entry.reason} · 版 {entry.revision}<small>{entry.createdAt} · {entry.operationId} · {entry.targetIds.length}件</small></button>{!draft.query && history.page === 0 && index === 0 && <button className="button secondary small" disabled={draft.busy} onClick={() => void undo()}>この変更を取り消す</button>}</div></li>)}</ol>}
+    {command && <section aria-label="履歴の対象版"><h4>{command.reason}</h4><p>操作 {command.operationId} · 現在版 {project.revision}</p><label>復元する時点<select aria-label="復元する時点" disabled={draft.busy} value={draft.side} onChange={event => choose({ side: event.target.value as 'before' | 'after', targetId: '' })}><option value="before">変更前 · 版 {command.before.revision}</option><option value="after">変更後 · 版 {command.after.revision}</option></select></label><PagedSelect label="単体復元する対象" scope={`${key}:history-target:${command.operationId}:${draft.side}`} disabled={draft.busy} value={draft.targetId} onChange={targetId => choose({ targetId })} items={[...source!.entities.map(entity => ({ id: entity.id, label: labelOf(entity) })), ...source!.relations.map(relation => ({ id: relation.id, label: `関係 ${relation.relationType} · ${relation.id}` }))]}/><button className="button secondary" disabled={draft.busy || !draft.targetId} onClick={() => void preview('unit')}>この情報だけの復元を確認</button><button className="button secondary" disabled={draft.busy} onClick={() => void preview('whole')}>作品全体の復元差分を確認</button></section>}
+    {!!points.total && <section aria-label="移行・読み込み前の復元点"><h4>移行・読み込み前の復元点</h4><ListPager {...points} setPage={pointPage => choose({ pointPage })} label="復元点"/>{points.entries.map(point => <p key={point.id}><button className="reference-link" disabled={draft.busy} onClick={() => void previewPoint(point.id)}>{point.reason} · 版 {point.revision} · {point.createdAt}</button></p>)}</section>}
+    {(draft.unit || whole) && <section aria-label="確認した復元差分"><h4>{whole ? '作品全体を復元' : '選んだ情報だけを復元'}</h4><p>確認基底版 {whole?.baseRevision ?? draft.unit!.baseRevision} · {draft.point ? `復元点 ${draft.point.restorePointId}` : `操作 ${draft.operationId} · ${draft.side === 'before' ? '変更前' : '変更後'}`}</p>{stale && <p role="alert">確認後に作品が更新されました。対象を保持して復元差分を再確認してください。</p>}{whole && <><p>{whole.changes.length}件の差分。公開済み固定版と全履歴は保持します。</p><ListPager {...changes} label="作品全体の復元差分"/>{changes.items.map(change => <p key={change.id}>{labelOf(project.entities.find(entity => entity.id === change.id))} · {change.id} · {change.fields.join('、')}</p>)}</>}{draft.unit && <>{draft.unit.warnings.map(warning => <p key={warning}>{warning}</p>)}<pre className="restore-preview">{JSON.stringify(draft.unit.source, null, 2)}</pre></>}<button className="button secondary" disabled={draft.busy} onClick={() => choose({ whole: undefined, point: undefined, unit: undefined })}>中止</button><button className="button primary" disabled={draft.busy || stale} onClick={() => void commit()}>{whole ? '確認した作品全体へ復元' : 'この内容へ復元する'}</button></section>}
+    {!!archived.total && <section><h4>アーカイブ済みの情報</h4><ListPager {...archived} label="アーカイブ済みの情報"/>{archived.items.map(entity => <div key={entity.id}><button className="reference-link" disabled={draft.busy} onClick={() => choose({ query: entity.id, page: 0, targetId: entity.id })}>{labelOf(entity)}の履歴を検索</button><button className="text-button" onClick={() => onOpen(entity.id)}>現在のアーカイブを開く</button></div>)}</section>}
+  </section>;
+}

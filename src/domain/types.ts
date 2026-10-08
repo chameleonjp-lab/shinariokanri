@@ -183,7 +183,7 @@ export interface ProjectData {
 export type ProjectContent = Omit<ProjectData, 'history' | 'snapshots' | 'authorAlternatives'>;
 export interface ProjectSnapshot { id: ID; versionLabel: string; contentHash: string; createdAt: RealTime; content: ProjectContent }
 export type ContentState = Omit<ProjectData, 'history'>;
-export interface CommandRecord { operationId: ID; projectId: ID; baseRevision: Revision; revision: Revision; targetIds: ID[]; reason: string; createdAt: RealTime; before: ContentState; after: ContentState; compensatesOperationId?: ID; idMap?: Record<ID, ID> }
+export interface CommandRecord { operationId: ID; projectId: ID; baseRevision: Revision; revision: Revision; targetIds: ID[]; reason: string; createdAt: RealTime; before: ContentState; after: ContentState; compensatesOperationId?: ID; idMap?: Record<ID, ID>; importOrigin?: { sourceProjectId: ID; sourceOperationId: ID; importOperationId: ID } }
 /** Branch snapshots live with ProjectData/ContentState and never recurse into immutable ProjectContent. */
 export interface StructurePlan { chapterId: ID; templateId: string; beatLabels: string[]; assignments: Record<string, ID> }
 export interface AlternativeVersion { id: ID; parentVersionId: ID | null; label: string; createdAt: RealTime; content: ProjectContent; contentHash?: string; structurePlan?: StructurePlan }

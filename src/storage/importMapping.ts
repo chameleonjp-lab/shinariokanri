@@ -226,7 +226,7 @@ function mappedStructurePlan(plan: NonNullable<AuthorAlternative['versions'][num
   return { ...structuredClone(plan), chapterId: lookup(plan.chapterId), templateId: lookup(plan.templateId), assignments: Object.fromEntries(Object.entries(plan.assignments).map(([beat, id]) => [beat, lookup(id)])) };
 }
 
-async function mapProject(source: ProjectData, target: ProjectData, idMap: Record<string, string>, signal?: AbortSignal): Promise<ProjectData> {
+export async function mapImportedProject(source: ProjectData, target: ProjectData, idMap: Record<string, string>, signal?: AbortSignal): Promise<ProjectData> {
   const lookup = (id: string) => idMap[id] ?? id;
   const state = async <T extends ProjectContent | ContentState>(input: T): Promise<T> => {
     checkCancelled(signal);
@@ -273,7 +273,7 @@ async function mapProject(source: ProjectData, target: ProjectData, idMap: Recor
     if ('snapshots' in content && 'snapshots' in input) content.snapshots = await Promise.all(input.snapshots.map(async snapshot => ({ ...structuredClone(snapshot), id: lookup(snapshot.id), content: await state(snapshot.content) })));
     return content;
   };
-  const project: ProjectData = { ...await state(source), history: await Promise.all(source.history.map(async command => ({ ...structuredClone(command), operationId: lookup(command.operationId), projectId: lookup(command.projectId), targetIds: command.targetIds.map(lookup), before: await state(command.before), after: await state(command.after), ...(command.compensatesOperationId ? { compensatesOperationId: lookup(command.compensatesOperationId) } : {}), ...(command.idMap ? { idMap: Object.fromEntries(Object.entries(command.idMap).map(([oldId, currentId]) => [oldId, lookup(currentId)])) } : {}) }))) };
+  const project: ProjectData = { ...await state(source), history: await Promise.all(source.history.map(async command => ({ ...structuredClone(command), operationId: lookup(command.operationId), projectId: lookup(command.projectId), targetIds: command.targetIds.map(lookup), before: await state(command.before), after: await state(command.after), ...(command.compensatesOperationId ? { compensatesOperationId: lookup(command.compensatesOperationId) } : {}), ...(command.importOrigin ? { importOrigin: { ...command.importOrigin, importOperationId: lookup(command.importOrigin.importOperationId) } } : {}), ...(command.idMap ? { idMap: Object.fromEntries(Object.entries(command.idMap).map(([oldId, currentId]) => [oldId, lookup(currentId)])) } : {}) }))) };
   const snapshots = new Map<string, ProjectSnapshot>();
   const visitStates = (callback: (state: ProjectContent | ContentState) => void) => {
     const visit = (content: ProjectContent | ContentState) => {
@@ -363,7 +363,7 @@ export async function planCrossProjectImport(source: PreparedScenario, target: P
   await verifySnapshotHashes([source.project, target, ...Object.values(worlds)]);
   for (const [id, resolution] of Object.entries(options.resolutions ?? {})) if (!['existing', 'incoming'].includes(resolution)) throw new StorageError('IMPORT_CONFLICT', '競合の採用方法が未対応です。', id);
   const idMap = validateMap(source.project, target, options.idMap);
-  const mappedProject = await mapProject(source.project, target, idMap, options.signal);
+  const mappedProject = await mapImportedProject(source.project, target, idMap, options.signal);
   const mapped = validateProject(mappedProject, { worldSnapshots }); if (!mapped.ok) throw validationError(mapped.issues);
   await verifySnapshotHashes([mappedProject]);
   const metadata = new Map<string, ReturnType<typeof attachmentMetadata>[number]>();

@@ -6,7 +6,7 @@ RB05追加で `variable.exclusions`、`foreshadow.alternativeInfo`、`scene.dial
 
 | 目的 | 出力 | 作者情報・素材 | 現在の制限 |
 | --- | --- | --- | --- |
-| 完全保存 | `.scenario` ZIP | 作者メモ、履歴、固定世界、取得済み素材を含む | 形式1.0.0。新規/複製/同一作品置換・統合。作品間ID対応と過去形式移行は未対応 |
+| 完全保存 | `.scenario` ZIP | 作者メモ、全履歴、推移する固定世界、取得済み素材、隔離した送信待ちを含む | 形式1.0.0。新規/複製/同一作品置換・統合/別作品の明示ID対応。旧1.0.0 fixtureとDB v1更新を検査。未知major/必須機能は拒否 |
 | 素材を除く保存 | `.scenario` ZIP | 素材metadataのみ、作者情報は含む | 素材本体の別保管が必要。完全バックアップとして扱わない |
 | 読み手向け | Markdown / HTML | 指定した公開名・公開文のみ。素材bytesなし | 公開プロファイルと対象版を検査。作者本文を自動採用しない |
 | 制作用runtime | `scenario-runtime` JSON 1.0.0 | 安定した公開IDと許可した実行情報。素材bytesなし | 特定ゲームエンジンへ直接取り込める保証はない。算出/再利用/未対応の項目や挙動を変える除外は拒否 |
@@ -32,3 +32,5 @@ RB05提示順追加では、foreshadow.presentationDeadline、checkpoint.migrati
 RB05再確認の追加契約：`trace.initialStubValues`は状態変数／外部宣言の型付きIDを保持し、`readingPath.selection`は章単位と場面単位を区別する。native/cloneは入力・選択範囲・旧新証跡を保存し、旧stubの個別入力が不明なら明示の移行・再作成を要求する。選択単位のない旧章記録は記録した場面列を保持する。未知の拡張を受け取る旧readerは通常のschema検査で拒否し、黙って脱落させない。
 
 RB05追加互換: checkpoint.worldTick と trace.initialStubBaseState は任意の型付き情報として保存する。日時なしの旧記録は引き続き検証し、矛盾する経路時点は拒否する。initialStubValues が記録された経路は固定版の入力から開始状態を再構成して照合する。入力のない旧stubの再生証跡を保持するが、新版再確認には明示した開始状態の移行・再作成を要求する。本文のID文字列は型付き参照へ置換しない。
+
+RB06の運用情報往復は[完全保存・任意履歴・明示対応](RB06_RECOVERY.md)の互換表を参照する。送信待ちがある1.0.0ファイルには必須機能 `portable-recovery-v1` と `data/recovery.json` を付ける。未知の旧readerが送信待ちを黙って落とすことを防ぐ。元サーバーrevisionは接続時の参考記録であり、ローカル履歴をサーバー共通元へ転用せず、元操作を隔離して接続・権限・確定基底を再検証する。

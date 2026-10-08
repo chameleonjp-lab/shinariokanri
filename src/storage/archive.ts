@@ -1,4 +1,5 @@
 import { Inflate, zipSync } from 'fflate';
+import { validateRecovery, recoveryImages, type PortableRecovery } from './recovery';
 import type { ProjectContent, ProjectData, WorldReference } from '../domain/types';
 import { newId, validateProject } from '../domain/model';
 import { validateProjectIntegrity } from '../domain/projectRecordValidation';
@@ -7,7 +8,7 @@ import { ARCHIVE_LIMITS, FORMAT_VERSION, equalJson, jsonBytes, parseStrictJson, 
   type ArchiveLimits, type LimitOverrides } from './json';
 
 export type AssetMode = 'embedded' | 'metadata_only';
-export interface ManifestFile { path: string; byteSize: number; sha256: string; role: 'project' | 'world' | 'asset' }
+export interface ManifestFile { path: string; byteSize: number; sha256: string; role: 'project' | 'world' | 'asset' | 'recovery' }
 export interface ScenarioManifest {
   format: 'scenario-package'; formatVersion: string; projectId: string; snapshotId: string;
   exportedAt: string; assetMode: AssetMode; files: ManifestFile[]; minimumReaderVersion: string;
@@ -16,7 +17,7 @@ export interface ScenarioManifest {
 export interface ArchiveAsset { path: string; contentHash: string; mediaType: string; bytes: Uint8Array }
 export interface PreparedScenario {
   manifest: ScenarioManifest; project: ProjectData; worlds: Record<string, ProjectData>;
-  assets: ArchiveAsset[]; warnings: string[];
+  assets: ArchiveAsset[]; warnings: string[]; recovery?: PortableRecovery;
   summary: { name: string; entities: number; relations: number; assetBytes: number; missingAssets: number; history: number };
 }
 export interface ArchiveProgress { stage: 'container' | 'expanding' | 'hashes' | 'validating'; completed: number; total: number; path?: string }
@@ -24,13 +25,13 @@ export interface InspectOptions { signal?: AbortSignal; onProgress?: (progress: 
 export interface ExportOptions {
   assetMode?: AssetMode; snapshotId?: string; exportedAt?: string;
   loadAsset?: (hash: string) => Promise<Uint8Array | undefined> | Uint8Array | undefined;
-  worlds?: Record<string, ProjectData>; signal?: AbortSignal;
+  worlds?: Record<string, ProjectData>; signal?: AbortSignal; recovery?: PortableRecovery;
 }
 
 interface ZipEntry { path: string; compressedSize: number; expandedSize: number; dataStart: number; method: number; crc: number; localStart: number; localEnd: number }
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 const hashPattern = /^[0-9a-f]{64}$/;
-const pathPattern = /^(?:manifest\.json|data\/project\.json|worlds\/[0-9a-f-]{36}\.json|assets\/[0-9a-f]{64}\.[a-z0-9]{1,8})$/;
+const pathPattern = /^(?:manifest\.json|data\/(?:project|recovery)\.json|worlds\/[0-9a-f-]{36}\.json|assets\/[0-9a-f]{64}\.[a-z0-9]{1,8})$/;
 const mimeExtensions: Record<string, string[]> = {
   'image/png': ['png'], 'image/jpeg': ['jpg', 'jpeg'], 'image/gif': ['gif'], 'image/webp': ['webp'],
   'audio/mpeg': ['mp3'], 'audio/wav': ['wav'], 'audio/x-wav': ['wav'], 'audio/ogg': ['ogg'],
@@ -212,7 +213,7 @@ function parseManifest(value: unknown): ScenarioManifest {
   if (data.format !== 'scenario-package' || data.formatVersion !== FORMAT_VERSION) throw new StorageError('FORMAT_UNSUPPORTED', 'この専用形式の版には対応していません。元のファイルを保持してください。', 'manifest.json');
   const minimum = typeof data.minimumReaderVersion === 'string' && /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/.test(data.minimumReaderVersion) ? data.minimumReaderVersion.split('.').map(Number) : undefined;
   if (!minimum || minimum[0] > 1 || minimum[0] === 1 && (minimum[1] > 0 || minimum[2] > 0)) throw new StorageError('FORMAT_UNSUPPORTED', '読み込みに新しいアプリが必要です。', 'manifest.json/minimumReaderVersion');
-  if (data.requiredFeatures !== undefined && (!Array.isArray(data.requiredFeatures) || data.requiredFeatures.length)) throw new StorageError('FORMAT_UNSUPPORTED', '未知の必須機能が宣言されています。', 'manifest.json/requiredFeatures');
+  if (data.requiredFeatures !== undefined && (!Array.isArray(data.requiredFeatures) || data.requiredFeatures.some(feature => feature !== 'portable-recovery-v1'))) throw new StorageError('FORMAT_UNSUPPORTED', '未知の必須機能が宣言されています。', 'manifest.json/requiredFeatures');
   if (typeof data.projectId !== 'string' || !uuid.test(data.projectId) || typeof data.snapshotId !== 'string' || !uuid.test(data.snapshotId)
     || typeof data.exportedAt !== 'string' || !Number.isFinite(Date.parse(data.exportedAt)) || !data.exportedAt.endsWith('Z')
     || !['embedded', 'metadata_only'].includes(data.assetMode as string) || !Array.isArray(data.files)) throw new StorageError('ARCHIVE_INVALID', 'manifestの必須項目が不正です。', 'manifest.json');
@@ -223,7 +224,7 @@ function parseManifest(value: unknown): ScenarioManifest {
     safeArchivePath(item.path);
     if (item.path === 'manifest.json' || !pathPattern.test(item.path) || paths.has(item.path)
       || !Number.isSafeInteger(item.byteSize) || (item.byteSize as number) < 0 || typeof item.sha256 !== 'string' || !hashPattern.test(item.sha256)
-      || item.role !== (item.path === 'data/project.json' ? 'project' : item.path.startsWith('worlds/') ? 'world' : 'asset')) throw new StorageError('ARCHIVE_INVALID', 'manifestのファイル宣言が不正または重複しています。', item.path);
+      || item.role !== (item.path === 'data/project.json' ? 'project' : item.path === 'data/recovery.json' ? 'recovery' : item.path.startsWith('worlds/') ? 'world' : 'asset')) throw new StorageError('ARCHIVE_INVALID', 'manifestのファイル宣言が不正または重複しています。', item.path);
     paths.add(item.path);
   }
   return data as unknown as ScenarioManifest;
@@ -376,11 +377,15 @@ export async function inspectScenarioData(bytes: Uint8Array, options: InspectOpt
     records += world.entities.length + world.relations.length;
     if (records > limits.records) throw new StorageError('LIMIT_EXCEEDED', '参照世界を含むentityとrelationの件数が上限を超えています。', file.path);
   }
-  verifyWorlds([project, ...Object.values(worlds)], worlds);
-  await verifySnapshotHashes([project, ...Object.values(worlds)]);
+  const declaredRecovery = manifest.requiredFeatures?.includes('portable-recovery-v1') ?? false;
+  if (declaredRecovery !== files.has('data/recovery.json')) throw new StorageError('FORMAT_UNSUPPORTED', '送信待ち復元情報には対応する必須機能の宣言が必要です。');
+  const recovery = declaredRecovery ? await validateRecovery(parseStrictJson(files.get('data/recovery.json')!, 'data/recovery.json', limits, budget), project, worldContents, options.signal) : undefined;
+  const operationalImages = recoveryImages(recovery);
+  verifyWorlds([project, ...operationalImages, ...Object.values(worlds)], worlds);
+  await verifySnapshotHashes([project, ...operationalImages, ...Object.values(worlds)]);
   await checkedProjectIntegrity(project, 'data/project.json', worldContents);
   for (const [id, world] of Object.entries(worlds)) await checkedProjectIntegrity(world, `worlds/${id}.json`, worldContents);
-  const attachments = new Map(allAttachmentMetadata([project, ...Object.values(worlds)]).map(item => [item.assetPath, item]));
+  const attachments = new Map(allAttachmentMetadata([project, ...operationalImages, ...Object.values(worlds)]).map(item => [item.assetPath, item]));
   const assets: ArchiveAsset[] = [];
   for (const file of manifest.files.filter(item => item.role === 'asset')) {
     const metadata = attachments.get(file.path), data = files.get(file.path)!;
@@ -393,8 +398,8 @@ export async function inspectScenarioData(bytes: Uint8Array, options: InspectOpt
   if (manifest.assetMode === 'embedded' && missing.length) throw new StorageError('ASSET_MISSING', '完全保存に必要な添付bytesが不足しています。', missing[0]);
   checkCancelled(options.signal);
   options.onProgress?.({ stage: 'validating', completed: 1, total: 1 });
-  return { manifest, project, worlds, assets,
-    warnings: manifest.assetMode === 'metadata_only' ? [`軽量保存です。${missing.length}件の添付bytesを含まず、完全バックアップとして復元できません。`] : [],
+  return { manifest, project, worlds, assets, ...(recovery ? { recovery } : {}),
+    warnings: [...(manifest.assetMode === 'metadata_only' ? [`軽量保存です。${missing.length}件の添付bytesを含まず、完全バックアップとして復元できません。`] : []), ...(recovery?.pending.length ? [`${recovery.pending.length}件の送信待ち意図を保持します。接続先・権限・サーバー共通元を確認するまで自動送信しません。`] : [])],
     summary: { name: project.name, entities: project.entities.length, relations: project.relations.length, assetBytes: assets.reduce((sum, item) => sum + item.bytes.byteLength, 0), missingAssets: missing.length, history: project.history.length } };
 }
 
@@ -436,9 +441,12 @@ export async function exportScenario(input: ProjectData, options: ExportOptions 
   for (const [id, world] of Object.entries(worlds)) await checkedProjectIntegrity(world, `worlds/${id}.json`, worldContents);
   const recordCount = [project, ...Object.values(worlds)].reduce((sum, source) => sum + source.entities.length + source.relations.length, 0);
   if (recordCount > ARCHIVE_LIMITS.records) throw new StorageError('LIMIT_EXCEEDED', '参照世界を含むentityとrelationの件数が上限を超えています。');
+  const recovery = options.recovery ? await validateRecovery(options.recovery, project, worldContents, options.signal) : undefined;
+  const operationalImages = recoveryImages(recovery);
+  verifyWorlds(operationalImages, worlds); await verifySnapshotHashes(operationalImages);
   const mode = options.assetMode ?? 'embedded';
-  const attachments = allAttachmentMetadata([project, ...Object.values(worlds)]);
-  const files: Record<string, Uint8Array> = { 'data/project.json': jsonBytes(project) };
+  const attachments = allAttachmentMetadata([project, ...operationalImages, ...Object.values(worlds)]);
+  const files: Record<string, Uint8Array> = { 'data/project.json': jsonBytes(project), ...(recovery ? { 'data/recovery.json': jsonBytes(recovery) } : {}) };
   for (const [id, world] of Object.entries(worlds)) {
     if (!uuid.test(id)) throw new StorageError('VALIDATION_FAILED', '共通世界snapshot IDが不正です。', id);
     files[`worlds/${id}.json`] = jsonBytes(checkedProject(world, `worlds/${id}.json`, ARCHIVE_LIMITS, worldContents));
@@ -458,7 +466,7 @@ export async function exportScenario(input: ProjectData, options: ExportOptions 
   const budget = { objects: 0 };
   const manifestFiles: ManifestFile[] = [];
   for (const [path, data] of Object.entries(files)) {
-    const role = path === 'data/project.json' ? 'project' : path.startsWith('worlds/') ? 'world' : 'asset';
+    const role = path === 'data/project.json' ? 'project' : path === 'data/recovery.json' ? 'recovery' : path.startsWith('worlds/') ? 'world' : 'asset';
     if (data.byteLength > (role === 'asset' ? ARCHIVE_LIMITS.assetBytes : ARCHIVE_LIMITS.jsonBytes)
       || (total += data.byteLength) > ARCHIVE_LIMITS.expandedBytes) throw new StorageError('LIMIT_EXCEEDED', '出力サイズが安全上限を超えています。分割や軽量出力を選んでください。', path);
     manifestFiles.push({ path, byteSize: data.byteLength, sha256: await sha256(data), role });
@@ -466,7 +474,7 @@ export async function exportScenario(input: ProjectData, options: ExportOptions 
   }
   const manifest: ScenarioManifest = { format: 'scenario-package', formatVersion: FORMAT_VERSION, projectId: project.projectId,
     snapshotId: options.snapshotId ?? newId(), exportedAt: options.exportedAt ?? new Date().toISOString(), assetMode: mode,
-    files: manifestFiles, minimumReaderVersion: FORMAT_VERSION };
+    files: manifestFiles, minimumReaderVersion: FORMAT_VERSION, ...(recovery ? { requiredFeatures: ['portable-recovery-v1'] } : {}) };
   // Validate metadata created from optional caller parameters, and count the manifest in all quotas.
   parseManifest(manifest);
   files['manifest.json'] = jsonBytes(manifest);
