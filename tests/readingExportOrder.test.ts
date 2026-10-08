@@ -18,6 +18,7 @@ it('reader Markdown and HTML follow the chosen version chapter order rather than
     namePolicy: { byEntityId: Object.fromEntries(selected.map(entity => [entity.id, { mode: 'replace' as const, replacement: entity.name }])) }, publicTitle: '公開作品',
     publicTexts: { [sceneA.id]: { body: textToRichText('公開本文A') }, [sceneB.id]: { body: textToRichText('公開本文B') } },
   });
+  profile.status='confirmed';
   project.entities = [...selected, profile];
   const content = projectContent(project);
   const snapshot = { id: crypto.randomUUID(), content, contentHash: await sha256(jsonBytes(content)), versionLabel: '元の章順', createdAt: new Date().toISOString() };

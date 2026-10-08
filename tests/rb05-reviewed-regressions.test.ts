@@ -1,3 +1,4 @@
+import { unzipSync } from 'fflate';
 // Positive regressions retained from the independent RB05 review; original evidence is unchanged.
 import 'fake-indexeddb/auto';
 import { mkdirSync, writeFileSync } from 'node:fs';
@@ -119,13 +120,21 @@ describe('Independent RB05 original-contract review; not whole AT credit',()=>{
     expect((cloned.entities.find(v=>v.id===idMap[set.id]) as Entity<'collection'>).data.memberIds).toEqual([idMap[trace.id]]);
     const cloneReplay=await replaySavedTraceVerified(cloned,idMap[trace.id]);record('R5P01',p,{expected:'new IDs/fields preserved; cloned trace replays terminal',actual:cloneReplay.status,clonedValidation:validateProject(cloned).ok});expect(cloneReplay.status).toBe('terminal');
   });
-  it('R5P02 existing executable exporters reject an unsupported exclusion instead of silently dropping it',async()=>{
+  it('R5P02 executable exporters refuse unpublished exclusions and preserve approved exclusion behavior',async()=>{
     const {p,b}=simpleFlow();const x=add(p,'variable',{key:'x',initial:{type:'boolean',value:false}}),y=add(p,'variable',{key:'y',initial:{type:'boolean',value:false}});
     const included=[...p.entities];included.forEach(e=>e.status='confirmed');
     const profile=add(p,'projection_profile',{audience:'reader',includedIds:included.map(e=>e.id),allowedKinds:[...new Set(included.map(e=>e.kind))],namePolicy:{defaultPolicy:{mode:'exclude'},byEntityId:Object.fromEntries(included.map((e,i)=>[e.id,{mode:'replace' as const,replacement:'Public '+i}]))},publicTitle:'Synthetic public fixture',idPolicy:'preserve',publicTexts:{[x.id]:{key:'x'},[y.id]:{key:'y'},[b.id]:{terminalReason:'Declared ending'}}});profile.status='confirmed';
     expect(validateProject(p).ok).toBe(true);
     const baseline=await exportProject(p,{profile:'runtime_json',projectionProfileId:profile.id,targetRevision:p.revision});expect(baseline.ok,JSON.stringify(baseline)).toBe(true);
     x.data.exclusions=[{variableId:y.id,value:{type:'boolean',value:true},otherValue:{type:'boolean',value:true},reason:'Cannot hold both'}];
-    const results=[];for(const format of ['runtime_json','playable_preview'] as const){const result=await exportProject(p,{profile:format,projectionProfileId:profile.id,targetRevision:p.revision});results.push({format,result});expect(result.ok).toBe(false);if(!result.ok)expect(result.issues.some(i=>i.code==='EXPORT_UNSUPPORTED'&&i.field==='exclusions')).toBe(true);}record('R5P02',p,{expected:'unsupported exclusion explicitly refused by executable profiles',actual:results});
+    const results=[];for(const format of ['runtime_json','playable_preview'] as const){
+      const privateRule=await exportProject(p,{profile:format,projectionProfileId:profile.id,targetRevision:p.revision});expect(privateRule.ok).toBe(false);if(!privateRule.ok)expect(privateRule.issues.some(issue=>issue.code==='PUBLIC_TEXT_REQUIRED'||issue.code==='EXPORT_UNSUPPORTED')).toBe(true);
+      profile.data.publicTexts![x.id].exclusionReason='Cannot hold both';
+      const result=await exportProject(p,{profile:format,projectionProfileId:profile.id,targetRevision:p.revision});expect(result.ok,JSON.stringify(result)).toBe(true);if(!result.ok)throw Error(JSON.stringify(result.issues));
+      const payload=format==='runtime_json'?JSON.parse(result.artifact.content):JSON.parse(new TextDecoder().decode(unzipSync(result.artifact.bytes!)['runtime.json'])),runtime=payload.runtimeProject??payload.project,variable=runtime.entities.find((entity:Entity)=>entity.id===x.id);
+      expect(variable.data.exclusions).toMatchObject([{variableId:y.id,value:{type:'boolean',value:true},otherValue:{type:'boolean',value:true}}]);
+      const session=startTrial(runtime),resultState=applyEffectsAtomic(session.state,[{operation:'set',targetId:x.id,value:{type:'boolean',value:true}},{operation:'set',targetId:y.id,value:{type:'boolean',value:true}}],{state:session.state,entities:runtime.entities});expect(resultState.ok).toBe(false);if(!resultState.ok)expect(resultState.state).toEqual(session.state);
+      results.push({format,ok:result.ok,atomicRefusal:!resultState.ok});delete profile.data.publicTexts![x.id].exclusionReason;
+    }record('R5P02',p,{expected:'unpublished rules refused; approved exclusions exported and both state changes refused atomically by the shared engine',actual:results});
   });
 });
