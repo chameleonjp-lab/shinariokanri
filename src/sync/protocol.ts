@@ -57,6 +57,9 @@ interface AckBase {
   documents: (SyncDocument | null)[];
   /** Native adapter capability: complete confirmed image at serverRevision, including unrelated remote changes. */
   confirmedDocuments?: SyncDocument[];
+  /** Limited-editor capability: the server's independent membership/field-grant revision. */
+  authorizationRevision?: Revision;
+  authorizationExpiresAt?: string | null;
 }
 export type SyncAck = (AckBase & { status: 'applied'; conflicts: [] }) |
   (AckBase & { status: 'conflict'; conflicts: SyncConflict[] });
@@ -196,6 +199,8 @@ export async function assertOperation(operation: SyncOperation): Promise<void> {
   if (!sameValue(operation, expected)) invalid();
 }
 export async function assertAckEnvelope(operation: SyncOperation, ack: SyncAck): Promise<void> {
+  if (ack?.authorizationExpiresAt !== undefined && ack.authorizationExpiresAt !== null && (typeof ack.authorizationExpiresAt !== 'string' || !Number.isFinite(Date.parse(ack.authorizationExpiresAt)))) invalid();
+  if (ack?.authorizationRevision !== undefined && !isRevision(ack.authorizationRevision)) invalid();
   if (!ack || ack.schemaVersion !== 1 || ack.operationId !== operation.operationId || !sameScope(ack.scope, operation.scope) ||
     ack.operationHash !== await valueHash(operation) || !isRevision(ack.serverRevision) ||
     BigInt(ack.serverRevision) < BigInt(operation.baseRevision) || !Array.isArray(ack.documents) ||
