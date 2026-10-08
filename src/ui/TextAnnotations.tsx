@@ -1,3 +1,4 @@
+import {useAuthorScope} from './StoreContext';
 import { useEffect, useMemo, useState } from 'react';
 import type { ContentAnchor, Entity, ProjectData, RichText, UnresolvedTextAnnotation } from '../domain/types';
 import {
@@ -68,6 +69,7 @@ export function TextAnnotations({
   onOpenReference,
   fieldLabel = '本文',
 }: TextAnnotationsProps) {
+  const authorScope=useAuthorScope(project.projectId);
   const blocks = Array.isArray(value) ? value : [];
   const [selectedBlockId, setSelectedBlockId] = useState(blocks[0]?.id ?? '');
   const [candidateId, setCandidateId] = useState('');
@@ -79,11 +81,11 @@ export function TextAnnotations({
   const [splitOffset, setSplitOffset] = useState(1);
   const [error, setError] = useState('');
   const [locallyIgnored, setLocallyIgnored] = useState<ReadonlySet<string>>(() => new Set());
-  const [persistedIgnored, setPersistedIgnored] = useState<ReadonlySet<string>>(() => storedIgnored(project.projectId, sourceEntityId));
+  const [persistedIgnored, setPersistedIgnored] = useState<ReadonlySet<string>>(() => storedIgnored(authorScope, sourceEntityId));
   const [unresolvedTargetIds, setUnresolvedTargetIds] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    setPersistedIgnored(storedIgnored(project.projectId, sourceEntityId));
+    setPersistedIgnored(storedIgnored(authorScope, sourceEntityId));
   }, [project.projectId, sourceEntityId]);
 
   const activeBlock = blocks.find(block => block.id === selectedBlockId) ?? blocks[0];
@@ -132,7 +134,7 @@ export function TextAnnotations({
     setLocallyIgnored(current => new Set([...current, key]));
     setPersistedIgnored(current => {
       const next = new Set([...current, key]);
-      try { saveIgnoredLinkCandidate(window.localStorage, project.projectId, sourceEntityId, key); } catch { /* Blocked storage keeps the in-memory choice for this editor. */ }
+      try { saveIgnoredLinkCandidate(window.localStorage, authorScope, sourceEntityId, key); } catch { /* Blocked storage keeps the in-memory choice for this editor. */ }
       return next;
     });
     onIgnoreCandidate?.(key);

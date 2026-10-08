@@ -1,3 +1,5 @@
+import {authorField,useAuthorInput,flushAuthorDraft,acknowledgeAuthorDraft} from './authorOperation';
+import {registerAuthorCache,registerAuthorBusy,useAuthorScope} from './StoreContext';
 import { useEffect, useRef, useState } from 'react';
 import type { ProjectData } from '../domain/types';
 import { adoptedRecord } from '../domain/adoption';
@@ -11,27 +13,28 @@ const pending = new Set<string>(), memory = new Map<string, Draft>(), EVENT = 's
 const key = (id: string) => `scenario-reaction-draft:v1:${id}`;
 function readDraft(id: string): Draft {
   if (memory.has(id)) return memory.get(id)!;
-  try { const value = JSON.parse(localStorage.getItem(key(id)) ?? 'null'); if (value && Object.hasOwn(REACTION_LABELS, value.mode) && typeof value.name === 'string' && value.name.length <= 1000 && Array.isArray(value.sceneIds) && value.sceneIds.length <= 100 && new Set(value.sceneIds).size === value.sceneIds.length && value.sceneIds.every((id: unknown) => typeof id === 'string')) return value; } catch { /* An unreadable optional draft is ignored. */ }
+  try { const value = JSON.parse(localStorage.getItem(key(id))??(id.startsWith('guest:')?localStorage.getItem(key(id.slice(6)))??localStorage.getItem(key(id.split(':').at(-1)!)):null)??'null'); if (value && Object.hasOwn(REACTION_LABELS, value.mode) && typeof value.name === 'string' && value.name.length <= 1000 && Array.isArray(value.sceneIds) && value.sceneIds.length <= 100 && new Set(value.sceneIds).size === value.sceneIds.length && value.sceneIds.every((id: unknown) => typeof id === 'string')) return value; } catch { /* An unreadable optional draft is ignored. */ }
   return empty();
 }
 function storeDraft(id: string, value: Draft): string { memory.set(id, value); try { localStorage.setItem(key(id), JSON.stringify(value)); return ''; } catch { return '下書きの端末内保存に失敗しました。この画面を開いている間の入力は保持しています。再読込の前に保存をやり直してください。'; } }
 export function ReactionBuilder({ project, onSaveProject, onOpen }: { project: ProjectData; onSaveProject: (project: ProjectData, reason: string) => Promise<ProjectData>; onOpen: (id: string) => void }) {
-  const [draft, setDraft] = useState(() => readDraft(project.projectId)), [preview, setPreview] = useState<ReturnType<typeof prepareReactions> | null>(null);
-  const [busy, setBusy] = useState(pending.has(project.projectId)), [error, setError] = useState(''), [notice, setNotice] = useState('');
-  const live = useRef(true); useEffect(() => { live.current = true; const changed = (event: Event) => { const detail = (event as CustomEvent).detail; if (detail.projectId !== project.projectId) return; setBusy(pending.has(project.projectId)); if (detail.saved) { setDraft(readDraft(project.projectId)); setPreview(null); setNotice('反応の系列を端末内に保存しました。'); } if (detail.error) setError(detail.error); }; window.addEventListener(EVENT, changed); return () => { live.current = false; window.removeEventListener(EVENT, changed); }; }, [project.projectId]);
+  const authorScope=useAuthorScope('reaction:'+project.projectId);
+  const [draft, setDraft] = useAuthorInput<Draft>(authorScope,'draft',()=>readDraft(authorScope),project.projectId,project.revision), [preview, setPreview] = useState<ReturnType<typeof prepareReactions> | null>(null);
+  const [busy, setBusy] = useState(pending.has(authorScope)), [error, setError] = useState(''), [notice, setNotice] = useState('');
+  const live = useRef(true); useEffect(() => { live.current = true; const changed = (event: Event) => { const detail = (event as CustomEvent).detail; if (detail.scope !== authorScope) return; setBusy(pending.has(authorScope)); if (detail.saved) { setDraft(authorField<Draft>(authorScope,'draft')??readDraft(authorScope)); setPreview(null); setNotice('反応の系列を端末内に保存しました。'); } if (detail.error) setError(detail.error); }; window.addEventListener(EVENT, changed); return () => { live.current = false; window.removeEventListener(EVENT, changed); }; }, [project.projectId,authorScope]);
   const scenes = project.entities.filter(entity => entity.kind === 'scene' && adoptedRecord(entity)), view = useListWindow({ items: scenes, scope: `${project.projectId}/reaction-scenes` });
-  const change = (next: Draft) => { setError(storeDraft(project.projectId, next)); setDraft(next); setPreview(null); setNotice(''); };
+  const change = (next: Draft) => { setError(storeDraft(authorScope, next)); setDraft(next); setPreview(null); setNotice(''); };
   const stale = !!preview && preview.candidate.revision !== project.revision;
   const save = async () => {
-    if (!preview || stale || pending.has(project.projectId)) return;
-    pending.add(project.projectId); window.dispatchEvent(new CustomEvent(EVENT, { detail: { projectId: project.projectId } }));
+    if (!preview || stale || pending.has(authorScope)) return;
+    pending.add(authorScope); window.dispatchEvent(new CustomEvent(EVENT, { detail: { scope: authorScope, projectId: project.projectId } }));
     const submitted = JSON.stringify(draft);
     try {
-      await onSaveProject(preview.candidate, `短い反応の系列を原子保存 · ${REACTION_LABELS[draft.mode]}`);
-      const draftError = JSON.stringify(readDraft(project.projectId)) === submitted ? storeDraft(project.projectId, empty()) : '';
-      pending.delete(project.projectId); window.dispatchEvent(new CustomEvent(EVENT, { detail: { projectId: project.projectId, saved: true, error: draftError } }));
+      await flushAuthorDraft(authorScope);const saved=await onSaveProject(preview.candidate, `短い反応の系列を原子保存 · ${REACTION_LABELS[draft.mode]}`);
+      acknowledgeAuthorDraft(authorScope,saved.revision);const draftError = JSON.stringify(authorField<Draft>(authorScope,'draft')??readDraft(authorScope)) === submitted ? storeDraft(authorScope, empty()) : '';
+      if(!draftError&&JSON.stringify(authorField<Draft>(authorScope,'draft'))===submitted)setDraft(empty());pending.delete(authorScope); window.dispatchEvent(new CustomEvent(EVENT, { detail: { scope: authorScope, projectId: project.projectId, saved: true, error: draftError } }));
       if (live.current) onOpen(preview.graphId);
-    } catch (cause) { pending.delete(project.projectId); window.dispatchEvent(new CustomEvent(EVENT, { detail: { projectId: project.projectId, error: (cause as Error).message } })); }
+    } catch (cause) { pending.delete(authorScope); window.dispatchEvent(new CustomEvent(EVENT, { detail: { scope: authorScope, projectId: project.projectId, error: (cause as Error).message } })); }
   };
   return <details className="settings-card"><summary>短い反応の系列を作る</summary><fieldset disabled={busy}>
     <p>選んだ順に場面を使います。系列の入力は作品別に下書きへ保持します。条件・抽選・巻戻・周回は試読と同じ実行規則を使います。</p>
@@ -44,3 +47,6 @@ export function ReactionBuilder({ project, onSaveProject, onOpen }: { project: P
     {error && <p role="alert">{error}</p>}{notice && <p role="status">{notice}</p>}
   </fieldset>{busy && <p role="status">反応の系列を保存中…</p>}</details>;
 }
+
+registerAuthorCache(account=>{for(const id of memory.keys())if(id.startsWith(account+':'))memory.delete(id);});
+registerAuthorBusy(account=>[...pending].some(id=>id.startsWith(account+':')));

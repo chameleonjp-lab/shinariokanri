@@ -131,7 +131,7 @@ button svg { pointer-events: none; }
 
 /* Navigation stays separate from the writing surface. */
 .app-shell { display: flex; min-height: 100dvh; }
-.sidebar { display: flex; flex-direction: column; width: 218px; flex: 0 0 218px; position: fixed; inset: 0 auto 0 0; background: #232b42; color: #cbd0df; padding: 25px 17px 18px; z-index: 20; overflow-y: auto; }
+.sidebar { display: flex; flex-direction: column; width: 218px; flex: 0 0 218px; position: fixed; inset: var(--account-controls-height, 0px) auto 0 0; background: #232b42; color: #cbd0df; padding: 25px 17px 18px; z-index: 20; overflow-y: auto; }
 .sidebar .brand { color: #fff; padding-left: 7px; margin-bottom: 28px; font-size: 14px; }
 .project-switch { display: flex; align-items: center; gap: 9px; width: 100%; min-height: 65px; padding: 10px; border-radius: 10px; border: 1px solid #ffffff14; background: #ffffff05; text-align: left; margin-bottom: 25px; }
 .project-switch:hover { background: #ffffff0e; }
@@ -769,3 +769,11 @@ button svg { pointer-events: none; }
 .index-editor-controls { border: 0; padding: 0; margin: 0; min-width: 0; }
 
 .editor-inputs,.editor-data-field{border:0;padding:0;margin:0;min-width:0}
+
+/* Account actions remain reachable above the fixed author sidebar at every width. */
+.account-controls { position: relative; z-index: 30; background: var(--surface); }
+.account-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 16px; border-bottom: 1px solid var(--border); }
+.account-toolbar span { min-width: 0; overflow-wrap: anywhere; font-size: 11px; }
+.account-controls > .settings-card { margin: 12px auto; width: min(900px, calc(100% - 24px)); max-height: 65dvh; overflow: auto; }
+.account-controls > .section-tabs { padding: 4px 16px; }
+.account-workspace .sidebar-backdrop { top: var(--account-controls-height, 0px); }

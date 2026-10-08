@@ -18,6 +18,7 @@ import { assertAck } from '../sync/validation';
 import { assertDocumentTarget, createSyncOperation, sameValue, valueHash, SyncProtocolError, type SyncAck, type SyncDocument } from '../sync/protocol';
 import { nativeDocuments, nativeFromDocuments, prepareNativeOperation, acknowledgeNativeDocuments,sameDocumentContent, resolveCurrentNativeConflict, type ConfirmedSyncBase, type PreparedNativeOperation, type PreservedNativeConflict, type NativeSyncAck } from '../sync/nativeBridge';
 import type { ConflictResolution } from '../sync/merge';
+import type { WorkspaceDrafts } from '../ui/workspaceDrafts';
 
 type StoredProject = Omit<ProjectData, 'entities' | 'relations' | 'snapshots' | 'history' | 'views'> & {
   entityIds: string[]; relationIds: string[]; snapshotIds: string[]; historyIds: string[]; viewIds: string[];
@@ -103,6 +104,7 @@ class ScenarioDatabase extends Dexie {
   importLogs!: Table<ImportLog, string>;
   importDrafts!: Table<ImportDraft, string>;
   authorToolDrafts!: Table<AuthorToolDraft, string>;
+  workspaceInputs!: Table<{ key: 'workspace'; value: WorkspaceDrafts }, string>;
   recoveredPending!: Table<RecoveredPendingIntent, string>;
   retainedSyncRecovery!:Table<RetainedSyncRecovery,string>;
   syncAssetAcks!:Table<{key:string;projectId:string;contentHash:string;byteSize:number;mediaType:string},string>;
@@ -123,6 +125,7 @@ class ScenarioDatabase extends Dexie {
     this.version(3).stores({ recoveredPending: 'key,projectId' });
     this.version(4).stores({ authorToolDrafts: 'key,projectId' });
     this.version(5).stores({ syncBases:'projectId', preparedSync:'operationId,projectId', syncConflicts:'operationId,projectId', syncAckEvidence:'operationId,projectId',retainedSyncRecovery:'key,projectId',syncAssetAcks:'key,projectId',sharedSnapshots:'id,createdAt' });
+    this.version(6).stores({ workspaceInputs: 'key' });
   }
 }
 
@@ -396,7 +399,7 @@ export class ScenarioStore {
     this.faultInjector = options.faultInjector;
     this.onSaveMetrics = options.onSaveMetrics;
     this.db = new ScenarioDatabase(options.databaseName ?? (this.accountId ? `scenario-manager-account-${encodeURIComponent(this.accountId)}` : 'scenario-manager-local-v1'));
-    for(const name of ['saveProject','importScenario','putAsset','commitPreparedAck','confirmSyncResolution','bindBootstrapBase','bindConfirmedProject','saveAuthorToolDraft','saveImportDraft','applyReceivedImage']){const fn=(this as unknown as Record<string,(...args:unknown[])=>Promise<unknown>>)[name].bind(this);Object.defineProperty(this,name,{configurable:true,writable:true,value:async(...args:unknown[])=>{this.activeOperations++;try{return await fn(...args);}finally{this.activeOperations--;}}});}
+    for(const name of ['saveProject','importScenario','putAsset','commitPreparedAck','confirmSyncResolution','bindBootstrapBase','bindConfirmedProject','saveAuthorToolDraft','saveImportDraft','applyReceivedImage','saveWorkspaceInputs','restoreAuthorInputs','restoreAuthorToolDrafts']){const fn=(this as unknown as Record<string,(...args:unknown[])=>Promise<unknown>>)[name].bind(this);Object.defineProperty(this,name,{configurable:true,writable:true,value:async(...args:unknown[])=>{this.activeOperations++;try{return await fn(...args);}finally{this.activeOperations--;}}});}
   }
   // Store names avoid Dexie's recursive KeyPaths expansion on the domain's large discriminated unions.
   private get writeTables(): string[] { return ['projects', 'entities', 'relations', 'blocks', 'snapshots', 'commands', 'outbox', 'assets', 'views', 'syncMetadata', 'restorePoints', 'worlds', 'importLogs', 'recoveredPending','syncBases','preparedSync','syncConflicts','syncAckEvidence','retainedSyncRecovery','syncAssetAcks']; }
@@ -695,6 +698,7 @@ export class ScenarioStore {
       measure('diff');
       const result = await this.db.transaction('rw', this.writeTables, async () => {
         checkCancelled(options.signal);
+        if(this.authorAccess&&await this.db.syncBases.get(candidate.projectId)&&this.authorAccess.get(candidate.projectId)!=='owner')throw new SyncProtocolError('FORBIDDEN');
         const replay = await this.db.commands.get(operationId);
         if (replay) return this.duplicateResult(replay, requestHash, candidate.projectId);
         const header = await this.db.projects.get(candidate.projectId);
@@ -1099,6 +1103,48 @@ export class ScenarioStore {
     const drafts=copy(inputs),previous=copy(expected);if(new Set(drafts.map(d=>d.key)).size!==drafts.length)throw new StorageError('VALIDATION_FAILED','入力IDが重複しています。');
     for(const d of drafts){if(!this.accountId||!d.key.startsWith(this.accountId+':')||!ID_PATTERN.test(d.projectId)||!/^\d+$/.test(d.baseRevision)||jsonBytes(d.fields).byteLength>1024*1024||d.asset&&(d.asset.bytes.byteLength>32*1024*1024||await sha256(d.asset.bytes)!==d.asset.contentHash))throw new StorageError('VALIDATION_FAILED','入力の領域・hash・上限が不正です。');}
     await this.db.transaction('rw',this.db.authorToolDrafts,async()=>{const actual=await this.db.authorToolDrafts.toArray();if(!sameJson(actual.map(d=>({...d,asset:d.asset?{contentHash:d.asset.contentHash,byteSize:d.asset.bytes.byteLength}:null})),previous.map(d=>({...d,asset:d.asset?{contentHash:d.asset.contentHash,byteSize:d.asset.bytes.byteLength}:null}))))throw new StorageError('REVISION_CONFLICT','確認後に未保存入力が変わりました。');await this.db.authorToolDrafts.bulkPut(drafts);this.faultInjector?.('before-commit');});
+  }
+  async getWorkspaceInputs(): Promise<WorkspaceDrafts | undefined> {
+    const row = await this.db.workspaceInputs.get('workspace');
+    return row ? copy(row.value) : undefined;
+  }
+  private checkedWorkspaceInputs(value: WorkspaceDrafts): WorkspaceDrafts {
+    const input = copy(value);
+    if (!input || Object.keys(input).some(key => !['drafts','jsonBuffers','settingsDrafts','alternativeDrafts'].includes(key)) ||
+        ['drafts','jsonBuffers','settingsDrafts','alternativeDrafts'].some(key => {
+          const field = (input as unknown as Record<string, unknown>)[key];
+          return !field || typeof field !== 'object' || Array.isArray(field);
+        }) || jsonBytes(input).byteLength > 64 * 1024 * 1024)
+      throw new StorageError('VALIDATION_FAILED', '作品入力の構造または保持上限が不正です。');
+    return input;
+  }
+  async saveWorkspaceInputs(value: WorkspaceDrafts, expected: WorkspaceDrafts | undefined): Promise<void> {
+    const submitted = this.checkedWorkspaceInputs(value), previous = copy(expected);
+    try { await this.db.transaction('rw', this.db.workspaceInputs, async () => {
+      const current = await this.db.workspaceInputs.get('workspace');
+      if (!sameJson(current?.value, previous)) throw new StorageError('REVISION_CONFLICT', '別画面で作品入力が変わりました。入力を持ち出して再確認してください。');
+      await this.db.workspaceInputs.put({ key: 'workspace', value: submitted });
+    }); } catch (cause) { throw saveError(cause); }
+  }
+  /** Workspace inputs and all tool/asset inputs are one account-local atomic restore. */
+  async restoreAuthorInputs(input: { tools: AuthorToolDraft[]; workspace: WorkspaceDrafts }, expected: { tools: AuthorToolDraft[]; workspace: WorkspaceDrafts | undefined }): Promise<void> {
+    const drafts = copy(input.tools), workspace = this.checkedWorkspaceInputs(input.workspace), previous = copy(expected);
+    if (new Set(drafts.map(d => d.key)).size !== drafts.length) throw new StorageError('VALIDATION_FAILED', '入力IDが重複しています。');
+    for (const draft of drafts) {
+      if (!this.accountId || !draft.key.startsWith(this.accountId + ':') || !ID_PATTERN.test(draft.projectId) || !/^(0|[1-9]\d*)$/.test(draft.baseRevision) ||
+          !draft.fields || typeof draft.fields !== 'object' || Array.isArray(draft.fields) || jsonBytes(draft.fields).byteLength > 1024 * 1024 ||
+          draft.asset && (draft.asset.bytes.byteLength > 32 * 1024 * 1024 || await sha256(draft.asset.bytes) !== draft.asset.contentHash))
+        throw new StorageError('VALIDATION_FAILED', '入力の領域・hash・上限が不正です。');
+    }
+    const summary = (items: AuthorToolDraft[]) => items.map(d => ({ ...d, asset: d.asset ? { contentHash: d.asset.contentHash, byteSize: d.asset.bytes.byteLength } : null })).sort((a,b) => a.key.localeCompare(b.key));
+    try { await this.db.transaction('rw', this.db.authorToolDrafts, this.db.workspaceInputs, async () => {
+      const actual = await this.db.authorToolDrafts.toArray(), current = await this.db.workspaceInputs.get('workspace');
+      if (!sameJson(summary(actual), summary(previous.tools)) || !sameJson(current?.value, previous.workspace))
+        throw new StorageError('REVISION_CONFLICT', '確認後に未保存入力が変わりました。');
+      await this.db.authorToolDrafts.bulkPut(drafts);
+      await this.db.workspaceInputs.put({ key: 'workspace', value: workspace });
+      this.faultInjector?.('before-commit');
+    }); } catch (cause) { throw saveError(cause); }
   }
   async getAuthorToolDraft(key: string): Promise<AuthorToolDraft | undefined> { const draft = await this.db.authorToolDrafts.get(key); return draft ? copy(draft) : undefined; }
   async clearAuthorToolDraft(key: string): Promise<void> { await this.db.authorToolDrafts.delete(key); }

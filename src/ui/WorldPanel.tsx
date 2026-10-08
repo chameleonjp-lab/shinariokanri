@@ -1,3 +1,4 @@
+import {useAuthorScope} from './StoreContext';
 import { useEffect, useMemo, useState } from 'react';
 import type { ID, ProjectData, Tick } from '../domain/types';
 import { effectiveWorldContent } from '../domain/world';
@@ -24,11 +25,12 @@ export interface WorldPanelProps {
   onShowTimeline?: (placeId?: ID, eventId?: ID) => void; onShowEntityTimeline?: (entityId: ID, at?: Tick | null) => void;
   onPinWorld?: WorldVersionsProps['onPinWorld']; assetUrl?: (attachmentId: ID) => Promise<string | undefined> | string | undefined;
 }
-function initialWorldView(project: ProjectData) {
-  try { const value = JSON.parse(localStorage.getItem(`scenario-world:v1:${project.projectId}`) ?? 'null') as Record<string, unknown> | null; return { tab: value && typeof value.tab === 'string' && value.tab in TABS ? value.tab as WorldTab : 'histories' as WorldTab, at: value?.at === null ? null : isTick(value?.at) ? value.at : project.mainStart, checkpoint: typeof value?.checkpoint === 'string' ? value.checkpoint : '', holder: typeof value?.holder === 'string' ? value.holder : '' }; } catch { return { tab: 'histories' as WorldTab, at: project.mainStart, checkpoint: '', holder: '' }; }
+function initialWorldView(project: ProjectData,scope:string) {
+  try { const value = JSON.parse(localStorage.getItem(`scenario-world:v1:${scope}`) ?? 'null') as Record<string, unknown> | null; return { tab: value && typeof value.tab === 'string' && value.tab in TABS ? value.tab as WorldTab : 'histories' as WorldTab, at: value?.at === null ? null : isTick(value?.at) ? value.at : project.mainStart, checkpoint: typeof value?.checkpoint === 'string' ? value.checkpoint : '', holder: typeof value?.holder === 'string' ? value.holder : '' }; } catch { return { tab: 'histories' as WorldTab, at: project.mainStart, checkpoint: '', holder: '' }; }
 }
 export function WorldPanel({ project, worlds = [], onSaveProject, onOpen, selectedPlaceId, selectedEntityId, requestedSection, worldTick, checkpointId: externalCheckpoint, onViewPointChange, onShowTimeline, onShowEntityTimeline, onPinWorld, assetUrl }: WorldPanelProps) {
-  const [initial] = useState(() => initialWorldView(project)), [tab, setTab] = useState<WorldTab>(requestedSection ?? (selectedPlaceId ? 'maps' : initial.tab)), [visited, setVisited] = useState<WorldTab[]>([requestedSection ?? (selectedPlaceId ? 'maps' : initial.tab)]), [at, setAt] = useState<Tick | null>(worldTick !== undefined ? worldTick : initial.at), [checkpointId, setCheckpointId] = useState(externalCheckpoint ?? initial.checkpoint), [holderId, setHolderId] = useState(initial.holder), [candidatePage, setCandidatePage] = useState(0);
+  const authorScope=useAuthorScope(project.projectId);
+  const [initial] = useState(() => initialWorldView(project,authorScope)), [tab, setTab] = useState<WorldTab>(requestedSection ?? (selectedPlaceId ? 'maps' : initial.tab)), [visited, setVisited] = useState<WorldTab[]>([requestedSection ?? (selectedPlaceId ? 'maps' : initial.tab)]), [at, setAt] = useState<Tick | null>(worldTick !== undefined ? worldTick : initial.at), [checkpointId, setCheckpointId] = useState(externalCheckpoint ?? initial.checkpoint), [holderId, setHolderId] = useState(initial.holder), [candidatePage, setCandidatePage] = useState(0);
   const effective = useMemo(() => ({ ...project, ...effectiveWorldContent(project, worlds) }), [project, worlds]), context = useMemo(() => checkpointContext(effective, checkpointId), [effective, checkpointId]), point = useMemo(() => ({ at, context, ...(context?.state.presentationPosition ? { presentationIds: [context.state.presentationPosition] } : {}) }), [at, context]);
   const index = useMemo(() => new Map(effective.entities.map(entity => [entity.id, entity])), [effective.entities]);
   const checks = useMemo(() => visited.includes('checks') ? inspectWorldCandidates(effective, point) : undefined, [effective, point, visited]);
@@ -37,7 +39,7 @@ export function WorldPanel({ project, worlds = [], onSaveProject, onOpen, select
   useEffect(() => { if (externalCheckpoint !== undefined) setCheckpointId(externalCheckpoint); }, [externalCheckpoint]);
   useEffect(() => { if (selectedPlaceId && requestedSection !== 'histories') chooseTab('maps'); }, [selectedPlaceId]);
   useEffect(() => { if (requestedSection) chooseTab(requestedSection); }, [requestedSection]);
-  useEffect(() => { try { localStorage.setItem(`scenario-world:v1:${project.projectId}`, JSON.stringify({ tab, at, checkpoint: checkpointId, holder: holderId })); } catch { /* View preferences are optional. */ } }, [project.projectId, tab, at, checkpointId, holderId]);
+  useEffect(() => { try { localStorage.setItem(`scenario-world:v1:${authorScope}`, JSON.stringify({ tab, at, checkpoint: checkpointId, holder: holderId })); } catch { /* View preferences are optional. */ } }, [project.projectId, tab, at, checkpointId, holderId]);
   const changePoint = (tick: Tick | null, checkpoint: ID) => { setAt(tick); setCheckpointId(checkpoint); setCandidatePage(0); onViewPointChange?.(tick, checkpoint); };
   const sectionProps = { project: effective, localProject: project, point, onSave: onSaveProject, onOpen };
   const safePage = Math.min(candidatePage, Math.max(0, Math.ceil((checks?.candidates.length ?? 0) / TIMELINE_PAGE_SIZE) - 1));

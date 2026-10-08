@@ -1,7 +1,7 @@
 import {LimitedSharePanel} from './ui/LimitedSharePanel';
 import {SyncPanel} from './ui/SyncPanel';
 import {useScenarioStore} from './ui/StoreContext';
-import {readWorkspaceDrafts,useWorkspaceDraftPersistence} from './ui/workspaceDrafts';
+import {readWorkspaceDrafts,loadWorkspaceDrafts,useWorkspaceDraftPersistence} from './ui/workspaceDrafts';
 import { GameHandoffPanel } from './ui/GameHandoffPanel';
 import { ConsultationImportPanel } from './ui/MediaConsultationTools';
 import { acknowledgeSettingsDraft, settingsDraftChanged, type ProjectSettingsDraft } from './ui/projectSettingsDraft';
@@ -50,6 +50,7 @@ export default function App() {
   const scenarioStore=useScenarioStore();
   const [projects, setProjects] = useState<ProjectData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [workspaceReady, setWorkspaceReady] = useState(false);
   const [library, setLibrary] = useState(true);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [hiddenPages, setHiddenPages] = useState<Page[]>([]);
@@ -89,7 +90,7 @@ export default function App() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
-  useWorkspaceDraftPersistence(scenarioStore,{drafts,jsonBuffers,settingsDrafts,alternativeDrafts},setError);
+  useWorkspaceDraftPersistence(scenarioStore,{drafts,jsonBuffers,settingsDrafts,alternativeDrafts},setError,workspaceReady);
   const [theme, setTheme] = useState(readPreference('scenario-theme', 'system'));
   const [online, setOnline] = useState(navigator.onLine);
   const projectRef = useRef<ProjectData | null>(null);
@@ -125,7 +126,7 @@ export default function App() {
 
   useEffect(() => {
     let live = true;
-    void scenarioStore.listProjectsForEditing().then(found => { if (!live) return; setProjects(found); const last = readPreference(`scenario-last-project:${scenarioStore.accountId??'guest'}`,scenarioStore.accountId?'':readPreference('scenario-last-project')); if (found.some(p => p.projectId === last)) { setActiveId(last); setLibrary(false); } }).catch(e => { if (live) setError((e as Error).message || '端末内の作品を読み込めませんでした。'); }).finally(() => { if (live) setLoading(false); });
+    void Promise.all([scenarioStore.listProjectsForEditing(),loadWorkspaceDrafts(scenarioStore)]).then(([found,input]) => { if (!live) return; setProjects(found); setDrafts(input.drafts);setJsonBuffers(input.jsonBuffers);setSettingsDrafts(input.settingsDrafts);setAlternativeDrafts(input.alternativeDrafts);setWorkspaceReady(true); const last = readPreference(`scenario-last-project:${scenarioStore.accountId??'guest'}`,scenarioStore.accountId?'':readPreference('scenario-last-project')); if (found.some(p => p.projectId === last)) { setActiveId(last); setLibrary(false); } }).catch(e => { if (live) setError((e as Error).message || '端末内の作品と未保存入力を読み込めませんでした。'); }).finally(() => { if (live) setLoading(false); });
     void scenarioStore.listWorldSnapshots().then(found => { if (live) setWorldRegistry(found); }).catch(e => { if (live) setError((e as Error).message); });
     return () => { live = false; };
   }, []);
