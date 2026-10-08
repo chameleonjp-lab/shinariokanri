@@ -1,0 +1,548 @@
+{
+  "kind": "independent_RB05_structure_candidate_1_review",
+  "reviewed_at_utc": "2026-10-08T05:12:31.327311+00:00",
+  "candidate": {
+    "snapshot": "shinariokanri-independent-rb05-structure-20261008-1",
+    "source_files": 149,
+    "source_manifest": "evidence/candidate-1/source-hashes.json",
+    "commit": null,
+    "tree": null
+  },
+  "base_commit": "b9ce26bccb6359d2414a66a13168fc054c434519",
+  "original_contracts": "original-contracts.json",
+  "original_whole_acceptance_status": "not_run",
+  "original_conditions_modified": 0,
+  "completion_decision": "not_complete",
+  "product_files_edited_by_independent_reviewer": 0,
+  "environment": {
+    "node": "v24.19.0",
+    "vitest": "5.0.3",
+    "os": "Debian GNU/Linux 13.6 (trixie), Linux6.18.44 x86_64",
+    "node_storage": "fake IndexedDB with real native archive/clone/runtime code",
+    "browser": "Chromium151.0.7922.173 /usr/bin/chromium",
+    "viewport": "1024x768",
+    "browser_build": "Vite development with actual App and actual IndexedDB ScenarioStore; controlled promise at save boundary; separate from production build, real devices, performance and real API"
+  },
+  "executed": [
+    {
+      "kind": "submitted_stage_tests",
+      "passed": 5,
+      "failed": 0,
+      "log": "evidence/candidate-1/submitted.log",
+      "whole_acceptance_credit": false
+    },
+    {
+      "kind": "new_independent_domain_boundaries",
+      "passed": 4,
+      "failed": 2,
+      "log": "evidence/candidate-1/independent.log",
+      "source": "evidence/candidate-1/independent-rb05-structure.ts"
+    },
+    {
+      "kind": "previous_independent_runtime_and_persistence_regressions",
+      "passed": 24,
+      "failed": 0,
+      "log": "evidence/candidate-1/prior.log",
+      "note": "Repeat verification after runtime/coverage changes, not 24 newly completed AT cases."
+    },
+    {
+      "kind": "independent_real_chromium_actual_App_save_boundaries",
+      "passed": 2,
+      "failed": 4,
+      "log": "evidence/candidate-1/browser.log",
+      "results": "evidence/candidate-1/browser.json",
+      "sources": [
+        "evidence/candidate-1/independent-app-review.mjs",
+        "evidence/candidate-1/independent-app-harness.tsx"
+      ]
+    }
+  ],
+  "findings": [
+    {
+      "id": "S5D01",
+      "status": "open_in_candidate_1",
+      "severity": "medium",
+      "files": [
+        "src/domain/flowStructure.ts"
+      ],
+      "requirements": [
+        "REQ-F13"
+      ],
+      "related_acceptance_cases": [
+        "AT-F13"
+      ],
+      "original_acceptance_credit": "not_run",
+      "title": "下位call図のscene/台詞エラーが上位件数に届かない",
+      "candidate_1_actual": "採用中の下位図にあるrejected台詞参照を含む有効projectでは、下位scene欄にerror1があるが上位chapter/root graphは0。calledTargetsが本文scene/台詞を集計せず、scene問題をsummary作成中に追加する。",
+      "expected": "下位scene/台詞も上位call集計へ含め、折りたたみでerrorを隠さない。",
+      "source_hashes": [
+        {
+          "file": "src/domain/flowStructure.ts",
+          "sha256": "3efd444aee53524ce82f8cf39d8bc9b44e637d83d984648f13dd79f648e4ef0c"
+        }
+      ]
+    },
+    {
+      "id": "S5D02",
+      "status": "open_in_candidate_1",
+      "severity": "high",
+      "files": [
+        "src/domain/regressionPaths.ts",
+        "src/domain/runtime.ts"
+      ],
+      "requirements": [
+        "REQ-F17",
+        "REQ-F15"
+      ],
+      "related_acceptance_cases": [
+        "AT-F17",
+        "AT-F15"
+      ],
+      "original_acceptance_credit": "not_run",
+      "title": "未知開始の経路を主checkedへ加算する",
+      "candidate_1_actual": "初期開示条件unknownの生成full_play経路を保存→集合宣言→固定版再生(status unknown)→再保存するとchecked1/total1。以前の集計から残る不足で今回のfull-origin guardが新たに作った問題とは区別。",
+      "expected": "未知・未完成経路の主checkedは0、宣言母数1と未知区別を保持する。",
+      "source_hashes": [
+        {
+          "file": "src/domain/regressionPaths.ts",
+          "sha256": "2eeaaab0f6024493120b867fc01cd5e01a87f7809722723f665f5ad85c593005"
+        },
+        {
+          "file": "src/domain/runtime.ts",
+          "sha256": "791b55926c633dece26d4511760bfbc3c41960c0155ad3ca88da1403a726ece7"
+        }
+      ]
+    },
+    {
+      "id": "S5R01",
+      "status": "open_in_candidate_1",
+      "severity": "high",
+      "files": [
+        "src/ui/ReactionBuilder.tsx"
+      ],
+      "requirements": [
+        "REQ-F20",
+        "REQ-N18"
+      ],
+      "related_acceptance_cases": [
+        "AT-F20",
+        "AT-N18"
+      ],
+      "original_acceptance_credit": "not_run",
+      "title": "cold start後の反応保存が履歴token喪失で拒否される",
+      "candidate_1_actual": "listProjectsForEditingで読んだprojectをpreview時にstructuredCloneすると空history配列のWeakMap tokenを失う。通常保存が履歴は保存コマンドからのみ追加できますで拒否される。新規/復元直後のfull historyでは見落とせる。",
+      "expected": "既存作品のcold start後もpreview基底revisionを保持して原子保存し、同じhistory tokenを保持する。",
+      "source_hashes": [
+        {
+          "file": "src/ui/ReactionBuilder.tsx",
+          "sha256": "94bb98ea6429686b66c1fb3acc20f80907289e1d6d8748df2aaaaa25e093088c"
+        }
+      ]
+    },
+    {
+      "id": "S5U04",
+      "status": "open_in_candidate_1",
+      "severity": "medium",
+      "files": [
+        "src/ui/Reader.tsx"
+      ],
+      "requirements": [
+        "REQ-F15",
+        "REQ-N18"
+      ],
+      "related_acceptance_cases": [
+        "AT-F15",
+        "AT-N18"
+      ],
+      "original_acceptance_credit": "not_run",
+      "title": "途中開始の保存待ちが画面再入で失われる",
+      "candidate_1_actual": "実DB保存を保留して資料へ移動→Reader再入すると作成ボタンがenabled。最初の保存は未完了で同一作品のpendingを保持していない。",
+      "expected": "同じ作品のpendingを保持し、最新propsのcheckpointとsnapshotを確認してからack解除する。",
+      "source_hashes": [
+        {
+          "file": "src/ui/Reader.tsx",
+          "sha256": "a63dcb7eaba8c1a9671ccd23710cf571a2c5ba34bbd7a3c6ea90c4dd2c3bcbad"
+        }
+      ]
+    },
+    {
+      "id": "S5U05",
+      "status": "open_in_candidate_1",
+      "severity": "high",
+      "files": [
+        "src/ui/Reader.tsx"
+      ],
+      "requirements": [
+        "REQ-F15",
+        "REQ-N18"
+      ],
+      "related_acceptance_cases": [
+        "AT-F15",
+        "AT-N18"
+      ],
+      "original_acceptance_credit": "not_run",
+      "title": "移動後の途中開始失敗が通知されず入力も失われる",
+      "candidate_1_actual": "保存gate開始を確認して資料へ移動→Reader再入→保存拒否。旧catchはlive=falseで無通知、新Readerにalertがなく、選んだ開始点も空へ戻る。",
+      "expected": "画面再入後も保存失敗を表示し、同じ開始点・版・cp・seed/tick入力から再試行できる。",
+      "source_hashes": [
+        {
+          "file": "src/ui/Reader.tsx",
+          "sha256": "a63dcb7eaba8c1a9671ccd23710cf571a2c5ba34bbd7a3c6ea90c4dd2c3bcbad"
+        }
+      ]
+    }
+  ],
+  "open_finding_ids": [
+    "S5D01",
+    "S5D02",
+    "S5R01",
+    "S5U04",
+    "S5U05"
+  ],
+  "positive_results": [
+    "Typed partial state with values/item/holder/belief survives native restore, clone, trace save, reload and replay; undo restores full state.",
+    "Reaction first/revisit, sequential saturation and seed-based random repeats maintain visits and draw positions through save/clone/replay and undo. Five draws change money10→5 and across-run memory7→9; end/new_loop/full_reset retain declared lifecycle rules.",
+    "Real App preview remains bound to the observed revision and requires reconfirmation after another save; typed partial save waits for current props and resumes after cold reload."
+  ],
+  "harness_setup_attempt": {
+    "status": "not_run_due_to_harness_navigation_setup",
+    "not_a_product_finding": true,
+    "note": "Initial harness began navigation before App shell was mounted, so hidden navigation stayed outside viewport. Corrected by awaiting App shell; final browser results are from corrected harness.",
+    "files": [
+      "evidence/candidate-1/browser-harness-setup.log",
+      "evidence/candidate-1/browser-harness-setup.json"
+    ]
+  },
+  "remaining_conditions": [
+    "RB05 whole requirements and original 116 whole AT remain not_run/not_complete.",
+    "RV11 immutable reference/override reuse is still stopped as unsupported and is not credited.",
+    "All-scope foreshadow deadline/resolution/reconfirmation, regression change reconfirmation, recognition comparisons and complete state-use/retention workflows remain separate work.",
+    "Specified real device/OS/browser/support technology, Standard/Large performance, actual Auth/RLS/private Storage and full archive/recovery acceptance remain unexecuted."
+  ],
+  "artifact_hashes": [
+    {
+      "file": "evidence/candidate-1/browser-harness-setup.json",
+      "sha256": "362c6ff0ad18ed67dfd59b76f192a43e84c55e9da9f890a0141e0ea7c94991fb"
+    },
+    {
+      "file": "evidence/candidate-1/browser-harness-setup.log",
+      "sha256": "58df41ce80c3e9ec136d3e103b1a875779b6a9f6c6608c0dd1f955e4c752eeb8"
+    },
+    {
+      "file": "evidence/candidate-1/browser.json",
+      "sha256": "f16241b4e90cb3c99f6c60b731166f23dce78fb163e207c2ca4f48085a06ed0c"
+    },
+    {
+      "file": "evidence/candidate-1/browser.log",
+      "sha256": "55540a44fce5a8cddd5ba942c9b4bab94052d29069c02edb77acb1319bbb2026"
+    },
+    {
+      "file": "evidence/candidate-1/fixtures/browser-S5U01-project.json",
+      "sha256": "bf14ca29824cef828ecf9853092c7b0032f2955ee08d2ffbec5f82a6267fc408"
+    },
+    {
+      "file": "evidence/candidate-1/fixtures/browser-S5U02-project.json",
+      "sha256": "dc66d05e68d7bf289dfb4a2e8ca884ce8cb8da9e24cf40817bdc2d83d98e491b"
+    },
+    {
+      "file": "evidence/candidate-1/fixtures/browser-S5U03-project.json",
+      "sha256": "f6675755c400077603448599fc45487181c63879579015162d14fad6c8a74802"
+    },
+    {
+      "file": "evidence/candidate-1/fixtures/browser-S5U04-project.json",
+      "sha256": "741d7936eb67edbe1fb93dd8386bc1d98eb819e57ae282923e43f7b2c13629a6"
+    },
+    {
+      "file": "evidence/candidate-1/fixtures/browser-S5U05-project.json",
+      "sha256": "bfbeeaa641793a08e9e30de570264e6508fd1dd6de48f1d273f2d6a9f8adbea1"
+    },
+    {
+      "file": "evidence/candidate-1/fixtures/browser-S5U06-project.json",
+      "sha256": "f303aae97dcb5aabe74da6d1218ec71a4c2c94b3a448db75fbedbcb59f136ecf"
+    },
+    {
+      "file": "evidence/candidate-1/fixtures/new-S5D01-observation.json",
+      "sha256": "bb28fe77a036686787b9858b79da0a9c592aaa27c64c111fb028a859928d5883"
+    },
+    {
+      "file": "evidence/candidate-1/fixtures/new-S5D01-project.json",
+      "sha256": "33a0c780f5657e80cef0f93f15634791c181f2cc2dc2344adbd4ee2493dfedcb"
+    },
+    {
+      "file": "evidence/candidate-1/fixtures/new-S5D02-observation.json",
+      "sha256": "8b391fd66db8e2d3a8ddb21036a0a3a006de731b27d884debf03f4dd06477b35"
+    },
+    {
+      "file": "evidence/candidate-1/fixtures/new-S5D02-project.json",
+      "sha256": "e12d768f2f4b32f308bfd279a55ba0917aad9266131d69b09ea2a1aa59f39a82"
+    },
+    {
+      "file": "evidence/candidate-1/fixtures/new-S5D03-observation.json",
+      "sha256": "99712a3c11a044ed93dcaab3e3c596ab2bd64e632f891678694005ae1c0075ca"
+    },
+    {
+      "file": "evidence/candidate-1/fixtures/new-S5D03-project.json",
+      "sha256": "d62142179d3efd3977ee5ffa37e3e87565efb613b6e85bff6c3be698592c176c"
+    },
+    {
+      "file": "evidence/candidate-1/fixtures/new-S5D04-first_revisit-observation.json",
+      "sha256": "cfe49ba8ae533cde613402dfafe1b2651fd84709c9eef9012bd886c71bfe48d4"
+    },
+    {
+      "file": "evidence/candidate-1/fixtures/new-S5D04-first_revisit-project.json",
+      "sha256": "6e291608980a1e0a3eac22c92e037590abd812d2eca17362c004f6d326bc5f7f"
+    },
+    {
+      "file": "evidence/candidate-1/fixtures/new-S5D04-random-observation.json",
+      "sha256": "a6e53672e2d408deeb25a8ae1d71db51c8dd09e738862894a13a6796bcd9184d"
+    },
+    {
+      "file": "evidence/candidate-1/fixtures/new-S5D04-random-project.json",
+      "sha256": "c01ca736ccb2ec9ecb558fad3439f25e65fb35549a443b7e449460ef34b3f68f"
+    },
+    {
+      "file": "evidence/candidate-1/fixtures/new-S5D04-sequence-observation.json",
+      "sha256": "8bc2a0d904defe5c0ef102a44e800e11a0347521122ecd0750f0ef3040eda7c0"
+    },
+    {
+      "file": "evidence/candidate-1/fixtures/new-S5D04-sequence-project.json",
+      "sha256": "983f9c457d68467a49b263182a9c2507c3edc5c3fe346b95b4c431d4037b795c"
+    },
+    {
+      "file": "evidence/candidate-1/fixtures/prior-boundary-R5B01-actual-observation.json",
+      "sha256": "ff7c7784965ec00a0b328dab628d579924efb4508f3c8d87c59a0c8d5627f152"
+    },
+    {
+      "file": "evidence/candidate-1/fixtures/prior-boundary-R5B01-actual-project.json",
+      "sha256": "04d7654d558d0837b72d67e71ef9ec59934429f0e1f3704134ab18df7511f05e"
+    },
+    {
+      "file": "evidence/candidate-1/fixtures/prior-boundary-R5B01-mixed-observation.json",
+      "sha256": "c7228480dae5d14f9d0ac2aa41cf6733e1750bf0cc9554f12814f5659f4c5e77"
+    },
+    {
+      "file": "evidence/candidate-1/fixtures/prior-boundary-R5B01-mixed-project.json",
+      "sha256": "91906b540bb4064257b4fc626adc3c9a9e98cffe1b8bdab26ab954dee1986e2e"
+    },
+    {
+      "file": "evidence/candidate-1/fixtures/prior-boundary-R5B02-observation.json",
+      "sha256": "1d7cecc01bcb3fa391a210015819a1bb770ce69244ab5d673a4b6f9b592b8cb7"
+    },
+    {
+      "file": "evidence/candidate-1/fixtures/prior-boundary-R5B02-project.json",
+      "sha256": "8d2b8e88a50159269024130b5dd387e9c97c4e5e4817556f183064193c41156c"
+    },
+    {
+      "file": "evidence/candidate-1/fixtures/prior-boundary-R5B03-observation.json",
+      "sha256": "e922844f463c7961649384ab7d01f11d768df2a77a26353691e8d7ac57a3ebb5"
+    },
+    {
+      "file": "evidence/candidate-1/fixtures/prior-boundary-R5B03-project.json",
+      "sha256": "dab9577e5c5fcb835b80164607a2ffbc78432e56983f4366b33237c25b5278b4"
+    },
+    {
+      "file": "evidence/candidate-1/fixtures/prior-boundary-R5B04-observation.json",
+      "sha256": "181ade694a3ade38647013bc932c6838511afc44b107a352278c71a45392241b"
+    },
+    {
+      "file": "evidence/candidate-1/fixtures/prior-boundary-R5B04-project.json",
+      "sha256": "2cd136563da389184e6e6d7ab8bfdd782bda18e4093e86867c52365ceea46cf8"
+    },
+    {
+      "file": "evidence/candidate-1/fixtures/prior-boundary-R5B05-observation.json",
+      "sha256": "30bc9274ad373a4454bdf1a7a29db148ce5637150e2a5e7bd95736654f9ed821"
+    },
+    {
+      "file": "evidence/candidate-1/fixtures/prior-boundary-R5B05-project.json",
+      "sha256": "d36276eacf3b54a6bd43d4735de9388fb1ccbb42623388035f44129b639cda14"
+    },
+    {
+      "file": "evidence/candidate-1/fixtures/prior-boundary-R5B06-observation.json",
+      "sha256": "1e0f28fac1f8a17ca4f3f871a0e6090083134fce58e0e3e06467a470a4ea1c73"
+    },
+    {
+      "file": "evidence/candidate-1/fixtures/prior-boundary-R5B06-project.json",
+      "sha256": "63b0060bd22eef15a0d322eee8ba20839eada90f880fbdd55e5ec9c31012ba97"
+    },
+    {
+      "file": "evidence/candidate-1/fixtures/prior-boundary-R5P03-observation.json",
+      "sha256": "fad292287b999b17aa9e9b44419578024ae04ff04fa87554cfa9ae8838827c5f"
+    },
+    {
+      "file": "evidence/candidate-1/fixtures/prior-boundary-R5P03-project.json",
+      "sha256": "965e81a82f3a932bbcba0b4a2ac57d65d41538afa3c9c77d290bff5bbb0d1c22"
+    },
+    {
+      "file": "evidence/candidate-1/fixtures/prior-boundary-R5P04-observation.json",
+      "sha256": "6ab04ecf8059c0aad1398d5c4c2af96f178c7df58d8ff7bbb9afc824129625e3"
+    },
+    {
+      "file": "evidence/candidate-1/fixtures/prior-boundary-R5P04-project.json",
+      "sha256": "e30c3268ffeb648f152d79958d59c6a2d35ffcd301867dd059f4e558d178100b"
+    },
+    {
+      "file": "evidence/candidate-1/fixtures/prior-native-R5P05-observation.json",
+      "sha256": "1cc07fab3135e9563b9942c8288ef1898a81e4c3a73183d752fa410cf98391d0"
+    },
+    {
+      "file": "evidence/candidate-1/fixtures/prior-native-R5P05-project.json",
+      "sha256": "d80dc4c81f8ad9ca9d7d892fcf1ebe34503039bad43ca9d9800188a73d6d0474"
+    },
+    {
+      "file": "evidence/candidate-1/fixtures/prior-native-R5P05.scenario",
+      "sha256": "bfcf97fb7619359a54d49f6c9aaf1fea194193bbbe3a033e10ee9498b5a664aa"
+    },
+    {
+      "file": "evidence/candidate-1/fixtures/prior-native-R5P06-observation.json",
+      "sha256": "82e7beea226b2111f5a1067ff698901530d720a46cd133375556f018b77c89ed"
+    },
+    {
+      "file": "evidence/candidate-1/fixtures/prior-native-R5P06-project.json",
+      "sha256": "28193c44493039123943640dd5b1212af525d95c7a5aa4ae5e15e1e2c79459f7"
+    },
+    {
+      "file": "evidence/candidate-1/fixtures/prior-native-R5P06.scenario",
+      "sha256": "412ec932471848ce27d20338cc8ab911b108adc5cf155181d06a7342e2afa1dd"
+    },
+    {
+      "file": "evidence/candidate-1/fixtures/prior-native-R5P07-observation.json",
+      "sha256": "0194730f665e7f497a797f382891daf840b8ebb56aa8f84095d71dc187d71db8"
+    },
+    {
+      "file": "evidence/candidate-1/fixtures/prior-native-R5P07-project.json",
+      "sha256": "bcc38e2c25f56034a7a8895b8954586a6ce14997d3b78bb5a4b4dcfe2fb8146a"
+    },
+    {
+      "file": "evidence/candidate-1/fixtures/prior-native-R5P08-observation.json",
+      "sha256": "9545c55d8f3710d65f09a9702b2641b594f8c0282b176ebc1fc2805b761628c1"
+    },
+    {
+      "file": "evidence/candidate-1/fixtures/prior-native-R5P08-project.json",
+      "sha256": "dffb835a034c2e8fe6da180e92e9196ac65c35e5bc996610fd2fd1d156aec191"
+    },
+    {
+      "file": "evidence/candidate-1/fixtures/prior-original-R5A01-observation.json",
+      "sha256": "efe7aceec09ea3ad8cc331796cd6fc7cbb6d764f820455b3cc70bc9e43bd57a9"
+    },
+    {
+      "file": "evidence/candidate-1/fixtures/prior-original-R5A01-project.json",
+      "sha256": "4603ee6b36c8fd805a6e1dfdb73247ef03afb916ba6dee8c3edcaa7627bc8b1f"
+    },
+    {
+      "file": "evidence/candidate-1/fixtures/prior-original-R5A02-observation.json",
+      "sha256": "7e2b860e3730958c8619fe84d52ffd8589fdd1bcc322d88cca7db21b06891181"
+    },
+    {
+      "file": "evidence/candidate-1/fixtures/prior-original-R5A02-project.json",
+      "sha256": "f7f3aa57c2bee796bf20d191fd519451bae059d7c0b4f561c5a596685f1f10e6"
+    },
+    {
+      "file": "evidence/candidate-1/fixtures/prior-original-R5A03-observation.json",
+      "sha256": "ba97a0fdd8c96a9beb339af7827595add335315cefb72c8540994c3bbf621aee"
+    },
+    {
+      "file": "evidence/candidate-1/fixtures/prior-original-R5A03-project.json",
+      "sha256": "8da12f0fe6670dce6efadc7b5faad32b76e98269cab2a45d4e2ffa1e5845bfff"
+    },
+    {
+      "file": "evidence/candidate-1/fixtures/prior-original-R5A04-observation.json",
+      "sha256": "abf3ffccaf6c80a560d4a53855909adf3cc44e09774e38dcf8ddba49a86f0167"
+    },
+    {
+      "file": "evidence/candidate-1/fixtures/prior-original-R5A04-project.json",
+      "sha256": "7ad0f24166c3e70915f488e4b25c76c58eb14a83e3bf497f6f502dea0e72e5ed"
+    },
+    {
+      "file": "evidence/candidate-1/fixtures/prior-original-R5A05-observation.json",
+      "sha256": "af36bae9ff8384a23fb26e9c25930b0fed9cdcf5353b0013d4d1996b1f0dbfac"
+    },
+    {
+      "file": "evidence/candidate-1/fixtures/prior-original-R5A05-project.json",
+      "sha256": "e1b71f1e0c7aea0cc16eaab9e92a83b6ed16dba91b722fb09ec1e067977d8745"
+    },
+    {
+      "file": "evidence/candidate-1/fixtures/prior-original-R5A06-observation.json",
+      "sha256": "ce41de3e1dc50dec0704769dfd05ff071d5dd11d586232eaad174b9b4899ed40"
+    },
+    {
+      "file": "evidence/candidate-1/fixtures/prior-original-R5A06-project.json",
+      "sha256": "635a4e4d07d176fb9692d6571380215a67f9d8436d4863d3f029c0a09d71956e"
+    },
+    {
+      "file": "evidence/candidate-1/fixtures/prior-original-R5A07-observation.json",
+      "sha256": "c258bf8f67369d6af652e30fada66adb53ddfa6015eef8c0dc36fdef0e99024b"
+    },
+    {
+      "file": "evidence/candidate-1/fixtures/prior-original-R5A07-project.json",
+      "sha256": "a7f16c54a1d6499231f3a36a216b22bdb5901b3c03ac6354132ce56161786396"
+    },
+    {
+      "file": "evidence/candidate-1/fixtures/prior-original-R5P01-observation.json",
+      "sha256": "77b3cdd3311cc6bef633a5b87052326bf205c6113b99ca7a7e2d87772b8395d5"
+    },
+    {
+      "file": "evidence/candidate-1/fixtures/prior-original-R5P01-project.json",
+      "sha256": "f5abba716e388e1e3b0c7b956785378df06b7180c7ec07de17d22569560bd8de"
+    },
+    {
+      "file": "evidence/candidate-1/fixtures/prior-original-R5P02-observation.json",
+      "sha256": "9cab5c8a229860b593c9e38bcbf7c046554a276b8c1802439cf9e0484083a159"
+    },
+    {
+      "file": "evidence/candidate-1/fixtures/prior-original-R5P02-project.json",
+      "sha256": "330cf61cd726c2aaf914864da9e7fc48c7adcd42859a46ad6fc35b70ec4ec76b"
+    },
+    {
+      "file": "evidence/candidate-1/independent-app-harness.html",
+      "sha256": "bf54a7bf57b9de6032fb4012cc9e85091b9e864cef61441157081384601458f6"
+    },
+    {
+      "file": "evidence/candidate-1/independent-app-harness.tsx",
+      "sha256": "b51ab70b4e2f17a5023b86dfa1f7b4db2a133938f724ef0921fd1cccc2b298f7"
+    },
+    {
+      "file": "evidence/candidate-1/independent-app-review.mjs",
+      "sha256": "3d9aab23778c926d52e0a31a86ebc4cc9ce87a29648d1e86c421d6b75239aae9"
+    },
+    {
+      "file": "evidence/candidate-1/independent-historical-trace.ts",
+      "sha256": "d21290938044c6e08bd078d189cf0e49b1a462995c79f7dac4d2041432147658"
+    },
+    {
+      "file": "evidence/candidate-1/independent-rb05-native-roundtrip.ts",
+      "sha256": "399a19a41de150ab211079812a39339b3a09d84474540c2b215df56db96c54e1"
+    },
+    {
+      "file": "evidence/candidate-1/independent-rb05-persistence-boundaries.ts",
+      "sha256": "81dff68dd61dbdffda09e3461fa044a3060d5d55895570512daab689bce541d9"
+    },
+    {
+      "file": "evidence/candidate-1/independent-rb05-review.ts",
+      "sha256": "810695d7addbe7174f8605a17b9acffef9fb8b85caf9d8347fdd3835202de5d4"
+    },
+    {
+      "file": "evidence/candidate-1/independent-rb05-structure.ts",
+      "sha256": "5041944d005ba57ff20f63e63c6bf3b964b7d1896327e4143ea16ca596f02ff8"
+    },
+    {
+      "file": "evidence/candidate-1/independent.log",
+      "sha256": "45c4d812d1a9a8567b5098bed4e5ba0fd1a6e24c00766cf982e5d437d09c71e0"
+    },
+    {
+      "file": "evidence/candidate-1/prior.log",
+      "sha256": "505638e665bdb8e49956c4e52359f8c04d020a83f8441d4c95631065aec139a5"
+    },
+    {
+      "file": "evidence/candidate-1/source-hashes.json",
+      "sha256": "9d6a54b4f4d419a0a37ffc89dc2a463629e32846e895c2d165670ab84a66bb48"
+    },
+    {
+      "file": "evidence/candidate-1/submitted-structure-reading.ts",
+      "sha256": "2a5a9f7adf333751ebe287545db3cc7bc0542c34bdacb6f3ffab42cd2d495ff7"
+    },
+    {
+      "file": "evidence/candidate-1/submitted.log",
+      "sha256": "179db49ad235b87a9778e9082873a6b0193ae79373c76e2c9d18aad576946364"
+    }
+  ]
+}
