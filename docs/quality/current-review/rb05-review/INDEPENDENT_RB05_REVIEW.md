@@ -57,3 +57,7 @@ RV11の階層・reference/override再利用は依頼範囲で未完成とされ�
 同じ正期待の24検査がすべて成功した。元9件、保存境界9件、変更していない旧章・分岐fixture2件、native保存・clone・再保存4件を別記した。clone後のopaqueな提示ID、章の効果前状態と台詞段落ID、旧章traceの任意欄互換が確認された。章のpartial経路と明示stub経路は各別集計へ1/1として加算し、主checkedは0を保持した。存在する偽の観測は章・分岐の再生とnative書出しが拒否し、正本は不変だった。
 
 この追加範囲で発見した未解消の挙動差はなくなった。`independent-rb05-candidate-5-review.json` と `evidence/candidate-5/` に実結果とhashを保存した。原26要件の全条件、RB05全体、全116受入は未実行・未完成を維持し、通常Appと指定実機・支援技術・性能・実権限の証拠へ置き換えていない。確定commitへのsrc hash照合は別記する。
+
+## 候補commitとの独立照合
+
+確定commit `6d2a05c768638d3658f756064eb8953df92e6ea9`、tree `73f48ce954835f7ae8c61851493ce2eeef1dc202` の内容をgit showで読み、候補5の全143src SHA256・ファイル集合と一致した。候補5の53証拠artifactと結果JSONもcommit内のbytesに一致し、ログ末尾の空白を含めて変更していない。最新main基底 `2efd4be` が祖先であることも確認した。[照合JSON](evidence/candidate-5-commit-binding.json) に各hashと照合結果を記録した。この対応は独立検査24件の対象版を固定するものであり、RB05全体・原116受入の完成判定は保留を維持する。
