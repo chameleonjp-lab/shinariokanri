@@ -1,7 +1,7 @@
 import { Inflate, zipSync } from 'fflate';
 import { validateRecovery, recoveryImages, type PortableRecovery } from './recovery';
-import type { Entity,ProjectContent, ProjectData, WorldReference } from '../domain/types';
-import { newId, validateProject,collectReferences,ENTITY_KINDS } from '../domain/model';
+import type { Entity,Relation,ProjectContent, ProjectData, WorldReference } from '../domain/types';
+import { newId, validateProject,collectReferences,collectRelationReferences,ENTITY_KINDS } from '../domain/model';
 import { validateProjectIntegrity } from '../domain/projectRecordValidation';
 import { checkCancelled, StorageError } from './errors';
 import { ARCHIVE_LIMITS, FORMAT_VERSION, equalJson, jsonBytes, parseStrictJson, resolveLimits, safeArchivePath, sha256,
@@ -299,7 +299,8 @@ export function referencedWorlds(projects: ProjectData[],availableWorlds:Record<
       if (old && (old.projectId !== reference.projectId || old.contentHash !== reference.contentHash)) throw new StorageError('VALIDATION_FAILED', '同じ共通世界snapshot IDの参照内容が一致しません。', reference.immutableSnapshotId);
       references.set(reference.immutableSnapshotId, reference);
     }
-    if(typeof data.kind==='string'&&ENTITY_KINDS.includes(data.kind as Entity['kind'])&&typeof data.projectId==='string'&&data.data&&typeof data.data==='object')for(const reference of collectReferences(data as unknown as Entity))if(reference.scope==='snapshot'){const pin=fixed.get(reference.id);if(pin&&pin.world.projectId!==data.projectId){const existing=references.get(reference.id);if(existing&&existing.contentHash!==pin.reference.contentHash)throw new StorageError('IMMUTABLE_SNAPSHOT','引用世界の期待hashが採用版と異なります。',reference.id);references.set(reference.id,pin.reference);}}
+    const typedReferences=typeof data.kind==='string'&&ENTITY_KINDS.includes(data.kind as Entity['kind'])&&typeof data.projectId==='string'&&data.data&&typeof data.data==='object'?collectReferences(data as unknown as Entity):typeof data.relationType==='string'&&typeof data.projectId==='string'&&typeof data.fromId==='string'&&typeof data.toId==='string'?collectRelationReferences(data as unknown as Relation):[];
+    for(const reference of typedReferences)if(reference.scope==='snapshot'){const pin=fixed.get(reference.id);if(pin&&pin.world.projectId!==data.projectId){const existing=references.get(reference.id);if(existing&&existing.contentHash!==pin.reference.contentHash)throw new StorageError('IMMUTABLE_SNAPSHOT','引用世界の期待hashが採用版と異なります。',reference.id);references.set(reference.id,pin.reference);}}
     for (const item of Object.values(data)) walk(item);
   }
   projects.forEach(walk); return [...references.values()];
