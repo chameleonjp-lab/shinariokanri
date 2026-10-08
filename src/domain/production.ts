@@ -35,7 +35,7 @@ export async function reconcileDeliverables(before: ProjectData, candidate: Proj
  for(const old of before.entities)if(old.kind==='dialogue_line'&&!old.deletedAt){const line=current.get(old.id);if(!line||line.deletedAt||line.kind!=='dialogue_line')changed.add(old.id);}
  // A manual stage change cannot approve an old or retired source hash.
  const staleApprovals=new Set<ID>();
- for(const entity of candidate.entities)if(!entity.deletedAt&&(entity.kind==='localization'||entity.kind==='recording')&&['reviewed','recorded'].includes(entity.data.stage??'')&&(changed.has(entity.data.sourceLineId)||changedData.has(entity.id))){
+ for(const entity of candidate.entities)if(!entity.deletedAt&&(entity.kind==='localization'||entity.kind==='recording')&&['reviewed','recorded'].includes(entity.data.stage??'')&&!changed.has(entity.data.sourceLineId)&&changedData.has(entity.id)){
   const line=current.get(entity.data.sourceLineId);
   if(!line||line.kind!=='dialogue_line'||line.deletedAt||['rejected','alternate'].includes(line.status)||entity.data.sourceHash!==await dialogueContentHash(candidate,line))staleApprovals.add(entity.id);
  }
@@ -46,7 +46,7 @@ export async function reconcileDeliverables(before: ProjectData, candidate: Proj
   return entity;
  });
  // Follow typed production dependencies once. Historical ancestry does not change copied content.
- const reverse=new Map<ID,ID[]>();for(const entity of entities)if(!entity.deletedAt&&!['rejected','alternate'].includes(entity.status))for(const reference of collectReferences(entity))if(!reference.path.startsWith('data.lineage')&&!reference.path.startsWith('data.originLineIds'))reverse.set(reference.id,[...reverse.get(reference.id)??[],entity.id]);
+ const reverse=new Map<ID,ID[]>();for(const entity of entities)if(!entity.deletedAt&&!['rejected','alternate'].includes(entity.status))for(const reference of collectReferences(entity))if(!reference.path.startsWith('data.lineage')&&!reference.path.startsWith('data.originLineIds')){const uses=reverse.get(reference.id);if(uses)uses.push(entity.id);else reverse.set(reference.id,[entity.id]);}
  const affected=new Set(changedData),queue=[...affected];for(let at=0;at<queue.length;at++)for(const id of reverse.get(queue[at])??[])if(!affected.has(id)){affected.add(id);queue.push(id);}
  const next={...candidate,entities:entities.map(entity=>{if(!affected.has(entity.id)||entity.deletedAt||['rejected','alternate'].includes(entity.status))return entity;
   if(entity.kind==='storyboard_frame'&&previous.has(entity.id))return {...entity,status:'needs_review' as const};
