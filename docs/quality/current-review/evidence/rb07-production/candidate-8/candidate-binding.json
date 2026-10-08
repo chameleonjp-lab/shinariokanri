@@ -1,0 +1,254 @@
+{
+  "source_commit": "39079f4066676d80b7098cf87e5719fc865c0564",
+  "source_tree": "a6d0ecbd8164cb3d6cf70abaa8fbe064296fd25f",
+  "source_manifest": "source-manifest.json",
+  "source_file_count": 257,
+  "results": {
+    "unit": {
+      "numTotalTests": 683,
+      "numPassedTests": 683,
+      "numFailedTests": 0,
+      "success": true
+    },
+    "production_chromium": {
+      "passed": 61,
+      "failed": 0
+    },
+    "python": {
+      "passed": 15,
+      "failed": 0,
+      "procedure": "unittest discover scripts test_*.py"
+    }
+  },
+  "independent_result": "needs_fix",
+  "scope": "RV18/19, Unicode lineage/deliverable hashes/cue dependencies, safe media bytes and historical world/reuse captions through normal save/reload/full recovery. Physical and whole requirements not certified.",
+  "environment": "Linux Node/Vitest/fakeIndexedDB plus production Chromium153; independent native App Chromium151 in separate isolated build",
+  "physical_devices": "not_run",
+  "actual_os_files_recording": "not_run",
+  "live_auth_rls_storage": "not_run",
+  "original116_final_acceptance": "not_run",
+  "independent_review": "independent/INDEPENDENT_REVIEW.json",
+  "independent_review_sha256": "413b6a8dd36cc0ed84950dd7b5236fe5e016034ced6f8c319ee386c008a79b1b",
+  "independent_results": {
+    "components": {
+      "passed": 24,
+      "failed": 0,
+      "fixtureValidityPassed": 1,
+      "notAcceptance": true,
+      "log": "independent/domain-reinspection.log"
+    },
+    "normalApp": {
+      "passed": 13,
+      "failed": 0,
+      "cases": [
+        {
+          "id": "R7U01-split-away-switch-failure-cold",
+          "status": "passed",
+          "pageErrors": []
+        },
+        {
+          "id": "R7U02-copy-merge-keeps-history-source",
+          "status": "passed",
+          "pageErrors": []
+        },
+        {
+          "id": "R7U03-material-ack-next-clear-cold",
+          "status": "passed",
+          "pageErrors": []
+        },
+        {
+          "id": "R7U04-stale-material-input-retained",
+          "status": "passed",
+          "pageErrors": []
+        },
+        {
+          "id": "R7U05-dependent-frame-review",
+          "status": "passed",
+          "pageErrors": []
+        },
+        {
+          "id": "R7U06-acquired-time-normal-failure",
+          "status": "passed",
+          "pageErrors": []
+        },
+        {
+          "id": "R7U07-chapter-flow-cues-timecode",
+          "status": "passed",
+          "pageErrors": []
+        },
+        {
+          "id": "R7U08-fixed-old-frame-no-live-cues",
+          "status": "passed",
+          "pageErrors": []
+        },
+        {
+          "id": "R7U09-fixed-subtitle-speaker-candidates",
+          "status": "passed",
+          "pageErrors": []
+        },
+        {
+          "id": "R7U10-fixed-subtitle-speaker-candidates",
+          "status": "passed",
+          "pageErrors": []
+        },
+        {
+          "id": "R7U11-old-world-caption-descriptor-cold-source",
+          "status": "passed",
+          "pageErrors": []
+        },
+        {
+          "id": "R7U12-old-world-first-save-complete-backup",
+          "status": "passed",
+          "pageErrors": []
+        },
+        {
+          "id": "R7U13-local-rule-anchor-on-old-world-caption",
+          "status": "passed",
+          "pageErrors": []
+        }
+      ],
+      "classification": "Actual App/native IndexedDB/Chromium151, same frozen positive inputs, controlled save/failure/ack/cold boundaries and verified current-vs-fixed source navigation"
+    },
+    "production": {
+      "build": "passed",
+      "buildInfo": {
+        "commit": "unknown",
+        "dirty": true,
+        "base": "/shinariokanri/",
+        "version": "a0974ce621bda10bf650",
+        "builtAt": "2026-10-08T12:55:27.432Z"
+      },
+      "browserPassed": 3,
+      "browserFailed": 0,
+      "classification": "Unchanged repository production E2E, Chromium151, dedicated5353",
+      "limitation": "Isolated archive lacks.git; unknown commit and dirty=true are retained. Dist SHA binds product bytes but is not clean release evidence.",
+      "logs": [
+        "independent/build.log",
+        "independent/production-browser.log",
+        "independent/production-browser.json"
+      ]
+    },
+    "additionalRelationComponent": {
+      "passed": 0,
+      "failed": 1,
+      "id": "R7D25",
+      "log": "independent/domain-relation-world.log"
+    },
+    "additionalRelationNormalAppArtifact": {
+      "passed": 0,
+      "failed": 1,
+      "id": "R7U14",
+      "classification": "Actual App download succeeds; separately inspected actual file is missing the required pin, so combined complete-save positive assertion fails. No download-only acceptance pass.",
+      "logs": [
+        "independent/browser-relation-world.log",
+        "independent/domain-ui-relation-download.log"
+      ]
+    }
+  },
+  "independent_findings": [
+    {
+      "id": "R7D25/R7U14",
+      "classification": "typed_Relation_immutable_world_citation_missing_from_complete_archive",
+      "requirements": [
+        "REQ-B09",
+        "REQ-B16",
+        "REQ-F09",
+        "REQ-N19"
+      ],
+      "acceptance": [
+        "AT-B09",
+        "AT-B16",
+        "AT-F09",
+        "AT-N19"
+      ],
+      "review": "RV16/RV19",
+      "given": "Older worldB pin is registered through another work. This work first adopts only newerB and has confirmed local characters+trust Relation. Relation.validity.presentationAnchor explicitly cites oldB line and snapshot; no caption or previous active-oldB history can mask the citation. Valid project and atomic save/reload succeed.",
+      "when": "Complete archive, both direct store API and normal App cold backup download, then inspect file and restore into empty new/clone.",
+      "expected": "Retain the relation historical world pin and its stored expectedHash; preserve the current newer world separately and resolve the exact old presentation source after restore.",
+      "actual": {
+        "component": {
+          "archivedWorldPinIds": [
+            "cbe3b5f5-ad7c-4642-836a-75c353518be9"
+          ],
+          "oldRequiredPin": "2d46a0ab-50d6-4c8a-b76f-1a79fa61e8f6",
+          "archivedRelation": {
+            "direction": "forward",
+            "evidenceIds": [],
+            "fromId": "babefd06-954b-4d00-8b81-e93f50bf17a9",
+            "id": "a49f0522-66e2-4fea-83bb-b84b31c35ad6",
+            "projectId": "7eeb281e-f467-4054-a7b7-7eb810770038",
+            "relationType": "trust",
+            "revision": "0",
+            "status": "confirmed",
+            "toId": "4c430380-dfc4-4749-9b7e-0dfc61a4badd",
+            "validity": {
+              "presentationAnchor": {
+                "entityId": "92294bd9-f7c2-4466-940f-6511b8291a86",
+                "sourceVersionId": "2d46a0ab-50d6-4c8a-b76f-1a79fa61e8f6"
+              },
+              "routeCondition": null,
+              "worldRange": null
+            },
+            "visibility": "private"
+          },
+          "sourceSavedRevision": "1"
+        },
+        "normalDownloadedArchive": {
+          "archivedWorldPinIds": [
+            "cbe3b5f5-ad7c-4642-836a-75c353518be9"
+          ],
+          "expectedOldPin": "2d46a0ab-50d6-4c8a-b76f-1a79fa61e8f6",
+          "relation": {
+            "direction": "forward",
+            "evidenceIds": [],
+            "fromId": "babefd06-954b-4d00-8b81-e93f50bf17a9",
+            "id": "a49f0522-66e2-4fea-83bb-b84b31c35ad6",
+            "projectId": "7eeb281e-f467-4054-a7b7-7eb810770038",
+            "relationType": "trust",
+            "revision": "0",
+            "status": "confirmed",
+            "toId": "4c430380-dfc4-4749-9b7e-0dfc61a4badd",
+            "validity": {
+              "presentationAnchor": {
+                "entityId": "92294bd9-f7c2-4466-940f-6511b8291a86",
+                "sourceVersionId": "2d46a0ab-50d6-4c8a-b76f-1a79fa61e8f6"
+              },
+              "routeCondition": null,
+              "worldRange": null
+            },
+            "visibility": "private"
+          },
+          "archiveAccepted": true
+        },
+        "normalBrowser": [
+          {
+            "id": "R7U14-relation-world-citation-normal-backup",
+            "status": "passed_download_only_pending_archive_content_assessment",
+            "pageErrors": []
+          }
+        ],
+        "note": "Normal complete download announces success and inspect accepts the archive, but old pin is missing. Download alone is not a full-save success. Empty restoration assertion stops at missing old pin."
+      },
+      "cause": {
+        "file": "src/storage/archive.ts",
+        "sha256": "6a6592b175ad76b2617e50d22b1fee7bd54a8fa787f41cede8e8ceda606778d4",
+        "detail": "referencedWorlds additions detect only Entity.kind/data and collectReferences, while Relation has relationType and needs collectRelationReferences. The valid old pin registry is pruned from the complete file."
+      },
+      "evidence": [
+        "tests/independent-rb07-relation-world-citation.test.ts",
+        "tests/independent-rb07-ui-relation-download.test.ts",
+        "independent/domain-relation-world.log",
+        "independent/domain-ui-relation-download.log",
+        "independent/relation-world-run1/test.ts",
+        "independent/relation-world-run1/raw.log",
+        "independent/fixtures/world-relation-production.json",
+        "independent/fixtures/R7D25-after.json",
+        "independent/fixtures/R7D25-complete.scenario",
+        "independent/browser-relation-world.json",
+        "independent/fixtures/R7U14-relation-world-complete.scenario",
+        "independent/fixtures/R7U14-archive-observation.json"
+      ],
+      "status": "failed_correct_expected_outcome_retained"
+    }
+  ]
+}

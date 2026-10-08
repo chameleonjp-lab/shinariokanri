@@ -74,6 +74,7 @@ export interface ImportOptions {
 export interface ImportPreview { conflicts: ImportConflict[]; pendingChanges: number; target?: ProjectData; additions: number; mappedPlan?: CrossProjectImportPlan; mappedRecovery?: PortableRecovery; confirmationHash?: string }
 export interface RecoveredPendingIntent { key: string; projectId: string; importOperationId: string; sequence: number; operation: PortableRecovery['pending'][number]; status: 'needs_reconnect' }
 export interface ImportDraft { key: string; bytes?: Uint8Array; sourceHash?: string; mode: ImportMode; targetProjectId: string; idMap: Record<string, string>; resolutions: Record<string, 'existing' | 'incoming'>; selectedId?: string }
+export interface AuthorToolDraft { key: string; projectId: string; baseRevision: string; fields: Record<string, unknown>; asset?: { bytes: Uint8Array; contentHash: string } }
 export interface HistoryPage { entries: CommandMetadata[]; page: number; maximum: number; total: number; size: number }
 export interface ImportConflict { id: string; kind: 'project' | 'entity' | 'relation' | 'snapshot' | 'view' | 'alternative'; existing: unknown; incoming: unknown }
 export interface ImportResult extends SaveResult { mode: ImportMode; idMap?: Record<string, string>; restorePointId?: string; warnings: string[] }
@@ -95,6 +96,7 @@ class ScenarioDatabase extends Dexie {
   worlds!: Table<{ id: string; project: ProjectData }, string>;
   importLogs!: Table<ImportLog, string>;
   importDrafts!: Table<ImportDraft, string>;
+  authorToolDrafts!: Table<AuthorToolDraft, string>;
   recoveredPending!: Table<RecoveredPendingIntent, string>;
   constructor(name: string) {
     super(name);
@@ -107,6 +109,7 @@ class ScenarioDatabase extends Dexie {
     });
     this.version(2).stores({ importDrafts: 'key' });
     this.version(3).stores({ recoveredPending: 'key,projectId' });
+    this.version(4).stores({ authorToolDrafts: 'key,projectId' });
   }
 }
 
@@ -787,6 +790,7 @@ export class ScenarioStore {
     }); } catch (error) { throw saveError(error); }
   }
   async getAsset(contentHash: string): Promise<Uint8Array | undefined> { const asset = await this.db.assets.get(contentHash); return asset?.bytes.slice(); }
+  async availableAssetHashes(): Promise<Set<string>> { return new Set(await this.db.assets.toCollection().primaryKeys()); }
   private async materializeOutbox(rows: StoredOutbox[], commands: Map<string, StoredCommand>): Promise<OutboxRecord[]> {
     rows = [...rows].sort((left, right) => BigInt(left.localRevision) < BigInt(right.localRevision) ? -1 : BigInt(left.localRevision) > BigInt(right.localRevision) ? 1 : left.createdAt.localeCompare(right.createdAt));
     const ready = new Map<string, CommandRecord>(), result: OutboxRecord[] = [];
@@ -913,7 +917,7 @@ export class ScenarioStore {
     let discovered = [project, ...recoveryImages(recovery)];
     while (discovered.length) {
       const next: ProjectData[] = [];
-      for (const reference of referencedWorlds(discovered)) {
+      for (const reference of referencedWorlds(discovered,captured.registry)) {
         if (worlds[reference.immutableSnapshotId]) continue;
         const world = captured.registry[reference.immutableSnapshotId];
         if (world) { worlds[reference.immutableSnapshotId] = world; next.push(world); }
@@ -957,6 +961,15 @@ export class ScenarioStore {
   }
   async getImportDraft(key: string): Promise<ImportDraft | undefined> { const draft = await this.db.importDrafts.get(key); return draft ? copy(draft) : undefined; }
   async clearImportDraft(key: string): Promise<void> { await this.db.importDrafts.delete(key); }
+
+  async saveAuthorToolDraft(draft: AuthorToolDraft): Promise<void> {
+    const submitted = copy(draft);
+    if (!submitted.key || !ID_PATTERN.test(submitted.projectId) || !/^\d+$/.test(submitted.baseRevision) || jsonBytes(submitted.fields).byteLength > 1024 * 1024 || submitted.asset && submitted.asset.bytes.byteLength > 32 * 1024 * 1024) throw new StorageError('LIMIT_EXCEEDED', '制作入力の一時保存上限または作品識別が不正です。');
+    if (submitted.asset && await sha256(submitted.asset.bytes) !== submitted.asset.contentHash) throw new StorageError('HASH_MISMATCH', '制作入力の素材bytesが変わっています。');
+    try { await this.db.authorToolDrafts.put(submitted); } catch (cause) { throw saveError(cause); }
+  }
+  async getAuthorToolDraft(key: string): Promise<AuthorToolDraft | undefined> { const draft = await this.db.authorToolDrafts.get(key); return draft ? copy(draft) : undefined; }
+  async clearAuthorToolDraft(key: string): Promise<void> { await this.db.authorToolDrafts.delete(key); }
 
   async importScenario(preparedInput: PreparedScenario, optionsInput: ImportOptions): Promise<ImportResult> {
     const options = { ...optionsInput, idMap: optionsInput.idMap ? copy(optionsInput.idMap) : undefined, resolutions: optionsInput.resolutions ? copy(optionsInput.resolutions) : undefined };

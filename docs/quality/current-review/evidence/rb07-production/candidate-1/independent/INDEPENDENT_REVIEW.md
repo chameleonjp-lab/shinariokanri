@@ -1,0 +1,7 @@
+RB07旧候補 `5651747be11825487886c8fe76480143c316c9c5` / tree `719bd6f3e2b2da130980691627d2e6ca771a439e` の独立レビューを確定した。正期待の部品14件は8成功6失敗、通常App7群は5成功2失敗。6部品の失敗は4原因にまとめた。コピーの歴史的lineageおよび没の旧位置が後の分割・統合で移動すること、素材→演出→絵コンテの確認待ちが伝播しないことを通常Appの原子保存→cold reloadでも確認した。確認previewの非同期中に基底revisionや入力を採用し直す2原因は、制御した直接APIの境界であり通常UIの再現とは区別した。
+
+後発ファイルR7U03は、先の保存ackと入力clearを遅延し資料往復後に再入して、clear-end→後発D save-startの順とcold reload後のD未承認保持を確認した。旧run2のイベント列をcold後に読む検査誤りと初期セットアップ停止は別保存し、製品不具合へ換算していない。通常入力の失敗再試行・作品切替・演出提示は実App/native IndexedDB/Chromium151で実行した。Vitest部品はfake-indexeddbである。
+
+独立production buildと変更していないrepositoryのRB07 production3件は成功した。reviewer testのhistory配列推論を直したビルド手順の初回失敗も保持した。archive隔離のbuild-infoはunknown/dirty=trueなのでclean release証拠へ換算しない。原15資料のhash、169srcとcommit/tree、旧4fixtureのhash保持、独立固定入力と成果物を結合した。原given/when/then/negativeとplanned/not_runを維持した。
+
+この結果はRB07全体、104要件、116受入、24工程、6回帰群の完成判定ではない。実OS Files、実録音、iPhone/iPad、支援技術、全性能、長時間、実Auth/APIは未実行。Vite5327/preview5329を停止し、製品・repo既存証拠・commitは編集していない。

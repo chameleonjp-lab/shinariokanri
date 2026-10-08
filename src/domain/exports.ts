@@ -57,6 +57,8 @@ export interface ExportOptions {
   writingMode?: 'horizontal' | 'vertical';
   runtimeProfile?: RuntimeExportProfile;
   sourceLanguage?: string;
+  /** Filters production deliverables by authored task assignment; identity IDs stay private. */
+  assigneeId?: ID;
   consultationContext?: { focusIds?: ID[]; beforeValues?: Record<ID, TypedValue>; afterValues?: Record<ID, TypedValue> };
 }
 const record = (value: unknown): Record<string, unknown> | undefined => value !== null && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : undefined;
@@ -162,8 +164,19 @@ async function exportCapturedProject(input: ProjectData, options: ExportOptions)
       if (issues.length) return { ok: false, issues, preview };
       const language = options.sourceLanguage ?? 'ja';
       if (!validLanguage(language)) return { ok: false, issues: [{ code: 'VALIDATION_FAILED', message: '有効な言語コードを指定してください。', field: 'sourceLanguage' }], preview };
-      const exportedLines = await localizedLines(project, projection, result.idMap, language);
-      const payload = { format: 'scenario-localization', formatVersion: '1.0.0', title: projection.title, versionLabel: publicVersionLabel, hashScope: 'projected_line', lines: exportedLines, terminology: byKind(projection, 'terminology'), assets: byKind(projection, 'attachment'), assetBytesIncluded: false };
+      let assigned: Set<ID> | undefined;
+      if (options.assigneeId) {
+        assigned = new Set(project.entities.filter(entity => entity.kind === 'production_task' && !entity.deletedAt && !['rejected', 'alternate'].includes(entity.status) && entity.data.assigneeId === options.assigneeId).flatMap(entity => entity.kind === 'production_task' ? entity.data.targetIds : []));
+        for (const id of [...assigned]) { const target = project.entities.find(entity => entity.id === id); if (target?.kind === 'scene') target.data.dialogueLineIds?.forEach(lineId => assigned!.add(lineId)); }
+        if (!assigned.size) return { ok: false, issues: [{ code: 'REFERENCE_INVALID', message: 'この担当者に対応する制作タスクの対象がありません。対象版・担当・公開範囲を確認してください。' }], preview };
+      }
+      const exportedLines = await localizedLines(project, projection, result.idMap, language, assigned);
+      if (assigned && !exportedLines.length) return { ok: false, issues: [{ code: 'REFERENCE_INVALID', message: '担当の台詞・翻訳・収録が公開範囲にありません。公開範囲を確認してください。' }], preview };
+      if (assigned) preview.warnings.push('作者が指定した制作タスクの担当範囲へ絞っています。担当者の識別情報は公開ファイルへ含めません。');
+      const selectedLineIds = new Set(exportedLines.map(line => line.lineId));
+      const assetIds = new Set(exportedLines.flatMap(line => line.recordings.flatMap(recording => recording.attachmentId ? [recording.attachmentId] : [])));
+      for (const line of byKind(projection, 'dialogue_line').filter(line => selectedLineIds.has(line.id))) for (const cue of byKind(projection, 'cue').filter(cue => Array.isArray(line.data.cueIds) && line.data.cueIds.includes(cue.id))) if (typeof cue.data.attachmentId === 'string') assetIds.add(cue.data.attachmentId);
+      const payload = { format: 'scenario-localization', formatVersion: '1.0.0', title: projection.title, versionLabel: publicVersionLabel, hashScope: 'projected_line', lines: exportedLines, terminology: byKind(projection, 'terminology'), assets: byKind(projection, 'attachment').filter(asset => !assigned || assetIds.has(asset.id)), assetBytesIncluded: false };
       preview.warnings.push('台詞hashは公開用本文・ルビ・話者・演出から計算します。作者原稿のhashは公開ファイルに含めません。');
       return succeed([
         artifact('localization.json', 'application/json;charset=utf-8', JSON.stringify(payload, null, 2)),
@@ -211,7 +224,7 @@ function presentationDisclosures(project: ProjectData, idMap: Record<string, str
 }
 const SAFE_RUNTIME_OMISSIONS: Readonly<Record<string, readonly string[]>> = {
   character: ['aliases', 'authorNotes', 'goals', 'voiceRules'], group: [], event: ['authorNotes', 'constraints'], place: ['aliases', 'changes'], item: ['changes'],
-  scene: ['authorNotes', 'goals', 'conflicts', 'results', 'newInformation'], chapter: ['authorNotes', 'structureRole'], dialogue_line: ['originLineIds'],
+  scene: ['authorNotes', 'goals', 'conflicts', 'results', 'newInformation'], chapter: ['authorNotes', 'structureRole'], dialogue_line: ['originLineIds', 'replacedByLineIds', 'lineage'],
   variable: [], flow_node: [], flow_edge: [], flow_graph: [], effect: [], assertion: ['reason', 'validity'], foreshadow: ['exceptions', 'deadline'], disclosure: ['targetScope'],
   attachment: ['assetPath', 'licenseNote', 'provenanceId', 'stage', 'revisionHistory', 'mediaType', 'contentHash', 'byteSize'], source: ['accessedAt', 'excerptLocation', 'attachmentId'],
   cue: ['stage'], quest: ['gameplaySpecIds'], lore: ['aliases', 'sourceIds'], recording: ['sourceHash', 'notes', 'reviewedBy'], localization: ['sourceHash', 'reviewedBy'],
@@ -338,17 +351,20 @@ interface ExportedLine {
   translations: { id: string; language: string; text: PublicValue; stage: string }[];
   recordings: { id: string; language: string; attachmentId: string | null; stage: string }[];
 }
-async function localizedLines(project: ProjectData, projection: PublicProjection, idMap: Record<string, string>, language: string): Promise<ExportedLine[]> {
+async function localizedLines(project: ProjectData, projection: PublicProjection, idMap: Record<string, string>, language: string, assigned?: ReadonlySet<ID>): Promise<ExportedLine[]> {
   const lines: ExportedLine[] = [];
   for (const line of byKind(projection, 'dialogue_line')) {
     const original = project.entities.find((entity): entity is Entity<'dialogue_line'> => entity.kind === 'dialogue_line' && idMap[entity.id] === line.id)!;
+    const assignedLine = assigned?.has(original.id);
+    if (assigned && !assignedLine && !project.entities.some(entity => (entity.kind === 'localization' || entity.kind === 'recording') && entity.data.sourceLineId === original.id && assigned.has(entity.id))) continue;
+    const allowed = (publicId: string) => !assigned || assignedLine || project.entities.some(entity => idMap[entity.id] === publicId && assigned.has(entity.id));
     const originalHash = await dialogueContentHash(project, original);
     const sourceHash = await hash({ text: blocks(line.data.text).map(block => ({ kind: block.kind, text: block.text, ruby: block.ruby ?? [] })), speakerId: line.data.speakerId ?? null, cues: byKind(projection, 'cue').filter(cue => Array.isArray(line.data.cueIds) && line.data.cueIds.includes(cue.id)).map(cue => cue.data) });
-    const translations = byKind(projection, 'localization').filter(translation => translation.data.sourceLineId === line.id).map(translation => {
+    const translations = byKind(projection, 'localization').filter(translation => translation.data.sourceLineId === line.id && allowed(translation.id)).map(translation => {
       const source = project.entities.find((entity): entity is Entity<'localization'> => entity.kind === 'localization' && idMap[entity.id] === translation.id)!;
       return { id: translation.id, language: String(translation.data.language ?? ''), text: translation.data.text ?? [], stage: source.data.sourceHash !== originalHash ? 'needs_review' : String(translation.data.stage ?? 'draft') };
     });
-    const recordings = byKind(projection, 'recording').filter(recording => recording.data.sourceLineId === line.id).map(recording => {
+    const recordings = byKind(projection, 'recording').filter(recording => recording.data.sourceLineId === line.id && allowed(recording.id)).map(recording => {
       const source = project.entities.find((entity): entity is Entity<'recording'> => entity.kind === 'recording' && idMap[entity.id] === recording.id)!;
       return { id: recording.id, language: String(recording.data.language ?? ''), attachmentId: typeof recording.data.attachmentId === 'string' ? recording.data.attachmentId : null, stage: source.data.sourceHash !== originalHash ? 'needs_review' : String(recording.data.stage ?? 'planned') };
     });

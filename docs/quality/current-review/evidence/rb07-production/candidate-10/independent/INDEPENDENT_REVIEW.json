@@ -1,0 +1,823 @@
+{
+  "target": {
+    "commit": "22bd75aec2829b84b012857aa1a8dce026981b66",
+    "tree": "717208f02556c8ccf6c74ebd04867845b9e8db42",
+    "base": "b310800c98bc9a89b93182ad721380a0be99d2d3",
+    "source169AllMatch": true,
+    "frozenAt": "2026-10-08T13:20:40.903866+00:00",
+    "verifiedAt": "2026-10-08T13:37:08.448305+00:00"
+  },
+  "purpose": "Limited independent RB07 RV18/19 and related complete-save review. Full104/116/24/6/RB07 not graded.",
+  "results": {
+    "components": {
+      "passed": 26,
+      "failed": 0,
+      "fixtureValidityPassed": 1,
+      "log": "independent/domain-reinspection.log",
+      "notAcceptance": true
+    },
+    "actualDownloadedFileComponent": {
+      "passed": 1,
+      "failed": 0,
+      "id": "R7U14-file-content",
+      "classification": "Actual App/native IndexedDB download -> actual file inspector -> fake-indexeddb empty new/clone restore. Distinct environment phases retained.",
+      "log": "independent/domain-actual-download.log"
+    },
+    "additionalWorldContextBoundaries": {
+      "passed": 3,
+      "failed": 1,
+      "log": "independent/domain-world-context-safety.log",
+      "cases": [
+        "CTX-R1: same world actual declared effect false removes candidate, full origin retained",
+        "CTX-R2: old inactive caption pin never borrows newer adopted state; unknown retained",
+        "CTX-R3: unverified/mismatching version unknown; missing/corrupt world refused",
+        "CAP-R1: later caller mutation incorrectly refuses captured fixed work input"
+      ]
+    },
+    "normalControlAndD26Repeat": {
+      "passed": 1,
+      "failed": 1,
+      "log": "independent/domain-world-capture-control.log",
+      "classification": "D26 repeat passed; CAP-control first unchanged operation passed then same test failed only at mutated input pending operation. Same cause as CAP-R1, not two distinct findings."
+    },
+    "normalApp": {
+      "passed": 15,
+      "failed": 0,
+      "cases": [
+        {
+          "id": "R7U01-split-away-switch-failure-cold",
+          "status": "passed",
+          "pageErrors": []
+        },
+        {
+          "id": "R7U02-copy-merge-keeps-history-source",
+          "status": "passed",
+          "pageErrors": []
+        },
+        {
+          "id": "R7U03-material-ack-next-clear-cold",
+          "status": "passed",
+          "pageErrors": []
+        },
+        {
+          "id": "R7U04-stale-material-input-retained",
+          "status": "passed",
+          "pageErrors": []
+        },
+        {
+          "id": "R7U05-dependent-frame-review",
+          "status": "passed",
+          "pageErrors": []
+        },
+        {
+          "id": "R7U06-acquired-time-normal-failure",
+          "status": "passed",
+          "pageErrors": []
+        },
+        {
+          "id": "R7U07-chapter-flow-cues-timecode",
+          "status": "passed",
+          "pageErrors": []
+        },
+        {
+          "id": "R7U08-fixed-old-frame-no-live-cues",
+          "status": "passed",
+          "pageErrors": []
+        },
+        {
+          "id": "R7U09-fixed-subtitle-speaker-candidates",
+          "status": "passed",
+          "pageErrors": []
+        },
+        {
+          "id": "R7U10-fixed-subtitle-speaker-candidates",
+          "status": "passed",
+          "pageErrors": []
+        },
+        {
+          "id": "R7U11-old-world-caption-descriptor-cold-source",
+          "status": "passed",
+          "pageErrors": []
+        },
+        {
+          "id": "R7U12-old-world-first-save-complete-backup",
+          "status": "passed",
+          "pageErrors": []
+        },
+        {
+          "id": "R7U13-local-rule-anchor-on-old-world-caption",
+          "status": "passed",
+          "pageErrors": []
+        },
+        {
+          "id": "R7U15-same-adopted-world-route-caption-saved-trace-cold",
+          "status": "passed",
+          "pageErrors": []
+        },
+        {
+          "id": "R7U14",
+          "status": "passed_combined_actual_download_content_new_clone",
+          "rawBrowser": "independent/browser-relation-world.json",
+          "contentProof": "independent/fixtures/R7U14-archive-observation.json",
+          "restoreProofs": [
+            "independent/fixtures/R7U14-archive-new.json",
+            "independent/fixtures/R7U14-archive-clone.json"
+          ]
+        }
+      ],
+      "classification": "Actual App/native IndexedDB/Chromium151; same immutable input bytes; controlled failure/ack/late file and saved-route cold reload. Actual relation file was separately assessed."
+    },
+    "production": {
+      "passed": 3,
+      "failed": 0,
+      "notAcceptance": true,
+      "log": "independent/production-browser.log",
+      "report": "independent/production-browser.json",
+      "buildInfo": {
+        "commit": "unknown",
+        "dirty": true,
+        "base": "/shinariokanri/",
+        "version": "b426328b46545c26c578",
+        "builtAt": "2026-10-08T13:27:17.824Z"
+      },
+      "classification": "Repository production E2E at dedicated preview5361, Chromium151; isolated build commit unknown/dirty=true, separately bound source and dist. Not clean release build."
+    }
+  },
+  "findings": [
+    {
+      "id": "R7D27/CAP-R1",
+      "classification": "caller_owned_author_content_not_captured_before_fixed_work_verification_await",
+      "requirements": [
+        "REQ-B16",
+        "REQ-F15",
+        "REQ-F17",
+        "REQ-N18",
+        "REQ-N19"
+      ],
+      "acceptance": [
+        "AT-B16",
+        "AT-F15",
+        "AT-F17",
+        "AT-N18",
+        "AT-N19"
+      ],
+      "review": "RV18/RV19 fixed version boundary",
+      "given": "Digest-valid fixed work content captured via captureRuntimeContent, same verified active world pin and frozen independent world-route bytes. Calling productionCheckView with the explicit fixed work version succeeds when source is unchanged (separate normal control).",
+      "when": "Immediately after calling productionCheckView and before its promise settles, caller changes the frame.caption of the original mutable input; the function has already cloned its execution source and registry but not author input.",
+      "expected": "The ongoing fixed-version check resolves from the bytes captured at invocation and retains the original caption. Later edits stay in the caller input for a separate operation. No substitution of pin or relaxation of digest validation.",
+      "actual": "INTEGRITY_FAILED: 制作検査の経路状態と採用世界を同じ固定作品版へ結合できません。 Same normal input without post-invocation mutation passed. Two independent positive-expectation executions reproduce the same refusal.",
+      "normalControl": {
+        "normalInputAccepted": true,
+        "fixedPin": "7f296120-0f78-4608-a601-81f4b5ec3f5f",
+        "expectedHash": "c0751bb6b58b24711dba2e1e815ee43422d59d210cacb7edc5e51186af66a183",
+        "frame": {
+          "id": "4c028250-89c6-46de-8074-f3bb46714306",
+          "projectId": "095954c8-72fd-465c-9701-ff29b5b7f38e",
+          "kind": "storyboard_frame",
+          "revision": "0",
+          "name": "固定世界台詞の字幕",
+          "status": "confirmed",
+          "visibility": "private",
+          "createdAt": "2026-10-08T13:11:38.766Z",
+          "updatedAt": "2026-10-08T13:11:38.766Z",
+          "customValues": {},
+          "data": {
+            "anchor": {
+              "entityId": "120ab290-1db5-485d-af55-c472d4794738",
+              "lineId": "120ab290-1db5-485d-af55-c472d4794738",
+              "sourceVersionId": "aff771ab-27f4-431a-9ec7-2ac7f9c0973c"
+            },
+            "mediaStartMs": 0,
+            "mediaEndMs": null,
+            "referenceAssetId": null,
+            "finalAssetId": null,
+            "cueIds": [],
+            "caption": [
+              {
+                "id": "1edc9bd2-7f02-46c2-821c-63476bd3c96f",
+                "kind": "paragraph",
+                "text": "字幕で声を確認"
+              }
+            ]
+          }
+        }
+      },
+      "cause": {
+        "file": "src/domain/productionChecks.ts",
+        "sha256": "b134192962ac789d515e1004cfaeee6a0f20d478853859ed50e6713aaa843353",
+        "detail": "author=reuseAuthorContent(input) remains caller owned. The destructured content object retains entities arrays through first awaited pin SHA; the second SHA observes later caller changes while source is already captured."
+      },
+      "evidence": [
+        "tests/independent-rb07-world-context-safety.test.ts",
+        "independent/domain-world-context-safety.log",
+        "tests/independent-rb07-world-capture-control.test.ts",
+        "independent/domain-world-capture-control.log",
+        "independent/fixtures/CAP-control.json",
+        "independent/fixtures/world-route-production.json"
+      ],
+      "status": "failed_correct_expected_outcome_retained",
+      "normalUIReproduction": "not_run; direct asynchronous API capture boundary only; existing normal App15 cases pass"
+    }
+  ],
+  "resolvedFindings": [
+    {
+      "id": "R7D17/R7U09",
+      "historicalCommit": "7ca23111b3e8f8e7d85cb78b05ea9179a73a9f3e",
+      "historicalReportSha256": "92b65b583adba206ce42c6f7987b964795bf64bbabc0688d50d7950319002274",
+      "status": "passed_verified_same_frozen_input_and_original_voice_expectation",
+      "value": "Old sourceA kept; current lineB independent. Native archive/new/clone retains old source. Direct unverified calls keep voice candidate unknown and add rule_context unknown, not true.",
+      "evidence": [
+        "tests/independent-rb07-fixed-speaker.test.ts",
+        "independent/fixtures/R7D17-roundtrip.json",
+        "independent/browser-speaker.json"
+      ]
+    },
+    {
+      "id": "R7D02/R7D14/R7U02",
+      "requirements": [
+        "REQ-F21",
+        "REQ-N18"
+      ],
+      "acceptance": [
+        "AT-F21",
+        "AT-E08"
+      ],
+      "review": "RV18",
+      "given": "An independently copied line has historical lineage pointing to the old source; another rejected cue retains an old source position.",
+      "when": "Merge or split the current original lines, including normal App save and cold reload.",
+      "expected": "Keep historical source IDs/Unicode ranges while adding the new operation mapping; do not rewrite rejected evidence.",
+      "actual": "Copy lineage.source and rejected cue anchor are rewritten to the new live line/block IDs. OriginalLineIds remains the older ID, making ancestry inconsistent.",
+      "evidence": [
+        "independent/fixtures/R7D02.json",
+        "independent/fixtures/R7D14.json",
+        "independent/fixtures/R7U02-observation.json"
+      ],
+      "files": [
+        "src/domain/productionWorkflow.ts"
+      ],
+      "historicalCommit": "5651747be11825487886c8fe76480143c316c9c5",
+      "historicalReportSha256": "0b8010ca41033f25eb1fa2b0f2e0e2eb998f2b07bac0fbaeda1736e0d0d759f7",
+      "status": "passed_same_original_inputs_and_correct_expectations",
+      "currentEvidence": [
+        "independent/domain-reinspection.log",
+        "independent/browser-production.json"
+      ],
+      "historicalFailure": "Copy lineage.source and rejected cue anchor are rewritten to the new live line/block IDs. OriginalLineIds remains the older ID, making ancestry inconsistent."
+    },
+    {
+      "id": "R7D06/R7U05",
+      "requirements": [
+        "REQ-F53",
+        "REQ-F22",
+        "REQ-F23"
+      ],
+      "acceptance": [
+        "AT-F53",
+        "AT-F22",
+        "AT-F23"
+      ],
+      "review": "RV19",
+      "given": "A confirmed storyboard depends on a cue via cueIds, and that cue uses the old material.",
+      "when": "Replace the cue material through normal confirmation, atomically save, and cold reload.",
+      "expected": "The dependent storyboard joins the same save as needs_review while old immutable snapshot stays intact.",
+      "actual": "The cue and translation require review; its dependent storyboard remains confirmed.",
+      "evidence": [
+        "independent/fixtures/R7D06.json",
+        "independent/fixtures/R7U05-observation.json"
+      ],
+      "files": [
+        "src/domain/production.ts"
+      ],
+      "historicalCommit": "5651747be11825487886c8fe76480143c316c9c5",
+      "historicalReportSha256": "0b8010ca41033f25eb1fa2b0f2e0e2eb998f2b07bac0fbaeda1736e0d0d759f7",
+      "status": "passed_same_original_inputs_and_correct_expectations",
+      "currentEvidence": [
+        "independent/domain-reinspection.log",
+        "independent/browser-production.json"
+      ],
+      "historicalFailure": "The cue and translation require review; its dependent storyboard remains confirmed."
+    },
+    {
+      "id": "R7D08",
+      "requirements": [
+        "REQ-N18",
+        "REQ-F53"
+      ],
+      "acceptance": [
+        "AT-N18",
+        "AT-F53"
+      ],
+      "review": "RV19",
+      "given": "A material confirmation preview starts at revision0 with one replacement ID.",
+      "when": "Controlled direct-API input mutation changes project revision/name and replacement ID array while hashing yields.",
+      "expected": "Capture the original revision/content/material inputs before the first await.",
+      "actual": "Plan silently adopts revision9, later name, and the added replacement ID.",
+      "measurementLimit": "Direct API await boundary; not a normal user mutation of React props.",
+      "evidence": [
+        "independent/fixtures/R7D08.json"
+      ],
+      "files": [
+        "src/domain/materials.ts"
+      ],
+      "historicalCommit": "5651747be11825487886c8fe76480143c316c9c5",
+      "historicalReportSha256": "0b8010ca41033f25eb1fa2b0f2e0e2eb998f2b07bac0fbaeda1736e0d0d759f7",
+      "status": "passed_same_original_inputs_and_correct_expectations",
+      "currentEvidence": [
+        "independent/domain-reinspection.log",
+        "independent/browser-production.json"
+      ],
+      "historicalFailure": "Plan silently adopts revision9, later name, and the added replacement ID."
+    },
+    {
+      "id": "R7D09/R7D13",
+      "requirements": [
+        "REQ-N18",
+        "REQ-F21",
+        "REQ-F23"
+      ],
+      "acceptance": [
+        "AT-N18",
+        "AT-F21",
+        "AT-F23"
+      ],
+      "review": "RV18",
+      "given": "Source approval or dialogue copy preview starts from original revision0/content.",
+      "when": "Controlled direct-API mutation changes revision or source text during asynchronous hashing.",
+      "expected": "Use the original base and immutable content, then require reconfirmation for later changes.",
+      "actual": "Approval base becomes9; dialogue plan combines changed live original and copy derived from old text.",
+      "measurementLimit": "Direct API await boundary; not physical device evidence.",
+      "evidence": [
+        "independent/fixtures/R7D09.json",
+        "independent/fixtures/R7D13.json"
+      ],
+      "files": [
+        "src/domain/productionWorkflow.ts"
+      ],
+      "historicalCommit": "5651747be11825487886c8fe76480143c316c9c5",
+      "historicalReportSha256": "0b8010ca41033f25eb1fa2b0f2e0e2eb998f2b07bac0fbaeda1736e0d0d759f7",
+      "status": "passed_same_original_inputs_and_correct_expectations",
+      "currentEvidence": [
+        "independent/domain-reinspection.log",
+        "independent/browser-production.json"
+      ],
+      "historicalFailure": "Approval base becomes9; dialogue plan combines changed live original and copy derived from old text."
+    },
+    {
+      "id": "R7D15/R7U08",
+      "historicalCommit": "92181f1dba3c07088bc409ece72e8b38e6ff980e",
+      "historicalReportSha256": "4ff31048502e7f6f6d479942175e49533f7064bc78d67624cbc9a81351b6d599",
+      "status": "passed_exact_same_fixed_UI_input_and_correct_expectations",
+      "expected": "Fixed old-pin-only frame stays confirmed; actual live cue-dependent frame still needs_review.",
+      "actual": {
+        "fixedFrameStatus": "confirmed",
+        "normalAppFixedFrameStatus": "confirmed"
+      },
+      "evidence": [
+        "independent/domain-reinspection.log",
+        "independent/browser-fixed.json",
+        "independent/fixtures/R7D15.json",
+        "independent/fixtures/R7U08-observation.json"
+      ]
+    },
+    {
+      "id": "R7D20/R7U10",
+      "historicalCommit": "8e6023929b64cb180f65da4b4859bd8a8df57b7c",
+      "historicalReportSha256": "90f5e644bcb9e2a35630128233043214a75544474a77159b8a67da8e2c32482d",
+      "status": "passed_same_frozen_bytes_correct_expectation",
+      "actual": "Outer reuse caption retains known old voice; normal App cold4candidates0unknown."
+    },
+    {
+      "id": "R7D21",
+      "historicalCommit": "8e6023929b64cb180f65da4b4859bd8a8df57b7c",
+      "historicalReportSha256": "90f5e644bcb9e2a35630128233043214a75544474a77159b8a67da8e2c32482d",
+      "status": "passed_same_frozen_bytes_correct_expectation",
+      "actual": "Altered reuse dependency is refused before a production view is returned."
+    },
+    {
+      "id": "R7D23/R7U12",
+      "historicalCommit": "1b7b50898515b92a1b8e6706565685c9be611113",
+      "historicalReportSha256": "1187500088167f5d76df09e42212a4dc5461b051fb433db8e4631a1847b8aa0b",
+      "status": "passed_same_frozen_input_correct_expectation",
+      "actual": {
+        "new": {
+          "sourceChecks": [
+            {
+              "id": "2e229043-3c07-4aa9-83d0-19a65006eafb:1fa78ae3-e5e5-46bd-8387-9f977656da62:288422ad-5f35-4946-866d-22504f245786:voice",
+              "kind": "voice",
+              "lineId": "2e229043-3c07-4aa9-83d0-19a65006eafb",
+              "ruleId": "1fa78ae3-e5e5-46bd-8387-9f977656da62",
+              "sourceAnchor": {
+                "entityId": "92294bd9-f7c2-4466-940f-6511b8291a86",
+                "lineId": "92294bd9-f7c2-4466-940f-6511b8291a86",
+                "blockId": "ea701203-df4f-4038-bebb-32ec39f7cacc",
+                "sourceVersionId": "2d46a0ab-50d6-4c8a-b76f-1a79fa61e8f6"
+              },
+              "anchor": {
+                "entityId": "2e229043-3c07-4aa9-83d0-19a65006eafb",
+                "blockId": "288422ad-5f35-4946-866d-22504f245786"
+              },
+              "value": "true",
+              "message": "口調の作者確認：一人称「私」・呼称「」・言い回し「」。",
+              "reasons": [],
+              "ruleAnchor": {
+                "entityId": "1fa78ae3-e5e5-46bd-8387-9f977656da62",
+                "sourceVersionId": "2d46a0ab-50d6-4c8a-b76f-1a79fa61e8f6"
+              }
+            }
+          ],
+          "restoredKnown": true,
+          "oldPinIncluded": true,
+          "canonicalCount": 1
+        },
+        "clone": {
+          "sourceChecks": [
+            {
+              "id": "2e229043-3c07-4aa9-83d0-19a65006eafb:1fa78ae3-e5e5-46bd-8387-9f977656da62:288422ad-5f35-4946-866d-22504f245786:voice",
+              "kind": "voice",
+              "lineId": "2e229043-3c07-4aa9-83d0-19a65006eafb",
+              "ruleId": "1fa78ae3-e5e5-46bd-8387-9f977656da62",
+              "sourceAnchor": {
+                "entityId": "92294bd9-f7c2-4466-940f-6511b8291a86",
+                "lineId": "92294bd9-f7c2-4466-940f-6511b8291a86",
+                "blockId": "ea701203-df4f-4038-bebb-32ec39f7cacc",
+                "sourceVersionId": "2d46a0ab-50d6-4c8a-b76f-1a79fa61e8f6"
+              },
+              "anchor": {
+                "entityId": "2e229043-3c07-4aa9-83d0-19a65006eafb",
+                "blockId": "288422ad-5f35-4946-866d-22504f245786"
+              },
+              "value": "true",
+              "message": "口調の作者確認：一人称「私」・呼称「」・言い回し「」。",
+              "reasons": [],
+              "ruleAnchor": {
+                "entityId": "1fa78ae3-e5e5-46bd-8387-9f977656da62",
+                "sourceVersionId": "2d46a0ab-50d6-4c8a-b76f-1a79fa61e8f6"
+              }
+            }
+          ],
+          "restoredKnown": true,
+          "oldPinIncluded": true,
+          "canonicalCount": 1
+        },
+        "normalFileDownload": {
+          "id": "R7U12-old-world-first-save-complete-backup",
+          "status": "passed",
+          "pageErrors": []
+        }
+      }
+    },
+    {
+      "id": "R7D24/R7U13",
+      "historicalCommit": "297f19a64040179e9165caa6c48fa20044d43f05",
+      "historicalReportSha256": "d93c363b9ffa8b88b92e3cc2659cace3f3821c0f1f3931bb6638ba1994071cab",
+      "status": "passed_same_frozen_bytes_correct_expectation",
+      "actual": "Current work terminology root opens its actual work editor; old-world voice/source remain explicitly pinned."
+    },
+    {
+      "id": "R7D25/R7U14",
+      "historicalCommit": "39079f4066676d80b7098cf87e5719fc865c0564",
+      "historicalReportSha256": "413b6a8dd36cc0ed84950dd7b5236fe5e016034ced6f8c319ee386c008a79b1b",
+      "status": "passed_same_frozen_bytes_correct_expectation",
+      "actual": {
+        "normalFile": {
+          "archivedWorldPinIds": [
+            "cbe3b5f5-ad7c-4642-836a-75c353518be9",
+            "2d46a0ab-50d6-4c8a-b76f-1a79fa61e8f6"
+          ],
+          "expectedOldPin": "2d46a0ab-50d6-4c8a-b76f-1a79fa61e8f6",
+          "relation": {
+            "direction": "forward",
+            "evidenceIds": [],
+            "fromId": "babefd06-954b-4d00-8b81-e93f50bf17a9",
+            "id": "a49f0522-66e2-4fea-83bb-b84b31c35ad6",
+            "projectId": "7eeb281e-f467-4054-a7b7-7eb810770038",
+            "relationType": "trust",
+            "revision": "0",
+            "status": "confirmed",
+            "toId": "4c430380-dfc4-4749-9b7e-0dfc61a4badd",
+            "validity": {
+              "presentationAnchor": {
+                "entityId": "92294bd9-f7c2-4466-940f-6511b8291a86",
+                "sourceVersionId": "2d46a0ab-50d6-4c8a-b76f-1a79fa61e8f6"
+              },
+              "routeCondition": null,
+              "worldRange": null
+            },
+            "visibility": "private"
+          },
+          "archiveAccepted": true
+        },
+        "directNew": {
+          "valid": true,
+          "worldPinIds": [
+            "2d46a0ab-50d6-4c8a-b76f-1a79fa61e8f6",
+            "cbe3b5f5-ad7c-4642-836a-75c353518be9"
+          ],
+          "relation": {
+            "direction": "forward",
+            "evidenceIds": [],
+            "fromId": "babefd06-954b-4d00-8b81-e93f50bf17a9",
+            "id": "a49f0522-66e2-4fea-83bb-b84b31c35ad6",
+            "projectId": "7eeb281e-f467-4054-a7b7-7eb810770038",
+            "relationType": "trust",
+            "revision": "0",
+            "status": "confirmed",
+            "toId": "4c430380-dfc4-4749-9b7e-0dfc61a4badd",
+            "validity": {
+              "presentationAnchor": {
+                "entityId": "92294bd9-f7c2-4466-940f-6511b8291a86",
+                "sourceVersionId": "2d46a0ab-50d6-4c8a-b76f-1a79fa61e8f6"
+              },
+              "routeCondition": null,
+              "worldRange": null
+            },
+            "visibility": "private"
+          }
+        },
+        "directClone": {
+          "valid": true,
+          "worldPinIds": [
+            "2d46a0ab-50d6-4c8a-b76f-1a79fa61e8f6",
+            "cbe3b5f5-ad7c-4642-836a-75c353518be9"
+          ],
+          "relation": {
+            "direction": "forward",
+            "evidenceIds": [],
+            "fromId": "b189fefc-8082-4776-b383-0790c0e84297",
+            "id": "0cd490d8-8aee-43e8-883c-1d1ec523badf",
+            "projectId": "13dac9a3-d8ad-4c5d-9a1d-a89db4631ec8",
+            "relationType": "trust",
+            "revision": "0",
+            "status": "confirmed",
+            "toId": "44e75262-40c9-4316-b6d3-c4f5885800f1",
+            "validity": {
+              "presentationAnchor": {
+                "entityId": "92294bd9-f7c2-4466-940f-6511b8291a86",
+                "sourceVersionId": "2d46a0ab-50d6-4c8a-b76f-1a79fa61e8f6"
+              },
+              "routeCondition": null,
+              "worldRange": null
+            },
+            "visibility": "private"
+          }
+        },
+        "actualFileNew": {
+          "actualAppDownloadedFile": true,
+          "restoreDatabase": "fake-indexeddb component",
+          "mode": "new",
+          "valid": true,
+          "worldPinIds": [
+            "2d46a0ab-50d6-4c8a-b76f-1a79fa61e8f6",
+            "cbe3b5f5-ad7c-4642-836a-75c353518be9"
+          ],
+          "relation": {
+            "direction": "forward",
+            "evidenceIds": [],
+            "fromId": "babefd06-954b-4d00-8b81-e93f50bf17a9",
+            "id": "a49f0522-66e2-4fea-83bb-b84b31c35ad6",
+            "projectId": "7eeb281e-f467-4054-a7b7-7eb810770038",
+            "relationType": "trust",
+            "revision": "0",
+            "status": "confirmed",
+            "toId": "4c430380-dfc4-4749-9b7e-0dfc61a4badd",
+            "validity": {
+              "presentationAnchor": {
+                "entityId": "92294bd9-f7c2-4466-940f-6511b8291a86",
+                "sourceVersionId": "2d46a0ab-50d6-4c8a-b76f-1a79fa61e8f6"
+              },
+              "routeCondition": null,
+              "worldRange": null
+            },
+            "visibility": "private"
+          }
+        },
+        "actualFileClone": {
+          "actualAppDownloadedFile": true,
+          "restoreDatabase": "fake-indexeddb component",
+          "mode": "clone",
+          "valid": true,
+          "worldPinIds": [
+            "2d46a0ab-50d6-4c8a-b76f-1a79fa61e8f6",
+            "cbe3b5f5-ad7c-4642-836a-75c353518be9"
+          ],
+          "relation": {
+            "direction": "forward",
+            "evidenceIds": [],
+            "fromId": "b516715b-56a0-4c45-9462-c0fb039a4b20",
+            "id": "fa5d55c2-a3f7-4c60-bb70-5ce865f40db2",
+            "projectId": "442be6d2-8871-4f09-99aa-eb40273c383e",
+            "relationType": "trust",
+            "revision": "0",
+            "status": "confirmed",
+            "toId": "23d06543-ee8c-4915-b40e-73b859e712f6",
+            "validity": {
+              "presentationAnchor": {
+                "entityId": "92294bd9-f7c2-4466-940f-6511b8291a86",
+                "sourceVersionId": "2d46a0ab-50d6-4c8a-b76f-1a79fa61e8f6"
+              },
+              "routeCondition": null,
+              "worldRange": null
+            },
+            "visibility": "private"
+          }
+        }
+      }
+    },
+    {
+      "id": "R7D26/R7U15",
+      "historicalCommit": "28eccca623bdc10953757be2911e3df0557bb42a",
+      "historicalReportSha256": "54dce55c4806237a3143e746aadcaa06e48f88c6bcb2ff6deb4fa75eafffa49c",
+      "status": "passed_same_frozen_bytes_correct_expectation",
+      "actual": {
+        "component": {
+          "checks": [
+            {
+              "id": "4c028250-89c6-46de-8074-f3bb46714306:16f6a8cc-4a3c-4000-a810-7e5e8761db70:1edc9bd2-7f02-46c2-821c-63476bd3c96f:voice",
+              "kind": "voice",
+              "lineId": "4c028250-89c6-46de-8074-f3bb46714306",
+              "ruleId": "16f6a8cc-4a3c-4000-a810-7e5e8761db70",
+              "sourceAnchor": {
+                "entityId": "120ab290-1db5-485d-af55-c472d4794738",
+                "lineId": "120ab290-1db5-485d-af55-c472d4794738",
+                "sourceVersionId": "aff771ab-27f4-431a-9ec7-2ac7f9c0973c"
+              },
+              "anchor": {
+                "entityId": "4c028250-89c6-46de-8074-f3bb46714306",
+                "blockId": "1edc9bd2-7f02-46c2-821c-63476bd3c96f"
+              },
+              "value": "true",
+              "message": "口調の作者確認：一人称「私」・呼称「」・言い回し「」。",
+              "reasons": [],
+              "ruleAnchor": {
+                "entityId": "16f6a8cc-4a3c-4000-a810-7e5e8761db70",
+                "sourceVersionId": "aff771ab-27f4-431a-9ec7-2ac7f9c0973c"
+              }
+            }
+          ],
+          "sourceChecks": [
+            {
+              "id": "120ab290-1db5-485d-af55-c472d4794738:16f6a8cc-4a3c-4000-a810-7e5e8761db70:faf1269e-0509-421a-a751-0afd48150f2a:voice",
+              "kind": "voice",
+              "lineId": "120ab290-1db5-485d-af55-c472d4794738",
+              "ruleId": "16f6a8cc-4a3c-4000-a810-7e5e8761db70",
+              "anchor": {
+                "entityId": "120ab290-1db5-485d-af55-c472d4794738",
+                "lineId": "120ab290-1db5-485d-af55-c472d4794738",
+                "blockId": "faf1269e-0509-421a-a751-0afd48150f2a",
+                "sourceVersionId": "aff771ab-27f4-431a-9ec7-2ac7f9c0973c"
+              },
+              "value": "true",
+              "message": "口調の作者確認：一人称「私」・呼称「」・言い回し「」。",
+              "reasons": [],
+              "ruleAnchor": {
+                "entityId": "16f6a8cc-4a3c-4000-a810-7e5e8761db70",
+                "sourceVersionId": "aff771ab-27f4-431a-9ec7-2ac7f9c0973c"
+              }
+            }
+          ],
+          "sessionStatus": "terminal",
+          "provenance": "full_play",
+          "knownFlag": {
+            "type": "boolean",
+            "value": true
+          },
+          "directCondition": {
+            "value": "true",
+            "reasons": []
+          },
+          "adoptedWorld": {
+            "projectId": "d4da8397-ab20-47b0-b0b8-ccb6929cc3ad",
+            "immutableSnapshotId": "aff771ab-27f4-431a-9ec7-2ac7f9c0973c",
+            "contentHash": "a8f52d4d7a41209d7886bb6b0638ecef20dc3200e18feed9f27ba307db11e095"
+          },
+          "stateVersion": "095954c8-72fd-465c-9701-ff29b5b7f38e",
+          "sourcePin": "aff771ab-27f4-431a-9ec7-2ac7f9c0973c"
+        },
+        "normalApp": {
+          "environment": {
+            "browser": "151.0.7922.173",
+            "executable": "/usr/bin/chromium",
+            "viewport": "1024x768",
+            "source": "Actual App/native IndexedDB: normal internal fresh start/gate/terminal/atomic record/cold then selected saved trace author inspection; same verified world pin as caption source. Not external actual receipt or physical-device evidence."
+          },
+          "results": [
+            {
+              "id": "R7U15-same-adopted-world-route-caption-saved-trace-cold",
+              "status": "passed",
+              "pageErrors": []
+            }
+          ]
+        },
+        "savedTraceProof": "independent/fixtures/R7U15-observation.json",
+        "normalCandidateCount": 2,
+        "normalUnknownCount": 0,
+        "unknownGuards": [
+          "CTX-R1",
+          "CTX-R2",
+          "CTX-R3"
+        ]
+      }
+    }
+  ],
+  "descriptorContract": {
+    "historical8eD22": {
+      "id": "R7D22",
+      "classification": "descriptor_input_insufficient_safe_refusal_not_product_acceptance_failure",
+      "given": "The caption still explicitly cites old worldB pin while the work adopts newer worldB pin. The content registry contains old bytes, but this API input has no descriptor supplying the expected old contentHash.",
+      "originalExpected": "The precheck expected success from content-only registry. This assumption did not supply a trusted expected digest for the no-longer-adopted old edition.",
+      "actual": "INTEGRITY_FAILED: 制作検査の元台詞の固定版hashを確認できません。現稿で代用しません。",
+      "decision": "Keep the failing source/raw unchanged as historical precheck. Do not compute a new digest from input and treat it as verified. Next candidate positive case must supply the already-existing old snapshot descriptor from worldB.snapshots; descriptor absence has a distinct safe-refusal expectation. Original REQ/AT clauses are unchanged.",
+      "evidence": [
+        "independent/fixtures/world-new-current-production.json",
+        "tests/independent-rb07-production-view.test.ts",
+        "independent/domain-production-view.log"
+      ]
+    },
+    "current": "Descriptor-present positive and descriptor-absent/mismatching safe rejection separately executed; content-only registry is never self-hashed into authorization."
+  },
+  "environment": {
+    "os": "Debian13.6/Linux6.18.44 x86_64",
+    "node": "24.19.0",
+    "vitest": "5.0.3",
+    "browser": "Chromium151.0.7922.173",
+    "executable": "/usr/bin/chromium",
+    "viewport": "1024x768",
+    "ports": "Vite5359/preview5361 stopped",
+    "database": "normal App: native IndexedDB; component: fake-indexeddb",
+    "files": "Authored PCM/video fixtures; safe native rendering/decode. File delivery controlled, not actual OS Files or microphone recording."
+  },
+  "originalContracts": {
+    "extract": "independent/ORIGINAL_CONTRACTS.json",
+    "requirements": 10,
+    "cases": 12,
+    "tasks": 6,
+    "allGivenWhenThenNegativeRetained": true,
+    "historicalRegistry": "planned/not_run unchanged; no baseline count treated as current completion"
+  },
+  "harnessHistory": [
+    {
+      "directory": "independent/reviewer-ts-setup1",
+      "classification": "reviewer TypeScript compile setup error; not product regression",
+      "detail": "New independent test accessed nonexistent TrialSession.graphId. First Vitest run passed at runtime with undefined graphId but reviewer test blocked build. Kept original source/build log/early preview log. Removed undefined graphId only, preserving fixed input and expectation; repeat D26 and build passed. No production browser run before successful build."
+    }
+  ],
+  "historicalNegativeEvidence": [
+    {
+      "directory": "/tmp/shinariokanri-independent-rb07-5651747",
+      "reportSha256": "0b8010ca41033f25eb1fa2b0f2e0e2eb998f2b07bac0fbaeda1736e0d0d759f7",
+      "artifactCount": 107,
+      "allArtifactsUnchanged": true
+    },
+    {
+      "directory": "/tmp/shinariokanri-independent-rb07-92181f1",
+      "reportSha256": "4ff31048502e7f6f6d479942175e49533f7064bc78d67624cbc9a81351b6d599",
+      "artifactCount": 64,
+      "allArtifactsUnchanged": true
+    },
+    {
+      "directory": "/tmp/shinariokanri-independent-rb07-7ca2311",
+      "reportSha256": "92b65b583adba206ce42c6f7987b964795bf64bbabc0688d50d7950319002274",
+      "artifactCount": 79,
+      "allArtifactsUnchanged": true
+    },
+    {
+      "directory": "/tmp/shinariokanri-independent-rb07-8e60239",
+      "reportSha256": "90f5e644bcb9e2a35630128233043214a75544474a77159b8a67da8e2c32482d",
+      "artifactCount": 98,
+      "allArtifactsUnchanged": true
+    },
+    {
+      "directory": "/tmp/shinariokanri-independent-rb07-1b7b508",
+      "reportSha256": "1187500088167f5d76df09e42212a4dc5461b051fb433db8e4631a1847b8aa0b",
+      "artifactCount": 109,
+      "allArtifactsUnchanged": true
+    },
+    {
+      "directory": "/tmp/shinariokanri-independent-rb07-297f19a",
+      "reportSha256": "d93c363b9ffa8b88b92e3cc2659cace3f3821c0f1f3931bb6638ba1994071cab",
+      "artifactCount": 75,
+      "allArtifactsUnchanged": true
+    },
+    {
+      "directory": "/tmp/shinariokanri-independent-rb07-39079f4",
+      "reportSha256": "413b6a8dd36cc0ed84950dd7b5236fe5e016034ced6f8c319ee386c008a79b1b",
+      "artifactCount": 128,
+      "allArtifactsUnchanged": true
+    },
+    {
+      "directory": "/tmp/shinariokanri-independent-rb07-28eccca",
+      "reportSha256": "54dce55c4806237a3143e746aadcaa06e48f88c6bcb2ff6deb4fa75eafffa49c",
+      "artifactCount": 144,
+      "allArtifactsUnchanged": true
+    }
+  ],
+  "unexecuted": [
+    "Full original104requirements/116acceptance/24steps/6regressions, whole RB07 and E08/E12 total acceptance remain ungraded.",
+    "All source form/large materials/rights combinations, complete public/projection/translation languages and every voice/route/scoped finite exception not wholly exercised.",
+    "Real iPhone/iPad Safari/Chrome/PC OS browser matrix, physical Files picker, physical recording, IME, rotation, VoiceOver/NVDA/200% text remain unexecuted.",
+    "Standard/Large 30-sample p95, real quota/2hour offline/update behavior and actual Auth/API/private Storage/sync remain unexecuted.",
+    "CAP-R1 ordinary UI trigger was not independently reproduced; concrete direct asynchronous API boundary only."
+  ],
+  "productRepositoryWrites": false,
+  "evidenceBinding": "SOURCE_COMMIT_BINDING169src/15originaldocs/4legacyhashonly/12unchanged independent input bytes; ARTIFACT_BINDING actual download/restoration/source/raw/dist, raw trailing whitespace preserved."
+}

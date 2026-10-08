@@ -1,3 +1,5 @@
+RB07局所候補 `11cffa7aa3bfbc96c9ee0087ad1e03e797fb1dfc` / tree `343c6a53058fbbf26936bf5e434c42e26a7b1f0e` は[制作運用](RB07_PRODUCTION.md)を通常操作→原子保存→再読込/完全復元へ接続。686単体/保存・61 production Chromium153・Python15・build/docs/plan/schema、独立31部品＋fixture1・実ファイルnew/clone1・App15・production3が成功。[11候補の旧負例](../quality/current-review/evidence/rb07-production/candidate-history.json)を保持し、系統対応/演出/旧話者/再利用/旧世界pin/関係引用/経路条件/await前captureを補修した。原116全体・実端末Files/録音/支援技術/長時間/実APIは未実行、RB08全profile/ゲームは後続。
+
 RB06の局所候補 `d64fd7dc1d14ab228511828ac6e72664dd31fdf7` / tree `07c6a8a8184d496652a24b9e790ee838ecf60058` は[完全保存・履歴・移行](RB06_RECOVERY.md)を通常操作→原子保存→再読込/復元へ接続した。664単体/保存、58 production Chromium153、Python15、build/docs/plan/schemaと独立17部品・11通常App・native移行1・production4が成功。旧負例・保存後の画面/後発ファイル/clear順序の補修を[候補履歴](../quality/current-review/evidence/rb06-recovery/candidate-history.json)へ保持。実OS Files/実端末/更新/長時間/実Authと全116最終受入は未実行。
 
 RB05第4追加は [提示順・未回収・開始版移行・再確認](RB05_NARRATIVE_RECONFIRMATION.md) を参照。提示効果前の観測、体験上の期限、固定checkpointの明示移行、旧証跡を残す改訂稿再確認、固定借用の同一graph/章文脈を通常保存へ接続した。子graphの呼出し/復帰と、作品別の試読・保存待ち・失敗経路を画面移動から保持する。原116受入と公開出力/RB06〜RB10、実端末/実権限の完成条件は保持する。
