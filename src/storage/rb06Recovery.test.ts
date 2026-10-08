@@ -25,6 +25,18 @@ async function basic(db: ScenarioStore, name = '復元元') { const p = createPr
 function mapping(source: ProjectData, target: ProjectData) { return Object.fromEntries(collectImportIds(source).map(item => [item.id, item.id === source.projectId ? target.projectId : newId()])); }
 
 describe('RB06 complete recovery and arbitrary historical selection', () => {
+  it('preserves a declared item ID shared with runtime inventories through enumeration and clone recovery', async () => {
+    const p = JSON.parse(readFileSync('tests/fixtures/rb05-reader-editions.json', 'utf8')).project as ProjectData;
+    const prepared = await inspectScenario(await exportScenario(p), { worker: false });
+    const item = p.entities.find(entity => entity.kind === 'item')!;
+    expect(collectImportIds(prepared.project).filter(row => row.id === item.id)).toEqual([{ id: item.id, role: 'entity:item' }]);
+    const db = open(), restored = await db.importScenario(prepared, { mode: 'clone' });
+    const mappedItem = restored.idMap![item.id], trace = restored.project.entities.find(entity => entity.kind === 'trace')!;
+    expect(trace.kind).toBe('trace');
+    const archive = await inspectScenario(await db.exportProject(restored.project.projectId), { worker: false });
+    expect(collectImportIds(archive.project).filter(row => row.id === mappedItem)).toEqual([{ id: mappedItem, role: 'entity:item' }]);
+    expect(archive.project.entities.find(entity => entity.id === mappedItem)?.kind).toBe('item');
+  });
   it('exports content, history and pending from one read image when another save completes during packaging', async () => {
     const db = open(), original = await basic(db), digest = crypto.subtle.digest.bind(crypto.subtle);
     let release!: () => void, entered!: () => void, hold = true;

@@ -32,6 +32,7 @@ export interface CrossProjectImportPlan {
 export function collectImportIds(project: ProjectData): ImportId[] {
   const found = new Map<string, ImportId>();
   const bindings: { id: string; ownerId: string }[] = [];
+  const runtimeItems = new Set<string>();
   const add = (id: string, role: ImportIdRole, ownerId?: string) => {
     const old = found.get(id);
     if (old && (old.role !== role || old.ownerId !== ownerId)) throw new StorageError('IMPORT_CONFLICT', '同じIDが別の種別・所有者で使われています。', id);
@@ -45,7 +46,7 @@ export function collectImportIds(project: ProjectData): ImportId[] {
       const role: ImportIdRole = 'kind' in record && 'text' in record ? 'block' : 'audienceHolderIds' in record ? 'alias' : 'eventKey' in record ? 'trigger' : 'x' in record && 'y' in record ? 'map_pin' : (() => { throw new StorageError('IMPORT_CONFLICT', '未対応の埋込IDです。', record.id as string); })();
       add(record.id, role, ownerId);
     }
-    if (typeof record.instanceId === 'string' && 'quantity' in record && 'consumed' in record) add(record.instanceId, 'runtime_item');
+    if (typeof record.instanceId === 'string' && 'quantity' in record && 'consumed' in record) runtimeItems.add(record.instanceId);
     if (record.mode === 'anonymize' && typeof record.publicId === 'string') add(record.publicId, 'public_id');
     for (const [key, item] of Object.entries(record)) {
       if (key === 'publicIds' && item && typeof item === 'object') for (const id of Object.values(item)) if (typeof id === 'string') add(id, 'public_id');
@@ -73,6 +74,9 @@ export function collectImportIds(project: ProjectData): ImportId[] {
   };
   state(project);
   for (const command of project.history) { add(command.operationId, 'operation'); state(command.before); state(command.after); }
+  // Declared individual items and aggregate type quantities use their entity ID in runtime.
+  // Generated instances own independent IDs; they must still reject other roles.
+  for (const id of runtimeItems) if (found.get(id)?.role !== 'entity:item') add(id, 'runtime_item');
   for (const binding of bindings) if (!found.has(binding.id)) add(binding.id, 'reuse_binding', binding.ownerId);
   return [...found.values()];
 }
