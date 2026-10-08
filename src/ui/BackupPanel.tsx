@@ -24,7 +24,7 @@ function update(key: string, patch: Partial<Draft>, persist = false) {
 }
 const subscribe = (listener: () => void) => { listeners.add(listener); return () => listeners.delete(listener); };
 
-export function BackupPanel({ project, projects, onImported }: { project: ProjectData | null; projects: ProjectData[]; onImported: (project: ProjectData) => void }) {
+export function BackupPanel({ project, projects, onImported }: { project: ProjectData | null; projects: ProjectData[]; onImported: (project: ProjectData, intent?: { followSelection: boolean }) => void }) {
   const key = project?.projectId ?? 'library';
   const draft = useSyncExternalStore(subscribe, () => load(key));
   const [query, setQuery] = useState('');
@@ -61,7 +61,8 @@ export function BackupPanel({ project, projects, onImported }: { project: Projec
     const value = load(key);
     if (value.saved && projects.some(candidate => candidate.projectId === value.saved!.projectId && BigInt(candidate.revision) >= BigInt(value.saved!.revision))) {
       update(key, { busy: false, saved: undefined, prepared: undefined, preview: undefined, checked: false, notice: '検査した作品を端末内に復元しました。保存した版を確認しました。' });
-      void (writes.get(key) ?? Promise.resolve()).catch(() => {}).then(() => scenarioStore.clearImportDraft(key)).catch(cause => update(key, { error: `復元済みの入力を消去できませんでした。${(cause as Error).message}` }));
+      const clear = (writes.get(key) ?? Promise.resolve()).catch(() => {}).then(() => scenarioStore.clearImportDraft(key)).catch(cause => update(key, { error: `復元済みの入力を消去できませんでした。${(cause as Error).message}` }));
+      writes.set(key, clear);
     }
   }, [key, projects]);
   useEffect(() => { if (!draft.busy && draft.ready) { const file = queuedFiles.get(key); if (file) { queuedFiles.delete(key); void inspect(file); } } }, [key, draft.busy, draft.ready]);
@@ -91,7 +92,7 @@ export function BackupPanel({ project, projects, onImported }: { project: Projec
     const request = load(key); if (request.busy || !request.prepared || !request.preview || !request.checked || blocked) return;
     update(key, { busy: true, error: '', progress: '確認した内容を原子保存中…' });
     const controller = new AbortController(); update(key, { controller });
-    try { const result = await scenarioStore.importScenario(request.prepared, { mode: request.mode, targetProjectId: ['replace', 'merge', 'mapped_merge'].includes(request.mode) ? request.targetProjectId : undefined, baseRevision: request.preview.target?.revision, idMap: request.idMap, resolutions: request.resolutions, confirmationHash: request.preview.confirmationHash, signal: controller.signal }); update(key, { saved: { projectId: result.project.projectId, revision: result.project.revision }, controller: undefined, progress: '保存した版の表示を待っています…' }); onImported(result.project); }
+    try { const result = await scenarioStore.importScenario(request.prepared, { mode: request.mode, targetProjectId: ['replace', 'merge', 'mapped_merge'].includes(request.mode) ? request.targetProjectId : undefined, baseRevision: request.preview.target?.revision, idMap: request.idMap, resolutions: request.resolutions, confirmationHash: request.preview.confirmationHash, signal: controller.signal }); update(key, { saved: { projectId: result.project.projectId, revision: result.project.revision }, controller: undefined, progress: '保存した版の表示を待っています…' }); onImported(result.project, { followSelection: !queuedFiles.has(key) }); }
     catch (cause) { update(key, { busy: false, controller: undefined, progress: '', error: (cause as Error).message }); }
   }
   async function exportBackup(full = true) {
