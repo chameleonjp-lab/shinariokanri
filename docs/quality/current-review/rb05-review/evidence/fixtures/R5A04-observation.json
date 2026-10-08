@@ -1,0 +1,145 @@
+{
+  "expected": "finite three-visit path reaches terminal without UNBOUNDED_LOOP",
+  "actual": {
+    "status": "unknown",
+    "findings": [
+      {
+        "status": "unknown",
+        "code": "UNBOUNDED_LOOP",
+        "message": "同じ状態へ戻る経路があります。無制限の反復は未確認です。",
+        "targetId": "f588f978-845c-4b03-af6d-ab841e7ea832",
+        "path": [
+          "f588f978-845c-4b03-af6d-ab841e7ea832",
+          "f588f978-845c-4b03-af6d-ab841e7ea832"
+        ],
+        "edgePath": [
+          [
+            "312557dc-e161-4f2b-afc4-9b42e681300f"
+          ]
+        ],
+        "startState": {
+          "contentVersionId": "f42553cb-259d-453e-bf93-5377ab9e40fb",
+          "variableValues": {
+            "70e29381-dbe8-4dd7-81be-fd0a3594ac63": {
+              "type": "boolean",
+              "value": false
+            }
+          },
+          "itemInstances": [],
+          "assertions": [],
+          "seenIds": [
+            "f588f978-845c-4b03-af6d-ab841e7ea832",
+            "5d210dc4-c47d-4936-950e-0749473a9819"
+          ],
+          "visitCounts": {
+            "f588f978-845c-4b03-af6d-ab841e7ea832": 1,
+            "5d210dc4-c47d-4936-950e-0749473a9819": 1
+          },
+          "onceTriggers": [],
+          "rngSeed": "scenario-1",
+          "rngPosition": 0,
+          "callStack": [],
+          "presentationPosition": "f588f978-845c-4b03-af6d-ab841e7ea832",
+          "loopNumber": 0,
+          "provenance": "full_play"
+        }
+      },
+      {
+        "status": "candidate",
+        "code": "NOT_REACHED_IN_CHECKED_SCOPE",
+        "message": "指定した開始状態と確認範囲では到達を見つけていません。到達不能の断定ではありません。",
+        "targetId": "875b5e35-45ab-4f4a-b8be-2fb5584e8b25",
+        "path": [],
+        "startState": {
+          "contentVersionId": "f42553cb-259d-453e-bf93-5377ab9e40fb",
+          "variableValues": {
+            "70e29381-dbe8-4dd7-81be-fd0a3594ac63": {
+              "type": "boolean",
+              "value": false
+            }
+          },
+          "itemInstances": [],
+          "assertions": [],
+          "seenIds": [
+            "f588f978-845c-4b03-af6d-ab841e7ea832",
+            "5d210dc4-c47d-4936-950e-0749473a9819"
+          ],
+          "visitCounts": {
+            "f588f978-845c-4b03-af6d-ab841e7ea832": 1,
+            "5d210dc4-c47d-4936-950e-0749473a9819": 1
+          },
+          "onceTriggers": [],
+          "rngSeed": "scenario-1",
+          "rngPosition": 0,
+          "callStack": [],
+          "presentationPosition": "f588f978-845c-4b03-af6d-ab841e7ea832",
+          "loopNumber": 0,
+          "provenance": "full_play"
+        }
+      }
+    ],
+    "coverage": {
+      "scenes": {
+        "reached": 1,
+        "total": 2,
+        "ids": [
+          "5d210dc4-c47d-4936-950e-0749473a9819"
+        ],
+        "excluded": 0,
+        "unknown": 0
+      },
+      "dialogue": {
+        "reached": 0,
+        "total": 0,
+        "ids": [],
+        "excluded": 0,
+        "unknown": 0
+      },
+      "choices": {
+        "reached": 0,
+        "total": 2,
+        "ids": [],
+        "excluded": 0,
+        "unknown": 0
+      },
+      "conditions": {
+        "reached": 3,
+        "total": 8,
+        "ids": [
+          "f588f978-845c-4b03-af6d-ab841e7ea832:true",
+          "0d0d2fa6-f062-414e-be24-7c930f502d4f:false",
+          "312557dc-e161-4f2b-afc4-9b42e681300f:true"
+        ],
+        "excluded": 0,
+        "unknown": 0
+      },
+      "provenance": "full_play",
+      "scope": "指定した作品版の場面、台詞、choice edge、明示gate/edge条件の真偽。途中開始とstubは別集計が必要です。"
+    },
+    "checkedStates": 1,
+    "limits": {
+      "maxStates": 100000,
+      "maxTransitions": 10000,
+      "maxMs": 30000
+    },
+    "truncated": false,
+    "contentVersionId": "f42553cb-259d-453e-bf93-5377ab9e40fb",
+    "contentRevision": "0",
+    "targetIds": [
+      "f588f978-845c-4b03-af6d-ab841e7ea832",
+      "875b5e35-45ab-4f4a-b8be-2fb5584e8b25"
+    ],
+    "entryIds": [
+      "f588f978-845c-4b03-af6d-ab841e7ea832"
+    ],
+    "declaredEntryIds": [
+      "f588f978-845c-4b03-af6d-ab841e7ea832"
+    ],
+    "assumptions": [
+      "全宣言入口の初期状態からの有限探索。未到達は到達不能の証明ではありません。",
+      "外部値を補いません。明示トリガーは宣言した入力が与えられる場合だけを確認します。",
+      "visitedは宣言した閾値まで状態に含めます。同状態の無制限ループは未確認です。"
+    ]
+  },
+  "manualFinalStatus": "terminal"
+}

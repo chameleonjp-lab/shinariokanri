@@ -1,0 +1,98 @@
+
+ RUN  v5.0.3 /tmp/shinariokanri-independent-rb05-20261008-2
+
+ × tests/independent-rb05-persistence-boundaries.test.ts > Independent RB05 new persistence and evidence boundaries > R5B01 actual candidate label cannot become principal checked evidence 21ms
+   → expected 1 to be +0 // Object.is equality
+ × tests/independent-rb05-persistence-boundaries.test.ts > Independent RB05 new persistence and evidence boundaries > R5B01 mixed candidate label cannot become principal checked evidence 7ms
+   → expected 1 to be +0 // Object.is equality
+ × tests/independent-rb05-persistence-boundaries.test.ts > Independent RB05 new persistence and evidence boundaries > R5B02 an arbitrary mid-node start saves a consistent partial observation provenance 7ms
+   → [{"code":"VALIDATION_FAILED","path":"project.entities[9].data.presentationState","message":"提示前の観測状態と開始点・対象版・由来が一致しません。"}]: expected false to be true // Object.is equality
+ × tests/independent-rb05-persistence-boundaries.test.ts > Independent RB05 new persistence and evidence boundaries > R5B03 chapter occurrence captures the same pre-effect state and verifies it after pinning 7ms
+   → expected undefined to deeply equal { type: 'boolean', value: false }
+ × tests/independent-rb05-persistence-boundaries.test.ts > Independent RB05 new persistence and evidence boundaries > R5B04 chapter replay refuses a forged optional pre-presentation observation 14ms
+   → expected false to be true // Object.is equality
+ ✓ tests/independent-rb05-persistence-boundaries.test.ts > Independent RB05 new persistence and evidence boundaries > R5P03 flow step replay refuses a forged pre-presentation observation without changing canonical data 8ms
+ ✓ tests/independent-rb05-persistence-boundaries.test.ts > Independent RB05 new persistence and evidence boundaries > R5P04 initial pre-effect observation survives archive, clone and foreshadow re-evaluation 49ms
+ × tests/independent-rb05-persistence-boundaries.test.ts > Independent RB05 new persistence and evidence boundaries > R5B06 an explicitly stubbed opening keeps stub provenance when its saved checkpoint is replayed 15ms
+   → 保存した開始状態と経路の直前状態が一致しません。: expected 'error' to be 'terminal' // Object.is equality
+ ✓ tests/independent-rb05-persistence-boundaries.test.ts > Independent RB05 new persistence and evidence boundaries > R5B05 executable projection cannot remove a present scene dialogue dependency 9ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/independent-rb05-persistence-boundaries.test.ts > Independent RB05 new persistence and evidence boundaries > R5B01 actual candidate label cannot become principal checked evidence
+ FAIL  tests/independent-rb05-persistence-boundaries.test.ts > Independent RB05 new persistence and evidence boundaries > R5B01 mixed candidate label cannot become principal checked evidence
+AssertionError: expected 1 to be +0 // Object.is equality
+
+- Expected
++ Received
+
+- 0
++ 1
+
+ ❯ tests/independent-rb05-persistence-boundaries.test.ts:22:257
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  tests/independent-rb05-persistence-boundaries.test.ts > Independent RB05 new persistence and evidence boundaries > R5B02 an arbitrary mid-node start saves a consistent partial observation provenance
+AssertionError: [{"code":"VALIDATION_FAILED","path":"project.entities[9].data.presentationState","message":"提示前の観測状態と開始点・対象版・由来が一致しません。"}]: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ tests/independent-rb05-persistence-boundaries.test.ts:27:366
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+ FAIL  tests/independent-rb05-persistence-boundaries.test.ts > Independent RB05 new persistence and evidence boundaries > R5B03 chapter occurrence captures the same pre-effect state and verifies it after pinning
+AssertionError: expected undefined to deeply equal { type: 'boolean', value: false }
+
+- Expected:
+{
+  "type": "boolean",
+  "value": false,
+}
+
++ Received:
+undefined
+
+ ❯ tests/independent-rb05-persistence-boundaries.test.ts:32:252
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯
+
+ FAIL  tests/independent-rb05-persistence-boundaries.test.ts > Independent RB05 new persistence and evidence boundaries > R5B04 chapter replay refuses a forged optional pre-presentation observation
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ tests/independent-rb05-persistence-boundaries.test.ts:40:296
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/6]⎯
+
+ FAIL  tests/independent-rb05-persistence-boundaries.test.ts > Independent RB05 new persistence and evidence boundaries > R5B06 an explicitly stubbed opening keeps stub provenance when its saved checkpoint is replayed
+AssertionError: 保存した開始状態と経路の直前状態が一致しません。: expected 'error' to be 'terminal' // Object.is equality
+
+Expected: "terminal"
+Received: "error"
+
+ ❯ tests/independent-rb05-persistence-boundaries.test.ts:56:290
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/6]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  6 failed | 3 passed (9)
+   Start at  03:43:29
+   Duration  751ms (transform 64%, tests 21%, import 15%, worker 1%)
+

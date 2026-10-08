@@ -34,6 +34,7 @@ export function validateReadingTraceRecord(content: ProjectData, trace: TraceDat
     if (!replay.ok) for (const issue of replay.issues) issues.push({ ...issue, path: `${path}.${current}.${issue.path}` });
     else {
       if (canonicalJson(replay.state) !== canonicalJson(occurrence.after)) fail(`${current}.after`, '記録した提示後の状態と共通エンジンの結果が一致しません。', 'INTEGRITY_FAILED');
+      if (occurrence.presentationState && canonicalJson(replay.observationState) !== canonicalJson(occurrence.presentationState)) fail(`${current}.presentationState`, '提示前の観測状態と共通エンジンの結果が一致しません。', 'INTEGRITY_FAILED');
       if (canonicalJson(replay.conditions) !== canonicalJson(occurrence.conditionResults)) fail(`${current}.conditionResults`, '提示時の条件根拠が不足・重複・矛盾しています。', 'INTEGRITY_FAILED');
     }
     expected = occurrence.after;

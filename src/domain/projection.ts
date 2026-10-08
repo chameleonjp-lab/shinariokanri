@@ -60,7 +60,7 @@ export const PROJECTION_FIELDS: Readonly<Partial<Record<EntityKind, Readonly<Rec
   item: { itemMode: oneOf('type', 'instance'), typeId: ref, body: rich },
   note: { body: rich, attachmentIds: refs },
   chapter: { sceneIds: refs, summary: rich },
-  scene: { summary: rich, body: rich, eventIds: refs, chapterId: ref, threadIds: refs, povId: ref, blockIds: refs, tension: number, importance: number },
+  scene: { summary: rich, body: rich, eventIds: refs, dialogueLineIds: refs, chapterId: ref, threadIds: refs, povId: ref, blockIds: refs, tension: number, importance: number },
   goal: { ownerId: ref, description: rich, changes: refs, evidenceSceneIds: refs },
   flow_node: { nodeType: oneOf('scene', 'choice', 'automatic', 'call', 'entry', 'exit', 'terminal'), sceneId: ref, childGraphId: ref, terminalReason: text, trigger: { type: 'trigger' }, gate: condition, executionPolicy: oneOf('manual_choice', 'first_match', 'all_match'), fallbackId: ref, shownInformationIds: refs },
   flow_edge: { fromId: ref, toId: ref, edgeType: oneOf('choice', 'automatic', 'call_return'), label: text, condition, effectIds: refs, priority: number, choiceLineId: ref },

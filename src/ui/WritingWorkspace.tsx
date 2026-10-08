@@ -18,6 +18,8 @@ import {
   type StructureTemplate,
 } from '../domain/writingWorkspace';
 import { createEntity, KIND_LABELS, newId } from '../domain/model';
+import { NarrativeClaims } from './NarrativeClaims';
+import { DialoguePresentation } from './DialoguePresentation';
 import { backChapterReading, pinChapterReadingRecord, presentNextChapterScene, replayChapterReading, startChapterReading, type ChapterReadingSession } from '../domain/presentation';
 import { jsonBytes, sha256 } from '../storage/json';
 import { fieldText } from './components';
@@ -286,7 +288,7 @@ export function ChapterReadingView({ project, chapterIds, scenePath, currentVers
     setBusy(true); setError(''); setNotice('');
     try {
       const checkpointId = newId(), snapshotId = newId();
-      const record = pinChapterReadingRecord(session, { checkpointId, snapshotId });
+      const record = pinChapterReadingRecord(session, { checkpointId, snapshotId }, project);
       const checkpoint = { ...createEntity(project.projectId, 'checkpoint', `章読み通しの開始状態 · ${new Date().toLocaleString('ja-JP')}`, record.checkpoint), id: checkpointId };
       const trace = createEntity(project.projectId, 'trace', `章読み通し経路 · ${session.occurrences.length}場面`, record.trace);
       const snapshot: ProjectSnapshot = { id: snapshotId, content: record.content, contentHash: await sha256(jsonBytes(record.content)), createdAt: new Date().toISOString(), versionLabel: `章読み通しの固定版 ${session.contentRevision}` };
@@ -358,7 +360,9 @@ export function ChapterReadingView({ project, chapterIds, scenePath, currentVers
         <header><span>{session.occurrences.length}回目の提示 · {session.occurrences.at(-1)?.occurrenceId}</span>{onOpenEntity || onOpenTarget ? <button type="button" className="text-button" onClick={() => openReadingEntity(presentedScene.id, session.contentVersionId)} disabled={session.contentVersionId !== project.projectId && !onOpenTarget}>{presentedScene.name || '名称未設定の場面'}{session.contentVersionId !== project.projectId ? 'の固定版を開く' : 'を編集'}</button> : <span>{presentedScene.name || '名称未設定の場面'}</span>}</header>
         <div className="reading-summary"><strong>要約</strong><RichTextView value={presentedScene.data.summary} vertical={vertical} onOpenTarget={onOpenEntity || onOpenTarget ? anchor => openReadingTarget(anchor, session.contentVersionId) : undefined}/></div>
         <div className="reading-body"><strong>本文</strong><RichTextView value={presentedScene.data.body} vertical={vertical} onOpenTarget={onOpenEntity || onOpenTarget ? anchor => openReadingTarget(anchor, session.contentVersionId) : undefined}/></div>
+        <DialoguePresentation key={presentedScene.id} project={session.content} lineIds={presentedScene.data.dialogueLineIds ?? []} vertical={vertical} onOpenTarget={anchor => openReadingTarget(anchor, session.contentVersionId)}/>
       </article>}
+      {(onOpenEntity || onOpenTarget) && <NarrativeClaims project={session.content} state={session.state} onOpenTarget={anchor => openReadingTarget(anchor, session.contentVersionId)}/>}
       <div className="reference-controls">
         <button type="button" className="button primary small" disabled={busy || stale || session.status !== 'ready'} onClick={presentNext}>{session.status === 'terminal' ? '全場面を提示しました' : '次の場面を提示'}</button>
         <button type="button" className="button secondary small" disabled={busy || !session.occurrences.length} onClick={goBack}>一場面戻る</button>

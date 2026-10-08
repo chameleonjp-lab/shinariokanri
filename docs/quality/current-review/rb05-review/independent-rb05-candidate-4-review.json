@@ -1,0 +1,329 @@
+{
+  "kind": "independent_RB05_candidate_4_reverification",
+  "reviewed_at_utc": "2026-10-08T03:57:05.966370+00:00",
+  "completion_decision": "not_complete",
+  "candidate": {
+    "snapshot": "independent-rb05-20261008-4",
+    "commit": null,
+    "tree": null,
+    "source_files": 143,
+    "source_manifest": "evidence/candidate-4/source-hashes.json",
+    "note": "Immutable copied source; commit binding pending. Results do not apply to later edits without hash verification."
+  },
+  "base_commit": "f077c9ec916a8a78acf4d6bd2d6e9cb92db60dc6",
+  "original_contracts_file": "original-rb05-contracts.json",
+  "original_whole_acceptance_status": "not_run",
+  "original_conditions_changed": 0,
+  "previous_candidate_evidence_changed": false,
+  "resolved_previous_findings": [
+    "R5A01",
+    "R5A03",
+    "R5A04",
+    "R5A05",
+    "R5A06",
+    "R5A07",
+    "R5B01",
+    "R5B02",
+    "R5B03",
+    "R5B06",
+    "R5C01"
+  ],
+  "note_companion_tests": "R5A02 and R5B04 also pass; they are companion tests of R5A01 and R5B03.",
+  "environment": {
+    "node": "v24.19.0",
+    "vitest": "5.0.3",
+    "os": "Debian GNU/Linux 13.6 (trixie), Linux 6.18.44 x86_64",
+    "storage_runtime": "fake IndexedDB; actual native archive, cloning, and shared runtime code",
+    "browser": "not_run_in_independent_candidate_4_review"
+  },
+  "executed": [
+    {
+      "kind": "independent_previous_correct_expected_contracts",
+      "passed": 9,
+      "failed": 0,
+      "log": "evidence/candidate-4/independent-review.log"
+    },
+    {
+      "kind": "independent_persistence_and_evidence_boundaries",
+      "passed": 9,
+      "failed": 0,
+      "log": "evidence/candidate-4/independent-review.log"
+    },
+    {
+      "kind": "unchanged_historical_baseline_native_files",
+      "passed": 2,
+      "failed": 0,
+      "log": "evidence/candidate-4/independent-review.log"
+    },
+    {
+      "kind": "independent_native_restore_clone_and_evidence_boundaries",
+      "passed": 3,
+      "failed": 1,
+      "log": "evidence/candidate-4/independent-review.log",
+      "source": "evidence/candidate-4/independent-native-roundtrip.ts"
+    }
+  ],
+  "findings": [
+    {
+      "id": "R5C02",
+      "test_ids": [
+        "R5P08"
+      ],
+      "severity": "medium",
+      "requirements": [
+        "REQ-B16",
+        "REQ-F17",
+        "REQ-N19"
+      ],
+      "review_items": [
+        "RV14",
+        "RV16"
+      ],
+      "files": [
+        "src/domain/regressionPaths.ts"
+      ],
+      "title": "旧章traceの未記録optional観測が宣言経路の一致を妨げる",
+      "expected": "元fixtureを変更せず、旧宣言にない追加任意欄は旧記録の比較欄へ正規化する。存在する偽観測は拒否し、partial別集計の1/1と主checked=0を保つ。",
+      "actual": "3099c9dの任意presentationStateなし章traceを宣言集合へ追加し再生するとterminalだが、再生成した観測欄がreadingPath比較を不一致にしpartial.checked=0/1。",
+      "status": "open_in_candidate_4",
+      "source_hashes": [
+        {
+          "file": "src/domain/regressionPaths.ts",
+          "sha256": "08717493ddfb866f58ffaf7987fc3fca130827cf02165dda8bc677c49ca045c1"
+        }
+      ]
+    }
+  ],
+  "positive_new_results": [
+    {
+      "id": "R5P06",
+      "status": "passed",
+      "behavior": "explicit stub opening remains stub through two native roundtrips and clone; principal checked remains0 while matching stub bucket is1/1"
+    },
+    {
+      "id": "R5P07",
+      "status": "passed",
+      "behavior": "native export refuses forged chapter pre-presentation state without mutating source"
+    },
+    {
+      "id": "R5P05",
+      "status": "passed",
+      "behavior": "chapter observation, line and paragraph IDs, opaque occurrenceId, fixed version, and partial-only coverage survive native restore and clone"
+    }
+  ],
+  "remaining_conditions": "Original 26 RB05 requirements and all 116 AT remain whole-case not_run. RV11 hierarchy/reference/override; typed partial-start UI; short reactions; complete foreshadow policy/deadline/reconfirmation; changed regression declaration reconfirmation; all truth/presentation comparisons; required real devices, assistive technology, performance and real authorization remain separate completion conditions. Targeted tests do not satisfy whole AT.",
+  "artifact_hashes": [
+    {
+      "file": "evidence/candidate-4/fixtures/boundary-R5B01-actual-observation.json",
+      "sha256": "ff7c7784965ec00a0b328dab628d579924efb4508f3c8d87c59a0c8d5627f152"
+    },
+    {
+      "file": "evidence/candidate-4/fixtures/boundary-R5B01-actual-project.json",
+      "sha256": "f0edb531e6990dc97dc438d98b3c887dfebc18f09205857df999385601d69694"
+    },
+    {
+      "file": "evidence/candidate-4/fixtures/boundary-R5B01-mixed-observation.json",
+      "sha256": "c7228480dae5d14f9d0ac2aa41cf6733e1750bf0cc9554f12814f5659f4c5e77"
+    },
+    {
+      "file": "evidence/candidate-4/fixtures/boundary-R5B01-mixed-project.json",
+      "sha256": "bd4ae987cfd045bcbc00cd9139e9d1c0bee46b0d61c4cbb99868fc35e62f3f73"
+    },
+    {
+      "file": "evidence/candidate-4/fixtures/boundary-R5B02-observation.json",
+      "sha256": "2af9f6253125081f4d1655ba70f51a45c68ef97f23210562503ef398a6628f83"
+    },
+    {
+      "file": "evidence/candidate-4/fixtures/boundary-R5B02-project.json",
+      "sha256": "ea039ebae26a4316c6a4ca77e189fae3e95e19cfd010968fa2b9ae9218bf0d5f"
+    },
+    {
+      "file": "evidence/candidate-4/fixtures/boundary-R5B03-observation.json",
+      "sha256": "e922844f463c7961649384ab7d01f11d768df2a77a26353691e8d7ac57a3ebb5"
+    },
+    {
+      "file": "evidence/candidate-4/fixtures/boundary-R5B03-project.json",
+      "sha256": "67792d15928de97634f5f429f41f8b6ff2a471e856425859ec86a46e1f11eded"
+    },
+    {
+      "file": "evidence/candidate-4/fixtures/boundary-R5B04-observation.json",
+      "sha256": "181ade694a3ade38647013bc932c6838511afc44b107a352278c71a45392241b"
+    },
+    {
+      "file": "evidence/candidate-4/fixtures/boundary-R5B04-project.json",
+      "sha256": "036e18c546b1045eeeb7e0c3fa7f247bd0c928a103d854889571e2105fb80380"
+    },
+    {
+      "file": "evidence/candidate-4/fixtures/boundary-R5B05-observation.json",
+      "sha256": "b98a7eda39fbc52eba3b1e21ce361f094bf823e0800d3e822577451df8451787"
+    },
+    {
+      "file": "evidence/candidate-4/fixtures/boundary-R5B05-project.json",
+      "sha256": "72988dc2c0c526f4a4e25cf764ceb84f8fd752d102a9ff51f2325daa9d350bf8"
+    },
+    {
+      "file": "evidence/candidate-4/fixtures/boundary-R5B06-observation.json",
+      "sha256": "1e0f28fac1f8a17ca4f3f871a0e6090083134fce58e0e3e06467a470a4ea1c73"
+    },
+    {
+      "file": "evidence/candidate-4/fixtures/boundary-R5B06-project.json",
+      "sha256": "c3fffc2d5408577749461d48a35c6d5b6a53e91a8377772b82580dcfdeac1972"
+    },
+    {
+      "file": "evidence/candidate-4/fixtures/boundary-R5P03-observation.json",
+      "sha256": "fad292287b999b17aa9e9b44419578024ae04ff04fa87554cfa9ae8838827c5f"
+    },
+    {
+      "file": "evidence/candidate-4/fixtures/boundary-R5P03-project.json",
+      "sha256": "cbf7b489c13e782206d46dc6bf3e19f7dd8224666e0c6698387b0f030eb69198"
+    },
+    {
+      "file": "evidence/candidate-4/fixtures/boundary-R5P04-observation.json",
+      "sha256": "6ab04ecf8059c0aad1398d5c4c2af96f178c7df58d8ff7bbb9afc824129625e3"
+    },
+    {
+      "file": "evidence/candidate-4/fixtures/boundary-R5P04-project.json",
+      "sha256": "28448f9637ac83e7d762b910f219d8f838adfbf2f32fa112ef0de0440e483ba0"
+    },
+    {
+      "file": "evidence/candidate-4/fixtures/native-R5P05-observation.json",
+      "sha256": "4528719a2dcb61acab176834d52a4dc29ea27e855cb74d1d30713efcbcc00a4b"
+    },
+    {
+      "file": "evidence/candidate-4/fixtures/native-R5P05-project.json",
+      "sha256": "026d49d1a16b2561b7b7beebfe56ea3fcfb5314c3d2c3463f1aebe4ce8cc8004"
+    },
+    {
+      "file": "evidence/candidate-4/fixtures/native-R5P05.scenario",
+      "sha256": "612034570bef12558876b85c2ca420766f8393a67379d88d0103788704ff8fca"
+    },
+    {
+      "file": "evidence/candidate-4/fixtures/native-R5P06-observation.json",
+      "sha256": "5928a2fdd0fa0883eec009521028b77d9740ba662e8bc07f8380857b836da6b1"
+    },
+    {
+      "file": "evidence/candidate-4/fixtures/native-R5P06-project.json",
+      "sha256": "007e785d138a75d9b2496f3d69c996b72ac62ae1c4d22a0654563ccefb7c7722"
+    },
+    {
+      "file": "evidence/candidate-4/fixtures/native-R5P06.scenario",
+      "sha256": "b6bea7c866eed999e6aa06bae17483442bbe171a4ce45133b9cc8dc8d4febe3a"
+    },
+    {
+      "file": "evidence/candidate-4/fixtures/native-R5P07-observation.json",
+      "sha256": "0194730f665e7f497a797f382891daf840b8ebb56aa8f84095d71dc187d71db8"
+    },
+    {
+      "file": "evidence/candidate-4/fixtures/native-R5P07-project.json",
+      "sha256": "cd56e99175809b42e59f7a98ee045f078db5acc8ae1fc1064fde0a14c1c5aa2b"
+    },
+    {
+      "file": "evidence/candidate-4/fixtures/native-R5P08-observation.json",
+      "sha256": "c7d56c482722f03255df08df53f0235b437cde150a70a469a8dc69bdcbe2a5fe"
+    },
+    {
+      "file": "evidence/candidate-4/fixtures/native-R5P08-project.json",
+      "sha256": "f61fd2afc5173dbcc29deb2a33bda3c477ce09c12699fb41aceeaf4428059771"
+    },
+    {
+      "file": "evidence/candidate-4/fixtures/original-R5A01-observation.json",
+      "sha256": "efe7aceec09ea3ad8cc331796cd6fc7cbb6d764f820455b3cc70bc9e43bd57a9"
+    },
+    {
+      "file": "evidence/candidate-4/fixtures/original-R5A01-project.json",
+      "sha256": "ade1f42b926fbf61095027ae78efb1cc20c73c836f552703bd3abb2f427735d9"
+    },
+    {
+      "file": "evidence/candidate-4/fixtures/original-R5A02-observation.json",
+      "sha256": "7e2b860e3730958c8619fe84d52ffd8589fdd1bcc322d88cca7db21b06891181"
+    },
+    {
+      "file": "evidence/candidate-4/fixtures/original-R5A02-project.json",
+      "sha256": "c301bad335c25f213862fd5372deb7574ef187b81e5e9eaa74bff856e987435f"
+    },
+    {
+      "file": "evidence/candidate-4/fixtures/original-R5A03-observation.json",
+      "sha256": "656bdf4c04951832cce11ec23da914c7ac31e7244e861c36d19d883eea9da649"
+    },
+    {
+      "file": "evidence/candidate-4/fixtures/original-R5A03-project.json",
+      "sha256": "ba705780233ad77db38a823ebc1f9f9c58ac13ee06adef1813bec2e30a5c4e14"
+    },
+    {
+      "file": "evidence/candidate-4/fixtures/original-R5A04-observation.json",
+      "sha256": "34aafd89027993e1020b8f8a872570d2140c6efb285db3eca1b801f776eb70d4"
+    },
+    {
+      "file": "evidence/candidate-4/fixtures/original-R5A04-project.json",
+      "sha256": "f7cdd80d4649dd51469c041b04c8ba269045ce4eb035cbbff5a512900d850c4b"
+    },
+    {
+      "file": "evidence/candidate-4/fixtures/original-R5A05-observation.json",
+      "sha256": "af36bae9ff8384a23fb26e9c25930b0fed9cdcf5353b0013d4d1996b1f0dbfac"
+    },
+    {
+      "file": "evidence/candidate-4/fixtures/original-R5A05-project.json",
+      "sha256": "bdca0ea5ef40ea4a84fa1e154ec203a6755a96fdcba4d4c9c5e169b0143971b5"
+    },
+    {
+      "file": "evidence/candidate-4/fixtures/original-R5A06-observation.json",
+      "sha256": "ce41de3e1dc50dec0704769dfd05ff071d5dd11d586232eaad174b9b4899ed40"
+    },
+    {
+      "file": "evidence/candidate-4/fixtures/original-R5A06-project.json",
+      "sha256": "316e775cea5a3f2626ea80b8fb366df1b3c56f47f53eeff4f63f51fc142b383c"
+    },
+    {
+      "file": "evidence/candidate-4/fixtures/original-R5A07-observation.json",
+      "sha256": "c258bf8f67369d6af652e30fada66adb53ddfa6015eef8c0dc36fdef0e99024b"
+    },
+    {
+      "file": "evidence/candidate-4/fixtures/original-R5A07-project.json",
+      "sha256": "eb7b29c323f42b809bdaa982e236419ef967dd2b3adf5f814bc39b6ac82a070b"
+    },
+    {
+      "file": "evidence/candidate-4/fixtures/original-R5P01-observation.json",
+      "sha256": "77b3cdd3311cc6bef633a5b87052326bf205c6113b99ca7a7e2d87772b8395d5"
+    },
+    {
+      "file": "evidence/candidate-4/fixtures/original-R5P01-project.json",
+      "sha256": "ff7973a6ee29e313295262a7f58b383bd0c16ee745aeb02afee78df4ae1b3d74"
+    },
+    {
+      "file": "evidence/candidate-4/fixtures/original-R5P02-observation.json",
+      "sha256": "c712dcd02946f5780c67aa36c043bb54385d0bebfa27167e8c838597bc6a3a0d"
+    },
+    {
+      "file": "evidence/candidate-4/fixtures/original-R5P02-project.json",
+      "sha256": "131307cc8ca1fc6f51f64ade6ed19902945882153c9250707ffcfcdf41db778b"
+    },
+    {
+      "file": "evidence/candidate-4/historical-trace-result.json",
+      "sha256": "2fd8ef222b1a96092b643bee6aa4abca061b451f776dcbca4aa57bbf97241703"
+    },
+    {
+      "file": "evidence/candidate-4/independent-historical-trace.ts",
+      "sha256": "a385cd00d4c3ce3acba57944504041c909aa4ec343b157ddc1ad7fb83ddf812f"
+    },
+    {
+      "file": "evidence/candidate-4/independent-native-roundtrip.ts",
+      "sha256": "4a2e95b6141f4924a2f1de9509bfb84e01f2ed0c4fd2bef9c8aa433431c5200c"
+    },
+    {
+      "file": "evidence/candidate-4/independent-original-contracts.ts",
+      "sha256": "8c16a04c795085b4b725b4943ded6c587b8ce7af1562ee92ed701cac4f3e985f"
+    },
+    {
+      "file": "evidence/candidate-4/independent-persistence-boundaries.ts",
+      "sha256": "eae4de75bb2080a4479999fbf5e8892ec10cedb2d845010821076bcab0188478"
+    },
+    {
+      "file": "evidence/candidate-4/independent-review.log",
+      "sha256": "92a26f1e80f213b5c1dd567b08ed0dd5d71c72f9d7664c554368dee84798f433"
+    },
+    {
+      "file": "evidence/candidate-4/source-hashes.json",
+      "sha256": "822c616ee58156c863835ea410a2cc55c1b78eb2d5c4d9122ae5bdd138694663"
+    }
+  ]
+}
