@@ -1,0 +1,52 @@
+
+> shinariokanri@0.1.0 test:e2e
+> playwright test tests/e2e/rb06-recovery.spec.ts
+
+[WebServer] (node:150531) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 3 tests using 1 worker
+
+(node:150555) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [chromium] › tests/e2e/rb06-recovery.spec.ts:11:1 › 50件より古い版を通常検索し、単体復元と作品全体復元を区別して保存失敗・再入・cold再生する (4.5s)
+  ✓  2 [chromium] › tests/e2e/rb06-recovery.spec.ts:19:1 › 別作品の全ID対応を画面移動・cold再起動から再開し、失敗後に原子統合して元履歴・段落を完全保存する (2.4s)
+  ✘  3 [chromium] › tests/e2e/rb06-recovery.spec.ts:27:1 › 復元保存待ちの後に選んだ資料と作品を保持し、新規復元だけを一覧へ追加する (6.3s)
+
+
+  1) [chromium] › tests/e2e/rb06-recovery.spec.ts:27:1 › 復元保存待ちの後に選んだ資料と作品を保持し、新規復元だけを一覧へ追加する ──────
+
+    Error: expect(locator).toHaveText(expected) failed
+
+    Locator: locator('.workspace-heading h1')
+    Expected: "資料"
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toHaveText" locator('.workspace-heading h1') with timeout 5000ms
+      - waiting for locator('.workspace-heading h1')
+
+
+      29 |   const incoming=createProject('待機中に復元する作品C');await page.locator('input[type=file]').setInputFiles({name:'later.scenario',mimeType:'application/zip',buffer:Buffer.from(await exportScenario(incoming))});await page.getByLabel('復元方法と対象への影響を確認しました').check();
+      30 |   await page.evaluate(()=>{const digest=crypto.subtle.digest.bind(crypto.subtle);let hold=true;crypto.subtle.digest=async(...args:Parameters<SubtleCrypto['digest']>)=>{if(hold){hold=false;(window as any).__rb06ImportHeld=true;await new Promise<void>(resolve=>{(window as any).__releaseRb06Import=resolve;});}return digest(...args);};});
+    > 31 |   await page.getByRole('button',{name:'この内容で復元する',exact:true}).click();await expect.poll(()=>page.evaluate(()=>(window as any).__rb06ImportHeld)).toBe(true);await navigate(page,/^資料/);await expect(page.locator('.workspace-heading h1')).toHaveText('資料');await page.evaluate(()=>(window as any).__releaseRb06Import());
+         |                                                                                                                                                                                                                                             ^
+      32 |   await expect.poll(()=>page.evaluate(async id=>{const databases=await indexedDB.databases();for(const item of databases){if(!item.name)continue;const db=await new Promise<IDBDatabase>((resolve,reject)=>{const request=indexedDB.open(item.name!);request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error);});try{if(db.objectStoreNames.contains('projects')){const found=await new Promise<boolean>((resolve,reject)=>{const request=db.transaction('projects').objectStore('projects').get(id);request.onsuccess=()=>resolve(!!request.result);request.onerror=()=>reject(request.error);});if(found)return true;}}finally{db.close();}}return false;},incoming.projectId)).toBe(true);await expect(page.locator('.workspace-heading h1')).toHaveText('資料');await expect(page.locator('.project-switch strong')).toHaveText(original.name);await page.reload();await expect(page.locator('.project-switch strong')).toHaveText(original.name);await expect(page.locator('.workspace-heading h1')).toHaveText('資料');
+      33 | });
+      34 |
+        at /workspace/shinariokanri-rb06/tests/e2e/rb06-recovery.spec.ts:31:237
+
+    Error Context: test-results/rb06-recovery-復元保存待ちの後に選んだ資料と作品を保持し、新規復元だけを一覧へ追加する-chromium/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/rb06-recovery-復元保存待ちの後に選んだ資料と作品を保持し、新規復元だけを一覧へ追加する-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/rb06-recovery-復元保存待ちの後に選んだ資料と作品を保持し、新規復元だけを一覧へ追加する-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    [chromium] › tests/e2e/rb06-recovery.spec.ts:27:1 › 復元保存待ちの後に選んだ資料と作品を保持し、新規復元だけを一覧へ追加する ───────
+  2 passed (14.6s)

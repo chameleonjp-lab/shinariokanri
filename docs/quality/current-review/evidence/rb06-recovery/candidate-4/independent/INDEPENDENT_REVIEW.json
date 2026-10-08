@@ -1,0 +1,267 @@
+{
+  "target": {
+    "commit": "bd43ca75f8cddccf93fcca1e762b8ba650c61bbb",
+    "tree": "34d55a28311595770a8ddc0a5a48ac63d66a7999",
+    "base": "b310800c98bc9a89b93182ad721380a0be99d2d3",
+    "source161Match": true,
+    "frozenAt": "2026-10-08T10:44:36.605218+00:00",
+    "verifiedAt": "2026-10-08T10:56:00.063382+00:00"
+  },
+  "decision": "Original R6U03 repaired with same fixtures/expectations and all8 prior UI cases pass. New controlled post-save file-selection queue boundary R6U09 remains; not whole RB06/104/116 completion.",
+  "historicalEvidenceUnchanged": {
+    "cd38ReportSha256": "84c2ee90b7a5181100035496a79f2769eb42dffdf42374a2cb7d248df72ba982",
+    "originalCd38ReportSha256": "84c2ee90b7a5181100035496a79f2769eb42dffdf42374a2cb7d248df72ba982",
+    "R6U03FailurePreserved": true,
+    "priorRawLogsAndFixtureBytesUnchanged": true
+  },
+  "verification": {
+    "independentParts": {
+      "passed": 17,
+      "failed": 0,
+      "log": "independent/domain-boundaries.log",
+      "cases": "Same R6I01-14 test sources and semantic expectations; absolute output paths changed only"
+    },
+    "priorActualAppBoundaries": {
+      "passed": 8,
+      "failed": 0,
+      "results": [
+        {
+          "id": "R6U01-item-clone-replay",
+          "status": "passed",
+          "pageErrors": []
+        },
+        {
+          "id": "R6U02-mapped-away-failure-switch",
+          "status": "passed",
+          "pageErrors": []
+        },
+        {
+          "id": "R6U03-new-away-completion",
+          "status": "passed",
+          "pageErrors": []
+        },
+        {
+          "id": "R6U04-stale-mapped-preview",
+          "status": "passed",
+          "pageErrors": []
+        },
+        {
+          "id": "R6U05-history-away-failure",
+          "status": "passed",
+          "pageErrors": []
+        },
+        {
+          "id": "R6U06-history-whole-other",
+          "status": "passed",
+          "pageErrors": []
+        },
+        {
+          "id": "R6U07-file-queue-preview",
+          "status": "passed",
+          "pageErrors": []
+        },
+        {
+          "id": "R6U08-file-queue-ack",
+          "status": "passed",
+          "pageErrors": []
+        }
+      ],
+      "logs": [
+        "independent/browser-recovery.json",
+        "independent/browser-recovery.log"
+      ],
+      "browser": "Chromium151.0.7922.173 /usr/bin/chromium",
+      "viewport": "1024x768",
+      "build": "isolated exact bd43 source via Vite; actual App/native IndexedDB"
+    },
+    "additionalBoundaries": {
+      "passed": 1,
+      "failed": 1,
+      "results": [
+        {
+          "id": "R6U09-new-ack-queue",
+          "status": "failed",
+          "error": "expect(received).toBe(expected) // Object.is equality\n\n- Expected  - 1\n+ Received  + 1\n\n- 独立 復元先A\n+ 独立 取り込みC\n  作品一覧へ\n  ⌄",
+          "pageErrors": [],
+          "body": "本文へ移動\nS\nシナリオ管理\n独立 取り込みC\n作品一覧へ\n⌄\nWORKSPACE\n年表\n構成\n資料\n0\n検索\nQUICK NOTE\nアイデアを残す\n作品・保存\nこの端末に保存\n同期接続先は未設定\n暗い配色にする\n独立 取り込みC\n/\n年表\n端末内保存済み\nLOCAL\nSTORY TIMELINE\n年表\n\n物語の時間と、そこで起きたこと。\n\n出来事を追加\n世界内年表\n関係表・図\n世界・地図・履歴\n最近開いた情報・お気に入り\n年表\n出来事一覧\n表示する暦\n先発グレゴリオ暦\n表示単位\ntick\n時\n日\n月\n年\n独自表示単位\n−\n1倍\n＋\n全体へ戻る\n本編開始へ\n先発グレゴリオ暦\n本編開始 0 tick\n表示 -60 〜 60 tick\n中心の本編基準 0 tick\nグループ・人物レーン\n選択した出来事の日時・制約\n本編開始の基準を変更\n全出来事の日時を移動\n前回の日時変更を一括取消\n物語の時間を並べましょう\n\n日時が未定でも、要約から出来事を残せます。\n\n出来事を追加\n前の期間\n移動\n次の期間\n暦の日付へ移動する\n出来事間の関係\n0\nすべての出来事間の関係\n因果\n前提\n出来事の予告\n出来事の回収\n関連\n参照\n選択した出来事に関係する線\n始点 → 終点をタップで結ぶ\n一覧から関係を追加\n端末内の作品 · 版 0\n1件の情報 · 0件の関係"
+        },
+        {
+          "id": "R6U10-new-navigation-roundtrip",
+          "status": "passed",
+          "pageErrors": []
+        }
+      ],
+      "classification": "R6U10 normal navigation-roundtrip pass; R6U09 controlled later native file-input change at post-save ack fails. Not actual OS Files evidence.",
+      "log": "independent/browser-recovery-extra.log"
+    },
+    "nativeDatabaseUpgrade": {
+      "passed": 1,
+      "failed": 0,
+      "result": {
+        "id": "R6V01-native-v1",
+        "status": "passed",
+        "pageErrors": []
+      },
+      "evidence": [
+        "independent/browser-v1.json",
+        "independent/fixtures/R6V01-native-v1.json"
+      ],
+      "classification": "Native IndexedDB additive old-v1 schema upgrade with genuine frozen3099 content/bytes/replay and cold reload; not physical OS/browser application update evidence"
+    },
+    "production": {
+      "build": "passed isolated npm run build",
+      "buildInfo": {
+        "commit": "unknown",
+        "dirty": true,
+        "base": "/shinariokanri/",
+        "version": "334726489307f35f062a",
+        "builtAt": "2026-10-08T10:50:30.259Z"
+      },
+      "infoLimitation": "Archive isolation has no.git. unknown/dirty=true is preserved truthfully; product161src and exact dist bytes bound separately. Not release-ready clean build evidence.",
+      "browser": {
+        "passed": 3,
+        "failed": 0,
+        "source": "repository tests/e2e/rb06-recovery.spec.ts unchanged at bd43; independent Chromium151 run on dedicated5321",
+        "logs": [
+          "independent/production-browser.json",
+          "independent/production-browser.log"
+        ]
+      }
+    },
+    "fixtureValidity": "Input generator tests intentionally not rerun to preserve original C/D/RD bytes. Current SHA matched; ordinary current App/native import revalidates archives. Earlier2 fixture creation pass counts remain historical."
+  },
+  "resolvedFindings": [
+    {
+      "id": "R6U03",
+      "requirements": [
+        "REQ-F35",
+        "REQ-N18",
+        "REQ-B12"
+      ],
+      "reviewReference": "RV16",
+      "classification": "reproduced_normal_ui_navigation_overwritten_after_restore",
+      "given": "Existing projectA; a native-valid separate projectC archive selected and new restore impact approved.",
+      "when": "Start new recovery; delay actual ScenarioStore import. Navigate to 資料 for A while pending, then finish the original atomic import.",
+      "expected": "Keep the later projectA/資料 choice; add restoredC to the project list. Open restoredC automatically only when the original recovery view and choice remain active.",
+      "actual": {
+        "before": {
+          "project": "独立 復元先A\n作品一覧へ\n⌄",
+          "heading": "資料"
+        },
+        "after": {
+          "project": "独立 復元先A\n作品一覧へ\n⌄",
+          "heading": "資料"
+        }
+      },
+      "storeResult": "C committed normally; A/B preserved. The defect is later navigation overwritten by completion, not lost archived data.",
+      "cause": {
+        "file": "src/App.tsx",
+        "sha256": "a2ed6c6684ebd0d306c1856ede93aa8433482d1f9161c0ad0e7edf0a7ee7b6a5",
+        "detail": "Backup onImported guards library and active project only; original page/tab and later navigation are not captured. The late openProject changes to restoredC and initialization returns to timeline."
+      },
+      "contract": "docs/implementation/RB06_RECOVERY.md: 画面移動・作品切替で後の選択を無断で開き直さない; user normal save/move/restore constraints.",
+      "source": "independent-app-recovery-followup2.mjs",
+      "fixture": "independent/fixtures/C.scenario",
+      "evidence": [
+        "independent/browser-recovery.json",
+        "independent/browser-recovery.log",
+        "independent/fixtures/R6U03-observation.json"
+      ],
+      "status": "passed_same_frozen_C_bytes_and_expected_outcome"
+    }
+  ],
+  "findings": [
+    {
+      "id": "R6U09",
+      "requirements": [
+        "REQ-F35",
+        "REQ-N18"
+      ],
+      "reviewReference": "RV16",
+      "classification": "reproduced_controlled_pending_file_selection_boundary",
+      "given": "Existing A view has approved a new native-valid C archive. C has atomically saved, but its Promise acknowledgment to the view is controlled and delayed.",
+      "when": "Deliver a later D file-input change while acknowledgment is pending, then complete C acknowledgment without navigating away.",
+      "expected": "Keep the original recovery view and process the later queued D selection; add C to the list without hiding the later selection.",
+      "actual": {
+        "before": "独立 復元先A\n作品一覧へ\n⌄",
+        "after": "独立 取り込みC\n作品一覧へ\n⌄",
+        "source": [],
+        "draftA": {
+          "sourceHash": "d34a0e6aac6aff0ed88983eb47bf349d7724e0a205f7aaaafdd5467e22754038",
+          "mode": "new"
+        },
+        "all": [
+          {
+            "projectId": "2384e2d3-b83b-4194-b837-e70589306e76",
+            "name": "独立 取り込みC"
+          },
+          {
+            "projectId": "2e555cbf-0ce9-4f3f-9dd9-231314173122",
+            "name": "独立 復元先A"
+          },
+          {
+            "projectId": "bf9116e4-e441-4b1d-b94d-1f73ab4dba85",
+            "name": "独立 復元先B"
+          }
+        ]
+      },
+      "impact": "Later D source confirmation is hidden because C is auto-opened. D remains in old A-key tab-memory queuedFiles; permanent deletion is not claimed. The existing persistent A input still points to C until A view resumes.",
+      "cause": {
+        "file": "src/ui/BackupPanel.tsx",
+        "sha256": "7cc9f5c3212cba2aa790ef5a2c2e2aa746aa4aa61e3f63c29b33b45c70d79afa",
+        "appSha256": "2d16fff31c732cf8c53ee6ab9dc7acf5e822dee134b0cd1f8480c774cdade2d1",
+        "detail": "Queued file change sets only queuedFiles; it neither updates App navigation epoch nor communicates a later-selection intent to onImported. C acknowledgment still opens C and changes BackupPanel project key, so oldA queue cannot be processed on the active view."
+      },
+      "measurementLimit": "Controlled native file-input event in actual Chromium, equivalent to resolving a pending selection. Not proof of an actual OS Files dialog operation; visible input is disabled during busy.",
+      "source": "independent-app-recovery-extra.mjs",
+      "fixture": "independent/fixtures/D.scenario (same bytes as cd38)",
+      "evidence": [
+        "independent/fixtures/R6U09-observation.json",
+        "independent/browser-recovery-extra.json",
+        "independent/browser-recovery-extra.log"
+      ],
+      "status": "failed_correct_expected_outcome_retained"
+    }
+  ],
+  "positiveScope": [
+    "Genuine immutable shared-item trace through empty/new, clone and explicit all-ID mapped merge: stable runtime inventory role, old edition/call execution, terminal, initial tick5, full-origin; reexport still replays.",
+    "All74 source commands explicitly mapped into another project keep original project/operation provenance and queued order; duplicate numeric revision lookup safely refuses ambiguity, explicit old operation unit restore retains the target note and published versions.",
+    "Arbitrary history beyond50 searchable/paged; single versus whole restoration preserve all original history and immutable editions, append compensating operations, survive empty-environment complete round trip.",
+    "Stale/forged history/map approvals refuse, other-role inventory ID collisions remain rejected, missing/duplicate mapping refuses.",
+    "All4 quota transaction stages and post-history cancellation roll back content/history/pending/restore point; exact retry works.",
+    "Material bytes restore and clone; metadata-only import warns and complete reexport refuses missing bytes. Corrupt hash, unknown required feature and configured limit refuse before mutation.",
+    "Portable pending retains exact commands/order/original server base, omits account identity, restores as needs_reconnect, reexports retained intents. Does not prove actual server retransmission or authorization.",
+    "Screen-specific pending mapped import/history fail, navigation/reentry/project switch, retry, stale target preview, queued later file selection/ack and cold import-draft retention pass.",
+    "Genuine old branch/chapter fixture bytes and conservative chapter partial provenance remain, including native v1 additive operational-table upgrade and cold startup.",
+    "Same-source R6U03 preserves A/資料 after newC completes; separate roundtrip back to original backup view preserves later navigation epoch and does not openC. Staying in original view still opens the successful clone via R6U01."
+  ],
+  "environment": {
+    "os": "Debian GNU/Linux13.6",
+    "kernel": "6.18.44",
+    "architecture": "x86_64",
+    "node": "v24.19.0",
+    "vitest": "5.0.3",
+    "componentDB": "fake-indexeddb",
+    "appDB": "actual Chromium native IndexedDB",
+    "faultControl": "Test harness waits/rejects actual store calls and post-commit ack; product source untouched",
+    "ports": "Vite5319 / production5321, both stopped"
+  },
+  "unexecuted": [
+    "Whole original104/116/24/6 or all RB06 not graded; original acceptance given/when/then/negative preserved with historicalnot_run.",
+    "Aggregate all-kind/author alternatives/adoption/transitive world/large-asset complete acceptance not independently executed here; parent full suite is separate.",
+    "Physical iPhone/iPad OS Files/actual Safari/Chrome/Edge/Firefox matrix, browser OS update, VoiceOver/NVDA/IME/rotation not executed.",
+    "Actual interrupted app/cache update, long offline/2hour editing, Standard/Large p95, real device quota not executed.",
+    "Actual Auth/RLS/API/private Storage/two-device reconnect/authorization/revocation and recovered outbox transmission not executed.",
+    "R6U09 controlled selection queue is failed; no whole acceptance completion conversion."
+  ],
+  "originalPlan": {
+    "requirements": 104,
+    "acceptanceCases": 116,
+    "stages": 24,
+    "regressionGroups": 6,
+    "notReduced": true,
+    "historicalBaselineAndDesignRegistryNotCurrentGrade": true
+  },
+  "productRepositoryWrites": false,
+  "evidenceBinding": "SOURCE_COMMIT_BINDING.json covers161src/original15docs/legacy4/all original frozen inputs. ARTIFACT_BINDING.json covers raw logs/test/harness sources/outputs/dist without whitespace trimming."
+}

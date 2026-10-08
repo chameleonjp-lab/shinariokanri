@@ -1,0 +1,319 @@
+{
+  "source": "docs/data/acceptance_cases.json and requirements.json; copied untouched given/when/then/negative_or_edge and historical result",
+  "acceptanceFileSha256": "e1e4b06a3bb1cd79fc590239ab6350103323335f2e1ee87a2e6a283755834c4f",
+  "requirementsFileSha256": "df11649ab7ec25c31ae2aad6aacdca98d7324aba2e701352f9a78136c3bed0dc",
+  "cases": [
+    {
+      "id": "AT-B12",
+      "requirement_ids": [
+        "REQ-B12"
+      ],
+      "package_id": "WP16",
+      "given": "条件・本文・関係線・素材を含む作品",
+      "when": "完全保存ファイルを新規作品へ読み戻す",
+      "then": "安定IDと情報内容と素材の対応が一致する",
+      "negative_or_edge": "破損・未対応版・危険なパス・参照不整合は既存作品を変更せず拒否する",
+      "result": "not_run"
+    },
+    {
+      "id": "AT-B23",
+      "requirement_ids": [
+        "REQ-B23"
+      ],
+      "package_id": "WP03",
+      "given": "確定リンクと履歴のある人物",
+      "when": "改名し復元して再起動する",
+      "then": "IDと参照を保ち復元も新しい履歴として残る",
+      "negative_or_edge": "容量不足や書き込み失敗を保存済みと表示せず、元データを失わせない",
+      "result": "not_run"
+    },
+    {
+      "id": "AT-F35",
+      "requirement_ids": [
+        "REQ-F35"
+      ],
+      "package_id": "WP16",
+      "given": "条件・線・素材・巨大tick・単体履歴を持つ作品",
+      "when": "全体を出力し空環境へ復元、別途単体復元と追加/置換/統合を選択する",
+      "then": "書き出して読み戻したとき、番号、条件、矢印、日時、素材が対応したまま残る。",
+      "negative_or_edge": "単体復元は最新の関連情報への影響を提示する。追加・置換・統合のID規則を適用し、失敗時は全体をロールバックする。",
+      "result": "not_run"
+    },
+    {
+      "id": "AT-N06",
+      "requirement_ids": [
+        "REQ-N06"
+      ],
+      "package_id": "WP03",
+      "given": "保存中の容量不足と移行失敗を注入",
+      "when": "複数対象の変更を試す",
+      "then": "全変更が確定するか全変更が未確定となり再試行できる",
+      "negative_or_edge": "一部更新・未検証のマイグレーション・偽の保存表示を残さない",
+      "result": "not_run"
+    },
+    {
+      "id": "AT-N09",
+      "requirement_ids": [
+        "REQ-N09"
+      ],
+      "package_id": "WP16",
+      "given": "破損・未対応版・参照切れ・圧縮爆弾のファイル",
+      "when": "既存作品へ読み込もうとする",
+      "then": "既存データは不変で対象パスと理由が示される",
+      "negative_or_edge": "一時解析の失敗を既存作品の一部置換として残さない",
+      "result": "not_run"
+    },
+    {
+      "id": "AT-N11",
+      "requirement_ids": [
+        "REQ-N11"
+      ],
+      "package_id": "WP03",
+      "given": "取得済み作品で機内モードにする",
+      "when": "編集して閉じ再度開き専用ファイルを出す",
+      "then": "端末内保存済みと未送信が区別され作品内容が残る",
+      "negative_or_edge": "初回取得や未キャッシュ添付を利用済みと偽表示しない",
+      "result": "not_run"
+    },
+    {
+      "id": "AT-N14",
+      "requirement_ids": [
+        "REQ-N14"
+      ],
+      "package_id": "WP16",
+      "given": "端末内データを失った空環境",
+      "when": "完全保存ファイルを読み込む",
+      "then": "本文・ID・条件・素材を保って編集を再開できる",
+      "negative_or_edge": "端末内履歴だけを外部バックアップの代わりとして保証しない",
+      "result": "not_run"
+    },
+    {
+      "id": "AT-E07",
+      "title": "専用ファイルの往復と拒否",
+      "requirement_ids": [
+        "REQ-B12",
+        "REQ-F35",
+        "REQ-F55",
+        "REQ-F56",
+        "REQ-N09",
+        "REQ-N14"
+      ],
+      "package_id": "WP23",
+      "given": "全entity種・未知日時・巨大tick・素材を含む作品",
+      "when": "空環境へ全情報往復し、別途ハッシュ不一致/参照切れ/危険パス/未対応版を投入する",
+      "then": "正規化した保存情報が一致し、不正ファイルは既存作品を一切変えない",
+      "negative_or_edge": "安全上限直前・直後、添付重複、ID衝突を確認する",
+      "result": "not_run"
+    },
+    {
+      "id": "AT-E12",
+      "title": "保存失敗とアプリ更新からの復帰",
+      "requirement_ids": [
+        "REQ-B23",
+        "REQ-F34",
+        "REQ-F35",
+        "REQ-N06",
+        "REQ-N11",
+        "REQ-N18"
+      ],
+      "package_id": "WP23",
+      "given": "キャッシュ済みアプリと未送信作品",
+      "when": "機内モード、保存容量不足、途中更新、移行失敗、専用出力からの再開を行う",
+      "then": "失敗と未保存を明示し、更新は安全地点で適用し、書き出しと復元で再開できる",
+      "negative_or_edge": "初回未取得・未取得素材・保存先取消を成功と扱わない",
+      "result": "not_run"
+    }
+  ],
+  "requirements": [
+    {
+      "id": "REQ-B12",
+      "title": "専用ファイルへの出力と読み込み",
+      "provenance": "元の依頼",
+      "decision_status": "previously_adopted",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP16",
+      "shall": "完全な作品を版付き専用ファイルへ出力し、事前検査・確認を経て読み戻せること。",
+      "failure_behavior": "破損・未対応版・危険なパス・参照不整合は既存作品を変更せず拒否する",
+      "acceptance_ids": [
+        "AT-B12"
+      ],
+      "source_refs": []
+    },
+    {
+      "id": "REQ-B23",
+      "title": "安定ID・保存・取り消し・履歴",
+      "provenance": "以前から採用済みの拡張",
+      "decision_status": "previously_adopted",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP03",
+      "shall": "改名・並べ替えで変わらないIDを使用し、端末内保存・取り消し・履歴・版の復元を提供すること。",
+      "failure_behavior": "容量不足や書き込み失敗を保存済みと表示せず、元データを失わせない",
+      "acceptance_ids": [
+        "AT-B23"
+      ],
+      "source_refs": []
+    },
+    {
+      "id": "REQ-F34",
+      "title": "通信なしの編集と同期を区別する",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP17",
+      "shall": "開いて保存済みの作品を通信なしでも編集できるようにする。端末内保存済み、送信待ち、同期済み、食い違いありを表示すること。",
+      "failure_behavior": "同一項目の競合は双方と共通元を保持する。保存済みと同期済みを混同せず、再送・削除対編集でも黙って上書きしない。",
+      "acceptance_ids": [
+        "AT-F34"
+      ],
+      "source_refs": [
+        "S12"
+      ],
+      "source_feature_id": "F34"
+    },
+    {
+      "id": "REQ-F35",
+      "title": "履歴とファイルを確実に持ち出す",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP16",
+      "shall": "作品全体と対象一つの復元を分ける。専用ファイルに素材も含められるようにし、形式の版、読み込み前の確認、追加か置換かを扱うこと。",
+      "failure_behavior": "単体復元は最新の関連情報への影響を提示する。追加・置換・統合のID規則を適用し、失敗時は全体をロールバックする。",
+      "acceptance_ids": [
+        "AT-F35"
+      ],
+      "source_refs": [
+        "S09",
+        "S24",
+        "S26"
+      ],
+      "source_feature_id": "F35"
+    },
+    {
+      "id": "REQ-F55",
+      "title": "共通の情報と意味付きの関係を持つ",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP08",
+      "shall": "人物、出来事、場面、場所、物品、状態、伏線、素材を一度登録する。関係には種類、向き、有効な時期・分岐、根拠の場面を付けること。",
+      "failure_behavior": "方向と時期・経路と根拠を検証する。自己関係を許す種類だけ認め、対称性や推移性を勝手に補わない。",
+      "acceptance_ids": [
+        "AT-F55"
+      ],
+      "source_refs": [
+        "S02",
+        "S06",
+        "S19"
+      ],
+      "source_feature_id": "F55"
+    },
+    {
+      "id": "REQ-F56",
+      "title": "項目の型と入力規則を定める",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP04",
+      "shall": "日付、数値、選択、文章、ほかの項目への参照を使い分ける。雛形の変更は既存データへの影響を確認して適用し、読み込み時も型を検査すること。",
+      "failure_behavior": "同名は原則許可しIDで識別する。キー項目だけ所定スコープで一意とする。型変更に適合しない値を消さず影響を示す。",
+      "acceptance_ids": [
+        "AT-F56"
+      ],
+      "source_refs": [
+        "S06",
+        "S43",
+        "S45"
+      ],
+      "source_feature_id": "F56"
+    },
+    {
+      "id": "REQ-N06",
+      "title": "保存と移行の原子性",
+      "provenance": "仕様を成立させる品質条件・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP03",
+      "shall": "端末内の一操作は本体・参照・履歴・送信待ちを同じトランザクションで保存し、形式更新前に復元点を作ること。",
+      "failure_behavior": "一部更新・未検証のマイグレーション・偽の保存表示を残さない",
+      "acceptance_ids": [
+        "AT-N06"
+      ],
+      "source_refs": [
+        "T01"
+      ]
+    },
+    {
+      "id": "REQ-N09",
+      "title": "読み込みの制限と検証",
+      "provenance": "仕様を成立させる品質条件・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP16",
+      "shall": "専用ファイルの版・構造・型・参照・ハッシュ・展開後量・パスを確認後に一括確定すること。数値上限はファイル仕様に従うこと。",
+      "failure_behavior": "一時解析の失敗を既存作品の一部置換として残さない",
+      "acceptance_ids": [
+        "AT-N09"
+      ],
+      "source_refs": []
+    },
+    {
+      "id": "REQ-N11",
+      "title": "通信なしでの継続",
+      "provenance": "仕様を成立させる品質条件・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP03",
+      "shall": "取得済み作品とキャッシュ済みアプリで、通信なしの編集・検索・試読・ファイル出力を可能にすること。未取得の素材は明示すること。",
+      "failure_behavior": "初回取得や未キャッシュ添付を利用済みと偽表示しない",
+      "acceptance_ids": [
+        "AT-N11"
+      ],
+      "source_refs": [
+        "T01"
+      ]
+    },
+    {
+      "id": "REQ-N14",
+      "title": "復元手順の完了",
+      "provenance": "仕様を成立させる品質条件・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP16",
+      "shall": "最新完全保存ファイルと公開スナップショットの復元方法を利用者に提示し、空環境への復元試験を行うこと。",
+      "failure_behavior": "端末内履歴だけを外部バックアップの代わりとして保証しない",
+      "acceptance_ids": [
+        "AT-N14"
+      ],
+      "source_refs": [
+        "T01"
+      ]
+    },
+    {
+      "id": "REQ-N18",
+      "title": "失敗時の説明と入力保持",
+      "provenance": "仕様を成立させる品質条件・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP02",
+      "shall": "エラーは何が失敗したか・未保存範囲・修正方法を対象近傍と通知へ表示し、入力を保持すること。",
+      "failure_behavior": "白画面・無言の失敗・黙ったデータ削除を残さない",
+      "acceptance_ids": [
+        "AT-N18"
+      ],
+      "source_refs": []
+    }
+  ],
+  "currentWholeCaseGrades": "not assigned by this focused review"
+}

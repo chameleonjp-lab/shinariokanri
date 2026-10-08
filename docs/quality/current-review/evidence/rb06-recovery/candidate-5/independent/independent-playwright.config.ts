@@ -1,0 +1,2 @@
+import {defineConfig,devices}from'@playwright/test';
+export default defineConfig({testDir:'tests/e2e',testMatch:'rb06-recovery.spec.ts',workers:1,retries:0,reporter:[['list'],['json',{outputFile:'independent/production-browser.json'}]],outputDir:'independent/production-traces',use:{baseURL:'http://127.0.0.1:5325/shinariokanri/',trace:'retain-on-failure'},projects:[{name:'independent-chromium151',use:{...devices['Desktop Chrome'],launchOptions:{executablePath:'/usr/bin/chromium',args:['--no-sandbox']}}}]});

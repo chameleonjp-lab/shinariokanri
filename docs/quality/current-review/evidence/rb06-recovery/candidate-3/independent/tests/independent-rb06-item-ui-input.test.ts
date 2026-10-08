@@ -1,0 +1,2 @@
+import {it,expect} from 'vitest';import{readFileSync,writeFileSync}from'node:fs';import{exportScenario,inspectScenario}from'../src/storage/archive';
+it('genuine immutable shared item-ID archive remains native-valid for UI selection',async()=>{const p=JSON.parse(readFileSync('tests/fixtures/rb05-reader-editions.json','utf8')).project,bytes=await exportScenario(p);expect((await inspectScenario(bytes,{worker:false})).project).toEqual(p);writeFileSync('independent/fixtures/RD-editions.scenario',bytes);});

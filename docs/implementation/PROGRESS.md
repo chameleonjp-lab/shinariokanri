@@ -1,3 +1,5 @@
+RB06の局所候補 `d64fd7dc1d14ab228511828ac6e72664dd31fdf7` / tree `07c6a8a8184d496652a24b9e790ee838ecf60058` は[完全保存・履歴・移行](RB06_RECOVERY.md)を通常操作→原子保存→再読込/復元へ接続した。664単体/保存、58 production Chromium153、Python15、build/docs/plan/schemaと独立17部品・11通常App・native移行1・production4が成功。旧負例・保存後の画面/後発ファイル/clear順序の補修を[候補履歴](../quality/current-review/evidence/rb06-recovery/candidate-history.json)へ保持。実OS Files/実端末/更新/長時間/実Authと全116最終受入は未実行。
+
 RB05第4追加は [提示順・未回収・開始版移行・再確認](RB05_NARRATIVE_RECONFIRMATION.md) を参照。提示効果前の観測、体験上の期限、固定checkpointの明示移行、旧証跡を残す改訂稿再確認、固定借用の同一graph/章文脈を通常保存へ接続した。子graphの呼出し/復帰と、作品別の試読・保存待ち・失敗経路を画面移動から保持する。原116受入と公開出力/RB06〜RB10、実端末/実権限の完成条件は保持する。
 
 候補 `7a40c7c52b5e3e2c8058a41bcc78c0113b9e1a0c`（tree `8362d0c22aa9eb9f5732d976227c9b37930795e5`）で単体/保存651件、production Chromium153/Linux通常操作54件、Python15件、文書/計画/schema/buildが成功。build-infoは同候補・dirty=false・base `/shinariokanri/`。独立部品12件＋Vite dev通常App12件は同じ正期待で成功し、再生完了の版表示/明示版選択の再入境界も補修した。途中候補の失敗→補修を[版別記録](../quality/current-review/evidence/rb05-narrative/candidate-history.json)に保持する。最新mainはPR #12取り込み後 `b310800`、CI run37740047138成功を2026-10-08に再確認した。マージ・本番公開・外部DB変更はこの作業で実行していない。
