@@ -1,6 +1,6 @@
 # 104要件の現在実装照合（最終受入は未実行）
 
-2026-10-09、main `33f3c8c4bd22fb0d79ebdd037c36ca9bf30aabf3` / tree `5b66f5d6295082e2eb033d3613beec516b720149`（PR #17取り込み後）を基底にRB10の現在sourceを照合した。対象候補commitは検査artifactで凍結する。104要件のshall/失敗条件、24工程、原116の正常/境界・失敗、6回帰群、RB01〜RB10を保持。
+2026-10-09、main `c590b47ebb66a326511f9b2fbdad545c186bdc59` / tree `845f9d9161cb1e5230e4b6af6852217ae8ea4a0a`（PR #18の外部取り込み後）を基底にRB10の現在sourceを照合した。対象候補commitは検査artifactで凍結する。104要件のshall/失敗条件、24工程、原116の正常/境界・失敗、6回帰群、RB01〜RB10を保持。
 
 原レジストリのplanned/not_runは設計記録。現在の部品・通常画面・自動ブラウザー・実機・実Authは分けて判定する。旧baseline・各旧candidate観察はJSONのhistorical欄と旧evidenceへ不変保存する。現在の結果は[JSON](current-implementation.json)の原契約/関連source SHA/個別未確認条件を参照。
 
@@ -110,3 +110,5 @@
 | REQ-N18 失敗時の説明と入力保持 | WP02/RB02 | EntityEditor／JSON／作者別案の入力保持、保存失敗表示、未保存案内がある。 開始/保存/再生の同一ターンと保存props反映まで経路操作を直列化。失敗で経路を保持し解除。 作品ごとに基底revision付き設定下書き/不正JSON/保存待ちを持ち、移動・再入・失敗・競合・ackで入力を保持。 RB05第2追加：反応系列の作品別下書き・確認revision・保存待ち、途中開始の移動再入・失敗通知を保持。 RB05第3追加：再利用の作品・使用先別下書き、確認基底版、移動／再入／cold reload／失敗とretryを保持。 RB05第4追加：章試読の版・開始候補・章/場面経路・時点を作品別に保持し、再入/cold reloadで再開する。 作品別の分岐試読操作を画面移動中も保持し、固定基底の原子保存、最新propsの検証再生、一括待機解除、失敗経路の再試行をproduction通常操作で検査。 RB10: 実保存失敗・取消の近傍通知から入力を保持し、移動/再入/後続操作を捨てず明示retry。await前captureとread中abortを保持し原子確定済み値を取り違えない。 | 原AT-N18のgiven/when/then/negative_or_edge全体を同一固定候補で受入し、現在source・手順・fixture・正常/失敗の実結果へ結合する。下欄に元の未確認条件を保持。段階/部品の成功を全体完成へ換算しない。 | not_run |
 | REQ-N19 正本と公開版の保護 | WP10/RB04 | 正本、作者別案の不変版、ゲーム経路、公開snapshotと採用記録を分離。 没変数を初期状態から除外。 選択版の入口、ノード、checkpoint候補から開始/解析とラベルを導く。 ContentAnchorの対象版・block/line・Unicodeコードポイント位置を参照画面へ渡して読み位置を保持。 RB05第3追加：固定共通元と依存pinのhash・版・段落／台詞IDを維持。明示した別固定版へのリンクを上書きしない。 | 原AT-N19のgiven/when/then/negative_or_edge全体を同一固定候補で受入し、現在source・手順・fixture・正常/失敗の実結果へ結合する。下欄に元の未確認条件を保持。段階/部品の成功を全体完成へ換算しない。 | not_run |
 | REQ-N20 持ち出しと互換性 | WP22/RB08 | 形式／runtime仕様版・対象版・警告／除外と現在互換表を出力する。  RB08: 固有制作/経路量/根拠付き見積、企画とプレイ行動/実装作業、旧媒体差分と独立改訂候補、全6profile/旧版Unicode引用/素材bytes、同一実行器の試遊ZIP、独立ゲームの受領hash/台詞素材ID/実結果の原子保存と再生、相談MD→作者別案→選択採用を通常UIと完全new/cloneへ接続。 RB10: 全profileとnative1.0の既存互換規則を保持。新辞書/共有指摘のfeature宣言とlocal DBv7を区別して互換表へ追記。旧版/clone/履歴/公開投影に対象版とID対応を保つ。 | 原AT-N20のgiven/when/then/negative_or_edge全体を同一固定候補で受入し、現在source・手順・fixture・正常/失敗の実結果へ結合する。下欄に元の未確認条件を保持。段階/部品の成功を全体完成へ換算しない。 | not_run |
+
+C3のCI756/255とStandard局所30回は成功したがLarge初回表示p95=11,094.5msは未達。原結果を保持しC4へ補修する。下表の原116最終結果を部品・CI・予備3回の成功で合格へ置き換えない。最終C4 commit/tree/buildと手順ごとの証拠は外部artifactで固定する。
