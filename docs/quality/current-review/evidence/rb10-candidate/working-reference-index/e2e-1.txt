@@ -1,0 +1,121 @@
+[WebServer] (node:510854) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 3 tests using 1 worker
+
+(node:510900) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  1 [chromium] › tests/e2e/rb10-reference-index.spec.ts:11:1 › Large references can be cancelled and retried while the current editor stays writable, with no partial or stale rows (14.7s)
+(node:511032) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Skipping host requirements validation logic because `PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS` env variable is set.
+  ✘  2 [firefox] › tests/e2e/rb10-reference-index.spec.ts:11:1 › Large references can be cancelled and retried while the current editor stays writable, with no partial or stale rows (19.3s)
+(node:511271) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Skipping host requirements validation logic because `PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS` env variable is set.
+  ✘  3 [webkit] › tests/e2e/rb10-reference-index.spec.ts:11:1 › Large references can be cancelled and retried while the current editor stays writable, with no partial or stale rows (15.6s)
+
+
+  1) [chromium] › tests/e2e/rb10-reference-index.spec.ts:11:1 › Large references can be cancelled and retried while the current editor stays writable, with no partial or stale rows 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: locator('.app-shell')
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" locator('.app-shell') with timeout 5000ms
+      - waiting for locator('.app-shell')
+
+
+      13 |  const p=createProject('参照を待たずに編集する'),a=createEntity(p.projectId,'character','索引A'),b=createEntity(p.projectId,'character','索引B');
+      14 |  p.entities.push(a,b);for(let i=0;i<12000;i++){const note=createEntity(p.projectId,'note',`参照元${i}`,{convertedToIds:[i%2?a.id:b.id],body:[{id:newId(),kind:'paragraph',text:'😀参照はコードポイント位置と出所を保持する。',links:[{start:0,end:1,target:{entityId:a.id}}]}]});p.entities.push(note);}p.entities.forEach(e=>e.status='confirmed');expect(validateProject(p)).toMatchObject({ok:true});
+    > 15 |  await page.setViewportSize({width:1440,height:1000});await page.goto('');await page.getByRole('button',{name:'保存ファイルを読み込む',exact:true}).click();await page.locator('input[type=file][accept*=".scenario"]').setInputFiles({name:'reference-index.scenario',mimeType:'application/zip',buffer:Buffer.from(await exportScenario(p))});await page.getByLabel('復元方法と対象への影響を確認しました').check();await page.getByRole('button',{name:'この内容で復元する',exact:true}).click();await expect(page.locator('.app-shell')).toBeVisible();await nav(page,/^資料/);await page.getByRole('button',{name:/^人物/}).click();const before=await durable(page);
+         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        ^
+      16 |  await page.locator('.entity-card').filter({has:page.getByRole('heading',{name:'索引A',exact:true})}).click();const name=page.getByLabel('名前',{exact:true});await expect(name).toBeEnabled();await expect(name).toHaveValue('索引A');await page.getByRole('button',{name:'参照の確認を中止',exact:true}).click();await expect(page.locator('.references-section')).toContainText('参照の確認を中止しました');await expect(page.locator('[data-windowed-list="この情報への参照"]')).toHaveCount(0);expect(await durable(page)).toEqual(before);
+      17 |  await page.locator('.entity-card').filter({has:page.getByRole('heading',{name:'索引B',exact:true})}).click();await expect(name).toHaveValue('索引B');await page.getByRole('button',{name:'参照の確認を再試行',exact:true}).click();await expect(page.getByRole('navigation',{name:'この情報への参照のページ',exact:true})).toContainText('6000件');await expect(page.locator('[data-windowed-list="この情報への参照"] .reference-link')).toHaveCount(30);await page.getByLabel('この情報への参照を検索',{exact:true}).fill('参照元11998');await expect(page.locator('[data-windowed-list="この情報への参照"]')).toContainText('参照元11998');expect(await durable(page)).toEqual(before);
+      18 |  await name.fill('索引Bを原子保存');await expect(page.locator('.editor-save-state')).toContainText('端末内保存済み');await page.reload();await nav(page,/^資料/);await page.locator('.entity-card').filter({hasText:'索引Bを原子保存'}).click();await expect(name).toHaveValue('索引Bを原子保存');await expect(page.locator('[data-windowed-list="この情報への参照"]')).toContainText('参照元11998');await expect(page.locator('.reference-index-progress')).toHaveCount(0);
+        at /workspace/shinariokanri-rb10/tests/e2e/rb10-reference-index.spec.ts:15:488
+
+    Error Context: ../../tmp/shinariokanri-rb10-reference-index-e2e-1/rb10-reference-index-Large-f77c3-th-no-partial-or-stale-rows-chromium/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../tmp/shinariokanri-rb10-reference-index-e2e-1/rb10-reference-index-Large-f77c3-th-no-partial-or-stale-rows-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace ../../tmp/shinariokanri-rb10-reference-index-e2e-1/rb10-reference-index-Large-f77c3-th-no-partial-or-stale-rows-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) [firefox] › tests/e2e/rb10-reference-index.spec.ts:11:1 › Large references can be cancelled and retried while the current editor stays writable, with no partial or stale rows 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: locator('.app-shell')
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" locator('.app-shell') with timeout 5000ms
+      - waiting for locator('.app-shell')
+
+
+      13 |  const p=createProject('参照を待たずに編集する'),a=createEntity(p.projectId,'character','索引A'),b=createEntity(p.projectId,'character','索引B');
+      14 |  p.entities.push(a,b);for(let i=0;i<12000;i++){const note=createEntity(p.projectId,'note',`参照元${i}`,{convertedToIds:[i%2?a.id:b.id],body:[{id:newId(),kind:'paragraph',text:'😀参照はコードポイント位置と出所を保持する。',links:[{start:0,end:1,target:{entityId:a.id}}]}]});p.entities.push(note);}p.entities.forEach(e=>e.status='confirmed');expect(validateProject(p)).toMatchObject({ok:true});
+    > 15 |  await page.setViewportSize({width:1440,height:1000});await page.goto('');await page.getByRole('button',{name:'保存ファイルを読み込む',exact:true}).click();await page.locator('input[type=file][accept*=".scenario"]').setInputFiles({name:'reference-index.scenario',mimeType:'application/zip',buffer:Buffer.from(await exportScenario(p))});await page.getByLabel('復元方法と対象への影響を確認しました').check();await page.getByRole('button',{name:'この内容で復元する',exact:true}).click();await expect(page.locator('.app-shell')).toBeVisible();await nav(page,/^資料/);await page.getByRole('button',{name:/^人物/}).click();const before=await durable(page);
+         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        ^
+      16 |  await page.locator('.entity-card').filter({has:page.getByRole('heading',{name:'索引A',exact:true})}).click();const name=page.getByLabel('名前',{exact:true});await expect(name).toBeEnabled();await expect(name).toHaveValue('索引A');await page.getByRole('button',{name:'参照の確認を中止',exact:true}).click();await expect(page.locator('.references-section')).toContainText('参照の確認を中止しました');await expect(page.locator('[data-windowed-list="この情報への参照"]')).toHaveCount(0);expect(await durable(page)).toEqual(before);
+      17 |  await page.locator('.entity-card').filter({has:page.getByRole('heading',{name:'索引B',exact:true})}).click();await expect(name).toHaveValue('索引B');await page.getByRole('button',{name:'参照の確認を再試行',exact:true}).click();await expect(page.getByRole('navigation',{name:'この情報への参照のページ',exact:true})).toContainText('6000件');await expect(page.locator('[data-windowed-list="この情報への参照"] .reference-link')).toHaveCount(30);await page.getByLabel('この情報への参照を検索',{exact:true}).fill('参照元11998');await expect(page.locator('[data-windowed-list="この情報への参照"]')).toContainText('参照元11998');expect(await durable(page)).toEqual(before);
+      18 |  await name.fill('索引Bを原子保存');await expect(page.locator('.editor-save-state')).toContainText('端末内保存済み');await page.reload();await nav(page,/^資料/);await page.locator('.entity-card').filter({hasText:'索引Bを原子保存'}).click();await expect(name).toHaveValue('索引Bを原子保存');await expect(page.locator('[data-windowed-list="この情報への参照"]')).toContainText('参照元11998');await expect(page.locator('.reference-index-progress')).toHaveCount(0);
+        at /workspace/shinariokanri-rb10/tests/e2e/rb10-reference-index.spec.ts:15:488
+
+    Error Context: ../../tmp/shinariokanri-rb10-reference-index-e2e-1/rb10-reference-index-Large-f77c3-th-no-partial-or-stale-rows-firefox/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../tmp/shinariokanri-rb10-reference-index-e2e-1/rb10-reference-index-Large-f77c3-th-no-partial-or-stale-rows-firefox/trace.zip
+    Usage:
+
+        npx playwright show-trace ../../tmp/shinariokanri-rb10-reference-index-e2e-1/rb10-reference-index-Large-f77c3-th-no-partial-or-stale-rows-firefox/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  3) [webkit] › tests/e2e/rb10-reference-index.spec.ts:11:1 › Large references can be cancelled and retried while the current editor stays writable, with no partial or stale rows 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: locator('.app-shell')
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" locator('.app-shell') with timeout 5000ms
+      - waiting for locator('.app-shell')
+
+
+      13 |  const p=createProject('参照を待たずに編集する'),a=createEntity(p.projectId,'character','索引A'),b=createEntity(p.projectId,'character','索引B');
+      14 |  p.entities.push(a,b);for(let i=0;i<12000;i++){const note=createEntity(p.projectId,'note',`参照元${i}`,{convertedToIds:[i%2?a.id:b.id],body:[{id:newId(),kind:'paragraph',text:'😀参照はコードポイント位置と出所を保持する。',links:[{start:0,end:1,target:{entityId:a.id}}]}]});p.entities.push(note);}p.entities.forEach(e=>e.status='confirmed');expect(validateProject(p)).toMatchObject({ok:true});
+    > 15 |  await page.setViewportSize({width:1440,height:1000});await page.goto('');await page.getByRole('button',{name:'保存ファイルを読み込む',exact:true}).click();await page.locator('input[type=file][accept*=".scenario"]').setInputFiles({name:'reference-index.scenario',mimeType:'application/zip',buffer:Buffer.from(await exportScenario(p))});await page.getByLabel('復元方法と対象への影響を確認しました').check();await page.getByRole('button',{name:'この内容で復元する',exact:true}).click();await expect(page.locator('.app-shell')).toBeVisible();await nav(page,/^資料/);await page.getByRole('button',{name:/^人物/}).click();const before=await durable(page);
+         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        ^
+      16 |  await page.locator('.entity-card').filter({has:page.getByRole('heading',{name:'索引A',exact:true})}).click();const name=page.getByLabel('名前',{exact:true});await expect(name).toBeEnabled();await expect(name).toHaveValue('索引A');await page.getByRole('button',{name:'参照の確認を中止',exact:true}).click();await expect(page.locator('.references-section')).toContainText('参照の確認を中止しました');await expect(page.locator('[data-windowed-list="この情報への参照"]')).toHaveCount(0);expect(await durable(page)).toEqual(before);
+      17 |  await page.locator('.entity-card').filter({has:page.getByRole('heading',{name:'索引B',exact:true})}).click();await expect(name).toHaveValue('索引B');await page.getByRole('button',{name:'参照の確認を再試行',exact:true}).click();await expect(page.getByRole('navigation',{name:'この情報への参照のページ',exact:true})).toContainText('6000件');await expect(page.locator('[data-windowed-list="この情報への参照"] .reference-link')).toHaveCount(30);await page.getByLabel('この情報への参照を検索',{exact:true}).fill('参照元11998');await expect(page.locator('[data-windowed-list="この情報への参照"]')).toContainText('参照元11998');expect(await durable(page)).toEqual(before);
+      18 |  await name.fill('索引Bを原子保存');await expect(page.locator('.editor-save-state')).toContainText('端末内保存済み');await page.reload();await nav(page,/^資料/);await page.locator('.entity-card').filter({hasText:'索引Bを原子保存'}).click();await expect(name).toHaveValue('索引Bを原子保存');await expect(page.locator('[data-windowed-list="この情報への参照"]')).toContainText('参照元11998');await expect(page.locator('.reference-index-progress')).toHaveCount(0);
+        at /workspace/shinariokanri-rb10/tests/e2e/rb10-reference-index.spec.ts:15:488
+
+    Error Context: ../../tmp/shinariokanri-rb10-reference-index-e2e-1/rb10-reference-index-Large-f77c3-th-no-partial-or-stale-rows-webkit/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../tmp/shinariokanri-rb10-reference-index-e2e-1/rb10-reference-index-Large-f77c3-th-no-partial-or-stale-rows-webkit/trace.zip
+    Usage:
+
+        npx playwright show-trace ../../tmp/shinariokanri-rb10-reference-index-e2e-1/rb10-reference-index-Large-f77c3-th-no-partial-or-stale-rows-webkit/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  3 failed
+    [chromium] › tests/e2e/rb10-reference-index.spec.ts:11:1 › Large references can be cancelled and retried while the current editor stays writable, with no partial or stale rows 
+    [firefox] › tests/e2e/rb10-reference-index.spec.ts:11:1 › Large references can be cancelled and retried while the current editor stays writable, with no partial or stale rows 
+    [webkit] › tests/e2e/rb10-reference-index.spec.ts:11:1 › Large references can be cancelled and retried while the current editor stays writable, with no partial or stale rows 
