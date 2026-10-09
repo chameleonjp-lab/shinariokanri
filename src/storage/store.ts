@@ -350,8 +350,18 @@ function extractBlocks(entity: Entity): { record: unknown; blocks: StoredBlock[]
 }
 
 function hydrateBlocks(record: unknown, blocks: Map<string, Block>): Entity {
+  // These are private values read in one native transaction. Rebuild only
+  // ancestors of a rich-text marker; unchanged JSON needs no additional copy.
+  // The input rows and the canonical block values remain untouched.
   const visit = (value: unknown): unknown => {
-    if (Array.isArray(value)) return value.map(visit);
+    if (Array.isArray(value)) {
+      let changed: unknown[] | undefined;
+      for (let i = 0; i < value.length; i++) {
+        const next = visit(value[i]);
+        if (next !== value[i]) { changed ??= value.slice(); changed[i] = next; }
+      }
+      return changed ?? value;
+    }
     if (value && typeof value === 'object') {
       const data = value as Record<string, unknown>;
       if (Array.isArray(data.__scenarioRichText)) return data.__scenarioRichText.map(id => {
@@ -359,7 +369,12 @@ function hydrateBlocks(record: unknown, blocks: Map<string, Block>): Entity {
         if (!block) throw new StorageError('SAVE_FAILED', '本文blockが不足しています。完全保存ファイルから復元してください。', id as string);
         return copy(block);
       });
-      return Object.fromEntries(Object.entries(data).map(([key, item]) => [key, visit(item)]));
+      let changed: Record<string, unknown> | undefined;
+      for (const key of Object.keys(data)) {
+        const next = visit(data[key]);
+        if (next !== data[key]) { changed ??= { ...data }; changed[key] = next; }
+      }
+      return changed ?? value;
     }
     return value;
   };

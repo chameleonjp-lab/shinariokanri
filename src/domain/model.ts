@@ -246,7 +246,18 @@ export const ENTITY_SCHEMAS: Record<EntityKind, Schema> = {
 };
 
 const isObject = (value: unknown): value is Record<string, unknown> => !!value && typeof value === 'object' && !Array.isArray(value) && (Object.getPrototypeOf(value) === Object.prototype || Object.getPrototypeOf(value) === null);
-const utf8Bytes = (value: string): number => new TextEncoder().encode(value).byteLength;
+const utf8Encoder = new TextEncoder();
+const utf8Bytes = (value: string): number => utf8Encoder.encode(value).byteLength;
+// Count the same Unicode code points as the string iterator, without building
+// an array for every field. Invalid surrogates are still rejected separately.
+function codePointLength(value: string): number {
+  let count = 0;
+  for (let i = 0; i < value.length; i++, count++) {
+    const code = value.charCodeAt(i), next = value.charCodeAt(i + 1);
+    if (code >= 0xd800 && code <= 0xdbff && next >= 0xdc00 && next <= 0xdfff) i++;
+  }
+  return count;
+}
 function validUnicode(value: string): boolean {
   for (let i = 0; i < value.length; i++) {
     const code = value.charCodeAt(i);
@@ -327,6 +338,8 @@ function namePolicySchema(value: Record<string, unknown>): Schema | undefined {
   }
 }
 interface AstBudget { counter: { count: number }; depth: number }
+const textSpan = { start: req(num(0, undefined, true)), end: req(num(0, undefined, true)) };
+const richTextBlocks = arr(obj({ id: req(idSchema), kind: req(en('paragraph', 'heading', 'list_item', 'quote')), text: req(txt()), ruby: opt(arr(obj({ ...textSpan, text: req(txt()) }))), links: opt(arr(obj({ ...textSpan, target: req(anchor) }))), unresolvedAnnotations: opt(arr(unresolvedTextAnnotation)) }));
 function walk(schema: Schema, value: unknown, path: string, issues: ValidationIssue[], references: DomainReference[], depth = 0, ast?: AstBudget): void {
   if (issues.length >= 256) return;
   if (depth > 32) { addIssue(issues, path, '構造の深さが上限32を超えています。', 'IMPORT_LIMIT'); return; }
@@ -353,7 +366,7 @@ function walk(schema: Schema, value: unknown, path: string, issues: ValidationIs
     case 'text': {
       if (typeof value !== 'string') { fail('文字列を入力してください。'); return; }
       if (!validUnicode(value)) fail('文字列に不正なUnicodeがあります。');
-      const count = [...value].length;
+      const count = codePointLength(value);
       if (schema.min !== undefined && count < schema.min) fail(`${schema.min}文字以上で入力してください。`);
       if (schema.max !== undefined && count > schema.max) fail(`${schema.max}文字以内で入力してください。`);
       if (schema.maxBytes !== undefined && utf8Bytes(value) > schema.maxBytes) fail('本文が1 MiBの上限を超えています。');
@@ -393,7 +406,8 @@ function walk(schema: Schema, value: unknown, path: string, issues: ValidationIs
     case 'object': {
       if (!isObject(value)) { fail('オブジェクトを指定してください。'); return; }
       for (const field of Object.keys(value)) if (!Object.hasOwn(schema.fields, field)) addIssue(issues, `${path}.${field}`, '未知の項目は保存できません。');
-      for (const [field, definition] of Object.entries(schema.fields)) {
+      for (const field of Object.keys(schema.fields)) {
+        const definition = schema.fields[field]!;
         const item = value[field], fieldPath = `${path}.${field}`;
         if (item === undefined) { if (definition.required) addIssue(issues, fieldPath, '必須項目です。'); continue; }
         if (item === null && definition.nullable) continue;
@@ -442,19 +456,18 @@ function walk(schema: Schema, value: unknown, path: string, issues: ValidationIs
       else fail('カスタム値は文字列・数値・真偽・日付・参照またはnullです。');
       return;
     case 'richtext': {
-      const span = { start: req(num(0, undefined, true)), end: req(num(0, undefined, true)) };
-      const blockSchema = obj({ id: req(idSchema), kind: req(en('paragraph', 'heading', 'list_item', 'quote')), text: req(txt()), ruby: opt(arr(obj({ ...span, text: req(txt()) }))), links: opt(arr(obj({ ...span, target: req(anchor) }))), unresolvedAnnotations: opt(arr(unresolvedTextAnnotation)) });
-      walk(arr(blockSchema), value, path, issues, references, depth + 1, ast);
+      walk(richTextBlocks, value, path, issues, references, depth + 1, ast);
       if (!Array.isArray(value)) return;
       let bytes = 0, chars = 0; const blockIds = new Set<string>();
       value.forEach((block: unknown, i) => {
         if (!isObject(block) || typeof block.text !== 'string') return;
-        bytes += utf8Bytes(block.text); chars += [...block.text].length;
+        const length = codePointLength(block.text);
+        bytes += utf8Bytes(block.text); chars += length;
         if (typeof block.id === 'string') { if (blockIds.has(block.id)) addIssue(issues, `${path}[${i}].id`, '段落IDが重複しています。'); blockIds.add(block.id); }
         if (Array.isArray(block.unresolvedAnnotations)) for (const annotation of block.unresolvedAnnotations) if (isObject(annotation)) for (const field of ['originalText', 'reason', 'reading']) if (typeof annotation[field] === 'string') bytes += utf8Bytes(annotation[field] as string);
         for (const field of ['ruby', 'links']) if (Array.isArray(block[field])) (block[field] as unknown[]).forEach((range, j) => {
           if (!isObject(range)) return;
-          if (typeof range.start === 'number' && typeof range.end === 'number' && (range.start >= range.end || range.end > [...(block.text as string)].length)) addIssue(issues, `${path}[${i}].${field}[${j}]`, '文字範囲はコードポイントで数え、本文内の半開区間を指定してください。');
+          if (typeof range.start === 'number' && typeof range.end === 'number' && (range.start >= range.end || range.end > length)) addIssue(issues, `${path}[${i}].${field}[${j}]`, '文字範囲はコードポイントで数え、本文内の半開区間を指定してください。');
           if (typeof range.text === 'string') bytes += utf8Bytes(range.text);
         });
       });
@@ -498,7 +511,14 @@ function walk(schema: Schema, value: unknown, path: string, issues: ValidationIs
 
 const commonFields: Record<string, Field> = { id: req(idSchema), projectId: req(scopedRef('project')), kind: req(en(...ENTITY_KINDS)), revision: req({ type: 'revision' }), name: req(short), status: req(en(...STATUSES)), visibility: req(en('private', 'team', 'projection')), retainIfUnreferenced: opt(bool), projectionProfileId: opt(ref('projection_profile')), templateId: opt(ref('template')), createdAt: req({ type: 'datetime' }), updatedAt: req({ type: 'datetime' }), deletedAt: opt({ type: 'datetime' }), deletionOperationId: opt(idSchema), customValues: req(record({ type: 'custom' }, key)) };
 const relationSchema = obj({ id: req(idSchema), projectId: req(scopedRef('project')), revision: req({ type: 'revision' }), fromId: req(ref()), toId: req(ref()), relationType: req(txt(1, 128)), direction: req(en('forward', 'symmetric')), validity: req(nullableValidity), evidenceIds: req(refs()), status: req(en(...STATUSES)), visibility: req(en('private', 'team', 'projection')), projectionProfileId: opt(ref('projection_profile')), deletedAt: opt({ type: 'datetime' }), deletionOperationId: opt(idSchema) });
-function entitySchema(kind: EntityKind): Schema { return obj({ ...commonFields, kind: req(en(kind)), data: req(ENTITY_SCHEMAS[kind]) }); }
+const entityRecordSchemas = new Map<EntityKind, { data: Schema; record: Schema }>();
+function entitySchema(kind: EntityKind): Schema {
+  const data = ENTITY_SCHEMAS[kind], cached = entityRecordSchemas.get(kind);
+  if (cached?.data === data) return cached.record;
+  const record = obj({ ...commonFields, kind: req(en(kind)), data: req(data) });
+  entityRecordSchemas.set(kind, { data, record });
+  return record;
+}
 function simpleValidate<T>(schema: Schema, value: unknown, path: string, references:DomainReference[]=[]): ValidationResult<T> { const issues: ValidationIssue[] = []; walk(schema, value, path, issues, references); return issues.length ? { ok: false, issues } : { ok: true, value: value as T }; }
 export function validateCondition(input: unknown, path = 'condition'): ValidationResult<Condition> { return simpleValidate(cond, input, path); }
 export function validateExpression(input: unknown, path = 'expression'): ValidationResult<Expression> { return simpleValidate({ type: 'expression' }, input, path); }
@@ -1075,7 +1095,7 @@ function validateAnchors(value: unknown, path: string, entities: Map<ID, Entity>
     if (typeof object.start === 'number' || typeof object.end === 'number') {
       if (typeof object.start !== 'number' || typeof object.end !== 'number') addIssue(issues, path, '文字範囲はstart/endを対で指定してください。');
       if (targetText === undefined) addIssue(issues, path, '文字範囲には本文ブロックまたは台詞への参照が必要です。');
-      else if (typeof object.end === 'number' && object.end > [...targetText].length) addIssue(issues, `${path}.end`, '文字範囲が参照元の本文を超えています。');
+      else if (typeof object.end === 'number' && object.end > codePointLength(targetText)) addIssue(issues, `${path}.end`, '文字範囲が参照元の本文を超えています。');
     }
   }
   for (const [field, child] of Object.entries(object)) if (!['publicTexts', 'before', 'after', 'runtimeState'].includes(field)) validateAnchors(child, `${path}.${field}`, entities, blocks, issues, depth + 1, resolveVersion);

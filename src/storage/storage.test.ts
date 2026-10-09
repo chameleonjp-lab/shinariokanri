@@ -1,4 +1,5 @@
 import 'fake-indexeddb/auto';
+import Dexie from 'dexie';
 import { afterEach, describe, expect, it } from 'vitest';
 import { zipSync, unzipSync } from 'fflate';
 import { createEntity, createProject, newId, textToRichText, validateProject } from '../domain/model';
@@ -36,6 +37,30 @@ async function rewriteArchive(bytes: Uint8Array, mutate: (files: Record<string, 
 }
 
 describe('atomic IndexedDB commands', () => {
+  it('hydrates private cold rows without changing stored blocks, drafts or fixed snapshots', async () => {
+    const name = `private-hydration-${newId()}`, first = store(undefined, name), project = fixture();
+    project.snapshots.push(await snapshot(project));
+    const saved = (await first.saveProject(project, { reason: '本文と固定版' })).project;
+    first.close();
+    const raw = new Dexie(name); await raw.open();
+    const durable = async () => sha256(jsonBytes({ entities: await raw.table('entities').toArray(), blocks: await raw.table('blocks').toArray() }));
+    try {
+      const before = await durable(), cold = store(undefined, name);
+      const draft = (await cold.getProjectForEditing(project.projectId))!;
+      expect(draft.entities).toEqual(saved.entities); expect(draft.snapshots).toEqual(saved.snapshots);
+      const note = draft.entities.find((entity): entity is Entity<'note'> => entity.kind === 'note')!;
+      note.data.body[0].text = '保存していない入力';
+      const again = (await cold.getProjectForEditing(project.projectId))!;
+      expect(again.entities).toEqual(saved.entities); expect(again.snapshots).toEqual(saved.snapshots);
+      expect(await durable()).toBe(before);
+      cold.close();
+      const restarted = store(undefined, name);
+      expect(await restarted.getProject(project.projectId)).toEqual(saved);
+      const archive = await inspectScenario(await restarted.exportProject(project.projectId), { worker: false });
+      expect(archive.project).toEqual(saved);
+      expect(await durable()).toBe(before);
+    } finally { raw.close(); }
+  });
   it('persists stable IDs, links, original text and huge negative ticks across restart; undo appends history', async () => {
     const dbName = `restart-${newId()}`, first = store(undefined, dbName);
     const initial = (await first.saveProject(fixture(), { reason: '作成' })).project;
