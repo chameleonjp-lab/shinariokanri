@@ -4,7 +4,7 @@ import {useScenarioStore,useAuthorScope,storeForAuthorScope} from './StoreContex
 import { useEffect, useSyncExternalStore, useMemo, useState } from 'react';
 import type { Entity, ProjectData } from '../domain/types';
 import { newId } from '../domain/model';
-import { ARCHIVE_LIMITS, inspectScenario, sha256, type ImportDraft, type ImportMode, type ImportPreview, type PreparedScenario } from '../storage';
+import { ARCHIVE_LIMITS, inspectScenario, sha256, StorageError, type ImportDraft, type ImportMode, type ImportPreview, type PreparedScenario } from '../storage';
 import { collectImportIds } from '../storage/importMapping';
 import { projectWithRecoveryHistory } from '../storage/recovery';
 import { Icon, downloadBytes, safeFileName } from './components';
@@ -15,6 +15,11 @@ import { PagedSelect } from './PagedSelect';
 interface Draft extends ImportDraft { prepared?: PreparedScenario; preview?: ImportPreview; checked: boolean; busy: boolean; ready: boolean; error: string; notice: string; progress: string; saved?: { projectId: string; revision: string }; controller?: AbortController }
 const drafts = new Map<string, Draft>(), listeners = new Set<() => void>(), writes = new Map<string, Promise<unknown>>();
 const queuedFiles = new Map<string, File>();
+function recoveryErrorMessage(cause: unknown, fileName?: string): string {
+  const message = cause instanceof Error && cause.message ? cause.message : '完全保存・復元の処理に失敗しました。入力と元ファイルを保持して再試行してください。';
+  const path = cause instanceof StorageError && cause.path ? cause.path : fileName;
+  return path ? `${path}: ${message}` : message;
+}
 const emit = () => listeners.forEach(listener => listener());
 function load(key: string): Draft { let value = drafts.get(key); if (!value) { value = { key, mode: 'clone', targetProjectId: key.split(':').at(-1) === 'library' ? '' : key.split(':').at(-1)!, idMap: {}, resolutions: {}, checked: false, busy: false, ready: false, error: '', notice: '', progress: '' }; drafts.set(key, value); } return value; }
 function update(key: string, patch: Partial<Draft>, persist = false) {
@@ -22,7 +27,7 @@ function update(key: string, patch: Partial<Draft>, persist = false) {
   if (persist) {
     const value = next, request: ImportDraft = { key, sourceHash: value.sourceHash, mode: value.mode, targetProjectId: value.targetProjectId, idMap: structuredClone(value.idMap), resolutions: structuredClone(value.resolutions), selectedId: value.selectedId };
     const prior = writes.get(key) ?? Promise.resolve();
-    const capturedStore=storeForAuthorScope(key),pending = prior.catch(() => {}).then(() => capturedStore.saveImportDraft(request)).catch(cause => update(key, { error: `復元入力の一時保存に失敗しました。画面内の入力は保持しています。${(cause as Error).message}` })); writes.set(key, pending);
+    const capturedStore=storeForAuthorScope(key),pending = prior.catch(() => {}).then(() => capturedStore.saveImportDraft(request)).catch(cause => update(key, { error: `復元入力の一時保存に失敗しました。画面内の入力は保持しています。${recoveryErrorMessage(cause)}` })); writes.set(key, pending);
   }
 }
 const subscribe = (listener: () => void) => { listeners.add(listener); return () => listeners.delete(listener); };
@@ -33,10 +38,10 @@ export function BackupPanel({ project, projects, onImported }: { project: Projec
   const draft = useSyncExternalStore(subscribe, () => load(key));
   const [query, setQuery] = useState('');
   const [recoveredPendingCount, setRecoveredPendingCount] = useState(0);
-  useEffect(() => { let live = true; setRecoveredPendingCount(0); if (project) void scenarioStore.getSaveState(project.projectId).then(value => { if (live) setRecoveredPendingCount(value.recoveredPendingCount); }).catch(cause => update(key, { error: (cause as Error).message })); return () => { live = false; }; }, [key, project?.revision]);
+  useEffect(() => { let live = true; setRecoveredPendingCount(0); if (project) void scenarioStore.getSaveState(project.projectId).then(value => { if (live) setRecoveredPendingCount(value.recoveredPendingCount); }).catch(cause => update(key, { error: recoveryErrorMessage(cause) })); return () => { live = false; }; }, [key, project?.revision]);
   const ownedIds = useMemo(() => {
     try { return { ids: draft.prepared ? collectImportIds(projectWithRecoveryHistory(draft.prepared.project, draft.prepared.recovery)) : [], error: '' }; }
-    catch (cause) { return { ids: [], error: (cause as Error).message }; }
+    catch (cause) { return { ids: [], error: recoveryErrorMessage(cause) }; }
   }, [draft.prepared]);
   const ids = ownedIds.ids;
   const matches = useMemo(() => { const text = query.normalize('NFKC').toLowerCase(); return ids.filter(item => `${item.id} ${item.role} ${draft.prepared?.project.entities.find(entity => entity.id === item.id)?.name ?? ''}`.normalize('NFKC').toLowerCase().includes(text)); }, [ids, query, draft.prepared]);
@@ -59,13 +64,13 @@ export function BackupPanel({ project, projects, onImported }: { project: Projec
         if (saved.bytes && await sha256(saved.bytes) !== saved.sourceHash) throw new Error('保持した元ファイルのhashが一致しません。');
         update(key, { ...saved, bytes: undefined, prepared, preview: undefined, checked: false, notice: prepared ? '元ファイルとID対応の入力を再開しました。対象版の影響を再確認してください。' : '' });
       }
-    }).catch(cause => update(key, { error: (cause as Error).message })).finally(() => update(key, { ready: true, busy: false, progress: '' }));
+    }).catch(cause => update(key, { error: recoveryErrorMessage(cause) })).finally(() => update(key, { ready: true, busy: false, progress: '' }));
   }, [key]);
   useEffect(() => {
     const value = load(key);
     if (value.saved && projects.some(candidate => candidate.projectId === value.saved!.projectId && BigInt(candidate.revision) >= BigInt(value.saved!.revision))) {
       update(key, { busy: false, saved: undefined, prepared: undefined, preview: undefined, checked: false, notice: '検査した作品を端末内に復元しました。保存した版を確認しました。' });
-      const clear = (writes.get(key) ?? Promise.resolve()).catch(() => {}).then(() => scenarioStore.clearImportDraft(key)).catch(cause => update(key, { error: `復元済みの入力を消去できませんでした。${(cause as Error).message}` }));
+      const clear = (writes.get(key) ?? Promise.resolve()).catch(() => {}).then(() => scenarioStore.clearImportDraft(key)).catch(cause => update(key, { error: `復元済みの入力を消去できませんでした。${recoveryErrorMessage(cause)}` }));
       writes.set(key, clear);
     }
   }, [key, projects]);
@@ -75,20 +80,20 @@ export function BackupPanel({ project, projects, onImported }: { project: Projec
     update(key, { busy: true, error: '', checked: false, progress: 'ID対応・差分・素材を検査中…' });
     const controller = new AbortController(); update(key, { controller });
     try { await (writes.get(key) ?? Promise.resolve()); const result = await scenarioStore.previewImport(request.prepared, { mode: request.mode, targetProjectId: ['replace', 'merge', 'mapped_merge'].includes(request.mode) ? request.targetProjectId : undefined, idMap: request.idMap, resolutions: request.resolutions, signal: controller.signal }); update(key, { preview: result }); }
-    catch (cause) { recordDiagnostic(cause,{accountId:scenarioStore.accountId,revision:project?.revision});update(key, { error: (cause as Error).message }); }
+    catch (cause) { recordDiagnostic(cause,{accountId:scenarioStore.accountId,revision:project?.revision});update(key, { error: recoveryErrorMessage(cause) }); }
     finally { update(key, { busy: false, controller: undefined, progress: '' }); }
   }
   async function inspect(file: File) {
     if (load(key).busy) { queuedFiles.set(key, file); return; }
-    if (file.size > ARCHIVE_LIMITS.compressedBytes) { update(key, { error: '保存ファイルの上限は64 MiBです。元の復元入力と保存済み作品を保持しています。' }); return; }
+    if (file.size > ARCHIVE_LIMITS.compressedBytes) { update(key, { error: `${file.name}: 保存ファイルの上限は64 MiBです。元の復元入力と保存済み作品を保持しています。` }); return; }
     const controller = new AbortController(); let inspected = false; update(key, { busy: true, error: '', notice: '', progress: 'ファイルを読み込み中…', controller });
     try {
       const bytes = new Uint8Array(await file.arrayBuffer()), prepared = await inspectScenario(bytes, { signal: controller.signal, onProgress: progress => update(key, { progress: `${progress.stage} ${progress.completed} / ${progress.total}` }) }), sourceHash = await sha256(bytes), prior = load(key), sameFile = sourceHash === prior.sourceHash;
       const next: ImportDraft = { key, bytes, sourceHash, mode: sameFile ? prior.mode : projects.some(p => p.projectId === prepared.project.projectId) ? 'clone' : 'new', targetProjectId: sameFile ? prior.targetProjectId : projects.some(p => p.projectId === prepared.project.projectId) ? prepared.project.projectId : prior.targetProjectId, idMap: sameFile ? prior.idMap : {}, resolutions: sameFile ? prior.resolutions : {} };
       update(key, { ...next, bytes: undefined, prepared, preview: undefined, checked: false });
       inspected = true;
-      try { await (writes.get(key) ?? Promise.resolve()).catch(() => {}); await scenarioStore.saveImportDraft(next); } catch (cause) { recordDiagnostic(cause,{accountId:scenarioStore.accountId,revision:project?.revision});update(key, { error: `元ファイルの一時保存に失敗しました。入力は画面内に保持しています。${(cause as Error).message}` }); }
-    } catch (cause) { recordDiagnostic(cause,{accountId:scenarioStore.accountId,revision:project?.revision});update(key, { error: (cause as Error).message }); }
+      try { await (writes.get(key) ?? Promise.resolve()).catch(() => {}); await scenarioStore.saveImportDraft(next); } catch (cause) { recordDiagnostic(cause,{accountId:scenarioStore.accountId,revision:project?.revision});update(key, { error: `元ファイルの一時保存に失敗しました。入力は画面内に保持しています。${recoveryErrorMessage(cause, file.name)}` }); }
+    } catch (cause) { recordDiagnostic(cause,{accountId:scenarioStore.accountId,revision:project?.revision});update(key, { error: recoveryErrorMessage(cause, file.name) }); }
     finally { update(key, { busy: false, controller: undefined, progress: '' }); }
     if (inspected && load(key).prepared && load(key).mode !== 'mapped_merge') await preview();
   }
@@ -97,13 +102,13 @@ export function BackupPanel({ project, projects, onImported }: { project: Projec
     update(key, { busy: true, error: '', progress: '確認した内容を原子保存中…' });
     const controller = new AbortController(); update(key, { controller });
     try { const result = await scenarioStore.importScenario(request.prepared, { mode: request.mode, targetProjectId: ['replace', 'merge', 'mapped_merge'].includes(request.mode) ? request.targetProjectId : undefined, baseRevision: request.preview.target?.revision, idMap: request.idMap, resolutions: request.resolutions, confirmationHash: request.preview.confirmationHash, signal: controller.signal }); update(key, { saved: { projectId: result.project.projectId, revision: result.project.revision }, controller: undefined, progress: '保存した版の表示を待っています…' }); onImported(result.project, { followSelection: !queuedFiles.has(key) }); }
-    catch (cause) { recordDiagnostic(cause,{accountId:scenarioStore.accountId,revision:project?.revision});update(key, { busy: false, controller: undefined, progress: '', error: (cause as Error).message }); }
+    catch (cause) { recordDiagnostic(cause,{accountId:scenarioStore.accountId,revision:project?.revision});update(key, { busy: false, controller: undefined, progress: '', error: recoveryErrorMessage(cause) }); }
   }
   async function exportBackup(full = true) {
     if (!project || load(key).busy) return; update(key, { busy: true, error: '', notice: '', progress: '完全保存ファイルを作成中…' });
     const controller = new AbortController(); update(key, { controller });
     try { const bytes = await scenarioStore.exportProject(project.projectId, { assetMode: full ? 'embedded' : 'metadata_only', signal: controller.signal,onProgress:p=>update(key,{progress:({container:'ファイル一覧を確認',expanding:'ファイルを展開',hashes:'保存した操作を照合',validating:'内容と履歴を検査',serializing:'本文・履歴・素材を格納',compressing:'保存ファイルを圧縮'})[p.stage]+` ${p.completed}/${p.total}`}) }); downloadBytes(bytes as BlobPart, `${safeFileName(project.name)}${full ? '' : '-素材を除く'}.scenario`, 'application/zip'); update(key, { notice: full ? '完全保存ファイルを作成しました。端末のダウンロードを確認してください。' : '素材bytesを除いたファイルを作成しました。完全復元には素材が別途必要です。' }); }
-    catch (cause) { recordDiagnostic(cause,{accountId:scenarioStore.accountId,revision:project?.revision});update(key, { error: (cause as Error).message }); }
+    catch (cause) { recordDiagnostic(cause,{accountId:scenarioStore.accountId,revision:project?.revision});update(key, { error: recoveryErrorMessage(cause) }); }
     finally { update(key, { busy: false, controller: undefined, progress: '' }); }
   }
   return <section className="backup-page">{project && <div className="backup-card"><Icon name="download" size={26}/><div><h3>作品を完全保存</h3><p>本文・状態・固定世界・履歴・送信待ち・添付を .scenario ファイルに保存します。</p><button className="button primary" disabled={draft.busy} onClick={() => void exportBackup()}>完全保存ファイルを作成</button><button className="text-button" disabled={draft.busy} onClick={() => void exportBackup(false)}>素材bytesを除いて保存</button></div></div>}

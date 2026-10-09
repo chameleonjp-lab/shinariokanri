@@ -1,0 +1,80 @@
+{
+  "original_case": "AT-N09",
+  "source_candidate": "572c6df91d09e141555c2f752b246107a2512786",
+  "source_tree": "1822ac96925fa765068a6339c5e828fe24f3e998",
+  "source_build": "d20d298b7ea8ae89db82",
+  "provenance": "Independent unchanged seven N09 input fixtures. completeInformation/fullFixtureBytes and badArchives generation source retained with C9 independent evidence; all full fixture bytes reused without weakening expected conditions.",
+  "generation_sources": [
+    {
+      "path": "/tmp/shinariokanri-independent-rb10-c9-572c6df/prepared/harness-c1/extended-support.ts",
+      "sha256": "7e843764f990365dbb7e514055585c4c1674ed559a11ef0d0d96a8b64db61a27"
+    },
+    {
+      "path": "/tmp/shinariokanri-independent-rb10-c9-572c6df/prepared/harness-c1/composite-fixtures.ts",
+      "sha256": "4f3430c2d69e6fce39814f8461ff77764ba7280c18735ede6c303315be145830"
+    }
+  ],
+  "complete": {
+    "path": "complete.scenario",
+    "bytes": 12864,
+    "sha256": "09a837f1572c72e763d06e82102f52347cf777dd698c68fc1c7b554445caf593"
+  },
+  "negative": [
+    {
+      "path": "project-hash-mismatch.scenario",
+      "bytes": 12866,
+      "sha256": "d29eaf524888cf9355e3ce92b22569dd92da38efbf68c82c88a1d061c28fb09e",
+      "expected_reason": "hash|ハッシュ|一致|破損",
+      "explanation": "One private project byte changes; manifest SHA remains original.",
+      "expected_path": "data/project.json"
+    },
+    {
+      "path": "unknown-major-format.scenario",
+      "bytes": 12867,
+      "sha256": "1aa359b6566139d9b8fc56c3b8974876762f7b9832956022454e87fb2b48ecab",
+      "expected_reason": "版|未対応|形式",
+      "explanation": "Unsupported major version is not migrated or partially imported.",
+      "expected_path": "manifest.json"
+    },
+    {
+      "path": "dangerous-path.scenario",
+      "bytes": 12974,
+      "sha256": "59f4ea500669586957993644e86238f9f45e59083aedf6ccbb2aff0fe7a5d8fe",
+      "expected_reason": "パス|path|危険|禁止",
+      "explanation": "Explicit traversal path in the ZIP container.",
+      "expected_path": "../project.json"
+    },
+    {
+      "path": "broken-typed-reference.scenario",
+      "bytes": 12880,
+      "sha256": "f15e70d2a6c8a2328a2d8abf1a539279445f359cab4e3283c2aeef9f04086699",
+      "expected_reason": "参照|REFERENCE|見つか|存在",
+      "explanation": "Correct file SHA but a nonexistent typed event.locationId.",
+      "expected_path": "data/project.json"
+    },
+    {
+      "path": "owned-ID-collision.scenario",
+      "bytes": 12873,
+      "sha256": "03b1eb184ae72f51f52e84c3b1376b5369aa38f6fb0f8b0966aa1b82d083e975",
+      "expected_reason": "ID|重複|衝突",
+      "explanation": "Correct SHA but duplicate owned entity ID.",
+      "expected_path": "data/project.json"
+    },
+    {
+      "path": "understated-compressed-payload.scenario",
+      "bytes": 18978,
+      "sha256": "a1518d4c781b2a7009a332d4b7e4886dcc892035ad618f34dd4fbca607600d0d",
+      "expected_reason": "上限|LIMIT|展開|宣言",
+      "explanation": "Compressed text is bounded at100KB but central/local expanded sizes understate100B; reject before partial import.",
+      "expected_path": "data/project.json"
+    },
+    {
+      "path": "duplicate-attachment-ZIP-path.scenario",
+      "bytes": 12864,
+      "sha256": "ed62c26e0f8b2fae9ed51faba4ee3a8b03b82dd22156ed073793e5ca508c9f04",
+      "expected_reason": "重複|ファイル名",
+      "explanation": "Both central and local names of the second attachment become the first attachment name.",
+      "expected_path": "assets/bceafcd9fef027847ebaa65b17642b488167e06c4a7b6413b9b3ac2147f1fab4.png"
+    }
+  ]
+}

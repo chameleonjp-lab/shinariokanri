@@ -103,3 +103,15 @@ C9は同じreadonly transactionの全範囲を2048件ずつ読み、編集読込
 初回新規機能検査の30秒超過と120秒再実行、存在しない診断CLIフィルター、順序試作の不改善をworking-bounded-cold-readで個別に保持。時間条件や元受入を緩めず、実OS/IME/Files/録音/VoiceOver/NVDA/専用実Auth・RLS・privateStorage/5実アカウント/現行quota・費用が必要な条件をnot_runとして残す。候補buildと具体的な短い確認手順を用意し、release evidence gateを維持する。
 
 PR #21は外部操作で2026-10-09T09:34:51Zにmain 449de9b469792b8778a7340b8ae27585d9d31e3a / tree 45726131d7f818d07b57aa8a26a9b7293b7cc129へ取り込まれた。同treeの固定C8のCI成功とLarge30未達をそのまま保持する。C9の分割読込を最新mainからfeat/rb10-bounded-cold-readへ移した。移す前の6a963aa buildは測定未実行の準備artifactとして別保存し、正式測定には新候補commit/treeのclean buildを用いる。
+
+## C9の原N09差分とC10の表示修正
+
+固定C9 572c6df/tree1822ac/buildd20dのCI37912747066、外部main4bd4371のCI37918015985は全20step764/261成功。原Standard8指標各30回とLarge実入力開始p95=7675.7ms／検索579.9msは局所数値内。元Large完全保存の取消/再入/2通常保存/空390new・clone/coldは88,003件・履歴/回復待ち・素材72MiBの全bytes/hashが一致した。
+
+独立原AT-N09で7拒否のnative12table不変を確認したが、5種類で対象パスが画面から欠落。C9実7200秒は10:25:36から10:45:48、21編集/試読で中断し未完了として保持。C10はBackupPanelの全10エラー境界でpathと理由を表示し、内部パス不明の読込では選択したファイル名を示す。同じ7破損fixtureの3browser通常・native15binary/下書き不変・clone原子ack/cold再試行と764/81単体がdirty準備で成功。cleanC10の全CI・正式各30回・Large復元・実7200秒・独立原116は別実行する。原文・schema・形式・上限・公開gateは不変。
+
+C7F05の旧全体passed判断は、1章内の場面順変更だけで原『章順変更』が未観測だったため撤回した。原rawは保持し、C9の複数章通常変更/原子失敗/再試行/cold/旧版/new-clone/tick不変を別の観測へ結合する。実OS/IME/Files/録音/VoiceOver/NVDA/専用実Auth・RLS・privateStorage/実accounts/現行quota・費用と公開先の不足を未実行のまま残す。
+
+## C10の探索取消結果保持
+
+独立した小fixtureで原AT-N05の取消→資料→試読の結果消失もC9通常productionで再現した。取消結果はunknown/truncated、正本12tableと未保存JSONは不変だったが、結果と保存導線が再入時に失われた。この追加観測は旧C9sealを変更せず別証拠へ保持する。C10は作者・作品別ReaderDraftへ結果/進捗/実行状態と共有取消を保持し、旧作者purge後の遅延書込を防ぐ。改訂後の現稿結果は再確認を明示、選択版が異なっても元対象版を保持する。dirty通常3browser×2ケースと全764/81単体が成功。原Large＋長い分岐・実時間7200秒・最終原116・実機・実APIの不足は別判定のまま。
