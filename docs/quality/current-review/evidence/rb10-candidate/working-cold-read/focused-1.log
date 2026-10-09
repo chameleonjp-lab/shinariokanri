@@ -1,0 +1,144 @@
+
+ RUN  v5.0.3 /workspace/shinariokanri-rb10
+
+stderr | src/storage/storage.test.ts > atomic IndexedDB commands > hydrates private cold rows without changing stored blocks, drafts or fixed snapshots
+Another connection wants to delete database 'private-hydration-beccd1eb-9cb3-4c47-a946-96d0a683b175'. Closing db now to resume the delete request.
+
+stderr | src/storage/storage.test.ts > atomic IndexedDB commands > persists stable IDs, links, original text and huge negative ticks across restart; undo appends history
+Another connection wants to delete database 'restart-64b9e5e8-b514-47be-bed7-7fc69507dd38'. Closing db now to resume the delete request.
+
+ ✓ src/storage/recordParts.test.ts (5 tests) 1629ms
+   ✓ refuses missing, altered, wrong-scope and repeated parts, cyclic graphs, sparse arrays and cancelled work 1567ms
+ ❯ src/domain/domain.test.ts (96 tests | 1 failed) 1692ms
+   ❯ versioned entity and reference contracts (65)
+     ✓ validates a complete all-kind project and the interactive demo 26ms
+     ✓ rejects unknown payload fields for character 1ms
+     ✓ rejects unknown payload fields for group 1ms
+     ✓ rejects unknown payload fields for event 1ms
+     ✓ rejects unknown payload fields for place 1ms
+     ✓ rejects unknown payload fields for item 1ms
+     ✓ rejects unknown payload fields for note 1ms
+     ✓ rejects unknown payload fields for chapter 1ms
+     ✓ rejects unknown payload fields for scene 3ms
+     ✓ rejects unknown payload fields for goal 1ms
+     ✓ rejects unknown payload fields for flow_node 1ms
+     ✓ rejects unknown payload fields for flow_edge 1ms
+     ✓ rejects unknown payload fields for flow_graph 1ms
+     ✓ rejects unknown payload fields for dialogue_line 1ms
+     ✓ rejects unknown payload fields for quest 1ms
+     ✓ rejects unknown payload fields for lore 1ms
+     ✓ rejects unknown payload fields for variable 1ms
+     ✓ rejects unknown payload fields for effect 1ms
+     ✓ rejects unknown payload fields for assertion 1ms
+     ✓ rejects unknown payload fields for foreshadow 1ms
+     ✓ rejects unknown payload fields for disclosure 1ms
+     ✓ rejects unknown payload fields for checkpoint 0ms
+     ✓ rejects unknown payload fields for trace 1ms
+     ✓ rejects unknown payload fields for attachment 0ms
+     ✓ rejects unknown payload fields for source 0ms
+     ✓ rejects unknown payload fields for cue 0ms
+     ✓ rejects unknown payload fields for storyboard_frame 0ms
+     ✓ rejects unknown payload fields for localization 0ms
+     ✓ rejects unknown payload fields for recording 0ms
+     ✓ rejects unknown payload fields for terminology 0ms
+     ✓ rejects unknown payload fields for map 0ms
+     ✓ rejects unknown payload fields for travel_route 0ms
+     ✓ rejects unknown payload fields for template 0ms
+     ✓ rejects unknown payload fields for collection 0ms
+     ✓ rejects unknown payload fields for review 0ms
+     ✓ rejects unknown payload fields for creative_brief 0ms
+     ✓ rejects unknown payload fields for decision 2ms
+     ✓ rejects unknown payload fields for gameplay_spec 0ms
+     ✓ rejects unknown payload fields for production_task 0ms
+     ✓ rejects unknown payload fields for media_variant 0ms
+     ✓ rejects unknown payload fields for voice_rule 0ms
+     ✓ rejects unknown payload fields for external_contract 0ms
+     ✓ rejects unknown payload fields for snapshot 1ms
+     ✓ rejects unknown payload fields for projection_profile 0ms
+     ✓ preserves duplicate display names while refusing key and ID collisions 1ms
+     ✓ checks missing references, reference kinds, and project scope 1ms
+     ✓ checks explicit pinned world snapshots independently for old/current content 2ms
+     ✓ rejects a world UUID collision before it can overwrite a local variable declaration 1ms
+     ✓ rejects active local entity / world entity ID collisions in the shared record namespace 1ms
+     ✓ rejects active local entity / world relation ID collisions in the shared record namespace 1ms
+     ✓ rejects active local relation / world entity ID collisions in the shared record namespace 1ms
+     ✓ rejects active local relation / world relation ID collisions in the shared record namespace 1ms
+     ✓ rejects two simultaneously active versions of one world even when they contain no records 0ms
+     ✓ preserves the same world record IDs across separately pinned current, snapshot and history contexts 3ms
+     ✓ rejects cycles in parent trees, relative times, derived values and task dependencies 2ms
+     ✓ counts Unicode code points in rich text spans and rejects invalid surrogate text 1ms
+     × keeps code-point, byte and malformed-Unicode limits independent after repeated schema checks 68ms
+     ✓ leaves text unchanged while rewriting typed refs, then moves dictionary keys safely 3ms
+     ✓ requires holder/source/terminal and rejects unsafe assets and false immutable snapshots 2ms
+     ✓ keeps the portable schema artifact aligned with all executable field schemas 43ms
+     ✓ compiles the actual JSON Schema and accepts all-kind/condition/query fixtures while rejecting unknown payloads 1453ms
+     ✓ persists real demo trial records with block IDs in the complete seen state 15ms
+     ✓ validates pinned checkpoint and trace refs against their own content after live body and node changes 14ms
+     ✓ retains review and explicit source-version anchors when live text is replaced 2ms
+     ✓ validates snapshot metadata, content and project ownership inside both sides of every history command 2ms
+   ✓ lossless world time and calendars (15)
+     ✓ rejects noncanonical tick +1 0ms
+     ✓ rejects noncanonical tick -0 0ms
+     ✓ rejects noncanonical tick 01 0ms
+     ✓ rejects noncanonical tick -01 0ms
+     ✓ rejects noncanonical tick 1.5 0ms
+     ✓ rejects noncanonical tick 1e3 0ms
+     ✓ rejects noncanonical tick 999999999999999999999999999999999999999 0ms
+     ✓ rejects noncanonical tick 123 0ms
+     ✓ rejects noncanonical tick null 0ms
+     ✓ round-trips negative 38-digit ticks and rejects arithmetic overflow 1ms
+     ✓ handles astronomical year zero, Gregorian leap rules and negative days without JS Date 2ms
+     ✓ uses bounded repeating custom calendars for years before and after the origin 1ms
+     ✓ resolves relative uncertainty, rejects cycles and keeps unresolved anchors unknown 1ms
+     ✓ rejects fixed time conflicts and does not mutate world time when the display origin changes 1ms
+     ✓ rejects constraint cycles and reversed gaps while dates remain unknown, and accepts half-open adjacency 2ms
+   ✓ typed three-valued conditions and atomic effects (16)
+     ✓ evaluates all(false,unknown) = false 0ms
+     ✓ evaluates all(true,unknown) = unknown 0ms
+     ✓ evaluates any(true,unknown) = true 0ms
+     ✓ evaluates any(false,unknown) = unknown 0ms
+     ✓ preserves unknown through not and missing values, and rejects type errors even behind false 1ms
+     ✓ bounds AST depth/node count and refuses unknown operators, fields and expression strings 2ms
+     ✓ renders nested parentheses and evaluates integer in/enum comparisons 1ms
+     ✓ re-evaluates derived values from the current snapshot and rejects derived cycles 1ms
+     ✓ does not infer knowledge from participation or author truth 0ms
+     ✓ applies effects in order against a working copy and rolls the full group back on overflow 1ms
+     ✓ blocks forbidden enum transitions as a group and allows explicit reset 1ms
+     ✓ uses sequential effect conditions and rolls back an unknown condition 1ms
+     ✓ grants deterministic stacks, rejects duplicate individual ownership, and refuses moving consumed items 1ms
+     ✓ rejects a foreign type individual in consume before changing any inventory 1ms
+     ✓ rejects a foreign type individual in move before changing any inventory 1ms
+     ✓ rejects direct writes to derived variables and retains missing initial values as unknown 1ms
+ ✓ src/storage/storage.test.ts (44 tests) 1586ms
+   ✓ atomic IndexedDB commands (15)
+     ✓ hydrates private cold rows without changing stored blocks, drafts or fixed snapshots 392ms
+ ✓ src/storage/rb10Diagnostics.test.ts (4 tests) 159ms
+ ✓ src/storage/recordDictionary.test.ts (4 tests) 16ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/domain/domain.test.ts > versioned entity and reference contracts > keeps code-point, byte and malformed-Unicode limits independent after repeated schema checks
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ src/domain/domain.test.ts:134:28
+    132|     entity.data.summary[0].text += '😀';
+    133|     const longSummary = validateEntity(entity);
+    134|     expect(longSummary.ok).toBe(false);
+       |                            ^
+    135|     if (!longSummary.ok) expect(longSummary.issues.some(issue => issue…
+    136|     entity.data.summary[0].text = original.data.summary[0].text;
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 4 passed (5)
+      Tests  1 failed | 152 passed (153)
+   Start at  03:29:37
+   Duration  2.68s (tests 73%, transform 18%, import 9%)
+

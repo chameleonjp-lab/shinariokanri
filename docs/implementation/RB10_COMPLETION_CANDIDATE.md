@@ -37,3 +37,13 @@ Linux自動Chromium／Firefox／WebKit、320/390/768/1024/1440幅、キーボー
 Standard各30回の局所p95は基準内。Large検索は基準内だがcold local初回表示30回p95は12,390.7msで未達。次候補では一覧取得でheader全体を先にdecodeせず主キーを取得し、同一read transactionで取得済みのprivate headerを再利用する。cold成立検査は同じUnicode・有限数・循環・JSON不可値の拒否規則を保ち、使用しないcanonical文字列の構築を省く。全構造・ID・参照・固定世界・snapshot hash・復元検査は保持する。
 
 dirty予備測定3回の成功は最終30回の代用にしない。次候補のclean commit／tree／buildを固定し、全CI、各30回、Large完全復元と2時間の実継続編集を再実行する。
+
+固定C2 `0c8f625` の全単体756件とCI（通常画面252件、RB03/RB04を含む）は成功した。原結果は `evidence/rb10-candidate/candidate-2/` に保持する。Standard30回のactive関係図p95が50msで33.4ms基準を超えたため、C2も性能未達。Largeの最終確認をC2へ流用しない。
+
+次候補では関係図の変わらない線・項目をmemo化し、全ノードの既定座標はgraph更新時に計算して移動中は表示中の点だけを読む。layoutのcallbackと切替時fallbackは作品／作者／端末scope別に保持する。条件・採用状態・意味・参照・未知・ページの規則は同じ。実ドラッグ、矢印キー、座標入力、移動ボタン、線端点、390/1440配置、関係の原子保存、cold再読込、完全ファイルで一致を確認する。
+
+PR #18 は外部操作で `2026-10-09T02:52:19Z` にmain `c590b47`（C2と同一tree）へ取り込まれた。次候補はこの最新mainから `feat/rb10-graph-performance` にまとめる。C2のCI成功と図の性能未達を分け、mainへ入ったことを完成判定に置き換えない。
+
+固定C3 `e4987df` / tree `7d92a7e` のCI run 37878165457は756単体・255通常画面と全検査が成功。Standard30回の原局所8指標は基準内、active図p95=16.734ms。一方Large初回表示30回p95=11,094.5msで10秒未達。検索p95=692.9msは2秒内。原結果と遅いsampleを `evidence/rb10-candidate/candidate-3/` へ保持する。初回1回やdirty3回を代用しない。
+
+次候補C4ではrich-text検査schema、同種record schemaとTextEncoderの再生成を減らし、Unicodeコードポイントを配列なしで数える。公開schemaが置換された場合はcacheを更新し、可変fieldsも毎回読む。cold読取は本文markerの祖先だけをcopy-on-changeで複製し、入力行・block・固定snapshotを変更しない。条件・未知・参照・世界・全hash・ID・上限の検査は保持。原2048コードポイント・UTF-8 1MiB・不正surrogate・ruby位置、cold draftとraw行SHA不変、完全fileを確認する。予備3回p95=7,367.1msは診断のみで最終30回に換算しない。追加fixtureの上限誤記と型エラー、修正前後の結果は `working-cold-read/` に残す。照合JSONの更新は最初にoriginal_requirement.idの参照を誤り中断し、コード/証拠のcommit b2806b2には最新照合が入らなかった。原文不変と全source SHAを確認して補正後にC4対象版を固定する。

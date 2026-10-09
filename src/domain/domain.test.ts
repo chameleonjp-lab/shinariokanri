@@ -121,6 +121,33 @@ describe('versioned entity and reference contracts', () => {
     note.data.body[0].ruby![0].end = 4; expect(validateProject(project).ok).toBe(false);
     note.data.body[0].ruby = []; note.data.body[0].text = '\ud800'; expect(validateProject(project).ok).toBe(false);
   });
+  it('keeps code-point, byte and malformed-Unicode limits independent after repeated schema checks', () => {
+    const entity = createEntity(newId(), 'character', '境界の文字');
+    entity.data.summary = [{ id: newId(), kind: 'paragraph', text: '😀'.repeat(2048), ruby: [{ start: 2047, end: 2048, text: '末尾' }] }];
+    entity.data.body = [{ id: newId(), kind: 'paragraph', text: '😀'.repeat(256 * 1024) }];
+    const original = structuredClone(entity);
+    expect(validateEntity(entity).ok).toBe(true);
+    expect(validateEntity(entity).ok).toBe(true);
+    expect(entity).toEqual(original);
+    entity.data.summary[0].text += '😀';
+    const longSummary = validateEntity(entity);
+    expect(longSummary.ok).toBe(false);
+    if (!longSummary.ok) expect(longSummary.issues.some(issue => issue.message.includes('2048'))).toBe(true);
+    entity.data.summary[0].text = original.data.summary![0].text;
+    entity.data.summary[0].ruby![0].end = 2049;
+    expect(validateEntity(entity).ok).toBe(false);
+    entity.data.summary[0].ruby![0].end = 2048;
+    entity.data.body[0].text += 'a';
+    const longBytes = validateEntity(entity);
+    expect(longBytes.ok).toBe(false);
+    if (!longBytes.ok) expect(longBytes.issues.some(issue => issue.message.includes('MiB'))).toBe(true);
+    entity.data.body[0].text = original.data.body![0].text;
+    expect(validateEntity(entity).ok).toBe(true);
+    for (const invalid of ['\ud800', '\udc00', '😀\ud800字']) {
+      entity.data.body[0].text = invalid;
+      expect(validateEntity(entity).ok).toBe(false);
+    }
+  });
   it('leaves text unchanged while rewriting typed refs, then moves dictionary keys safely', () => {
     const project = createProject(), source = add(project, 'character'), targetId = newId();
     const profile = add(project, 'projection_profile', { audience: '読者', includedIds: [source.id], publicTexts: { [source.id]: { body: [{ id: newId(), kind: 'paragraph', text: `原文のUUID ${source.id}`, links: [{ start: 0, end: 1, target: { entityId: source.id } }] }] } } });

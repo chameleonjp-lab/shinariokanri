@@ -1,0 +1,106 @@
+[WebServer] (node:495946) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 3 tests using 1 worker
+
+(node:495991) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  1 [chromium] › tests/e2e/rb10-graph.spec.ts:10:1 › graph movement keeps connected lines, device layout and live semantic edits consistent through cold reload (30.1s)
+(node:496145) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Skipping host requirements validation logic because `PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS` env variable is set.
+  ✘  2 [firefox] › tests/e2e/rb10-graph.spec.ts:10:1 › graph movement keeps connected lines, device layout and live semantic edits consistent through cold reload (30.3s)
+(node:496404) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Skipping host requirements validation logic because `PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS` env variable is set.
+  ✘  3 [webkit] › tests/e2e/rb10-graph.spec.ts:10:1 › graph movement keeps connected lines, device layout and live semantic edits consistent through cold reload (30.1s)
+
+
+  1) [chromium] › tests/e2e/rb10-graph.spec.ts:10:1 › graph movement keeps connected lines, device layout and live semantic edits consistent through cold reload 
+
+    Test timeout of 30000ms exceeded.
+
+    Error: locator.selectOption: Test timeout of 30000ms exceeded.
+    Call log:
+      - waiting for getByRole('dialog', { name: '意味付きの関係を編集', exact: true }).getByLabel('向き', { exact: true })
+
+
+      15 |  const x=Number(await node.locator('text').getAttribute('x')),otherX=await other.locator('text').getAttribute('x');await node.press('ArrowRight');await node.press('ArrowRight');await expect(node.locator('text')).toHaveAttribute('x',String(x+40));await expect(line.locator('line').first()).toHaveAttribute('x1',String(x+40));await expect(other.locator('text')).toHaveAttribute('x',otherX!);await expect(page.getByLabel('選択した項目の横位置',{exact:true})).toHaveValue(String(x+40));
+      16 |  await page.reload();await graph(page);await expect(node.locator('text')).toHaveAttribute('x',String(x+40));await page.setViewportSize({width:390,height:844});await expect(node.locator('text')).toHaveAttribute('x',String(x));await node.click();await page.getByRole('button',{name:'選択項目を→へ移動',exact:true}).click();await expect(node.locator('text')).toHaveAttribute('x',String(x+20));await expect(line.locator('line').first()).toHaveAttribute('x1',String(x+20));await page.setViewportSize({width:1440,height:1000});await expect(node.locator('text')).toHaveAttribute('x',String(x+40));
+    > 17 |  expect(await completeImage(page)).toEqual(before);await graph(page);await node.press('Enter');await expect(page.locator('.detail-heading')).toContainText('配置A');await page.getByRole('button',{name:'詳細を閉じる',exact:true}).click();await line.press('Enter');const dialog=page.getByRole('dialog',{name:'意味付きの関係を編集',exact:true});await dialog.getByLabel('関係の種類',{exact:true}).selectOption('related');await dialog.getByRole('combobox',{name:'関係の始点',exact:true}).selectOption(a.id);await dialog.getByRole('combobox',{name:'関係の終点',exact:true}).selectOption(b.id);await dialog.getByLabel('向き',{exact:true}).selectOption('symmetric');await dialog.getByRole('button',{name:'関係を保存',exact:true}).click();await expect(dialog).toBeHidden();
+         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     ^
+      18 |  const updated=page.getByRole('button',{name:'配置Aから配置Bへ、関連、関係を編集',exact:true});await expect(updated).toBeVisible();await expect(line).toHaveCount(0);await expect(updated.locator('line').nth(1)).toHaveAttribute('marker-start','url(#world-relation-arrow)');await page.reload();await graph(page);await expect(updated).toBeVisible();await expect(node.locator('text')).toHaveAttribute('x',String(x+40));const after=await completeImage(page);expect(after.relations).toHaveLength(1);expect(after.relations[0]).toMatchObject({id:p.relations[0].id,fromId:a.id,toId:b.id,relationType:'related',direction:'symmetric'});expect(after.entities).toEqual(before.entities);
+      19 | });
+      20 |
+        at /workspace/shinariokanri-rb10/tests/e2e/rb10-graph.spec.ts:17:597
+
+    Error Context: ../../tmp/shinariokanri-rb10-working-graph-e2e-16/rb10-graph-graph-movement--b66d8-sistent-through-cold-reload-chromium/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../tmp/shinariokanri-rb10-working-graph-e2e-16/rb10-graph-graph-movement--b66d8-sistent-through-cold-reload-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace ../../tmp/shinariokanri-rb10-working-graph-e2e-16/rb10-graph-graph-movement--b66d8-sistent-through-cold-reload-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) [firefox] › tests/e2e/rb10-graph.spec.ts:10:1 › graph movement keeps connected lines, device layout and live semantic edits consistent through cold reload 
+
+    Test timeout of 30000ms exceeded.
+
+    Error: locator.selectOption: Test timeout of 30000ms exceeded.
+    Call log:
+      - waiting for getByRole('dialog', { name: '意味付きの関係を編集', exact: true }).getByLabel('向き', { exact: true })
+
+
+      15 |  const x=Number(await node.locator('text').getAttribute('x')),otherX=await other.locator('text').getAttribute('x');await node.press('ArrowRight');await node.press('ArrowRight');await expect(node.locator('text')).toHaveAttribute('x',String(x+40));await expect(line.locator('line').first()).toHaveAttribute('x1',String(x+40));await expect(other.locator('text')).toHaveAttribute('x',otherX!);await expect(page.getByLabel('選択した項目の横位置',{exact:true})).toHaveValue(String(x+40));
+      16 |  await page.reload();await graph(page);await expect(node.locator('text')).toHaveAttribute('x',String(x+40));await page.setViewportSize({width:390,height:844});await expect(node.locator('text')).toHaveAttribute('x',String(x));await node.click();await page.getByRole('button',{name:'選択項目を→へ移動',exact:true}).click();await expect(node.locator('text')).toHaveAttribute('x',String(x+20));await expect(line.locator('line').first()).toHaveAttribute('x1',String(x+20));await page.setViewportSize({width:1440,height:1000});await expect(node.locator('text')).toHaveAttribute('x',String(x+40));
+    > 17 |  expect(await completeImage(page)).toEqual(before);await graph(page);await node.press('Enter');await expect(page.locator('.detail-heading')).toContainText('配置A');await page.getByRole('button',{name:'詳細を閉じる',exact:true}).click();await line.press('Enter');const dialog=page.getByRole('dialog',{name:'意味付きの関係を編集',exact:true});await dialog.getByLabel('関係の種類',{exact:true}).selectOption('related');await dialog.getByRole('combobox',{name:'関係の始点',exact:true}).selectOption(a.id);await dialog.getByRole('combobox',{name:'関係の終点',exact:true}).selectOption(b.id);await dialog.getByLabel('向き',{exact:true}).selectOption('symmetric');await dialog.getByRole('button',{name:'関係を保存',exact:true}).click();await expect(dialog).toBeHidden();
+         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     ^
+      18 |  const updated=page.getByRole('button',{name:'配置Aから配置Bへ、関連、関係を編集',exact:true});await expect(updated).toBeVisible();await expect(line).toHaveCount(0);await expect(updated.locator('line').nth(1)).toHaveAttribute('marker-start','url(#world-relation-arrow)');await page.reload();await graph(page);await expect(updated).toBeVisible();await expect(node.locator('text')).toHaveAttribute('x',String(x+40));const after=await completeImage(page);expect(after.relations).toHaveLength(1);expect(after.relations[0]).toMatchObject({id:p.relations[0].id,fromId:a.id,toId:b.id,relationType:'related',direction:'symmetric'});expect(after.entities).toEqual(before.entities);
+      19 | });
+      20 |
+        at /workspace/shinariokanri-rb10/tests/e2e/rb10-graph.spec.ts:17:597
+
+    Error Context: ../../tmp/shinariokanri-rb10-working-graph-e2e-16/rb10-graph-graph-movement--b66d8-sistent-through-cold-reload-firefox/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../tmp/shinariokanri-rb10-working-graph-e2e-16/rb10-graph-graph-movement--b66d8-sistent-through-cold-reload-firefox/trace.zip
+    Usage:
+
+        npx playwright show-trace ../../tmp/shinariokanri-rb10-working-graph-e2e-16/rb10-graph-graph-movement--b66d8-sistent-through-cold-reload-firefox/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  3) [webkit] › tests/e2e/rb10-graph.spec.ts:10:1 › graph movement keeps connected lines, device layout and live semantic edits consistent through cold reload 
+
+    Test timeout of 30000ms exceeded.
+
+    Error: locator.selectOption: Test timeout of 30000ms exceeded.
+    Call log:
+      - waiting for getByRole('dialog', { name: '意味付きの関係を編集', exact: true }).getByLabel('向き', { exact: true })
+
+
+      15 |  const x=Number(await node.locator('text').getAttribute('x')),otherX=await other.locator('text').getAttribute('x');await node.press('ArrowRight');await node.press('ArrowRight');await expect(node.locator('text')).toHaveAttribute('x',String(x+40));await expect(line.locator('line').first()).toHaveAttribute('x1',String(x+40));await expect(other.locator('text')).toHaveAttribute('x',otherX!);await expect(page.getByLabel('選択した項目の横位置',{exact:true})).toHaveValue(String(x+40));
+      16 |  await page.reload();await graph(page);await expect(node.locator('text')).toHaveAttribute('x',String(x+40));await page.setViewportSize({width:390,height:844});await expect(node.locator('text')).toHaveAttribute('x',String(x));await node.click();await page.getByRole('button',{name:'選択項目を→へ移動',exact:true}).click();await expect(node.locator('text')).toHaveAttribute('x',String(x+20));await expect(line.locator('line').first()).toHaveAttribute('x1',String(x+20));await page.setViewportSize({width:1440,height:1000});await expect(node.locator('text')).toHaveAttribute('x',String(x+40));
+    > 17 |  expect(await completeImage(page)).toEqual(before);await graph(page);await node.press('Enter');await expect(page.locator('.detail-heading')).toContainText('配置A');await page.getByRole('button',{name:'詳細を閉じる',exact:true}).click();await line.press('Enter');const dialog=page.getByRole('dialog',{name:'意味付きの関係を編集',exact:true});await dialog.getByLabel('関係の種類',{exact:true}).selectOption('related');await dialog.getByRole('combobox',{name:'関係の始点',exact:true}).selectOption(a.id);await dialog.getByRole('combobox',{name:'関係の終点',exact:true}).selectOption(b.id);await dialog.getByLabel('向き',{exact:true}).selectOption('symmetric');await dialog.getByRole('button',{name:'関係を保存',exact:true}).click();await expect(dialog).toBeHidden();
+         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     ^
+      18 |  const updated=page.getByRole('button',{name:'配置Aから配置Bへ、関連、関係を編集',exact:true});await expect(updated).toBeVisible();await expect(line).toHaveCount(0);await expect(updated.locator('line').nth(1)).toHaveAttribute('marker-start','url(#world-relation-arrow)');await page.reload();await graph(page);await expect(updated).toBeVisible();await expect(node.locator('text')).toHaveAttribute('x',String(x+40));const after=await completeImage(page);expect(after.relations).toHaveLength(1);expect(after.relations[0]).toMatchObject({id:p.relations[0].id,fromId:a.id,toId:b.id,relationType:'related',direction:'symmetric'});expect(after.entities).toEqual(before.entities);
+      19 | });
+      20 |
+        at /workspace/shinariokanri-rb10/tests/e2e/rb10-graph.spec.ts:17:597
+
+    Error Context: ../../tmp/shinariokanri-rb10-working-graph-e2e-16/rb10-graph-graph-movement--b66d8-sistent-through-cold-reload-webkit/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../tmp/shinariokanri-rb10-working-graph-e2e-16/rb10-graph-graph-movement--b66d8-sistent-through-cold-reload-webkit/trace.zip
+    Usage:
+
+        npx playwright show-trace ../../tmp/shinariokanri-rb10-working-graph-e2e-16/rb10-graph-graph-movement--b66d8-sistent-through-cold-reload-webkit/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  3 failed
+    [chromium] › tests/e2e/rb10-graph.spec.ts:10:1 › graph movement keeps connected lines, device layout and live semantic edits consistent through cold reload 
+    [firefox] › tests/e2e/rb10-graph.spec.ts:10:1 › graph movement keeps connected lines, device layout and live semantic edits consistent through cold reload 
+    [webkit] › tests/e2e/rb10-graph.spec.ts:10:1 › graph movement keeps connected lines, device layout and live semantic edits consistent through cold reload 
