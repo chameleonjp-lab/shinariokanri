@@ -6,7 +6,15 @@ import { canonicalJson, jsonBytes, sha256 } from '../storage/json';
 type Reusable = Entity<'scene'> | Entity<'flow_node'>;
 export interface ReuseOrigin { entityId: ID; sourceVersionId: ID; ownerId: ID; bindings: Record<ID, ID>; graphId?: ID; chapterId?: ID }
 const origins = new WeakMap<ProjectContent, Map<ID, ReuseOrigin>>(), canonical = new WeakMap<ProjectContent, ProjectContent>();
+// Per-field exceptions preserve the declaration that supplied an override
+// through another fixed reference. They belong only to the execution view;
+// existing body/link origins and all persisted formats retain their contract.
+const fieldOrigins = new WeakMap<ProjectContent, Map<ID, Map<string, ReuseOrigin | null>>>();
 export const reuseOrigin = (project: ProjectContent, id: ID) => origins.get(project)?.get(id);
+export function reuseFieldOrigin(project: ProjectContent, id: ID, field: string): ReuseOrigin | undefined {
+  const fields=fieldOrigins.get(project)?.get(id);
+  return fields?.has(field) ? fields.get(field) ?? undefined : reuseOrigin(project,id);
+}
 export const reuseAuthorContent = <T extends ProjectContent>(project: T): T => (canonical.get(project) ?? project) as T;
 const reusable = (entity: Entity): entity is Reusable => entity.kind === 'scene' || entity.kind === 'flow_node';
 function fixedReferenceVersion(record: Entity, path: string): ID | undefined {
@@ -74,7 +82,7 @@ function mapRecord(record: Entity, bindings: Record<ID, ID>, projectId: ID, vers
  * but borrowed records are never appended to the author's document or snapshots. */
 export function resolveReuseContent<T extends ProjectContent>(project: T, snapshots: readonly ProjectSnapshot[], ancestors: ID[] = []): T {
   if (origins.has(project) || !project.entities.some(entity => adoptedRecord(entity) && reusable(entity) && entity.data.reuse && entity.data.reuse.mode !== 'clone')) return project;
-  const entities = new Map(project.entities.map(entity => [entity.id, entity])), metadata = new Map<ID, ReuseOrigin>();
+  const entities = new Map(project.entities.map(entity => [entity.id, entity])), metadata = new Map<ID, ReuseOrigin>(), fieldMetadata = new Map<ID, Map<string, ReuseOrigin | null>>();
   const authorIds = new Set([...project.entities.flatMap(entity => [entity.id, ...ownedContentIds(entity.data)]), ...project.relations.map(relation => relation.id), ...project.views.map(view => view.id), project.projectId]);
   const worlds = new Map(project.worldReferences.map(reference => [reference.projectId, reference]));
   for (const owner of project.entities) {
@@ -105,6 +113,18 @@ export function resolveReuseContent<T extends ProjectContent>(project: T, snapsh
       const priorOrigin = reuseOrigin(sourceContent, record.id);
       const originBindings = priorOrigin ? Object.fromEntries(Object.entries(priorOrigin.bindings).flatMap(([original, intermediate]) => bindings[intermediate] ? [[original, bindings[intermediate]]] : [])) : bindings;
       metadata.set(id, { entityId: priorOrigin?.entityId ?? record.id, sourceVersionId: priorOrigin?.sourceVersionId ?? snapshot.id, ownerId: owner.id, bindings: originBindings, graphId: sourceGraph ? bindings[sourceGraph.id] ?? sourceGraph.id : undefined, chapterId: sourceScene?.kind === 'scene' && sourceScene.data.chapterId ? bindings[sourceScene.data.chapterId] ?? sourceScene.data.chapterId : undefined });
+      const fields=new Map<string, ReuseOrigin | null>();
+      for(const [field,inherited] of fieldOrigins.get(sourceContent)?.get(record.id)??[]){
+        // A local field in the pinned source was declared at that snapshot,
+        // whereas an inherited exception retains its own real source edition.
+        const fieldBindings=inherited?Object.fromEntries(Object.entries(inherited.bindings).flatMap(([original,intermediate])=>bindings[intermediate]?[[original,bindings[intermediate]]]:[])):bindings;
+        fields.set(field,{entityId:inherited?.entityId??record.id,sourceVersionId:inherited?.sourceVersionId??snapshot.id,ownerId:owner.id,bindings:fieldBindings});
+      }
+      if(id===owner.id){
+        for(const field of reuse.overrideFields)fields.set(field,null);
+        if(owner.kind==='scene')fields.set('chapterId',null);
+      }
+      if(fields.size)fieldMetadata.set(id,fields);
       if (id === owner.id) {
         const data = { ...mapped.data } as Record<string, unknown>;
         delete data.reuse;
@@ -121,7 +141,7 @@ export function resolveReuseContent<T extends ProjectContent>(project: T, snapsh
     allIds.add(id);
   }
   const view = { ...project, entities: [...entities.values()], worldReferences: [...worlds.values()] };
-  origins.set(view, metadata); canonical.set(view, project); return view;
+  origins.set(view, metadata); fieldOrigins.set(view, fieldMetadata); canonical.set(view, project); return view;
 }
 
 export function reuseTargetAnchor(project: ProjectContent, anchor: ContentAnchor): ContentAnchor {

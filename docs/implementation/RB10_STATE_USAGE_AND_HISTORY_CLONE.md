@@ -16,7 +16,15 @@ C15で、元Standard8,800件・91履歴・91送信待ち意図の同じ実完全
 
 この追加補修後、状態利用7件、実辞書・複製4件、一覧・保存・作者別案を含む5ファイル81件と型検査が成功した。インストール済みChromiumを含む最終準備の全単体790件・87ファイル、schema生成、文書・計画、Python15件も成功。独立の最終静的再確認に追加の阻害指摘はない。実91履歴のclone、取消、元116の条項、実2時間、実環境の合格はこの部品成功から推定せず、固定候補の実結果を別々に記録する。
 
-準備版の実source・正期待の失敗・訂正・raw結果・独立静的指摘は、[初回の部品証拠](../quality/current-review/evidence/rb10-candidate/candidate-16-state-and-clone-working-1/MANIFEST.json)と[追加指摘と最終準備の証拠](../quality/current-review/evidence/rb10-candidate/candidate-16-reviewed-working-final-1/MANIFEST.json)に分ける。対象版を固定する前の証拠であり、同一完成commitの全受入証拠とは区別する。
+その後、独立の正期待fixtureは途中commit `2189b19f4028f8de54007b32de8c73de088e256f` / tree `f5630a4872b6994002814378e988e0913dc75e3e` に固定reference/overrideの追加差を確認した。元のgateを改稿しても使用先は旧pinのYを読むが、正本だけの利用索引がその読取を見落としていた。既存の実行用解決を利用索引へ接続し、使用先・元ID・固定版IDを原因へ残す。見直し画面は期待hashの検証前・欠落・改竄を未判定として表示し、実 `verifyReusePins()` が成功した同じ入力だけを利用判定へ渡す。最新稿への代用、借用レコードの正本追加、期待hashの再sealはしない。明示したgateの部分上書きと没の使用先は別に評価する。
+
+この補修の初回関連43件は成功し、正期待7件に固定reference/override、上書き、欠落/改竄、没、実完全clone→原子new→coldの利用原因を含む。通常productionの3engineでは固定利用の見直し→保存→cold→完全保存と既存の四表示が成功した。一方、統合選択はタブ復帰で閲覧ページが選択IDのページへ移動する正期待の失敗を3engineで確認した。選択中のIDを表示に残し、閲覧ページを別に保持する補修後、同じ通常production9検査は成功した。この実artifactは次の追加補修前の準備版に固定し、最新候補の画面成功へ流用しない。
+
+追加の独立正期待は、実SHA待機中にcallerがpin本文を替えると検証した旧本文と利用判定の本文が異なる差、ローカルgateと二段階overrideの出所表示の差を確認した。検証前にcurrentとsnapshotの同じ入力をcaptureし、関係しない全履歴・作者別案を展開しない。見直し画面の結果は作品objectと確認時revisionの両方に結ぶ。利用原因のfield別例外は実行ビューのWeakMapに限り、ローカル上書きには現在の使用先、旧中間版で上書きされた条件を外側へ継承するときは実際の中間ID/外側pin、継承した条件には合成したID対応と元版を保持する。既存本文・リンクの最内側の固定版規則、schema・完全ファイル・公開wireは維持する。
+
+この追加補修後の正期待は固定状態利用10件、関連31件、独立の同じ元入力5件が成功した。型・schema・Python15と、実Chromiumを含む全単体800件/88ファイルも成功した。直前の799件と最初の790件はその時点のsourceでの歴史的準備結果として保持する。自分の外側入口fixtureにgraphを付け忘れてblockedになった失敗は別記録し、正しいgraphを足して期待を弱めず訂正した。元の正期待の製品失敗と混同しない。全件選択・本文注記等に残る分割は別の現在差分として照合し、この局所成功をRV27全体や元116の完成にはしない。
+
+準備版の実source・正期待の失敗・訂正・raw結果・独立静的指摘は、[初回の部品証拠](../quality/current-review/evidence/rb10-candidate/candidate-16-state-and-clone-working-1/MANIFEST.json)、[追加指摘の790件準備証拠](../quality/current-review/evidence/rb10-candidate/candidate-16-reviewed-working-final-1/MANIFEST.json)、[固定再利用・出所とページ保持の800件準備証拠](../quality/current-review/evidence/rb10-candidate/candidate-16-fixed-reuse-working-final-1/MANIFEST.json)に分ける。対象版を固定する前の証拠であり、同一完成commitの全受入証拠とは区別する。
 
 主対応はREQ/AT-F39、B12、B23、F35、N06、N14、N18。RV01の利用原因一覧、RV16/RV17の全履歴復元、RV29の固定対象版での確認へ接続する。既存の全kind・段落/台詞ID・世界pin・公開投影・履歴・送信待ち・素材bytes・原子性・Unicodeと、ZIP64MiB/展開256MiB/JSON64MiB/素材32MiB/100,000records/500,000objects/深さ32を維持する。元104要件、116ケースのgiven/when/then/negative_or_edge、24工程、6回帰群、33境界とrelease gateは変更しない。
 

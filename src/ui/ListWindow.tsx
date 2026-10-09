@@ -6,7 +6,7 @@ function readPage(scope: string) {
   try { const page = Number(localStorage.getItem(PREFIX + scope)); return Number.isSafeInteger(page) && page >= 0 && page <= 100_000 ? page : 0; } catch { return 0; }
 }
 /** Per-project view position, independent from authored data and save revisions. */
-export function useListWindow<T extends { id: string }>({ items, scope, selectedId, size = 60 }: { items: readonly T[]; scope: string; selectedId?: string | null; size?: number }) {
+export function useListWindow<T extends { id: string }>({ items, scope, selectedId, size = 60,followSelected=true }: { items: readonly T[]; scope: string; selectedId?: string | null; size?: number;followSelected?:boolean }) {
   scope=useAuthorScope(scope);
   const [position, setPosition] = useState(() => ({ scope, page: readPage(scope) }));
   const selected = useRef<string | null | undefined>(undefined);
@@ -22,9 +22,9 @@ export function useListWindow<T extends { id: string }>({ items, scope, selected
   useEffect(() => {
     if (lastScope.current === scope && selected.current === selectedId) return;
     lastScope.current = scope; selected.current = selectedId;
-    if (selectedIndex >= 0) setPage(Math.floor(selectedIndex / size));
+    if (followSelected&&selectedIndex >= 0) setPage(Math.floor(selectedIndex / size));
     else setPosition({ scope, page: readPage(scope) });
-  }, [scope, selectedId, selectedIndex]);
+  }, [scope, selectedId, selectedIndex,followSelected]);
   return { items: items.slice(page * size, (page + 1) * size), page, maximum, total: items.length, offset: page * size, setPage, selectedPage: selectedIndex < 0 ? undefined : Math.floor(selectedIndex / size) };
 }
 export function ListPager({ page, maximum, total, setPage, selectedPage, label }: { page: number; maximum: number; total: number; setPage: (page: number) => void; selectedPage?: number; label: string }) {
