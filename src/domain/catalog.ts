@@ -1,5 +1,6 @@
 import { KIND_LABELS, collectReferences } from './model';
 import { duplicateCandidates } from './maintenance';
+import { stateUsageIndex } from './stateUsage';
 import type { CollectionData, Entity, EntityKind, ID, ProjectData, Query, Sort } from './types';
 
 /** Search normalization is separate from stored text. Original Japanese spelling remains untouched. */
@@ -346,14 +347,20 @@ export function findCatalogMaintenance(project: ProjectData): CatalogMaintenance
     if (duplicate.kind !== 'review') findings.push(finding('possible_duplicate', duplicate.ids, `同じ種類に正規化後の名前が「${duplicate.name}」となる項目があります。名前だけで重複とは決めず、内容と参照を確認してください。`, duplicate.ids.map(id => 'name')));
   }
   const referenced = referencedIds(project);
+  const stateUses = stateUsageIndex(project);
   for (const entity of active) {
-    if (entity.kind !== 'review' && !referenced.has(entity.id)) {
+    const used = entity.kind === 'variable' ? (stateUses.get(entity.id)?.length ?? 0) > 0 : referenced.has(entity.id);
+    if (entity.kind !== 'review' && !used) {
       if (entity.retainIfUnreferenced) {
-        findings.push(finding('retained', [entity.id], '未参照ですが、作者が保持するよう指定しています。参照がないことだけを理由に削除しません。', ['retainIfUnreferenced']));
+        findings.push(finding('retained', [entity.id], entity.kind === 'variable'
+          ? '未使用ですが、作者が保持するよう指定しています。保存経路などの参照も保護し、利用箇所がないことだけを理由に削除しません。'
+          : '未参照ですが、作者が保持するよう指定しています。参照がないことだけを理由に削除しません。', ['retainIfUnreferenced']));
       } else if (entity.kind === 'variable' && entity.data.externalUseDeclared) {
         findings.push(finding('external_use', [entity.id], '作品外から使う状態として宣言されています。外部連携の利用先を確認し、宣言を外す前に影響を調べてください。', ['data.externalUseDeclared']));
       } else {
-        findings.push(finding('unreferenced', [entity.id], '有効な項目・関係・保存ビューから直接参照されていません。背景設定など意図して保持する情報の可能性もあるため、保持指定または削除前の影響確認を選んでください。'));
+        findings.push(finding('unreferenced', [entity.id], entity.kind === 'variable'
+          ? '採用された宣言に読取・更新・初期化の利用がありません。試読の保存状態に値が含まれるだけでは利用と数えません。保存経路などの参照は引き続き保護し、保持指定または削除前の影響確認を選んでください。'
+          : '有効な項目・関係・保存ビューから直接参照されていません。背景設定など意図して保持する情報の可能性もあるため、保持指定または削除前の影響確認を選んでください。'));
       }
     }
     if (hasReadingField(entity) && !readingOf(entity)) {
