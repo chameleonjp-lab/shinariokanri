@@ -20,7 +20,7 @@ RB05〜RB09の原子保存、固定世界、経路、作者別案、全履歴、
 
 実保存・読込・同期・認証・画面エラーからコード、操作ID、対象版、build commit/tree/base、ブラウザー／OS数値版、画面幅、online状態だけを記録する。本人が確認してファイルへ持出せる。本文・stack・個人情報・認証情報・remoteエラー文を既定診断へ含めず自動送信しない。account切替で消去する。
 
-限定編集DBv2を維持し、9個目のSQL migrationで共有指摘lifecycleを準備する。service-onlyの元版対応表をordinary roleへ公開せず、role/session/期限をtransaction時点で再検証する。既存接続へ自動適用しない。実Auth/RLS/private Storageには専用URL、owner/editor/commenter/viewerの実試験account、private bucket、許容fixture容量、利用tier、現行quota／費用が必要。
+限定編集DBv2を維持し、9個目のSQL migrationで共有指摘lifecycleを準備する。service-onlyの元版対応表をordinary roleへ公開せず、role/session/期限をtransaction時点で再検証する。既存接続へ自動適用しない。実Auth/RLS/private Storageには専用URL、owner/editor/reviewer/reader/nonmemberの5実試験account、private bucket、許容fixture容量、利用tier、現行quota／費用が必要。
 
 ## 同一候補の検証
 
@@ -47,3 +47,27 @@ PR #18 は外部操作で `2026-10-09T02:52:19Z` にmain `c590b47`（C2と同一
 固定C3 `e4987df` / tree `7d92a7e` のCI run 37878165457は756単体・255通常画面と全検査が成功。Standard30回の原局所8指標は基準内、active図p95=16.734ms。一方Large初回表示30回p95=11,094.5msで10秒未達。検索p95=692.9msは2秒内。原結果と遅いsampleを `evidence/rb10-candidate/candidate-3/` へ保持する。初回1回やdirty3回を代用しない。
 
 次候補C4ではrich-text検査schema、同種record schemaとTextEncoderの再生成を減らし、Unicodeコードポイントを配列なしで数える。公開schemaが置換された場合はcacheを更新し、可変fieldsも毎回読む。cold読取は本文markerの祖先だけをcopy-on-changeで複製し、入力行・block・固定snapshotを変更しない。条件・未知・参照・世界・全hash・ID・上限の検査は保持。原2048コードポイント・UTF-8 1MiB・不正surrogate・ruby位置、cold draftとraw行SHA不変、完全fileを確認する。予備3回p95=7,367.1msは診断のみで最終30回に換算しない。追加fixtureの上限誤記と型エラー、修正前後の結果は `working-cold-read/` に残す。照合JSONの更新は最初にoriginal_requirement.idの参照を誤り中断し、コード/証拠のcommit b2806b2には最新照合が入らなかった。原文不変と全source SHAを確認して補正後にC4対象版を固定する。
+
+## C4の測定終点とC5の入力開始補修
+
+PR #19は外部操作で2026-10-09T04:08:16Zにmain `ff69ac1304554b4ccd5705e6e23ab280abbfcf63` / tree `f476ea0723d8f309833db7e7c56658a1d39cb14d`へ取り込まれた。固定C4 `746cc68` と同一tree。CI run 37880375499は758単体・255 production画面・RB03/RB04・Python15・全20stepが成功した。原結果とsource/build/hashを `evidence/rb10-candidate/candidate-4/` に保持する。
+
+C4 Standard各30回の局所値は基準内。Large検索p95=470.8ms、一覧描画起動p95=7,642.7msも局所の数値基準内。ただし既存起動probeの終点は最初の一覧cardとrAFで、入力可能の確認がない。別の補足probeは最初の実cardから対象名の入力欄を開き、enabled・readOnly=false・inertなし・CSS祖先の表示/opacity・画面内交差・focus・次frameを確認する。入力/変更イベントや正本保存は行わず、前後内容hash・履歴・待ち件数・素材bytesを照合する。
+
+補足v1のLarge30回p95=9,515.1msは弱い可視性確認の値として保持。強いCSS終点のStandard30回p95=1,839.2msは3秒内。Largeの同じ強い30回は19回で実行環境が停止し、正式30回未完了。実行再開後の診断3回p95=10,569.3msは10秒を超えた。前の一覧描画値、途中19回、別probeや3回を正式入力開始の合格にしない。probe自体の可視性確認は各0.2〜0.4msだった。
+
+EntityEditorの同期逆参照検査が最初の編集欄描画を待たせていたため、C5では元のcollectReferencesを保ち、派生索引を短い区間に分けて入力を先に表示する。全件確認前は未確認を示し、取消・失敗・再試行を区別する。完了した索引だけをimmutable source配列別に公開し、遅れた旧source結果を現稿へ混ぜない。全ID/本文位置/版/採用状態/参照検査は保持し、正本・履歴・outbox・partsに派生索引を書き込まない。既存の検索/30件ページ/戻り位置を維持する。
+
+補修中の99単体/結合と12,002件の実通常画面が3ブラウザーで成功。pointer取消の位置が進捗の桁で動くFirefoxの差分も補修した。取消→同じ対象で12,000件再試行→別対象6,000件→末尾検索→原子保存→cold→完全fileの全note不変を検査する。失敗fixture・selector・watchdog・一時並走と実製品差分を `working-reference-index/` に分けて残す。予備Large入力開始3回p95=8,413.6msはdirty buildの診断のみ。C5は最新mainから独立ブランチへまとめ、clean commit/tree/buildを固定して正式各30回・復元・実2時間・原116を検証する。全品質gateと実機/実Auth不足は保留のまま。
+
+## C5の未達とC6のcold読取補修
+
+固定C5 `5720bc8` / tree `a2d73e6`、clean build `27f23e6d00216dccad52` はStandard各30回の局所8指標が数値内。Largeの同じCSS/focus入力開始30回はp95=10,082.6msで10秒未達。全sample・fixture・source/build・環境・実素材72MiB・history/outbox31を `evidence/rb10-candidate/candidate-5/` に保持する。別の起動終点や予備3回を代用しない。
+
+CI37889230895は761単体/build/docs/plan/Python15成功、production257成功/Firefox1全体watchdog失敗。元の12,002件と22expectを保持し、機能検査全体watchdog240秒と5段階名を追加。保存の60秒待ち、10秒入力開始等の性能条件は変えない。CI成功を原116や実端末の完成へ換算しない。
+
+C6はmarkerがないcold DB配列を二度コピーせず、markerがあれば全marker検証を保って一度コピーする。header順のMap作成と不足検査で全件の一時配列を省く。コードポイント・Unicode・schema・hash・parts・native atomic transaction・元ファイル上限は保持。欠損/foreign/corruptを全拒否しnative8tableが読み取り前後で不変な検査を追加する。dirty3回p95=7,728msは診断のみ。単体fixtureと型の途中失敗は `working-cold-allocation/` に残す。freezeのfor-in置換は比較上遅いため採用していない。
+
+次のclean対象を固定し、全CI、正式30回、Large全bytes復元、実7200秒の編集と独立原116の正常/境界を進める。実機/支援技術/実Auth/専用費用の不足と公開gate保留は維持する。
+
+C6準備sourceで全単体763件／81ファイル、schema生成差分なし、文書・計画・Python15、対象通常操作3ブラウザーが成功。次のclean対象と各実証拠を別に固定する。

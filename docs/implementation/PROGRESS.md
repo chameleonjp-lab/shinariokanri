@@ -1,6 +1,10 @@
-2026-10-09の現在作業は[RB10候補の準備と確認条件](RB10_COMPLETION_CANDIDATE.md)を参照。PR #14〜#17の競合を順に解消し、各CI成功を確認した。#17の最終headは `01676a27d1f7bbc03d421c8c64187ef385e86ed4`、CI run `37867912548` が735単体、225 productionブラウザー、RB03/RB04、Python15、文書・計画・buildで成功。取り込みは利用者側で行われ、最新mainは `33f3c8c4bd22fb0d79ebdd037c36ca9bf30aabf3` / tree `5b66f5d6295082e2eb033d3613beec516b720149`。本作業からmainへのマージ・公開・外部DB変更は行っていない。
+2026-10-09の現在作業は[RB10候補の準備と確認条件](RB10_COMPLETION_CANDIDATE.md)を参照。PR #14〜#17の競合を順に解消し、各CI成功を確認した。#17の最終headは `01676a27d1f7bbc03d421c8c64187ef385e86ed4`、CI run `37867912548` が735単体、225 productionブラウザー、RB03/RB04、Python15、文書・計画・buildで成功。PR #18/#19も利用者側で取り込まれ、最新mainは `ff69ac1304554b4ccd5705e6e23ab280abbfcf63` / tree `f476ea0723d8f309833db7e7c56658a1d39cb14d`（PR #19、2026-10-09T04:08:16Z）。本作業からmainへのマージ・公開・外部DB変更は行っていない。
 
-RB10は章／執筆／分岐／制作／参照候補の分割、任意診断の実失敗導線、共有指摘→制作タスクの原子保存、同義／反対状態候補、Largeのlossless DB partsと完全ファイル辞書、取消中の入力・原子性とcold読込を接続した。開発中の単体754件と追加通常画面27件（3ブラウザー）が成功している。これらは固定した完成候補の全受入結果ではない。Standard各30回、Large素材付き／取消／空復元／2時間と独立レビューを同一候補へ結合する工程を継続する。
+RB10は章／執筆／分岐／制作／参照候補の分割、任意診断の実失敗導線、共有指摘→制作タスクの原子保存、同義／反対状態候補、Largeのlossless DB partsと完全ファイル辞書、取消中の入力・原子性とcold読込を接続した。固定C4 `746cc68` のCI run `37880375499` は758単体、255 production画面、RB03/RB04、Python15、文書・計画・buildで成功。Standard各30回の局所値は基準内。Largeの一覧描画は10秒内だったが、実際に入力可能となる時点を要求する補足30回は19回で環境中断、再起動後の診断3回はp95=10,569.3msで未達。異なる測定終点や中断を合格へ換算しない。
+
+C5 `5720bc89410e39cc3ed0de50f2135367f24c47bf` / tree `a2d73e65a2332b1c2d02c8e267f86e6e887078e5` はLarge逆参照を分割・取消・未確認・明示再試行へ接続した。固定Standard各30回は局所8指標が数値内だが、Large入力開始30回p95=10,082.6msで10秒未達。検索459.1ms、88,003記録／history31／pending31／素材72MiBの実bytesが一致。CI run37889230895は761単体・build・文書・計画・Python15成功、production257成功／Firefox新参照テスト全体watchdog超過1失敗、後のRB03/RB04はskip。原結果はcandidate-5へ保持する。
+
+C6は同じブランチ／Draft PR #20で、cold読取の不要な全配列コピーとMap用pair配列を省く。全marker/hash/strict schema、header順、欠損／foreign拒否、完全形式と上限を保持する。新検査はnative生行の不変、遅いmarkerの破損拒否、冷起動順と復元を確認する。補修中のdirty診断3回p95=7,728msを正式30回へ換算しない。原fixture・期待値を保持して機能テスト全体watchdogを240秒へ調整し、性能10秒は維持する。clean候補の正式各30回、素材付きLarge／取消／空new・clone復元／実2時間と独立原116照合を継続する。
 
 [104要件の現在照合](../quality/current-review/CURRENT_REQUIREMENTS.md)は原契約と現在の関連source hashを保持する。元116の正常／境界・失敗は未実行を合格へ変えない。実iPhone／iPad／PC各OS・VoiceOver／NVDA・実Auth/RLS/private Storage・専用接続quota／費用は不足しており公開gateを保留する。以下の段階候補・main観察・工程表は各確認時点の歴史的記録として保持する。
 

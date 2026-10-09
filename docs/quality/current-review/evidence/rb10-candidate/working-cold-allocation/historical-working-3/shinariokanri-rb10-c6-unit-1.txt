@@ -1,0 +1,47 @@
+
+ RUN  v5.0.3 /workspace/shinariokanri-rb10
+
+··x·stderr | src/storage/storage.test.ts > atomic IndexedDB commands > hydrates private cold rows without changing stored blocks, drafts or fixed snapshots
+Another connection wants to delete database 'private-hydration-66452e2f-f375-4d92-9065-95a558bf23a5'. Closing db now to resume the delete request.
+
+·stderr | src/storage/storage.test.ts > atomic IndexedDB commands > persists stable IDs, links, original text and huge negative ticks across restart; undo appends history
+Another connection wants to delete database 'restart-4f537293-ee1c-4585-b6ca-3fe2aecb2af3'. Closing db now to resume the delete request.
+
+stderr | src/storage/flowWorldDurability.test.ts > RV04 exact fixed world across native save, restore and clone (fake IndexedDB) > keeps gate, borrowed values, saved replay and hashes tied to the old edition after world revision
+Another connection wants to delete database 'flow-world-2fbc8a3f-8d54-40c6-a632-fad1274a8f27'. Closing db now to resume the delete request.
+
+·························································stderr | src/storage/cacheConcurrency.test.ts > does not repopulate caches when an initial uncached read resumes after close
+Another connection wants to delete database 'cache-close-b62a2eb0-def7-4820-a451-3a8ee8225db9'. Closing db now to resume the delete request.
+
+········
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/storage/storage.test.ts > atomic IndexedDB commands > retains committed header order on a cold range read and refuses missing or foreign rows without changing durable data
+StorageError: project.relations[0].revision: 必須項目です。
+project.relations[0].evidenceIds: 必須項目です。
+project.relations[1].revision: 必須項目です。
+project.relations[1].evidenceIds: 必須項目です。
+ ❯ validatedCurrent src/storage/store.ts:203:19
+    201|   const result = validateCurrentProject(input, { worldSnapshots }, pre…
+    202|   if (!result.ok) {
+    203|     const error = new StorageError('VALIDATION_FAILED', result.issues.…
+       |                   ^
+    204|     Object.assign(error, { issues: result.issues });
+    205|     throw error;
+ ❯ ScenarioStore.saveProject src/storage/store.ts:747:19
+ ❯ ScenarioStore.value src/storage/store.ts:431:519
+ ❯ src/storage/storage.test.ts:46:66
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 6 passed (7)
+      Tests  1 failed | 69 passed (70)
+   Start at  05:57:19
+   Duration  3.86s (tests 62%, transform 25%, import 11%, worker 1%)
+
+  Transform  transforming modules took 2.65s · 25% of tracked time, re-done on every run
+             persist transforms across runs with fsModuleCache: true
+             learn more: https://vitest.dev/guide/improving-performance#caching-between-reruns
+

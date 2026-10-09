@@ -1,0 +1,11 @@
+# 参照索引の補修中の検証
+
+固定C4でLargeの描画済み一覧は10秒内だったが、CSS表示・入力可能・focusを要求した補足起動検査は19/30で環境中断し、再起動後の診断3回p95=10,569.3ms。描画だけを編集可能の合格へ換算しない。C4原結果は隣のcandidate-4へ不変保持する。
+
+補修はEntityEditorの全件同期逆参照検査を、元のcollectReferencesを使う取消可能な分割処理へ移す。全件完了前の空/途中一覧は未確認と表示し、取消・失敗・再試行を分ける。結果はimmutable source配列別に保持し、遅れた旧入力の結果を現稿へ混ぜない。正本・ID・版・履歴・送信待ちを変更しない。
+
+99件の対象単体/結合と、12,002件を通常画面で入力可能→pointer取消→同じ対象で全12,000参照再試行→別対象6,000参照→末尾検索→原子保存→cold→完全ファイル読取する1件×3ブラウザーが補修中に成功した。run6-bindingが6対象source SHAと12配信artifact SHAを保持する。dirty buildでの局所証拠であり、固定候補の性能30回・原116・実機へ換算しない。
+
+途中unit1〜3はfixtureのnative型/paragraph kind/deletionOperationId/ValidationResult.okの誤り。E2E1はLarge importの5秒watchdog、E2E2は人物追加と人物2のselector重複、E2E3は対象切替後の検証手順の誤り、E2E4はLarge保存5秒watchdog。元のfixture件数/操作/期待値を保持して手順と非性能watchdogを補正した。E2E3/4は停止用プロセス識別を誤り一時並走し、停止信号は送られず、実結果はどちらも3件失敗。stop/isolation JSONを保持し、中断/合格として隠さない。
+
+E2E5はChromium成功、Firefoxで進捗の桁変化が取消buttonを移動させpointer操作が安定しない実差分、WebKitで保存watchdog超過。buttonを変化するstatusの前へ置いて位置を保ち、保存確定を60秒watchdogで待つ補修後、E2E6はChromium/Firefox/WebKitの3件成功。60秒は性能合格基準ではない。保存のp95はcommand開始→commitを別途測定する。

@@ -18,6 +18,6 @@
 
 実端末確認はスマートフォン／タブレットの通常画面で新規登録→保存→再読込→固定リンク→読み位置へ戻る→完全保存→空領域new/clone復元を行う。利用に毎回PCを必要としない。320/390/768/1024/1440幅、回転、IME、Files、録音、offline、キーボード、文字200%、VoiceOver／NVDA、ドラッグ代替の結果とOS/browser実版を個別に残す。自動WebKitを実Safariの証拠へ変えない。
 
-専用実接続にはURL/public key、owner/editor/commenter/viewer/non-memberの試験accountとfixture tenant、private bucket、region/tier、許容量と現行quota／費用が必要。利用者の別用途DBを代用せず、自動migration適用・課金・公開をしない。prepared/rebase/原子ACK/二案UIと9migrationの局所契約は実接続試験から区別する。
+専用実接続にはURL/public key、owner/editor/reviewer/reader/nonmemberの5試験accountとfixture tenant、private bucket、region/tier、許容量と現行quota／費用が必要。利用者の別用途DBを代用せず、自動migration適用・課金・公開をしない。prepared/rebase/原子ACK/二案UIと9migrationの局所契約は実接続試験から区別する。
 
 公開を別途承認して実施した後は、直リンクから開いたbuild-infoと完成commit、サブパス・キャッシュ更新・cold/offline・保存/復元・権限撤回を再確認する。公開先が未設定であることや未実行の受入を、公開成功や費用ゼロへ読み替えない。

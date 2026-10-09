@@ -1,0 +1,77 @@
+
+ RUN  v5.0.3 /workspace/shinariokanri-rb10
+
+ ❯ src/ui/referenceIndex.test.ts (3 tests | 3 failed) 21ms
+   ❯ derived reference index publication (3)
+     × keeps typed/Unicode references in project order, excludes archived/self, and never mutates records 17ms
+     × cancels a partly calculated index without publishing an empty or partial answer, and retries all rows 2ms
+     × binds a late result to its original source and keeps a revised source unchecked until calculated 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/ui/referenceIndex.test.ts > derived reference index publication > keeps typed/Unicode references in project order, excludes archived/self, and never mutates records
+AssertionError: expected undefined to deeply equal []
+
+- Expected:
+[]
+
++ Received:
+undefined
+
+ ❯ fixture src/ui/referenceIndex.test.ts:12:83
+     10|  const archived=createEntity(p.projectId,'scene','除外した参照',{povId:a.id}…
+     11|  const self=createEntity(p.projectId,'note','自身を参照');self.data.originN…
+     12|  p.entities.push(a,b,shared,body,archived,self);expect(validateProject…
+       |                                                                                   ^
+     13| }
+     14| describe('derived reference index publication',()=>{
+ ❯ src/ui/referenceIndex.test.ts:16:34
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  src/ui/referenceIndex.test.ts > derived reference index publication > cancels a partly calculated index without publishing an empty or partial answer, and retries all rows
+AssertionError: expected undefined to deeply equal []
+
+- Expected:
+[]
+
++ Received:
+undefined
+
+ ❯ fixture src/ui/referenceIndex.test.ts:12:83
+     10|  const archived=createEntity(p.projectId,'scene','除外した参照',{povId:a.id}…
+     11|  const self=createEntity(p.projectId,'note','自身を参照');self.data.originN…
+     12|  p.entities.push(a,b,shared,body,archived,self);expect(validateProject…
+       |                                                                                   ^
+     13| }
+     14| describe('derived reference index publication',()=>{
+ ❯ src/ui/referenceIndex.test.ts:26:15
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  src/ui/referenceIndex.test.ts > derived reference index publication > binds a late result to its original source and keeps a revised source unchecked until calculated
+AssertionError: expected undefined to deeply equal []
+
+- Expected:
+[]
+
++ Received:
+undefined
+
+ ❯ fixture src/ui/referenceIndex.test.ts:12:83
+     10|  const archived=createEntity(p.projectId,'scene','除外した参照',{povId:a.id}…
+     11|  const self=createEntity(p.projectId,'note','自身を参照');self.data.originN…
+     12|  p.entities.push(a,b,shared,body,archived,self);expect(validateProject…
+       |                                                                                   ^
+     13| }
+     14| describe('derived reference index publication',()=>{
+ ❯ src/ui/referenceIndex.test.ts:33:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  3 failed | 96 passed (99)
+   Start at  04:44:20
+   Duration  2.13s (tests 50%, transform 45%, import 5%)
+

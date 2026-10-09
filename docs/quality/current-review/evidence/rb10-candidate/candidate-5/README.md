@@ -1,0 +1,9 @@
+# C5 固定候補の失敗と結果
+
+候補 `5720bc89410e39cc3ed0de50f2135367f24c47bf` / tree `a2d73e65a2332b1c2d02c8e267f86e6e887078e5`、clean build `27f23e6d00216dccad52`。source358、原文26、配信12のSHAはsource-and-build-binding.jsonに固定する。実ブラウザーはLinux管理環境の自動実行であり実端末／実権限ではない。
+
+同じCSS／viewport／focus／enabledを要求する入力開始probeと元の測定を組み合わせ、Standard各30回は局所8指標が数値内。Large各30回は入力開始p95=10,082.6msで10秒未達。検索459.1ms、88,003記録、history/outbox31、素材72MiBの全bytesとhashが一致。初回、診断3回、遅いsample除外を正式30回の代用にしない。Largeの他指標は診断でStandardの閾値へ換算しない。
+
+CI run37889230895は761単体／build／文書／計画／Python15が成功、production画面257成功／Firefox1失敗。新しい12,002件の参照索引操作の全体120秒watchdog超過。rawログに他のassertion失敗はないが未実行工程や原116を合格にしない。RB03/RB04はこのrunではskip。次候補では同じfixture・期待値で機能検査watchdog240秒と段階名を追加し、10秒の性能条件を維持する。
+
+C6はcold読取でpacked markerがない配列をコピーせず、markerがあれば全markerの検証を保って一度コピーする。header順・欠損拒否・foreign拒否・hash・原子性を維持する。for-inへのfreeze置換は管理Node上の比較で遅く、採用していない。profileは診断でproduction性能証拠ではない。

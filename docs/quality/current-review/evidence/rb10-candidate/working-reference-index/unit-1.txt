@@ -1,0 +1,53 @@
+
+ RUN  v5.0.3 /workspace/shinariokanri-rb10
+
+ ❯ src/ui/referenceIndex.test.ts (3 tests | 2 failed) 108ms
+   ❯ derived reference index publication (3)
+     × keeps typed/Unicode references in project order, excludes archived/self, and never mutates records 22ms
+     × binds a late result to its original source and keeps a revised source unchecked until calculated 2ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/ui/referenceIndex.test.ts > derived reference index publication > keeps typed/Unicode references in project order, excludes archived/self, and never mutates records
+AssertionError: expected [ Array(1) ] to deeply equal [ …(2) ]
+
+- Expected
++ Received
+
+  [
+    "2b8f47ba-6a2a-4884-b79f-3b6ef6088b62",
+-   "8d8c9724-2e2d-4ed9-917f-4282eebeb79a",
+  ]
+
+ ❯ src/ui/referenceIndex.test.ts:18:57
+     16|   expect(cachedReferencesTo(source,a.id)).toBeUndefined();
+     17|   await prepareReferenceIndex(source,{onProgress:n=>progress.push(n),y…
+     18|   expect(cachedReferencesTo(source,a.id)?.map(e=>e.id)).toEqual([share…
+       |                                                         ^
+     19|   expect(cachedReferencesTo(source,b.id)?.map(e=>e.id)).toEqual([share…
+     20|   expect(cachedReferencesTo(source,self.id)).toEqual([]);expect(cached…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/ui/referenceIndex.test.ts > derived reference index publication > binds a late result to its original source and keeps a revised source unchecked until calculated
+AssertionError: expected [ Array(1) ] to deeply equal [ …(2) ]
+
+- Expected
++ Received
+
+  [
+    "673b7587-0aec-47f2-beaa-458cfc56ed7d",
+-   "d74d32d9-8e5b-4245-9829-14be9160f6a8",
+  ]
+
+ ❯ src/ui/referenceIndex.test.ts:35:54
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  2 failed | 97 passed (99)
+   Start at  04:41:50
+   Duration  2.02s (tests 60%, transform 32%, import 8%)
+
