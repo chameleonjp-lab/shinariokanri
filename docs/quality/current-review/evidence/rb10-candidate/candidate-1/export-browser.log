@@ -1,0 +1,23 @@
+
+> shinariokanri@0.1.0 pretest
+> node scripts/build/portable-runtime.mjs
+
+Production portable runtime generated: 144259 characters
+
+> shinariokanri@0.1.0 test
+> vitest run tests/exports.test.ts --testNamePattern=runs the exported HTML|rolls back every exported effect --reporter=default --reporter=json --outputFile.json=/tmp/shinariokanri-rb10-c1-export-browser.json
+
+
+ RUN  v5.0.3 /workspace/shinariokanri-rb10
+
+ ✓ tests/exports.test.ts (21 tests | 19 skipped) 2420ms
+   ✓ purpose-specific export (21)
+     ✓ runs the exported HTML in Chromium, renders active text safely, and restores the complete state 1488ms
+     ✓ rolls back every exported effect when a later effect violates an integer bound 929ms
+
+ Test Files  1 passed (1)
+      Tests  2 passed | 19 skipped (21)
+   Start at  01:50:17
+   Duration  3.91s (tests 65%, transform 19%, import 16%)
+
+JSON report written to /tmp/shinariokanri-rb10-c1-export-browser.json

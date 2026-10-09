@@ -29,3 +29,11 @@ RB05〜RB09の原子保存、固定世界、経路、作者別案、全履歴、
 Linux自動Chromium／Firefox／WebKit、320/390/768/1024/1440幅、キーボード、文字拡大、offline、cache、更新、直リンクは自動ブラウザー証拠。実iPhone Safari／Chrome、iPad Safari／分割、PC各OS・実版、回転、IME、Files、録音、VoiceOver／NVDA、ドラッグ代替へ流用しない。
 
 公開は保留する。116ケース、24工程、9品質gateに同一完成版の実証拠がそろうまで`check_release.py`を緩めない。local成功だけで実機・支援技術・実同期／権限・専用接続費用を合格扱いにしない。
+
+## C1 の失敗と次候補の補修
+
+固定C1 `71159f2` の原結果は `docs/quality/current-review/evidence/rb10-candidate/candidate-1/` に保持する。CI単体754件と文書／計画／Python／buildは成功したが、E2Eは開始点selectと検索欄のlabelが一致した3件で失敗。元の操作・期待値を保ち、selectをexact comboboxで指定する。
+
+Standard各30回の局所p95は基準内。Large検索は基準内だがcold local初回表示30回p95は12,390.7msで未達。次候補では一覧取得でheader全体を先にdecodeせず主キーを取得し、同一read transactionで取得済みのprivate headerを再利用する。cold成立検査は同じUnicode・有限数・循環・JSON不可値の拒否規則を保ち、使用しないcanonical文字列の構築を省く。全構造・ID・参照・固定世界・snapshot hash・復元検査は保持する。
+
+dirty予備測定3回の成功は最終30回の代用にしない。次候補のclean commit／tree／buildを固定し、全CI、各30回、Large完全復元と2時間の実継続編集を再実行する。

@@ -110,6 +110,34 @@ export function parseStrictJson(bytes: Uint8Array, path: string, limits: Archive
   return result;
 }
 
+/** Check the canonical JSON value contract without constructing an unused
+ * encoded string. Object fields with undefined remain omitted; array values
+ * must be serializable. Shared values are allowed, active cycles are not. */
+export function validateJsonValue(value: unknown): void {
+  const active = new Set<object>();
+  function visit(input: unknown): void {
+    if (input === null || typeof input === 'boolean') return;
+    if (typeof input === 'string') {
+      if (!isValidUnicode(input)) throw new StorageError('VALIDATION_FAILED', 'Unicodeのサロゲートが不正です。');
+      return;
+    }
+    if (typeof input === 'number') {
+      if (!Number.isFinite(input)) throw new StorageError('VALIDATION_FAILED', '有限でない数値は保存できません。');
+      return;
+    }
+    if (typeof input !== 'object') throw new StorageError('VALIDATION_FAILED', 'JSONに保存できない値があります。');
+    if (active.has(input)) throw new StorageError('VALIDATION_FAILED', '循環したJSONは保存できません。');
+    active.add(input);
+    if (Array.isArray(input)) input.forEach(visit);
+    else for (const key of Object.keys(input)) {
+      const child = (input as Record<string, unknown>)[key];
+      if (child !== undefined) visit(child);
+    }
+    active.delete(input);
+  }
+  visit(value);
+}
+
 /** Keys are canonicalized, but all arrays retain their semantic order. */
 export function canonicalJson(value: unknown): string {
   const active = new Set<object>();

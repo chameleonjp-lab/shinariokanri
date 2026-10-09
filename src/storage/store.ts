@@ -472,10 +472,14 @@ export class ScenarioStore {
     return record;
   }
 
-  private async readProject(projectId: string, includeHistory = true, timing?:Record<string,number>): Promise<{ project: ProjectData; historyIds: string[]; contentHeadOperationId?: string } | undefined> {
+  private async readProject(projectId: string, includeHistory = true, timing?:Record<string,number>, capturedHeader?:StoredProject): Promise<{ project: ProjectData; historyIds: string[]; contentHeadOperationId?: string } | undefined> {
     const timed=<T>(stage:string,read:()=>PromiseLike<T>)=>{if(!timing)return read();const started=performance.now();return read().then(value=>{timing[`database.${stage}`]=performance.now()-started;return value;});};
-    const header = await this.db.projects.get(projectId);
+    // A caller inside this same read transaction already decoded the header.
+    // Reusing that private value avoids another large parts worker and keeps
+    // the header and all of its rows on the same atomic database snapshot.
+    const header = capturedHeader ?? await this.db.projects.get(projectId);
     if (!header) return undefined;
+    if(header.projectId!==projectId)throw new StorageError('SAVE_FAILED','作品の保存情報が別の作品を指しています。',projectId);
     const { entityIds, relationIds, snapshotIds, historyIds, viewIds, contentHeadOperationId, ...project } = header;
     // The compound primary keys keep one project's rows contiguous. Reading
     // that range avoids a secondary-index lookup for every native record.
@@ -512,7 +516,7 @@ export class ScenarioStore {
       const read = await this.db.transaction('r', this.writeTables, async () => {
         const header = await this.db.projects.get(projectId), cached = this.cachedProjects.get(projectId);
         if (!header) return undefined;
-        return cached?.revision === header.revision && this.completeHistories.has(projectId) && sameJson(this.cachedHistoryIds.get(projectId), header.historyIds) ? { project: cached, historyIds: header.historyIds, contentHeadOperationId: header.contentHeadOperationId } : this.readProject(projectId);
+        return cached?.revision === header.revision && this.completeHistories.has(projectId) && sameJson(this.cachedHistoryIds.get(projectId), header.historyIds) ? { project: cached, historyIds: header.historyIds, contentHeadOperationId: header.contentHeadOperationId } : this.readProject(projectId,true,undefined,header);
       });
       if (!read) return undefined;
       let { project } = read;
@@ -537,9 +541,11 @@ export class ScenarioStore {
       const readEpoch = { project: this.cacheEpochs.get(projectId) ?? 0, lifetime: this.cacheLifetime };
       const read = await this.db.transaction('r', this.writeTables, async () => {
         bindRecordPartsSignal(options.signal);checkCancelled(options.signal);
+        const headerStarted=started===undefined?undefined:performance.now();
         const header = await this.db.projects.get(projectId), cached = this.cachedProjects.get(projectId);
+        if(headerStarted!==undefined)milliseconds['database.header']=performance.now()-headerStarted;
         if (!header) return undefined;
-        return cached?.revision === header.revision && sameJson(this.cachedHistoryIds.get(projectId), header.historyIds) ? { project: cached, historyIds: header.historyIds, contentHeadOperationId: header.contentHeadOperationId } : this.readProject(projectId, false,started===undefined?undefined:milliseconds);
+        return cached?.revision === header.revision && sameJson(this.cachedHistoryIds.get(projectId), header.historyIds) ? { project: cached, historyIds: header.historyIds, contentHeadOperationId: header.contentHeadOperationId } : this.readProject(projectId, false,started===undefined?undefined:milliseconds,header);
       });
       checkCancelled(options.signal);
       if (!read) return undefined;
@@ -560,15 +566,15 @@ export class ScenarioStore {
   }
   async listProjectsForEditing(options: { signal?: AbortSignal; onProgress?: (completed: number, total: number) => void;onStage?:(stage:ReadStage)=>void;immutableView?:boolean } = {}): Promise<ProjectData[]> {
     checkCancelled(options.signal);
-    const headers = await this.db.projects.toArray();
+    const projectIds = await this.db.projects.toCollection().primaryKeys();
     const projects: ProjectData[] = [];
-    options.onProgress?.(0, headers.length);
-    for (const [index,header] of headers.entries()) {
+    options.onProgress?.(0, projectIds.length);
+    for (const [index,projectId] of projectIds.entries()) {
       checkCancelled(options.signal);
-      const project = await this.getProjectForEditing(header.projectId,options);
+      const project = await this.getProjectForEditing(projectId,options);
       checkCancelled(options.signal);
       if (project) projects.push(project);
-      options.onProgress?.(index+1, headers.length);
+      options.onProgress?.(index+1, projectIds.length);
     }
     return projects;
   }
