@@ -1,0 +1,172 @@
+{
+  "finding": "C7 F31/N13 320px page horizontal overflow from current typed-reference label",
+  "status": "reproduced product UI difference",
+  "commit": "905aad8997bd4218fc3da84bba96687120ebb4dd",
+  "tree": "b89ea2600f3b9d5298e6cb0bda227a822ea27f8c",
+  "build": "4aa7686ea50ba1b3f89e",
+  "candidateBindingSHA256": "d72f6e4668f1019c499e940a0d13d9d82afa85ac7eecfa0ab560fbe9bc0a65d7",
+  "originalRequirements": [
+    {
+      "id": "REQ-F31",
+      "title": "画面の広さに合わせて編集する",
+      "provenance": "調査提案の仕様化・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP02",
+      "shall": "広い画面は一覧・図・詳細、iPadは二画面、スマートフォンは図と詳細を切り替える。縦横と分割表示にも合わせること。",
+      "failure_behavior": "端末の幅で表示を切り替え、重要操作をPCに限定しない。分割表示やソフトキーボードで確定ボタンが隠れない。",
+      "acceptance_ids": [
+        "AT-F31"
+      ],
+      "source_refs": [
+        "S06",
+        "S23",
+        "S33"
+      ],
+      "source_feature_id": "F31"
+    },
+    {
+      "id": "REQ-N13",
+      "title": "日本語と時間の正確性",
+      "provenance": "仕様を成立させる品質条件・PRレビュー対象",
+      "decision_status": "review_proposal",
+      "implementation_status": "planned",
+      "release_scope": "complete_v1",
+      "package_id": "WP05",
+      "shall": "UTF-8、日本語IME、ルビ、読み、別名、絵文字を破損なく保持し、世界時間と実日時を別型にすること。",
+      "failure_behavior": "IME変換を操作キーで確定前に破壊したり、tickを浮動小数で丸めない",
+      "acceptance_ids": [
+        "AT-N13"
+      ],
+      "source_refs": []
+    }
+  ],
+  "originalAcceptance": {
+    "id": "AT-F31",
+    "requirement_ids": [
+      "REQ-F31"
+    ],
+    "package_id": "WP02",
+    "given": "人物/条件/関係線/専用ファイルを持つ作品と未保存入力",
+    "when": "幅320/390/768/1024/1440、縦横/分割で配置を切替え、狭幅だけで編集と読み込みを完了する",
+    "then": "人物、条件、関係線、読み込みの編集を、スマートフォンだけでも完了できる。",
+    "negative_or_edge": "端末の幅で表示を切り替え、重要操作をPCに限定しない。分割表示やソフトキーボードで確定ボタンが隠れない。",
+    "result": "not_run"
+  },
+  "normalProcedure": [
+    "Seed exact key boolean/day-night enum fixture and two people + trust relation via normal native file import",
+    "At320 edit name; fail Quota auto-save and verify native rows unchanged; widths320/390/768/1024/1440 retain draft; keyboard retry",
+    "Build nested all(key,any(day,night)) using typed controls and save",
+    "Open timeline→relation table/graph; select A; ArrowRight and explicit move button; keyboard open relation and save related/symmetric",
+    "After modal closes, measure page width before 200%/cold steps"
+  ],
+  "expected": "documentElement.scrollWidth-clientWidth <=1 at320; long reference text wraps, full label accessible; internal graph canvas scrolling remains allowed",
+  "actual": {
+    "innerWidth": 320,
+    "scrollWidth": 378,
+    "clientWidth": 320,
+    "scrollX": 0,
+    "offenders": [
+      {
+        "tag": "STRONG",
+        "className": null,
+        "id": "",
+        "text": "参照 · data.gate.children[1].children[0].variableId",
+        "left": 36,
+        "right": 378.140625,
+        "width": 342.140625,
+        "minWidth": "auto",
+        "whiteSpace": "normal",
+        "scrollWidth": 342,
+        "clientWidth": 342,
+        "overflowX": "visible",
+        "position": "static",
+        "ancestors": [
+          {
+            "tag": "BUTTON",
+            "className": "world-relation-meaning",
+            "overflowX": "visible",
+            "right": 294
+          },
+          {
+            "tag": "ARTICLE",
+            "className": null,
+            "overflowX": "visible",
+            "right": 305
+          },
+          {
+            "tag": "DIV",
+            "className": "world-relation-table",
+            "overflowX": "visible",
+            "right": 305
+          },
+          {
+            "tag": "DIV",
+            "className": "world-panel relationships-view",
+            "overflowX": "visible",
+            "right": 305
+          }
+        ]
+      }
+    ]
+  },
+  "rootCauseElement": "src/ui/Relationships.tsx:99 world-relation-meaning > strong typed reference label",
+  "rootCauseCSS": "src/ui/World.css:1 world-relation-meaning lacks overflow-wrap; text-button has anywhere but middle label does not",
+  "minimalSuggestedRepair": "Constrain meaning and text child widths (min-width:0/max-width:100%); overflow-wrap:anywhere for label text without clipping/deletion. Preserve all graph/table interactions and labels. Root implements and re-freezes, reviewer makes no product edits.",
+  "environment": "Linux Google Chrome for Testing153.0.8010.12, production sealed dist, 320x900 CSS viewport, native IndexedDB. Synthetic Quota fixture only. No physical device/OS Files/Auth evidence.",
+  "productSourceChanged": false,
+  "expectationRelaxed": false,
+  "runs": [
+    {
+      "run": "f31-c7-1",
+      "rawPath": "/tmp/shinariokanri-independent-rb10-c7-905aad8/prepared/results/f31-c7-1/raw.log",
+      "rawSHA256": "58cbc8683449361ee227329432a0dcfb7d24295401488ac33b723f8d720e0686",
+      "bindingPath": "/tmp/shinariokanri-independent-rb10-c7-905aad8/prepared/results/f31-c7-1/EXECUTION_BINDING.json",
+      "bindingSHA256": "8aa987e6d93ac8dbce0691ddadebdbc324a89d1f9b46e603490872543b5d22b7"
+    },
+    {
+      "run": "f31-c7-diagnostic-2",
+      "rawPath": "/tmp/shinariokanri-independent-rb10-c7-905aad8/prepared/results/f31-c7-diagnostic-2/raw.log",
+      "rawSHA256": "26905e78759d1fe04a1fca18dde3ebafa2dba20e371c21f6d92e0af8c11508b6",
+      "bindingPath": "/tmp/shinariokanri-independent-rb10-c7-905aad8/prepared/results/f31-c7-diagnostic-2/EXECUTION_BINDING.json",
+      "bindingSHA256": "efe334036169f0276ea677dd79d9b38c60e507d3983ea3a2e2b86a45824c8463"
+    },
+    {
+      "run": "f31-c7-diagnostic-3",
+      "rawPath": "/tmp/shinariokanri-independent-rb10-c7-905aad8/prepared/results/f31-c7-diagnostic-3/raw.log",
+      "rawSHA256": "6ca4dcd85593b7de43b9b63009ad3bae5f5081f78475cc6b1852185569878ced",
+      "bindingPath": "/tmp/shinariokanri-independent-rb10-c7-905aad8/prepared/results/f31-c7-diagnostic-3/EXECUTION_BINDING.json",
+      "bindingSHA256": "cc564576e6117db6a5c51aa7b34b7d409dc3ed8d0148f7b06cd95d16307d0324"
+    }
+  ],
+  "sourceOriginalFiles": [
+    {
+      "file": "src/ui/World.css",
+      "sha256": "809bf29e69d21335c38b2572f3e0e4326a271ba91f1d680ffdc13a669eaa2e2a"
+    },
+    {
+      "file": "src/ui/Relationships.tsx",
+      "sha256": "8aec7cd6362911cdcb2b461e2bdf8e29aa2dc38df6d3f1f5645c705770fb00c0"
+    },
+    {
+      "file": "docs/spec/UI_UX.md",
+      "sha256": "46be9bb0b4c131c7c3c8892432f967a8f2bd0a394ffde5c90aa508ec047fdea4"
+    },
+    {
+      "file": "docs/data/requirements.json",
+      "sha256": "df11649ab7ec25c31ae2aad6aacdca98d7324aba2e701352f9a78136c3bed0dc"
+    },
+    {
+      "file": "docs/data/acceptance_cases.json",
+      "sha256": "e1e4b06a3bb1cd79fc590239ab6350103323335f2e1ee87a2e6a283755834c4f"
+    }
+  ],
+  "notExecutedAt320": [
+    "200% text phase",
+    "cold native/complete-file restore phase"
+  ],
+  "otherWidths": "390/768/1024/1440 original normal sequence passed (four independent cases); not current320 proof",
+  "physical": "not_run",
+  "actualAuth": "not_run"
+}

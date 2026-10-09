@@ -1,0 +1,717 @@
+[WebServer] (node:527827) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 3 tests using 1 worker
+
+(node:527873) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  1 [chromium] › tests/e2e/rb10-library-reopen.spec.ts:49:1 › library selection keeps canonical projects clean and resumes a failed draft across another project, cold reload and empty new/clone restoration (12.4s)
+(node:528080) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Skipping host requirements validation logic because `PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS` env variable is set.
+  ✘  2 [firefox] › tests/e2e/rb10-library-reopen.spec.ts:49:1 › library selection keeps canonical projects clean and resumes a failed draft across another project, cold reload and empty new/clone restoration (2.0m)
+(node:528515) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Skipping host requirements validation logic because `PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS` env variable is set.
+  ✘  3 [webkit] › tests/e2e/rb10-library-reopen.spec.ts:49:1 › library selection keeps canonical projects clean and resumes a failed draft across another project, cold reload and empty new/clone restoration (21.9s)
+
+
+  1) [chromium] › tests/e2e/rb10-library-reopen.spec.ts:49:1 › library selection keeps canonical projects clean and resumes a failed draft across another project, cold reload and empty new/clone restoration 
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: "1"
+    Received: "2"
+
+      43 |  const character=p.entities.find(e=>e.kind==='character')!,note=p.entities.find(e=>e.kind==='note')!;
+      44 |  expect(character.name).toBe(expectedName);expect(note.kind).toBe('note');if(note.kind==='note'){expect(note.data.body[0]!.text).toBe('😀人物と𠮷野の固定本文');expect(note.data.body[0]!.links![0]!.target.entityId).toBe(character.id);}
+    > 45 |  expect(p.revision).toBe('1');expect(p.history).toHaveLength(1);expect(p.history[0]!.before.revision).toBe('0');expect(p.history[0]!.after.revision).toBe('1');expect(p.history[0]!.before.entities.find(e=>e.kind==='character')!.name).toBe('人物同名');expect(p.history[0]!.after.entities.find(e=>e.kind==='character')!.name).toBe(expectedName);
+         |                     ^
+      46 |  expect(p.snapshots).toHaveLength(1);expect(p.snapshots[0]!.content.entities.find(e=>e.kind==='character')!.name).toBe('人物同名');expect(p.snapshots[0]!.content).not.toHaveProperty('id');
+      47 | }
+      48 |
+        at checkEdition (/workspace/shinariokanri-rb10/tests/e2e/rb10-library-reopen.spec.ts:45:21)
+        at /workspace/shinariokanri-rb10/tests/e2e/rb10-library-reopen.spec.ts:59:287
+
+    Error Context: ../../tmp/shinariokanri-rb10-c7-library-e2e-2/rb10-library-reopen-librar-00a46-empty-new-clone-restoration-chromium/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../tmp/shinariokanri-rb10-c7-library-e2e-2/rb10-library-reopen-librar-00a46-empty-new-clone-restoration-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace ../../tmp/shinariokanri-rb10-c7-library-e2e-2/rb10-library-reopen-librar-00a46-empty-new-clone-restoration-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) [firefox] › tests/e2e/rb10-library-reopen.spec.ts:49:1 › library selection keeps canonical projects clean and resumes a failed draft across another project, cold reload and empty new/clone restoration 
+
+    Test timeout of 120000ms exceeded.
+
+    Error: locator.click: Test ended.
+    Browser logs:
+
+    [pid=528092][out]         ERROR: Component returned failure code: 0x804b001b (NS_ERROR_INVALID_CONTENT_ENCODING) [nsIStreamListener.onDataAvailable] convertString@chrome://juggler/content/NetworkObserver.js:1037:13
+    [pid=528092][out] getBase64EncodedResponse@chrome://juggler/content/NetworkObserver.js:946:18
+    [pid=528092][out] getResponseBody@chrome://juggler/content/NetworkObserver.js:91:34
+    [pid=528092][out] Network.getResponseBody@chrome://juggler/content/protocol/PageHandler.js:262:30
+    [pid=528092][out] dispatch@chrome://juggler/content/protocol/Dispatcher.js:133:39
+    [pid=528092][out] _dispatch@chrome://juggler/content/protocol/Dispatcher.js:70:36
+    [pid=528092][out] receiveMessage@chrome://juggler/content/components/Juggler.js:122:20
+    [pid=528092][out] 
+    [pid=528092][out]       
+    [pid=528092][out]         ERROR: Component returned failure code: 0x804b001b (NS_ERROR_INVALID_CONTENT_ENCODING) [nsIStreamListener.onDataAvailable] convertString@chrome://juggler/content/NetworkObserver.js:1037:13
+    [pid=528092][out] getBase64EncodedResponse@chrome://juggler/content/NetworkObserver.js:946:18
+    [pid=528092][out] getResponseBody@chrome://juggler/content/NetworkObserver.js:91:34
+    [pid=528092][out] Network.getResponseBody@chrome://juggler/content/protocol/PageHandler.js:262:30
+    [pid=528092][out] dispatch@chrome://juggler/content/protocol/Dispatcher.js:133:39
+    [pid=528092][out] _dispatch@chrome://juggler/content/protocol/Dispatcher.js:70:36
+    [pid=528092][out] receiveMessage@chrome://juggler/content/components/Juggler.js:122:20
+    [pid=528092][out] 
+    [pid=528092][out]       
+    [pid=528092][out]         ERROR: Component returned failure code: 0x804b001b (NS_ERROR_INVALID_CONTENT_ENCODING) [nsIStreamListener.onDataAvailable] convertString@chrome://juggler/content/NetworkObserver.js:1037:13
+    [pid=528092][out] getBase64EncodedResponse@chrome://juggler/content/NetworkObserver.js:946:18
+    [pid=528092][out] getResponseBody@chrome://juggler/content/NetworkObserver.js:91:34
+    [pid=528092][out] Network.getResponseBody@chrome://juggler/content/protocol/PageHandler.js:262:30
+    [pid=528092][out] dispatch@chrome://juggler/content/protocol/Dispatcher.js:133:39
+    [pid=528092][out] _dispatch@chrome://juggler/content/protocol/Dispatcher.js:70:36
+    [pid=528092][out] receiveMessage@chrome://juggler/content/components/Juggler.js:122:20
+    [pid=528092][out] 
+    [pid=528092][out]       
+    [pid=528092][out]         ERROR: Component returned failure code: 0x804b001b (NS_ERROR_INVALID_CONTENT_ENCODING) [nsIStreamListener.onDataAvailable] convertString@chrome://juggler/content/NetworkObserver.js:1037:13
+    [pid=528092][out] getBase64EncodedResponse@chrome://juggler/content/NetworkObserver.js:946:18
+    [pid=528092][out] getResponseBody@chrome://juggler/content/NetworkObserver.js:91:34
+    [pid=528092][out] Network.getResponseBody@chrome://juggler/content/protocol/PageHandler.js:262:30
+    [pid=528092][out] dispatch@chrome://juggler/content/protocol/Dispatcher.js:133:39
+    [pid=528092][out] _dispatch@chrome://juggler/content/protocol/Dispatcher.js:70:36
+    [pid=528092][out] receiveMessage@chrome://juggler/content/components/Juggler.js:122:20
+    [pid=528092][out] 
+    [pid=528092][out]       
+    [pid=528092][out]         ERROR: Component returned failure code: 0x804b001b (NS_ERROR_INVALID_CONTENT_ENCODING) [nsIStreamListener.onDataAvailable] convertString@chrome://juggler/content/NetworkObserver.js:1037:13
+    [pid=528092][out] getBase64EncodedResponse@chrome://juggler/content/NetworkObserver.js:946:18
+    [pid=528092][out] getResponseBody@chrome://juggler/content/NetworkObserver.js:91:34
+    [pid=528092][out] Network.getResponseBody@chrome://juggler/content/protocol/PageHandler.js:262:30
+    [pid=528092][out] dispatch@chrome://juggler/content/protocol/Dispatcher.js:133:39
+    [pid=528092][out] _dispatch@chrome://juggler/content/protocol/Dispatcher.js:70:36
+    [pid=528092][out] receiveMessage@chrome://juggler/content/components/Juggler.js:122:20
+    [pid=528092][out] 
+    [pid=528092][out]       
+    [pid=528092][out]         ERROR: Component returned failure code: 0x804b001b (NS_ERROR_INVALID_CONTENT_ENCODING) [nsIStreamListener.onDataAvailable] convertString@chrome://juggler/content/NetworkObserver.js:1037:13
+    [pid=528092][out] getBase64EncodedResponse@chrome://juggler/content/NetworkObserver.js:946:18
+    [pid=528092][out] getResponseBody@chrome://juggler/content/NetworkObserver.js:91:34
+    [pid=528092][out] Network.getResponseBody@chrome://juggler/content/protocol/PageHandler.js:262:30
+    [pid=528092][out] dispatch@chrome://juggler/content/protocol/Dispatcher.js:133:39
+    [pid=528092][out] _dispatch@chrome://juggler/content/protocol/Dispatcher.js:70:36
+    [pid=528092][out] receiveMessage@chrome://juggler/content/components/Juggler.js:122:20
+    [pid=528092][out] 
+    [pid=528092][out]       
+    [pid=528092][out]         ERROR: Component returned failure code: 0x804b001b (NS_ERROR_INVALID_CONTENT_ENCODING) [nsIStreamListener.onDataAvailable] convertString@chrome://juggler/content/NetworkObserver.js:1037:13
+    [pid=528092][out] getBase64EncodedResponse@chrome://juggler/content/NetworkObserver.js:946:18
+    [pid=528092][out] getResponseBody@chrome://juggler/content/NetworkObserver.js:91:34
+    [pid=528092][out] Network.getResponseBody@chrome://juggler/content/protocol/PageHandler.js:262:30
+    [pid=528092][out] dispatch@chrome://juggler/content/protocol/Dispatcher.js:133:39
+    [pid=528092][out] _dispatch@chrome://juggler/content/protocol/Dispatcher.js:70:36
+    [pid=528092][out] receiveMessage@chrome://juggler/content/components/Juggler.js:122:20
+    [pid=528092][out] 
+    [pid=528092][out]       
+    [pid=528092][out]         ERROR: Component returned failure code: 0x804b001b (NS_ERROR_INVALID_CONTENT_ENCODING) [nsIStreamListener.onDataAvailable] convertString@chrome://juggler/content/NetworkObserver.js:1037:13
+    [pid=528092][out] getBase64EncodedResponse@chrome://juggler/content/NetworkObserver.js:946:18
+    [pid=528092][out] getResponseBody@chrome://juggler/content/NetworkObserver.js:91:34
+    [pid=528092][out] Network.getResponseBody@chrome://juggler/content/protocol/PageHandler.js:262:30
+    [pid=528092][out] dispatch@chrome://juggler/content/protocol/Dispatcher.js:133:39
+    [pid=528092][out] _dispatch@chrome://juggler/content/protocol/Dispatcher.js:70:36
+    [pid=528092][out] receiveMessage@chrome://juggler/content/components/Juggler.js:122:20
+    [pid=528092][out] 
+    [pid=528092][out]       
+    [pid=528092][out]         ERROR: Component returned failure code: 0x804b001b (NS_ERROR_INVALID_CONTENT_ENCODING) [nsIStreamListener.onDataAvailable] convertString@chrome://juggler/content/NetworkObserver.js:1037:13
+    [pid=528092][out] getBase64EncodedResponse@chrome://juggler/content/NetworkObserver.js:946:18
+    [pid=528092][out] getResponseBody@chrome://juggler/content/NetworkObserver.js:91:34
+    [pid=528092][out] Network.getResponseBody@chrome://juggler/content/protocol/PageHandler.js:262:30
+    [pid=528092][out] dispatch@chrome://juggler/content/protocol/Dispatcher.js:133:39
+    [pid=528092][out] _dispatch@chrome://juggler/content/protocol/Dispatcher.js:70:36
+    [pid=528092][out] receiveMessage@chrome://juggler/content/components/Juggler.js:122:20
+    [pid=528092][out] 
+    [pid=528092][out]       
+    [pid=528092][out]         ERROR: Component returned failure code: 0x804b001b (NS_ERROR_INVALID_CONTENT_ENCODING) [nsIStreamListener.onDataAvailable] convertString@chrome://juggler/content/NetworkObserver.js:1037:13
+    [pid=528092][out] getBase64EncodedResponse@chrome://juggler/content/NetworkObserver.js:946:18
+    [pid=528092][out] getResponseBody@chrome://juggler/content/NetworkObserver.js:91:34
+    [pid=528092][out] Network.getResponseBody@chrome://juggler/content/protocol/PageHandler.js:262:30
+    [pid=528092][out] dispatch@chrome://juggler/content/protocol/Dispatcher.js:133:39
+    [pid=528092][out] _dispatch@chrome://juggler/content/protocol/Dispatcher.js:70:36
+    [pid=528092][out] receiveMessage@chrome://juggler/content/components/Juggler.js:122:20
+    [pid=528092][out] 
+    [pid=528092][out]       console.warn: BackupService: "There was an error while trying to get the Document's directory" [Exception... "Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIProperties.get]"  nsresult: "0x80004005 (NS_ERROR_FAILURE)"  location: "JS frame :: resource:///modules/backup/BackupService.sys.mjs :: get docsDirFolderPath :: line 1299"  data: no]
+    [pid=528092][err] JavaScript error: resource:///modules/backup/BackupService.sys.mjs, line 4429: NotAllowedError: PathUtils.join: PathUtils does not support empty paths
+    [pid=528092][out] console.error: services.settings: 
+    [pid=528092][out]   Message: EmptyDatabaseError: "main/nimbus-desktop-experiments" has not been synced yet
+    [pid=528092][out]   Stack:
+    [pid=528092][out]     EmptyDatabaseError@resource://services-settings/Database.sys.mjs:19:5
+    [pid=528092][out] list@resource://services-settings/Database.sys.mjs:96:13
+    [pid=528092][out] 
+    [pid=528092][out] 1791528964473	addons.xpi	ERROR	System addon update list error Error: Failed downloading XML, status: 0, channelStatus: 2153390067, errorCode: 2, reason: error
+    [pid=528092][out] console.error: "Could not download new icon" (new ServerInfoError("Server response is invalid SyntaxError: JSON.parse: unexpected end of data at line 1 column 1 of the JSON data", "resource://services-settings/Attachments.sys.mjs", 40))
+    [pid=528092][err] JavaScript warning: http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js, line 36: Script terminated by timeout at:
+    [pid=528092][err] tf@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:36:54865
+    [pid=528092][err] a@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:36:55737
+    [pid=528092][err] EventListener.handleEvent*cf/<@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:36:56136
+    [pid=528092][err] pl@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:95253
+    [pid=528092][err] Nu@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:118536
+    [pid=528092][err] Mu@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:118311
+    [pid=528092][err] Nu@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:119755
+    [pid=528092][err] Mu@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:118311
+    [pid=528092][err] Nu@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:118518
+    [pid=528092][err] Mu@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:118311
+    [pid=528092][err] Nu@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:119755
+    [pid=528092][err] Mu@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:118311
+    [pid=528092][err] Nu@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:119755
+    [pid=528092][err] Mu@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:118311
+    [pid=528092][err] Nu@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:119755
+    [pid=528092][err] Mu@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:118311
+    [pid=528092][err] Nu@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:118518
+    [pid=528092][err] Mu@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:118311
+    [pid=528092][err] Nu@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:118559
+    [pid=528092][err] Mu@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:118311
+    [pid=528092][err] Nu@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:119755
+    [pid=528092][err] Mu@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:118311
+    [pid=528092][err] Nu@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:118584
+    [pid=528092][err] lf@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:133168
+    [pid=528092][err] Js</ef/<@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:130151
+    [pid=528092][err] D@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:17:3006
+    [pid=528092][err] EventHandlerNonNull*Ws<@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:17:3390
+    [pid=528092][err] o/<@http://127.0.0.1:4173/shinariokanri/assets/presentation-p0FcZTIj.js:1:184
+    [pid=528092][err] Gs<@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:17:4972
+    [pid=528092][err] o/<@http://127.0.0.1:4173/shinariokanri/assets/presentation-p0FcZTIj.js:1:184
+    [pid=528092][err] Js<@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:17:8792
+    [pid=528092][err] o/<@http://127.0.0.1:4173/shinariokanri/assets/presentation-p0FcZTIj.js:1:184
+    [pid=528092][err] Ys<@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:25:50739
+    [pid=528092][err] o/<@http://127.0.0.1:4173/shinariokanri/assets/presentation-p0FcZTIj.js:1:184
+    [pid=528092][err] @http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:25:50746
+    [pid=528092][err] 
+    [pid=528092][err] JavaScript error: chrome://juggler/content/Helper.js, line 82: NS_ERROR_FAILURE: Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIWebProgress.removeProgressListener]
+    [pid=528092] <gracefully close start>
+    [pid=528092][out] 
+    [pid=528092][out]         ERROR: Failed "callFunction": connector for namespace "page" in channel "undefined" is disposed. _rejectCallbacksFromConnector@chrome://juggler/content/SimpleChannel.js:108:25
+    [pid=528092][out] dispose@chrome://juggler/content/SimpleChannel.js:119:27
+    [pid=528092][out] dispose@chrome://juggler/content/protocol/PageHandler.js:152:23
+    [pid=528092][out] _dispose@chrome://juggler/content/protocol/Dispatcher.js:117:21
+    [pid=528092][out] destroySession@chrome://juggler/content/protocol/Dispatcher.js:35:13
+    [pid=528092][out] dispose@chrome://juggler/content/protocol/BrowserHandler.js:77:24
+    [pid=528092][out] _dispose@chrome://juggler/content/protocol/Dispatcher.js:117:21
+    [pid=528092][out] _dispose@chrome://juggler/content/protocol/Dispatcher.js:41:23
+    [pid=528092][out] observe/browserHandler<@chrome://juggler/content/components/Juggler.js:143:22
+    [pid=528092][out] Browser.close@chrome://juggler/content/protocol/BrowserHandler.js:156:10
+    [pid=528092][out] 
+    Call log:
+      - waiting for locator('.sidebar').getByRole('button', { name: /^作品/ }).first()
+        - locator resolved to <button class="nav-item ">…</button>
+      - attempting click action
+        2 × waiting for element to be visible, enabled and stable
+          - element is visible, enabled and stable
+          - scrolling into view if needed
+          - done scrolling
+          - element is outside of the viewport
+        - retrying click action
+        - waiting 20ms
+        2 × waiting for element to be visible, enabled and stable
+          - element is visible, enabled and stable
+          - scrolling into view if needed
+          - done scrolling
+          - element is outside of the viewport
+        - retrying click action
+          - waiting 100ms
+        210 × waiting for element to be visible, enabled and stable
+            - element is visible, enabled and stable
+            - scrolling into view if needed
+            - done scrolling
+            - element is outside of the viewport
+          - retrying click action
+            - waiting 500ms
+
+        at [pid=528092][out]         ERROR: Component returned failure code: 0x804b001b (NS_ERROR_INVALID_CONTENT_ENCODING) [nsIStreamListener.onDataAvailable] convertString@chrome://juggler/content/NetworkObserver.js:1037:13)
+        at [pid=528092][out] getBase64EncodedResponse@chrome://juggler/content/NetworkObserver.js:946:18
+        at [pid=528092][out] getResponseBody@chrome://juggler/content/NetworkObserver.js:91:34
+        at [pid=528092][out] Network.getResponseBody@chrome://juggler/content/protocol/PageHandler.js:262:30
+        at [pid=528092][out] dispatch@chrome://juggler/content/protocol/Dispatcher.js:133:39
+        at [pid=528092][out] _dispatch@chrome://juggler/content/protocol/Dispatcher.js:70:36
+        at [pid=528092][out] receiveMessage@chrome://juggler/content/components/Juggler.js:122:20
+        at [pid=528092][out]         ERROR: Component returned failure code: 0x804b001b (NS_ERROR_INVALID_CONTENT_ENCODING) [nsIStreamListener.onDataAvailable] convertString@chrome://juggler/content/NetworkObserver.js:1037:13)
+        at [pid=528092][out] getBase64EncodedResponse@chrome://juggler/content/NetworkObserver.js:946:18
+        at [pid=528092][out] getResponseBody@chrome://juggler/content/NetworkObserver.js:91:34
+        at [pid=528092][out] Network.getResponseBody@chrome://juggler/content/protocol/PageHandler.js:262:30
+        at [pid=528092][out] dispatch@chrome://juggler/content/protocol/Dispatcher.js:133:39
+        at [pid=528092][out] _dispatch@chrome://juggler/content/protocol/Dispatcher.js:70:36
+        at [pid=528092][out] receiveMessage@chrome://juggler/content/components/Juggler.js:122:20
+        at [pid=528092][out]         ERROR: Component returned failure code: 0x804b001b (NS_ERROR_INVALID_CONTENT_ENCODING) [nsIStreamListener.onDataAvailable] convertString@chrome://juggler/content/NetworkObserver.js:1037:13)
+        at [pid=528092][out] getBase64EncodedResponse@chrome://juggler/content/NetworkObserver.js:946:18
+        at [pid=528092][out] getResponseBody@chrome://juggler/content/NetworkObserver.js:91:34
+        at [pid=528092][out] Network.getResponseBody@chrome://juggler/content/protocol/PageHandler.js:262:30
+        at [pid=528092][out] dispatch@chrome://juggler/content/protocol/Dispatcher.js:133:39
+        at [pid=528092][out] _dispatch@chrome://juggler/content/protocol/Dispatcher.js:70:36
+        at [pid=528092][out] receiveMessage@chrome://juggler/content/components/Juggler.js:122:20
+        at [pid=528092][out]         ERROR: Component returned failure code: 0x804b001b (NS_ERROR_INVALID_CONTENT_ENCODING) [nsIStreamListener.onDataAvailable] convertString@chrome://juggler/content/NetworkObserver.js:1037:13)
+        at [pid=528092][out] getBase64EncodedResponse@chrome://juggler/content/NetworkObserver.js:946:18
+        at [pid=528092][out] getResponseBody@chrome://juggler/content/NetworkObserver.js:91:34
+        at [pid=528092][out] Network.getResponseBody@chrome://juggler/content/protocol/PageHandler.js:262:30
+        at [pid=528092][out] dispatch@chrome://juggler/content/protocol/Dispatcher.js:133:39
+        at [pid=528092][out] _dispatch@chrome://juggler/content/protocol/Dispatcher.js:70:36
+        at [pid=528092][out] receiveMessage@chrome://juggler/content/components/Juggler.js:122:20
+        at [pid=528092][out]         ERROR: Component returned failure code: 0x804b001b (NS_ERROR_INVALID_CONTENT_ENCODING) [nsIStreamListener.onDataAvailable] convertString@chrome://juggler/content/NetworkObserver.js:1037:13)
+        at [pid=528092][out] getBase64EncodedResponse@chrome://juggler/content/NetworkObserver.js:946:18
+        at [pid=528092][out] getResponseBody@chrome://juggler/content/NetworkObserver.js:91:34
+        at [pid=528092][out] Network.getResponseBody@chrome://juggler/content/protocol/PageHandler.js:262:30
+        at [pid=528092][out] dispatch@chrome://juggler/content/protocol/Dispatcher.js:133:39
+        at [pid=528092][out] _dispatch@chrome://juggler/content/protocol/Dispatcher.js:70:36
+        at [pid=528092][out] receiveMessage@chrome://juggler/content/components/Juggler.js:122:20
+        at [pid=528092][out]         ERROR: Component returned failure code: 0x804b001b (NS_ERROR_INVALID_CONTENT_ENCODING) [nsIStreamListener.onDataAvailable] convertString@chrome://juggler/content/NetworkObserver.js:1037:13)
+        at [pid=528092][out] getBase64EncodedResponse@chrome://juggler/content/NetworkObserver.js:946:18
+        at [pid=528092][out] getResponseBody@chrome://juggler/content/NetworkObserver.js:91:34
+        at [pid=528092][out] Network.getResponseBody@chrome://juggler/content/protocol/PageHandler.js:262:30
+        at [pid=528092][out] dispatch@chrome://juggler/content/protocol/Dispatcher.js:133:39
+        at [pid=528092][out] _dispatch@chrome://juggler/content/protocol/Dispatcher.js:70:36
+        at [pid=528092][out] receiveMessage@chrome://juggler/content/components/Juggler.js:122:20
+        at [pid=528092][out]         ERROR: Component returned failure code: 0x804b001b (NS_ERROR_INVALID_CONTENT_ENCODING) [nsIStreamListener.onDataAvailable] convertString@chrome://juggler/content/NetworkObserver.js:1037:13)
+        at [pid=528092][out] getBase64EncodedResponse@chrome://juggler/content/NetworkObserver.js:946:18
+        at [pid=528092][out] getResponseBody@chrome://juggler/content/NetworkObserver.js:91:34
+        at [pid=528092][out] Network.getResponseBody@chrome://juggler/content/protocol/PageHandler.js:262:30
+        at [pid=528092][out] dispatch@chrome://juggler/content/protocol/Dispatcher.js:133:39
+        at [pid=528092][out] _dispatch@chrome://juggler/content/protocol/Dispatcher.js:70:36
+        at [pid=528092][out] receiveMessage@chrome://juggler/content/components/Juggler.js:122:20
+        at [pid=528092][out]         ERROR: Component returned failure code: 0x804b001b (NS_ERROR_INVALID_CONTENT_ENCODING) [nsIStreamListener.onDataAvailable] convertString@chrome://juggler/content/NetworkObserver.js:1037:13)
+        at [pid=528092][out] getBase64EncodedResponse@chrome://juggler/content/NetworkObserver.js:946:18
+        at [pid=528092][out] getResponseBody@chrome://juggler/content/NetworkObserver.js:91:34
+        at [pid=528092][out] Network.getResponseBody@chrome://juggler/content/protocol/PageHandler.js:262:30
+        at [pid=528092][out] dispatch@chrome://juggler/content/protocol/Dispatcher.js:133:39
+        at [pid=528092][out] _dispatch@chrome://juggler/content/protocol/Dispatcher.js:70:36
+        at [pid=528092][out] receiveMessage@chrome://juggler/content/components/Juggler.js:122:20
+        at [pid=528092][out]         ERROR: Component returned failure code: 0x804b001b (NS_ERROR_INVALID_CONTENT_ENCODING) [nsIStreamListener.onDataAvailable] convertString@chrome://juggler/content/NetworkObserver.js:1037:13)
+        at [pid=528092][out] getBase64EncodedResponse@chrome://juggler/content/NetworkObserver.js:946:18
+        at [pid=528092][out] getResponseBody@chrome://juggler/content/NetworkObserver.js:91:34
+        at [pid=528092][out] Network.getResponseBody@chrome://juggler/content/protocol/PageHandler.js:262:30
+        at [pid=528092][out] dispatch@chrome://juggler/content/protocol/Dispatcher.js:133:39
+        at [pid=528092][out] _dispatch@chrome://juggler/content/protocol/Dispatcher.js:70:36
+        at [pid=528092][out] receiveMessage@chrome://juggler/content/components/Juggler.js:122:20
+        at [pid=528092][out]         ERROR: Component returned failure code: 0x804b001b (NS_ERROR_INVALID_CONTENT_ENCODING) [nsIStreamListener.onDataAvailable] convertString@chrome://juggler/content/NetworkObserver.js:1037:13)
+        at [pid=528092][out] getBase64EncodedResponse@chrome://juggler/content/NetworkObserver.js:946:18
+        at [pid=528092][out] getResponseBody@chrome://juggler/content/NetworkObserver.js:91:34
+        at [pid=528092][out] Network.getResponseBody@chrome://juggler/content/protocol/PageHandler.js:262:30
+        at [pid=528092][out] dispatch@chrome://juggler/content/protocol/Dispatcher.js:133:39
+        at [pid=528092][out] _dispatch@chrome://juggler/content/protocol/Dispatcher.js:70:36
+        at [pid=528092][out] receiveMessage@chrome://juggler/content/components/Juggler.js:122:20
+        at [pid=528092][out]     EmptyDatabaseError@resource://services-settings/Database.sys.mjs:19:5
+        at [pid=528092][out] list@resource://services-settings/Database.sys.mjs:96:13
+        at [pid=528092][err] tf@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:36:54865
+        at [pid=528092][err] a@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:36:55737
+        at [pid=528092][err] EventListener.handleEvent*cf/<@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:36:56136
+        at [pid=528092][err] pl@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:95253
+        at [pid=528092][err] Nu@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:118536
+        at [pid=528092][err] Mu@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:118311
+        at [pid=528092][err] Nu@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:119755
+        at [pid=528092][err] Mu@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:118311
+        at [pid=528092][err] Nu@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:118518
+        at [pid=528092][err] Mu@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:118311
+        at [pid=528092][err] Nu@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:119755
+        at [pid=528092][err] Mu@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:118311
+        at [pid=528092][err] Nu@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:119755
+        at [pid=528092][err] Mu@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:118311
+        at [pid=528092][err] Nu@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:119755
+        at [pid=528092][err] Mu@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:118311
+        at [pid=528092][err] Nu@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:118518
+        at [pid=528092][err] Mu@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:118311
+        at [pid=528092][err] Nu@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:118559
+        at [pid=528092][err] Mu@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:118311
+        at [pid=528092][err] Nu@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:119755
+        at [pid=528092][err] Mu@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:118311
+        at [pid=528092][err] Nu@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:118584
+        at [pid=528092][err] lf@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:133168
+        at [pid=528092][err] Js</ef/<@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:130151
+        at [pid=528092][err] D@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:17:3006
+        at [pid=528092][err] EventHandlerNonNull*Ws<@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:17:3390
+        at [pid=528092][err] o/<@http://127.0.0.1:4173/shinariokanri/assets/presentation-p0FcZTIj.js:1:184
+        at [pid=528092][err] Gs<@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:17:4972
+        at [pid=528092][err] o/<@http://127.0.0.1:4173/shinariokanri/assets/presentation-p0FcZTIj.js:1:184
+        at [pid=528092][err] Js<@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:17:8792
+        at [pid=528092][err] o/<@http://127.0.0.1:4173/shinariokanri/assets/presentation-p0FcZTIj.js:1:184
+        at [pid=528092][err] Ys<@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:25:50739
+        at [pid=528092][err] o/<@http://127.0.0.1:4173/shinariokanri/assets/presentation-p0FcZTIj.js:1:184
+        at [pid=528092][err] @http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:25:50746
+        at [pid=528092][out]         ERROR: Failed "callFunction": connector for namespace "page" in channel "undefined" is disposed. _rejectCallbacksFromConnector@chrome://juggler/content/SimpleChannel.js:108:25
+        at [pid=528092][out] dispose@chrome://juggler/content/SimpleChannel.js:119:27
+        at [pid=528092][out] dispose@chrome://juggler/content/protocol/PageHandler.js:152:23
+        at [pid=528092][out] _dispose@chrome://juggler/content/protocol/Dispatcher.js:117:21
+        at [pid=528092][out] destroySession@chrome://juggler/content/protocol/Dispatcher.js:35:13
+        at [pid=528092][out] dispose@chrome://juggler/content/protocol/BrowserHandler.js:77:24
+        at [pid=528092][out] _dispose@chrome://juggler/content/protocol/Dispatcher.js:117:21
+        at [pid=528092][out] _dispose@chrome://juggler/content/protocol/Dispatcher.js:41:23
+        at [pid=528092][out] observe/browserHandler<@chrome://juggler/content/components/Juggler.js:143:22
+        at [pid=528092][out] Browser.close@chrome://juggler/content/protocol/BrowserHandler.js:156:10
+        at nav (/workspace/shinariokanri-rb10/tests/e2e/rb10-library-reopen.spec.ts:10:68)
+        at completeFile (/workspace/shinariokanri-rb10/tests/e2e/rb10-library-reopen.spec.ts:38:2)
+        at /workspace/shinariokanri-rb10/tests/e2e/rb10-library-reopen.spec.ts:59:236
+
+    Error Context: ../../tmp/shinariokanri-rb10-c7-library-e2e-2/rb10-library-reopen-librar-00a46-empty-new-clone-restoration-firefox/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../tmp/shinariokanri-rb10-c7-library-e2e-2/rb10-library-reopen-librar-00a46-empty-new-clone-restoration-firefox/trace.zip
+    Usage:
+
+        npx playwright show-trace ../../tmp/shinariokanri-rb10-c7-library-e2e-2/rb10-library-reopen-librar-00a46-empty-new-clone-restoration-firefox/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  3) [webkit] › tests/e2e/rb10-library-reopen.spec.ts:49:1 › library selection keeps canonical projects clean and resumes a failed draft across another project, cold reload and empty new/clone restoration 
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: "1"
+    Received: "2"
+
+      43 |  const character=p.entities.find(e=>e.kind==='character')!,note=p.entities.find(e=>e.kind==='note')!;
+      44 |  expect(character.name).toBe(expectedName);expect(note.kind).toBe('note');if(note.kind==='note'){expect(note.data.body[0]!.text).toBe('😀人物と𠮷野の固定本文');expect(note.data.body[0]!.links![0]!.target.entityId).toBe(character.id);}
+    > 45 |  expect(p.revision).toBe('1');expect(p.history).toHaveLength(1);expect(p.history[0]!.before.revision).toBe('0');expect(p.history[0]!.after.revision).toBe('1');expect(p.history[0]!.before.entities.find(e=>e.kind==='character')!.name).toBe('人物同名');expect(p.history[0]!.after.entities.find(e=>e.kind==='character')!.name).toBe(expectedName);
+         |                     ^
+      46 |  expect(p.snapshots).toHaveLength(1);expect(p.snapshots[0]!.content.entities.find(e=>e.kind==='character')!.name).toBe('人物同名');expect(p.snapshots[0]!.content).not.toHaveProperty('id');
+      47 | }
+      48 |
+        at checkEdition (/workspace/shinariokanri-rb10/tests/e2e/rb10-library-reopen.spec.ts:45:21)
+        at /workspace/shinariokanri-rb10/tests/e2e/rb10-library-reopen.spec.ts:59:287
+
+    Error Context: ../../tmp/shinariokanri-rb10-c7-library-e2e-2/rb10-library-reopen-librar-00a46-empty-new-clone-restoration-webkit/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../tmp/shinariokanri-rb10-c7-library-e2e-2/rb10-library-reopen-librar-00a46-empty-new-clone-restoration-webkit/trace.zip
+    Usage:
+
+        npx playwright show-trace ../../tmp/shinariokanri-rb10-c7-library-e2e-2/rb10-library-reopen-librar-00a46-empty-new-clone-restoration-webkit/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  3 failed
+    [chromium] › tests/e2e/rb10-library-reopen.spec.ts:49:1 › library selection keeps canonical projects clean and resumes a failed draft across another project, cold reload and empty new/clone restoration 
+    [firefox] › tests/e2e/rb10-library-reopen.spec.ts:49:1 › library selection keeps canonical projects clean and resumes a failed draft across another project, cold reload and empty new/clone restoration 
+    [webkit] › tests/e2e/rb10-library-reopen.spec.ts:49:1 › library selection keeps canonical projects clean and resumes a failed draft across another project, cold reload and empty new/clone restoration 
+{
+  "config": {
+    "argv": [
+      "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+      "/workspace/shinariokanri-rb10/node_modules/.bin/playwright",
+      "test",
+      "tests/e2e/rb10-library-reopen.spec.ts",
+      "--output=/tmp/shinariokanri-rb10-c7-library-e2e-2",
+      "--reporter=list,json"
+    ],
+    "configFile": "/workspace/shinariokanri-rb10/playwright.config.ts",
+    "rootDir": "/workspace/shinariokanri-rb10/tests/e2e",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/tmp/shinariokanri-rb10-c7-library-e2e-2",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "/workspace/shinariokanri-rb10/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "/tmp/shinariokanri-rb10-c7-library-e2e-2",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "firefox",
+        "name": "firefox",
+        "testDir": "/workspace/shinariokanri-rb10/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "/tmp/shinariokanri-rb10-c7-library-e2e-2",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "webkit",
+        "name": "webkit",
+        "testDir": "/workspace/shinariokanri-rb10/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list"
+      ],
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": {
+      "command": "npm run preview -- --port 4173",
+      "url": "http://127.0.0.1:4173/shinariokanri/",
+      "reuseExistingServer": true
+    }
+  },
+  "suites": [
+    {
+      "title": "rb10-library-reopen.spec.ts",
+      "file": "rb10-library-reopen.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "library selection keeps canonical projects clean and resumes a failed draft across another project, cold reload and empty new/clone restoration",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 12398,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m\"1\"\u001b[39m\nReceived: \u001b[31m\"2\"\u001b[39m",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m\"1\"\u001b[39m\nReceived: \u001b[31m\"2\"\u001b[39m\n    at checkEdition (/workspace/shinariokanri-rb10/tests/e2e/rb10-library-reopen.spec.ts:45:21)\n    at /workspace/shinariokanri-rb10/tests/e2e/rb10-library-reopen.spec.ts:59:287",
+                    "location": {
+                      "file": "/workspace/shinariokanri-rb10/tests/e2e/rb10-library-reopen.spec.ts",
+                      "column": 21,
+                      "line": 45
+                    },
+                    "snippet": "  43 |  const character=p.entities.find(e=>e.kind==='character')!,note=p.entities.find(e=>e.kind==='note')!;\n  44 |  expect(character.name).toBe(expectedName);expect(note.kind).toBe('note');if(note.kind==='note'){expect(note.data.body[0]!.text).toBe('😀人物と𠮷野の固定本文');expect(note.data.body[0]!.links![0]!.target.entityId).toBe(character.id);}\n> 45 |  expect(p.revision).toBe('1');expect(p.history).toHaveLength(1);expect(p.history[0]!.before.revision).toBe('0');expect(p.history[0]!.after.revision).toBe('1');expect(p.history[0]!.before.entities.find(e=>e.kind==='character')!.name).toBe('人物同名');expect(p.history[0]!.after.entities.find(e=>e.kind==='character')!.name).toBe(expectedName);\n     |                     ^\n  46 |  expect(p.snapshots).toHaveLength(1);expect(p.snapshots[0]!.content.entities.find(e=>e.kind==='character')!.name).toBe('人物同名');expect(p.snapshots[0]!.content).not.toHaveProperty('id');\n  47 | }\n  48 |"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "/workspace/shinariokanri-rb10/tests/e2e/rb10-library-reopen.spec.ts",
+                        "column": 21,
+                        "line": 45
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m\"1\"\u001b[39m\nReceived: \u001b[31m\"2\"\u001b[39m\n\n  43 |  const character=p.entities.find(e=>e.kind==='character')!,note=p.entities.find(e=>e.kind==='note')!;\n  44 |  expect(character.name).toBe(expectedName);expect(note.kind).toBe('note');if(note.kind==='note'){expect(note.data.body[0]!.text).toBe('😀人物と𠮷野の固定本文');expect(note.data.body[0]!.links![0]!.target.entityId).toBe(character.id);}\n> 45 |  expect(p.revision).toBe('1');expect(p.history).toHaveLength(1);expect(p.history[0]!.before.revision).toBe('0');expect(p.history[0]!.after.revision).toBe('1');expect(p.history[0]!.before.entities.find(e=>e.kind==='character')!.name).toBe('人物同名');expect(p.history[0]!.after.entities.find(e=>e.kind==='character')!.name).toBe(expectedName);\n     |                     ^\n  46 |  expect(p.snapshots).toHaveLength(1);expect(p.snapshots[0]!.content.entities.find(e=>e.kind==='character')!.name).toBe('人物同名');expect(p.snapshots[0]!.content).not.toHaveProperty('id');\n  47 | }\n  48 |\n    at checkEdition (/workspace/shinariokanri-rb10/tests/e2e/rb10-library-reopen.spec.ts:45:21)\n    at /workspace/shinariokanri-rb10/tests/e2e/rb10-library-reopen.spec.ts:59:287"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T06:55:20.680Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/tmp/shinariokanri-rb10-c7-library-e2e-2/rb10-library-reopen-librar-00a46-empty-new-clone-restoration-chromium/error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/tmp/shinariokanri-rb10-c7-library-e2e-2/rb10-library-reopen-librar-00a46-empty-new-clone-restoration-chromium/trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "/workspace/shinariokanri-rb10/tests/e2e/rb10-library-reopen.spec.ts",
+                    "column": 21,
+                    "line": 45
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "575f6ad7164e239ff94d-6419067e329a438398f2",
+          "file": "rb10-library-reopen.spec.ts",
+          "line": 49,
+          "column": 1
+        },
+        {
+          "title": "library selection keeps canonical projects clean and resumes a failed draft across another project, cold reload and empty new/clone restoration",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "firefox",
+              "projectName": "firefox",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "timedOut",
+                  "duration": 122111,
+                  "error": {
+                    "message": "\u001b[31mTest timeout of 120000ms exceeded.\u001b[39m",
+                    "stack": "\u001b[31mTest timeout of 120000ms exceeded.\u001b[39m"
+                  },
+                  "errors": [
+                    {
+                      "message": "\u001b[31mTest timeout of 120000ms exceeded.\u001b[39m"
+                    },
+                    {
+                      "location": {
+                        "file": "NS_ERROR_INVALID_CONTENT_ENCODING) [nsIStreamListener.onDataAvailable] convertString@chrome://juggler/content/NetworkObserver.js",
+                        "column": 13,
+                        "line": 1037
+                      },
+                      "message": "Error: locator.click: Test ended.\nBrowser logs:\n\n[pid=528092][out]         ERROR: Component returned failure code: 0x804b001b (NS_ERROR_INVALID_CONTENT_ENCODING) [nsIStreamListener.onDataAvailable] convertString@chrome://juggler/content/NetworkObserver.js:1037:13\n[pid=528092][out] getBase64EncodedResponse@chrome://juggler/content/NetworkObserver.js:946:18\n[pid=528092][out] getResponseBody@chrome://juggler/content/NetworkObserver.js:91:34\n[pid=528092][out] Network.getResponseBody@chrome://juggler/content/protocol/PageHandler.js:262:30\n[pid=528092][out] dispatch@chrome://juggler/content/protocol/Dispatcher.js:133:39\n[pid=528092][out] _dispatch@chrome://juggler/content/protocol/Dispatcher.js:70:36\n[pid=528092][out] receiveMessage@chrome://juggler/content/components/Juggler.js:122:20\n[pid=528092][out] \n[pid=528092][out]       \n[pid=528092][out]         ERROR: Component returned failure code: 0x804b001b (NS_ERROR_INVALID_CONTENT_ENCODING) [nsIStreamListener.onDataAvailable] convertString@chrome://juggler/content/NetworkObserver.js:1037:13\n[pid=528092][out] getBase64EncodedResponse@chrome://juggler/content/NetworkObserver.js:946:18\n[pid=528092][out] getResponseBody@chrome://juggler/content/NetworkObserver.js:91:34\n[pid=528092][out] Network.getResponseBody@chrome://juggler/content/protocol/PageHandler.js:262:30\n[pid=528092][out] dispatch@chrome://juggler/content/protocol/Dispatcher.js:133:39\n[pid=528092][out] _dispatch@chrome://juggler/content/protocol/Dispatcher.js:70:36\n[pid=528092][out] receiveMessage@chrome://juggler/content/components/Juggler.js:122:20\n[pid=528092][out] \n[pid=528092][out]       \n[pid=528092][out]         ERROR: Component returned failure code: 0x804b001b (NS_ERROR_INVALID_CONTENT_ENCODING) [nsIStreamListener.onDataAvailable] convertString@chrome://juggler/content/NetworkObserver.js:1037:13\n[pid=528092][out] getBase64EncodedResponse@chrome://juggler/content/NetworkObserver.js:946:18\n[pid=528092][out] getResponseBody@chrome://juggler/content/NetworkObserver.js:91:34\n[pid=528092][out] Network.getResponseBody@chrome://juggler/content/protocol/PageHandler.js:262:30\n[pid=528092][out] dispatch@chrome://juggler/content/protocol/Dispatcher.js:133:39\n[pid=528092][out] _dispatch@chrome://juggler/content/protocol/Dispatcher.js:70:36\n[pid=528092][out] receiveMessage@chrome://juggler/content/components/Juggler.js:122:20\n[pid=528092][out] \n[pid=528092][out]       \n[pid=528092][out]         ERROR: Component returned failure code: 0x804b001b (NS_ERROR_INVALID_CONTENT_ENCODING) [nsIStreamListener.onDataAvailable] convertString@chrome://juggler/content/NetworkObserver.js:1037:13\n[pid=528092][out] getBase64EncodedResponse@chrome://juggler/content/NetworkObserver.js:946:18\n[pid=528092][out] getResponseBody@chrome://juggler/content/NetworkObserver.js:91:34\n[pid=528092][out] Network.getResponseBody@chrome://juggler/content/protocol/PageHandler.js:262:30\n[pid=528092][out] dispatch@chrome://juggler/content/protocol/Dispatcher.js:133:39\n[pid=528092][out] _dispatch@chrome://juggler/content/protocol/Dispatcher.js:70:36\n[pid=528092][out] receiveMessage@chrome://juggler/content/components/Juggler.js:122:20\n[pid=528092][out] \n[pid=528092][out]       \n[pid=528092][out]         ERROR: Component returned failure code: 0x804b001b (NS_ERROR_INVALID_CONTENT_ENCODING) [nsIStreamListener.onDataAvailable] convertString@chrome://juggler/content/NetworkObserver.js:1037:13\n[pid=528092][out] getBase64EncodedResponse@chrome://juggler/content/NetworkObserver.js:946:18\n[pid=528092][out] getResponseBody@chrome://juggler/content/NetworkObserver.js:91:34\n[pid=528092][out] Network.getResponseBody@chrome://juggler/content/protocol/PageHandler.js:262:30\n[pid=528092][out] dispatch@chrome://juggler/content/protocol/Dispatcher.js:133:39\n[pid=528092][out] _dispatch@chrome://juggler/content/protocol/Dispatcher.js:70:36\n[pid=528092][out] receiveMessage@chrome://juggler/content/components/Juggler.js:122:20\n[pid=528092][out] \n[pid=528092][out]       \n[pid=528092][out]         ERROR: Component returned failure code: 0x804b001b (NS_ERROR_INVALID_CONTENT_ENCODING) [nsIStreamListener.onDataAvailable] convertString@chrome://juggler/content/NetworkObserver.js:1037:13\n[pid=528092][out] getBase64EncodedResponse@chrome://juggler/content/NetworkObserver.js:946:18\n[pid=528092][out] getResponseBody@chrome://juggler/content/NetworkObserver.js:91:34\n[pid=528092][out] Network.getResponseBody@chrome://juggler/content/protocol/PageHandler.js:262:30\n[pid=528092][out] dispatch@chrome://juggler/content/protocol/Dispatcher.js:133:39\n[pid=528092][out] _dispatch@chrome://juggler/content/protocol/Dispatcher.js:70:36\n[pid=528092][out] receiveMessage@chrome://juggler/content/components/Juggler.js:122:20\n[pid=528092][out] \n[pid=528092][out]       \n[pid=528092][out]         ERROR: Component returned failure code: 0x804b001b (NS_ERROR_INVALID_CONTENT_ENCODING) [nsIStreamListener.onDataAvailable] convertString@chrome://juggler/content/NetworkObserver.js:1037:13\n[pid=528092][out] getBase64EncodedResponse@chrome://juggler/content/NetworkObserver.js:946:18\n[pid=528092][out] getResponseBody@chrome://juggler/content/NetworkObserver.js:91:34\n[pid=528092][out] Network.getResponseBody@chrome://juggler/content/protocol/PageHandler.js:262:30\n[pid=528092][out] dispatch@chrome://juggler/content/protocol/Dispatcher.js:133:39\n[pid=528092][out] _dispatch@chrome://juggler/content/protocol/Dispatcher.js:70:36\n[pid=528092][out] receiveMessage@chrome://juggler/content/components/Juggler.js:122:20\n[pid=528092][out] \n[pid=528092][out]       \n[pid=528092][out]         ERROR: Component returned failure code: 0x804b001b (NS_ERROR_INVALID_CONTENT_ENCODING) [nsIStreamListener.onDataAvailable] convertString@chrome://juggler/content/NetworkObserver.js:1037:13\n[pid=528092][out] getBase64EncodedResponse@chrome://juggler/content/NetworkObserver.js:946:18\n[pid=528092][out] getResponseBody@chrome://juggler/content/NetworkObserver.js:91:34\n[pid=528092][out] Network.getResponseBody@chrome://juggler/content/protocol/PageHandler.js:262:30\n[pid=528092][out] dispatch@chrome://juggler/content/protocol/Dispatcher.js:133:39\n[pid=528092][out] _dispatch@chrome://juggler/content/protocol/Dispatcher.js:70:36\n[pid=528092][out] receiveMessage@chrome://juggler/content/components/Juggler.js:122:20\n[pid=528092][out] \n[pid=528092][out]       \n[pid=528092][out]         ERROR: Component returned failure code: 0x804b001b (NS_ERROR_INVALID_CONTENT_ENCODING) [nsIStreamListener.onDataAvailable] convertString@chrome://juggler/content/NetworkObserver.js:1037:13\n[pid=528092][out] getBase64EncodedResponse@chrome://juggler/content/NetworkObserver.js:946:18\n[pid=528092][out] getResponseBody@chrome://juggler/content/NetworkObserver.js:91:34\n[pid=528092][out] Network.getResponseBody@chrome://juggler/content/protocol/PageHandler.js:262:30\n[pid=528092][out] dispatch@chrome://juggler/content/protocol/Dispatcher.js:133:39\n[pid=528092][out] _dispatch@chrome://juggler/content/protocol/Dispatcher.js:70:36\n[pid=528092][out] receiveMessage@chrome://juggler/content/components/Juggler.js:122:20\n[pid=528092][out] \n[pid=528092][out]       \n[pid=528092][out]         ERROR: Component returned failure code: 0x804b001b (NS_ERROR_INVALID_CONTENT_ENCODING) [nsIStreamListener.onDataAvailable] convertString@chrome://juggler/content/NetworkObserver.js:1037:13\n[pid=528092][out] getBase64EncodedResponse@chrome://juggler/content/NetworkObserver.js:946:18\n[pid=528092][out] getResponseBody@chrome://juggler/content/NetworkObserver.js:91:34\n[pid=528092][out] Network.getResponseBody@chrome://juggler/content/protocol/PageHandler.js:262:30\n[pid=528092][out] dispatch@chrome://juggler/content/protocol/Dispatcher.js:133:39\n[pid=528092][out] _dispatch@chrome://juggler/content/protocol/Dispatcher.js:70:36\n[pid=528092][out] receiveMessage@chrome://juggler/content/components/Juggler.js:122:20\n[pid=528092][out] \n[pid=528092][out]       console.warn: BackupService: \"There was an error while trying to get the Document's directory\" [Exception... \"Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIProperties.get]\"  nsresult: \"0x80004005 (NS_ERROR_FAILURE)\"  location: \"JS frame :: resource:///modules/backup/BackupService.sys.mjs :: get docsDirFolderPath :: line 1299\"  data: no]\n[pid=528092][err] JavaScript error: resource:///modules/backup/BackupService.sys.mjs, line 4429: NotAllowedError: PathUtils.join: PathUtils does not support empty paths\n[pid=528092][out] console.error: services.settings: \n[pid=528092][out]   Message: EmptyDatabaseError: \"main/nimbus-desktop-experiments\" has not been synced yet\n[pid=528092][out]   Stack:\n[pid=528092][out]     EmptyDatabaseError@resource://services-settings/Database.sys.mjs:19:5\n[pid=528092][out] list@resource://services-settings/Database.sys.mjs:96:13\n[pid=528092][out] \n[pid=528092][out] 1791528964473\taddons.xpi\tERROR\tSystem addon update list error Error: Failed downloading XML, status: 0, channelStatus: 2153390067, errorCode: 2, reason: error\n[pid=528092][out] console.error: \"Could not download new icon\" (new ServerInfoError(\"Server response is invalid SyntaxError: JSON.parse: unexpected end of data at line 1 column 1 of the JSON data\", \"resource://services-settings/Attachments.sys.mjs\", 40))\n[pid=528092][err] JavaScript warning: http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js, line 36: Script terminated by timeout at:\n[pid=528092][err] tf@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:36:54865\n[pid=528092][err] a@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:36:55737\n[pid=528092][err] EventListener.handleEvent*cf/<@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:36:56136\n[pid=528092][err] pl@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:95253\n[pid=528092][err] Nu@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:118536\n[pid=528092][err] Mu@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:118311\n[pid=528092][err] Nu@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:119755\n[pid=528092][err] Mu@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:118311\n[pid=528092][err] Nu@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:118518\n[pid=528092][err] Mu@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:118311\n[pid=528092][err] Nu@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:119755\n[pid=528092][err] Mu@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:118311\n[pid=528092][err] Nu@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:119755\n[pid=528092][err] Mu@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:118311\n[pid=528092][err] Nu@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:119755\n[pid=528092][err] Mu@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:118311\n[pid=528092][err] Nu@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:118518\n[pid=528092][err] Mu@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:118311\n[pid=528092][err] Nu@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:118559\n[pid=528092][err] Mu@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:118311\n[pid=528092][err] Nu@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:119755\n[pid=528092][err] Mu@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:118311\n[pid=528092][err] Nu@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:118584\n[pid=528092][err] lf@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:133168\n[pid=528092][err] Js</ef/<@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:130151\n[pid=528092][err] D@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:17:3006\n[pid=528092][err] EventHandlerNonNull*Ws<@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:17:3390\n[pid=528092][err] o/<@http://127.0.0.1:4173/shinariokanri/assets/presentation-p0FcZTIj.js:1:184\n[pid=528092][err] Gs<@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:17:4972\n[pid=528092][err] o/<@http://127.0.0.1:4173/shinariokanri/assets/presentation-p0FcZTIj.js:1:184\n[pid=528092][err] Js<@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:17:8792\n[pid=528092][err] o/<@http://127.0.0.1:4173/shinariokanri/assets/presentation-p0FcZTIj.js:1:184\n[pid=528092][err] Ys<@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:25:50739\n[pid=528092][err] o/<@http://127.0.0.1:4173/shinariokanri/assets/presentation-p0FcZTIj.js:1:184\n[pid=528092][err] @http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:25:50746\n[pid=528092][err] \n[pid=528092][err] JavaScript error: chrome://juggler/content/Helper.js, line 82: NS_ERROR_FAILURE: Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIWebProgress.removeProgressListener]\n[pid=528092] <gracefully close start>\n[pid=528092][out] \n[pid=528092][out]         ERROR: Failed \"callFunction\": connector for namespace \"page\" in channel \"undefined\" is disposed. _rejectCallbacksFromConnector@chrome://juggler/content/SimpleChannel.js:108:25\n[pid=528092][out] dispose@chrome://juggler/content/SimpleChannel.js:119:27\n[pid=528092][out] dispose@chrome://juggler/content/protocol/PageHandler.js:152:23\n[pid=528092][out] _dispose@chrome://juggler/content/protocol/Dispatcher.js:117:21\n[pid=528092][out] destroySession@chrome://juggler/content/protocol/Dispatcher.js:35:13\n[pid=528092][out] dispose@chrome://juggler/content/protocol/BrowserHandler.js:77:24\n[pid=528092][out] _dispose@chrome://juggler/content/protocol/Dispatcher.js:117:21\n[pid=528092][out] _dispose@chrome://juggler/content/protocol/Dispatcher.js:41:23\n[pid=528092][out] observe/browserHandler<@chrome://juggler/content/components/Juggler.js:143:22\n[pid=528092][out] Browser.close@chrome://juggler/content/protocol/BrowserHandler.js:156:10\n[pid=528092][out] \nCall log:\n\u001b[2m  - waiting for locator('.sidebar').getByRole('button', { name: /^作品/ }).first()\u001b[22m\n\u001b[2m    - locator resolved to <button class=\"nav-item \">…</button>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is visible, enabled and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - element is outside of the viewport\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is visible, enabled and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - element is outside of the viewport\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m    210 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m        - element is visible, enabled and stable\u001b[22m\n\u001b[2m        - scrolling into view if needed\u001b[22m\n\u001b[2m        - done scrolling\u001b[22m\n\u001b[2m        - element is outside of the viewport\u001b[22m\n\u001b[2m      - retrying click action\u001b[22m\n\u001b[2m        - waiting 500ms\u001b[22m\n\n    at [pid=528092][out]         ERROR: Component returned failure code: 0x804b001b (NS_ERROR_INVALID_CONTENT_ENCODING) [nsIStreamListener.onDataAvailable] convertString@chrome://juggler/content/NetworkObserver.js:1037:13)\n    at [pid=528092][out] getBase64EncodedResponse@chrome://juggler/content/NetworkObserver.js:946:18\n    at [pid=528092][out] getResponseBody@chrome://juggler/content/NetworkObserver.js:91:34\n    at [pid=528092][out] Network.getResponseBody@chrome://juggler/content/protocol/PageHandler.js:262:30\n    at [pid=528092][out] dispatch@chrome://juggler/content/protocol/Dispatcher.js:133:39\n    at [pid=528092][out] _dispatch@chrome://juggler/content/protocol/Dispatcher.js:70:36\n    at [pid=528092][out] receiveMessage@chrome://juggler/content/components/Juggler.js:122:20\n    at [pid=528092][out]         ERROR: Component returned failure code: 0x804b001b (NS_ERROR_INVALID_CONTENT_ENCODING) [nsIStreamListener.onDataAvailable] convertString@chrome://juggler/content/NetworkObserver.js:1037:13)\n    at [pid=528092][out] getBase64EncodedResponse@chrome://juggler/content/NetworkObserver.js:946:18\n    at [pid=528092][out] getResponseBody@chrome://juggler/content/NetworkObserver.js:91:34\n    at [pid=528092][out] Network.getResponseBody@chrome://juggler/content/protocol/PageHandler.js:262:30\n    at [pid=528092][out] dispatch@chrome://juggler/content/protocol/Dispatcher.js:133:39\n    at [pid=528092][out] _dispatch@chrome://juggler/content/protocol/Dispatcher.js:70:36\n    at [pid=528092][out] receiveMessage@chrome://juggler/content/components/Juggler.js:122:20\n    at [pid=528092][out]         ERROR: Component returned failure code: 0x804b001b (NS_ERROR_INVALID_CONTENT_ENCODING) [nsIStreamListener.onDataAvailable] convertString@chrome://juggler/content/NetworkObserver.js:1037:13)\n    at [pid=528092][out] getBase64EncodedResponse@chrome://juggler/content/NetworkObserver.js:946:18\n    at [pid=528092][out] getResponseBody@chrome://juggler/content/NetworkObserver.js:91:34\n    at [pid=528092][out] Network.getResponseBody@chrome://juggler/content/protocol/PageHandler.js:262:30\n    at [pid=528092][out] dispatch@chrome://juggler/content/protocol/Dispatcher.js:133:39\n    at [pid=528092][out] _dispatch@chrome://juggler/content/protocol/Dispatcher.js:70:36\n    at [pid=528092][out] receiveMessage@chrome://juggler/content/components/Juggler.js:122:20\n    at [pid=528092][out]         ERROR: Component returned failure code: 0x804b001b (NS_ERROR_INVALID_CONTENT_ENCODING) [nsIStreamListener.onDataAvailable] convertString@chrome://juggler/content/NetworkObserver.js:1037:13)\n    at [pid=528092][out] getBase64EncodedResponse@chrome://juggler/content/NetworkObserver.js:946:18\n    at [pid=528092][out] getResponseBody@chrome://juggler/content/NetworkObserver.js:91:34\n    at [pid=528092][out] Network.getResponseBody@chrome://juggler/content/protocol/PageHandler.js:262:30\n    at [pid=528092][out] dispatch@chrome://juggler/content/protocol/Dispatcher.js:133:39\n    at [pid=528092][out] _dispatch@chrome://juggler/content/protocol/Dispatcher.js:70:36\n    at [pid=528092][out] receiveMessage@chrome://juggler/content/components/Juggler.js:122:20\n    at [pid=528092][out]         ERROR: Component returned failure code: 0x804b001b (NS_ERROR_INVALID_CONTENT_ENCODING) [nsIStreamListener.onDataAvailable] convertString@chrome://juggler/content/NetworkObserver.js:1037:13)\n    at [pid=528092][out] getBase64EncodedResponse@chrome://juggler/content/NetworkObserver.js:946:18\n    at [pid=528092][out] getResponseBody@chrome://juggler/content/NetworkObserver.js:91:34\n    at [pid=528092][out] Network.getResponseBody@chrome://juggler/content/protocol/PageHandler.js:262:30\n    at [pid=528092][out] dispatch@chrome://juggler/content/protocol/Dispatcher.js:133:39\n    at [pid=528092][out] _dispatch@chrome://juggler/content/protocol/Dispatcher.js:70:36\n    at [pid=528092][out] receiveMessage@chrome://juggler/content/components/Juggler.js:122:20\n    at [pid=528092][out]         ERROR: Component returned failure code: 0x804b001b (NS_ERROR_INVALID_CONTENT_ENCODING) [nsIStreamListener.onDataAvailable] convertString@chrome://juggler/content/NetworkObserver.js:1037:13)\n    at [pid=528092][out] getBase64EncodedResponse@chrome://juggler/content/NetworkObserver.js:946:18\n    at [pid=528092][out] getResponseBody@chrome://juggler/content/NetworkObserver.js:91:34\n    at [pid=528092][out] Network.getResponseBody@chrome://juggler/content/protocol/PageHandler.js:262:30\n    at [pid=528092][out] dispatch@chrome://juggler/content/protocol/Dispatcher.js:133:39\n    at [pid=528092][out] _dispatch@chrome://juggler/content/protocol/Dispatcher.js:70:36\n    at [pid=528092][out] receiveMessage@chrome://juggler/content/components/Juggler.js:122:20\n    at [pid=528092][out]         ERROR: Component returned failure code: 0x804b001b (NS_ERROR_INVALID_CONTENT_ENCODING) [nsIStreamListener.onDataAvailable] convertString@chrome://juggler/content/NetworkObserver.js:1037:13)\n    at [pid=528092][out] getBase64EncodedResponse@chrome://juggler/content/NetworkObserver.js:946:18\n    at [pid=528092][out] getResponseBody@chrome://juggler/content/NetworkObserver.js:91:34\n    at [pid=528092][out] Network.getResponseBody@chrome://juggler/content/protocol/PageHandler.js:262:30\n    at [pid=528092][out] dispatch@chrome://juggler/content/protocol/Dispatcher.js:133:39\n    at [pid=528092][out] _dispatch@chrome://juggler/content/protocol/Dispatcher.js:70:36\n    at [pid=528092][out] receiveMessage@chrome://juggler/content/components/Juggler.js:122:20\n    at [pid=528092][out]         ERROR: Component returned failure code: 0x804b001b (NS_ERROR_INVALID_CONTENT_ENCODING) [nsIStreamListener.onDataAvailable] convertString@chrome://juggler/content/NetworkObserver.js:1037:13)\n    at [pid=528092][out] getBase64EncodedResponse@chrome://juggler/content/NetworkObserver.js:946:18\n    at [pid=528092][out] getResponseBody@chrome://juggler/content/NetworkObserver.js:91:34\n    at [pid=528092][out] Network.getResponseBody@chrome://juggler/content/protocol/PageHandler.js:262:30\n    at [pid=528092][out] dispatch@chrome://juggler/content/protocol/Dispatcher.js:133:39\n    at [pid=528092][out] _dispatch@chrome://juggler/content/protocol/Dispatcher.js:70:36\n    at [pid=528092][out] receiveMessage@chrome://juggler/content/components/Juggler.js:122:20\n    at [pid=528092][out]         ERROR: Component returned failure code: 0x804b001b (NS_ERROR_INVALID_CONTENT_ENCODING) [nsIStreamListener.onDataAvailable] convertString@chrome://juggler/content/NetworkObserver.js:1037:13)\n    at [pid=528092][out] getBase64EncodedResponse@chrome://juggler/content/NetworkObserver.js:946:18\n    at [pid=528092][out] getResponseBody@chrome://juggler/content/NetworkObserver.js:91:34\n    at [pid=528092][out] Network.getResponseBody@chrome://juggler/content/protocol/PageHandler.js:262:30\n    at [pid=528092][out] dispatch@chrome://juggler/content/protocol/Dispatcher.js:133:39\n    at [pid=528092][out] _dispatch@chrome://juggler/content/protocol/Dispatcher.js:70:36\n    at [pid=528092][out] receiveMessage@chrome://juggler/content/components/Juggler.js:122:20\n    at [pid=528092][out]         ERROR: Component returned failure code: 0x804b001b (NS_ERROR_INVALID_CONTENT_ENCODING) [nsIStreamListener.onDataAvailable] convertString@chrome://juggler/content/NetworkObserver.js:1037:13)\n    at [pid=528092][out] getBase64EncodedResponse@chrome://juggler/content/NetworkObserver.js:946:18\n    at [pid=528092][out] getResponseBody@chrome://juggler/content/NetworkObserver.js:91:34\n    at [pid=528092][out] Network.getResponseBody@chrome://juggler/content/protocol/PageHandler.js:262:30\n    at [pid=528092][out] dispatch@chrome://juggler/content/protocol/Dispatcher.js:133:39\n    at [pid=528092][out] _dispatch@chrome://juggler/content/protocol/Dispatcher.js:70:36\n    at [pid=528092][out] receiveMessage@chrome://juggler/content/components/Juggler.js:122:20\n    at [pid=528092][out]     EmptyDatabaseError@resource://services-settings/Database.sys.mjs:19:5\n    at [pid=528092][out] list@resource://services-settings/Database.sys.mjs:96:13\n    at [pid=528092][err] tf@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:36:54865\n    at [pid=528092][err] a@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:36:55737\n    at [pid=528092][err] EventListener.handleEvent*cf/<@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:36:56136\n    at [pid=528092][err] pl@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:95253\n    at [pid=528092][err] Nu@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:118536\n    at [pid=528092][err] Mu@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:118311\n    at [pid=528092][err] Nu@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:119755\n    at [pid=528092][err] Mu@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:118311\n    at [pid=528092][err] Nu@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:118518\n    at [pid=528092][err] Mu@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:118311\n    at [pid=528092][err] Nu@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:119755\n    at [pid=528092][err] Mu@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:118311\n    at [pid=528092][err] Nu@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:119755\n    at [pid=528092][err] Mu@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:118311\n    at [pid=528092][err] Nu@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:119755\n    at [pid=528092][err] Mu@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:118311\n    at [pid=528092][err] Nu@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:118518\n    at [pid=528092][err] Mu@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:118311\n    at [pid=528092][err] Nu@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:118559\n    at [pid=528092][err] Mu@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:118311\n    at [pid=528092][err] Nu@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:119755\n    at [pid=528092][err] Mu@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:118311\n    at [pid=528092][err] Nu@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:118584\n    at [pid=528092][err] lf@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:133168\n    at [pid=528092][err] Js</ef/<@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:24:130151\n    at [pid=528092][err] D@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:17:3006\n    at [pid=528092][err] EventHandlerNonNull*Ws<@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:17:3390\n    at [pid=528092][err] o/<@http://127.0.0.1:4173/shinariokanri/assets/presentation-p0FcZTIj.js:1:184\n    at [pid=528092][err] Gs<@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:17:4972\n    at [pid=528092][err] o/<@http://127.0.0.1:4173/shinariokanri/assets/presentation-p0FcZTIj.js:1:184\n    at [pid=528092][err] Js<@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:17:8792\n    at [pid=528092][err] o/<@http://127.0.0.1:4173/shinariokanri/assets/presentation-p0FcZTIj.js:1:184\n    at [pid=528092][err] Ys<@http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:25:50739\n    at [pid=528092][err] o/<@http://127.0.0.1:4173/shinariokanri/assets/presentation-p0FcZTIj.js:1:184\n    at [pid=528092][err] @http://127.0.0.1:4173/shinariokanri/assets/index-WQ-SIwjf.js:25:50746\n    at [pid=528092][out]         ERROR: Failed \"callFunction\": connector for namespace \"page\" in channel \"undefined\" is disposed. _rejectCallbacksFromConnector@chrome://juggler/content/SimpleChannel.js:108:25\n    at [pid=528092][out] dispose@chrome://juggler/content/SimpleChannel.js:119:27\n    at [pid=528092][out] dispose@chrome://juggler/content/protocol/PageHandler.js:152:23\n    at [pid=528092][out] _dispose@chrome://juggler/content/protocol/Dispatcher.js:117:21\n    at [pid=528092][out] destroySession@chrome://juggler/content/protocol/Dispatcher.js:35:13\n    at [pid=528092][out] dispose@chrome://juggler/content/protocol/BrowserHandler.js:77:24\n    at [pid=528092][out] _dispose@chrome://juggler/content/protocol/Dispatcher.js:117:21\n    at [pid=528092][out] _dispose@chrome://juggler/content/protocol/Dispatcher.js:41:23\n    at [pid=528092][out] observe/browserHandler<@chrome://juggler/content/components/Juggler.js:143:22\n    at [pid=528092][out] Browser.close@chrome://juggler/content/protocol/BrowserHandler.js:156:10\n    at nav (/workspace/shinariokanri-rb10/tests/e2e/rb10-library-reopen.spec.ts:10:68)\n    at completeFile (/workspace/shinariokanri-rb10/tests/e2e/rb10-library-reopen.spec.ts:38:2)\n    at /workspace/shinariokanri-rb10/tests/e2e/rb10-library-reopen.spec.ts:59:236"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [
+                    {
+                      "text": "Skipping host requirements validation logic because `PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS` env variable is set.\n"
+                    }
+                  ],
+                  "retry": 0,
+                  "startTime": "2026-10-09T06:55:34.107Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/tmp/shinariokanri-rb10-c7-library-e2e-2/rb10-library-reopen-librar-00a46-empty-new-clone-restoration-firefox/error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/tmp/shinariokanri-rb10-c7-library-e2e-2/rb10-library-reopen-librar-00a46-empty-new-clone-restoration-firefox/trace.zip"
+                    }
+                  ]
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "575f6ad7164e239ff94d-dcb2eecf0427bae9b134",
+          "file": "rb10-library-reopen.spec.ts",
+          "line": 49,
+          "column": 1
+        },
+        {
+          "title": "library selection keeps canonical projects clean and resumes a failed draft across another project, cold reload and empty new/clone restoration",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "webkit",
+              "projectName": "webkit",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 21875,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m\"1\"\u001b[39m\nReceived: \u001b[31m\"2\"\u001b[39m",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m\"1\"\u001b[39m\nReceived: \u001b[31m\"2\"\u001b[39m\n    at checkEdition (/workspace/shinariokanri-rb10/tests/e2e/rb10-library-reopen.spec.ts:45:21)\n    at /workspace/shinariokanri-rb10/tests/e2e/rb10-library-reopen.spec.ts:59:287",
+                    "location": {
+                      "file": "/workspace/shinariokanri-rb10/tests/e2e/rb10-library-reopen.spec.ts",
+                      "column": 21,
+                      "line": 45
+                    },
+                    "snippet": "  43 |  const character=p.entities.find(e=>e.kind==='character')!,note=p.entities.find(e=>e.kind==='note')!;\n  44 |  expect(character.name).toBe(expectedName);expect(note.kind).toBe('note');if(note.kind==='note'){expect(note.data.body[0]!.text).toBe('😀人物と𠮷野の固定本文');expect(note.data.body[0]!.links![0]!.target.entityId).toBe(character.id);}\n> 45 |  expect(p.revision).toBe('1');expect(p.history).toHaveLength(1);expect(p.history[0]!.before.revision).toBe('0');expect(p.history[0]!.after.revision).toBe('1');expect(p.history[0]!.before.entities.find(e=>e.kind==='character')!.name).toBe('人物同名');expect(p.history[0]!.after.entities.find(e=>e.kind==='character')!.name).toBe(expectedName);\n     |                     ^\n  46 |  expect(p.snapshots).toHaveLength(1);expect(p.snapshots[0]!.content.entities.find(e=>e.kind==='character')!.name).toBe('人物同名');expect(p.snapshots[0]!.content).not.toHaveProperty('id');\n  47 | }\n  48 |"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "/workspace/shinariokanri-rb10/tests/e2e/rb10-library-reopen.spec.ts",
+                        "column": 21,
+                        "line": 45
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m\"1\"\u001b[39m\nReceived: \u001b[31m\"2\"\u001b[39m\n\n  43 |  const character=p.entities.find(e=>e.kind==='character')!,note=p.entities.find(e=>e.kind==='note')!;\n  44 |  expect(character.name).toBe(expectedName);expect(note.kind).toBe('note');if(note.kind==='note'){expect(note.data.body[0]!.text).toBe('😀人物と𠮷野の固定本文');expect(note.data.body[0]!.links![0]!.target.entityId).toBe(character.id);}\n> 45 |  expect(p.revision).toBe('1');expect(p.history).toHaveLength(1);expect(p.history[0]!.before.revision).toBe('0');expect(p.history[0]!.after.revision).toBe('1');expect(p.history[0]!.before.entities.find(e=>e.kind==='character')!.name).toBe('人物同名');expect(p.history[0]!.after.entities.find(e=>e.kind==='character')!.name).toBe(expectedName);\n     |                     ^\n  46 |  expect(p.snapshots).toHaveLength(1);expect(p.snapshots[0]!.content.entities.find(e=>e.kind==='character')!.name).toBe('人物同名');expect(p.snapshots[0]!.content).not.toHaveProperty('id');\n  47 | }\n  48 |\n    at checkEdition (/workspace/shinariokanri-rb10/tests/e2e/rb10-library-reopen.spec.ts:45:21)\n    at /workspace/shinariokanri-rb10/tests/e2e/rb10-library-reopen.spec.ts:59:287"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [
+                    {
+                      "text": "Skipping host requirements validation logic because `PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS` env variable is set.\n"
+                    }
+                  ],
+                  "retry": 0,
+                  "startTime": "2026-10-09T06:57:40.446Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/tmp/shinariokanri-rb10-c7-library-e2e-2/rb10-library-reopen-librar-00a46-empty-new-clone-restoration-webkit/error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/tmp/shinariokanri-rb10-c7-library-e2e-2/rb10-library-reopen-librar-00a46-empty-new-clone-restoration-webkit/trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "/workspace/shinariokanri-rb10/tests/e2e/rb10-library-reopen.spec.ts",
+                    "column": 21,
+                    "line": 45
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "575f6ad7164e239ff94d-4158713cd26e21a38dc3",
+          "file": "rb10-library-reopen.spec.ts",
+          "line": 49,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-09T06:55:19.125Z",
+    "duration": 163760.503,
+    "expected": 0,
+    "skipped": 0,
+    "unexpected": 3,
+    "flaky": 0
+  }
+}

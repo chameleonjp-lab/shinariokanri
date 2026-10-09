@@ -1,0 +1,38 @@
+
+> shinariokanri@0.1.0 prebuild
+> node scripts/build/portable-runtime.mjs
+
+Production portable runtime generated: 144514 characters
+
+> shinariokanri@0.1.0 build
+> tsc -b && vite build && node scripts/build/service-worker.mjs
+
+vite v8.3.2 building client environment for production...
+transforming...
+✓ 188 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                                    0.65 kB │ gzip:   0.44 kB
+dist/assets/recordParts.worker-T_qEKL4N.js         8.33 kB
+dist/assets/readValidation.worker-ml078vLf.js    283.35 kB
+dist/assets/archiveExport.worker-BGcKFGSj.js     318.30 kB
+dist/assets/archive.worker-Db8yCkQz.js           322.55 kB
+dist/assets/index-sh31W3vc.css                    76.06 kB │ gzip:  15.11 kB
+dist/assets/presentation-p0FcZTIj.js             213.26 kB │ gzip:  66.30 kB
+dist/assets/index-DyAkuwQU.js                  1,822.58 kB │ gzip: 537.58 kB
+
+[33m[INEFFECTIVE_DYNAMIC_IMPORT] [0msrc/sync/publicShare.ts is dynamically imported by src/storage/store.ts but also statically imported by src/ui/SharedPortal.tsx, dynamic import will not move module into another chunk.
+
+[plugin builtin:vite-reporter] 
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+[33m[INEFFECTIVE_DYNAMIC_IMPORT] [0msrc/domain/runtime.ts is dynamically imported by src/domain/projectRecordValidation.ts but also statically imported by src/domain/gameProtocol.ts, src/domain/runtimeVerified.ts, src/domain/traceReconfirmation.ts, src/ui/Reader.tsx, dynamic import will not move module into another chunk.
+
+[33m[INEFFECTIVE_DYNAMIC_IMPORT] [0msrc/domain/runtimeVerified.ts is dynamically imported by src/domain/checkpoints.ts but also statically imported by src/domain/gameProtocol.ts, src/domain/productionPlanning.ts, src/domain/traceReconfirmation.ts, src/ui/ProductionReviewPanel.tsx, src/ui/Reader.tsx, dynamic import will not move module into another chunk.
+
+[33m[INEFFECTIVE_DYNAMIC_IMPORT] [0msrc/domain/gameProtocol.ts is dynamically imported by src/domain/projectRecordValidation.ts but also statically imported by src/domain/gameHandoff.ts, dynamic import will not move module into another chunk.
+
+✓ built in 1.43s
+Offline shell generated: 4aa7686ea50ba1b3f89e, /shinariokanri/

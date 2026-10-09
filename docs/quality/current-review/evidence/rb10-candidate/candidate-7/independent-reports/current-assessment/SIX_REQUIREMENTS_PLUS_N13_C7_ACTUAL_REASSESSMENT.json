@@ -1,0 +1,856 @@
+{
+  "target": {
+    "commit": "905aad8997bd4218fc3da84bba96687120ebb4dd",
+    "tree": "b89ea2600f3b9d5298e6cb0bda227a822ea27f8c",
+    "build": "4aa7686ea50ba1b3f89e",
+    "sourceBindingSHA256": "d72f6e4668f1019c499e940a0d13d9d82afa85ac7eecfa0ab560fbe9bc0a65d7"
+  },
+  "createdAt": "2026-10-09T08:08:06.702674+00:00",
+  "original104Unchanged": true,
+  "sourceAuditSHA256": "f6deec0d7ec781b4b842f4606b3a94da616df6ec1a5e26798154c3e2f23c4d30",
+  "actualClauseLedgerSHA256": "c91f9f180947fefc5b7272c0fbddfd37120cadf7695c4f99ff4a9471b8550d9f",
+  "scope": "Six requested current-code requirements plus observedN13; historical lack-of-test/status is not current missing implementation. Physical/live gates and whole requirement clauses stay pending individually.",
+  "requirements": [
+    {
+      "originalRequirement": {
+        "id": "REQ-F01",
+        "title": "思いつきを一時置きする",
+        "provenance": "調査提案の仕様化・PRレビュー対象",
+        "decision_status": "review_proposal",
+        "implementation_status": "planned",
+        "release_scope": "complete_v1",
+        "package_id": "WP04",
+        "shall": "作品内の受け皿へ、短い文章・画像・音声メモを保存する。あとから人物、場面、伏線へ変換し、元のメモも参照できること。",
+        "failure_behavior": "録音を拒否した端末でも文章を保存できる。変換は元メモを消さず、元と変換先のIDを結ぶ。",
+        "acceptance_ids": [
+          "AT-F01"
+        ],
+        "source_refs": [
+          "S13",
+          "S22"
+        ],
+        "source_feature_id": "F01"
+      },
+      "ownerBatch": "RB02",
+      "workPackage": "WP04",
+      "originalHistoricalAssessment": "implementation_present",
+      "independentCurrentAssessment": {
+        "assessment": "implementation present; exact scene conversion local normal/negative observed; whole requirement and original actual sync not certified",
+        "evidence": "AT-F01 local 390px ordinary App actualPNG/WAV→note→linked scene→native atomic fail/retry→Library/cold/new/clone/re-export passed. Other planned conversion targets remain to execute in selected/current normal suites; actual smartphone→PC sync/recording/Files not_run.",
+        "case": "AT-F01"
+      },
+      "sourceFiles": [
+        {
+          "path": "src/ui/WorkPage.tsx",
+          "originalDescriptorSHA256": "ada0cf5926f8840480c24d442ef997ca8a0136f73c6550b99b65a3b9541a3f4a",
+          "actualC7SHA256": "ada0cf5926f8840480c24d442ef997ca8a0136f73c6550b99b65a3b9541a3f4a",
+          "descriptorMatches": true
+        },
+        {
+          "path": "src/ui/fieldSpecs.ts",
+          "originalDescriptorSHA256": "364950eaa9afab525c9fadea17ea453ae5d3950358875b359dc7bb9d3588647c",
+          "actualC7SHA256": "364950eaa9afab525c9fadea17ea453ae5d3950358875b359dc7bb9d3588647c",
+          "descriptorMatches": true
+        }
+      ],
+      "caseObservation": {
+        "given": {
+          "literalExpected": "文章メモ「塔の鍵は鳥が持つ」、画像1枚、音声1件をスマートフォンで保存した作品",
+          "actualStatus": "partial_local_observed",
+          "observations": [
+            "Exact sentence 塔の鍵は鳥が持つ and real PNG/WAV created through ordinary App at 390px. Physical smartphone recording/OS Files not_run."
+          ],
+          "fixtureSHA256": "e327d89c628fe39e20f0b243905b453b69fe9f3308ab08db5943f35b472bc0fa",
+          "artifactPaths": [
+            "/tmp/shinariokanri-independent-rb10-c7-905aad8/prepared/results/f01-c7-2/raw.log",
+            "/tmp/shinariokanri-independent-rb10-c7-905aad8/prepared/results/f01-c7-2/EXECUTION_BINDING.json",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f01-c7-2/artifacts/six-requirement-normal-AT--91391-rn-cold-and-empty-new-clone/F01-original-local-clauses.json",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f01-c7-2/artifacts/six-requirement-normal-AT--91391-rn-cold-and-empty-new-clone/3-complete-download-a2dc023ff2971d2f4942430f062d84c17817c0c2ec4a6dba3e731ac94de24caa.scenario",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f01-c7-2/artifacts/six-requirement-normal-AT--91391-rn-cold-and-empty-new-clone/4-complete-download-d3895efa7cd10a5ed896fe734c8f73a0f893b7a998264686e116d76e15c71f18.scenario",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f01-c7-2/artifacts/six-requirement-normal-AT--91391-rn-cold-and-empty-new-clone/5-input-new-d3895efa7cd10a5ed896fe734c8f73a0f893b7a998264686e116d76e15c71f18.scenario",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f01-c7-2/artifacts/six-requirement-normal-AT--91391-rn-cold-and-empty-new-clone/6-complete-download-70f473c147917228806bd4c0bf8303c318bf48f1507db765e2c20c7f6f9ec518.scenario",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f01-c7-2/artifacts/six-requirement-normal-AT--91391-rn-cold-and-empty-new-clone/7-input-clone-d3895efa7cd10a5ed896fe734c8f73a0f893b7a998264686e116d76e15c71f18.scenario",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f01-c7-2/artifacts/six-requirement-normal-AT--91391-rn-cold-and-empty-new-clone/8-complete-download-8c9395c69a84c7433d4cc0fb6c656009f130fd71235e0539c19f4d8272296f31.scenario"
+          ]
+        },
+        "when": {
+          "literalExpected": "メモから場面へ変換し、別端末で同期後の変換元と変換先を開く",
+          "actualStatus": "partial_local_observed",
+          "observations": [
+            "Normal note-to-scene conversion and immutable origin reference verified. New/clone portable restoration is not original two-device synchronization."
+          ],
+          "fixtureSHA256": "e327d89c628fe39e20f0b243905b453b69fe9f3308ab08db5943f35b472bc0fa",
+          "artifactPaths": [
+            "/tmp/shinariokanri-independent-rb10-c7-905aad8/prepared/results/f01-c7-2/raw.log",
+            "/tmp/shinariokanri-independent-rb10-c7-905aad8/prepared/results/f01-c7-2/EXECUTION_BINDING.json",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f01-c7-2/artifacts/six-requirement-normal-AT--91391-rn-cold-and-empty-new-clone/F01-original-local-clauses.json",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f01-c7-2/artifacts/six-requirement-normal-AT--91391-rn-cold-and-empty-new-clone/3-complete-download-a2dc023ff2971d2f4942430f062d84c17817c0c2ec4a6dba3e731ac94de24caa.scenario",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f01-c7-2/artifacts/six-requirement-normal-AT--91391-rn-cold-and-empty-new-clone/4-complete-download-d3895efa7cd10a5ed896fe734c8f73a0f893b7a998264686e116d76e15c71f18.scenario",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f01-c7-2/artifacts/six-requirement-normal-AT--91391-rn-cold-and-empty-new-clone/5-input-new-d3895efa7cd10a5ed896fe734c8f73a0f893b7a998264686e116d76e15c71f18.scenario",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f01-c7-2/artifacts/six-requirement-normal-AT--91391-rn-cold-and-empty-new-clone/6-complete-download-70f473c147917228806bd4c0bf8303c318bf48f1507db765e2c20c7f6f9ec518.scenario",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f01-c7-2/artifacts/six-requirement-normal-AT--91391-rn-cold-and-empty-new-clone/7-input-clone-d3895efa7cd10a5ed896fe734c8f73a0f893b7a998264686e116d76e15c71f18.scenario",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f01-c7-2/artifacts/six-requirement-normal-AT--91391-rn-cold-and-empty-new-clone/8-complete-download-8c9395c69a84c7433d4cc0fb6c656009f130fd71235e0539c19f4d8272296f31.scenario"
+          ]
+        },
+        "then": {
+          "literalExpected": "スマートフォンで一文を残し、PCで場面へ変えても元のメモを追える。",
+          "actualStatus": "partial_local_observed",
+          "observations": [
+            "Origin note/body/attachment IDs, converted scene and reference relation survived atomic save/cold/new/clone/re-export. Actual smartphone-to-PC synchronization not_run."
+          ],
+          "fixtureSHA256": "e327d89c628fe39e20f0b243905b453b69fe9f3308ab08db5943f35b472bc0fa",
+          "artifactPaths": [
+            "/tmp/shinariokanri-independent-rb10-c7-905aad8/prepared/results/f01-c7-2/raw.log",
+            "/tmp/shinariokanri-independent-rb10-c7-905aad8/prepared/results/f01-c7-2/EXECUTION_BINDING.json",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f01-c7-2/artifacts/six-requirement-normal-AT--91391-rn-cold-and-empty-new-clone/F01-original-local-clauses.json",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f01-c7-2/artifacts/six-requirement-normal-AT--91391-rn-cold-and-empty-new-clone/3-complete-download-a2dc023ff2971d2f4942430f062d84c17817c0c2ec4a6dba3e731ac94de24caa.scenario",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f01-c7-2/artifacts/six-requirement-normal-AT--91391-rn-cold-and-empty-new-clone/4-complete-download-d3895efa7cd10a5ed896fe734c8f73a0f893b7a998264686e116d76e15c71f18.scenario",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f01-c7-2/artifacts/six-requirement-normal-AT--91391-rn-cold-and-empty-new-clone/5-input-new-d3895efa7cd10a5ed896fe734c8f73a0f893b7a998264686e116d76e15c71f18.scenario",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f01-c7-2/artifacts/six-requirement-normal-AT--91391-rn-cold-and-empty-new-clone/6-complete-download-70f473c147917228806bd4c0bf8303c318bf48f1507db765e2c20c7f6f9ec518.scenario",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f01-c7-2/artifacts/six-requirement-normal-AT--91391-rn-cold-and-empty-new-clone/7-input-clone-d3895efa7cd10a5ed896fe734c8f73a0f893b7a998264686e116d76e15c71f18.scenario",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f01-c7-2/artifacts/six-requirement-normal-AT--91391-rn-cold-and-empty-new-clone/8-complete-download-8c9395c69a84c7433d4cc0fb6c656009f130fd71235e0539c19f4d8272296f31.scenario"
+          ]
+        },
+        "negative_or_edge": {
+          "literalExpected": "録音を拒否した端末でも文章を保存できる。変換は元メモを消さず、元と変換先のIDを結ぶ。",
+          "actualStatus": "passed_local_synthetic_permission_denial",
+          "observations": [
+            "Synthetic microphone NotAllowedError blocked recording but allowed sentence save. Quota conversion failure preserved all native rows and draft, then retry succeeded. Origin note retained; distinct scene/body IDs linked through convertedToIds and reference relation. Real OS permission not_run."
+          ],
+          "fixtureSHA256": "e327d89c628fe39e20f0b243905b453b69fe9f3308ab08db5943f35b472bc0fa",
+          "artifactPaths": [
+            "/tmp/shinariokanri-independent-rb10-c7-905aad8/prepared/results/f01-c7-2/raw.log",
+            "/tmp/shinariokanri-independent-rb10-c7-905aad8/prepared/results/f01-c7-2/EXECUTION_BINDING.json",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f01-c7-2/artifacts/six-requirement-normal-AT--91391-rn-cold-and-empty-new-clone/F01-original-local-clauses.json",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f01-c7-2/artifacts/six-requirement-normal-AT--91391-rn-cold-and-empty-new-clone/3-complete-download-a2dc023ff2971d2f4942430f062d84c17817c0c2ec4a6dba3e731ac94de24caa.scenario",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f01-c7-2/artifacts/six-requirement-normal-AT--91391-rn-cold-and-empty-new-clone/4-complete-download-d3895efa7cd10a5ed896fe734c8f73a0f893b7a998264686e116d76e15c71f18.scenario",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f01-c7-2/artifacts/six-requirement-normal-AT--91391-rn-cold-and-empty-new-clone/5-input-new-d3895efa7cd10a5ed896fe734c8f73a0f893b7a998264686e116d76e15c71f18.scenario",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f01-c7-2/artifacts/six-requirement-normal-AT--91391-rn-cold-and-empty-new-clone/6-complete-download-70f473c147917228806bd4c0bf8303c318bf48f1507db765e2c20c7f6f9ec518.scenario",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f01-c7-2/artifacts/six-requirement-normal-AT--91391-rn-cold-and-empty-new-clone/7-input-clone-d3895efa7cd10a5ed896fe734c8f73a0f893b7a998264686e116d76e15c71f18.scenario",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f01-c7-2/artifacts/six-requirement-normal-AT--91391-rn-cold-and-empty-new-clone/8-complete-download-8c9395c69a84c7433d4cc0fb6c656009f130fd71235e0539c19f4d8272296f31.scenario"
+          ]
+        }
+      },
+      "caseResult": "not_run_full_original_physical_two_device_conditions",
+      "wholeRequirementCompleteInferred": false
+    },
+    {
+      "originalRequirement": {
+        "id": "REQ-F05",
+        "title": "構成の雛形と盛り上がりを見る",
+        "provenance": "調査提案の仕様化・PRレビュー対象",
+        "decision_status": "review_proposal",
+        "implementation_status": "planned",
+        "release_scope": "complete_v1",
+        "package_id": "WP10",
+        "shall": "物語の構成を雛形から選び、自由に変更する。場面の緊張度や重要度を自分で付け、選んだ進行順で偏りを確認すること。",
+        "failure_behavior": "雛形適用は別案または差分確認を経る。緊張度の未入力をゼロと集計せず算出母数を示す。",
+        "acceptance_ids": [
+          "AT-F05"
+        ],
+        "source_refs": [
+          "S12",
+          "S13"
+        ],
+        "source_feature_id": "F05"
+      },
+      "ownerBatch": "RB04",
+      "workPackage": "WP10",
+      "originalHistoricalAssessment": "implementation_present",
+      "independentCurrentAssessment": {
+        "assessment": "implementation present; original AT-F05 local original normal/negative directly passed",
+        "evidence": "2/8/null, two author alternatives, template cancel and explicit apply,2/3 measured denominator, atomic fail/retry, saved alternative/cold/fullfile passed. This does not certify all long paths/current importance values/all platforms beyond original exact case.",
+        "case": "AT-F05"
+      },
+      "sourceFiles": [
+        {
+          "path": "src/ui/Lists.tsx",
+          "originalDescriptorSHA256": "f60daa0ce0a00e6fedfc23006efd41af8c448a5461e0bb58545c0a252074a071",
+          "actualC7SHA256": "f60daa0ce0a00e6fedfc23006efd41af8c448a5461e0bb58545c0a252074a071",
+          "descriptorMatches": true
+        },
+        {
+          "path": "src/ui/fieldSpecs.ts",
+          "originalDescriptorSHA256": "364950eaa9afab525c9fadea17ea453ae5d3950358875b359dc7bb9d3588647c",
+          "actualC7SHA256": "364950eaa9afab525c9fadea17ea453ae5d3950358875b359dc7bb9d3588647c",
+          "descriptorMatches": true
+        }
+      ],
+      "caseObservation": {
+        "given": {
+          "literalExpected": "緊張度2/8/未入力の三場面と一つの構成雛形",
+          "actualStatus": "passed_local_original_fixture",
+          "observations": [
+            "Exact authored tension 2/8/null, three scenes, one chapter/template, two alternatives."
+          ],
+          "fixtureSHA256": "e327d89c628fe39e20f0b243905b453b69fe9f3308ab08db5943f35b472bc0fa",
+          "artifactPaths": [
+            "/tmp/shinariokanri-independent-rb10-c7-905aad8/prepared/results/f05-c7-1/raw.log",
+            "/tmp/shinariokanri-independent-rb10-c7-905aad8/prepared/results/f05-c7-1/EXECUTION_BINDING.json",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f05-c7-1/artifacts/six-requirement-normal-AT--ec772-aved-head-and-cold-fullfile/F05-original-local-clauses.json",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f05-c7-1/artifacts/six-requirement-normal-AT--ec772-aved-head-and-cold-fullfile/1-input-new-ffc2d63efcb2e5dab8043049f772df07a64bf5dabcf4bc35bb15126fd4453b92.scenario",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f05-c7-1/artifacts/six-requirement-normal-AT--ec772-aved-head-and-cold-fullfile/2-complete-download-b14989a0b7ddada066c3a88244ce5d2c547674fa62b81f616e76ded5c940eb64.scenario",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f05-c7-1/artifacts/six-requirement-normal-AT--ec772-aved-head-and-cold-fullfile/3-complete-download-78aa363281bc6c2db5787655c1a0548bc5e5abfba5c531817ea75a52235dcd3a.scenario",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f05-c7-1/artifacts/six-requirement-normal-AT--ec772-aved-head-and-cold-fullfile/4-input-new-78aa363281bc6c2db5787655c1a0548bc5e5abfba5c531817ea75a52235dcd3a.scenario",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f05-c7-1/artifacts/six-requirement-normal-AT--ec772-aved-head-and-cold-fullfile/5-complete-download-e452c0c674b7c68c0f553b6fe4e0bbff43c668440d9aafd6e4e55890ca8e84e8.scenario"
+          ]
+        },
+        "when": {
+          "literalExpected": "別案に雛形を適用して章順を変え、緊張度の表示と算出対象を確認する",
+          "actualStatus": "passed_local_normal_original_sequence",
+          "observations": [
+            "Ordinary alternative template preview/cancel preserved order; explicit apply changed only selected alternative to 8/2/null. Atomic save, cold and empty complete-file restore retained head."
+          ],
+          "fixtureSHA256": "e327d89c628fe39e20f0b243905b453b69fe9f3308ab08db5943f35b472bc0fa",
+          "artifactPaths": [
+            "/tmp/shinariokanri-independent-rb10-c7-905aad8/prepared/results/f05-c7-1/raw.log",
+            "/tmp/shinariokanri-independent-rb10-c7-905aad8/prepared/results/f05-c7-1/EXECUTION_BINDING.json",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f05-c7-1/artifacts/six-requirement-normal-AT--ec772-aved-head-and-cold-fullfile/F05-original-local-clauses.json",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f05-c7-1/artifacts/six-requirement-normal-AT--ec772-aved-head-and-cold-fullfile/1-input-new-ffc2d63efcb2e5dab8043049f772df07a64bf5dabcf4bc35bb15126fd4453b92.scenario",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f05-c7-1/artifacts/six-requirement-normal-AT--ec772-aved-head-and-cold-fullfile/2-complete-download-b14989a0b7ddada066c3a88244ce5d2c547674fa62b81f616e76ded5c940eb64.scenario",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f05-c7-1/artifacts/six-requirement-normal-AT--ec772-aved-head-and-cold-fullfile/3-complete-download-78aa363281bc6c2db5787655c1a0548bc5e5abfba5c531817ea75a52235dcd3a.scenario",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f05-c7-1/artifacts/six-requirement-normal-AT--ec772-aved-head-and-cold-fullfile/4-input-new-78aa363281bc6c2db5787655c1a0548bc5e5abfba5c531817ea75a52235dcd3a.scenario",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f05-c7-1/artifacts/six-requirement-normal-AT--ec772-aved-head-and-cold-fullfile/5-complete-download-e452c0c674b7c68c0f553b6fe4e0bbff43c668440d9aafd6e4e55890ca8e84e8.scenario"
+          ]
+        },
+        "then": {
+          "literalExpected": "表示は作者が付けた値から作り、作品の良し悪しを自動採点しない。",
+          "actualStatus": "passed_local_original_values",
+          "observations": [
+            "Display matched authored 2/8/missing; measured denominator 2/3 and one missing. Canonical order preserved; no automatic quality score substituted."
+          ],
+          "fixtureSHA256": "e327d89c628fe39e20f0b243905b453b69fe9f3308ab08db5943f35b472bc0fa",
+          "artifactPaths": [
+            "/tmp/shinariokanri-independent-rb10-c7-905aad8/prepared/results/f05-c7-1/raw.log",
+            "/tmp/shinariokanri-independent-rb10-c7-905aad8/prepared/results/f05-c7-1/EXECUTION_BINDING.json",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f05-c7-1/artifacts/six-requirement-normal-AT--ec772-aved-head-and-cold-fullfile/F05-original-local-clauses.json",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f05-c7-1/artifacts/six-requirement-normal-AT--ec772-aved-head-and-cold-fullfile/1-input-new-ffc2d63efcb2e5dab8043049f772df07a64bf5dabcf4bc35bb15126fd4453b92.scenario",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f05-c7-1/artifacts/six-requirement-normal-AT--ec772-aved-head-and-cold-fullfile/2-complete-download-b14989a0b7ddada066c3a88244ce5d2c547674fa62b81f616e76ded5c940eb64.scenario",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f05-c7-1/artifacts/six-requirement-normal-AT--ec772-aved-head-and-cold-fullfile/3-complete-download-78aa363281bc6c2db5787655c1a0548bc5e5abfba5c531817ea75a52235dcd3a.scenario",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f05-c7-1/artifacts/six-requirement-normal-AT--ec772-aved-head-and-cold-fullfile/4-input-new-78aa363281bc6c2db5787655c1a0548bc5e5abfba5c531817ea75a52235dcd3a.scenario",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f05-c7-1/artifacts/six-requirement-normal-AT--ec772-aved-head-and-cold-fullfile/5-complete-download-e452c0c674b7c68c0f553b6fe4e0bbff43c668440d9aafd6e4e55890ca8e84e8.scenario"
+          ]
+        },
+        "negative_or_edge": {
+          "literalExpected": "雛形適用は別案または差分確認を経る。緊張度の未入力をゼロと集計せず算出母数を示す。",
+          "actualStatus": "passed_local_original_boundaries",
+          "observations": [
+            "Cancel preserved order, explicit apply only changed the alternative, null stayed null with an unfilled chart circle rather than zero. Quota refusal preserved all native rows and draft; retry/cold/fullfile retained earlier version."
+          ],
+          "fixtureSHA256": "e327d89c628fe39e20f0b243905b453b69fe9f3308ab08db5943f35b472bc0fa",
+          "artifactPaths": [
+            "/tmp/shinariokanri-independent-rb10-c7-905aad8/prepared/results/f05-c7-1/raw.log",
+            "/tmp/shinariokanri-independent-rb10-c7-905aad8/prepared/results/f05-c7-1/EXECUTION_BINDING.json",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f05-c7-1/artifacts/six-requirement-normal-AT--ec772-aved-head-and-cold-fullfile/F05-original-local-clauses.json",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f05-c7-1/artifacts/six-requirement-normal-AT--ec772-aved-head-and-cold-fullfile/1-input-new-ffc2d63efcb2e5dab8043049f772df07a64bf5dabcf4bc35bb15126fd4453b92.scenario",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f05-c7-1/artifacts/six-requirement-normal-AT--ec772-aved-head-and-cold-fullfile/2-complete-download-b14989a0b7ddada066c3a88244ce5d2c547674fa62b81f616e76ded5c940eb64.scenario",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f05-c7-1/artifacts/six-requirement-normal-AT--ec772-aved-head-and-cold-fullfile/3-complete-download-78aa363281bc6c2db5787655c1a0548bc5e5abfba5c531817ea75a52235dcd3a.scenario",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f05-c7-1/artifacts/six-requirement-normal-AT--ec772-aved-head-and-cold-fullfile/4-input-new-78aa363281bc6c2db5787655c1a0548bc5e5abfba5c531817ea75a52235dcd3a.scenario",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f05-c7-1/artifacts/six-requirement-normal-AT--ec772-aved-head-and-cold-fullfile/5-complete-download-e452c0c674b7c68c0f553b6fe4e0bbff43c668440d9aafd6e4e55890ca8e84e8.scenario"
+          ]
+        }
+      },
+      "caseResult": "passed_original_case_in_observed_local_environment",
+      "wholeRequirementCompleteInferred": false
+    },
+    {
+      "originalRequirement": {
+        "id": "REQ-F31",
+        "title": "画面の広さに合わせて編集する",
+        "provenance": "調査提案の仕様化・PRレビュー対象",
+        "decision_status": "review_proposal",
+        "implementation_status": "planned",
+        "release_scope": "complete_v1",
+        "package_id": "WP02",
+        "shall": "広い画面は一覧・図・詳細、iPadは二画面、スマートフォンは図と詳細を切り替える。縦横と分割表示にも合わせること。",
+        "failure_behavior": "端末の幅で表示を切り替え、重要操作をPCに限定しない。分割表示やソフトキーボードで確定ボタンが隠れない。",
+        "acceptance_ids": [
+          "AT-F31"
+        ],
+        "source_refs": [
+          "S06",
+          "S23",
+          "S33"
+        ],
+        "source_feature_id": "F31"
+      },
+      "ownerBatch": "RB02",
+      "workPackage": "WP02",
+      "originalHistoricalAssessment": "implementation_present",
+      "independentCurrentAssessment": {
+        "assessment": "implementation present with reproduced current320 reflow difference",
+        "evidence": "390/768/1024/1440 full procedure passed.320 failed with pageoverflow58 after relation keyboard save; typed-reference middle strong does not wrap.320200%/cold phase not_run due failure. Actual rotation/SplitView/software keyboard/OS Files not_run.",
+        "case": "AT-F31"
+      },
+      "sourceFiles": [
+        {
+          "path": "src/App.tsx",
+          "originalDescriptorSHA256": "64428fb12163c16133a62c689e992ebb5c72c9fae65afa397b384b8a024030e1",
+          "actualC7SHA256": "64428fb12163c16133a62c689e992ebb5c72c9fae65afa397b384b8a024030e1",
+          "descriptorMatches": true
+        },
+        {
+          "path": "src/styles.css",
+          "originalDescriptorSHA256": "bdd71c6fbfaeb4b42049739ba8927252cc6fd4a99dd8d0438b573d165982826b",
+          "actualC7SHA256": "bdd71c6fbfaeb4b42049739ba8927252cc6fd4a99dd8d0438b573d165982826b",
+          "descriptorMatches": true
+        },
+        {
+          "path": "tests/e2e/editor.spec.ts",
+          "originalDescriptorSHA256": "e0fdbe01454d6916703a66448ea21c047fd9c13786a445f3f964ca82e7835f4b",
+          "actualC7SHA256": "e0fdbe01454d6916703a66448ea21c047fd9c13786a445f3f964ca82e7835f4b",
+          "descriptorMatches": true
+        }
+      ],
+      "caseObservation": {
+        "given": {
+          "literalExpected": "人物/条件/関係線/専用ファイルを持つ作品と未保存入力",
+          "actualStatus": "passed_local_fixture_physical_conditions_not_run",
+          "observations": [
+            "Person, typed condition, saved relation, native complete file and unsaved draft supplied."
+          ],
+          "fixtureSHA256": null,
+          "artifactPaths": [
+            "/tmp/shinariokanri-independent-rb10-c7-905aad8/prepared/F31_320_REPRODUCTION/REPORT.json",
+            "/tmp/shinariokanri-independent-rb10-c7-905aad8/prepared/results/f31-c7-diagnostic-3/raw.log"
+          ]
+        },
+        "when": {
+          "literalExpected": "幅320/390/768/1024/1440、縦横/分割で配置を切替え、狭幅だけで編集と読み込みを完了する",
+          "actualStatus": "failed_local_320_other_widths_passed",
+          "observations": [
+            "390/768/1024/1440 completed normal keyboard save,200% text,complete import,cold. At320 condition/relation save passed, but58px page overflow stopped later phases. Physical rotation/SplitView/software keyboard not_run."
+          ],
+          "fixtureSHA256": null,
+          "artifactPaths": [
+            "/tmp/shinariokanri-independent-rb10-c7-905aad8/prepared/F31_320_REPRODUCTION/REPORT.json",
+            "/tmp/shinariokanri-independent-rb10-c7-905aad8/prepared/results/f31-c7-diagnostic-3/raw.log"
+          ]
+        },
+        "then": {
+          "literalExpected": "人物、条件、関係線、読み込みの編集を、スマートフォンだけでも完了できる。",
+          "actualStatus": "partial_local_observed_320_reflow_failed",
+          "observations": [
+            "At320 person/typed condition/relation editing saved via keyboard; remaining 200%/file+cold not executed because original page reflow failure."
+          ],
+          "fixtureSHA256": null,
+          "artifactPaths": [
+            "/tmp/shinariokanri-independent-rb10-c7-905aad8/prepared/F31_320_REPRODUCTION/REPORT.json",
+            "/tmp/shinariokanri-independent-rb10-c7-905aad8/prepared/results/f31-c7-diagnostic-3/raw.log"
+          ]
+        },
+        "negative_or_edge": {
+          "literalExpected": "端末の幅で表示を切り替え、重要操作をPCに限定しない。分割表示やソフトキーボードで確定ボタンが隠れない。",
+          "actualStatus": "failed_local_original_page_reflow",
+          "observations": [
+            "Required320 reflow fails with reference labelright378.14 and pageoverflow58. Native Quota failure invariant/draft retention and keyboard retry passed. Real software keyboard overlap and SplitView not_run."
+          ],
+          "fixtureSHA256": null,
+          "artifactPaths": [
+            "/tmp/shinariokanri-independent-rb10-c7-905aad8/prepared/F31_320_REPRODUCTION/REPORT.json",
+            "/tmp/shinariokanri-independent-rb10-c7-905aad8/prepared/results/f31-c7-diagnostic-3/raw.log"
+          ]
+        }
+      },
+      "caseResult": "failed_local_original_320_reflow",
+      "wholeRequirementCompleteInferred": false
+    },
+    {
+      "originalRequirement": {
+        "id": "REQ-F40",
+        "title": "条件を組み立て、成立理由を見る",
+        "provenance": "調査提案の仕様化・PRレビュー対象",
+        "decision_status": "review_proposal",
+        "implementation_status": "planned",
+        "release_scope": "complete_v1",
+        "package_id": "WP11",
+        "shall": "「すべて」「どれか」「否定」を入れ子で選び、条件を自然文と式で確認する。複数成立時の優先順、全実行か一つか、不成立時の行き先を決めること。",
+        "failure_behavior": "括弧・優先順・不成立時処理を明示する。未知を偽にしない三値評価を行い、任意のコードを条件として実行しない。",
+        "acceptance_ids": [
+          "AT-F40"
+        ],
+        "source_refs": [
+          "S06",
+          "S41"
+        ],
+        "source_feature_id": "F40"
+      },
+      "ownerBatch": "RB05",
+      "workPackage": "WP11",
+      "originalHistoricalAssessment": "implementation_present",
+      "independentCurrentAssessment": {
+        "assessment": "implementation present; original AT-F40 local original normal/negative directly passed",
+        "evidence": "Original boolean/昼夜enum/all(any) typed controls, parentheses,true/false/unknown/author reason, two simultaneous auto candidates, priority tie atomic refusal, fallback=null and arbitrary script no-execution passed including cold. Whole requirement all/not/all_match/limits coverage is tracked separately, not inferred from one case.",
+        "case": "AT-F40"
+      },
+      "sourceFiles": [
+        {
+          "path": "src/domain/conditions.ts",
+          "originalDescriptorSHA256": "b78ee74fb3461975b5142eaddbdae74419afc96fa5d8bc7a1a53527c202e822f",
+          "actualC7SHA256": "b78ee74fb3461975b5142eaddbdae74419afc96fa5d8bc7a1a53527c202e822f",
+          "descriptorMatches": true
+        },
+        {
+          "path": "src/domain/model.ts",
+          "originalDescriptorSHA256": "12bf620df01c0c0ed0d7cc24c0335182b014ca178820354e176f9ec85e71bf2a",
+          "actualC7SHA256": "12bf620df01c0c0ed0d7cc24c0335182b014ca178820354e176f9ec85e71bf2a",
+          "descriptorMatches": true
+        },
+        {
+          "path": "src/domain/runtime.ts",
+          "originalDescriptorSHA256": "0e2570c6735dc2f450b24f3021d8286fe28afec3922a50905fb5a920b47dba71",
+          "actualC7SHA256": "0e2570c6735dc2f450b24f3021d8286fe28afec3922a50905fb5a920b47dba71",
+          "descriptorMatches": true
+        },
+        {
+          "path": "src/domain/runtimeContracts.ts",
+          "originalDescriptorSHA256": "13491ea1f81b36c21eac07b4f563f7d83122196e5cee73a1f2ad7e3a5244a442",
+          "actualC7SHA256": "13491ea1f81b36c21eac07b4f563f7d83122196e5cee73a1f2ad7e3a5244a442",
+          "descriptorMatches": true
+        },
+        {
+          "path": "src/ui/Fields.tsx",
+          "originalDescriptorSHA256": "60d5d128b47ae2525c44982920d17045030f44028d5947fa0472b1fb3d4a41d3",
+          "actualC7SHA256": "60d5d128b47ae2525c44982920d17045030f44028d5947fa0472b1fb3d4a41d3",
+          "descriptorMatches": true
+        },
+        {
+          "path": "src/ui/Reader.tsx",
+          "originalDescriptorSHA256": "4fc0b78d24b9b2542f7b9f4f7410130bc68ff756d94b0a2e1644c2eeb628cd92",
+          "actualC7SHA256": "4fc0b78d24b9b2542f7b9f4f7410130bc68ff756d94b0a2e1644c2eeb628cd92",
+          "descriptorMatches": true
+        },
+        {
+          "path": "src/ui/fieldSpecs.ts",
+          "originalDescriptorSHA256": "364950eaa9afab525c9fadea17ea453ae5d3950358875b359dc7bb9d3588647c",
+          "actualC7SHA256": "364950eaa9afab525c9fadea17ea453ae5d3950358875b359dc7bb9d3588647c",
+          "descriptorMatches": true
+        }
+      ],
+      "caseObservation": {
+        "given": {
+          "literalExpected": "鍵booleanと時刻enum昼/夜、同時成立する自動候補2件",
+          "actualStatus": "passed_local_original_fixture",
+          "observations": [
+            "Original key boolean, clock enum 昼/夜 and two simultaneous automatic candidates with explicit distinct priority."
+          ],
+          "fixtureSHA256": "e327d89c628fe39e20f0b243905b453b69fe9f3308ab08db5943f35b472bc0fa",
+          "artifactPaths": [
+            "/tmp/shinariokanri-independent-rb10-c7-905aad8/prepared/results/f40-c7-3/raw.log",
+            "/tmp/shinariokanri-independent-rb10-c7-905aad8/prepared/results/f40-c7-3/EXECUTION_BINDING.json",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f40-c7-3/artifacts/six-requirement-normal-AT--9e7b4-rough-normal-typed-controls/F40-original-local-clauses.json",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f40-c7-3/artifacts/six-requirement-normal-AT--9e7b4-rough-normal-typed-controls/1-input-new-39d77d49018751857b4d0db142a832be2ff4a1c3349b526ef07c1f8a4ada2e16.scenario",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f40-c7-3/artifacts/six-requirement-normal-AT--9e7b4-rough-normal-typed-controls/2-complete-download-6439691481ee9c1d8a2d1cdf2a7893229a34d569a4297467318b774d67a7da01.scenario",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f40-c7-3/artifacts/six-requirement-normal-AT--9e7b4-rough-normal-typed-controls/3-complete-download-32fb1c3842fcf8f4efe9d6b29e23262ece9a1660df4506957c7b3b20916527a0.scenario",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f40-c7-3/artifacts/six-requirement-normal-AT--9e7b4-rough-normal-typed-controls/4-complete-download-910d1e0ad0a404b7f842dd7f303eda502591f4e4b33f6a735289c8ad52be27b2.scenario",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f40-c7-3/artifacts/six-requirement-normal-AT--9e7b4-rough-normal-typed-controls/5-complete-download-864ea226ff3493513ed3ecc654f02f20fec779dabd7398b081d348ce539b029a.scenario",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f40-c7-3/artifacts/six-requirement-normal-AT--9e7b4-rough-normal-typed-controls/6-complete-download-89369a1c633647fa07c13f757c053578b9a55fb5dae062faa67dd5c15492095e.scenario"
+          ]
+        },
+        "when": {
+          "literalExpected": "all(鍵,any(昼,夜))を作り真/偽/不明、優先同値、fallbackなしを順に評価する",
+          "actualStatus": "passed_local_normal_original_sequence",
+          "observations": [
+            "Typed controls created all(key,any(day,night)); false/unknown/true, tie refusal and fallback=null were evaluated sequentially. Expected A reached intended terminal; cold parentheses retained."
+          ],
+          "fixtureSHA256": "e327d89c628fe39e20f0b243905b453b69fe9f3308ab08db5943f35b472bc0fa",
+          "artifactPaths": [
+            "/tmp/shinariokanri-independent-rb10-c7-905aad8/prepared/results/f40-c7-3/raw.log",
+            "/tmp/shinariokanri-independent-rb10-c7-905aad8/prepared/results/f40-c7-3/EXECUTION_BINDING.json",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f40-c7-3/artifacts/six-requirement-normal-AT--9e7b4-rough-normal-typed-controls/F40-original-local-clauses.json",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f40-c7-3/artifacts/six-requirement-normal-AT--9e7b4-rough-normal-typed-controls/1-input-new-39d77d49018751857b4d0db142a832be2ff4a1c3349b526ef07c1f8a4ada2e16.scenario",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f40-c7-3/artifacts/six-requirement-normal-AT--9e7b4-rough-normal-typed-controls/2-complete-download-6439691481ee9c1d8a2d1cdf2a7893229a34d569a4297467318b774d67a7da01.scenario",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f40-c7-3/artifacts/six-requirement-normal-AT--9e7b4-rough-normal-typed-controls/3-complete-download-32fb1c3842fcf8f4efe9d6b29e23262ece9a1660df4506957c7b3b20916527a0.scenario",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f40-c7-3/artifacts/six-requirement-normal-AT--9e7b4-rough-normal-typed-controls/4-complete-download-910d1e0ad0a404b7f842dd7f303eda502591f4e4b33f6a735289c8ad52be27b2.scenario",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f40-c7-3/artifacts/six-requirement-normal-AT--9e7b4-rough-normal-typed-controls/5-complete-download-864ea226ff3493513ed3ecc654f02f20fec779dabd7398b081d348ce539b029a.scenario",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f40-c7-3/artifacts/six-requirement-normal-AT--9e7b4-rough-normal-typed-controls/6-complete-download-89369a1c633647fa07c13f757c053578b9a55fb5dae062faa67dd5c15492095e.scenario"
+          ]
+        },
+        "then": {
+          "literalExpected": "「鍵あり、かつ、昼または夜」の括弧を明示する。今の値で選択肢が出ない理由を説明する。",
+          "actualStatus": "passed_local_original_display",
+          "observations": [
+            "Exact parenthesized Japanese all/any description, false no-fallback explanation and exact unknown author reason matched."
+          ],
+          "fixtureSHA256": "e327d89c628fe39e20f0b243905b453b69fe9f3308ab08db5943f35b472bc0fa",
+          "artifactPaths": [
+            "/tmp/shinariokanri-independent-rb10-c7-905aad8/prepared/results/f40-c7-3/raw.log",
+            "/tmp/shinariokanri-independent-rb10-c7-905aad8/prepared/results/f40-c7-3/EXECUTION_BINDING.json",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f40-c7-3/artifacts/six-requirement-normal-AT--9e7b4-rough-normal-typed-controls/F40-original-local-clauses.json",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f40-c7-3/artifacts/six-requirement-normal-AT--9e7b4-rough-normal-typed-controls/1-input-new-39d77d49018751857b4d0db142a832be2ff4a1c3349b526ef07c1f8a4ada2e16.scenario",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f40-c7-3/artifacts/six-requirement-normal-AT--9e7b4-rough-normal-typed-controls/2-complete-download-6439691481ee9c1d8a2d1cdf2a7893229a34d569a4297467318b774d67a7da01.scenario",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f40-c7-3/artifacts/six-requirement-normal-AT--9e7b4-rough-normal-typed-controls/3-complete-download-32fb1c3842fcf8f4efe9d6b29e23262ece9a1660df4506957c7b3b20916527a0.scenario",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f40-c7-3/artifacts/six-requirement-normal-AT--9e7b4-rough-normal-typed-controls/4-complete-download-910d1e0ad0a404b7f842dd7f303eda502591f4e4b33f6a735289c8ad52be27b2.scenario",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f40-c7-3/artifacts/six-requirement-normal-AT--9e7b4-rough-normal-typed-controls/5-complete-download-864ea226ff3493513ed3ecc654f02f20fec779dabd7398b081d348ce539b029a.scenario",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f40-c7-3/artifacts/six-requirement-normal-AT--9e7b4-rough-normal-typed-controls/6-complete-download-89369a1c633647fa07c13f757c053578b9a55fb5dae062faa67dd5c15492095e.scenario"
+          ]
+        },
+        "negative_or_edge": {
+          "literalExpected": "括弧・優先順・不成立時処理を明示する。未知を偽にしない三値評価を行い、任意のコードを条件として実行しない。",
+          "actualStatus": "passed_local_original_boundaries",
+          "observations": [
+            "Equal priority refused atomically with all rows unchanged. Script condition disabled save and never ran sentinel. Unknown stayed unknown. Gate/fallback persisted; original entity IDs/order retained and generated reviews have unique IDs and original targets."
+          ],
+          "fixtureSHA256": "e327d89c628fe39e20f0b243905b453b69fe9f3308ab08db5943f35b472bc0fa",
+          "artifactPaths": [
+            "/tmp/shinariokanri-independent-rb10-c7-905aad8/prepared/results/f40-c7-3/raw.log",
+            "/tmp/shinariokanri-independent-rb10-c7-905aad8/prepared/results/f40-c7-3/EXECUTION_BINDING.json",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f40-c7-3/artifacts/six-requirement-normal-AT--9e7b4-rough-normal-typed-controls/F40-original-local-clauses.json",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f40-c7-3/artifacts/six-requirement-normal-AT--9e7b4-rough-normal-typed-controls/1-input-new-39d77d49018751857b4d0db142a832be2ff4a1c3349b526ef07c1f8a4ada2e16.scenario",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f40-c7-3/artifacts/six-requirement-normal-AT--9e7b4-rough-normal-typed-controls/2-complete-download-6439691481ee9c1d8a2d1cdf2a7893229a34d569a4297467318b774d67a7da01.scenario",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f40-c7-3/artifacts/six-requirement-normal-AT--9e7b4-rough-normal-typed-controls/3-complete-download-32fb1c3842fcf8f4efe9d6b29e23262ece9a1660df4506957c7b3b20916527a0.scenario",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f40-c7-3/artifacts/six-requirement-normal-AT--9e7b4-rough-normal-typed-controls/4-complete-download-910d1e0ad0a404b7f842dd7f303eda502591f4e4b33f6a735289c8ad52be27b2.scenario",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f40-c7-3/artifacts/six-requirement-normal-AT--9e7b4-rough-normal-typed-controls/5-complete-download-864ea226ff3493513ed3ecc654f02f20fec779dabd7398b081d348ce539b029a.scenario",
+            "/workspace/shinariokanri-independent-artifacts/rb10-c7-905aad8/f40-c7-3/artifacts/six-requirement-normal-AT--9e7b4-rough-normal-typed-controls/6-complete-download-89369a1c633647fa07c13f757c053578b9a55fb5dae062faa67dd5c15492095e.scenario"
+          ]
+        }
+      },
+      "caseResult": "passed_original_case_in_observed_local_environment",
+      "wholeRequirementCompleteInferred": false
+    },
+    {
+      "originalRequirement": {
+        "id": "REQ-N02",
+        "title": "対応ブラウザーと実端末",
+        "provenance": "仕様を成立させる品質条件・PRレビュー対象",
+        "decision_status": "review_proposal",
+        "implementation_status": "planned",
+        "release_scope": "complete_v1",
+        "package_id": "WP23",
+        "shall": "iPhone Safari・Chrome、iPad Safari・分割表示、PC Chrome・Edge・Firefox・Safariの対象環境表を検証し、OSとブラウザーの実バージョンを記録すること。",
+        "failure_behavior": "自動ブラウザー試験だけを実端末の合格証拠にしない",
+        "acceptance_ids": [
+          "AT-N02"
+        ],
+        "source_refs": []
+      },
+      "ownerBatch": "RB10",
+      "workPackage": "WP23",
+      "originalHistoricalAssessment": "known_difference_or_unfinished_integration",
+      "independentCurrentAssessment": {
+        "assessment": "automated platform harness present; specified real OS/browser matrix not_run",
+        "evidence": "Independent C7 actual environment Linux Chromium153; root C7 CI three-engine results remain separate. No iPhone Safari/Chrome,iPadSplitView,PC Edge/macOS Safari realOS version proof. Existing implementation should not be called missing solely due physical evidence gap.",
+        "case": "AT-N02"
+      },
+      "sourceFiles": [
+        {
+          "path": "docs/implementation/PROGRESS.md",
+          "originalDescriptorSHA256": "af671eaca8b24cbe9cc22d3acb43eba1d9f10480c206c657b8de8947e862f5d8",
+          "actualC7SHA256": "e6552bb25650a14574f5626951cee1e0673020732f631d96bbc02cf07d688acf",
+          "descriptorMatches": false
+        },
+        {
+          "path": "playwright.config.ts",
+          "originalDescriptorSHA256": "fd11ed54eaeafd74fe44f36b05acdb87b16e30c635a31de650af42910b0a952e",
+          "actualC7SHA256": "fd11ed54eaeafd74fe44f36b05acdb87b16e30c635a31de650af42910b0a952e",
+          "descriptorMatches": true
+        },
+        {
+          "path": "tests/e2e/editor.spec.ts",
+          "originalDescriptorSHA256": "e0fdbe01454d6916703a66448ea21c047fd9c13786a445f3f964ca82e7835f4b",
+          "actualC7SHA256": "e0fdbe01454d6916703a66448ea21c047fd9c13786a445f3f964ca82e7835f4b",
+          "descriptorMatches": true
+        }
+      ],
+      "caseObservation": {
+        "given": {
+          "literalExpected": "UI_UXの対象端末表",
+          "actualStatus": "not_run_C7",
+          "observations": [],
+          "fixtureSHA256": null,
+          "artifactPaths": []
+        },
+        "when": {
+          "literalExpected": "同じ総合試験を対象環境で実行する",
+          "actualStatus": "not_run_C7",
+          "observations": [],
+          "fixtureSHA256": null,
+          "artifactPaths": []
+        },
+        "then": {
+          "literalExpected": "保存・再読込・ファイル往復・タッチ操作が成功する",
+          "actualStatus": "not_run_C7",
+          "observations": [],
+          "fixtureSHA256": null,
+          "artifactPaths": []
+        },
+        "negative_or_edge": {
+          "literalExpected": "自動ブラウザー試験だけを実端末の合格証拠にしない",
+          "actualStatus": "not_run_C7",
+          "observations": [],
+          "fixtureSHA256": null,
+          "artifactPaths": []
+        }
+      },
+      "caseResult": "not_run",
+      "wholeRequirementCompleteInferred": false
+    },
+    {
+      "originalRequirement": {
+        "id": "REQ-N03",
+        "title": "アクセシビリティ",
+        "provenance": "仕様を成立させる品質条件・PRレビュー対象",
+        "decision_status": "review_proposal",
+        "implementation_status": "planned",
+        "release_scope": "complete_v1",
+        "package_id": "WP23",
+        "shall": "WCAG 2.2 AAを受入目標とし、キーボード・スクリーンリーダー・文字拡大200%・色以外の意味表現・ドラッグ代替を提供すること。",
+        "failure_behavior": "図だけで編集を強制せず、見える焦点や拡大を無効にしない",
+        "acceptance_ids": [
+          "AT-N03"
+        ],
+        "source_refs": [
+          "T02"
+        ]
+      },
+      "ownerBatch": "RB10",
+      "workPackage": "WP23",
+      "originalHistoricalAssessment": "known_difference_or_unfinished_integration",
+      "independentCurrentAssessment": {
+        "assessment": "accessibility implementation present; current320 reflow difference and real assistive-technology/full-AA checks not_run",
+        "evidence": "Keyboard save, focus, graph ArrowRight/button drag alternatives and200% at390/768/1024/1440 observed.320 graph/table reference label overflows page. Real VoiceOver/NVDA and manual fullAA checks not_run. These are separate from static implementation presence.",
+        "case": "AT-N03"
+      },
+      "sourceFiles": [
+        {
+          "path": "src/styles.css",
+          "originalDescriptorSHA256": "bdd71c6fbfaeb4b42049739ba8927252cc6fd4a99dd8d0438b573d165982826b",
+          "actualC7SHA256": "bdd71c6fbfaeb4b42049739ba8927252cc6fd4a99dd8d0438b573d165982826b",
+          "descriptorMatches": true
+        },
+        {
+          "path": "src/ui/components.tsx",
+          "originalDescriptorSHA256": "7a419db0fb68f4addea1fd1ce881cdc6902e04b2fc5ce736427af56d69edf0ee",
+          "actualC7SHA256": "7a419db0fb68f4addea1fd1ce881cdc6902e04b2fc5ce736427af56d69edf0ee",
+          "descriptorMatches": true
+        },
+        {
+          "path": "tests/e2e/editor.spec.ts",
+          "originalDescriptorSHA256": "e0fdbe01454d6916703a66448ea21c047fd9c13786a445f3f964ca82e7835f4b",
+          "actualC7SHA256": "e0fdbe01454d6916703a66448ea21c047fd9c13786a445f3f964ca82e7835f4b",
+          "descriptorMatches": true
+        }
+      ],
+      "caseObservation": {
+        "given": {
+          "literalExpected": "キーボードとVoiceOverまたはNVDA",
+          "actualStatus": "not_run_C7",
+          "observations": [],
+          "fixtureSHA256": null,
+          "artifactPaths": []
+        },
+        "when": {
+          "literalExpected": "主な作成から出力まで操作する",
+          "actualStatus": "not_run_C7",
+          "observations": [],
+          "fixtureSHA256": null,
+          "artifactPaths": []
+        },
+        "then": {
+          "literalExpected": "フォーカス・読み上げ・エラー・完了通知が判断できる",
+          "actualStatus": "not_run_C7",
+          "observations": [],
+          "fixtureSHA256": null,
+          "artifactPaths": []
+        },
+        "negative_or_edge": {
+          "literalExpected": "図だけで編集を強制せず、見える焦点や拡大を無効にしない",
+          "actualStatus": "not_run_C7",
+          "observations": [],
+          "fixtureSHA256": null,
+          "artifactPaths": []
+        }
+      },
+      "caseResult": "not_run",
+      "wholeRequirementCompleteInferred": false
+    },
+    {
+      "originalRequirement": {
+        "id": "REQ-N13",
+        "title": "日本語と時間の正確性",
+        "provenance": "仕様を成立させる品質条件・PRレビュー対象",
+        "decision_status": "review_proposal",
+        "implementation_status": "planned",
+        "release_scope": "complete_v1",
+        "package_id": "WP05",
+        "shall": "UTF-8、日本語IME、ルビ、読み、別名、絵文字を破損なく保持し、世界時間と実日時を別型にすること。",
+        "failure_behavior": "IME変換を操作キーで確定前に破壊したり、tickを浮動小数で丸めない",
+        "acceptance_ids": [
+          "AT-N13"
+        ],
+        "source_refs": []
+      },
+      "ownerBatch": "RB02",
+      "workPackage": "WP05",
+      "originalHistoricalAssessment": "implemented_targeted_verified_final_unverified",
+      "independentCurrentAssessment": {
+        "assessment": "current320 page horizontal overflow is a reproduced failure of original requirement",
+        "evidence": "Original failure_behavior explicitly forbids unnecessary page horizontal scrolling. HTMLSTRONG reference-path label reaches378.14 at320; canvas internal scroll remains valid.",
+        "case": "AT-F31"
+      },
+      "sourceFiles": [
+        {
+          "path": "src/App.tsx",
+          "originalDescriptorSHA256": "64428fb12163c16133a62c689e992ebb5c72c9fae65afa397b384b8a024030e1",
+          "actualC7SHA256": "64428fb12163c16133a62c689e992ebb5c72c9fae65afa397b384b8a024030e1",
+          "descriptorMatches": true
+        },
+        {
+          "path": "src/domain/exports.ts",
+          "originalDescriptorSHA256": "e12ee6aa221e0807469c066c2b838a5328ac7a0e6de37082906c27c57ca794f9",
+          "actualC7SHA256": "e12ee6aa221e0807469c066c2b838a5328ac7a0e6de37082906c27c57ca794f9",
+          "descriptorMatches": true
+        },
+        {
+          "path": "src/domain/materials.ts",
+          "originalDescriptorSHA256": "60cdb88fb2d95223c5977b611300be66e161baa9fbcfdd62a6576840ab4fb736",
+          "actualC7SHA256": "60cdb88fb2d95223c5977b611300be66e161baa9fbcfdd62a6576840ab4fb736",
+          "descriptorMatches": true
+        },
+        {
+          "path": "src/domain/production.ts",
+          "originalDescriptorSHA256": "26ff566a385b1979db67135568c8edb22e4e0c1dac83a5c32a834b87d6890d96",
+          "actualC7SHA256": "26ff566a385b1979db67135568c8edb22e4e0c1dac83a5c32a834b87d6890d96",
+          "descriptorMatches": true
+        },
+        {
+          "path": "src/domain/productionChecks.ts",
+          "originalDescriptorSHA256": "ab65aad9956824059fb42265a5608cf07de3cc7082cd43fe0691d63d692c0313",
+          "actualC7SHA256": "ab65aad9956824059fb42265a5608cf07de3cc7082cd43fe0691d63d692c0313",
+          "descriptorMatches": true
+        },
+        {
+          "path": "src/domain/productionWorkflow.ts",
+          "originalDescriptorSHA256": "fb8068d7bf63609d834d21bc7261b56b7e4d55906d4b1bd9b6a00d0d83f1dc24",
+          "actualC7SHA256": "fb8068d7bf63609d834d21bc7261b56b7e4d55906d4b1bd9b6a00d0d83f1dc24",
+          "descriptorMatches": true
+        },
+        {
+          "path": "src/domain/time.ts",
+          "originalDescriptorSHA256": "6bcaade20487c977da38a7c3100cdb092ca25422f10b3b753b4a54488aad67bb",
+          "actualC7SHA256": "6bcaade20487c977da38a7c3100cdb092ca25422f10b3b753b4a54488aad67bb",
+          "descriptorMatches": true
+        },
+        {
+          "path": "src/domain/types.ts",
+          "originalDescriptorSHA256": "49f426a71555ee9024586b054485a0d493b8a3478ffd7a205ea609ce41684692",
+          "actualC7SHA256": "49f426a71555ee9024586b054485a0d493b8a3478ffd7a205ea609ce41684692",
+          "descriptorMatches": true
+        },
+        {
+          "path": "src/storage/rb07Production.test.ts",
+          "originalDescriptorSHA256": "2b08f0d440328824a649a9c338f3b8080588d86bcde4d04e92449784f8e18987",
+          "actualC7SHA256": "2b08f0d440328824a649a9c338f3b8080588d86bcde4d04e92449784f8e18987",
+          "descriptorMatches": true
+        },
+        {
+          "path": "src/ui/EntityEditor.tsx",
+          "originalDescriptorSHA256": "38a1d28e547ac4f665609f888aa7346e5982b2809255660ccb84b499ae23d267",
+          "actualC7SHA256": "38a1d28e547ac4f665609f888aa7346e5982b2809255660ccb84b499ae23d267",
+          "descriptorMatches": true
+        },
+        {
+          "path": "src/ui/Fields.tsx",
+          "originalDescriptorSHA256": "60d5d128b47ae2525c44982920d17045030f44028d5947fa0472b1fb3d4a41d3",
+          "actualC7SHA256": "60d5d128b47ae2525c44982920d17045030f44028d5947fa0472b1fb3d4a41d3",
+          "descriptorMatches": true
+        },
+        {
+          "path": "src/ui/PresentationCues.tsx",
+          "originalDescriptorSHA256": "3b37bfc5960ae2f3dac11b4abb7aad75a671335ad5eee35fd7d589d56a60131c",
+          "actualC7SHA256": "3b37bfc5960ae2f3dac11b4abb7aad75a671335ad5eee35fd7d589d56a60131c",
+          "descriptorMatches": true
+        },
+        {
+          "path": "src/ui/ProductionReviewPanel.tsx",
+          "originalDescriptorSHA256": "16697e26f88a59fb2040b5f31d5e950517e08f4f6da6915ef7f99ddc24fc7416",
+          "actualC7SHA256": "16697e26f88a59fb2040b5f31d5e950517e08f4f6da6915ef7f99ddc24fc7416",
+          "descriptorMatches": true
+        },
+        {
+          "path": "src/ui/ProductionTools.tsx",
+          "originalDescriptorSHA256": "48c8b7f62bee3c73a150267098b96ab7e3b92e958a8841e42c7db4543e93ca1a",
+          "actualC7SHA256": "48c8b7f62bee3c73a150267098b96ab7e3b92e958a8841e42c7db4543e93ca1a",
+          "descriptorMatches": true
+        },
+        {
+          "path": "src/ui/Reader.tsx",
+          "originalDescriptorSHA256": "4fc0b78d24b9b2542f7b9f4f7410130bc68ff756d94b0a2e1644c2eeb628cd92",
+          "actualC7SHA256": "4fc0b78d24b9b2542f7b9f4f7410130bc68ff756d94b0a2e1644c2eeb628cd92",
+          "descriptorMatches": true
+        },
+        {
+          "path": "src/ui/WritingWorkspace.tsx",
+          "originalDescriptorSHA256": "e26c0bf9023e7c58cc54f7dfbc4138fe78b748889d6bc0746d08d852787fc208",
+          "actualC7SHA256": "e26c0bf9023e7c58cc54f7dfbc4138fe78b748889d6bc0746d08d852787fc208",
+          "descriptorMatches": true
+        },
+        {
+          "path": "src/ui/fieldSpecs.ts",
+          "originalDescriptorSHA256": "364950eaa9afab525c9fadea17ea453ae5d3950358875b359dc7bb9d3588647c",
+          "actualC7SHA256": "364950eaa9afab525c9fadea17ea453ae5d3950358875b359dc7bb9d3588647c",
+          "descriptorMatches": true
+        },
+        {
+          "path": "tests/e2e/rb07-production.spec.ts",
+          "originalDescriptorSHA256": "e1371323f5b525ce16fcac07621ff073fe266634e4cd0e602094eb7f965133c7",
+          "actualC7SHA256": "e1371323f5b525ce16fcac07621ff073fe266634e4cd0e602094eb7f965133c7",
+          "descriptorMatches": true
+        }
+      ],
+      "caseObservation": {
+        "given": {
+          "literalExpected": "人物/条件/関係線/専用ファイルを持つ作品と未保存入力",
+          "actualStatus": "passed_local_fixture_physical_conditions_not_run",
+          "observations": [
+            "Person, typed condition, saved relation, native complete file and unsaved draft supplied."
+          ],
+          "fixtureSHA256": null,
+          "artifactPaths": [
+            "/tmp/shinariokanri-independent-rb10-c7-905aad8/prepared/F31_320_REPRODUCTION/REPORT.json",
+            "/tmp/shinariokanri-independent-rb10-c7-905aad8/prepared/results/f31-c7-diagnostic-3/raw.log"
+          ]
+        },
+        "when": {
+          "literalExpected": "幅320/390/768/1024/1440、縦横/分割で配置を切替え、狭幅だけで編集と読み込みを完了する",
+          "actualStatus": "failed_local_320_other_widths_passed",
+          "observations": [
+            "390/768/1024/1440 completed normal keyboard save,200% text,complete import,cold. At320 condition/relation save passed, but58px page overflow stopped later phases. Physical rotation/SplitView/software keyboard not_run."
+          ],
+          "fixtureSHA256": null,
+          "artifactPaths": [
+            "/tmp/shinariokanri-independent-rb10-c7-905aad8/prepared/F31_320_REPRODUCTION/REPORT.json",
+            "/tmp/shinariokanri-independent-rb10-c7-905aad8/prepared/results/f31-c7-diagnostic-3/raw.log"
+          ]
+        },
+        "then": {
+          "literalExpected": "人物、条件、関係線、読み込みの編集を、スマートフォンだけでも完了できる。",
+          "actualStatus": "partial_local_observed_320_reflow_failed",
+          "observations": [
+            "At320 person/typed condition/relation editing saved via keyboard; remaining 200%/file+cold not executed because original page reflow failure."
+          ],
+          "fixtureSHA256": null,
+          "artifactPaths": [
+            "/tmp/shinariokanri-independent-rb10-c7-905aad8/prepared/F31_320_REPRODUCTION/REPORT.json",
+            "/tmp/shinariokanri-independent-rb10-c7-905aad8/prepared/results/f31-c7-diagnostic-3/raw.log"
+          ]
+        },
+        "negative_or_edge": {
+          "literalExpected": "端末の幅で表示を切り替え、重要操作をPCに限定しない。分割表示やソフトキーボードで確定ボタンが隠れない。",
+          "actualStatus": "failed_local_original_page_reflow",
+          "observations": [
+            "Required320 reflow fails with reference labelright378.14 and pageoverflow58. Native Quota failure invariant/draft retention and keyboard retry passed. Real software keyboard overlap and SplitView not_run."
+          ],
+          "fixtureSHA256": null,
+          "artifactPaths": [
+            "/tmp/shinariokanri-independent-rb10-c7-905aad8/prepared/F31_320_REPRODUCTION/REPORT.json",
+            "/tmp/shinariokanri-independent-rb10-c7-905aad8/prepared/results/f31-c7-diagnostic-3/raw.log"
+          ]
+        }
+      },
+      "caseResult": "failed_local_original_320_reflow",
+      "wholeRequirementCompleteInferred": false
+    }
+  ],
+  "all104or116Complete": false
+}

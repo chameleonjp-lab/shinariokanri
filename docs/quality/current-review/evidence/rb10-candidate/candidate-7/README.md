@@ -1,0 +1,9 @@
+# C7 固定対象の成功・320px不具合・検査手順の停止
+
+905aad8997bd4218fc3da84bba96687120ebb4dd / tree b89ea2600f3b9d5298e6cb0bda227a822ea27f8c / clean build 4aa7686ea50ba1b3f89e。CI37898131383は763単体・261 production・全20step成功。同じtreeの実checkoutはc1abadd2bbad5757a329595470ae0ef115e3e29d。
+
+Standard各30回の局所指標とLargeの強い入力開始30回7997.8ms／検索446.3msは元数値内。元helperのLarge取消・一覧再選択・通常保存・完全出力・空390幅new/clone・coldは成功。88003記録・元履歴と送信待ち・72MiBの全実bytes/hashを照合した。これらを別候補の合格へ流用しない。
+
+独立通常8件と部品53件の成功後、320pxの関係表の参照経路ラベルによる全体58px横スクロールを確認。390/768/1024/1440の成功とは分ける。原F31/N13の条件を保持してC8で全文折返しを直す。短いStandard60秒診断は1回保存後、旧タブ名を使う検査側の誤りで停止した。実7200秒は未開始。原helper・失敗rawを保持し、正しい現行ラベルへ更新する。
+
+independent-actual-evidence.tar.gzは独立封印633証拠・269実artifactとbindingを、各SHA・bytesを照合して梱包した。BUNDLE_MANIFEST.jsonの全内容を梱包後に再検算済み。主要報告と原116条項別結果は個別にも置く。C7準備台帳の2文書SHAが追記で古くなった検査失敗も保持する。C8は全本文更新後に台帳SHAを再照合する。F05/F40の観測環境での原ケース結果以外を116完成に換算しない。実OS・支援技術・実Auth/RLS/privateStorage・専用現行費用は未実行。

@@ -71,3 +71,25 @@ C6はmarkerがないcold DB配列を二度コピーせず、markerがあれば�
 次のclean対象を固定し、全CI、正式30回、Large全bytes復元、実7200秒の編集と独立原116の正常/境界を進める。実機/支援技術/実Auth/専用費用の不足と公開gate保留は維持する。
 
 C6準備sourceで全単体763件／81ファイル、schema生成差分なし、文書・計画・Python15、対象通常操作3ブラウザーが成功。次のclean対象と各実証拠を別に固定する。
+
+## C6のCI・性能成功とC7の作品一覧再入補修
+
+固定C6 eab9812/tree8cc78のCI37893273502は763単体・258 production・全20step成功。checkout ad793affは同じsource tree。強い入力開始の正式Standard/Large各30回は局所数値内（Large8,483.2ms、検索462.4ms）。全asset bytes/hash・88003記録・history31・pending31が一致。source/build/helper/環境と全sampleをcandidate-6に保持する。
+
+後の元Large復元手順で、取消→再試行→作品一覧の再入後に通常保存がproject.idの未知項目で拒否された。元helperの120秒timeoutと、同じ操作に失敗UIだけを加えた診断を区別して保持。表示用idが正本へ混入した実装差分をC7で直す。schema、原子性、履歴、ID、固定snapshot、完全形式と上限を保持する。
+
+通常回帰は2作品の同名人物・Unicodeリンク・旧snapshotを使い、保存容量不足/native8table不変/入力保持→別作品保存→未保存入力再開→保存/cold→空390幅new/clone復元まで確認。dirty3ブラウザーで全3成功。検査側の元履歴0とclone追加commandの期待補正、coldのメニュー準備待ち、全失敗rawはworking-library-canonicalへ保存。
+
+PR20は利用者側でmain ae22dcaへ取り込まれた。C7は新ブランチでclean対象を固定し全CI・同じ強い各30回・元復元helper・実7200秒・独立原116を再検証する。全体完成・実端末・実Auth/RLS/Storage・専用現行費用と公開gateは保留する。
+
+C7準備版の全763単体／81ファイル、schema生成差分なし、文書・計画・Python15は成功。対象版固定後の各30回・復元・実7200秒・原116を別に実行し、準備成功を最終受入へ換算しない。
+
+## C7の固定結果とC8の320px補修
+
+C7 905aad8997bd4218fc3da84bba96687120ebb4dd / tree b89ea2600f3b9d5298e6cb0bda227a822ea27f8c / build4aa7686ea50ba1b3f89eのCI37898131383は763単体・261 production・全20step成功。同tree checkout c1abadd2bbad5757a329595470ae0ef115e3e29d。実入力開始を測るStandard/Large各30回は局所数値内（Large7997.8ms、検索446.3ms）。元Large取消／一覧再選択／通常編集／完全new/clone／coldは88,003記録・履歴・回復待ち・素材72MiBを全hashで確認した。
+
+独立53部品・8通常成功後、320pxで条件の由来ラベルがページ全体58px横スクロールを発生。390/768/1024/1440の成功から320合格を推定しない。C8は全文を折り返すCSSを加え、元graph検査の正常・cold・配置・関係・完全出力期待を保持して320/200%を追加した。初回は人物中心の絞込みを解除し忘れた検査手順の失敗、2回目は通常comboboxで解除し3browser成功。全文を省略・非表示にしない。
+
+C7のStandard60秒診断は旧名「試読」を探して停止し、Large実7200秒は未開始。新measure-appは現行「試読・検査」とApp準備待ちを使う。時間・fixture・操作・原子性・冷再読込／完全復元条件は不変。補足性能helper v4の測定区間も不変：実行artifactSHA、生成元の旧scriptSHA、現在tracked helperSHA、C8製品source/distを別々に結合し、performanceモードだけを使用する。soak/recoveryは新tracked helperを実行する。
+
+歴史candidate-7の633独立証拠／269実artifactはSHA照合済みtar.gzと主要JSONに保持。C7台帳の2文書SHAが後の追記で古くなった準備失敗も残し、C8は全本文更新後に104関連source SHAと359source、26原文不変を再照合する。cleanC8の全CI・各30回・Large復元・実7200秒・独立原116が未確認の間は未実行のまま扱う。実機・支援技術・実Auth/RLS/privateStorage・専用quota／費用の公開gateを維持する。
