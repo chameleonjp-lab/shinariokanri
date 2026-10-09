@@ -1,0 +1,93 @@
+{
+  "source_commit": "29a8bb9fa19b18a519c000a8569f91f220e4807b",
+  "source_tree": "84a75b7d900cc39c990b8c78cf309ceacb00d6c7",
+  "source_manifest": "source-manifest.json",
+  "source_file_count": 315,
+  "results": {
+    "unit": {
+      "numTotalTests": 725,
+      "numPassedTests": 725,
+      "numFailedTests": 0,
+      "success": true
+    }
+  },
+  "independent_result": "needs_fix_historical",
+  "scope": "RV25–RV26 server-confirmed common base/prepared/atomic ACK/post-edit conflict/dependency rebase/private bytes/full new+clone recovery/limited projection+Unicode fixed comments/account-bound durable inputs/monotonic editor authority+expiry. Mock and local contract evidence only.",
+  "environment": "Linux Node/Vitest/fakeIndexedDB; Chromium153 production; isolated network-none PostgreSQL17.11 with mocked Auth/Storage schema",
+  "original116_final_acceptance": "not_run",
+  "physical_devices": "not_run",
+  "live_auth_rls_storage": "not_run",
+  "independent_report": "independent-artifacts/dist/independent/REPORT.json",
+  "independent_report_sha256": "fc9d5d2ddeea33a710cfa5dbf0ca308243a6056f685db755690bfe80ad1b3aec",
+  "independent_summary": {
+    "stage": "RB09 candidate2 targeted independent component review; superseded by supplied candidate3",
+    "candidateCommit": "29a8bb9fa19b18a519c000a8569f91f220e4807b",
+    "candidateTree": "84a75b7d900cc39c990b8c78cf309ceacb00d6c7",
+    "sourceCount": 317,
+    "sourceBindingSHA256": "446d893d948f371890bbe5e9b612933071540801fcdebb37d84f732a1fc7a696",
+    "all317GitShowMatchedAtFreeze": true,
+    "original15Unchanged": true,
+    "previousCandidate521Unchanged": true,
+    "changedFiles": [
+      "src/sync/editorStore.ts",
+      "tests/rb09Features.test.ts"
+    ],
+    "runs": [
+      {
+        "category": "original core11+capture1+editor5+repository positive17",
+        "tests": 34,
+        "pass": 34,
+        "fail": 0,
+        "log": "independent/core-editor-domain.log"
+      },
+      {
+        "category": "new same-content-revision editor boundaries",
+        "tests": 3,
+        "pass": 2,
+        "fail": 1,
+        "log": "independent/editor-epoch-domain.log"
+      }
+    ],
+    "E02OriginalExpectation": "pass; lower revision rejected and all state unchanged",
+    "positiveSameRevisionCommonValueChange": "pass rejected atomically",
+    "positiveSameRevisionFieldWithdrawal": "pass removed active access and retained prior input separately",
+    "finding": {
+      "id": "R9E04",
+      "given": "Content serverRevision1 unchanged; current fieldset withdrew name and was already received",
+      "when": "Receive a delayed older fieldset with name at same content revision1",
+      "expected": "Reject stale permission response and retain current active fieldset, while legitimate new grant must have a distinguishable current authority/response generation",
+      "actual": "Receive accepts old fieldset and restores revoked name as active editor field",
+      "proof": "independent/fixtures/R9E04.json",
+      "source": "src/sync/editorStore.ts / src/sync/editor.ts readEditorImage",
+      "classification": "Real isolated component with synthetic images; not observed actual Auth/API leak"
+    },
+    "notRun": [
+      {
+        "scope": "Candidate2 production browser/native SQL/deep-link/archive restore",
+        "reason": "Candidate3 supplied after focused E02+epoch run, before c2 build/browser. Prior candidate1 successes not converted to c2; retarget independent normal-operation checks to fixed candidate3."
+      },
+      {
+        "scope": "All104/116/24/6, real Auth/RLS/Storage/physical",
+        "reason": "Targeted component results do not fulfill original whole acceptance; endpoints/accounts/physical environment unspecified"
+      }
+    ],
+    "environment": {
+      "node": "24.19.0",
+      "vitest": "5.0.3",
+      "storage": "fake-indexeddb",
+      "sharedRepoEdited": false,
+      "productTrackedEdited": false,
+      "rawWhitespacePreserved": true
+    },
+    "sealedAt": "2026-10-08T19:58:17.172885+00:00"
+  },
+  "build_info": {
+    "commit": "29a8bb9fa19b18a519c000a8569f91f220e4807b",
+    "dirty": false,
+    "base": "/shinariokanri/",
+    "builtAt": "2026-10-08T19:30:08.345Z",
+    "versionHashScope": "sorted paths and bytes plus build info before version",
+    "version": "731d271a91366d706fc7"
+  },
+  "production_browser_execution": "not_run for this candidate; C1/C3 checks retain their own commit binding"
+}

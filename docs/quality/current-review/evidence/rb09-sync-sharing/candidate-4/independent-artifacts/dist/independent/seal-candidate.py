@@ -1,0 +1,52 @@
+from pathlib import Path
+import hashlib,json,subprocess,datetime
+base=Path('/tmp/shinariokanri-independent-rb09-4d14113');root=base/'independent';source=json.loads((base/'SOURCE_BINDING.json').read_text());commit=source['candidateCommit'];tree=source['candidateTree']
+def sha(p):return hashlib.sha256(p.read_bytes()).hexdigest()
+def dump(p,d):p.write_text(json.dumps(d,ensure_ascii=False,indent=2)+'\n')
+assert subprocess.check_output(['git','rev-parse',commit+'^{tree}'],cwd=base,text=True).strip()==tree
+requests=''.join(commit+':'+r['file']+'\n' for r in source['sourceHashes']).encode()
+raw=subprocess.run(['git','cat-file','--batch'],input=requests,capture_output=True,cwd=base,check=True).stdout
+pos=0;mismatch=[]
+for row in source['sourceHashes']:
+ end=raw.index(b'\n',pos);header=raw[pos:end].decode();size=int(header.rsplit(' ',1)[1]);content=raw[end+1:end+1+size];pos=end+1+size+1
+ if hashlib.sha256(content).hexdigest()!=row['sha256'] or sha(base/row['file'])!=row['sha256']:mismatch.append(row['file'])
+assert not mismatch
+assert all(sha(base/r['file'])==r['sha256'] for r in source['originalDocuments15'])
+oldroots=['/tmp/shinariokanri-rb09-core-review','/tmp/shinariokanri-rb09-core-review-4','/tmp/shinariokanri-independent-rb09-additional-1','/tmp/shinariokanri-independent-rb09-35d34a8','/tmp/shinariokanri-independent-rb09-29a8bb9','/tmp/shinariokanri-independent-rb09-dd4328c'];old=[]
+for b in oldroots:
+ b=Path(b);binding=b/'independent/ARTIFACTS_BINDING.json';d=json.loads(binding.read_text());bad=[r['file'] for r in d['artifacts'] if not (b/r['file']).is_file() or sha(b/r['file'])!=r['sha256']]
+ assert not bad,(str(b),bad)
+ report=b/'independent/REPORT.json';assert sha(report)==d['reportSHA256']
+ old.append({'root':str(b),'artifactCount':d['artifactCount'],'bindingSHA256':sha(binding),'reportSHA256':sha(report),'mismatches':bad})
+status=subprocess.check_output(['git','status','--porcelain','--untracked-files=no'],cwd=base,text=True);assert not status
+build=json.loads((base/'dist/build-info.json').read_text());assert build['commit']==commit and build['dirty']==False
+now=datetime.datetime.now(datetime.timezone.utc).isoformat()
+final={'candidateCommit':commit,'candidateTree':tree,'sourceCount':len(source['sourceHashes']),'sourceBindingSHA256':sha(base/'SOURCE_BINDING.json'),'all319MatchedGitShowAndFrozenFiles':True,'allOriginal15Unchanged':True,'oldBindingsUnchanged':old,'trackedGitStatus':status,'buildInfo':build,'sealedAt':now};dump(root/'FINAL_SOURCE_BINDING.json',final)
+positiveIDs=['R9US01','R9USV02','R9UE00','R9URV01','R9UR02','R9URBytes04','R9UL06','R9USC03','R9UI05_CACHE','R9UI05_TX','R9UI06']
+report={'stage':'RB09 candidate4 independent review, historical fixed source; failed cases preserved','candidateCommit':commit,'candidateTree':tree,'sourceCount':319,'sourceBindingSHA256':sha(base/'SOURCE_BINDING.json'),'finalSourceBindingSHA256':sha(root/'FINAL_SOURCE_BINDING.json'),'original104_116_24_6Preserved':True,'original15Unchanged':True,'old53_76_175_521_363_534Unchanged':True,'originalRegistryStatusesNotChanged':True,
+'actualIndependentRuns':[
+{'scope':'core/local/native5/editor/transfer/world + repository positive20 + epoch3','tests':53,'pass':53,'fail':0,'log':'independent/core-editor-transfer-world.log'},
+{'scope':'current authority withdrawal/regrant/missing/expired stamps and editorDBv1 migration plus expiry resolution/adoption','tests':5,'pass':3,'fail':2,'log':'independent/authority-boundaries-corrected.log','failedIDs':['R9E05','R9E06']},
+{'scope':'typed owner/editor/derived SQL and Edge private-byte guards in fresh PostgreSQL mockAuth/Storage','tests':16,'pass':16,'fail':0,'log':'independent/sql-typed-editor-derived-edge.log'},
+{'scope':'SQL current epoch/current grant/expiry under locked commit','tests':3,'pass':3,'fail':0,'log':'independent/sql-authorization-corrected.log'},
+{'scope':'fresh network-none PostgreSQL all8migrations + original mockRLS + NULL Unicode boundaries','migrations':8,'migrationPass':8,'mockRLSAssertions':23,'mockRLSPass':23,'nullBoundaryAssertions':2,'nullBoundaryPass':2,'logs':['independent/sql-setup-results.json','independent/sql-original-rls.log','independent/sql-null-comment-refusal.log']},
+{'scope':'normal clean production Chromium153 isolated5394 HTTPS mocks','finalGroups':13,'pass':11,'fail':2,'positiveIDs':positiveIDs,'failedIDs':['R9UIE05','R9UIE06'],'resultFiles':['independent/browser/RESULTS.json','independent/browser-extra-contracts/RESULTS.json','independent/browser-account-boundaries/RESULTS.json','independent/browser-comment-corrected/RESULTS.json','independent/browser-canonical-cache-corrected/RESULTS.json','independent/browser-canonical-inputs-observed/RESULTS.json(R9UI05_TX only)','independent/browser-canonical-width-final/RESULTS.json','independent/browser-authority-expiry/RESULTS.json(R9UIE06 only)','independent/browser-authority-expiry-corrected/RESULTS.json'],'noFetchNormalization':True,'noForcedClick':True,'clockFixture':'Date.now is advanced only for local editor authority-expiry boundaries; Auth token still within its synthetic one-hour validity'}],
+'finalComponentTotal':{'tests':77,'pass':75,'fail':2,'includesRepositorySuite20':True,'excludesOriginal116':True},
+'productFindings':[
+{'id':'R9E05','expected':'After authority deadline, conflict resolution must refuse FORBIDDEN and leave full local base/input/prepared/conflict/ACK state unchanged','actual':'C4 resolve commits revision/base/local/prepared changes; UI subsequent synchronize refuses FORBIDDEN after local state changed, leaving displayed conflict stale','componentProof':'independent/fixtures/R9E05.json','normalUIProof':'independent/browser-authority-expiry-corrected/R9UIE05-observed.json','raw':['independent/authority-boundaries-corrected.log','independent/browser-authority-expiry-corrected.log']},
+{'id':'R9E06','expected':'A recovery approval obtained before deadline cannot adopt active editor values after authority expiry; retained historical evidence stays exact and full active state unchanged','actual':'C4 adoptRecovery commits revision3→4 and 共通A→旧記録の入力 through ordinary UI, success notice instead of refusal','componentProof':'independent/fixtures/R9E06.json','normalUIProof':'independent/browser-authority-expiry/R9UIE06-observed.json','raw':['independent/authority-boundaries-corrected.log','independent/browser-authority-expiry.log']}],
+'priorRepairsOnThisSource':{'E00':'pass independent clones','E02':'pass monotonic content/common field guards','E03':'pass current grant before cached ACK','E04':'pass stamped rev1→withdraw2→old1 refusal/same2 expansion refusal/regrant3, missing/expired refusal and legacy evidence recovery','U00':'pass normal fetch receiver','US01':'pass limited deep link and Unicode old version','SQL04':'pass derived reference and needs_review atomic save','UI05':'pass aggregate TX failure allB unchanged+retryA, cache failure canonical successA+coldA','UI06':'pass normal pointer at1280/390/768/1440','UR02':'pass later area retained'},
+'preservedInitialAttempts':json.loads((root/'SETUP_CLASSIFICATIONS.json').read_text())+[{'path':'independent/setup-authority-conflict-fixture','classification':'review_fixture_failure','reason':'handmade conflict wire had wrong field/reason shape; assertAck correctly rejected it. Corrected threeWayMerge conflict preserves original expiry and atomic expectations.'}],
+'c3CommunicationCorrection':'C3 actual 48core+3epoch(2pass1E04fail)+16typedSQL+7migrations/mock23/NULL2+11finalnormalApp are sealed in C3 REPORT db5c962... and binding534 24a249b...; earlier claim that C3 SQL/browser were unexecuted was explicitly corrected. Parent726/75 remains separate.',
+'environment':{'os':'Debian13.6 / Linux6.18.44 x86_64','node':'24.19.0','vitest':'5.0.3','browser':'Chromium153.0.8010.12','appOrigin':'http://127.0.0.1:5394/shinariokanri/','sql':'own fresh PostgreSQL17.11 network-none, no published ports','AuthStorage':'synthetic fixtures / intercepted HTTPS mocks','buildInfo':build,'root4173Used':False,'sharedProductTrackedChanges':False,'rawWhitespacePreserved':True},
+'notRun':[{'scope':'Actual Auth/DataAPI/RLS/private Storage/two real devices','reason':'Dedicated endpoint/project/real accounts/roles/approved configuration/quota/currentcost unspecified; synthetic fixture cannot substitute'},{'scope':'Full104REQ/116AT/24packages/6regressiongroups release, physicalOS/assistive/performance gates','reason':'Focused review stage; required physical/provider environment and final release proof pending'},{'scope':'Parent whole728unit/production75','reason':'Separate parent evidence, not counted here'},{'scope':'C5 repair','reason':'Will be graded separately at ff971b7 after this C4 evidence is sealed'}],
+'cleanup':{'own5394Stopped':True,'ownPostgreSQLRemoved':True},'sealedAt':now}
+dump(root/'REPORT.json',report)
+(root/'REPORT.md').write_text(f'''# RB09 C4 独立レビュー\n\n対象 `{commit}` / tree `{tree}`。319入力ファイルは固定checkoutとgit blobの全SHAが一致、元15資料と旧53/76/175/521/363/534成果物は不変です。\n\n部品77検査は75成功・2失敗。新旧SQL8本、模擬RLS23、NULL位置2、通常productionの正期待11群は成功。期限後の解決と復元採用は部品・通常UIの双方で状態が変わり失敗しました（R9E05/E06、UIE05/UIE06）。原104/116の合格数には換算しません。\n\nC3の実行範囲は実rawに基づく既存REPORT/binding534を正とし、未実行とした誤伝達は訂正済みです。C4の誤selector・不正手書きACK・JSONキー順比較・生成前のファイル未存在は検査準備の問題として原rawを保存し、製品失敗と分けています。\n\n実Auth/DataAPI/private Storage、二実端末、支援技術、性能、全116受入の最終判定は未実行です。候補C5は別に検証します。\n''')
+files={base/r['file'] for r in source['sourceHashes']}|{base/r['file'] for r in source['originalDocuments15']}|{base/'SOURCE_BINDING.json'}
+files|={p for p in root.rglob('*') if p.is_file() and p.name!='ARTIFACTS_BINDING.json'}
+files|={p for p in (base/'tests').glob('independent-rb09-*') if p.is_file()}
+files|={p for p in (base/'dist').rglob('*') if p.is_file()}
+art=[{'file':str(p.relative_to(base)),'sha256':sha(p),'bytes':p.stat().st_size}for p in sorted(files)]
+binding={'candidateCommit':commit,'candidateTree':tree,'sourceCount':319,'sourceBindingSHA256':sha(base/'SOURCE_BINDING.json'),'finalSourceBindingSHA256':sha(root/'FINAL_SOURCE_BINDING.json'),'reportSHA256':sha(root/'REPORT.json'),'artifactCount':len(art),'artifacts':art,'rawWhitespacePreserved':True,'notFullAcceptance':True,'notRealSupabaseEvidence':True,'sealedAt':now};dump(root/'ARTIFACTS_BINDING.json',binding)
+print(json.dumps({'reportSHA256':sha(root/'REPORT.json'),'bindingSHA256':sha(root/'ARTIFACTS_BINDING.json'),'artifactCount':len(art),'sourceCount':319,'oldBindingsUnchanged':True}))

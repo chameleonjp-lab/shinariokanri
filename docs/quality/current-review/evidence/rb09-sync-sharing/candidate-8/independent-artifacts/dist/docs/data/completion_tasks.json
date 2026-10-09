@@ -1,0 +1,3241 @@
+[
+  {
+    "id": "REQ-B01",
+    "title": "作品の作成と情報の登録",
+    "original_package_id": "WP04",
+    "batch_id": "RB02",
+    "status": "planned",
+    "baseline_assessment": "主要動作あり",
+    "retained_implementation": "作品と共通資料の登録・編集・アーカイブ、名前から登録、入力保持を実装。人物保存・再読込を画面で確認。",
+    "review_gap": "全種類の操作と、参照付きアーカイブの全組合せは受入未完了。",
+    "required_behavior": "作品を作成し、人物・出来事・場所・物品・メモを追加・編集・アーカイブできること。名前だけで登録して詳細を後から補えること。",
+    "implementation_action": "全種類の追加・編集・アーカイブと再表示を同じ保存コマンドへ接続する。参照付き削除は影響一覧と取消を用意し、名前だけの登録から詳細を補えるようにする。",
+    "code_paths": [
+      "src/App.tsx",
+      "src/ui/EntityEditor.tsx",
+      "src/storage/store.ts"
+    ],
+    "acceptance_ids": [
+      "AT-B01"
+    ],
+    "integration_ids": [
+      "AT-E01"
+    ],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "必須項目や参照先が不正な変更は保存せず、入力途中の文章と修正箇所を保持する",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-B02",
+    "title": "共通の出来事と人物別の出来事",
+    "original_package_id": "WP07",
+    "batch_id": "RB03",
+    "status": "planned",
+    "baseline_assessment": "主要動作あり",
+    "retained_implementation": "共通レーンと参加人物レーン、両方への表示を同じevent IDで構成。参加役割を明示入力する。",
+    "review_gap": "全レーンの端末別・重なり別の受入証拠は不足。",
+    "required_behavior": "横軸を世界内時間、縦軸をグループと人物にした年表を持つこと。共通出来事は共通レーンへ、人物別出来事は対象人物のレーンへ表示すること。",
+    "implementation_action": "共通・人物レーンの多重表示、参加役割、長期間帯、出来事の重なりを完成させる。どの表示から編集しても同じIDへ反映し、共通表示だけでは全員の参加や知識を作らない。",
+    "code_paths": [
+      "src/ui/Timeline.tsx",
+      "src/ui/Fields.tsx"
+    ],
+    "acceptance_ids": [
+      "AT-B02"
+    ],
+    "integration_ids": [],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "共通レーンへの表示だけでは全員を関係者や知識の保有者に登録しない",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-B03",
+    "title": "グループと人物レーン",
+    "original_package_id": "WP07",
+    "batch_id": "RB03",
+    "status": "planned",
+    "baseline_assessment": "部分実装",
+    "retained_implementation": "グループ追加・改名・折りたたみと複数グループから人物参照がある。",
+    "review_gap": "グループ順の編集、階層・多重参照を含む一連の画面操作が不足。",
+    "required_behavior": "グループを追加・改名・並べ替え・折りたたみでき、人物を複数グループから参照できること。",
+    "implementation_action": "グループと人物レーンの並べ替え、階層、折りたたみをタップとドラッグで編集できるようにする。複数グループの人物参照を保ち、削除時は人物本体を残す。",
+    "code_paths": [
+      "src/ui/Timeline.tsx",
+      "src/ui/fieldSpecs.ts"
+    ],
+    "acceptance_ids": [
+      "AT-B03"
+    ],
+    "integration_ids": [],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "グループ削除では人物を連鎖削除せず、表示への影響を確認する",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-B04",
+    "title": "人物ラベルを固定して横移動",
+    "original_package_id": "WP07",
+    "batch_id": "RB03",
+    "status": "planned",
+    "baseline_assessment": "主要動作あり",
+    "retained_implementation": "年表専用のスクロール領域とsticky人物ラベルを実装。",
+    "review_gap": "実iPad・iPhoneの横移動、選択維持、ソフトキーボードとの結合は未検証。",
+    "required_behavior": "年表の横移動中も人物名とグループ名を固定し、時間方向の位置と選択を保持すること。",
+    "implementation_action": "横移動中の人物・グループ・時間ラベル固定と選択維持を、ソフトキーボード・縦横回転・詳細から戻る操作までつなげる。",
+    "code_paths": [
+      "src/ui/Timeline.tsx",
+      "src/styles.css"
+    ],
+    "acceptance_ids": [
+      "AT-B04"
+    ],
+    "integration_ids": [
+      "AT-E01"
+    ],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "ページ全体の横ずれや、編集欄のスクロールとの取り違えが起きない",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-B05",
+    "title": "年表の表示単位",
+    "original_package_id": "WP06",
+    "batch_id": "RB03",
+    "status": "planned",
+    "baseline_assessment": "部分実装",
+    "retained_implementation": "tick・時・日・30日幅・365日幅と拡大縮小を提供。",
+    "review_gap": "独自単位はない。月・年は明示した固定幅で、独自暦に合わせた月年の表示切替ではない。",
+    "required_behavior": "時刻・日・月・年・独自単位を表示上で切り替え、表示範囲を拡大・縮小できること。",
+    "implementation_action": "固定30日・365日幅の表示を、選択した暦の月・年境界と独自表示単位に対応させる。単位と拡大率を変えても出来事の日時を更新しない。",
+    "code_paths": [
+      "src/ui/Timeline.tsx",
+      "src/domain/time.ts"
+    ],
+    "acceptance_ids": [
+      "AT-B05"
+    ],
+    "integration_ids": [
+      "AT-E02"
+    ],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "現在の暦に存在しない単位は理由付きで選択不可とし、暗黙の換算をしない",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-B06",
+    "title": "過去への延長と本編開始",
+    "original_package_id": "WP06",
+    "batch_id": "RB03",
+    "status": "planned",
+    "baseline_assessment": "主要動作あり",
+    "retained_implementation": "負・巨大tick、期間移動、独立した本編開始を実装。基準変更は出来事tickを変更しない。",
+    "review_gap": "実端末で極端な範囲を含む通し操作の受入は未完了。",
+    "required_behavior": "負の世界時間を含めて過去へ延長でき、本編開始を独立した基準点として設定できること。",
+    "implementation_action": "負・巨大世界時刻、本編基準点、日時へ移動、過去と未来への延長を通常入力で扱う。基準点変更と全出来事を移動する操作を分け、後者だけ差分と取消を持たせる。",
+    "code_paths": [
+      "src/ui/Timeline.tsx",
+      "src/ui/WorkPage.tsx",
+      "src/domain/time.ts"
+    ],
+    "acceptance_ids": [
+      "AT-B06"
+    ],
+    "integration_ids": [
+      "AT-E02"
+    ],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "本編開始を動かしただけで全出来事を移動しない",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-B07",
+    "title": "出来事間の意味付き矢印",
+    "original_package_id": "WP08",
+    "batch_id": "RB03",
+    "status": "planned",
+    "baseline_assessment": "部分実装",
+    "retained_implementation": "型付き関係の始点・終点・方向・根拠を表と別の関係図で編集できる。",
+    "review_gap": "年表上に出来事間の線を重ねる操作と連動表示はない。図の線自体からの編集も未実装。",
+    "required_behavior": "因果・前提・伏線・回収など種類と向きを持つ関係線を作成・編集し、元情報へ移動できること。",
+    "implementation_action": "年表上の出来事間に意味・向き・ラベル付き矢印を重ねる。始点→終点のタップと一覧で追加し、線選択から編集・根拠へ移動し、対象の関係だけ表示できるようにする。",
+    "code_paths": [
+      "src/ui/Lists.tsx",
+      "src/ui/Timeline.tsx",
+      "src/domain/model.ts"
+    ],
+    "acceptance_ids": [
+      "AT-B07"
+    ],
+    "integration_ids": [
+      "AT-E01"
+    ],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "存在しない終点や型の異なる関係を保存せず理由を示す",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-B08",
+    "title": "出来事の関係者とメモ",
+    "original_package_id": "WP04",
+    "batch_id": "RB02",
+    "status": "planned",
+    "baseline_assessment": "主要動作あり",
+    "retained_implementation": "出来事の参加者・役割・場所・物品・作者メモを個別に持つ。参加を知識へ自動変換しない。",
+    "review_gap": "全役割の複合操作は受入未完了。",
+    "required_behavior": "出来事ごとに関係者・役割・場所・物品・作者メモを関連付けること。",
+    "implementation_action": "出来事の参加・目撃・伝聞等の役割、場所、物品、作者メモを選択式で関連付ける。役割の追加を人物の知識取得へ自動変換しない。",
+    "code_paths": [
+      "src/ui/fieldSpecs.ts",
+      "src/ui/Fields.tsx",
+      "src/domain/conditions.ts"
+    ],
+    "acceptance_ids": [
+      "AT-B08"
+    ],
+    "integration_ids": [],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "登場、目撃、伝聞、知識取得を同じ関係として扱わない",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-B09",
+    "title": "人物関係図との連携",
+    "original_package_id": "WP08",
+    "batch_id": "RB03",
+    "status": "planned",
+    "baseline_assessment": "部分実装",
+    "retained_implementation": "作品共通の関係表・図と人物詳細の参照元一覧が同じIDを使う。",
+    "review_gap": "人物を中心にした専用関係図、年表と図の範囲・選択の連動が不足。",
+    "required_behavior": "人物別と作品全体の関係図を持ち、図・年表・詳細から同じ人物と関係を参照すること。",
+    "implementation_action": "人物を中心とする関係図と作品全体図を追加し、年表の選択・時点・絞り込み・詳細との往復を同じIDでつなぐ。戻ると元の位置を復元する。",
+    "code_paths": [
+      "src/ui/Lists.tsx",
+      "src/ui/EntityEditor.tsx"
+    ],
+    "acceptance_ids": [
+      "AT-B09"
+    ],
+    "integration_ids": [],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "図上の配置変更は人物の所属・時期・関係を変更しない",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-B10",
+    "title": "名前からのリンクと逆参照",
+    "original_package_id": "WP05",
+    "batch_id": "RB02",
+    "status": "planned",
+    "baseline_assessment": "部分実装",
+    "retained_implementation": "本文内のIDリンクと逆参照を保存・表示できる。",
+    "review_gap": "リンクは主にJSONで入力。移動先の段落位置を使わずentity IDだけ開く。文章編集で位置がずれる。",
+    "required_behavior": "本文・メモの確定リンクから人物等と段落へ移動し、対象から利用箇所へ戻れること。",
+    "implementation_action": "文章選択からIDリンクを作成し、Block/Lineと範囲を追跡する。改名・段落移動・分割後もリンク先の該当箇所へ移動でき、逆参照から元位置へ戻れるようにする。R01を先に直す。",
+    "code_paths": [
+      "src/ui/Fields.tsx",
+      "src/ui/EntityEditor.tsx",
+      "src/App.tsx"
+    ],
+    "acceptance_ids": [
+      "AT-B10"
+    ],
+    "integration_ids": [],
+    "finding_ids": [
+      "R01"
+    ],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "同名や一般語を自動で一人へ確定しない",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-B11",
+    "title": "場所と物品の一覧",
+    "original_package_id": "WP04",
+    "batch_id": "RB02",
+    "status": "planned",
+    "baseline_assessment": "主要動作あり",
+    "retained_implementation": "場所・物品の独立した一覧、説明、参照元と種類/個体の区別がある。物品効果の原子検査もある。",
+    "review_gap": "世界時点での所有履歴表示はB18側の未完了事項。",
+    "required_behavior": "人物とは別に場所と物品の一覧・詳細・メモ・参照元を持つこと。",
+    "implementation_action": "場所・物品を人物と別の一覧から扱い、説明・メモ・参照元・物品の種類と個体を編集する。所有履歴への入口を用意し、個体の重複所有を原子処理で拒否する。",
+    "code_paths": [
+      "src/ui/fieldSpecs.ts",
+      "src/domain/conditions.ts",
+      "src/ui/EntityEditor.tsx"
+    ],
+    "acceptance_ids": [
+      "AT-B11"
+    ],
+    "integration_ids": [],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "物品の種類と個体を区別し、一つの個体の複製で所有を二重化しない",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-B12",
+    "title": "専用ファイルへの出力と読み込み",
+    "original_package_id": "WP16",
+    "batch_id": "RB06",
+    "status": "planned",
+    "baseline_assessment": "部分実装",
+    "retained_implementation": ".scenario ZIPのmanifest、hash、事前検査、確認、復元を実装。空のブラウザー領域への復元を再確認。",
+    "review_gap": "全種類・共通世界・公開版・履歴・添付の総合往復、履歴増加後の出力上限、過去版移行は未完了。",
+    "required_behavior": "完全な作品を版付き専用ファイルへ出力し、事前検査・確認を経て読み戻せること。",
+    "implementation_action": "全種類・世界版・作者別案・公開版・復元に必要な履歴・添付を完全ファイルへ含める。空環境への同一性照合、破損拒否、追加・置換・統合の通常操作を完成させる。",
+    "code_paths": [
+      "src/storage/archive.ts",
+      "src/storage/store.ts",
+      "src/ui/WorkPage.tsx"
+    ],
+    "acceptance_ids": [
+      "AT-B12"
+    ],
+    "integration_ids": [
+      "AT-E01",
+      "AT-E07"
+    ],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "破損・未対応版・危険なパス・参照不整合は既存作品を変更せず拒否する",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-B13",
+    "title": "世界の出来事と提示順の分離",
+    "original_package_id": "WP10",
+    "batch_id": "RB04",
+    "status": "planned",
+    "baseline_assessment": "主要動作あり",
+    "retained_implementation": "event世界日時とchapter/sceneの順序・event参照を別に持つ。章内の場面並べ替えがある。",
+    "review_gap": "複雑な回想・章変更と開示評価の総合受入は未完了。",
+    "required_behavior": "世界の出来事と章・場面・提示順を別情報にし、一つの出来事を複数場面から参照すること。",
+    "implementation_action": "章・場面の提示順と世界の出来事を別々に編集する。一出来事の複数場面参照、回想の並べ替え、章移動を同じ参照で扱い、世界日時を不変にする。",
+    "code_paths": [
+      "src/ui/Lists.tsx",
+      "src/App.tsx",
+      "src/domain/types.ts"
+    ],
+    "acceptance_ids": [
+      "AT-B13"
+    ],
+    "integration_ids": [
+      "AT-E02"
+    ],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "場面の並べ替えを出来事の日付変更として保存しない",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-B14",
+    "title": "分岐・合流と条件・効果",
+    "original_package_id": "WP12",
+    "batch_id": "RB05",
+    "status": "planned",
+    "baseline_assessment": "部分実装",
+    "retained_implementation": "条件・効果・合流・終端、原子的な試読処理がある。",
+    "review_gap": "「含まれる」の保存と手動選択のfallback操作に不具合。不採用効果も実行される。",
+    "required_behavior": "選択肢・条件・効果・合流・意図した終端を編集できること。条件と効果の実行規則は動作契約に従うこと。",
+    "implementation_action": "条件・効果・選択肢・合流・意図した終端・不成立時の行き先を通常フォームで作る。R03/R04/R05を直し、全進行方式の選択前評価と原子効果を画面・試読・出力で一致させる。",
+    "code_paths": [
+      "src/domain/runtime.ts",
+      "src/ui/Fields.tsx",
+      "src/ui/Reader.tsx"
+    ],
+    "acceptance_ids": [
+      "AT-B14"
+    ],
+    "integration_ids": [
+      "AT-E03"
+    ],
+    "finding_ids": [
+      "R03",
+      "R04",
+      "R05"
+    ],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "選択肢ゼロや不正な効果は終端と区別し、途中までの更新を残さない",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-B15",
+    "title": "状態とフラグの管理",
+    "original_package_id": "WP11",
+    "batch_id": "RB05",
+    "status": "planned",
+    "baseline_assessment": "主要動作あり",
+    "retained_implementation": "状態の型・初期値・範囲、三値条件評価を共通処理へ分離。未知を偽にしない。",
+    "review_gap": "条件編集全体の受入と算出状態等の画面統合は未完了。",
+    "required_behavior": "状態の型・初期値・条件・更新を作品内で管理し、未定義と偽を区別すること。",
+    "implementation_action": "型付き状態辞書、初期値、範囲、算出式、参照元と変更元を編集できるようにする。未定義は不明と表示し、偽へ変換しない。型変更前に利用条件への影響を示す。",
+    "code_paths": [
+      "src/domain/conditions.ts",
+      "src/domain/model.ts",
+      "src/ui/Fields.tsx"
+    ],
+    "acceptance_ids": [
+      "AT-B15"
+    ],
+    "integration_ids": [
+      "AT-E03"
+    ],
+    "finding_ids": [
+      "R05"
+    ],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "未定義の値を暗黙に偽またはゼロにせず未確認と表示する",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-B16",
+    "title": "試し読みと操作の巻き戻し",
+    "original_package_id": "WP13",
+    "batch_id": "RB05",
+    "status": "planned",
+    "baseline_assessment": "部分実装",
+    "retained_implementation": "分岐試読、全状態の巻戻、抽選の復元、開始内容の固定がある。",
+    "review_gap": "手動選択でfallbackへ進む画面操作が欠ける。章順だけでの連続試読も不足。",
+    "required_behavior": "提示順または分岐を試し読みし、選択を戻すと対応する状態も戻せること。",
+    "implementation_action": "章順の通読と分岐試読の両方を完成させ、途中状態の作成・巻戻・経路保存をつなぐ。巻戻は知識・物品・既読・訪問・乱数・呼出位置も復元し、代替進行ボタンを使えるようにする。",
+    "code_paths": [
+      "src/domain/runtime.ts",
+      "src/ui/Reader.tsx"
+    ],
+    "acceptance_ids": [
+      "AT-B16"
+    ],
+    "integration_ids": [
+      "AT-E03"
+    ],
+    "finding_ids": [
+      "R04"
+    ],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "試し読みの操作で作者の正本や公開版を上書きしない",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-B17",
+    "title": "真実・人物の認識・プレイヤーの認識",
+    "original_package_id": "WP15",
+    "batch_id": "RB05",
+    "status": "planned",
+    "baseline_assessment": "部分実装",
+    "retained_implementation": "真実・証言・信念・仮説とholder、知識効果、プレイヤーのseenを分離。",
+    "review_gap": "人物別の認識と読者提示を時点・経路で並べる表示、嘘・誤解の発言候補検査が不足。",
+    "required_behavior": "作者が定める真実、証言、人物の認識、プレイヤーへの提示を分けて記録すること。",
+    "implementation_action": "作者の真実、証言、人物の信念、プレイヤーへの提示を時点と経路で並べる。知識の出所と取得箇所へ移動でき、嘘・誤解・意図した例外を根拠付き候補として扱う。",
+    "code_paths": [
+      "src/domain/types.ts",
+      "src/domain/conditions.ts",
+      "src/ui/Reader.tsx"
+    ],
+    "acceptance_ids": [
+      "AT-B17"
+    ],
+    "integration_ids": [
+      "AT-E04"
+    ],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "同じ場面に居るだけで真相を全員へ伝播しない",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-B18",
+    "title": "関係・所属・位置・所有の変化",
+    "original_package_id": "WP09",
+    "batch_id": "RB03",
+    "status": "planned",
+    "baseline_assessment": "登録・土台のみ",
+    "retained_implementation": "関係のvalidity、所有・移動の型とruntimeの物品更新がある。",
+    "review_gap": "時点/経路を選んで所属・関係・現在地・所有の候補を切り替える作品側の表示は未実装。",
+    "required_behavior": "関係・所属・場所・物品の所有を世界時点と経路の範囲に応じて表示すること。",
+    "implementation_action": "選択時点と経路から、所属・人物関係・現在地・所有の有効範囲を評価する作品側表示を追加する。矛盾や不確かな時点は候補と根拠を示し、一つの確定値にしない。",
+    "code_paths": [
+      "src/domain/types.ts",
+      "src/domain/conditions.ts",
+      "src/ui/Lists.tsx"
+    ],
+    "acceptance_ids": [
+      "AT-B18"
+    ],
+    "integration_ids": [],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "順序や経路が不明な場合は複数候補または不明とし唯一の状態を作らない",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-B19",
+    "title": "伏線と回収の管理",
+    "original_package_id": "WP15",
+    "batch_id": "RB05",
+    "status": "planned",
+    "baseline_assessment": "部分実装",
+    "retained_implementation": "伏線を独立登録し、手掛かり/回収を結び、通った経路の不足候補を表示。",
+    "review_gap": "提示時と異なる状態で再評価する不具合。作品・経路・期限別の未回収一覧と全経路検査が不足。",
+    "required_behavior": "伏線・手掛かり・回収の関連と状態を記録し、未回収を対象作品と経路に応じて一覧化すること。",
+    "implementation_action": "作品・経路・期限別の未回収一覧と方針別集計を追加する。R02を直し、探索した各経路へ提示時証跡の評価を組み込み、必須手掛かりを飛ばした根拠経路を開けるようにする。",
+    "code_paths": [
+      "src/domain/runtime.ts",
+      "src/ui/Reader.tsx",
+      "src/ui/fieldSpecs.ts"
+    ],
+    "acceptance_ids": [
+      "AT-B19"
+    ],
+    "integration_ids": [
+      "AT-E04"
+    ],
+    "finding_ids": [
+      "R02"
+    ],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "プレイヤーに提示しただけで理解・推理済みと判定しない",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-B20",
+    "title": "人物の目的と変化",
+    "original_package_id": "WP10",
+    "batch_id": "RB04",
+    "status": "planned",
+    "baseline_assessment": "部分実装",
+    "retained_implementation": "人物の目標と場面の目標・葛藤・結果を登録できる。",
+    "review_gap": "提示順・世界時点から人物の変化を横断して確認する表示は不足。",
+    "required_behavior": "人物の目的・葛藤・変化を場面と関連付け、提示順と時点から確認できること。",
+    "implementation_action": "人物の目的・葛藤・前後の変化を場面に結び、選んだ提示順と世界時点で確認する表示を追加する。未入力も許容し、関連場面へ移動できるようにする。",
+    "code_paths": [
+      "src/ui/fieldSpecs.ts",
+      "src/domain/types.ts"
+    ],
+    "acceptance_ids": [
+      "AT-B20"
+    ],
+    "integration_ids": [],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "役割を未入力の場面を作成不能にしない",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-B21",
+    "title": "不確かな日時と独自暦",
+    "original_package_id": "WP06",
+    "batch_id": "RB03",
+    "status": "planned",
+    "baseline_assessment": "部分実装",
+    "retained_implementation": "瞬間・期間・不確定・未定・相対日時、標準/繰返し暦の変換と循環拒否を実装。",
+    "review_gap": "独自暦の通常入力はJSON。年表の暦単位・年齢・制約連動の全受入は未完了。",
+    "required_behavior": "確定・期間・概算・未定・相対日時を扱い、独自暦で一貫して表示すること。",
+    "implementation_action": "確定・期間・概算・未定・相対日時と独自暦を選択式の入力にする。閏・存在しない日付・負時刻・相対制約の循環・固定日時との衝突を通常操作で説明する。",
+    "code_paths": [
+      "src/domain/time.ts",
+      "src/ui/Fields.tsx",
+      "src/ui/WorkPage.tsx"
+    ],
+    "acceptance_ids": [
+      "AT-B21"
+    ],
+    "integration_ids": [
+      "AT-E02"
+    ],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "循環する相対制約や存在しない日付は拒否または未解決とし、日時を捏造しない",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-B22",
+    "title": "クエスト・会話・設定資料",
+    "original_package_id": "WP12",
+    "batch_id": "RB05",
+    "status": "planned",
+    "baseline_assessment": "部分実装",
+    "retained_implementation": "quest、会話、lore、状態・分岐への参照と遷移検査の土台がある。",
+    "review_gap": "クエストや会話をまとめて構築・試読する専用操作、全種類の未完成一覧が不足。",
+    "required_behavior": "クエスト、会話、世界設定を場面・人物・条件へ結び付け、未完了箇所を一覧にできること。",
+    "implementation_action": "クエスト・会話・設定資料を専用の構成画面から組み立て、人物・場面・条件・報酬・状態遷移へ接続する。未完成の入口・出口・参照を種類をまたいで一覧化する。",
+    "code_paths": [
+      "src/ui/fieldSpecs.ts",
+      "src/domain/conditions.ts",
+      "src/ui/Lists.tsx"
+    ],
+    "acceptance_ids": [
+      "AT-B22"
+    ],
+    "integration_ids": [],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "クエストの完了と本文・実装の完成を一つの状態に統合しない",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-B23",
+    "title": "安定ID・保存・取り消し・履歴",
+    "original_package_id": "WP03",
+    "batch_id": "RB06",
+    "status": "planned",
+    "baseline_assessment": "主要動作あり",
+    "retained_implementation": "安定ID、IndexedDBの原子保存、補償undo、単体/版復元を実装。故障注入試験が通る。",
+    "review_gap": "全障害・ブラウザー再起動・長時間・大量履歴の受入は未完了。",
+    "required_behavior": "改名・並べ替えで変わらないIDを使用し、端末内保存・取り消し・履歴・版の復元を提供すること。",
+    "implementation_action": "保存を変更レコード中心に改善し、履歴・取消・単体復元を維持する。再起動、長時間編集、容量不足、送信待ち、形式移行で同一操作の一部だけが保存されないことを確認する。",
+    "code_paths": [
+      "src/storage/store.ts",
+      "src/storage/storage.test.ts",
+      "src/ui/WorkPage.tsx"
+    ],
+    "acceptance_ids": [
+      "AT-B23"
+    ],
+    "integration_ids": [
+      "AT-E12"
+    ],
+    "finding_ids": [
+      "R06"
+    ],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "容量不足や書き込み失敗を保存済みと表示せず、元データを失わせない",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-B24",
+    "title": "検索・絞り込み・確認候補・タッチ操作",
+    "original_package_id": "WP05",
+    "batch_id": "RB02",
+    "status": "planned",
+    "baseline_assessment": "部分実装",
+    "retained_implementation": "日本語正規化検索、種類/状態絞込、参照検査、上限付き分岐解析と一覧代替がある。",
+    "review_gap": "索引、意味上の矛盾候補、保存検索の再適用・一括編集、全操作の実端末受入が不足。",
+    "required_behavior": "全文検索と複合絞り込みを持ち、参照切れや矛盾候補を根拠付きで提示すること。全編集にはタッチと一覧での操作方法を用意すること。",
+    "implementation_action": "全文・人物参加・章・状態・伏線等の複合検索を保存・再適用する。参照切れ、時点の居場所、移動、所有、条件の矛盾候補を根拠へ接続し、一覧・タップでも編集を完了できるようにする。",
+    "code_paths": [
+      "src/App.tsx",
+      "src/domain/runtime.ts",
+      "src/ui/components.tsx"
+    ],
+    "acceptance_ids": [
+      "AT-B24"
+    ],
+    "integration_ids": [],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "根拠が不足する候補を確定不具合と断定せず、色だけで意味を伝えない",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-F01",
+    "title": "思いつきを一時置きする",
+    "original_package_id": "WP04",
+    "batch_id": "RB02",
+    "status": "planned",
+    "baseline_assessment": "部分実装",
+    "retained_implementation": "短文メモ、attachment参照、変換元/変換先IDの登録欄がある。",
+    "review_gap": "音声メモの録音と人物/場面/伏線への変換操作は未実装。",
+    "required_behavior": "作品内の受け皿へ、短い文章・画像・音声メモを保存する。あとから人物、場面、伏線へ変換し、元のメモも参照できること。",
+    "implementation_action": "受け皿のメモへ文章・画像・音声を追加する。マイク許可がある環境では録音と保存を行い、拒否・非対応時は理由と代替を示す。人物・場面・伏線へ変換する操作に元メモへの参照と取消を付ける。",
+    "code_paths": [
+      "src/ui/fieldSpecs.ts",
+      "src/ui/WorkPage.tsx"
+    ],
+    "acceptance_ids": [
+      "AT-F01"
+    ],
+    "integration_ids": [],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "録音を拒否した端末でも文章を保存できる。変換は元メモを消さず、元と変換先のIDを結ぶ。",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-F02",
+    "title": "入力項目と雛形を変える",
+    "original_package_id": "WP04",
+    "batch_id": "RB02",
+    "status": "planned",
+    "baseline_assessment": "登録・土台のみ",
+    "retained_implementation": "templateと型付きcustomValuesのschema・JSON入力を用意。",
+    "review_gap": "作品別フォームへの雛形適用、項目非表示、既存値への影響を確認する通常操作がない。",
+    "required_behavior": "人物や場面の項目を作品ごとに追加する。必須にする項目、説明文、初期値を選べる。使わない項目や画面を隠すこと。",
+    "implementation_action": "作品別の項目・雛形の編集、必須・説明・初期値、項目と画面の非表示を通常フォームにする。既存値への適用差分を先に示し、非表示でもデータは保つ。",
+    "code_paths": [
+      "src/domain/model.ts",
+      "src/ui/EntityEditor.tsx",
+      "src/ui/fieldSpecs.ts"
+    ],
+    "acceptance_ids": [
+      "AT-F02"
+    ],
+    "integration_ids": [],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "必須項目の追加や型変更は既存値の影響を事前表示する。不適合値を黙って削除・変換しない。",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-F03",
+    "title": "人物以外の筋で並べる",
+    "original_package_id": "WP10",
+    "batch_id": "RB04",
+    "status": "planned",
+    "baseline_assessment": "登録・土台のみ",
+    "retained_implementation": "plot_threadグループとscene.threadIdsを持つ。",
+    "review_gap": "年表の縦軸を場所・章・筋などへ切り替える表示はない。",
+    "required_behavior": "縦軸を人物、組織、場所、章、恋愛や戦争などの物語の筋へ切り替える。一つの場面を複数の筋から参照すること。",
+    "implementation_action": "構成の縦軸を人物・組織・場所・章・物語の筋で切り替える。一場面の複数筋への表示は共通場面IDを参照し、片側からの編集を全表示へ反映する。",
+    "code_paths": [
+      "src/ui/fieldSpecs.ts",
+      "src/ui/Timeline.tsx"
+    ],
+    "acceptance_ids": [
+      "AT-F03"
+    ],
+    "integration_ids": [],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "筋から外しても本文を消さない。表示レーンと実際の参加関係は別に保持する。",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-F04",
+    "title": "場面の役割を記録する",
+    "original_package_id": "WP10",
+    "batch_id": "RB04",
+    "status": "planned",
+    "baseline_assessment": "主要動作あり",
+    "retained_implementation": "視点、目標、葛藤、結果、新情報、緊張度などを任意入力できる。",
+    "review_gap": "未入力を含めた実端末での全項目受入は未完了。",
+    "required_behavior": "視点、人物の目標、対立、結果、新しく分かること、前後で変わることを短く記録する。役割のない場面も許容すること。",
+    "implementation_action": "場面カードと本文の詳細で視点・目標・対立・結果・新情報・前後変化を編集する。空欄でも場面作成と順序変更を完了できることを全端末で確認する。",
+    "code_paths": [
+      "src/ui/fieldSpecs.ts",
+      "src/domain/model.ts"
+    ],
+    "acceptance_ids": [
+      "AT-F04"
+    ],
+    "integration_ids": [],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "未記入を許し、作者が定めた役割を評価の正解として自動判定しない。",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-F05",
+    "title": "構成の雛形と盛り上がりを見る",
+    "original_package_id": "WP10",
+    "batch_id": "RB04",
+    "status": "planned",
+    "baseline_assessment": "登録・土台のみ",
+    "retained_implementation": "構成の役割、緊張度・重要度、templateの保存形式を持つ。",
+    "review_gap": "構成雛形の適用と差分確認、進行順に沿う盛り上がりの図・集計がない。",
+    "required_behavior": "物語の構成を雛形から選び、自由に変更する。場面の緊張度や重要度を自分で付け、選んだ進行順で偏りを確認すること。",
+    "implementation_action": "構成雛形の選択・自由変更・適用差分・取消を実装する。作者入力の緊張度と重要度を選択経路または章順で描画し、数値未入力をゼロと断定しない。",
+    "code_paths": [
+      "src/ui/fieldSpecs.ts",
+      "src/ui/Lists.tsx"
+    ],
+    "acceptance_ids": [
+      "AT-F05"
+    ],
+    "integration_ids": [],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "雛形適用は別案または差分確認を経る。緊張度の未入力をゼロと集計せず算出母数を示す。",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-F06",
+    "title": "要約と本文を行き来する",
+    "original_package_id": "WP10",
+    "batch_id": "RB04",
+    "status": "planned",
+    "baseline_assessment": "部分実装",
+    "retained_implementation": "要約/本文/作者メモを分離し、本文確認と縦書き・ルビ表示、reader出力がある。",
+    "review_gap": "章順の通読、通常操作でのルビ付与・リンク作成、編集時の位置追従が不足。",
+    "required_behavior": "カードには要約、執筆画面には本文を出す。章や選んだ道を通して読む。要約、本文、作者メモを分け、小説用にはルビ・縦書きの確認表示も用意すること。",
+    "implementation_action": "要約カードと本文を同じ場面から往復し、章順・選んだ経路の通読を用意する。文章選択でルビ・リンクを付け、縦書き確認と注記の位置追従を完成させる。",
+    "code_paths": [
+      "src/ui/EntityEditor.tsx",
+      "src/ui/Fields.tsx",
+      "src/domain/exports.ts"
+    ],
+    "acceptance_ids": [
+      "AT-F06"
+    ],
+    "integration_ids": [],
+    "finding_ids": [
+      "R01"
+    ],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "要約の更新は本文を上書きしない。公開用読み物へ作者メモを混ぜず、ルビと縦書きでも元の段落IDを保つ。",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-F07",
+    "title": "年齢と生涯を表示する",
+    "original_package_id": "WP06",
+    "batch_id": "RB03",
+    "status": "planned",
+    "baseline_assessment": "登録・土台のみ",
+    "retained_implementation": "人物のbirth/deathと独自暦の計算部品を持つ。",
+    "review_gap": "選択時点の年齢・存命・所属、回想・復活の例外をまとめる表示がない。",
+    "required_behavior": "生年月日、寿命、状態の変化を出来事と結ぶ。年表で選んだ時点の年齢、存命、所属を表示する。独自暦で計算すること。",
+    "implementation_action": "独自暦の誕生・死亡・状態変化と出来事を結び、選択時点の年齢・存命・所属を表示する。範囲しか分からない誕生日や復活の例外を、不明・範囲・理由付きで表示する。",
+    "code_paths": [
+      "src/ui/fieldSpecs.ts",
+      "src/domain/time.ts"
+    ],
+    "acceptance_ids": [
+      "AT-F07"
+    ],
+    "integration_ids": [],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "生年月日や暦の対応が未定なら年齢は範囲または不明とする。回想・復活の例外を時期と経路付きで記録する。",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-F08",
+    "title": "時間差と前後関係を守る",
+    "original_package_id": "WP06",
+    "batch_id": "RB03",
+    "status": "planned",
+    "baseline_assessment": "登録・土台のみ",
+    "retained_implementation": "相対日時と日時制約の型・整合検査がある。",
+    "review_gap": "変更前の連動先、固定日時との衝突、連動移動の選択・原子確定と取消の画面がない。",
+    "required_behavior": "「先に起こる」「終了後から何日以上」「同時に始まる」を登録する。日付変更前に連動先を見せ、移動か指摘だけか選ぶこと。",
+    "implementation_action": "前後・同時・最小時間差を通常フォームで登録する。日時変更前に連動先と固定日時の衝突を示し、連動移動か指摘だけか選んで一括確定・取消する。",
+    "code_paths": [
+      "src/domain/time.ts",
+      "src/ui/fieldSpecs.ts"
+    ],
+    "acceptance_ids": [
+      "AT-F08"
+    ],
+    "integration_ids": [],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "循環制約・固定日時との衝突は影響一覧を示す。承認された可動日時だけを一括変更し、取消時は全変更を戻す。",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-F09",
+    "title": "一つの世界を複数作品で使う",
+    "original_package_id": "WP09",
+    "batch_id": "RB03",
+    "status": "planned",
+    "baseline_assessment": "登録・土台のみ",
+    "retained_implementation": "固定された共通世界参照の型、保存・ZIP検証処理を持つ。",
+    "review_gap": "作品側で世界版を選択・更新し、影響先を一覧にする通常操作がない。",
+    "required_behavior": "共通設定を参照しながら、作品ごとの開始時期、採用設定、登場人物、章を管理する。改訂した設定の影響先を一覧にすること。",
+    "implementation_action": "共通世界の固定版を作品で選択し、採用設定・開始時期・登場人物を管理する。世界の改訂差分、影響先、適用版を確認し、旧作品と公開版には自動反映しない。",
+    "code_paths": [
+      "src/domain/types.ts",
+      "src/storage/archive.ts",
+      "src/storage/store.ts"
+    ],
+    "acceptance_ids": [
+      "AT-F09"
+    ],
+    "integration_ids": [
+      "AT-E09"
+    ],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "共通設定の公開版は不変とし作品が参照する版を固定する。続編の改訂を旧作へ自動適用しない。",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-F10",
+    "title": "地図と年表を連動する",
+    "original_package_id": "WP09",
+    "batch_id": "RB03",
+    "status": "planned",
+    "baseline_assessment": "登録・土台のみ",
+    "retained_implementation": "map、場所、親地図、ピン座標の型と入力欄がある。",
+    "review_gap": "地図の描画、ピン選択、年表との往復・絞込操作がない。",
+    "required_behavior": "地図の場所から出来事を絞り、出来事から地図の位置へ移動する。世界→地方→街→建物の地図をつなぐこと。",
+    "implementation_action": "地図画像とピンを描画し、世界→地方→街→建物の階層と検索可能な場所一覧を用意する。ピンから出来事を絞り、年表の出来事から場所へ移動する。地図なしでも編集可能にする。",
+    "code_paths": [
+      "src/ui/fieldSpecs.ts",
+      "src/domain/model.ts"
+    ],
+    "acceptance_ids": [
+      "AT-F10"
+    ],
+    "integration_ids": [],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "地図画像がない場合は場所の一覧を同等に使う。地図階層の循環と無効な座標参照を拒否する。",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-F11",
+    "title": "移動と場所の変化を記録する",
+    "original_package_id": "WP09",
+    "batch_id": "RB03",
+    "status": "planned",
+    "baseline_assessment": "登録・土台のみ",
+    "retained_implementation": "移動経路、場所階層、時間幅・validityを登録できる。",
+    "review_gap": "移動所要時間の確認候補と、破壊・再建・支配・改名の時点別表示がない。",
+    "required_behavior": "登録した移動経路、手段、所要時間から時期を確認する。場所の改名、破壊、再建、支配組織の変化も時点で切り替えること。",
+    "implementation_action": "移動経路・手段・所要時間から居場所と到着時期の確認候補を出す。場所の改名・破壊・再建・支配組織を時点で切り替え、未登録の移動時間を断定しない。",
+    "code_paths": [
+      "src/ui/fieldSpecs.ts",
+      "src/domain/types.ts"
+    ],
+    "acceptance_ids": [
+      "AT-F11"
+    ],
+    "integration_ids": [],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "移動手段・距離・所要時間の根拠がない場合は未確認とする。時点による改名や支配の違いを恒久上書きしない。",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-F12",
+    "title": "家系・別名・正体を扱う",
+    "original_package_id": "WP09",
+    "batch_id": "RB03",
+    "status": "planned",
+    "baseline_assessment": "部分実装",
+    "retained_implementation": "親子などの関係型、別名/認識者の型、作者指定の公開名投影がある。",
+    "review_gap": "家系専用表示、時期/認識者による表示名選択、実サーバーを含む正体漏れ受入が不足。",
+    "required_behavior": "家系、師弟、血統などを専用表示にする。同じ人物の本名・偽名を時期と認識者に結び付け、作者向けと公開向けの名前を分けること。",
+    "implementation_action": "家系・師弟・血統の専用図と関係表を作り、本名・偽名を時期と認識者に応じて切り替える。公開名の選択を限定投影へ渡し、秘密の家系・本名・別名が検索にも残らないようにする。",
+    "code_paths": [
+      "src/domain/model.ts",
+      "src/domain/projection.ts",
+      "src/ui/Lists.tsx"
+    ],
+    "acceptance_ids": [
+      "AT-F12"
+    ],
+    "integration_ids": [
+      "AT-E05"
+    ],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "家系は関係種類と根拠を持つ。正体の公開前は本名だけでなく、索引・画像名・リンク・親子関係からも漏らさない。",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-F13",
+    "title": "図を章・場面・会話へ分ける",
+    "original_package_id": "WP12",
+    "batch_id": "RB05",
+    "status": "planned",
+    "baseline_assessment": "部分実装",
+    "retained_implementation": "親子flow_graph、入口/出口、呼出スタックの試読処理がある。",
+    "review_gap": "画面は平坦なノード一覧。章→場面→会話の図の掘下げ、上位での未完了件数表示が不足。",
+    "required_behavior": "大きな図では章だけを表示し、選ぶと場面、さらに会話へ掘り下げる。小さな図の入口と出口を明示してつなぐこと。",
+    "implementation_action": "分岐図を章→場面→会話へ掘り下げ、入口・出口・親へ戻る操作を付ける。上位で未完成・エラー件数を集計し、折りたたんでも不足を隠さない。",
+    "code_paths": [
+      "src/domain/runtime.ts",
+      "src/ui/Lists.tsx"
+    ],
+    "acceptance_ids": [
+      "AT-F13"
+    ],
+    "integration_ids": [],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "下位図の未解決入口・出口・条件エラーは上位図の件数に反映し、折りたたみでエラーを隠さない。",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-F14",
+    "title": "発生のきっかけと条件を分ける",
+    "original_package_id": "WP12",
+    "batch_id": "RB05",
+    "status": "planned",
+    "baseline_assessment": "主要動作あり",
+    "retained_implementation": "明示trigger、once/repeat、deadline、同一occurrenceの重複防止を実装し試験済み。",
+    "review_gap": "trigger入力はJSON中心。全端末での構築・期限エラー操作は未完了。",
+    "required_behavior": "場所に入る、話しかける、戦闘に勝つなどのきっかけと、所持品・生存などの条件を別に登録する。一度だけ、繰り返し、期限も扱うこと。",
+    "implementation_action": "場所への進入・会話・戦闘結果等のきっかけを条件と別のフォームで登録する。発生番号、単発・繰り返し・有効範囲・期限を試読入力につなげ、同じ発生の再送で二重効果を起こさない。",
+    "code_paths": [
+      "src/domain/runtime.ts",
+      "tests/runtime.test.ts",
+      "src/ui/Reader.tsx"
+    ],
+    "acceptance_ids": [
+      "AT-F14"
+    ],
+    "integration_ids": [],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "条件評価だけでは効果を実行しない。自動発火は明示設定とし、重複した同一トリガーでは一度だけ規則を守る。",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-F15",
+    "title": "途中状態から試し読みする",
+    "original_package_id": "WP13",
+    "batch_id": "RB05",
+    "status": "planned",
+    "baseline_assessment": "部分実装",
+    "retained_implementation": "checkpoint/開始状態の固定、版不一致拒否、不足値のunknown、巻戻を実装。",
+    "review_gap": "途中開始状態を文章や選択で組み立てる操作と版移行が不足。runtimeStateはJSON入力。",
+    "required_behavior": "所持品、人物の状態、既読情報などをまとめた開始状態を保存する。そこから試し読みし、選択を戻すと状態も戻すこと。",
+    "implementation_action": "所持品・知識・既読・状態を選択式で組み立て、途中開始点へ保存する。作品版が違う開始点は差分・移行・再作成を案内し、通し確認の証拠とは区別する。",
+    "code_paths": [
+      "src/domain/runtime.ts",
+      "src/ui/Reader.tsx",
+      "src/ui/fieldSpecs.ts"
+    ],
+    "acceptance_ids": [
+      "AT-F15"
+    ],
+    "integration_ids": [],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "版不一致の開始状態は移行確認が必要。不足値は未確認とし、途中開始の証跡を通しプレイの証跡として扱わない。",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-F16",
+    "title": "選択前後と別の道を比べる",
+    "original_package_id": "WP13",
+    "batch_id": "RB05",
+    "status": "planned",
+    "baseline_assessment": "部分実装",
+    "retained_implementation": "直前の状態差分、diffRuntimeStates、合流時の状態保持がある。",
+    "review_gap": "二つの保存経路を選んで状態を並べて比較し、変更元へ移動する画面がない。",
+    "required_behavior": "試し読みの前後で、知識、好感度、所持品など何が変わったかを表示する。同じ場面に到達した別の道の状態とも比べること。",
+    "implementation_action": "保存した二経路を選び、同じ到達点の知識・好感度・持ち物・既読等を並べて比較する。変化した理由と処理・場面へ移動し、合流だけでは差を消さない。",
+    "code_paths": [
+      "src/domain/runtime.ts",
+      "src/ui/Reader.tsx"
+    ],
+    "acceptance_ids": [
+      "AT-F16"
+    ],
+    "integration_ids": [
+      "AT-E03"
+    ],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "合流時は自動初期化しない。差を解消するには明示効果を登録し、差分から変更元へ戻れるようにする。",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-F17",
+    "title": "確認した経路を保存する",
+    "original_package_id": "WP14",
+    "batch_id": "RB05",
+    "status": "planned",
+    "baseline_assessment": "部分実装",
+    "retained_implementation": "固定snapshotの経路保存/再実行、種類別coverage、版変更の再確認表示がある。",
+    "review_gap": "宣言した回帰経路集合の管理、台詞と場面の提示連携、変更後の影響一覧が不足。",
+    "required_behavior": "選択の履歴と開始状態、作品の版を保存して再実行する。通った場面・選択肢と未確認箇所を一覧にし、変更後の再確認に使うこと。",
+    "implementation_action": "確認用の経路集合を登録し、開始状態・版・経路・条件結果・乱数を保存して再実行する。本文・条件・素材等の変更影響を理由付きで示し、台詞・場面・選択肢別の確認範囲を表示する。",
+    "code_paths": [
+      "src/domain/runtime.ts",
+      "src/ui/Reader.tsx"
+    ],
+    "acceptance_ids": [
+      "AT-F17"
+    ],
+    "integration_ids": [
+      "AT-E10"
+    ],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "台詞到達率・選択肢到達率・条件結果の網羅率を別々に算出する。版変更後の経路は再確認待ちとする。",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-F18",
+    "title": "条件と行き止まりを検査する",
+    "original_package_id": "WP14",
+    "batch_id": "RB05",
+    "status": "planned",
+    "baseline_assessment": "主要動作あり",
+    "retained_implementation": "参照・進行不可・未到達候補、証人経路、外部unknown・無制限ループ・上限を実装。",
+    "review_gap": "大規模・全入口/版の総合受入は未完了。これだけで伏線の全経路評価にはならない。",
+    "required_behavior": "参照切れ、出られない繰り返し、選択肢の消失、到達できない終わりの候補を調べる。根拠になる条件と経路を添えること。",
+    "implementation_action": "全入口を対象に参照切れ・進行不能・到達候補・無制限ループを探索し、条件と根拠経路を開けるようにする。大規模では進捗・取消・打切り・外部不明を表示し、安全の証明へ読み替えない。",
+    "code_paths": [
+      "src/domain/runtime.ts",
+      "tests/runtime.test.ts"
+    ],
+    "acceptance_ids": [
+      "AT-F18"
+    ],
+    "integration_ids": [
+      "AT-E10"
+    ],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "外部値・無制限ループ・探索打切りは未確認とする。不具合候補には再現経路または不成立の根拠を添える。",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-F19",
+    "title": "共通の会話や場面を再利用する",
+    "original_package_id": "WP12",
+    "batch_id": "RB05",
+    "status": "planned",
+    "baseline_assessment": "登録・土台のみ",
+    "retained_implementation": "reuseのreference/clone/override型を保存し、未対応の参照/上書き試読は停止する。",
+    "review_gap": "共通場面の固定版解決、独立複製、フィールド上書き、適用版と影響の操作がない。",
+    "required_behavior": "参照して共通部分を使う、独立した複製を作る、一部だけ変える、を選ぶ。再利用先と変更の影響を一覧にすること。",
+    "implementation_action": "共通場面を固定版参照・独立複製・一部上書きから選ぶ通常操作と実行処理を追加する。内部ID対応、参照版の更新、上書き衝突と変更先を確認し、複製先を元編集で変えない。",
+    "code_paths": [
+      "src/domain/runtime.ts",
+      "src/ui/fieldSpecs.ts"
+    ],
+    "acceptance_ids": [
+      "AT-F19"
+    ],
+    "integration_ids": [],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "参照・複製・差分上書きの方式を保存する。元を削除する前に全参照先を示し、更新の適用範囲を固定する。",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-F20",
+    "title": "短い反応と周回を扱う",
+    "original_package_id": "WP13",
+    "batch_id": "RB05",
+    "status": "planned",
+    "baseline_assessment": "部分実装",
+    "retained_implementation": "訪問条件、抽選種/位置、Backの再現、周回と全初期化、across_runs持越しがある。",
+    "review_gap": "短い反応の系列を作る専用操作と場面/章scopeの自動reset結合が不足。",
+    "required_behavior": "条件で変わる短い台詞、初回と再訪、順番に出す反応、抽選する反応を登録する。周回で残す情報と初期化する情報を選ぶこと。",
+    "implementation_action": "初回・再訪・順番・抽選の短い反応を通常操作で構築する。場面・章・今回のプレイ・周回をまたぐ情報の初期化を実行へ接続し、巻戻で抽選と訪問も復元する。",
+    "code_paths": [
+      "src/domain/runtime.ts",
+      "src/ui/Reader.tsx"
+    ],
+    "acceptance_ids": [
+      "AT-F20"
+    ],
+    "integration_ids": [
+      "AT-E10"
+    ],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "乱数種・抽選位置・既読・周回持越しを保存する。抽選候補ゼロを無言で進行せず不成立時の処理に従う。",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-F21",
+    "title": "台詞に変わらない番号を付ける",
+    "original_package_id": "WP19",
+    "batch_id": "RB07",
+    "status": "planned",
+    "baseline_assessment": "部分実装",
+    "retained_implementation": "台詞/選択肢の固定ID、原文hash、コピーと編集の基本データ契約がある。",
+    "review_gap": "台詞の分割/統合操作と元→新ID対応履歴がない。本文内注記の位置追従も不具合。",
+    "required_behavior": "台詞と選択肢の一つずつに、表示しない番号を付ける。文章を変更しても翻訳、音声、ゲーム側の参照との対応を保つこと。",
+    "implementation_action": "台詞・選択肢の改名・並べ替えではIDを保つ。分割・統合・複製では新IDと旧→新対応履歴を保存し、翻訳・音声・外部参照の再確認対象を一括表示する。",
+    "code_paths": [
+      "src/domain/production.ts",
+      "src/domain/types.ts",
+      "src/ui/Fields.tsx"
+    ],
+    "acceptance_ids": [
+      "AT-F21"
+    ],
+    "integration_ids": [
+      "AT-E08"
+    ],
+    "finding_ids": [
+      "R01"
+    ],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "既存台詞の編集はID維持、コピーは新ID、分割は元から二つの新IDへの対応履歴を残す。IDの手動再利用を拒否する。",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-F22",
+    "title": "演出と必要な素材を結ぶ",
+    "original_package_id": "WP20",
+    "batch_id": "RB07",
+    "status": "planned",
+    "baseline_assessment": "登録・土台のみ",
+    "retained_implementation": "cue、話者、表情、素材、待機ms、仮/確定素材を保存・確認できる。",
+    "review_gap": "本文と連動する演出表示、足りない素材と仮素材の横断一覧、素材差替えの全影響が不足。",
+    "required_behavior": "話者、表情、立ち絵、背景、音楽、効果音、間、カメラなどを台詞や場面に結ぶ。仮素材・完成素材と不足を確認すること。",
+    "implementation_action": "台詞・場面と話者、表情、立ち絵、背景、音楽、効果音、間、カメラを並べて編集・確認する。仮・完成・不足素材の横断一覧と素材版の差替え影響を作る。",
+    "code_paths": [
+      "src/ui/fieldSpecs.ts",
+      "src/ui/AssetPreview.tsx"
+    ],
+    "acceptance_ids": [
+      "AT-F22"
+    ],
+    "integration_ids": [],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "欠落素材と仮素材を別状態にし、素材がなくても本文を読める。素材IDの取り替えで台詞IDを変えない。",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-F23",
+    "title": "翻訳と音声の見直しを管理する",
+    "original_package_id": "WP19",
+    "batch_id": "RB07",
+    "status": "planned",
+    "baseline_assessment": "部分実装",
+    "retained_implementation": "翻訳/収録の原台詞参照・言語・hash・工程、原文変更時needs_review、localization出力がある。",
+    "review_gap": "分割履歴、担当/確認者別の操作、原文hashを通常操作で確認・承認する導線が不足。",
+    "required_behavior": "言語ごとの本文と用語、収録メモ、音声を対応させる。元の文章を変えたら翻訳・音声を見直し対象にし、担当別に書き出すこと。",
+    "implementation_action": "言語別原稿、担当、確認者、収録メモ、音声を台詞IDに対応させる。原文内容・分割対応・現在の内容指紋を確認して承認する導線と担当別出力を完成させる。",
+    "code_paths": [
+      "src/domain/production.ts",
+      "src/domain/exports.ts",
+      "src/ui/fieldSpecs.ts"
+    ],
+    "acceptance_ids": [
+      "AT-F23"
+    ],
+    "integration_ids": [
+      "AT-E08"
+    ],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "原文の内容ハッシュが変わった場合のみ依存成果物を確認待ちにする。音声・翻訳の版と確認者を保持する。",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-F24",
+    "title": "目的に応じて書き出す",
+    "original_package_id": "WP22",
+    "batch_id": "RB08",
+    "status": "planned",
+    "baseline_assessment": "部分実装",
+    "retained_implementation": "完全保存・reader・runtime JSON・翻訳・相談・簡易試遊ZIPを実装。未対応機能を拒否する。",
+    "review_gap": "簡易試遊には物品/知識/外部値/呼出等の制限あり。全profileの総合互換受入は未完了。",
+    "required_behavior": "保存用の完全な作品、読みやすい資料、選択して読める簡易体験版、ゲーム制作向けの構造化データを別々に出力すること。",
+    "implementation_action": "完全保存・読み物・簡易体験・汎用実行データ・翻訳/制作出力を目的別に完成させる。簡易体験はv1の内部条件・物品・知識・共通場面を共有処理で扱い、外部処理だけ仮値または説明付き停止にする。",
+    "code_paths": [
+      "src/domain/exports.ts",
+      "docs/implementation/EXPORT_COMPATIBILITY.md"
+    ],
+    "acceptance_ids": [
+      "AT-F24"
+    ],
+    "integration_ids": [],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "完全保存・公開資料・試遊・制作データの各プロファイルを選択する。未対応の条件や外部コマンドは制作出力を拒否し説明する。",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-F25",
+    "title": "採用状態と別案を記録する",
+    "original_package_id": "WP10",
+    "batch_id": "RB04",
+    "status": "planned",
+    "baseline_assessment": "部分実装",
+    "retained_implementation": "確定/仮/確認待ち/不採用/別案の状態、不変snapshotと出力除外がある。",
+    "review_gap": "作者別案の分離・比較・正本選択の画面が不足。不採用effectは試読で実行される。",
+    "required_behavior": "確定、仮、要確認、没、別案を設定する。確定稿を保って別の展開を試す。作者の別案とゲーム内で選べる分岐を別に表示すること。",
+    "implementation_action": "作者別案を作成・分離・差分比較・採用し、正本を明示選択できるようにする。確定・仮・確認待ち・不採用の扱いを試読と出力で一致させ、ゲーム内分岐と別案を区別する。",
+    "code_paths": [
+      "src/ui/EntityEditor.tsx",
+      "src/domain/projection.ts",
+      "src/domain/runtime.ts"
+    ],
+    "acceptance_ids": [
+      "AT-F25"
+    ],
+    "integration_ids": [],
+    "finding_ids": [
+      "R03"
+    ],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "作者別案とゲーム内経路を別ID・別種として保存する。没・仮の情報が正本の制作出力へ混入しない。",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-F26",
+    "title": "変更で見直す箇所を示す",
+    "original_package_id": "WP05",
+    "batch_id": "RB02",
+    "status": "planned",
+    "baseline_assessment": "部分実装",
+    "retained_implementation": "ID逆参照、削除影響・統合preview、翻訳/収録/媒体への変更確認待ちがある。",
+    "review_gap": "設定・条件・伏線・素材を含む意味上の見直し候補一覧と理由付けの通常操作が不足。",
+    "required_behavior": "設定変更後、関連する場面、条件、伏線、翻訳、素材を確認待ちにする。直接の参照と意味上の関連を区別し、変更理由を残すこと。",
+    "implementation_action": "直接参照と作者が明示した意味上の関連から、場面・条件・伏線・翻訳・音声・素材の見直し一覧を生成する。理由と対象版、対応済み・再確認済みを残し、自動判断を正解と扱わない。",
+    "code_paths": [
+      "src/domain/maintenance.ts",
+      "src/domain/production.ts",
+      "src/ui/EntityEditor.tsx"
+    ],
+    "acceptance_ids": [
+      "AT-F26"
+    ],
+    "integration_ids": [],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "ID参照の改名反映と意味の見直しを区別する。見直し候補を確定修正として本文へ適用しない。",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-F27",
+    "title": "未リンクの名前と参照元を探す",
+    "original_package_id": "WP05",
+    "batch_id": "RB02",
+    "status": "planned",
+    "baseline_assessment": "登録・土台のみ",
+    "retained_implementation": "型付きのIDリンクとcollectReferencesによる逆参照がある。",
+    "review_gap": "本文の名前/別名から候補を作り、同名を選ぶ操作と候補除外の保存がない。",
+    "required_behavior": "本文内の名前・別名からリンク候補を作り、同名なら選択する。設定を開くと使用箇所を表示する。不要な候補は除外できること。",
+    "implementation_action": "本文の名前・読み・別名から未リンク候補を作り、同名を選んで確定リンクにする。一般語の候補除外を保存し、逆参照から本文の正しい箇所へ戻る。",
+    "code_paths": [
+      "src/domain/model.ts",
+      "src/ui/Fields.tsx",
+      "src/ui/EntityEditor.tsx"
+    ],
+    "acceptance_ids": [
+      "AT-F27"
+    ],
+    "integration_ids": [],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "リンク候補の除外を保持し、同名では識別情報を示す。普通の単語や引用資料を無断で置換しない。",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-F28",
+    "title": "資料と設定の根拠を残す",
+    "original_package_id": "WP20",
+    "batch_id": "RB07",
+    "status": "planned",
+    "baseline_assessment": "部分実装",
+    "retained_implementation": "安全な画像/音声/PDF添付、Web URL、出所/解釈/参照箇所の登録がある。PDFは埋込実行しない。",
+    "review_gap": "動画や全資料形式の追加・確認、取得日や再配布に関する全画面連携は未完了。",
+    "required_behavior": "画像、音声、動画、PDF、Web資料を設定や場面へ結ぶ。参照した箇所、日付、作者の解釈を記録すること。",
+    "implementation_action": "画像・音声・動画・PDF・Web資料を通常操作で追加し、参照箇所・取得日・出所・作者の解釈・再配布可否を保存する。未取得・非対応形式は理由を示し、能動内容を実行しない。",
+    "code_paths": [
+      "src/domain/attachments.ts",
+      "src/ui/AssetPreview.tsx",
+      "src/ui/fieldSpecs.ts"
+    ],
+    "acceptance_ids": [
+      "AT-F28"
+    ],
+    "integration_ids": [],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "添付と外部URLを区別し、参照箇所・取得日・解釈を分ける。外部資料の再配布権限がない場合はリンクと書誌情報だけを出す。",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-F29",
+    "title": "指摘と次の作業を場面に結ぶ",
+    "original_package_id": "WP18",
+    "batch_id": "RB09",
+    "status": "planned",
+    "baseline_assessment": "部分実装",
+    "retained_implementation": "reviewレコードの対象版、引用、本文、工程、対応内容の型と入力がある。",
+    "review_gap": "関係線からの指摘導線、対象段落削除後の位置追跡、共有レビューと作業への接続が不足。",
+    "required_behavior": "人物、台詞、場面、関係線へコメントや確認事項を付ける。未対応、修正済み、再確認済みを区別する。担当者は任意とすること。",
+    "implementation_action": "人物・台詞・段落・場面・関係線から指摘を作り、対象版と引用位置を保存する。移動・削除後は対応先か位置不明を表示し、指摘から制作作業を作成して対応・再確認を追う。",
+    "code_paths": [
+      "src/ui/fieldSpecs.ts",
+      "src/domain/model.ts"
+    ],
+    "acceptance_ids": [
+      "AT-F29"
+    ],
+    "integration_ids": [],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "指摘時の対象版と引用範囲を保持する。対象段落が削除されても元指摘は残し、最新位置は不明と表示する。",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-F30",
+    "title": "秘密を隠して確認してもらう",
+    "original_package_id": "WP18",
+    "batch_id": "RB09",
+    "status": "planned",
+    "baseline_assessment": "部分実装",
+    "retained_implementation": "作者指定の公開名/文章・ID変換・allowlist投影と限定範囲出力がある。",
+    "review_gap": "実Auth/membership/RLS/Storageと閲覧/指摘/編集/管理の共有画面はない。直接APIの漏れ試験も未実行。",
+    "required_behavior": "読むだけ、指摘する、編集する範囲を選ぶ。章・人物・分岐に限定した資料を作り、名前、地図、リンク先も同じ公開範囲で扱うこと。",
+    "implementation_action": "閲覧・指摘・編集・管理の範囲と期限を選択できる共有画面を作る。正本を送らず許可した投影だけ渡し、本文・検索・索引・図・地図・素材・リンク・件数を同じ公開範囲にする。",
+    "code_paths": [
+      "src/domain/projection.ts",
+      "src/sync/README.md",
+      "src/ui/WorkPage.tsx"
+    ],
+    "acceptance_ids": [
+      "AT-F30"
+    ],
+    "integration_ids": [
+      "AT-E05"
+    ],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "権限はサーバー側と出力時に検証する。非公開データを送ってCSSで隠す方式を禁止し、検索・素材・参照数にも同じ投影を適用する。",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-F31",
+    "title": "画面の広さに合わせて編集する",
+    "original_package_id": "WP02",
+    "batch_id": "RB02",
+    "status": "planned",
+    "baseline_assessment": "部分実装",
+    "retained_implementation": "幅別ナビ、一覧/詳細切替、広い画面の一覧＋詳細を実装。5幅の画面試験が通る。",
+    "review_gap": "実iPad分割・縦横回転・ソフトキーボード時の全編集は未検証。",
+    "required_behavior": "広い画面は一覧・図・詳細、iPadは二画面、スマートフォンは図と詳細を切り替える。縦横と分割表示にも合わせること。",
+    "implementation_action": "PCの三領域、iPadの二領域、狭い画面の切替を全編集画面に適用する。画面分割・縦横回転・ソフトキーボードでも入力・焦点・選択・戻り位置を保つ。",
+    "code_paths": [
+      "src/styles.css",
+      "src/App.tsx",
+      "tests/e2e/editor.spec.ts"
+    ],
+    "acceptance_ids": [
+      "AT-F31"
+    ],
+    "integration_ids": [
+      "AT-E01",
+      "AT-E11"
+    ],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "端末の幅で表示を切り替え、重要操作をPCに限定しない。分割表示やソフトキーボードで確定ボタンが隠れない。",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-F32",
+    "title": "指・マウス・キーボードに対応する",
+    "original_package_id": "WP02",
+    "batch_id": "RB02",
+    "status": "planned",
+    "baseline_assessment": "部分実装",
+    "retained_implementation": "通常ボタン/入力と順序の上下ボタン、関係表からの始点/終点選択がある。",
+    "review_gap": "ドラッグ併用、まとめて編集、図の整列/配置操作、全キーボード操作と文字拡大の受入が不足。",
+    "required_behavior": "ドラッグ、タップでの始点と終点指定、一覧からの選択を併用する。まとめて編集、整列、検索、移動をキーボードでも行えること。",
+    "implementation_action": "ドラッグにタップ・一覧・キーボードの代替を持たせ、図の始点/終点、整列、配置、順序、一括編集を完成させる。図外のページスクロールと図内移動を分ける。",
+    "code_paths": [
+      "src/ui/Lists.tsx",
+      "src/ui/Fields.tsx",
+      "src/styles.css"
+    ],
+    "acceptance_ids": [
+      "AT-F32"
+    ],
+    "integration_ids": [
+      "AT-E01",
+      "AT-E11"
+    ],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "ドラッグ・ホバー・右クリック・長押しの各操作は常時アクセスできるボタンと一覧で代替する。ブラウザーの文字拡大を妨げない。",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-F33",
+    "title": "表示と作業の続きへ戻る",
+    "original_package_id": "WP02",
+    "batch_id": "RB02",
+    "status": "planned",
+    "baseline_assessment": "登録・土台のみ",
+    "retained_implementation": "最終作品/配色のlocalStorage、saved view格納API、検索条件のcollection作成を持つ。",
+    "review_gap": "保存検索の再適用、お気に入り、最近開いた対象、選択/図配置/範囲の再開をUIで使っていない。",
+    "required_behavior": "名前を付けた絞り込みや配置を保存する。最近開いた対象、お気に入り、図の位置、選択中の場面を保持する。表示設定は端末別にすること。",
+    "implementation_action": "名前付き検索・図配置・年表範囲を保存して再適用する。お気に入り、最近開いた対象、選択中の場面、スクロールを端末別に復元し、作品の正本へ表示位置を混ぜない。",
+    "code_paths": [
+      "src/App.tsx",
+      "src/storage/store.ts",
+      "src/ui/fieldSpecs.ts"
+    ],
+    "acceptance_ids": [
+      "AT-F33"
+    ],
+    "integration_ids": [],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "内容と端末別の表示設定を分ける。削除された対象への再開リンクは履歴または復元案内へ移し白画面にしない。",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-F34",
+    "title": "通信なしの編集と同期を区別する",
+    "original_package_id": "WP17",
+    "batch_id": "RB09",
+    "status": "planned",
+    "baseline_assessment": "部分実装",
+    "retained_implementation": "端末内保存とoutboxを分離し、offlineキャッシュ再開を検査。UIは接続先未設定と表示する。",
+    "review_gap": "実端末間の送信/競合/解決/同期済み表示と認証がない。outboxの準備操作への自動変換も未接続。",
+    "required_behavior": "開いて保存済みの作品を通信なしでも編集できるようにする。端末内保存済み、送信待ち、同期済み、食い違いありを表示すること。",
+    "implementation_action": "実際の接続先で保存コマンドから送信待ちを準備し、認証・送信・受信・再送・食い違い解決を画面へ接続する。端末内保存済み、未送信、添付送信待ち、同期済みを別に表示する。",
+    "code_paths": [
+      "src/storage/store.ts",
+      "src/sync/README.md",
+      "src/App.tsx"
+    ],
+    "acceptance_ids": [
+      "AT-F34"
+    ],
+    "integration_ids": [
+      "AT-E06",
+      "AT-E12"
+    ],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "同一項目の競合は双方と共通元を保持する。保存済みと同期済みを混同せず、再送・削除対編集でも黙って上書きしない。",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-F35",
+    "title": "履歴とファイルを確実に持ち出す",
+    "original_package_id": "WP16",
+    "batch_id": "RB06",
+    "status": "planned",
+    "baseline_assessment": "部分実装",
+    "retained_implementation": "素材入り保存、検査preview、新規/複製/置換/同作品統合、単体/全体復元を実装。",
+    "review_gap": "別作品mergeのID対応、過去形式移行、全失敗系と長い履歴の復元受入が不足。",
+    "required_behavior": "作品全体と対象一つの復元を分ける。専用ファイルに素材も含められるようにし、形式の版、読み込み前の確認、追加か置換かを扱うこと。",
+    "implementation_action": "作品全体と単体復元を分け、別作品統合の明示ID対応、移行前復元点、素材込み完全持出しを完成させる。大量履歴・容量不足・取消・ID衝突でも既存作品を保つ。",
+    "code_paths": [
+      "src/storage/store.ts",
+      "src/storage/archive.ts",
+      "src/ui/WorkPage.tsx"
+    ],
+    "acceptance_ids": [
+      "AT-F35"
+    ],
+    "integration_ids": [
+      "AT-E07",
+      "AT-E12"
+    ],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "単体復元は最新の関連情報への影響を提示する。追加・置換・統合のID規則を適用し、失敗時は全体をロールバックする。",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-F36",
+    "title": "相談用に必要な情報だけ集める",
+    "original_package_id": "WP22",
+    "batch_id": "RB08",
+    "status": "planned",
+    "baseline_assessment": "部分実装",
+    "retained_implementation": "相談用範囲/前後値出力とcreateConsultationProposalの別案生成関数を持つ。",
+    "review_gap": "提案文章の取り込みと正本との差分比較はUIへ未接続。外部AIへの自動送信はない。",
+    "required_behavior": "人物や場面を指定して、確定設定、関連する出来事、前後の状態、未確定事項、参照番号をまとめて書き出す。提案の文章は別案として取り込むこと。",
+    "implementation_action": "選んだ人物・場面から確定設定、前後状態、未確定事項、参照IDを相談用に出力する。提案文章を出所・対象版付きの作者別案として取り込み、差分比較後に採用できるようにする。",
+    "code_paths": [
+      "src/domain/exports.ts",
+      "src/ui/WorkPage.tsx"
+    ],
+    "acceptance_ids": [
+      "AT-F36"
+    ],
+    "integration_ids": [],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "相談用出力にも公開範囲を適用する。AIサービスへ自動送信せず、取り込む文章は出所と対象版を持つ別案とする。",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-F37",
+    "title": "状態の意味と初期値を登録する",
+    "original_package_id": "WP11",
+    "batch_id": "RB05",
+    "status": "planned",
+    "baseline_assessment": "部分実装",
+    "retained_implementation": "表示名/キー/説明/型/初期値/許容値、人物/quest参照と検査がある。",
+    "review_gap": "同義語/反対語を値へまとめる候補、全辞書操作の受入は不足。",
+    "required_behavior": "状態ごとに表示名、説明、型、初期値、許容値を定める。オン・オフ、数値、選択肢から選ぶ状態を使い分け、関連する人物やクエストと結ぶこと。",
+    "implementation_action": "状態の表示名・説明・型・初期値・許容値・人物/クエスト参照を一画面で管理する。同義語・反対語を辞書上の候補として整理し、値の意味を確認してから統合する。",
+    "code_paths": [
+      "src/ui/fieldSpecs.ts",
+      "src/domain/conditions.ts",
+      "src/domain/model.ts"
+    ],
+    "acceptance_ids": [
+      "AT-F37"
+    ],
+    "integration_ids": [],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "同義語・反対語は同じ状態の値として表現する候補を示す。型違い、許容値外、未定義の使用は拒否または未確認とする。",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-F38",
+    "title": "有効範囲・初期化・算出を決める",
+    "original_package_id": "WP11",
+    "batch_id": "RB05",
+    "status": "planned",
+    "baseline_assessment": "部分実装",
+    "retained_implementation": "scope、derived/resetRules型、派生値評価/循環拒否、周回/全resetの別操作を持つ。",
+    "review_gap": "scene/chapter終了でresetRulesを適用するruntime接続がない。持越し対象一覧や式の通常編集が不足。",
+    "required_behavior": "一場面、章、人物、今回のプレイ、周回をまたぐ情報を区別する。初期化する時点を決め、ほかの値から判定する状態は式として定義すること。",
+    "implementation_action": "有効範囲、初期化規則、周回の持越し、算出式を通常入力で編集する。場面・章の終了時に規則を適用して記録し、算出循環は拒否する。初期化後の合流と巻戻も共通処理で扱う。",
+    "code_paths": [
+      "src/domain/runtime.ts",
+      "src/domain/conditions.ts",
+      "src/ui/fieldSpecs.ts"
+    ],
+    "acceptance_ids": [
+      "AT-F38"
+    ],
+    "integration_ids": [
+      "AT-E03"
+    ],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "算出状態への直接代入と循環式を拒否する。周回初期化と全リセットを別コマンドとし、持ち越し対象を一覧化する。",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-F39",
+    "title": "読む箇所・変更箇所・理由を追う",
+    "original_package_id": "WP11",
+    "batch_id": "RB05",
+    "status": "planned",
+    "baseline_assessment": "部分実装",
+    "retained_implementation": "逆参照、試読trace、値差分と変更の保存がある。",
+    "review_gap": "状態の読む/書く/初期化する一覧を分ける画面と未使用/外部利用保持の整理導線がない。",
+    "required_behavior": "ある状態を条件に使う場面、変更する場面、初期化する処理を一覧にする。試し読みでは、いつ何が原因で値が変わったかを記録すること。",
+    "implementation_action": "状態を読む条件、変更する効果、初期化する処理を別一覧にし、該当箇所へ移動する。値の変更原因を試読記録で追い、外部利用として保持する未使用状態を勝手に削除しない。",
+    "code_paths": [
+      "src/ui/EntityEditor.tsx",
+      "src/domain/runtime.ts",
+      "src/domain/maintenance.ts"
+    ],
+    "acceptance_ids": [
+      "AT-F39"
+    ],
+    "integration_ids": [],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "値の参照元と書込元を安定IDで追う。未使用状態は削除候補だけを示し、外部で使う宣言がある値を誤削除しない。",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-F40",
+    "title": "条件を組み立て、成立理由を見る",
+    "original_package_id": "WP11",
+    "batch_id": "RB05",
+    "status": "planned",
+    "baseline_assessment": "部分実装",
+    "retained_implementation": "AND/OR/NOT、自然文の括弧、三値評価、優先順・進行規則・fallbackの入力がある。",
+    "review_gap": "in演算の値入力が壊れる。manual_choiceのfallbackを試読画面から実行できない。",
+    "required_behavior": "「すべて」「どれか」「否定」を入れ子で選び、条件を自然文と式で確認する。複数成立時の優先順、全実行か一つか、不成立時の行き先を決めること。",
+    "implementation_action": "AND/OR/NOTの入れ子、括弧、型付き比較、複数値の「含まれる」、自然文を通常フォームにする。優先順、全実行/単一、不成立先を説明し、保存・再読込・試読で同じ評価を使う。",
+    "code_paths": [
+      "src/ui/Fields.tsx",
+      "src/ui/Reader.tsx",
+      "src/domain/conditions.ts"
+    ],
+    "acceptance_ids": [
+      "AT-F40"
+    ],
+    "integration_ids": [
+      "AT-E03"
+    ],
+    "finding_ids": [
+      "R04",
+      "R05"
+    ],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "括弧・優先順・不成立時処理を明示する。未知を偽にしない三値評価を行い、任意のコードを条件として実行しない。",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-F41",
+    "title": "状態が変わる順番を定義する",
+    "original_package_id": "WP11",
+    "batch_id": "RB05",
+    "status": "planned",
+    "baseline_assessment": "部分実装",
+    "retained_implementation": "状態/questのtransitionRules、禁止遷移拒否、reset/理由付き例外、原子effectを実装。",
+    "review_gap": "遷移表の通常操作、相互排他状態・経路/期限付き例外の全実行連携が不足。",
+    "required_behavior": "未受注→進行中→完了・失敗など、許す変化を表にする。両立しない状態と意図した例外を登録し、変更前後を確認すること。",
+    "implementation_action": "許容遷移と禁止遷移を表で編集し、相互排他状態と理由・経路・期限付き例外を実行へ接続する。不正な一件があれば全効果を棄却し、明示初期化は通常更新と分けて記録する。",
+    "code_paths": [
+      "src/domain/conditions.ts",
+      "src/ui/fieldSpecs.ts"
+    ],
+    "acceptance_ids": [
+      "AT-F41"
+    ],
+    "integration_ids": [
+      "AT-E03"
+    ],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "禁止遷移は一連の効果を原子的に拒否する。例外は理由・対象経路・期限付きで明示し、以前の状態を記録する。",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-F42",
+    "title": "ゲーム側との受け渡しを定める",
+    "original_package_id": "WP22",
+    "batch_id": "RB08",
+    "status": "planned",
+    "baseline_assessment": "部分実装",
+    "retained_implementation": "external_contractの管理元/型/欠損方針、stub入力と証跡区分、汎用runtime JSONがある。",
+    "review_gap": "実ゲームadapterと実測結果の接続・対応版検証は未実装。",
+    "required_behavior": "体力や戦闘結果など外部の値について、どちらが管理するか、入力と出力、想定する処理を記録する。仮の値で確認し、実装結果との対応を残すこと。",
+    "implementation_action": "管理元・型・入力/出力・欠損方針を持つ外部値契約を出力する。一つの汎用ブラウザーゲーム受取処理で実際の結果を返して対応版を検証し、仮値と実測証跡を区別する。既存ランキングへ接続しない。",
+    "code_paths": [
+      "src/domain/exports.ts",
+      "src/domain/runtime.ts",
+      "src/ui/Reader.tsx"
+    ],
+    "acceptance_ids": [
+      "AT-F42"
+    ],
+    "integration_ids": [
+      "AT-E10"
+    ],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "外部値の管理元・型・欠損時の扱いを固定する。仮の外部応答とゲーム実機の確認結果は別証跡とする。",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-F43",
+    "title": "伏線を独立した項目として持つ",
+    "original_package_id": "WP15",
+    "batch_id": "RB05",
+    "status": "planned",
+    "baseline_assessment": "主要動作あり",
+    "retained_implementation": "独立foreshadow、複数clue/payoff/truth/requiredInfoと提示位置を登録できる。",
+    "review_gap": "場面削除/複数伏線を含む全操作受入は未完了。提示評価の不具合はF45に記載。",
+    "required_behavior": "謎や期待、真相、意図を持つ伏線の項目を作る。複数の手掛かりと複数の回収を結び、一つの場面が複数の伏線を扱えるようにすること。",
+    "implementation_action": "独立伏線と複数手掛かり・回収・真実を通常入力で構成する。本文位置・複数伏線・場面削除の影響を扱い、移動や分割で伏線本体IDを変えない。",
+    "code_paths": [
+      "src/ui/fieldSpecs.ts",
+      "src/domain/types.ts"
+    ],
+    "acceptance_ids": [
+      "AT-F43"
+    ],
+    "integration_ids": [
+      "AT-E04"
+    ],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "場面を削除しても伏線本体は残す。複数の手掛かり・回収と代替説明を別IDで対応付ける。",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-F44",
+    "title": "体験順に開示の段階を確認する",
+    "original_package_id": "WP15",
+    "batch_id": "RB05",
+    "status": "planned",
+    "baseline_assessment": "部分実装",
+    "retained_implementation": "hint/suspicion/reinforce/reveal/alternativeを本文位置と経路のseenへ結ぶ。",
+    "review_gap": "章順での評価、人物認識と読者の並列表、並べ替え時の再確認待ちが不足。提示条件の再評価に不具合。",
+    "required_behavior": "初めて示す、疑わせる、補強する、真相を明かすなどを本文の箇所へ結ぶ。選んだ章順やプレイ経路で、人物と読み手の認識を並べること。",
+    "implementation_action": "章順・経路の提示記録から初出・疑い・補強・真相等を確認し、人物と読み手の認識を並べる。並べ替え・本文移動は再確認待ちにし、提示後の値で提示事実を消さない。",
+    "code_paths": [
+      "src/domain/runtime.ts",
+      "src/ui/Reader.tsx"
+    ],
+    "acceptance_ids": [
+      "AT-F44"
+    ],
+    "integration_ids": [
+      "AT-E02"
+    ],
+    "finding_ids": [
+      "R02"
+    ],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "開示の段階は経路上の提示位置で評価する。章の並べ替えは世界時間を変えず開示評価だけを再確認待ちにする。",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-F45",
+    "title": "手掛かりを見られる道を調べる",
+    "original_package_id": "WP15",
+    "batch_id": "RB05",
+    "status": "planned",
+    "baseline_assessment": "部分実装",
+    "retained_implementation": "通った経路に限り必須提示不足を根拠経路付きで示す。",
+    "review_gap": "全経路のanalyzeFlowへ伏線検査を結合していない。提示後の状態で再評価し不足を見逃す。",
+    "required_behavior": "回収へ進むために必要と作者が指定した情報について、経路上で提示されるかを確認する。任意の手掛かり、代わりの説明、別経路の回収も登録すること。",
+    "implementation_action": "全入口からの上限付き探索に伏線評価を組み込み、必須・任意・代替情報と別回収を扱う。不足の根拠経路を再実行でき、未探索・外部不明・打切りを問題なしと扱わない。",
+    "code_paths": [
+      "src/domain/runtime.ts",
+      "src/ui/Reader.tsx"
+    ],
+    "acceptance_ids": [
+      "AT-F45"
+    ],
+    "integration_ids": [
+      "AT-E04"
+    ],
+    "finding_ids": [
+      "R02"
+    ],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "作者が必要とした情報の提示有無だけを評価する。探索の制限超過や外部条件は未確認、プレイヤーの理解は自動認定しない。",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-F46",
+    "title": "知識・証言・誤解の出所を残す",
+    "original_package_id": "WP15",
+    "batch_id": "RB05",
+    "status": "planned",
+    "baseline_assessment": "部分実装",
+    "retained_implementation": "truthKind、holder、source/evidence/validityと明示知識効果の型を分離。",
+    "review_gap": "知識取得の出所・時点と嘘/誤解の発言を表示・確認する専用機能が不足。",
+    "required_behavior": "誰から聞いたか、何を見たか、何を根拠に信じるかを記録する。世界の真の設定、作中の証言、人物の認識、作者の未確定案を結び付けて区別すること。",
+    "implementation_action": "知識・証言・誤解の取得時点、誰から聞いたか、根拠箇所へ移動できる認識画面を作る。発言の知らないはずの情報は候補にし、意図した嘘・誤解の理由を保存する。",
+    "code_paths": [
+      "src/domain/types.ts",
+      "src/domain/conditions.ts",
+      "src/ui/fieldSpecs.ts"
+    ],
+    "acceptance_ids": [
+      "AT-F46"
+    ],
+    "integration_ids": [
+      "AT-E04"
+    ],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "証言の誤り、意図した嘘、未確定案を真実から分離する。知識取得には出所と時点または経路位置を必要とする。",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-F47",
+    "title": "未回収の意図と期限を記録する",
+    "original_package_id": "WP15",
+    "batch_id": "RB05",
+    "status": "planned",
+    "baseline_assessment": "部分実装",
+    "retained_implementation": "回収方針の区別とdeadline/exceptions入力、intentional候補区分がある。",
+    "review_gap": "作品/分岐/続編の期限評価、回収先変更の確認待ちと集計が不足。",
+    "required_behavior": "この作品で回収、続編で回収、意図して残す、誤誘導、検討中、没を区別する。作品・分岐ごとの対象を定め、回収先の変更を確認待ちにすること。",
+    "implementation_action": "今作・続編・意図した未回収・誤誘導・検討中・不採用を作品/分岐/期限で集計する。回収先変更で対象版を再確認待ちにし、旧公開版の評価を保持する。",
+    "code_paths": [
+      "src/domain/runtime.ts",
+      "src/ui/fieldSpecs.ts"
+    ],
+    "acceptance_ids": [
+      "AT-F47"
+    ],
+    "integration_ids": [
+      "AT-E04"
+    ],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "今作・分岐・続編など対象範囲と意図を明示する。回収先変更時は再確認待ちにし、意図した未回収は警告の集計から分ける。",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-F48",
+    "title": "人物の声と用語の基準を持つ",
+    "original_package_id": "WP19",
+    "batch_id": "RB07",
+    "status": "planned",
+    "baseline_assessment": "登録・土台のみ",
+    "retained_implementation": "voice_ruleとterminologyの一人称/用法/読み/例外/validityを保存できる。",
+    "review_gap": "本文・字幕・翻訳の表記/口調の候補検査と期間適用がない。",
+    "required_behavior": "人物ごとの一人称、呼び方、口調、使う語、台詞例を記録する。用語の表記・読み・意図した例外をまとめ、本文と字幕・翻訳の確認に使うこと。",
+    "implementation_action": "人物ごとの一人称・呼称・口調・台詞例、用語の表記・読み・例外・時期を編集する。本文・字幕・翻訳の一致候補を根拠箇所へ結び、意図した例外と自動では分からない口調を区別する。",
+    "code_paths": [
+      "src/ui/fieldSpecs.ts",
+      "src/domain/types.ts"
+    ],
+    "acceptance_ids": [
+      "AT-F48"
+    ],
+    "integration_ids": [
+      "AT-E08"
+    ],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "表記・口調の期間と例外を保持する。指摘は置換候補であり、本文や翻訳を自動修正しない。",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-F49",
+    "title": "企画の基準と判断理由を残す",
+    "original_package_id": "WP21",
+    "batch_id": "RB08",
+    "status": "planned",
+    "baseline_assessment": "主要動作あり",
+    "retained_implementation": "企画の対象/体験/主題/範囲と判断の対象版/理由/結果を独立レコードで持つ。",
+    "review_gap": "企画と制作の横断画面、全参照操作の受入は未完了。",
+    "required_behavior": "想定する読み手・プレイヤー、届けたい体験、主題、作風、制作範囲、成果物をまとめる。重要な変更の判断、理由、優先度、対象の版を記録すること。",
+    "implementation_action": "企画と重要判断を制作画面から参照し、対象・体験・主題・作風・範囲・成果物、理由・優先度・対象版を関連場面と作業に結ぶ。決定履歴を残す。",
+    "code_paths": [
+      "src/ui/fieldSpecs.ts",
+      "src/domain/model.ts"
+    ],
+    "acceptance_ids": [
+      "AT-F49"
+    ],
+    "integration_ids": [],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "企画・判断には対象版と根拠を保存する。却下・保留を削除せず、方針変更を公開済み版へ自動反映しない。",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-F50",
+    "title": "物語とプレイヤーの行動を結ぶ",
+    "original_package_id": "WP21",
+    "batch_id": "RB08",
+    "status": "planned",
+    "baseline_assessment": "登録・土台のみ",
+    "retained_implementation": "gameplay_specに行動/仕組み/導入/報酬/quest/task/意図差分を記録。",
+    "review_gap": "場面の物語とプレイ行動を並べる専用表示、実装との確認候補と受渡しが不足。",
+    "required_behavior": "場面で知ることと、実際に行う探索・選択・戦闘・操作を並べる。必要なゲーム機能、クエスト、チュートリアル、報酬、実装担当の作業と結ぶこと。",
+    "implementation_action": "場面の物語と探索・選択・戦闘等の行動を並べ、機能・クエスト・チュートリアル・報酬・実装作業を関連付ける。想定と実装の違いを確認候補へつなぎ、制作出力に含める。",
+    "code_paths": [
+      "src/ui/fieldSpecs.ts",
+      "src/domain/types.ts"
+    ],
+    "acceptance_ids": [
+      "AT-F50"
+    ],
+    "integration_ids": [],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "遊びの仕様と物語の記述の差は意図付き確認候補にする。ゲーム機能の未実装を執筆未完了と混同しない。",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-F51",
+    "title": "制作日程と依存する作業を持つ",
+    "original_package_id": "WP21",
+    "batch_id": "RB08",
+    "status": "planned",
+    "baseline_assessment": "部分実装",
+    "retained_implementation": "工程別task、進捗board、実期限/依存/見積型、循環検査がある。",
+    "review_gap": "担当/先行素材の一連操作、依存を可視化して期限の不整合を扱う機能が不足。",
+    "required_behavior": "執筆、レビュー、実装、翻訳、収録、確認、公開の状態を別々に記録する。担当、現実の期限、先に必要な素材や作業を場面へ結ぶこと。",
+    "implementation_action": "担当・先行素材・依存作業・現実の期限を編集し、制作依存図と一覧を用意する。執筆・レビュー・実装・翻訳・収録・確認・公開を別状態で保持し、循環と期限不整合を根拠付きで示す。",
+    "code_paths": [
+      "src/ui/Lists.tsx",
+      "src/domain/model.ts",
+      "src/ui/fieldSpecs.ts"
+    ],
+    "acceptance_ids": [
+      "AT-F51"
+    ],
+    "integration_ids": [
+      "AT-E09"
+    ],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "執筆・実装・翻訳・収録・確認・公開の状態と実日付を別々に保存する。依存作業の循環と期限不整合を示す。",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-F52",
+    "title": "制作量と一経路の量を分ける",
+    "original_package_id": "WP21",
+    "batch_id": "RB08",
+    "status": "planned",
+    "baseline_assessment": "部分実装",
+    "retained_implementation": "固有scene集合と経路出現数を分けるproductionCountsがありboardは固有対象数を表示。",
+    "review_gap": "台詞・素材・再利用量、読書/プレイ時間と速度仮定、見積の範囲をまとめる集計画面がない。",
+    "required_behavior": "固有の場面・台詞・素材の数、再利用部分、分岐ごとの読める量を別々に集計する。制作の見積もりと根拠、未決定の範囲も残すこと。",
+    "implementation_action": "固有場面・台詞・素材・共通再利用量と経路ごとの体験量を別に集計する。読書/プレイ時間は速度仮定と範囲を表示し、未設定を不明にする。見積根拠と未決定量を保存する。",
+    "code_paths": [
+      "src/domain/production.ts",
+      "src/ui/Lists.tsx"
+    ],
+    "acceptance_ids": [
+      "AT-F52"
+    ],
+    "integration_ids": [
+      "AT-E09"
+    ],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "制作数は安定IDの集合、体験量は経路ごとの出現回数で集計する。速度・重複・未確定箇所・対象版を明示する。",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-F53",
+    "title": "本文と絵コンテ・演出を並べる",
+    "original_package_id": "WP20",
+    "batch_id": "RB07",
+    "status": "planned",
+    "baseline_assessment": "登録・土台のみ",
+    "retained_implementation": "storyboard/cueのanchor、参照/完成素材、ms時刻を世界tickと別に保存。",
+    "review_gap": "本文と絵コンテ/演出を並べる表示、素材差替えの確認待ち・timecode編集が不足。",
+    "required_behavior": "場面・台詞へ絵コンテのコマ、カメラ、音声、字幕、演出上の時刻を結ぶ。参照画像と完成素材を区別し、差し替え後の確認対象を示すこと。",
+    "implementation_action": "本文と絵コンテ・演出を並べ、コマ・カメラ・音声・字幕・演出時刻を通常編集する。参照画像と完成素材を区別し、差替え後の確認待ちを全関連台詞へ反映する。",
+    "code_paths": [
+      "src/ui/fieldSpecs.ts",
+      "src/domain/types.ts"
+    ],
+    "acceptance_ids": [
+      "AT-F53"
+    ],
+    "integration_ids": [],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "演出時刻はミリ秒、世界時刻は暦のtickとして分離する。素材差替え後は依存コマを確認待ちにする。",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-F54",
+    "title": "媒体ごとの派生内容を管理する",
+    "original_package_id": "WP21",
+    "batch_id": "RB08",
+    "status": "planned",
+    "baseline_assessment": "部分実装",
+    "retained_implementation": "media_variantの媒体/元snapshot/本文/範囲と元データ変更時needsReviewがある。",
+    "review_gap": "公開予定日等の通常入力、公開済み媒体との差分比較、共通世界版の選択が不足。",
+    "required_behavior": "共通の世界設定を参照しながら、ゲーム、小説、動画、音声、告知用の文章を別に持つ。媒体別の公開範囲、版、公開予定日、変更後の確認先を記録すること。",
+    "implementation_action": "媒体別の文章・公開範囲・公開予定日・固定版を編集し、公開済み版と改訂案を比較する。参照世界版を選べるようにし、設定改訂は影響先を示してから適用する。",
+    "code_paths": [
+      "src/domain/production.ts",
+      "src/ui/fieldSpecs.ts"
+    ],
+    "acceptance_ids": [
+      "AT-F54"
+    ],
+    "integration_ids": [
+      "AT-E09"
+    ],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "派生作品は共通設定の版を参照する。媒体別文章と公開済みスナップショットは保持し、変更候補だけを伝える。",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-F55",
+    "title": "共通の情報と意味付きの関係を持つ",
+    "original_package_id": "WP08",
+    "batch_id": "RB03",
+    "status": "planned",
+    "baseline_assessment": "主要動作あり",
+    "retained_implementation": "共通entity IDと意味/方向/時期/経路/根拠付きRelation、型/自己/対称関係検査がある。",
+    "review_gap": "派生参照を図へ戻す操作と、validityの表示切替は不足。",
+    "required_behavior": "人物、出来事、場面、場所、物品、状態、伏線、素材を一度登録する。関係には種類、向き、有効な時期・分岐、根拠の場面を付けること。",
+    "implementation_action": "共通情報と意味・方向・有効期間/経路・根拠を図/表へ一貫して投影する。派生線から元の場面・条件・素材・制作依存へ戻り、編集可能な線と派生表示を区別する。",
+    "code_paths": [
+      "src/domain/model.ts",
+      "src/ui/Lists.tsx"
+    ],
+    "acceptance_ids": [
+      "AT-F55"
+    ],
+    "integration_ids": [
+      "AT-E07"
+    ],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "方向と時期・経路と根拠を検証する。自己関係を許す種類だけ認め、対称性や推移性を勝手に補わない。",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-F56",
+    "title": "項目の型と入力規則を定める",
+    "original_package_id": "WP04",
+    "batch_id": "RB02",
+    "status": "planned",
+    "baseline_assessment": "部分実装",
+    "retained_implementation": "標準項目の型、schema/参照/キー一意、custom/templateの検査を持つ。",
+    "review_gap": "雛形変更の影響を確認して一括適用する通常操作はない。",
+    "required_behavior": "日付、数値、選択、文章、ほかの項目への参照を使い分ける。雛形の変更は既存データへの影響を確認して適用し、読み込み時も型を検査すること。",
+    "implementation_action": "標準と追加項目の型・入力規則、雛形変更の既存値差分を通常画面へ接続する。追加・変換・取消を一括処理し、ファイル読込にも同じ型検査を適用する。",
+    "code_paths": [
+      "src/domain/model.ts",
+      "src/ui/EntityEditor.tsx"
+    ],
+    "acceptance_ids": [
+      "AT-F56"
+    ],
+    "integration_ids": [
+      "AT-E07"
+    ],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "同名は原則許可しIDで識別する。キー項目だけ所定スコープで一意とする。型変更に適合しない値を消さず影響を示す。",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-F57",
+    "title": "日本語の索引と用語集を作る",
+    "original_package_id": "WP05",
+    "batch_id": "RB02",
+    "status": "planned",
+    "baseline_assessment": "部分実装",
+    "retained_implementation": "NFKC・大小文字・かな正規化検索、読み/別名の保存がある。",
+    "review_gap": "五十音/分類の作者索引、表記揺れ辞書、段落/台詞位置への検索移動がない。",
+    "required_behavior": "読み、表記揺れ、略称、旧名、別名、分類から項目を探す。五十音順・分類別の索引を持ち、同名を選び分け、本文の段落や台詞へ移動できること。",
+    "implementation_action": "読み・別名・旧名・略称・表記揺れ・分類を持つ五十音/分類索引と用語集を作る。同名の選び分け、段落/台詞位置への移動、公開範囲別索引を完成させる。",
+    "code_paths": [
+      "src/ui/components.tsx",
+      "src/App.tsx",
+      "src/ui/fieldSpecs.ts"
+    ],
+    "acceptance_ids": [
+      "AT-F57"
+    ],
+    "integration_ids": [
+      "AT-E05"
+    ],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "原文を保持し検索用正規化を別に持つ。作者索引と自動検索を分け、秘匿対象の読み・別名・参照数を公開側へ出さない。",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-F58",
+    "title": "一覧・カード・図を同じ情報で使う",
+    "original_package_id": "WP05",
+    "batch_id": "RB02",
+    "status": "planned",
+    "baseline_assessment": "部分実装",
+    "retained_implementation": "カード/年表/関係表/図、種類＋状態＋文字列検索と検索条件レコード作成がある。",
+    "review_gap": "保存条件の再実行、人物参加等の関連条件検索、固定/動的一覧の実際の表示、一括編集previewが不足。",
+    "required_behavior": "表、カード、年表、図を切り替えて編集する。「この人物が出て、未実装の場面」など複数条件の検索を保存する。まとめて編集した変更も取り消せること。",
+    "implementation_action": "複合検索を保存・再実行し、固定リストと条件で変わるリストを実際に表示する。表/カード/年表/図は同じ情報を使い、一括変更は差分を見て原子確定・取消できるようにする。",
+    "code_paths": [
+      "src/App.tsx",
+      "src/ui/Lists.tsx",
+      "src/ui/fieldSpecs.ts"
+    ],
+    "acceptance_ids": [
+      "AT-F58"
+    ],
+    "integration_ids": [],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "動的条件一覧と固定ID集合の一覧を区別する。一括編集は変更前後を確認し、一部だけ失敗した更新を確定しない。",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-F59",
+    "title": "線の意味を選んで可視化する",
+    "original_package_id": "WP08",
+    "batch_id": "RB03",
+    "status": "planned",
+    "baseline_assessment": "部分実装",
+    "retained_implementation": "手入力Relationの種類別filter、矢印/文字/表の代替を実装。",
+    "review_gap": "一段/二段、階層、経路/時点、進行/参照/制作依存など派生図と隠れた範囲の表示がない。",
+    "required_behavior": "人物関係、因果、伏線、進行、参照、制作の依存を別表示にする。選んだ項目から一段・二段の範囲だけ開き、階層、凡例、一覧・関係表も用意すること。",
+    "implementation_action": "人物・因果・伏線・進行・参照・制作依存を別図へ投影し、一段/二段・階層・時点/経路を選べるようにする。線の意味と非表示範囲を示し、同じ編集を関係表でも完了できるようにする。",
+    "code_paths": [
+      "src/ui/Lists.tsx",
+      "src/ui/Timeline.tsx"
+    ],
+    "acceptance_ids": [
+      "AT-F59"
+    ],
+    "integration_ids": [
+      "AT-E11"
+    ],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "凡例・線種・矢印・ラベルを持ち、色以外でも意味を伝える。表示範囲と隠れた件数を示すが公開側の秘密の件数は漏らさない。",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-F60",
+    "title": "重複・未参照・変更待ちを整理する",
+    "original_package_id": "WP05",
+    "batch_id": "RB02",
+    "status": "planned",
+    "baseline_assessment": "登録・土台のみ",
+    "retained_implementation": "重複候補/未参照抽出、統合previewと参照書換えの純粋関数がある。",
+    "review_gap": "通常画面からの候補一覧、項目選択、統合確定・取消、保持指定が未接続。",
+    "required_behavior": "重複候補の統合時は残す項目と参照の変更を確認する。未参照の設定、未使用の状態、読み未登録、未確認の変更を一覧にし、削除前に影響を見せること。",
+    "implementation_action": "重複・未参照・未使用状態・読み未登録・変更確認待ちを通常一覧へ出す。統合する項目と残すIDを選び、全参照の書換え差分を確認して一括確定・取消する。外部利用の保持指定を尊重する。",
+    "code_paths": [
+      "src/domain/maintenance.ts",
+      "src/App.tsx"
+    ],
+    "acceptance_ids": [
+      "AT-F60"
+    ],
+    "integration_ids": [],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "統合の残すIDと全参照書換えを事前表示する。背景設定・外部利用を保持指定でき、統合・削除・一括変更は補償操作で戻せる。",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-N01",
+    "title": "全端末での編集",
+    "original_package_id": "WP02",
+    "batch_id": "RB02",
+    "status": "planned",
+    "baseline_assessment": "部分実装",
+    "retained_implementation": "320px以上の幅別レイアウトと通常編集/復元の入口がある。5幅で基本画面を確認。",
+    "review_gap": "スマートフォン単独の本文/条件/線/履歴/ファイル全編集受入は未完了。fallbackとinの不具合あり。",
+    "required_behavior": "スマートフォンの幅320 CSS px以上で、人物・本文・日時・条件・関係線・履歴・ファイル読み込みを完了できること。",
+    "implementation_action": "幅320pxから、本文・条件・関係線・日時・履歴・専用ファイルの全操作を単独で完了できる画面にする。通常の全要件受入を狭い幅でも通し、内部記法の手入力やPC操作を必須にしない。",
+    "code_paths": [
+      "src/styles.css",
+      "tests/e2e/editor.spec.ts",
+      "src/ui/Reader.tsx"
+    ],
+    "acceptance_ids": [
+      "AT-N01"
+    ],
+    "integration_ids": [
+      "AT-E01"
+    ],
+    "finding_ids": [
+      "R04"
+    ],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "PC専用操作やページ全体の不要な横スクロールを残さない",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-N02",
+    "title": "対応ブラウザーと実端末",
+    "original_package_id": "WP23",
+    "batch_id": "RB10",
+    "status": "planned",
+    "baseline_assessment": "実機等未検証",
+    "retained_implementation": "CIでChromium/Firefox/WebKit各11件。今回Chromiumの元11件を再実行。",
+    "review_gap": "実iPhone Safari/Chrome、実iPad分割、macOS Safari/Edgeの実OS・ブラウザー版付き証拠がない。",
+    "required_behavior": "iPhone Safari・Chrome、iPad Safari・分割表示、PC Chrome・Edge・Firefox・Safariの対象環境表を検証し、OSとブラウザーの実バージョンを記録すること。",
+    "implementation_action": "実iPhone Safari/Chrome、実iPad Safari/分割、PC Chrome/Edge/Firefox/macOS Safariの環境表を用意する。OS・ブラウザー版と通し操作の証拠を記録し、自動WebKitとは別に合否を付ける。",
+    "code_paths": [
+      "playwright.config.ts",
+      "tests/e2e/editor.spec.ts",
+      "docs/implementation/PROGRESS.md"
+    ],
+    "acceptance_ids": [
+      "AT-N02"
+    ],
+    "integration_ids": [
+      "AT-E11"
+    ],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "自動ブラウザー試験だけを実端末の合格証拠にしない",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-N03",
+    "title": "アクセシビリティ",
+    "original_package_id": "WP23",
+    "batch_id": "RB10",
+    "status": "planned",
+    "baseline_assessment": "実機等未検証",
+    "retained_implementation": "初期画面axe、ラベル、focus、関係表代替、native dialogがある。",
+    "review_gap": "全画面のWCAG2.2 AA、VoiceOver/NVDA、200%拡大とタッチ代替の手動受入がない。",
+    "required_behavior": "WCAG 2.2 AAを受入目標とし、キーボード・スクリーンリーダー・文字拡大200%・色以外の意味表現・ドラッグ代替を提供すること。",
+    "implementation_action": "全画面で焦点・ラベル・読み順・キーボード・VoiceOver/NVDA・200%拡大・色以外の線識別・ドラッグ代替を確認する。自動検査の後に手動操作で読み書き・失敗復帰まで検証する。",
+    "code_paths": [
+      "tests/e2e/editor.spec.ts",
+      "src/ui/components.tsx",
+      "src/styles.css"
+    ],
+    "acceptance_ids": [
+      "AT-N03"
+    ],
+    "integration_ids": [
+      "AT-E11"
+    ],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "図だけで編集を強制せず、見える焦点や拡大を無効にしない",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-N04",
+    "title": "標準データの応答目標",
+    "original_package_id": "WP23",
+    "batch_id": "RB10",
+    "status": "planned",
+    "baseline_assessment": "実機等未検証",
+    "retained_implementation": "Standard/Largeのseed付き生成器がある。今回は標準の保存観測を追加。",
+    "review_gap": "所定実端末30回p95、起動/検索/描画/保存の全目標は未検証。全履歴検査・全件再保存のコストに懸念。",
+    "required_behavior": "標準データの操作応答p95≤200 ms、ローカル検索p95≤500 ms、保存完了p95≤1000 ms、キャッシュ済み起動≤3秒を目標とすること。測定条件は性能仕様に従うこと。",
+    "implementation_action": "Standard/Largeの実件数と添付量を固定し、所定端末・production buildで各操作30回と95%地点の所要時間を記録する。履歴増加後と2時間編集後を含め、入力待ちと通信を分けて元の数値目標に判定する。",
+    "code_paths": [
+      "src/testing/performanceFixture.ts",
+      "src/storage/store.ts",
+      "src/domain/production.ts"
+    ],
+    "acceptance_ids": [
+      "AT-N04"
+    ],
+    "integration_ids": [
+      "AT-E11"
+    ],
+    "finding_ids": [
+      "R06"
+    ],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "実測前の数値を達成済みとしない。超過を要件削減で黙って隠さない",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-N05",
+    "title": "大規模データと処理の中断",
+    "original_package_id": "WP14",
+    "batch_id": "RB05",
+    "status": "planned",
+    "baseline_assessment": "部分実装",
+    "retained_implementation": "entityカード60件、年表レーン200件の分割、worker読み込み、解析進捗/取消と上限がある。",
+    "review_gap": "関係図/ノード/未定日時は全件描画。Large初回表示、保存/出力の進捗・取消とUI応答受入が不足。",
+    "required_behavior": "大規模データを分割表示し、全件をDOMへ描画しないこと。解析・入出力は進捗と取消を持ち、探索上限を表示すること。",
+    "implementation_action": "図・ノード・未定日時・索引も分割描画にし、Largeでも全件を画面に作らない。解析・保存・出力・読込の長い処理は進捗と取消を用意し、取消の確定点と探索済み/未確認範囲を表示する。",
+    "code_paths": [
+      "src/ui/Lists.tsx",
+      "src/ui/Timeline.tsx",
+      "src/storage/archive.ts",
+      "src/domain/runtime.ts"
+    ],
+    "acceptance_ids": [
+      "AT-N05"
+    ],
+    "integration_ids": [
+      "AT-E10"
+    ],
+    "finding_ids": [
+      "R06"
+    ],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "探索の途中終了を全経路の安全証明にしない",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-N06",
+    "title": "保存と移行の原子性",
+    "original_package_id": "WP03",
+    "batch_id": "RB06",
+    "status": "planned",
+    "baseline_assessment": "部分実装",
+    "retained_implementation": "本体/履歴/outbox/素材の同一DB transactionと故障注入rollbackを実装。",
+    "review_gap": "過去形式からの移行復元点と実ブラウザー全障害注入・長時間受入が不足。",
+    "required_behavior": "端末内の一操作は本体・参照・履歴・送信待ちを同じトランザクションで保存し、形式更新前に復元点を作ること。",
+    "implementation_action": "本体・参照・履歴・送信待ち・素材参照を一つの保存単位にする。形式移行前の復元点、書込各段階の故障注入、容量不足・再起動・移行失敗を検証し、一部確定と偽の成功表示を防ぐ。",
+    "code_paths": [
+      "src/storage/store.ts",
+      "src/storage/storage.test.ts"
+    ],
+    "acceptance_ids": [
+      "AT-N06"
+    ],
+    "integration_ids": [
+      "AT-E06",
+      "AT-E12"
+    ],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "一部更新・未検証のマイグレーション・偽の保存表示を残さない",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-N07",
+    "title": "同期の競合と再送",
+    "original_package_id": "WP17",
+    "batch_id": "RB09",
+    "status": "planned",
+    "baseline_assessment": "登録・土台のみ",
+    "retained_implementation": "三方向merge、冪等ack、未解決競合停止、アカウント境界を契約試験。",
+    "review_gap": "実DB・認証・二端末同期・依存outbox rebaseと解決UIは未接続。メモリ試験を実同期の証拠にできない。",
+    "required_behavior": "共通元のrevisionを使い、同じ項目の競合・削除対編集・操作の重複を検知すること。未解決は双方を保持すること。",
+    "implementation_action": "実サーバー確定revisionを共通元に送信待ちを準備し、依存操作の組み直し、冪等再送、削除対編集、再並べ替えを扱う。解決中の第三変更も再比較し、二端末の結果と未送信を照合する。",
+    "code_paths": [
+      "src/sync/README.md",
+      "src/sync/outbox.ts",
+      "tests/sync.test.ts"
+    ],
+    "acceptance_ids": [
+      "AT-N07"
+    ],
+    "integration_ids": [
+      "AT-E06"
+    ],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "端末時計や最終書込だけで片方を消さない",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-N08",
+    "title": "権限と秘密の投影",
+    "original_package_id": "WP18",
+    "batch_id": "RB09",
+    "status": "planned",
+    "baseline_assessment": "登録・土台のみ",
+    "retained_implementation": "公開投影のallowlistとID変換、名前/本文指定、契約membership検査がある。",
+    "review_gap": "サーバーAuth/RLS/private Storage、直接API、検索/素材/件数の実権限試験は存在しない。",
+    "required_behavior": "作品の閲覧・指摘・編集・管理権限と共有範囲をサーバー側で検証し、本文・検索・図・素材・リンクで一致させること。",
+    "implementation_action": "作品membership・private/team・投影・役割をサーバーと素材取得で検査する。非メンバーやID差替えの直接API、全CRUD、共有失効、秘密の検索/図/素材名/件数、公開buildのsecret混入を試験する。",
+    "code_paths": [
+      "src/domain/projection.ts",
+      "src/sync/testing.ts",
+      "src/sync/README.md"
+    ],
+    "acceptance_ids": [
+      "AT-N08"
+    ],
+    "integration_ids": [
+      "AT-E05"
+    ],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "secretキーの公開、UIのみの非表示、他作品のID差替えを許さない",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-N09",
+    "title": "読み込みの制限と検証",
+    "original_package_id": "WP16",
+    "batch_id": "RB06",
+    "status": "planned",
+    "baseline_assessment": "主要動作あり",
+    "retained_implementation": "版/hash/安全パス/strict JSON/容量/参照を事前検査し原子的import。拒否試験と往復が通る。",
+    "review_gap": "全上限直前/直後、全種混在の総合受入は未完了。",
+    "required_behavior": "専用ファイルの版・構造・型・参照・ハッシュ・展開後量・パスを確認後に一括確定すること。数値上限はファイル仕様に従うこと。",
+    "implementation_action": "archiveの全上限直前/直後、危険パス、重複key、hash、型、参照、未知版、取消を試す。隔離解析後だけ一括確定し、既存作品・素材・履歴の不変を照合する。",
+    "code_paths": [
+      "src/storage/archive.ts",
+      "src/storage/json.ts",
+      "src/storage/storage.test.ts"
+    ],
+    "acceptance_ids": [
+      "AT-N09"
+    ],
+    "integration_ids": [
+      "AT-E07"
+    ],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "一時解析の失敗を既存作品の一部置換として残さない",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-N10",
+    "title": "入力と添付の安全な表示",
+    "original_package_id": "WP20",
+    "batch_id": "RB07",
+    "status": "planned",
+    "baseline_assessment": "主要動作あり",
+    "retained_implementation": "React文字列、HTML/Markdown escape、安全URL、能動添付拒否、PDF非埋込、非eval条件がある。",
+    "review_gap": "全素材形式・巨大入力・全ブラウザーでの総合安全受入は未完了。",
+    "required_behavior": "本文・外部URL・添付を非実行データとして扱い、HTML・SVG等の能動内容や危険URLを実行しないこと。",
+    "implementation_action": "本文・URL・画像/音声/動画/PDF等を安全な表示処理へ通す。能動HTML/SVGや危険URL、偽拡張子、巨大入力を拒否し、条件の任意コードを実行しないことを全出力でも確認する。",
+    "code_paths": [
+      "src/domain/attachments.ts",
+      "src/ui/AssetPreview.tsx",
+      "src/domain/exports.ts"
+    ],
+    "acceptance_ids": [
+      "AT-N10"
+    ],
+    "integration_ids": [],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "ファイル名だけの種類判定や任意コードの条件実行を許さない",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-N11",
+    "title": "通信なしでの継続",
+    "original_package_id": "WP03",
+    "batch_id": "RB06",
+    "status": "planned",
+    "baseline_assessment": "部分実装",
+    "retained_implementation": "production service workerで取得済みshellをキャッシュ。配信停止後の再開/完全出力のE2Eを再確認。",
+    "review_gap": "実端末の機内モード、更新/未取得素材/長時間編集の組合せは未完了。",
+    "required_behavior": "取得済み作品とキャッシュ済みアプリで、通信なしの編集・検索・試読・ファイル出力を可能にすること。未取得の素材は明示すること。",
+    "implementation_action": "キャッシュ取得済みの作品で、通信なしの編集・検索・試読・完全出力を通す。未取得素材を明示し、機内モード・再起動・アプリ更新・2時間操作でも未送信と入力を保つ。",
+    "code_paths": [
+      "scripts/build/service-worker.mjs",
+      "src/main.tsx",
+      "tests/e2e/editor.spec.ts"
+    ],
+    "acceptance_ids": [
+      "AT-N11"
+    ],
+    "integration_ids": [
+      "AT-E12"
+    ],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "初回取得や未キャッシュ添付を利用済みと偽表示しない",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-N12",
+    "title": "再現可能な確認記録",
+    "original_package_id": "WP14",
+    "batch_id": "RB05",
+    "status": "planned",
+    "baseline_assessment": "主要動作あり",
+    "retained_implementation": "固定版/開始状態/trace/条件結果/RNG/stub区分と再生を実装し試験。",
+    "review_gap": "実ゲームactual証跡、全版変更・checkpoint移行は未完了。",
+    "required_behavior": "作品版・開始状態・経路・条件結果・乱数種・外部応答の仮実区分を確認記録へ含めること。",
+    "implementation_action": "作品版・開始状態・経路・提示条件・乱数・外部応答の仮実を固定した確認記録を完成させる。旧版再生、版違い開始点の移行、実ゲーム受取結果を照合し、別版の合格へ流用しない。",
+    "code_paths": [
+      "src/domain/runtime.ts",
+      "tests/runtime.test.ts"
+    ],
+    "acceptance_ids": [
+      "AT-N12"
+    ],
+    "integration_ids": [
+      "AT-E10"
+    ],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "新しい版の結果を古い版の合格証跡として扱わない",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-N13",
+    "title": "日本語と時間の正確性",
+    "original_package_id": "WP05",
+    "batch_id": "RB02",
+    "status": "planned",
+    "baseline_assessment": "部分実装",
+    "retained_implementation": "UTF-8、Unicode検査、IME中保存停止、絵文字、整数tickと実日付の別型がある。",
+    "review_gap": "実日本語IME/ルビ入力は未検証。文字編集後のルビ・リンク位置がずれる。",
+    "required_behavior": "UTF-8、日本語IME、ルビ、読み、別名、絵文字を破損なく保持し、世界時間と実日時を別型にすること。",
+    "implementation_action": "実日本語入力、絵文字、ルビ、読み・別名、段落の分割/統合/移動を検証する。文字範囲追従はUnicodeコードポイントと入力確定を扱い、世界時刻は整数文字列のまま実日時と分離する。",
+    "code_paths": [
+      "src/ui/EntityEditor.tsx",
+      "src/ui/Fields.tsx",
+      "src/domain/time.ts"
+    ],
+    "acceptance_ids": [
+      "AT-N13"
+    ],
+    "integration_ids": [],
+    "finding_ids": [
+      "R01"
+    ],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "IME変換を操作キーで確定前に破壊したり、tickを浮動小数で丸めない",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-N14",
+    "title": "復元手順の完了",
+    "original_package_id": "WP16",
+    "batch_id": "RB06",
+    "status": "planned",
+    "baseline_assessment": "部分実装",
+    "retained_implementation": "利用ガイド、完全保存と空領域復元、履歴・snapshot復元処理がある。",
+    "review_gap": "全情報/素材/旧公開版を含む復元訓練、端末喪失/大量履歴を含む実ユーザー手順は未完了。",
+    "required_behavior": "最新完全保存ファイルと公開スナップショットの復元方法を利用者に提示し、空環境への復元試験を行うこと。",
+    "implementation_action": "全種類・共通世界・作者別案・公開版・履歴・素材入り完全保存から、空の別端末領域へ復元する手順を完成させる。端末喪失と大量履歴の訓練を行い、正規化データと素材を比較する。",
+    "code_paths": [
+      "docs/implementation/USER_GUIDE.md",
+      "src/storage/store.ts",
+      "tests/e2e/editor.spec.ts"
+    ],
+    "acceptance_ids": [
+      "AT-N14"
+    ],
+    "integration_ids": [
+      "AT-E07"
+    ],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "端末内履歴だけを外部バックアップの代わりとして保証しない",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-N15",
+    "title": "診断とプライバシー",
+    "original_package_id": "WP24",
+    "batch_id": "RB10",
+    "status": "planned",
+    "baseline_assessment": "登録・土台のみ",
+    "retained_implementation": "本文やstackを受け取らないcreateDiagnostic関数と試験がある。外部自動送信は見当たらない。",
+    "review_gap": "実エラーへの診断記録・環境情報収集・任意持出しのUIへ未接続。",
+    "required_behavior": "診断にはエラーコード・操作ID・版・環境を記録し、本文・個人情報・秘密・認証情報を既定で含めないこと。送信は任意とすること。",
+    "implementation_action": "実エラーから診断コード・操作ID・版・環境を端末内に記録し、任意の持出し画面へ接続する。本文・秘密・個人情報・認証情報を含まないことを確認し、自動外部送信を追加しない。",
+    "code_paths": [
+      "src/diagnostics.ts",
+      "tests/diagnostics.test.ts",
+      "src/App.tsx"
+    ],
+    "acceptance_ids": [
+      "AT-N15"
+    ],
+    "integration_ids": [],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "ログや分析サービスへ作品本文を自動送信しない",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-N16",
+    "title": "拡張性と検証可能性",
+    "original_package_id": "WP01",
+    "batch_id": "RB02",
+    "status": "planned",
+    "baseline_assessment": "主要動作あり",
+    "retained_implementation": "時間/状態/runtime/投影/保存をUIから分離し、固定データ255件が今回も通る。",
+    "review_gap": "モジュール分離だけで全UIとの同一規則は保証されず、今回の統合不具合が残る。",
+    "required_behavior": "時間・状態評価・投影・ファイル移行をUIと保存製品から分け、固定データと決定的試験で検証すること。",
+    "implementation_action": "図/一覧/本文/試読/出力が同じ時間・条件・状態・採用状態・投影処理を使うよう整理する。純粋な部品試験に加え通常フォームから同じ結果になる結合試験を作る。",
+    "code_paths": [
+      "src/domain/conditions.ts",
+      "src/domain/time.ts",
+      "src/domain/projection.ts",
+      "vitest.config.ts"
+    ],
+    "acceptance_ids": [
+      "AT-N16"
+    ],
+    "integration_ids": [],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "画面ごとに別の条件評価や独自のID管理を作らない",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-N17",
+    "title": "公開構成と費用の明示",
+    "original_package_id": "WP24",
+    "batch_id": "RB10",
+    "status": "planned",
+    "baseline_assessment": "実機等未検証",
+    "retained_implementation": "基底パス、build-info、公開証拠gate、手動release workflowを用意。公開は保留。",
+    "review_gap": "完成commitの証拠、実同期/保存/送信の上限・現行費用、公開後直リンク検証はない。",
+    "required_behavior": "公開時はデプロイ対象commitと基底パスを確認し、同期・保存容量・送信等の上限と費用を記録すること。新規有料機能の自動有効化をしないこと。",
+    "implementation_action": "完成候補commit、基底パス、build-info、キャッシュ更新、直リンク、公開後表示版を検証する。同期DB・素材・通信・認証の現行上限と費用を記録し、証拠が揃ってから公開候補を提出する。",
+    "code_paths": [
+      ".github/workflows/release.yml",
+      "scripts/check_release.py",
+      "docs/implementation/RELEASE.md"
+    ],
+    "acceptance_ids": [
+      "AT-N17"
+    ],
+    "integration_ids": [],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "この資料の作成だけで公開済みや費用ゼロと宣言しない",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-N18",
+    "title": "失敗時の説明と入力保持",
+    "original_package_id": "WP02",
+    "batch_id": "RB02",
+    "status": "planned",
+    "baseline_assessment": "部分実装",
+    "retained_implementation": "保存/不正JSONの入力保持、近傍エラー、手動再試行・一時持出しを画面試験で再確認。",
+    "review_gap": "relation/全共通操作/通信失敗の受入は不足。inの不適合は利用者が入力で直せない。",
+    "required_behavior": "エラーは何が失敗したか・未保存範囲・修正方法を対象近傍と通知へ表示し、入力を保持すること。",
+    "implementation_action": "全編集・関係・ファイル・通信・素材・競合の失敗に未保存範囲と修正方法を表示する。入力と選択を保ち、再試行・戻る・一時持出しで作業を再開できるようにする。",
+    "code_paths": [
+      "src/ui/EntityEditor.tsx",
+      "src/App.tsx",
+      "tests/e2e/editor.spec.ts"
+    ],
+    "acceptance_ids": [
+      "AT-N18"
+    ],
+    "integration_ids": [
+      "AT-E12"
+    ],
+    "finding_ids": [
+      "R05"
+    ],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "白画面・無言の失敗・黙ったデータ削除を残さない",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-N19",
+    "title": "正本と公開版の保護",
+    "original_package_id": "WP10",
+    "batch_id": "RB04",
+    "status": "planned",
+    "baseline_assessment": "部分実装",
+    "retained_implementation": "不変snapshotと保護、固定版出力、作者メモ・不採用/別案の投影除外がある。",
+    "review_gap": "作者別案・正本を選択して比較/採用する製品操作が不足。不採用効果の試読実行も不整合。",
+    "required_behavior": "正本・作者別案・ゲーム内経路・公開スナップショットを区別し、公開版の更新は新しい版として作ること。",
+    "implementation_action": "正本・作者別案・ゲーム経路・公開版を画面と保存で分ける。公開版は不変にして更新は新しい版へ保存し、不採用効果も試読へ流さず、別案採用時に影響を表示する。",
+    "code_paths": [
+      "src/storage/store.ts",
+      "src/domain/exports.ts",
+      "src/domain/projection.ts",
+      "src/domain/runtime.ts"
+    ],
+    "acceptance_ids": [
+      "AT-N19"
+    ],
+    "integration_ids": [],
+    "finding_ids": [
+      "R03"
+    ],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "別案の編集で公開済み本文や参照設定を上書きしない",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  },
+  {
+    "id": "REQ-N20",
+    "title": "持ち出しと互換性",
+    "original_package_id": "WP22",
+    "batch_id": "RB08",
+    "status": "planned",
+    "baseline_assessment": "部分実装",
+    "retained_implementation": "専用形式/汎用runtime等の仕様版と対象版、除外preview、互換性文書、未対応拒否を実装。",
+    "review_gap": "全profile総合検証と実ゲームengine adapterはない。すべてのengineへの対応ではない。",
+    "required_behavior": "完全保存・汎用JSON・読み物等の出力に仕様版と対象版を付け、未対応機能と除外項目を表示すること。互換性の検証範囲を記録すること。",
+    "implementation_action": "出力の仕様版・対象版・全項目の対応/除外/未対応を画面と互換表へ記録する。汎用JSONと一つの実受取処理を試験し、未対応engineは対応済みと書かず、完全保存の往復は維持する。",
+    "code_paths": [
+      "src/domain/exports.ts",
+      "docs/implementation/EXPORT_COMPATIBILITY.md"
+    ],
+    "acceptance_ids": [
+      "AT-N20"
+    ],
+    "integration_ids": [],
+    "finding_ids": [],
+    "done_when": [
+      "元の必須動作全体と受入試験の正常・境界/失敗条件が合格し、対象版・手順・入力・結果を記録する。",
+      "Unity・Unreal・ink・Yarn等すべてに対応済みと仮定しない",
+      "利用者の通常操作から保存・再読込・関連情報への移動を確認する。型や関数の存在だけでは完了にしない。"
+    ],
+    "result": "not_run",
+    "evidence": [],
+    "final_acceptance_batch": "RB10"
+  }
+]

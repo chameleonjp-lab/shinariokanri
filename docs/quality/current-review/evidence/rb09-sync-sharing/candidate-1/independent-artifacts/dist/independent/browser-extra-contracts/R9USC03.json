@@ -1,0 +1,35 @@
+{
+  "id": "R9USC03",
+  "status": "fail",
+  "expected": "Correct behavior, not observed-bad success",
+  "failure": "locator.selectOption: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByLabel('対象の公開段落', { exact: true })\u001b[22m\n\n    at /tmp/shinariokanri-independent-rb09-35d34a8/independent/browser-extra-contracts.mjs:18:529\n    at async run (/tmp/shinariokanri-independent-rb09-35d34a8/independent/browser-extra-contracts.mjs:14:248)\n    at async file:///tmp/shinariokanri-independent-rb09-35d34a8/independent/browser-extra-contracts.mjs:18:1",
+  "observation": {},
+  "calls": [
+    {
+      "type": "auth-fixture",
+      "role": "reviewer"
+    },
+    {
+      "type": "edge",
+      "action": "projects",
+      "input": {}
+    },
+    {
+      "type": "public-list"
+    },
+    {
+      "type": "edge",
+      "action": "shared_snapshot",
+      "input": {
+        "snapshotId": "40000000-0000-4000-8000-000000000005"
+      }
+    },
+    {
+      "type": "comments",
+      "method": "GET",
+      "body": null
+    }
+  ],
+  "pageErrors": [],
+  "environment": "Production Chromium153 at isolated5391, HTTPS backend mocks"
+}

@@ -1,0 +1,37 @@
+import { startTrialVerified } from '../domain/runtimeVerified';
+import { stepTrial, backTrial, restartTrial, getTrialChoices, getTrialNode, declaredEntrypoints, setTrialStubValues } from '../domain/runtime';
+import type { TrialSession, TrialRequest } from '../domain/runtime';
+import type { ProjectData, RichText, TypedValue, ContentAnchor } from '../domain/types';
+import { sha256, jsonBytes } from '../storage/json';
+import { presentationAnchorApplies } from '../domain/presentation';
+import { adoptedRecord } from '../domain/adoption';
+import { richBody } from './richBody';
+import {materialView} from './material';
+
+/** This independent browser entry embeds the production engine, never another condition interpreter. */
+export const engine={startTrialVerified,stepTrial,backTrial,restartTrial,getTrialChoices,getTrialNode,declaredEntrypoints,setTrialStubValues};
+(globalThis as any).ScenarioRuntime=engine;
+type Payload={project:ProjectData;projectHash:string;title:string;versionLabel:string;publicToRuntime:Record<string,string>;assetData?:Record<string,{mediaType:string;base64:string}>};
+export async function mount(payload:Payload){
+ if(await sha256(jsonBytes(payload.project))!==payload.projectHash)throw Error('INTEGRITY_FAILED: 出力内容hashが一致しません。');
+ const project=payload.project,choose=document.getElementById('choices')!,scene=document.getElementById('scene')!,message=document.getElementById('message')!,state=document.getElementById('state')!;
+ document.getElementById('title')!.textContent=payload.title;document.getElementById('version')!.textContent=payload.versionLabel;
+ let session:TrialSession|undefined,busy=false;(globalThis as any).ScenarioSession=()=>session?structuredClone(session):undefined;const urls=new Set<string>();const entry=document.createElement('select');entry.setAttribute('aria-label','開始入口');for(const id of declaredEntrypoints(project)){const option=document.createElement('option');option.value=id;option.textContent=project.entities.find(e=>e.id===id)?.name??id;entry.append(option);}document.getElementById('start')!.before(entry);
+ const tick=document.createElement('input');tick.setAttribute('aria-label','試遊時点の世界内tick');tick.placeholder='期限用の世界内tick';entry.after(tick);
+ function button(label:string,action:()=>void,disabled=false){const b=document.createElement('button');b.textContent=label;b.type='button';b.disabled=disabled||busy;b.onclick=action;choose.append(b);return b;}
+ const showMaterial=materialView(project,payload.assetData??{},payload.publicToRuntime,urls);
+ const body=(text:RichText,parent:HTMLElement,anchor?:ContentAnchor)=>richBody(project,text,parent,anchor,project.projectId,showMaterial);
+ function render(){for(const url of urls)URL.revokeObjectURL(url);urls.clear();choose.replaceChildren();scene.replaceChildren();for(const id of ['undo','restart','loop']){(document.getElementById(id) as HTMLButtonElement).disabled=busy||!session||(id==='undo'&&session.history.length===0);} if(!session)return;const node=getTrialNode(project,session);document.getElementById('node-name')!.textContent=node?.name??'開始状態';message.textContent=[session.status,...session.issues.map(issue=>`${issue.code}: ${issue.message}`)].join(' · ');state.textContent=JSON.stringify(session.state,null,2);
+  const content=node?.data.sceneId?session.content.entities.find(e=>e.id===node.data.sceneId):undefined;if(content?.kind==='scene'&&!session.pendingPresentation){body(content.data.body,scene);for(const id of content.data.dialogueLineIds??[]){const line=session.content.entities.find(e=>e.id===id);if(line?.kind==='dialogue_line'&&adoptedRecord(line)){const heading=document.createElement('strong');heading.textContent=line.data.speakerId?session.content.entities.find(e=>e.id===line.data.speakerId)?.name??'話者未確認':'';scene.append(heading);body(line.data.text,scene);}}
+   const details=document.createElement('details'),summary=document.createElement('summary');summary.textContent='演出・絵コンテ・素材';details.append(summary);for(const cue of session.content.entities.filter(e=>e.kind==='cue'&&adoptedRecord(e))){if(cue.kind!=='cue'||!presentationAnchorApplies(session.content,session!.state,cue.data.anchor,{nodeId:node?.id,sceneId:content.id}))continue;const line=document.createElement('p');line.textContent=`${cue.data.cueType} · ${cue.data.mediaTime??0} ms · 待機${cue.data.waitMs??0} ms · ${cue.data.expression??''} · ${JSON.stringify(cue.data.camera??{})}`;details.append(line);media(cue.data.attachmentId,details);}for(const frame of session.content.entities.filter(e=>e.kind==='storyboard_frame'&&adoptedRecord(e))){if(frame.kind!=='storyboard_frame'||!presentationAnchorApplies(session.content,session!.state,frame.data.anchor,{nodeId:node?.id,sceneId:content.id}))continue;body(frame.data.caption??[],details);media(frame.data.finalAssetId??frame.data.referenceAssetId,details);}if(details.childElementCount>1)scene.append(details);
+  }
+  if(session.status==='ready'){const transfer=node?.data.nodeType==='call'||node?.data.nodeType==='exit'&&session.state.callStack.length>0,policy=node?.data.executionPolicy??(node?.data.nodeType==='automatic'?'first_match':'manual_choice');if(transfer||policy!=='manual_choice')button(transfer?'呼出し・復帰の規則で進む':'進行規則に従って次へ',()=>step());else for(const choice of getTrialChoices(project,session))button(choice.label,()=>step({edgeId:choice.edgeId}),choice.result!=='true'||!choice.toId);if(node?.data.fallbackId)button('代替先へ進む',()=>step());}
+  for(const contract of session.content.entities.filter(e=>e.kind==='external_contract'&&adoptedRecord(e))){if(contract.kind!=='external_contract')continue;for(const [index,value] of (contract.data.stubValues??[]).entries())button(`仮外部値 ${contract.name} ${index+1}`,()=>{session=setTrialStubValues(project,session!,{external:{[contract.id]:value as TypedValue}});render();});}
+ }
+ function media(id:string|null|undefined,parent:HTMLElement){if(id)showMaterial(id,project.projectId,parent);}
+ function step(request:TrialRequest={}){if(!session||busy)return;if(session.trace.length>=10000){message.textContent='TRANSITION_LIMIT: 一経路10,000遷移で停止しました。';return;}const node=getTrialNode(project,session);if(node?.data.trigger&&!confirm(`宣言したきっかけ「${node.data.trigger.eventKey||node.data.trigger.event}」を入力しますか。`))return;session=stepTrial(project,session,{...request,worldTick:tick.value||undefined,...node?.data.trigger?{event:{triggerId:node.data.trigger.id||node.id,event:node.data.trigger.event,eventKey:node.data.trigger.eventKey,occurrenceId:crypto.randomUUID()}}:{}});render();}
+ document.getElementById('start')!.onclick=async()=>{if(busy)return;busy=true;try{session=await startTrialVerified(project,{entryId:entry.value,worldTick:tick.value||undefined});}catch(cause){message.textContent=(cause as Error).message;}finally{busy=false;render();}};
+ document.getElementById('undo')!.onclick=()=>{if(session&&!busy){session=backTrial(session);render();}};document.getElementById('restart')!.onclick=()=>{if(session&&!busy){session=restartTrial(project,session,'all',entry.value,{worldTick:tick.value||undefined});render();}};document.getElementById('loop')!.onclick=()=>{if(session&&!busy){session=restartTrial(project,session,'next_run',entry.value,{worldTick:tick.value||undefined});render();}};
+ (document.getElementById('start') as HTMLButtonElement).click();
+}
+const data=typeof document==='undefined'?undefined:document.getElementById('scenario-data');if(data)void mount(JSON.parse(data.textContent??'{}')).catch(cause=>{document.getElementById('message')!.textContent=(cause as Error).message;});

@@ -1,0 +1,27 @@
+
+ RUN  v5.0.3 /tmp/shinariokanri-independent-rb09-35d34a8
+
+ ❯ tests/independent-rb09-sql-derived.test.ts (3 tests | 1 failed) 1653ms
+   × R9DSV01 limited source edit atomically shifts private Unicode references and invalidates approved translation while keeping derived review and private IDs out of the editor ACK 753ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/independent-rb09-sql-derived.test.ts > R9DSV01 limited source edit atomically shifts private Unicode references and invalidates approved translation while keeping derived review and private IDs out of the editor ACK
+Error: ERROR:  TOMBSTONE_REQUIRED
+CONTEXT:  PL/pgSQL function public.scenario_sync_commit_prepared(uuid,uuid,uuid,bigint,jsonb,text,jsonb,jsonb,jsonb,uuid[]) line 37 at RAISE
+
+ ❯ sql tests/independent-rb09-sql-derived.test.ts:13:371
+
+ ❯ rpc tests/independent-rb09-sql-derived.test.ts:14:55
+ ❯ Object.commit tests/independent-rb09-sql-derived.test.ts:15:278
+ ❯ applyEditorOperation src/sync/editor.ts:37:35
+ ❯ tests/independent-rb09-sql-derived.test.ts:18:218
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 2 passed (3)
+   Start at  19:33:23
+   Duration  2.36s (tests 76%, transform 19%, import 4%)
+

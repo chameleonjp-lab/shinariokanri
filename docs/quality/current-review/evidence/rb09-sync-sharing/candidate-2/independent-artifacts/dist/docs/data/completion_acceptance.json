@@ -1,0 +1,3959 @@
+{
+  "cases": [
+    {
+      "id": "AT-B01",
+      "requirement_ids": [
+        "REQ-B01"
+      ],
+      "package_id": "WP04",
+      "given": "空の作品",
+      "when": "名前だけの人物と要約だけの出来事を登録する",
+      "then": "同じ作品の一覧・詳細・検索から再度開ける",
+      "negative_or_edge": "必須項目や参照先が不正な変更は保存せず、入力途中の文章と修正箇所を保持する",
+      "result": "not_run",
+      "original_package_id": "WP04",
+      "batch_id": "RB02",
+      "contributing_batches": [
+        "RB02"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-B02",
+      "requirement_ids": [
+        "REQ-B02"
+      ],
+      "package_id": "WP07",
+      "given": "共通出来事と二人が関わる出来事がある",
+      "when": "年表を開き出来事を編集する",
+      "then": "共通レーンと人物レーンから同一IDの情報を開ける",
+      "negative_or_edge": "共通レーンへの表示だけでは全員を関係者や知識の保有者に登録しない",
+      "result": "not_run",
+      "original_package_id": "WP07",
+      "batch_id": "RB03",
+      "contributing_batches": [
+        "RB03"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-B03",
+      "requirement_ids": [
+        "REQ-B03"
+      ],
+      "package_id": "WP07",
+      "given": "人物が二つのグループに属する",
+      "when": "片方を折りたたみ並べ替える",
+      "then": "人物の本体・所属・出来事のIDは変わらない",
+      "negative_or_edge": "グループ削除では人物を連鎖削除せず、表示への影響を確認する",
+      "result": "not_run",
+      "original_package_id": "WP07",
+      "batch_id": "RB03",
+      "contributing_batches": [
+        "RB03"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-B04",
+      "requirement_ids": [
+        "REQ-B04"
+      ],
+      "package_id": "WP07",
+      "given": "横に長い年表",
+      "when": "指またはスクロール操作で過去と未来へ移動する",
+      "then": "人物名と共通レーンの識別を保ち対象の出来事を編集できる",
+      "negative_or_edge": "ページ全体の横ずれや、編集欄のスクロールとの取り違えが起きない",
+      "result": "not_run",
+      "original_package_id": "WP07",
+      "batch_id": "RB03",
+      "contributing_batches": [
+        "RB03"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-B05",
+      "requirement_ids": [
+        "REQ-B05"
+      ],
+      "package_id": "WP06",
+      "given": "確定日時と不確定日時の出来事がある",
+      "when": "表示単位と拡大率を切り替える",
+      "then": "保存された日時・条件・関係線を変更しない",
+      "negative_or_edge": "現在の暦に存在しない単位は理由付きで選択不可とし、暗黙の換算をしない",
+      "result": "not_run",
+      "original_package_id": "WP06",
+      "batch_id": "RB03",
+      "contributing_batches": [
+        "RB03"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-B06",
+      "requirement_ids": [
+        "REQ-B06"
+      ],
+      "package_id": "WP06",
+      "given": "本編開始より前後に出来事がある",
+      "when": "本編開始の基準点だけ変更する",
+      "then": "出来事の絶対位置を保ち、相対表示だけ更新する",
+      "negative_or_edge": "本編開始を動かしただけで全出来事を移動しない",
+      "result": "not_run",
+      "original_package_id": "WP06",
+      "batch_id": "RB03",
+      "contributing_batches": [
+        "RB03"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-B07",
+      "requirement_ids": [
+        "REQ-B07"
+      ],
+      "package_id": "WP08",
+      "given": "二つの出来事がある",
+      "when": "始点と終点をタップで指定して線の種類を選ぶ",
+      "then": "年表と関係一覧から同じ関係IDを編集できる",
+      "negative_or_edge": "存在しない終点や型の異なる関係を保存せず理由を示す",
+      "result": "not_run",
+      "original_package_id": "WP08",
+      "batch_id": "RB03",
+      "contributing_batches": [
+        "RB03"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-B08",
+      "requirement_ids": [
+        "REQ-B08"
+      ],
+      "package_id": "WP04",
+      "given": "参加者が未設定の出来事",
+      "when": "二人を異なる役割で登録してメモを書く",
+      "then": "人物側の参照元にも同じ出来事が現れる",
+      "negative_or_edge": "登場、目撃、伝聞、知識取得を同じ関係として扱わない",
+      "result": "not_run",
+      "original_package_id": "WP04",
+      "batch_id": "RB02",
+      "contributing_batches": [
+        "RB02"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-B09",
+      "requirement_ids": [
+        "REQ-B09"
+      ],
+      "package_id": "WP08",
+      "given": "年表に登場する二人がいる",
+      "when": "関係図で関係を更新して年表から詳細を開く",
+      "then": "同じ関係の意味と時期が表示される",
+      "negative_or_edge": "図上の配置変更は人物の所属・時期・関係を変更しない",
+      "result": "not_run",
+      "original_package_id": "WP08",
+      "batch_id": "RB03",
+      "contributing_batches": [
+        "RB03"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-B10",
+      "requirement_ids": [
+        "REQ-B10"
+      ],
+      "package_id": "WP05",
+      "given": "同名人物と別名がある",
+      "when": "候補を確認して本文にリンクを付ける",
+      "then": "選んだ対象のIDと本文位置に対応する",
+      "negative_or_edge": "同名や一般語を自動で一人へ確定しない",
+      "result": "not_run",
+      "original_package_id": "WP05",
+      "batch_id": "RB02",
+      "contributing_batches": [
+        "RB02"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-B11",
+      "requirement_ids": [
+        "REQ-B11"
+      ],
+      "package_id": "WP04",
+      "given": "場所と物品がある",
+      "when": "出来事に関連付けて各一覧を開く",
+      "then": "関係する人物・出来事へ相互移動できる",
+      "negative_or_edge": "物品の種類と個体を区別し、一つの個体の複製で所有を二重化しない",
+      "result": "not_run",
+      "original_package_id": "WP04",
+      "batch_id": "RB02",
+      "contributing_batches": [
+        "RB02"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-B12",
+      "requirement_ids": [
+        "REQ-B12"
+      ],
+      "package_id": "WP16",
+      "given": "条件・本文・関係線・素材を含む作品",
+      "when": "完全保存ファイルを新規作品へ読み戻す",
+      "then": "安定IDと情報内容と素材の対応が一致する",
+      "negative_or_edge": "破損・未対応版・危険なパス・参照不整合は既存作品を変更せず拒否する",
+      "result": "not_run",
+      "original_package_id": "WP16",
+      "batch_id": "RB06",
+      "contributing_batches": [
+        "RB06"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-B13",
+      "requirement_ids": [
+        "REQ-B13"
+      ],
+      "package_id": "WP10",
+      "given": "古い出来事を後の回想で示す構成",
+      "when": "回想の提示位置を変更する",
+      "then": "世界時間を変えず読者の開示順だけ変わる",
+      "negative_or_edge": "場面の並べ替えを出来事の日付変更として保存しない",
+      "result": "not_run",
+      "original_package_id": "WP10",
+      "batch_id": "RB04",
+      "contributing_batches": [
+        "RB04"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-B14",
+      "requirement_ids": [
+        "REQ-B14"
+      ],
+      "package_id": "WP12",
+      "given": "鍵を得る道と得ない道が合流する",
+      "when": "二経路で同じ合流先へ進む",
+      "then": "所持状態の違いを保ったまま到着する",
+      "negative_or_edge": "選択肢ゼロや不正な効果は終端と区別し、途中までの更新を残さない",
+      "result": "not_run",
+      "original_package_id": "WP12",
+      "batch_id": "RB05",
+      "contributing_batches": [
+        "RB05"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-B15",
+      "requirement_ids": [
+        "REQ-B15"
+      ],
+      "package_id": "WP11",
+      "given": "型の異なる状態がある",
+      "when": "条件を組み立て更新する",
+      "then": "値と更新元を確認できる",
+      "negative_or_edge": "未定義の値を暗黙に偽またはゼロにせず未確認と表示する",
+      "result": "not_run",
+      "original_package_id": "WP11",
+      "batch_id": "RB05",
+      "contributing_batches": [
+        "RB05"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-B16",
+      "requirement_ids": [
+        "REQ-B16"
+      ],
+      "package_id": "WP13",
+      "given": "二つの選択肢と効果がある",
+      "when": "片方へ進み戻って他方へ進む",
+      "then": "所持品・知識・既読・抽選状態を巻き戻した結果で進行する",
+      "negative_or_edge": "試し読みの操作で作者の正本や公開版を上書きしない",
+      "result": "not_run",
+      "original_package_id": "WP13",
+      "batch_id": "RB05",
+      "contributing_batches": [
+        "RB05"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-B17",
+      "requirement_ids": [
+        "REQ-B17"
+      ],
+      "package_id": "WP15",
+      "given": "嘘の証言と真相がある",
+      "when": "誰がどの経路で聞いたか登録する",
+      "then": "真偽・出所・知っている範囲を別々に確認できる",
+      "negative_or_edge": "同じ場面に居るだけで真相を全員へ伝播しない",
+      "result": "not_run",
+      "original_package_id": "WP15",
+      "batch_id": "RB05",
+      "contributing_batches": [
+        "RB05"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-B18",
+      "requirement_ids": [
+        "REQ-B18"
+      ],
+      "package_id": "WP09",
+      "given": "人物が途中で移動し所属を変える",
+      "when": "変化前後と別経路を選ぶ",
+      "then": "指定した時点と経路の状態が表示される",
+      "negative_or_edge": "順序や経路が不明な場合は複数候補または不明とし唯一の状態を作らない",
+      "result": "not_run",
+      "original_package_id": "WP09",
+      "batch_id": "RB03",
+      "contributing_batches": [
+        "RB03"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-B19",
+      "requirement_ids": [
+        "REQ-B19"
+      ],
+      "package_id": "WP15",
+      "given": "任意の手掛かりと続編用の謎がある",
+      "when": "今作の回収状況を表示する",
+      "then": "必須の未回収と意図した持ち越しを分ける",
+      "negative_or_edge": "プレイヤーに提示しただけで理解・推理済みと判定しない",
+      "result": "not_run",
+      "original_package_id": "WP15",
+      "batch_id": "RB05",
+      "contributing_batches": [
+        "RB05"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-B20",
+      "requirement_ids": [
+        "REQ-B20"
+      ],
+      "package_id": "WP10",
+      "given": "目的が変化する人物",
+      "when": "変化の根拠となる場面を登録する",
+      "then": "変化前後と根拠へ移動できる",
+      "negative_or_edge": "役割を未入力の場面を作成不能にしない",
+      "result": "not_run",
+      "original_package_id": "WP10",
+      "batch_id": "RB04",
+      "contributing_batches": [
+        "RB04"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-B21",
+      "requirement_ids": [
+        "REQ-B21"
+      ],
+      "package_id": "WP06",
+      "given": "日付未定と相対日時の出来事がある",
+      "when": "先行出来事との日数制約を設定する",
+      "then": "確定していない範囲を表現し前後関係を確認できる",
+      "negative_or_edge": "循環する相対制約や存在しない日付は拒否または未解決とし、日時を捏造しない",
+      "result": "not_run",
+      "original_package_id": "WP06",
+      "batch_id": "RB03",
+      "contributing_batches": [
+        "RB03"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-B22",
+      "requirement_ids": [
+        "REQ-B22"
+      ],
+      "package_id": "WP12",
+      "given": "会話とクエストと設定がある",
+      "when": "場面の前提と台詞へ関連付ける",
+      "then": "双方から根拠を追える",
+      "negative_or_edge": "クエストの完了と本文・実装の完成を一つの状態に統合しない",
+      "result": "not_run",
+      "original_package_id": "WP12",
+      "batch_id": "RB05",
+      "contributing_batches": [
+        "RB05"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-B23",
+      "requirement_ids": [
+        "REQ-B23"
+      ],
+      "package_id": "WP03",
+      "given": "確定リンクと履歴のある人物",
+      "when": "改名し復元して再起動する",
+      "then": "IDと参照を保ち復元も新しい履歴として残る",
+      "negative_or_edge": "容量不足や書き込み失敗を保存済みと表示せず、元データを失わせない",
+      "result": "not_run",
+      "original_package_id": "WP03",
+      "batch_id": "RB06",
+      "contributing_batches": [
+        "RB06"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-B24",
+      "requirement_ids": [
+        "REQ-B24"
+      ],
+      "package_id": "WP05",
+      "given": "タッチ端末で作品を開く",
+      "when": "絞り込んで関係線や条件を編集する",
+      "then": "マウスなしで完了し絞り込みの範囲を把握できる",
+      "negative_or_edge": "根拠が不足する候補を確定不具合と断定せず、色だけで意味を伝えない",
+      "result": "not_run",
+      "original_package_id": "WP05",
+      "batch_id": "RB02",
+      "contributing_batches": [
+        "RB02"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-F01",
+      "requirement_ids": [
+        "REQ-F01"
+      ],
+      "package_id": "WP04",
+      "given": "文章メモ「塔の鍵は鳥が持つ」、画像1枚、音声1件をスマートフォンで保存した作品",
+      "when": "メモから場面へ変換し、別端末で同期後の変換元と変換先を開く",
+      "then": "スマートフォンで一文を残し、PCで場面へ変えても元のメモを追える。",
+      "negative_or_edge": "録音を拒否した端末でも文章を保存できる。変換は元メモを消さず、元と変換先のIDを結ぶ。",
+      "result": "not_run",
+      "original_package_id": "WP04",
+      "batch_id": "RB02",
+      "contributing_batches": [
+        "RB02"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-F02",
+      "requirement_ids": [
+        "REQ-F02"
+      ],
+      "package_id": "WP04",
+      "given": "人物雛形に名前だけの既存人物Aがある作品",
+      "when": "説明付きenum項目「所属」を任意項目として追加し、後で必須化と数値型への変更を試す",
+      "then": "設定を細かくしない作品でも、名前と要約だけで登録を始められる。",
+      "negative_or_edge": "必須項目の追加や型変更は既存値の影響を事前表示する。不適合値を黙って削除・変換しない。",
+      "result": "not_run",
+      "original_package_id": "WP04",
+      "batch_id": "RB02",
+      "contributing_batches": [
+        "RB02"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-F03",
+      "requirement_ids": [
+        "REQ-F03"
+      ],
+      "package_id": "WP10",
+      "given": "場面Sと恋愛/戦争の二つの筋がある作品",
+      "when": "Sを二つの筋へ表示し、一方のカードで本文を修正してもう一方から開く",
+      "then": "場面を別の筋にも表示しても、本文が別々に複製されない。",
+      "negative_or_edge": "筋から外しても本文を消さない。表示レーンと実際の参加関係は別に保持する。",
+      "result": "not_run",
+      "original_package_id": "WP10",
+      "batch_id": "RB04",
+      "contributing_batches": [
+        "RB04"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-F04",
+      "requirement_ids": [
+        "REQ-F04"
+      ],
+      "package_id": "WP10",
+      "given": "人物Aが鍵を探す場面Sと役割未入力の場面T",
+      "when": "Sに視点A、目標、対立、結果、新情報を登録し、Tは空欄のまま保存する",
+      "then": "場面を開くと、物語に加える理由と変化を確認できる。",
+      "negative_or_edge": "未記入を許し、作者が定めた役割を評価の正解として自動判定しない。",
+      "result": "not_run",
+      "original_package_id": "WP10",
+      "batch_id": "RB04",
+      "contributing_batches": [
+        "RB04"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-F05",
+      "requirement_ids": [
+        "REQ-F05"
+      ],
+      "package_id": "WP10",
+      "given": "緊張度2/8/未入力の三場面と一つの構成雛形",
+      "when": "別案に雛形を適用して章順を変え、緊張度の表示と算出対象を確認する",
+      "then": "表示は作者が付けた値から作り、作品の良し悪しを自動採点しない。",
+      "negative_or_edge": "雛形適用は別案または差分確認を経る。緊張度の未入力をゼロと集計せず算出母数を示す。",
+      "result": "not_run",
+      "original_package_id": "WP10",
+      "batch_id": "RB04",
+      "contributing_batches": [
+        "RB04"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-F06",
+      "requirement_ids": [
+        "REQ-F06"
+      ],
+      "package_id": "WP10",
+      "given": "要約「門が開く」、本文「門番は去った」、秘密の作者メモとルビを持つ場面",
+      "when": "カードから本文へ移り本文を変更し、選んだ章を横書き/縦書きで通読する",
+      "then": "作者メモを試し読みへ出さず、本文の修正が関連する表示へ反映される。",
+      "negative_or_edge": "要約の更新は本文を上書きしない。公開用読み物へ作者メモを混ぜず、ルビと縦書きでも元の段落IDを保つ。",
+      "result": "not_run",
+      "original_package_id": "WP10",
+      "batch_id": "RB04",
+      "contributing_batches": [
+        "RB04"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-F07",
+      "requirement_ids": [
+        "REQ-F07"
+      ],
+      "package_id": "WP06",
+      "given": "生年月日が確定した人物、死亡後登場、誕生日未定の人物",
+      "when": "暦を選んで誕生日前後の年齢を確認し、死亡後登場へ回想の理由を付ける",
+      "then": "死亡後の場面は、回想・記録・復活などの意図を添えて例外扱いできる。",
+      "negative_or_edge": "生年月日や暦の対応が未定なら年齢は範囲または不明とする。回想・復活の例外を時期と経路付きで記録する。",
+      "result": "not_run",
+      "original_package_id": "WP06",
+      "batch_id": "RB03",
+      "contributing_batches": [
+        "RB03"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-F08",
+      "requirement_ids": [
+        "REQ-F08"
+      ],
+      "package_id": "WP06",
+      "given": "A終了100、B開始200、終了から50–100tickの制約と固定日時C",
+      "when": "Aの終了を180へ動かす候補を作り、連動対象を確認して適用後に取り消す",
+      "then": "表示の拡大・縮小で日付は変わらず、日付変更の影響を取り消せる。",
+      "negative_or_edge": "循環制約・固定日時との衝突は影響一覧を示す。承認された可動日時だけを一括変更し、取消時は全変更を戻す。",
+      "result": "not_run",
+      "original_package_id": "WP06",
+      "batch_id": "RB03",
+      "contributing_batches": [
+        "RB03"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-F09",
+      "requirement_ids": [
+        "REQ-F09"
+      ],
+      "package_id": "WP09",
+      "given": "共通世界Wの公開版1を参照する旧作Pと続編Q",
+      "when": "Wに改訂版2を作りQだけ参照更新し、Pの公開版1の設定を再度開く",
+      "then": "過去作品の公開時点の設定を保ったまま、続編用の設定を作れる。",
+      "negative_or_edge": "共通設定の公開版は不変とし作品が参照する版を固定する。続編の改訂を旧作へ自動適用しない。",
+      "result": "not_run",
+      "original_package_id": "WP09",
+      "batch_id": "RB03",
+      "contributing_batches": [
+        "RB03"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-F10",
+      "requirement_ids": [
+        "REQ-F10"
+      ],
+      "package_id": "WP09",
+      "given": "同じ場所IDを持つ街と建物が地図なしで登録済み",
+      "when": "場所一覧から出来事を編集し、街/建物の地図画像とpinを後から追加して往復する",
+      "then": "地図画像がなくても場所の一覧で作業でき、地図を追加しても同じ場所を参照する。",
+      "negative_or_edge": "地図画像がない場合は場所の一覧を同等に使う。地図階層の循環と無効な座標参照を拒否する。",
+      "result": "not_run",
+      "original_package_id": "WP09",
+      "batch_id": "RB03",
+      "contributing_batches": [
+        "RB03"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-F11",
+      "requirement_ids": [
+        "REQ-F11"
+      ],
+      "package_id": "WP09",
+      "given": "人物が街Aから街Bへ100tick差で移動し、手段の最低所要時間は未設定",
+      "when": "移動検査を行い、最低200tickを登録して再検査し、場所の破壊前後を表示する",
+      "then": "計算に使う時間が未設定なら、移動不可能と断定せず未確認にする。",
+      "negative_or_edge": "移動手段・距離・所要時間の根拠がない場合は未確認とする。時点による改名や支配の違いを恒久上書きしない。",
+      "result": "not_run",
+      "original_package_id": "WP09",
+      "batch_id": "RB03",
+      "contributing_batches": [
+        "RB03"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-F12",
+      "requirement_ids": [
+        "REQ-F12"
+      ],
+      "package_id": "WP09",
+      "given": "同一人物の偽名と非公開本名、非公開の親子関係",
+      "when": "正体開示前のreader投影を作り、検索、家系、索引、リンク、添付名を調べる",
+      "then": "正体を明かす前の資料に、本名や家系のつながりが表示されない。",
+      "negative_or_edge": "家系は関係種類と根拠を持つ。正体の公開前は本名だけでなく、索引・画像名・リンク・親子関係からも漏らさない。",
+      "result": "not_run",
+      "original_package_id": "WP09",
+      "batch_id": "RB03",
+      "contributing_batches": [
+        "RB03"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-F13",
+      "requirement_ids": [
+        "REQ-F13"
+      ],
+      "package_id": "WP12",
+      "given": "章内に場面、場面内に会話があり、未接続の出口が一つある階層graph",
+      "when": "章まで折りたたんで未完成件数を確認し、会話へ掘り下げ出口を再接続する",
+      "then": "図を折りたたんでも、中に条件や未完成箇所があることを確認できる。",
+      "negative_or_edge": "下位図の未解決入口・出口・条件エラーは上位図の件数に反映し、折りたたみでエラーを隠さない。",
+      "result": "not_run",
+      "original_package_id": "WP12",
+      "batch_id": "RB05",
+      "contributing_batches": [
+        "RB05"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-F14",
+      "requirement_ids": [
+        "REQ-F14"
+      ],
+      "package_id": "WP12",
+      "given": "gateは鍵あり、triggerは入室、once=runの出来事",
+      "when": "鍵を得るだけの状態更新、入室、同じoccurrenceIdの再送、再入室を順に行う",
+      "then": "前提が成り立つだけで出来事が勝手に起こらず、きっかけが必要か選べる。",
+      "negative_or_edge": "条件評価だけでは効果を実行しない。自動発火は明示設定とし、重複した同一トリガーでは一度だけ規則を守る。",
+      "result": "not_run",
+      "original_package_id": "WP12",
+      "batch_id": "RB05",
+      "contributing_batches": [
+        "RB05"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-F15",
+      "requirement_ids": [
+        "REQ-F15"
+      ],
+      "package_id": "WP13",
+      "given": "鍵あり・好感度5のcheckpointと初期値欠落のcheckpoint",
+      "when": "途中開始で進み戻り、不足値のcheckpointと別版checkpointからの開始を試す",
+      "then": "途中開始で必要な状態がない場合、最初から開始した場合と区別して表示する。",
+      "negative_or_edge": "版不一致の開始状態は移行確認が必要。不足値は未確認とし、途中開始の証跡を通しプレイの証跡として扱わない。",
+      "result": "not_run",
+      "original_package_id": "WP13",
+      "batch_id": "RB05",
+      "contributing_batches": [
+        "RB05"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-F16",
+      "requirement_ids": [
+        "REQ-F16"
+      ],
+      "package_id": "WP13",
+      "given": "鍵取得/未取得の二経路が合流し、初期好感度0",
+      "when": "二経路を同じ版から進め、合流先の差分と変更元を比べ、明示resetの有無で再実行する",
+      "then": "合流後に差が残る場合、差を消すのか、会話などへ反映するのか確認できる。",
+      "negative_or_edge": "合流時は自動初期化しない。差を解消するには明示効果を登録し、差分から変更元へ戻れるようにする。",
+      "result": "not_run",
+      "original_package_id": "WP13",
+      "batch_id": "RB05",
+      "contributing_batches": [
+        "RB05"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-F17",
+      "requirement_ids": [
+        "REQ-F17"
+      ],
+      "package_id": "WP14",
+      "given": "場面4、選択肢3、条件真偽4項目の母数を持つ版",
+      "when": "二選択肢だけの経路記録を保存して再実行し、内容変更後の確認待ちを調べる",
+      "then": "確認できた割合は対象を明記する。場面を見ただけで全条件を確認済みにしない。",
+      "negative_or_edge": "台詞到達率・選択肢到達率・条件結果の網羅率を別々に算出する。版変更後の経路は再確認待ちとする。",
+      "result": "not_run",
+      "original_package_id": "WP14",
+      "batch_id": "RB05",
+      "contributing_batches": [
+        "RB05"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-F18",
+      "requirement_ids": [
+        "REQ-F18"
+      ],
+      "package_id": "WP14",
+      "given": "到達可能終端、意図した終端、選択肢ゼロ、無制限ループ、外部条件を含むgraph",
+      "when": "参照検査と有限探索を実行し、各結果区分、証人経路、上限超過を開く",
+      "then": "外部の処理など分からない条件は未確認にする。意図した終わりと進めない不具合を区別する。",
+      "negative_or_edge": "外部値・無制限ループ・探索打切りは未確認とする。不具合候補には再現経路または不成立の根拠を添える。",
+      "result": "not_run",
+      "original_package_id": "WP14",
+      "batch_id": "RB05",
+      "contributing_batches": [
+        "RB05"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-F19",
+      "requirement_ids": [
+        "REQ-F19"
+      ],
+      "package_id": "WP12",
+      "given": "共通会話Cを参照するS、独立複製T、台詞のみoverrideするU",
+      "when": "Cの台詞を改訂し、影響一覧と適用版を確認してS/T/Uの文章を比較する",
+      "then": "元を変更するとどこが変わるか分かり、意図しない分岐へ反映されない。",
+      "negative_or_edge": "参照・複製・差分上書きの方式を保存する。元を削除する前に全参照先を示し、更新の適用範囲を固定する。",
+      "result": "not_run",
+      "original_package_id": "WP12",
+      "batch_id": "RB05",
+      "contributing_batches": [
+        "RB05"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-F20",
+      "requirement_ids": [
+        "REQ-F20"
+      ],
+      "package_id": "WP13",
+      "given": "初回/再訪反応と抽選3候補、run所持金、across_runs記憶",
+      "when": "seed固定で初回/再訪/戻るを行い、周回と全リセット後の記憶/所持金を比べる",
+      "then": "繰り返しでも重要な情報が失われず、抽選の結果を記録して再現できる。",
+      "negative_or_edge": "乱数種・抽選位置・既読・周回持越しを保存する。抽選候補ゼロを無言で進行せず不成立時の処理に従う。",
+      "result": "not_run",
+      "original_package_id": "WP13",
+      "batch_id": "RB05",
+      "contributing_batches": [
+        "RB05"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-F21",
+      "requirement_ids": [
+        "REQ-F21"
+      ],
+      "package_id": "WP19",
+      "given": "台詞L1/L2と対応する翻訳/音声/外部参照",
+      "when": "話者改名とL1/L2並替え、L1編集、複製、分割を行い各IDと対応履歴を確認する",
+      "then": "並べ替えや改名をしても、別の台詞の音声へ取り違えない。",
+      "negative_or_edge": "既存台詞の編集はID維持、コピーは新ID、分割は元から二つの新IDへの対応履歴を残す。IDの手動再利用を拒否する。",
+      "result": "not_run",
+      "original_package_id": "WP19",
+      "batch_id": "RB07",
+      "contributing_batches": [
+        "RB07"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-F22",
+      "requirement_ids": [
+        "REQ-F22"
+      ],
+      "package_id": "WP20",
+      "given": "話者/背景/音楽/間が指定され、背景は仮素材、音楽は欠落",
+      "when": "本文だけの表示と演出込み表示を切り替え、素材一覧で不足と仮完成を調べる",
+      "then": "シナリオだけを読める表示と、演出を含めて確認する表示を切り替えられる。",
+      "negative_or_edge": "欠落素材と仮素材を別状態にし、素材がなくても本文を読める。素材IDの取り替えで台詞IDを変えない。",
+      "result": "not_run",
+      "original_package_id": "WP20",
+      "batch_id": "RB07",
+      "contributing_batches": [
+        "RB07"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-F23",
+      "requirement_ids": [
+        "REQ-F23"
+      ],
+      "package_id": "WP19",
+      "given": "原文hashに対応し翻訳/収録が確認済みの台詞",
+      "when": "原文を修正して担当別出力し、並べ替えだけの場合と見直し対象を比較する",
+      "then": "元の文章だけが変わっても、古い翻訳や音声を完成済みのまま扱わない。",
+      "negative_or_edge": "原文の内容ハッシュが変わった場合のみ依存成果物を確認待ちにする。音声・翻訳の版と確認者を保持する。",
+      "result": "not_run",
+      "original_package_id": "WP19",
+      "batch_id": "RB07",
+      "contributing_batches": [
+        "RB07"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-F24",
+      "requirement_ids": [
+        "REQ-F24"
+      ],
+      "package_id": "WP22",
+      "given": "作者メモ、没案、公開名、分岐、添付、未対応外部処理を持つ版",
+      "when": "完全保存の往復、reader、playable、runtimeの各出力を選び除外と拒否を確認する",
+      "then": "保存用の読み戻しでは情報を保つ。制作・公開用には作者メモや秘密を必要に応じて除く。",
+      "negative_or_edge": "完全保存・公開資料・試遊・制作データの各プロファイルを選択する。未対応の条件や外部コマンドは制作出力を拒否し説明する。",
+      "result": "not_run",
+      "original_package_id": "WP22",
+      "batch_id": "RB08",
+      "contributing_batches": [
+        "RB08"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-F25",
+      "requirement_ids": [
+        "REQ-F25"
+      ],
+      "package_id": "WP10",
+      "given": "正本と公開版1を持つ作品",
+      "when": "別案の場面を作って没にし、ゲーム内に選択分岐を追加して正本を制作出力する",
+      "then": "没案がゲーム用の出力へ混ざらず、元の案を消さずに比較できる。",
+      "negative_or_edge": "作者別案とゲーム内経路を別ID・別種として保存する。没・仮の情報が正本の制作出力へ混入しない。",
+      "result": "not_run",
+      "original_package_id": "WP10",
+      "batch_id": "RB04",
+      "contributing_batches": [
+        "RB04"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-F26",
+      "requirement_ids": [
+        "REQ-F26"
+      ],
+      "package_id": "WP05",
+      "given": "人物Aを参照する台詞/伏線/翻訳と、意味だけ関連した場面",
+      "when": "A改名と死亡設定の変更を別々に実行し、自動表示更新と人の確認待ちを比較する",
+      "then": "改名だけの自動反映と、本文を人が見直す必要のある変更を区別する。",
+      "negative_or_edge": "ID参照の改名反映と意味の見直しを区別する。見直し候補を確定修正として本文へ適用しない。",
+      "result": "not_run",
+      "original_package_id": "WP05",
+      "batch_id": "RB02",
+      "contributing_batches": [
+        "RB02"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-F27",
+      "requirement_ids": [
+        "REQ-F27"
+      ],
+      "package_id": "WP05",
+      "given": "同名人物「葵」2人、一般語としての葵、別名を含む本文",
+      "when": "候補を確認して一人に確定リンク、一般語を除外し、対象の逆参照と再候補を調べる",
+      "then": "本文中の普通の単語を人物名と勝手に結び付けず、候補を選んで確定できる。",
+      "negative_or_edge": "リンク候補の除外を保持し、同名では識別情報を示す。普通の単語や引用資料を無断で置換しない。",
+      "result": "not_run",
+      "original_package_id": "WP05",
+      "batch_id": "RB02",
+      "contributing_batches": [
+        "RB02"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-F28",
+      "requirement_ids": [
+        "REQ-F28"
+      ],
+      "package_id": "WP20",
+      "given": "Web資料URL、PDF添付、画像、作者の解釈を持つ設定",
+      "when": "参照ページ/取得日を指定して設定に結び、公開出力の再配布許可を確認する",
+      "then": "設定の説明と参考資料の文章を区別し、後から元の資料へ戻れる。",
+      "negative_or_edge": "添付と外部URLを区別し、参照箇所・取得日・解釈を分ける。外部資料の再配布権限がない場合はリンクと書誌情報だけを出す。",
+      "result": "not_run",
+      "original_package_id": "WP20",
+      "batch_id": "RB07",
+      "contributing_batches": [
+        "RB07"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-F29",
+      "requirement_ids": [
+        "REQ-F29"
+      ],
+      "package_id": "WP18",
+      "given": "版1の台詞Lにreviewerが指摘したコメント",
+      "when": "本文改訂、対象段落削除、修正済み、再確認済みを順に行い元版の引用を開く",
+      "then": "指摘から対象を開け、対象が変わっても何についての指摘だったか追える。",
+      "negative_or_edge": "指摘時の対象版と引用範囲を保持する。対象段落が削除されても元指摘は残し、最新位置は不明と表示する。",
+      "result": "not_run",
+      "original_package_id": "WP18",
+      "batch_id": "RB09",
+      "contributing_batches": [
+        "RB09"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-F30",
+      "requirement_ids": [
+        "REQ-F30"
+      ],
+      "package_id": "WP18",
+      "given": "chapter限定reader、reviewer、editorと秘密の本名/関係/添付",
+      "when": "各役割で本文、検索、図、リンク、素材と直接APIを操作し、秘密の取得と本文更新を試す",
+      "then": "秘密を隠した本文から、検索や関連図、リンク先を使って秘密が見えない。",
+      "negative_or_edge": "権限はサーバー側と出力時に検証する。非公開データを送ってCSSで隠す方式を禁止し、検索・素材・参照数にも同じ投影を適用する。",
+      "result": "not_run",
+      "original_package_id": "WP18",
+      "batch_id": "RB09",
+      "contributing_batches": [
+        "RB09"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-F31",
+      "requirement_ids": [
+        "REQ-F31"
+      ],
+      "package_id": "WP02",
+      "given": "人物/条件/関係線/専用ファイルを持つ作品と未保存入力",
+      "when": "幅320/390/768/1024/1440、縦横/分割で配置を切替え、狭幅だけで編集と読み込みを完了する",
+      "then": "人物、条件、関係線、読み込みの編集を、スマートフォンだけでも完了できる。",
+      "negative_or_edge": "端末の幅で表示を切り替え、重要操作をPCに限定しない。分割表示やソフトキーボードで確定ボタンが隠れない。",
+      "result": "not_run",
+      "original_package_id": "WP02",
+      "batch_id": "RB02",
+      "contributing_batches": [
+        "RB02"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-F32",
+      "requirement_ids": [
+        "REQ-F32"
+      ],
+      "package_id": "WP02",
+      "given": "右クリック/ドラッグに相当する編集作業",
+      "when": "タップボタンだけで線作成/順序移動/一括編集を完了し、同じ作業をキーボードで行う",
+      "then": "触れるとだけ現れる操作や右クリックだけの操作を、タッチ用のボタンからも使える。",
+      "negative_or_edge": "ドラッグ・ホバー・右クリック・長押しの各操作は常時アクセスできるボタンと一覧で代替する。ブラウザーの文字拡大を妨げない。",
+      "result": "not_run",
+      "original_package_id": "WP02",
+      "batch_id": "RB02",
+      "contributing_batches": [
+        "RB02"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-F33",
+      "requirement_ids": [
+        "REQ-F33"
+      ],
+      "package_id": "WP02",
+      "given": "PC幅で保存した拡大率/図位置とスマートフォン別設定",
+      "when": "名前付き検索/お気に入りから再開し、別端末の同場面と削除済み再開リンクを開く",
+      "then": "別端末で同じ場面を開いても、小さい画面へPCの細かい配置を押し付けない。",
+      "negative_or_edge": "内容と端末別の表示設定を分ける。削除された対象への再開リンクは履歴または復元案内へ移し白画面にしない。",
+      "result": "not_run",
+      "original_package_id": "WP02",
+      "batch_id": "RB02",
+      "contributing_batches": [
+        "RB02"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-F34",
+      "requirement_ids": [
+        "REQ-F34"
+      ],
+      "package_id": "WP17",
+      "given": "二端末が同じbaseRevisionの作品を取得済み",
+      "when": "機内モードで同じ本文を別々に編集し、順不同で同期して競合を選び再送する",
+      "then": "二つの端末で同じ項目を変えた場合、片方を黙って消さずに両方を確認して選べる。",
+      "negative_or_edge": "同一項目の競合は双方と共通元を保持する。保存済みと同期済みを混同せず、再送・削除対編集でも黙って上書きしない。",
+      "result": "not_run",
+      "original_package_id": "WP17",
+      "batch_id": "RB09",
+      "contributing_batches": [
+        "RB09"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-F35",
+      "requirement_ids": [
+        "REQ-F35"
+      ],
+      "package_id": "WP16",
+      "given": "条件・線・素材・巨大tick・単体履歴を持つ作品",
+      "when": "全体を出力し空環境へ復元、別途単体復元と追加/置換/統合を選択する",
+      "then": "書き出して読み戻したとき、番号、条件、矢印、日時、素材が対応したまま残る。",
+      "negative_or_edge": "単体復元は最新の関連情報への影響を提示する。追加・置換・統合のID規則を適用し、失敗時は全体をロールバックする。",
+      "result": "not_run",
+      "original_package_id": "WP16",
+      "batch_id": "RB06",
+      "contributing_batches": [
+        "RB06"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-F36",
+      "requirement_ids": [
+        "REQ-F36"
+      ],
+      "package_id": "WP22",
+      "given": "確定設定と未確定設定、秘密、前後状態を持つ場面S",
+      "when": "S周辺だけ相談用に出力し、提案文章を別案として取り込み、正本との比較を開く",
+      "then": "相談で出た案が、自動で確定設定を書き換えず、変更候補として比較できる。",
+      "negative_or_edge": "相談用出力にも公開範囲を適用する。AIサービスへ自動送信せず、取り込む文章は出所と対象版を持つ別案とする。",
+      "result": "not_run",
+      "original_package_id": "WP22",
+      "batch_id": "RB08",
+      "contributing_batches": [
+        "RB08"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-F37",
+      "requirement_ids": [
+        "REQ-F37"
+      ],
+      "package_id": "WP11",
+      "given": "新しい作品と下書き状態",
+      "when": "生存をenumの存命/死亡で宣言し、integer好感度と未設定booleanを登録して型違い代入を試す",
+      "then": "「死亡」と「存命」のような反対の意味の値を重複して管理しない。未設定を偽と決め付けない。",
+      "negative_or_edge": "同義語・反対語は同じ状態の値として表現する候補を示す。型違い、許容値外、未定義の使用は拒否または未確認とする。",
+      "result": "not_run",
+      "original_package_id": "WP11",
+      "batch_id": "RB05",
+      "contributing_batches": [
+        "RB05"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-F38",
+      "requirement_ids": [
+        "REQ-F38"
+      ],
+      "package_id": "WP11",
+      "given": "run所持金10、across_runs記憶、好感度から算出する好意",
+      "when": "値更新、周回、全リセット、算出値への直接代入、循環式の保存を試す",
+      "then": "持ち越す記憶と初期化する所持金を分ける。「好感度が一定以上」を別の値として二重更新しない。",
+      "negative_or_edge": "算出状態への直接代入と循環式を拒否する。周回初期化と全リセットを別コマンドとし、持ち越し対象を一覧化する。",
+      "result": "not_run",
+      "original_package_id": "WP11",
+      "batch_id": "RB05",
+      "contributing_batches": [
+        "RB05"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-F39",
+      "requirement_ids": [
+        "REQ-F39"
+      ],
+      "package_id": "WP11",
+      "given": "状態Xを条件で読む場面、更新する場面、resetする処理と未使用Y",
+      "when": "Xの利用箇所と試読変更履歴を開き、外部利用宣言のあるYを整理候補で確認する",
+      "then": "値が変わった理由から対象の選択や処理へ戻れる。使われていない状態も候補として見つかる。",
+      "negative_or_edge": "値の参照元と書込元を安定IDで追う。未使用状態は削除候補だけを示し、外部で使う宣言がある値を誤削除しない。",
+      "result": "not_run",
+      "original_package_id": "WP11",
+      "batch_id": "RB05",
+      "contributing_batches": [
+        "RB05"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-F40",
+      "requirement_ids": [
+        "REQ-F40"
+      ],
+      "package_id": "WP11",
+      "given": "鍵booleanと時刻enum昼/夜、同時成立する自動候補2件",
+      "when": "all(鍵,any(昼,夜))を作り真/偽/不明、優先同値、fallbackなしを順に評価する",
+      "then": "「鍵あり、かつ、昼または夜」の括弧を明示する。今の値で選択肢が出ない理由を説明する。",
+      "negative_or_edge": "括弧・優先順・不成立時処理を明示する。未知を偽にしない三値評価を行い、任意のコードを条件として実行しない。",
+      "result": "not_run",
+      "original_package_id": "WP11",
+      "batch_id": "RB05",
+      "contributing_batches": [
+        "RB05"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-F41",
+      "requirement_ids": [
+        "REQ-F41"
+      ],
+      "package_id": "WP11",
+      "given": "未受注→進行中→完了/失敗のみを許すクエスト",
+      "when": "完了→未受注と同時に所持金加算するeffect群を実行し、理由付きresetを別途試す",
+      "then": "完了済みのクエストが意図せず未受注へ戻った場合、変更した処理と規則を確認できる。",
+      "negative_or_edge": "禁止遷移は一連の効果を原子的に拒否する。例外は理由・対象経路・期限付きで明示し、以前の状態を記録する。",
+      "result": "not_run",
+      "original_package_id": "WP11",
+      "batch_id": "RB05",
+      "contributing_batches": [
+        "RB05"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-F42",
+      "requirement_ids": [
+        "REQ-F42"
+      ],
+      "package_id": "WP22",
+      "given": "ゲーム管理の戦闘結果enum契約とstub勝利、実ゲーム証跡未登録",
+      "when": "stubで通った道を出力し、後にactual結果をline/flow ID対応付きで記録して比較する",
+      "then": "仮の戦闘結果で通れた道と、ゲーム上で実際に確認した道を区別する。番号と値の対応を保つ。",
+      "negative_or_edge": "外部値の管理元・型・欠損時の扱いを固定する。仮の外部応答とゲーム実機の確認結果は別証跡とする。",
+      "result": "not_run",
+      "original_package_id": "WP22",
+      "batch_id": "RB08",
+      "contributing_batches": [
+        "RB08"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-F43",
+      "requirement_ids": [
+        "REQ-F43"
+      ],
+      "package_id": "WP15",
+      "given": "独立伏線Qに二つの手掛かりと二つの回収がある",
+      "when": "手掛かり場面を分割/移動/削除し、Q本体を開いて根拠位置を付け直す",
+      "then": "場面を分割・移動しても伏線そのものは残り、手掛かりと回収先を付け直せる。",
+      "negative_or_edge": "場面を削除しても伏線本体は残す。複数の手掛かり・回収と代替説明を別IDで対応付ける。",
+      "result": "not_run",
+      "original_package_id": "WP15",
+      "batch_id": "RB05",
+      "contributing_batches": [
+        "RB05"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-F44",
+      "requirement_ids": [
+        "REQ-F44"
+      ],
+      "package_id": "WP15",
+      "given": "世界tickが古い回想を提示順の最後に置く構成",
+      "when": "回想を先頭/最後に移動し、人物と読者提示の開示段階を二経路で確認する",
+      "then": "回想の世界内の日付が古くても、読み手が後から見るなら後の開示として扱う。",
+      "negative_or_edge": "開示の段階は経路上の提示位置で評価する。章の並べ替えは世界時間を変えず開示評価だけを再確認待ちにする。",
+      "result": "not_run",
+      "original_package_id": "WP15",
+      "batch_id": "RB05",
+      "contributing_batches": [
+        "RB05"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-F45",
+      "requirement_ids": [
+        "REQ-F45"
+      ],
+      "package_id": "WP15",
+      "given": "必須情報Cと代替説明D、C/Dを両方飛ばして回収Pへ行けるgraph",
+      "when": "各経路の提示検査を行い、不足する証人経路と任意手掛かりの扱いを確認する",
+      "then": "手掛かりを飛ばして真相へ到達する経路を示せる。プレイヤーが推理できたと自動判定はしない。",
+      "negative_or_edge": "作者が必要とした情報の提示有無だけを評価する。探索の制限超過や外部条件は未確認、プレイヤーの理解は自動認定しない。",
+      "result": "not_run",
+      "original_package_id": "WP15",
+      "batch_id": "RB05",
+      "contributing_batches": [
+        "RB05"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-F46",
+      "requirement_ids": [
+        "REQ-F46"
+      ],
+      "package_id": "WP15",
+      "given": "真実T、人物Aの嘘の証言、Bの誤解、Cの未取得知識",
+      "when": "出所と取得箇所を登録し、CがTを断言する台詞と理由付き嘘の台詞を検査する",
+      "then": "知らないはずの人物の発言を確認候補にする。意図した嘘や誤解は、その理由を添えて扱える。",
+      "negative_or_edge": "証言の誤り、意図した嘘、未確定案を真実から分離する。知識取得には出所と時点または経路位置を必要とする。",
+      "result": "not_run",
+      "original_package_id": "WP15",
+      "batch_id": "RB05",
+      "contributing_batches": [
+        "RB05"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-F47",
+      "requirement_ids": [
+        "REQ-F47"
+      ],
+      "package_id": "WP15",
+      "given": "今作回収Q、続編回収R、意図した未回収S、没T",
+      "when": "今作/特定分岐の未回収を抽出し、Qの回収先を変えて確認待ちを調べる",
+      "then": "続編用に残した謎が不具合一覧へ混ざらず、今作で回収する予定の漏れを見つけられる。",
+      "negative_or_edge": "今作・分岐・続編など対象範囲と意図を明示する。回収先変更時は再確認待ちにし、意図した未回収は警告の集計から分ける。",
+      "result": "not_run",
+      "original_package_id": "WP15",
+      "batch_id": "RB05",
+      "contributing_batches": [
+        "RB05"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-F48",
+      "requirement_ids": [
+        "REQ-F48"
+      ],
+      "package_id": "WP19",
+      "given": "時期で一人称が変わる人物と表記ゆれ用語、意図した例外",
+      "when": "時期前後の台詞と字幕/翻訳へ候補検査を行い、本文が無断置換されないか確認する",
+      "then": "人物が成長して口調を変える場合は時期を指定する。指摘は候補として示し、本文を勝手に置換しない。",
+      "negative_or_edge": "表記・口調の期間と例外を保持する。指摘は置換候補であり、本文や翻訳を自動修正しない。",
+      "result": "not_run",
+      "original_package_id": "WP19",
+      "batch_id": "RB07",
+      "contributing_batches": [
+        "RB07"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-F49",
+      "requirement_ids": [
+        "REQ-F49"
+      ],
+      "package_id": "WP21",
+      "given": "企画に対象/体験/主題と版1の採用判断がある",
+      "when": "修正指摘を企画目的へ結び付け、却下案の理由と版2の別判断を登録する",
+      "then": "修正依頼から企画のどの目的に関わるかを確認できる。却下した案の理由も後から分かる。",
+      "negative_or_edge": "企画・判断には対象版と根拠を保存する。却下・保留を削除せず、方針変更を公開済み版へ自動反映しない。",
+      "result": "not_run",
+      "original_package_id": "WP21",
+      "batch_id": "RB08",
+      "contributing_batches": [
+        "RB08"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-F50",
+      "requirement_ids": [
+        "REQ-F50"
+      ],
+      "package_id": "WP21",
+      "given": "危険と説明する場面、実装仕様では無条件通過、意図は未入力",
+      "when": "探索/戦闘/報酬/チュートリアルと作業を関連付け、食い違いに意図を追記する",
+      "then": "物語で危険な場所が、実際には安全に通れるなどの食い違いを、意図も含めて確認できる。",
+      "negative_or_edge": "遊びの仕様と物語の記述の差は意図付き確認候補にする。ゲーム機能の未実装を執筆未完了と混同しない。",
+      "result": "not_run",
+      "original_package_id": "WP21",
+      "batch_id": "RB08",
+      "contributing_batches": [
+        "RB08"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-F51",
+      "requirement_ids": [
+        "REQ-F51"
+      ],
+      "package_id": "WP21",
+      "given": "執筆done、実装todoの場面と現実の期限、素材待ち作業",
+      "when": "場面の世界日付を変更し未実装を抽出、作業依存の循環を作ろうとする",
+      "then": "物語内の日付を変えても制作期限は動かない。本文が完成していても未実装の場面を抽出できる。",
+      "negative_or_edge": "執筆・実装・翻訳・収録・確認・公開の状態と実日付を別々に保存する。依存作業の循環と期限不整合を示す。",
+      "result": "not_run",
+      "original_package_id": "WP21",
+      "batch_id": "RB08",
+      "contributing_batches": [
+        "RB08"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-F52",
+      "requirement_ids": [
+        "REQ-F52"
+      ],
+      "package_id": "WP21",
+      "given": "二経路で共通場面一件を再利用し速度が未設定",
+      "when": "固有場面/台詞/素材数と各経路の出現数を集計し、速度を設定して時間を再見積もりする",
+      "then": "二つの経路に出る共通場面を制作量では二重に数えない。所要時間は速度などの仮定を示す。",
+      "negative_or_edge": "制作数は安定IDの集合、体験量は経路ごとの出現回数で集計する。速度・重複・未確定箇所・対象版を明示する。",
+      "result": "not_run",
+      "original_package_id": "WP21",
+      "batch_id": "RB08",
+      "contributing_batches": [
+        "RB08"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-F53",
+      "requirement_ids": [
+        "REQ-F53"
+      ],
+      "package_id": "WP20",
+      "given": "台詞にコマと演出開始1000ms、世界tick -10がある",
+      "when": "コマから本文へ戻り、参考画像を完成素材へ差替え確認待ちを開く",
+      "then": "物語の年月日と動画・演出内の秒数を混同しない。必要なコマから対象の本文へ戻れる。",
+      "negative_or_edge": "演出時刻はミリ秒、世界時刻は暦のtickとして分離する。素材差替え後は依存コマを確認待ちにする。",
+      "result": "not_run",
+      "original_package_id": "WP20",
+      "batch_id": "RB07",
+      "contributing_batches": [
+        "RB07"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-F54",
+      "requirement_ids": [
+        "REQ-F54"
+      ],
+      "package_id": "WP21",
+      "given": "共通設定版1を参照する公開済み小説/動画と未公開ゲーム",
+      "when": "共通設定を版2へ改訂し、媒体ごとの変更候補と旧公開原稿を比較する",
+      "then": "元設定を変えても各媒体の文章を自動で同じ文へ置換せず、公開済みの版と修正候補を比べられる。",
+      "negative_or_edge": "派生作品は共通設定の版を参照する。媒体別文章と公開済みスナップショットは保持し、変更候補だけを伝える。",
+      "result": "not_run",
+      "original_package_id": "WP21",
+      "batch_id": "RB08",
+      "contributing_batches": [
+        "RB08"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-F55",
+      "requirement_ids": [
+        "REQ-F55"
+      ],
+      "package_id": "WP08",
+      "given": "人物A→Bの信頼と時期/経路付き所属関係",
+      "when": "信頼の逆向き表示、時点切替え、図の自動整列を行い正本の関係を比較する",
+      "then": "信頼する関係を逆向きにも自動適用しない。図の配置だけを変えても物語上の関係は変わらない。",
+      "negative_or_edge": "方向と時期・経路と根拠を検証する。自己関係を許す種類だけ認め、対称性や推移性を勝手に補わない。",
+      "result": "not_run",
+      "original_package_id": "WP08",
+      "batch_id": "RB03",
+      "contributing_batches": [
+        "RB03"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-F56",
+      "requirement_ids": [
+        "REQ-F56"
+      ],
+      "package_id": "WP04",
+      "given": "同名人物2名、参照型項目、既存enum値のある雛形",
+      "when": "改名、必須/nullable変更、enum→数値型の変更、型不正のファイル読み込みを試す",
+      "then": "空欄を許す項目と必須を区別する。同名を許す範囲を決め、単なる改名で対応を壊さない。",
+      "negative_or_edge": "同名は原則許可しIDで識別する。キー項目だけ所定スコープで一意とする。型変更に適合しない値を消さず影響を示す。",
+      "result": "not_run",
+      "original_package_id": "WP04",
+      "batch_id": "RB02",
+      "contributing_batches": [
+        "RB02"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-F57",
+      "requirement_ids": [
+        "REQ-F57"
+      ],
+      "package_id": "WP05",
+      "given": "漢字名/読み/旧名/別名/同名/秘密名と作者が選んだ索引",
+      "when": "読みと表記ゆれで検索し五十音/分類索引から段落へ移り、公開索引を出力する",
+      "then": "漢字名を読みから探せる。全文検索、作者が選ぶ索引、タグを区別し、秘密の名前は公開索引へ出さない。",
+      "negative_or_edge": "原文を保持し検索用正規化を別に持つ。作者索引と自動検索を分け、秘匿対象の読み・別名・参照数を公開側へ出さない。",
+      "result": "not_run",
+      "original_package_id": "WP05",
+      "batch_id": "RB02",
+      "contributing_batches": [
+        "RB02"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-F58",
+      "requirement_ids": [
+        "REQ-F58"
+      ],
+      "package_id": "WP05",
+      "given": "未実装かつ人物Aが出る動的一覧と固定ID一覧",
+      "when": "場面を追加し各一覧を再度開き、カード/表/図を切替え一括編集を取り消す",
+      "then": "表示を変えても別のデータができない。検索を再実行する一覧と、固定した選択の一覧を区別する。",
+      "negative_or_edge": "動的条件一覧と固定ID集合の一覧を区別する。一括編集は変更前後を確認し、一部だけ失敗した更新を確定しない。",
+      "result": "not_run",
+      "original_package_id": "WP05",
+      "batch_id": "RB02",
+      "contributing_batches": [
+        "RB02"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-F59",
+      "requirement_ids": [
+        "REQ-F59"
+      ],
+      "package_id": "WP08",
+      "given": "人物/因果/伏線/進行/参照/制作依存が混在する情報",
+      "when": "種類別、一段/二段、凡例、関係表を切り替え、隠れた範囲を確認して全体へ戻る",
+      "then": "矢印、ラベル、線種で意味を読める。表示を絞ったと分かり、全体や元の対象へ戻れる。",
+      "negative_or_edge": "凡例・線種・矢印・ラベルを持ち、色以外でも意味を伝える。表示範囲と隠れた件数を示すが公開側の秘密の件数は漏らさない。",
+      "result": "not_run",
+      "original_package_id": "WP08",
+      "batch_id": "RB03",
+      "contributing_batches": [
+        "RB03"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-F60",
+      "requirement_ids": [
+        "REQ-F60"
+      ],
+      "package_id": "WP05",
+      "given": "重複候補人物、未参照背景設定、外部利用状態、読み欠落",
+      "when": "残すIDと参照変更を確認して統合/取消し、保持指定と一括編集取消を行う",
+      "then": "背景設定だけの項目は残せる。統合・一括変更・削除を取り消し、元の参照を追える。",
+      "negative_or_edge": "統合の残すIDと全参照書換えを事前表示する。背景設定・外部利用を保持指定でき、統合・削除・一括変更は補償操作で戻せる。",
+      "result": "not_run",
+      "original_package_id": "WP05",
+      "batch_id": "RB02",
+      "contributing_batches": [
+        "RB02"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-N01",
+      "requirement_ids": [
+        "REQ-N01"
+      ],
+      "package_id": "WP02",
+      "given": "幅320・390 CSS pxの縦画面",
+      "when": "入力と一覧による線編集と復元を行う",
+      "then": "確定ボタンとエラーへ到達でき横図にも一覧代替がある",
+      "negative_or_edge": "PC専用操作やページ全体の不要な横スクロールを残さない",
+      "result": "not_run",
+      "original_package_id": "WP02",
+      "batch_id": "RB02",
+      "contributing_batches": [
+        "RB02"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-N02",
+      "requirement_ids": [
+        "REQ-N02"
+      ],
+      "package_id": "WP23",
+      "given": "UI_UXの対象端末表",
+      "when": "同じ総合試験を対象環境で実行する",
+      "then": "保存・再読込・ファイル往復・タッチ操作が成功する",
+      "negative_or_edge": "自動ブラウザー試験だけを実端末の合格証拠にしない",
+      "result": "not_run",
+      "original_package_id": "WP23",
+      "batch_id": "RB10",
+      "contributing_batches": [
+        "RB10"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-N03",
+      "requirement_ids": [
+        "REQ-N03"
+      ],
+      "package_id": "WP23",
+      "given": "キーボードとVoiceOverまたはNVDA",
+      "when": "主な作成から出力まで操作する",
+      "then": "フォーカス・読み上げ・エラー・完了通知が判断できる",
+      "negative_or_edge": "図だけで編集を強制せず、見える焦点や拡大を無効にしない",
+      "result": "not_run",
+      "original_package_id": "WP23",
+      "batch_id": "RB10",
+      "contributing_batches": [
+        "RB10"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-N04",
+      "requirement_ids": [
+        "REQ-N04"
+      ],
+      "package_id": "WP23",
+      "given": "標準データと実測対象端末",
+      "when": "指定操作を30回ずつ実行する",
+      "then": "記録した条件で全目標値を満たす",
+      "negative_or_edge": "実測前の数値を達成済みとしない。超過を要件削減で黙って隠さない",
+      "result": "not_run",
+      "original_package_id": "WP23",
+      "batch_id": "RB10",
+      "contributing_batches": [
+        "RB10"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-N05",
+      "requirement_ids": [
+        "REQ-N05"
+      ],
+      "package_id": "WP14",
+      "given": "大規模データと長い分岐",
+      "when": "探索を打ち切り別の画面へ移る",
+      "then": "編集中の内容を保ち結果を未確認として開ける",
+      "negative_or_edge": "探索の途中終了を全経路の安全証明にしない",
+      "result": "not_run",
+      "original_package_id": "WP14",
+      "batch_id": "RB05",
+      "contributing_batches": [
+        "RB05"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-N06",
+      "requirement_ids": [
+        "REQ-N06"
+      ],
+      "package_id": "WP03",
+      "given": "保存中の容量不足と移行失敗を注入",
+      "when": "複数対象の変更を試す",
+      "then": "全変更が確定するか全変更が未確定となり再試行できる",
+      "negative_or_edge": "一部更新・未検証のマイグレーション・偽の保存表示を残さない",
+      "result": "not_run",
+      "original_package_id": "WP03",
+      "batch_id": "RB06",
+      "contributing_batches": [
+        "RB06"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-N07",
+      "requirement_ids": [
+        "REQ-N07"
+      ],
+      "package_id": "WP17",
+      "given": "オフラインの二端末",
+      "when": "同じ本文を変更し順不同で同期する",
+      "then": "二案を比較して解決でき再送しても効果が二重化しない",
+      "negative_or_edge": "端末時計や最終書込だけで片方を消さない",
+      "result": "not_run",
+      "original_package_id": "WP17",
+      "batch_id": "RB09",
+      "contributing_batches": [
+        "RB09"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-N08",
+      "requirement_ids": [
+        "REQ-N08"
+      ],
+      "package_id": "WP18",
+      "given": "非メンバーと限定閲覧者",
+      "when": "直接APIと検索と素材へアクセスする",
+      "then": "許可した投影以外の本文・名称・ID・メタデータが取得できない",
+      "negative_or_edge": "secretキーの公開、UIのみの非表示、他作品のID差替えを許さない",
+      "result": "not_run",
+      "original_package_id": "WP18",
+      "batch_id": "RB09",
+      "contributing_batches": [
+        "RB09"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-N09",
+      "requirement_ids": [
+        "REQ-N09"
+      ],
+      "package_id": "WP16",
+      "given": "破損・未対応版・参照切れ・圧縮爆弾のファイル",
+      "when": "既存作品へ読み込もうとする",
+      "then": "既存データは不変で対象パスと理由が示される",
+      "negative_or_edge": "一時解析の失敗を既存作品の一部置換として残さない",
+      "result": "not_run",
+      "original_package_id": "WP16",
+      "batch_id": "RB06",
+      "contributing_batches": [
+        "RB06"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-N10",
+      "requirement_ids": [
+        "REQ-N10"
+      ],
+      "package_id": "WP20",
+      "given": "scriptやjavascript URLを含む文章",
+      "when": "編集・試読・公開資料で表示する",
+      "then": "内容を安全なテキストまたは検査済み表示として扱う",
+      "negative_or_edge": "ファイル名だけの種類判定や任意コードの条件実行を許さない",
+      "result": "not_run",
+      "original_package_id": "WP20",
+      "batch_id": "RB07",
+      "contributing_batches": [
+        "RB07"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-N11",
+      "requirement_ids": [
+        "REQ-N11"
+      ],
+      "package_id": "WP03",
+      "given": "取得済み作品で機内モードにする",
+      "when": "編集して閉じ再度開き専用ファイルを出す",
+      "then": "端末内保存済みと未送信が区別され作品内容が残る",
+      "negative_or_edge": "初回取得や未キャッシュ添付を利用済みと偽表示しない",
+      "result": "not_run",
+      "original_package_id": "WP03",
+      "batch_id": "RB06",
+      "contributing_batches": [
+        "RB06"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-N12",
+      "requirement_ids": [
+        "REQ-N12"
+      ],
+      "package_id": "WP14",
+      "given": "同じ版の抽選を含む経路",
+      "when": "確認記録から再実行する",
+      "then": "同じ条件の結果が再現され版変更時は要再確認となる",
+      "negative_or_edge": "新しい版の結果を古い版の合格証跡として扱わない",
+      "result": "not_run",
+      "original_package_id": "WP14",
+      "batch_id": "RB05",
+      "contributing_batches": [
+        "RB05"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-N13",
+      "requirement_ids": [
+        "REQ-N13"
+      ],
+      "package_id": "WP05",
+      "given": "日本語変換途中と負の巨大tick",
+      "when": "保存・検索・出力・読み戻しを行う",
+      "then": "原文とIDとtick文字列が完全一致する",
+      "negative_or_edge": "IME変換を操作キーで確定前に破壊したり、tickを浮動小数で丸めない",
+      "result": "not_run",
+      "original_package_id": "WP05",
+      "batch_id": "RB02",
+      "contributing_batches": [
+        "RB02"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-N14",
+      "requirement_ids": [
+        "REQ-N14"
+      ],
+      "package_id": "WP16",
+      "given": "端末内データを失った空環境",
+      "when": "完全保存ファイルを読み込む",
+      "then": "本文・ID・条件・素材を保って編集を再開できる",
+      "negative_or_edge": "端末内履歴だけを外部バックアップの代わりとして保証しない",
+      "result": "not_run",
+      "original_package_id": "WP16",
+      "batch_id": "RB06",
+      "contributing_batches": [
+        "RB06"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-N15",
+      "requirement_ids": [
+        "REQ-N15"
+      ],
+      "package_id": "WP24",
+      "given": "認証エラーと本文を含む失敗",
+      "when": "診断を生成して内容を確認する",
+      "then": "必要な識別情報だけが出力され送信前に利用者が選べる",
+      "negative_or_edge": "ログや分析サービスへ作品本文を自動送信しない",
+      "result": "not_run",
+      "original_package_id": "WP24",
+      "batch_id": "RB10",
+      "contributing_batches": [
+        "RB10"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-N16",
+      "requirement_ids": [
+        "REQ-N16"
+      ],
+      "package_id": "WP01",
+      "given": "同じ条件を異なる表示から編集する",
+      "when": "純粋な評価処理とUI統合を実行する",
+      "then": "同じ規則とエラーコードが得られる",
+      "negative_or_edge": "画面ごとに別の条件評価や独自のID管理を作らない",
+      "result": "not_run",
+      "original_package_id": "WP01",
+      "batch_id": "RB02",
+      "contributing_batches": [
+        "RB02"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-N17",
+      "requirement_ids": [
+        "REQ-N17"
+      ],
+      "package_id": "WP24",
+      "given": "公開候補の構成と見積表",
+      "when": "サブパス・直リンク・更新・再読込を確認する",
+      "then": "表示版が対象commitと一致し費用の有無を確認できる",
+      "negative_or_edge": "この資料の作成だけで公開済みや費用ゼロと宣言しない",
+      "result": "not_run",
+      "original_package_id": "WP24",
+      "batch_id": "RB10",
+      "contributing_batches": [
+        "RB10"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-N18",
+      "requirement_ids": [
+        "REQ-N18"
+      ],
+      "package_id": "WP02",
+      "given": "保存・参照・同期の失敗",
+      "when": "修正または再試行を行う",
+      "then": "同じ入力から復帰し成功時だけ完了と表示する",
+      "negative_or_edge": "白画面・無言の失敗・黙ったデータ削除を残さない",
+      "result": "not_run",
+      "original_package_id": "WP02",
+      "batch_id": "RB02",
+      "contributing_batches": [
+        "RB02"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-N19",
+      "requirement_ids": [
+        "REQ-N19"
+      ],
+      "package_id": "WP10",
+      "given": "公開済み作品と別案がある",
+      "when": "改訂して制作出力を行う",
+      "then": "選択した正本版だけが対象となり旧公開版は不変で残る",
+      "negative_or_edge": "別案の編集で公開済み本文や参照設定を上書きしない",
+      "result": "not_run",
+      "original_package_id": "WP10",
+      "batch_id": "RB04",
+      "contributing_batches": [
+        "RB04"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-N20",
+      "requirement_ids": [
+        "REQ-N20"
+      ],
+      "package_id": "WP22",
+      "given": "未対応の外部コマンドがある作品",
+      "when": "対応先別の制作出力を選ぶ",
+      "then": "不一致の箇所を示し安全な出力だけを生成する",
+      "negative_or_edge": "Unity・Unreal・ink・Yarn等すべてに対応済みと仮定しない",
+      "result": "not_run",
+      "original_package_id": "WP22",
+      "batch_id": "RB08",
+      "contributing_batches": [
+        "RB08"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "要件の照合と部品試験は、ケース全体の受入合格ではない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-E01",
+      "title": "スマートフォンだけで基本編集",
+      "requirement_ids": [
+        "REQ-B01",
+        "REQ-B04",
+        "REQ-B07",
+        "REQ-B12",
+        "REQ-F31",
+        "REQ-F32",
+        "REQ-N01"
+      ],
+      "package_id": "WP23",
+      "given": "iPhone縦画面と空作品",
+      "when": "人物2名、共通/個人出来事、場所、線、括弧付き条件を作成して専用ファイルを書き出し読み戻す",
+      "then": "PCを使わずIDと内容が一致し再編集できる",
+      "negative_or_edge": "入力中のキーボード、横画面、取消、Filesのキャンセルでも入力を失わない",
+      "result": "not_run",
+      "original_package_id": "WP23",
+      "batch_id": "RB10",
+      "contributing_batches": [
+        "RB02",
+        "RB03",
+        "RB06"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "幅別基本画面・人物保存・ZIP復元はあるが、実iPhone単独の全編集通しは未実行。R04/R05のUI不具合も残る。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-E02",
+      "title": "世界時間・回想・基準点",
+      "requirement_ids": [
+        "REQ-B05",
+        "REQ-B06",
+        "REQ-B13",
+        "REQ-B21",
+        "REQ-F44"
+      ],
+      "package_id": "WP23",
+      "given": "世界tick -10の出来事を後章で回想する作品",
+      "when": "表示単位、本編基準点、回想章順をそれぞれ変更する",
+      "then": "世界tickは不変、相対表示と開示順だけが所定に変わる",
+      "negative_or_edge": "暦の存在しない日付と相対制約循環は拒否される",
+      "result": "not_run",
+      "original_package_id": "WP23",
+      "batch_id": "RB10",
+      "contributing_batches": [
+        "RB03",
+        "RB04",
+        "RB05"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "tick/相対日時と章順の分離はある。回想・本編基準変更・開示再評価までの通し画面受入は未実行。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-E03",
+      "title": "分岐・合流・状態・巻き戻し",
+      "requirement_ids": [
+        "REQ-B14",
+        "REQ-B15",
+        "REQ-B16",
+        "REQ-F16",
+        "REQ-F38",
+        "REQ-F40",
+        "REQ-F41"
+      ],
+      "package_id": "WP23",
+      "given": "鍵取得/未取得が同じ合流先へ続く固定作品",
+      "when": "二経路を実行し戻す、禁止遷移を含む一括効果を選ぶ",
+      "then": "合流後も鍵差が残り、戻すと全状態が復元され、不正効果は全体拒否となる",
+      "negative_or_edge": "未知の値は偽にされず、有効選択肢ゼロは意図した終端と区別される",
+      "result": "not_run",
+      "original_package_id": "WP23",
+      "batch_id": "RB10",
+      "contributing_batches": [
+        "RB05"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "合流の状態保持、原子効果と巻戻の部品試験は通る。不採用効果とfallbackの結合でR03/R04を再現。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-E04",
+      "title": "伏線の提示と人物の誤解",
+      "requirement_ids": [
+        "REQ-B17",
+        "REQ-B19",
+        "REQ-F43",
+        "REQ-F45",
+        "REQ-F46",
+        "REQ-F47"
+      ],
+      "package_id": "WP23",
+      "given": "必須手掛かりを飛ばせる経路と嘘の証言と続編の謎",
+      "when": "真相へ行く二経路を解析する",
+      "then": "手掛かり欠落の証人経路を示し、人物の認識と真実を区別し続編謎を別集計する",
+      "negative_or_edge": "理解したと判定せず、外部条件を含む経路は未確認とする",
+      "result": "not_run",
+      "original_package_id": "WP23",
+      "batch_id": "RB10",
+      "contributing_batches": [
+        "RB05"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "通った経路の伏線チェックはあるが、R02で欠落を見逃す。全経路解析に伏線は未結合。人物の嘘/誤解・続編集計も未完了。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-E05",
+      "title": "公開範囲と正体の漏れ",
+      "requirement_ids": [
+        "REQ-F12",
+        "REQ-F30",
+        "REQ-F57",
+        "REQ-N08"
+      ],
+      "package_id": "WP23",
+      "given": "非公開の本名と家系と添付がある限定共有snapshot",
+      "when": "閲覧者が本文、検索、索引、図、リンク、素材、直接APIを調べる",
+      "then": "許可した別名だけが出て秘密のID・名前・関係・件数・ファイル名が取得できない",
+      "negative_or_edge": "IDやproject_idを差替えたアクセスと権限撤回後の新規取得は拒否する",
+      "result": "not_run",
+      "original_package_id": "WP23",
+      "batch_id": "RB10",
+      "contributing_batches": [
+        "RB02",
+        "RB03",
+        "RB09"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "投影の部品試験がある。実共有snapshot・API・RLS・Storage・索引を非メンバーから調べる環境がない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-E06",
+      "title": "二端末の競合と削除",
+      "requirement_ids": [
+        "REQ-F34",
+        "REQ-N06",
+        "REQ-N07"
+      ],
+      "package_id": "WP23",
+      "given": "共通revisionを取得した二端末",
+      "when": "両方オフラインで同じ本文を編集、片方削除、重複と順逆で送信する",
+      "then": "双方と共通元を比較でき、解決後は同じ結果、二重効果と勝手な復活はない",
+      "negative_or_edge": "容量不足と認証失効時にも未送信を失わず、同期済みと表示しない",
+      "result": "not_run",
+      "original_package_id": "WP23",
+      "batch_id": "RB10",
+      "contributing_batches": [
+        "RB06",
+        "RB09"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "契約用メモリサーバーはある。実認証と二端末通信断/削除/競合/解決の受入は実行できない。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-E07",
+      "title": "専用ファイルの往復と拒否",
+      "requirement_ids": [
+        "REQ-B12",
+        "REQ-F35",
+        "REQ-F55",
+        "REQ-F56",
+        "REQ-N09",
+        "REQ-N14"
+      ],
+      "package_id": "WP23",
+      "given": "全entity種・未知日時・巨大tick・素材を含む作品",
+      "when": "空環境へ全情報往復し、別途ハッシュ不一致/参照切れ/危険パス/未対応版を投入する",
+      "then": "正規化した保存情報が一致し、不正ファイルは既存作品を一切変えない",
+      "negative_or_edge": "安全上限直前・直後、添付重複、ID衝突を確認する",
+      "result": "not_run",
+      "original_package_id": "WP23",
+      "batch_id": "RB10",
+      "contributing_batches": [
+        "RB02",
+        "RB03",
+        "RB06"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "完全ZIPの検査/往復/拒否、空のブラウザー領域復元はある。全種類・世界・素材・版・巨大tickを同時に往復する総合受入は未完了。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-E08",
+      "title": "翻訳・音声・台詞分割",
+      "requirement_ids": [
+        "REQ-F21",
+        "REQ-F23",
+        "REQ-F48"
+      ],
+      "package_id": "WP23",
+      "given": "原文と翻訳と音声が確認済みの台詞",
+      "when": "改名/並替え、原文編集、分割、差戻しを行う",
+      "then": "音声取り違えがなく内容変更時だけ見直し対象となり分割対応履歴を追える",
+      "negative_or_edge": "取消や単体復元も新revisionとなり古い成果物を自動確認済みにしない",
+      "result": "not_run",
+      "original_package_id": "WP23",
+      "batch_id": "RB10",
+      "contributing_batches": [
+        "RB07"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "原文変更の翻訳/収録needs_reviewはある。台詞分割/統合と元→新ID対応履歴がなく、ケース全体は未達。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-E09",
+      "title": "制作量と公開済み媒体版",
+      "requirement_ids": [
+        "REQ-F09",
+        "REQ-F51",
+        "REQ-F52",
+        "REQ-F54"
+      ],
+      "package_id": "WP23",
+      "given": "二経路で再利用する場面と公開済み小説版",
+      "when": "世界設定改訂と制作集計、場面の日付変更を行う",
+      "then": "固有制作数は一回、体験量は各経路で算出し、小説旧版と実期限は不変",
+      "negative_or_edge": "未設定速度の所要時間は不明とし、執筆済でも実装未完了を抽出する",
+      "result": "not_run",
+      "original_package_id": "WP23",
+      "batch_id": "RB10",
+      "contributing_batches": [
+        "RB03",
+        "RB08"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "固有数/経路数の関数と媒体needsReviewはある。共通世界改訂・旧公開小説との比較・媒体別集計の通しは未完了。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-E10",
+      "title": "解析の上限・仮実の区別",
+      "requirement_ids": [
+        "REQ-F17",
+        "REQ-F18",
+        "REQ-F20",
+        "REQ-F42",
+        "REQ-N05",
+        "REQ-N12"
+      ],
+      "package_id": "WP23",
+      "given": "抽選・無制限ループ・外部戦闘を含む作品",
+      "when": "同じ記録を再実行して探索上限まで解析する",
+      "then": "抽選は再現され、未確認の範囲と分母を示し、仮戦闘結果と実ゲーム結果を別に記録する",
+      "negative_or_edge": "対象版の変更で再確認待ちになり、打切りを到達不能の証明としない",
+      "result": "not_run",
+      "original_package_id": "WP23",
+      "batch_id": "RB10",
+      "contributing_batches": [
+        "RB05",
+        "RB08"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "抽選/巻戻/探索上限/仮値区分は部品試験済み。実ゲーム応答、全scope、作品変更後の回帰管理は未完了。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-E11",
+      "title": "表示代替・支援技術・性能",
+      "requirement_ids": [
+        "REQ-F31",
+        "REQ-F32",
+        "REQ-F59",
+        "REQ-N02",
+        "REQ-N03",
+        "REQ-N04"
+      ],
+      "package_id": "WP23",
+      "given": "標準/大規模データと対象ブラウザー表",
+      "when": "キーボード、VoiceOver、200%拡大、狭い幅、図の一覧代替、指定性能を測定する",
+      "then": "全操作へ到達でき所定環境の測定結果と証拠を残す",
+      "negative_or_edge": "色依存・ドラッグ専用・焦点喪失・IME破壊・全件DOM描画を検出する",
+      "result": "not_run",
+      "original_package_id": "WP23",
+      "batch_id": "RB10",
+      "contributing_batches": [
+        "RB02",
+        "RB03",
+        "RB10"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "基本幅と初期axeは通る。VoiceOver/NVDA、200%拡大、実端末の30回p95がない。R06では標準保存の15秒台を観測。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    },
+    {
+      "id": "AT-E12",
+      "title": "保存失敗とアプリ更新からの復帰",
+      "requirement_ids": [
+        "REQ-B23",
+        "REQ-F34",
+        "REQ-F35",
+        "REQ-N06",
+        "REQ-N11",
+        "REQ-N18"
+      ],
+      "package_id": "WP23",
+      "given": "キャッシュ済みアプリと未送信作品",
+      "when": "機内モード、保存容量不足、途中更新、移行失敗、専用出力からの再開を行う",
+      "then": "失敗と未保存を明示し、更新は安全地点で適用し、書き出しと復元で再開できる",
+      "negative_or_edge": "初回未取得・未取得素材・保存先取消を成功と扱わない",
+      "result": "not_run",
+      "original_package_id": "WP23",
+      "batch_id": "RB10",
+      "contributing_batches": [
+        "RB02",
+        "RB06",
+        "RB09"
+      ],
+      "status": "planned",
+      "evidence": [],
+      "historical_review": "配信停止時キャッシュ再開とDB故障注入はある。実容量不足/途中更新/旧形式移行/長時間の総合復帰は未完了。",
+      "evidence_fields": [
+        "commit",
+        "case_id",
+        "requirement_ids",
+        "fixture_seed_or_hash",
+        "environment",
+        "procedure",
+        "actual_result",
+        "negative_result",
+        "evidence_path",
+        "checked_at"
+      ]
+    }
+  ],
+  "regression_groups": [
+    {
+      "id": "RG-R01",
+      "finding_id": "R01",
+      "title": "本文注記の位置を保つ",
+      "batch_id": "RB01",
+      "requirements": [
+        "REQ-B10",
+        "REQ-F06",
+        "REQ-F21",
+        "REQ-N13"
+      ],
+      "given": "「アオが歩く。」のアオに人物リンク・ルビと伏線提示位置を設定した本文。",
+      "steps": [
+        "本文の先頭へ「昨日、」を追加し、保存→再読込→人物リンク→戻るを操作する。",
+        "前方削除、注記内部の置換、絵文字追加、段落分割/統合/移動、取消、入力変換途中を順に試す。"
+      ],
+      "expected": "リンクとルビはアオを指す。追跡不能な重なる変更は再リンク待ちとして明示し、別の文字へ黙って付かない。伏線/指摘位置、Block/Line対応も維持または理由付きの位置不明になる。",
+      "environments": [
+        "部品",
+        "通常本文フォーム",
+        "Chromium/Firefox/WebKit",
+        "実iPhone日本語入力はRB10で最終確認"
+      ],
+      "result": "not_run",
+      "evidence": [],
+      "status": "planned",
+      "depends_on": []
+    },
+    {
+      "id": "RG-R02",
+      "finding_id": "R02",
+      "title": "提示済み回収の手掛かり不足を見逃さない",
+      "batch_id": "RB01",
+      "requirements": [
+        "REQ-B19",
+        "REQ-F44",
+        "REQ-F45"
+      ],
+      "given": "開示可能=trueで提示する回収が、提示後に開示可能=falseへ変更される。必須手掛かりを飛ばす経路と見る経路がある。",
+      "steps": [
+        "手掛かりを飛ばして回収を提示し、経路の伏線確認を行う。",
+        "条件を変える効果なし、初期提示、巻戻、経路保存/再生でも実行し、RB05では全経路探索に同じ検査を接続する。"
+      ],
+      "expected": "提示された事実とその時の条件結果から不足と根拠経路を示す。後の値で回収を検査対象から外さない。任意手掛かり/代替情報は作者指定に沿って扱う。",
+      "environments": [
+        "部品",
+        "試読フォーム",
+        "全経路探索はRB05"
+      ],
+      "result": "not_run",
+      "evidence": [],
+      "status": "planned",
+      "depends_on": []
+    },
+    {
+      "id": "RG-R03",
+      "finding_id": "R03",
+      "title": "不採用効果を原子的に拒否する",
+      "batch_id": "RB01",
+      "requirements": [
+        "REQ-B14",
+        "REQ-F25",
+        "REQ-N19"
+      ],
+      "given": "有効な分岐が不採用効果を参照し、同じ操作内に別の正しい効果もある。",
+      "steps": [
+        "単独/複数効果、manual_choice/first_match/all_match、開示/再利用から実行する。",
+        "巻戻・保存経路再生・公開/簡易体験出力からも同じ採用状態規則を確認する。"
+      ],
+      "expected": "不採用参照を説明付きで拒否し、変数・物品・知識・既読・once・乱数・履歴・進行位置を部分更新しない。出力は除外または未対応参照として説明付き停止する。",
+      "environments": [
+        "部品",
+        "試読フォーム",
+        "出力"
+      ],
+      "result": "not_run",
+      "evidence": [],
+      "status": "planned",
+      "depends_on": []
+    },
+    {
+      "id": "RG-R04",
+      "finding_id": "R04",
+      "title": "代替進行と停止を画面から操作する",
+      "batch_id": "RB01",
+      "requirements": [
+        "REQ-B14",
+        "REQ-B16",
+        "REQ-F40",
+        "REQ-N01"
+      ],
+      "given": "手動選択の全候補がfalseで、有効なfallbackがある。",
+      "steps": [
+        "幅390pxの試読画面から代替進行を実行し、戻る→経路保存/再生を行う。",
+        "gate=false、fallbackなし、unknown混在、真候補あり、trigger付きの組合せを試す。"
+      ],
+      "expected": "進行規則に従う有効操作が表示され、経路と状態が記録される。代替先なしは進行不可、unknownは理由付き停止とし、意図した終端と区別する。",
+      "environments": [
+        "部品",
+        "幅320/390pxの通常試読",
+        "全自動ブラウザー"
+      ],
+      "result": "not_run",
+      "evidence": [],
+      "status": "planned",
+      "depends_on": []
+    },
+    {
+      "id": "RG-R05",
+      "finding_id": "R05",
+      "title": "含まれる条件を通常フォームで保存する",
+      "batch_id": "RB01",
+      "requirements": [
+        "REQ-B14",
+        "REQ-B15",
+        "REQ-F40",
+        "REQ-N18"
+      ],
+      "given": "boolean/integer/enumの状態と、単値比較の条件がある。",
+      "steps": [
+        "単値↔含まれるへ切り替え、型付きの複数値を追加/削除し自然文を確認する。",
+        "保存→再読込→試読と、未知値・異なる型・空入力・演算切替取消を通常フォームだけで行う。"
+      ],
+      "expected": "正しい配列として保存され、括弧付き自然文・式・試読結果が一致する。単値の暗黙破棄や型違いを避け、修正できる欄と入力を保つ。",
+      "environments": [
+        "部品",
+        "条件編集フォーム",
+        "全自動ブラウザー"
+      ],
+      "result": "not_run",
+      "evidence": [],
+      "status": "planned",
+      "depends_on": []
+    },
+    {
+      "id": "RG-R06",
+      "finding_id": "R06",
+      "title": "変更単位保存の速度と復元性を保つ",
+      "batch_id": "RB01",
+      "requirements": [
+        "REQ-B23",
+        "REQ-N04",
+        "REQ-N05",
+        "REQ-N06",
+        "REQ-N14"
+      ],
+      "given": "レビューStandard 8,800件と、添付付きStandard/Large。履歴が少ない状態と2時間編集後を用意する。",
+      "steps": [
+        "作品名一項目、本文一台詞、複合変更を区間別に計測し、全件再保存/全履歴読込/全台詞hashが少量変更で再発しないことを確認する。",
+        "DB書込各段階の失敗・容量不足・取消・undo・単体復元・完全保存空環境復元を実行する。",
+        "RB10で指定実端末・30回p95と原仕様の標準/大規模の目標を判定する。"
+      ],
+      "expected": "原子性・履歴・ID・素材が維持される。コマンド検査開始から端末commitまでのStandard保存p95≤1,000msを最終目標とし、UI開始→成功通知も別計測する。前回の二観測はp95にしない。",
+      "environments": [
+        "部品/障害注入",
+        "実IndexedDBのproduction build",
+        "指定実端末の最終判定はRB10"
+      ],
+      "result": "not_run",
+      "evidence": [],
+      "status": "planned",
+      "depends_on": []
+    }
+  ]
+}

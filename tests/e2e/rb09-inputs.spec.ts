@@ -1,0 +1,41 @@
+import {test,expect,type Page} from '@playwright/test';
+import {readFile} from 'node:fs/promises';
+import {readFileSync} from 'node:fs';
+import {createHttpContract,type HttpContract} from './httpContract';
+let endpoint='',contract:HttpContract|undefined;
+test.afterEach(async()=>{await contract?.close();contract=undefined;});
+const account='00000000-0000-4000-8000-000000000002';
+const fixture=(name:string)=>readFileSync(new URL(`../fixtures/sync/browser/${name}`,import.meta.url));
+const editor=JSON.parse(fixture('editor-base.json').toString()),remote=JSON.parse(fixture('remote-native.json').toString()),shared=JSON.parse(fixture('shared.json').toString());
+// Production browser UI with real local HTTP fixture. This proves neither real Auth/RLS nor a physical device.
+async function wire(page:Page,role:'owner'|'editor'='editor'){
+ contract=await createHttpContract(async route=>{const r=route.request(),u=new URL(r.url()),body=r.postDataJSON() as {action?:string}|null;
+  if(r.method()==='OPTIONS')return route.fulfill({status:204,headers:{'Access-Control-Allow-Origin':'*','Access-Control-Allow-Headers':'*','Access-Control-Allow-Methods':'*'}});
+  if(u.pathname.includes('/auth/v1/token'))return route.fulfill({json:{access_token:'input-fixture-memory-token',user:{id:account},expires_in:3600}});
+  if(u.pathname.endsWith('scenario_snapshots'))return route.fulfill({json:[{id:shared.id}]});
+  if(u.pathname.endsWith('scenario_comments'))return route.fulfill({json:[]});
+  if(body?.action==='projects')return route.fulfill({json:[{projectId:role==='owner'?remote.project.projectId:editor.projectId,serverRevision:'1',role,name:role==='owner'?remote.project.name:null}]});
+  if(body?.action==='team_read')return route.fulfill({json:editor});
+  if(body?.action==='shared_snapshot')return route.fulfill({json:shared});
+  if(body?.action==='pull')return route.fulfill({json:remote});
+  if(body?.action==='download_archive'){await new Promise(resolve=>setTimeout(resolve,1200));return route.fulfill({contentType:'application/octet-stream',body:fixture('remote-complete.scenario')});}
+  return route.fulfill({status:500,json:{code:'UNEXPECTED_CONTRACT_ACTION'}});
+ });endpoint=contract.url;
+}
+async function login(page:Page,cold=false){
+ await page.getByRole('button',{name:'アカウント・専用同期',exact:true}).click();
+ if(!cold){await page.getByLabel('専用Supabase URL',{exact:true}).fill(endpoint);await page.getByLabel('公開用APIキー',{exact:true}).fill('sb_publishable_input_fixture');await page.getByRole('button',{name:'接続設定を保持',exact:true}).click();}
+ await page.getByLabel('メール',{exact:true}).fill('input@example.invalid');await page.getByLabel('パスワード',{exact:true}).fill('fixture-only');await page.getByRole('button',{name:'認証してアカウント領域を開く',exact:true}).click();await expect(page.getByRole('status').filter({hasText:'認証したアカウントの領域を開きました。'})).toBeVisible();await expect(page.getByRole('button',{name:'接続先から取得',exact:true})).toBeVisible();
+}
+async function enterEditor(page:Page){await page.getByRole('button',{name:'接続先から取得',exact:true}).click();await page.getByRole('button',{name:'許可された作品を確認',exact:true}).click();await page.getByRole('button',{name:'許可項目を編集',exact:true}).click();await page.getByRole('button',{name:'現在の権限で項目を取得',exact:true}).click();await expect(page.getByRole('textbox',{name:/^name/}).first()).toBeVisible();}
+async function rows(page:Page){return page.evaluate(async account=>{const db=await new Promise<IDBDatabase>((resolve,reject)=>{const r=indexedDB.open('scenario-manager-account-'+account);r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});try{const get=(name:string)=>new Promise<unknown[]>((resolve,reject)=>{const r=db.transaction(name,'readonly').objectStore(name).getAll();r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});return {tools:await get('authorToolDrafts'),workspace:await get('workspaceInputs'),projects:await get('projects'),bases:await get('syncBases')};}finally{db.close();}},account);}
+async function edit(page:Page,text:string){await page.getByRole('textbox',{name:/^name/}).first().fill(text);await expect.poll(async()=>JSON.stringify((await rows(page)).tools)).toContain(text);}
+async function prepareInputRestore(page:Page){await edit(page,'持出しA😀');const download=page.waitForEvent('download');await page.getByRole('button',{name:'未保存入力をファイルに持出す',exact:true}).click();const file=await download,buffer=await readFile((await file.path())!);const saved=JSON.parse(buffer.toString());expect(saved.originAccountId).toBe(account);await edit(page,'現在B😀');const before=await rows(page);await page.getByLabel('同じアカウントの入力を復元').setInputFiles({name:'inputs.json',mimeType:'application/json',buffer});await expect(page.getByRole('button',{name:'現在入力を持出して確認した入力を復元',exact:true})).toBeVisible();return {before,saved};}
+
+test('active author screen keeps account controls reachable at PC and phone widths',async({page})=>{await page.goto('');await page.getByLabel('作品名',{exact:true}).fill('端末内作品');await page.getByRole('button',{name:'作品を作成',exact:true}).click();await expect(page.locator('.app-shell')).toBeVisible();for(const width of [1280,390]){await page.setViewportSize({width,height:900});await page.getByRole('button',{name:'アカウント・専用同期',exact:true}).click();await expect(page.getByLabel('専用Supabase URL',{exact:true})).toBeVisible();await page.getByRole('button',{name:'アカウント・専用同期',exact:true}).click();}});
+
+test('input DB commit resumes all A despite a cache quota fault and cold reauthentication',async({page})=>{await wire(page);await page.goto('');await login(page);await enterEditor(page);const {saved}=await prepareInputRestore(page);await page.evaluate(account=>{const original=Storage.prototype.setItem;let armed=true;Storage.prototype.setItem=function(key,value){if(armed&&key==='scenario-workspace-input:v1:'+account){armed=false;throw new DOMException('display cache quota','QuotaExceededError');}return original.call(this,key,value);};},account);await page.getByRole('button',{name:'現在入力を持出して確認した入力を復元',exact:true}).click();await expect(page.getByRole('textbox',{name:/^name/}).first()).toHaveValue('持出しA😀');const after=await rows(page);expect(after.tools).toEqual(saved.tools);expect((after.workspace[0] as {value:unknown}).value).toEqual(saved.workspace);await expect(page.getByRole('status').filter({hasText:'表示用キャッシュ'})).toBeVisible();await page.reload();await login(page,true);await enterEditor(page);await expect(page.getByRole('textbox',{name:/^name/}).first()).toHaveValue('持出しA😀');expect(JSON.stringify(await page.evaluate(()=>Object.assign({},localStorage)))).not.toContain('input-fixture-memory-token');});
+
+test('input TX failure leaves tool and workspace B intact and preserves visible input for retry',async({page})=>{await wire(page);await page.goto('');await login(page);await enterEditor(page);const {before}=await prepareInputRestore(page);await page.evaluate(()=>{const original=IDBObjectStore.prototype.put;let armed=true;IDBObjectStore.prototype.put=function(...args:Parameters<IDBObjectStore['put']>){if(armed&&this.name==='workspaceInputs'){armed=false;throw new DOMException('input body quota','QuotaExceededError');}return original.apply(this,args);};});await page.getByRole('button',{name:'現在入力を持出して確認した入力を復元',exact:true}).click();await expect(page.getByRole('alert').filter({hasText:'容量'})).toBeVisible();await expect(page.getByRole('textbox',{name:/^name/}).first()).toHaveValue('現在B😀');const after=await rows(page);expect(after.tools).toEqual(before.tools);expect(after.workspace).toEqual(before.workspace);});
+
+test('delayed complete archive and base commit preserve a later shared-screen navigation',async({page})=>{await wire(page,'owner');await page.goto('');await login(page);await page.getByRole('button',{name:'接続先から取得',exact:true}).click();await page.getByRole('button',{name:'許可された作品を確認',exact:true}).click();await page.getByRole('button',{name:'完全保存から新規復元',exact:true}).click();await page.getByRole('button',{name:'限定版の閲覧・指摘',exact:true}).click();await expect.poll(async()=>JSON.stringify((await rows(page)).bases)).toContain(remote.project.projectId);await expect(page.getByRole('heading',{name:'限定版の閲覧・指摘',exact:true})).toBeVisible();expect((await rows(page)).projects).toEqual(expect.arrayContaining([expect.objectContaining({projectId:remote.project.projectId})]));});

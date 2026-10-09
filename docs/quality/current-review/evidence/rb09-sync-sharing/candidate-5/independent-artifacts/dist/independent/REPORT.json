@@ -1,0 +1,205 @@
+{
+  "stage": "RB09 candidate5 independent review; historical failed pending-field-withdrawal evidence retained",
+  "candidateCommit": "ff971b7b841eb2cf19b574b11df2dd85410540dd",
+  "candidateTree": "a828061ff61b3b3cb85843df2ae48a1e75ac0ac0",
+  "sourceCount": 319,
+  "sourceBindingSHA256": "895818770feac1ef6c79e108b3681f673e4cbf6d387e09856e299beb70721cc0",
+  "finalSourceBindingSHA256": "80c9986b32e46fa6895a5d8448683c2c37fe9127574d63a1b48282b925513805",
+  "original104_116_24_6Preserved": true,
+  "original15Unchanged": true,
+  "old53_76_175_521_363_534Unchanged": true,
+  "originalRegistryStatusesNotChanged": true,
+  "actualIndependentRuns": [
+    {
+      "scope": "core/local/native5/editor/transfer/world + repository22 + epoch3",
+      "tests": 55,
+      "pass": 55,
+      "fail": 0,
+      "log": "independent/core-editor-transfer-world.log"
+    },
+    {
+      "scope": "original authority/legacy evidence migration/expiry resolution and recovery",
+      "tests": 5,
+      "pass": 5,
+      "fail": 0,
+      "log": "independent/authority-boundaries.log"
+    },
+    {
+      "scope": "deadline crossing final IndexedDB transaction read, public receive/saveField/prepare/ACK/resolve/adoptRecovery",
+      "tests": 6,
+      "pass": 6,
+      "fail": 0,
+      "log": "independent/transaction-expiry-final.log"
+    },
+    {
+      "scope": "typed owner/editor/derived SQL, Edge private bytes, current authority under locked commit, synthetic Auth/Storage",
+      "tests": 19,
+      "pass": 19,
+      "fail": 0,
+      "log": "independent/sql-typed-editor-derived-edge-authority.log"
+    },
+    {
+      "scope": "new current field withdrawal in prepared and conflict phases",
+      "tests": 2,
+      "pass": 0,
+      "fail": 2,
+      "failedIDs": [
+        "R9E07-prepared",
+        "R9E07-conflict"
+      ],
+      "log": "independent/pending-authority.log"
+    },
+    {
+      "scope": "fresh network-none all8migrations/mockRLS/NULL Unicode boundaries",
+      "migrations": 8,
+      "migrationPass": 8,
+      "mockRLSAssertions": 23,
+      "mockRLSPass": 23,
+      "nullBoundaryAssertions": 2,
+      "nullBoundaryPass": 2,
+      "logs": [
+        "independent/sql-setup-results.json",
+        "independent/sql-original-rls.log",
+        "independent/sql-null-comment-refusal.log"
+      ]
+    },
+    {
+      "scope": "normal clean production Chromium153 isolated5395 HTTPS mocks",
+      "finalGroups": 15,
+      "pass": 13,
+      "fail": 2,
+      "positiveIDs": [
+        "R9US01",
+        "R9USV02",
+        "R9UE00",
+        "R9URV01",
+        "R9UR02",
+        "R9URBytes04",
+        "R9UL06",
+        "R9USC03",
+        "R9UI05_CACHE",
+        "R9UI05_TX",
+        "R9UI06",
+        "R9UIE05",
+        "R9UIE06"
+      ],
+      "failedIDs": [
+        "R9UIE07-prepared",
+        "R9UIE07-conflict"
+      ],
+      "logs": [
+        "independent/browser-execution.json",
+        "independent/browser-pending-authority.log(R9UIE07-conflict)",
+        "independent/browser-pending-authority-corrected.log"
+      ],
+      "noFetchNormalization": true,
+      "noForcedClick": true
+    }
+  ],
+  "finalComponentTotal": {
+    "tests": 87,
+    "pass": 85,
+    "fail": 2,
+    "includesRepositorySuite22": true,
+    "excludesOriginal116": true
+  },
+  "productFindings": [
+    {
+      "id": "R9E07",
+      "variants": [
+        "prepared",
+        "conflict"
+      ],
+      "contract": "docs/spec/SYNC_SECURITY.md:48 current communication handles revoked cache while preserving unsent evidence",
+      "given": "prepared/conflict authority1 expiry=null, then hash-verified authority2 removing name at same content revision",
+      "expected": "Retain original common/local/prepared/conflict/ACK as exact evidence and stop new active writes to withdrawn fields",
+      "actual": "receive rejects REVISION_CHANGED solely because pending work exists; old authority1 remains and a new saveField(name) succeeds. Ordinary UI reproduces both variants.",
+      "componentProofs": [
+        "independent/fixtures/R9E07-prepared.json",
+        "independent/fixtures/R9E07-conflict.json"
+      ],
+      "normalUIProofs": [
+        "independent/browser-pending-authority-corrected/R9UIE07-prepared-observed.json",
+        "independent/browser-pending-authority/R9UIE07-conflict-observed.json"
+      ],
+      "serverAuthorizationBypassNotClaimed": true
+    }
+  ],
+  "priorRepairsOnThisSource": {
+    "E00": "pass independent clones",
+    "E02": "pass monotonic content/common field guards",
+    "E03": "pass current grant before cached ACK",
+    "E04": "pass stamped rev1→withdraw2→old1 refusal/same2 expansion refusal/regrant3, missing/expired refusal and legacy evidence recovery",
+    "U00": "pass normal fetch receiver",
+    "US01": "pass limited deep link and Unicode old version",
+    "SQL04": "pass derived reference and needs_review atomic save",
+    "UI05": "pass aggregate TX failure allB unchanged+retryA, cache failure canonical successA+coldA",
+    "UI06": "pass normal pointer at1280/390/768/1440",
+    "UR02": "pass later area retained",
+    "E05/E06": "pass original C4 inputs/expectations in component and normal UI, plus six deadline-crossing atomic operations"
+  },
+  "preservedInitialAttempts": [
+    {
+      "path": "independent/setup-sql-types",
+      "classification": "independent fixture response shape annotation; runtime expected values unchanged"
+    },
+    {
+      "path": "independent/setup-transaction-types",
+      "classification": "independent fixture discriminated SyncAck typing; runtime expected values unchanged"
+    },
+    {
+      "path": "independent/PENDING_AUTHORITY_SETUP_CLASSIFICATION.json",
+      "classification": "HTTP503 correctly normalized TRANSPORT_UNAVAILABLE; initial prepared UI selector waited backend code, boundary not reached"
+    },
+    {
+      "path": "independent/SEAL_SETUP_CLASSIFICATION.json",
+      "classification": "report-code generator quoting error and subsequent missing file; no product tests or old evidence changed"
+    }
+  ],
+  "c3CommunicationCorrection": "C3 actual 48core+3epoch(2pass1E04fail)+16typedSQL+7migrations/mock23/NULL2+11finalnormalApp are sealed in C3 REPORT db5c962... and binding534 24a249b...; earlier claim that C3 SQL/browser were unexecuted was explicitly corrected. Parent726/75 remains separate.",
+  "environment": {
+    "os": "Debian13.6 / Linux6.18.44 x86_64",
+    "node": "24.19.0",
+    "vitest": "5.0.3",
+    "browser": "Chromium153.0.8010.12",
+    "appOrigin": "http://127.0.0.1:5395/shinariokanri/",
+    "sql": "own fresh PostgreSQL17.11 network-none, no published ports",
+    "AuthStorage": "synthetic fixtures / intercepted HTTPS mocks",
+    "buildInfo": {
+      "commit": "ff971b7b841eb2cf19b574b11df2dd85410540dd",
+      "dirty": false,
+      "base": "/shinariokanri/",
+      "builtAt": "2026-10-08T20:55:13.460Z",
+      "versionHashScope": "sorted paths and bytes plus build info before version",
+      "version": "f78db7c4c3efbd295e9b"
+    },
+    "root4173Used": false,
+    "sharedProductTrackedChanges": false,
+    "rawWhitespacePreserved": true
+  },
+  "notRun": [
+    {
+      "scope": "Actual Auth/DataAPI/RLS/privateStorage/two real devices",
+      "reason": "Dedicated endpoint/project/accounts/roles/configuration/quota/currentcost unspecified; synthetic fixtures cannot substitute"
+    },
+    {
+      "scope": "Full104REQ/116AT/24packages/6regressiongroups, physicalOS/assistive/performance/finalrelease",
+      "reason": "Focused review stage; actual environments and final-target evidence pending"
+    },
+    {
+      "scope": "Root full suite and candidate6 repair",
+      "reason": "Separate root evidence; C6 graded after C5 seal"
+    }
+  ],
+  "cleanup": {
+    "own5395Stopped": true,
+    "ownPostgreSQLRemoved": true
+  },
+  "sealedAt": "2026-10-08T21:05:18.584691+00:00",
+  "old53_76_175_521_363_534_565Unchanged": true,
+  "automaticReview": {
+    "action": "setup classification file creation",
+    "rejectionReason": "Concern about overwriting old classification history",
+    "resolved": "Read-only check showed C5 target absent and C4 classification unchanged. Safe alternative exclusively created a distinct new classification and new harness file. No old evidence edited; no remaining blocker."
+  }
+}
