@@ -22,7 +22,7 @@ export function EvidenceChoices({ project, value, onChange, onOpen }: { project:
   const index = useMemo(() => new Map(project.entities.map(entity => [entity.id, entity])), [project.entities]);
   return <div className="world-evidence"><ul>{value.map(id => <li key={id}>{onOpen ? <button className="text-button" type="button" onClick={() => onOpen(id)}>{labelOf(index.get(id))}</button> : labelOf(index.get(id))}<button className="button subtle small" type="button" aria-label={`${labelOf(index.get(id))}を根拠から外す`} onClick={() => onChange(value.filter(item => item !== id))}>外す</button></li>)}</ul><EntityChoice label="根拠として追加する情報" entities={project.entities.filter(entity => !value.includes(entity.id))} value="" onChange={id => { if (id) onChange([...value, id]); }}/></div>;
 }
-function RelationForm({ relation, project, onSave, onClose, onOpen }: { relation: Relation; project: ProjectData; onSave: RelationshipsProps['onSave']; onClose: () => void; onOpen: (id: ID) => void }) {
+export function RelationForm({ relation, project, onSave, onClose, onOpen }: { relation: Relation; project: ProjectData; onSave: RelationshipsProps['onSave']; onClose: () => void; onOpen: (id: ID) => void }) {
   const [draft, setDraft] = useState(() => structuredClone(relation)), [error, setError] = useState(''), [busy, setBusy] = useState(false), [valid, setValid] = useState(true);
   const definition = RELATION_TYPES.find(type => type.key === draft.relationType);
   const update = (value: Partial<Relation>) => setDraft(previous => ({ ...previous, ...value }));
