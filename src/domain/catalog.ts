@@ -1,6 +1,8 @@
 import { KIND_LABELS, collectReferences } from './model';
 import { duplicateCandidates } from './maintenance';
-import { stateUsageIndex } from './stateUsage';
+import { requiresFixedStateUsageVerification,stateUsageIndex } from './stateUsage';
+import type {StateUsage} from './stateUsage';
+import {verifyReusePins} from './reuse';
 import type { CollectionData, Entity, EntityKind, ID, ProjectData, Query, Sort } from './types';
 
 /** Search normalization is separate from stored text. Original Japanese spelling remains untouched. */
@@ -341,15 +343,31 @@ function reviewPaths(entity: Entity): string[] {
 
 /** Returns actionable review candidates without asserting that any item is erroneous or safe to delete. */
 export function findCatalogMaintenance(project: ProjectData): CatalogMaintenanceFinding[] {
+  if(requiresFixedStateUsageVerification(project))return catalogMaintenance(project,undefined,'固定版のhash検証前です。');
+  try{return catalogMaintenance(project,stateUsageIndex(project));}
+  catch(error){return catalogMaintenance(project,undefined,(error as Error).message);}
+}
+/** Verify the declared, immutable fixed edition; never substitute current text
+ * or overwrite the expected hash to make a stale pin appear valid. */
+export async function findCatalogMaintenanceVerified(project:ProjectData):Promise<CatalogMaintenanceFinding[]> {
+  // Hash verification and the assessment must observe the same image. Retain
+  // dictionary sharing inside that image, without expanding unrelated history
+  // or author alternatives into a second copy of the entire project.
+  const {history:_history,authorAlternatives:_alternatives,...current}=project;
+  const captured:ProjectData=structuredClone({...current,history:[]});
+  try{await verifyReusePins(captured,captured.snapshots);return catalogMaintenance(captured,stateUsageIndex(captured));}
+  catch(error){return catalogMaintenance(captured,undefined,(error as Error).message);}
+}
+function catalogMaintenance(project:ProjectData,stateUses:Map<ID,StateUsage[]>|undefined,stateUsageReason?:string):CatalogMaintenanceFinding[] {
   const active = activeEntities(project);
   const findings: CatalogMaintenanceFinding[] = [];
   for (const duplicate of duplicateCandidates(project)) {
     if (duplicate.kind !== 'review') findings.push(finding('possible_duplicate', duplicate.ids, `同じ種類に正規化後の名前が「${duplicate.name}」となる項目があります。名前だけで重複とは決めず、内容と参照を確認してください。`, duplicate.ids.map(id => 'name')));
   }
   const referenced = referencedIds(project);
-  const stateUses = stateUsageIndex(project);
   for (const entity of active) {
-    const used = entity.kind === 'variable' ? (stateUses.get(entity.id)?.length ?? 0) > 0 : referenced.has(entity.id);
+    const usageUnknown=entity.kind==='variable'&&!stateUses;
+    const used = entity.kind === 'variable' ? usageUnknown||(stateUses?.get(entity.id)?.length ?? 0) > 0 : referenced.has(entity.id);
     if (entity.kind !== 'review' && !used) {
       if (entity.retainIfUnreferenced) {
         findings.push(finding('retained', [entity.id], entity.kind === 'variable'
@@ -367,7 +385,8 @@ export function findCatalogMaintenance(project: ProjectData): CatalogMaintenance
       findings.push(finding('missing_reading', [entity.id], '読みが未登録です。名前から探すための候補であり、読みが不要な場合もあります。', ['data.reading']));
     }
     const paths = reviewPaths(entity);
-    if (paths.length) findings.push(finding('needs_review', [entity.id], 'この項目には確認待ちの状態があります。関連する本文や素材を確認し、対応済みか再確認済みかを判断してください。', paths));
+    if(usageUnknown)findings.push(finding('needs_review',[entity.id],`固定使用先を確認できず、状態の利用は未判定です。${stateUsageReason??''} 未使用や外部利用だけとは判定せず、固定版とID対応を確認してください。`,paths));
+    else if (paths.length) findings.push(finding('needs_review', [entity.id], 'この項目には確認待ちの状態があります。関連する本文や素材を確認し、対応済みか再確認済みかを判断してください。', paths));
   }
   return findings.sort((a, b) => compareValues(a.kind, b.kind) || compareValues(a.targetIds.join(','), b.targetIds.join(',')));
 }
