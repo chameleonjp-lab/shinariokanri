@@ -1,3 +1,4 @@
+import {recordDiagnostic} from '../diagnostics';
 import {registerAuthorCache,registerAuthorBusy} from './StoreContext';
 import {useScenarioStore,useAuthorScope,storeForAuthorScope} from './StoreContext';
 import { useEffect, useSyncExternalStore, useMemo, useState } from 'react';
@@ -74,7 +75,7 @@ export function BackupPanel({ project, projects, onImported }: { project: Projec
     update(key, { busy: true, error: '', checked: false, progress: 'ID対応・差分・素材を検査中…' });
     const controller = new AbortController(); update(key, { controller });
     try { await (writes.get(key) ?? Promise.resolve()); const result = await scenarioStore.previewImport(request.prepared, { mode: request.mode, targetProjectId: ['replace', 'merge', 'mapped_merge'].includes(request.mode) ? request.targetProjectId : undefined, idMap: request.idMap, resolutions: request.resolutions, signal: controller.signal }); update(key, { preview: result }); }
-    catch (cause) { update(key, { error: (cause as Error).message }); }
+    catch (cause) { recordDiagnostic(cause,{accountId:scenarioStore.accountId,revision:project?.revision});update(key, { error: (cause as Error).message }); }
     finally { update(key, { busy: false, controller: undefined, progress: '' }); }
   }
   async function inspect(file: File) {
@@ -86,8 +87,8 @@ export function BackupPanel({ project, projects, onImported }: { project: Projec
       const next: ImportDraft = { key, bytes, sourceHash, mode: sameFile ? prior.mode : projects.some(p => p.projectId === prepared.project.projectId) ? 'clone' : 'new', targetProjectId: sameFile ? prior.targetProjectId : projects.some(p => p.projectId === prepared.project.projectId) ? prepared.project.projectId : prior.targetProjectId, idMap: sameFile ? prior.idMap : {}, resolutions: sameFile ? prior.resolutions : {} };
       update(key, { ...next, bytes: undefined, prepared, preview: undefined, checked: false });
       inspected = true;
-      try { await (writes.get(key) ?? Promise.resolve()).catch(() => {}); await scenarioStore.saveImportDraft(next); } catch (cause) { update(key, { error: `元ファイルの一時保存に失敗しました。入力は画面内に保持しています。${(cause as Error).message}` }); }
-    } catch (cause) { update(key, { error: (cause as Error).message }); }
+      try { await (writes.get(key) ?? Promise.resolve()).catch(() => {}); await scenarioStore.saveImportDraft(next); } catch (cause) { recordDiagnostic(cause,{accountId:scenarioStore.accountId,revision:project?.revision});update(key, { error: `元ファイルの一時保存に失敗しました。入力は画面内に保持しています。${(cause as Error).message}` }); }
+    } catch (cause) { recordDiagnostic(cause,{accountId:scenarioStore.accountId,revision:project?.revision});update(key, { error: (cause as Error).message }); }
     finally { update(key, { busy: false, controller: undefined, progress: '' }); }
     if (inspected && load(key).prepared && load(key).mode !== 'mapped_merge') await preview();
   }
@@ -96,13 +97,13 @@ export function BackupPanel({ project, projects, onImported }: { project: Projec
     update(key, { busy: true, error: '', progress: '確認した内容を原子保存中…' });
     const controller = new AbortController(); update(key, { controller });
     try { const result = await scenarioStore.importScenario(request.prepared, { mode: request.mode, targetProjectId: ['replace', 'merge', 'mapped_merge'].includes(request.mode) ? request.targetProjectId : undefined, baseRevision: request.preview.target?.revision, idMap: request.idMap, resolutions: request.resolutions, confirmationHash: request.preview.confirmationHash, signal: controller.signal }); update(key, { saved: { projectId: result.project.projectId, revision: result.project.revision }, controller: undefined, progress: '保存した版の表示を待っています…' }); onImported(result.project, { followSelection: !queuedFiles.has(key) }); }
-    catch (cause) { update(key, { busy: false, controller: undefined, progress: '', error: (cause as Error).message }); }
+    catch (cause) { recordDiagnostic(cause,{accountId:scenarioStore.accountId,revision:project?.revision});update(key, { busy: false, controller: undefined, progress: '', error: (cause as Error).message }); }
   }
   async function exportBackup(full = true) {
     if (!project || load(key).busy) return; update(key, { busy: true, error: '', notice: '', progress: '完全保存ファイルを作成中…' });
     const controller = new AbortController(); update(key, { controller });
-    try { const bytes = await scenarioStore.exportProject(project.projectId, { assetMode: full ? 'embedded' : 'metadata_only', signal: controller.signal }); downloadBytes(bytes as BlobPart, `${safeFileName(project.name)}${full ? '' : '-素材を除く'}.scenario`, 'application/zip'); update(key, { notice: full ? '完全保存ファイルを作成しました。端末のダウンロードを確認してください。' : '素材bytesを除いたファイルを作成しました。完全復元には素材が別途必要です。' }); }
-    catch (cause) { update(key, { error: (cause as Error).message }); }
+    try { const bytes = await scenarioStore.exportProject(project.projectId, { assetMode: full ? 'embedded' : 'metadata_only', signal: controller.signal,onProgress:p=>update(key,{progress:({container:'ファイル一覧を確認',expanding:'ファイルを展開',hashes:'保存した操作を照合',validating:'内容と履歴を検査',serializing:'本文・履歴・素材を格納',compressing:'保存ファイルを圧縮'})[p.stage]+` ${p.completed}/${p.total}`}) }); downloadBytes(bytes as BlobPart, `${safeFileName(project.name)}${full ? '' : '-素材を除く'}.scenario`, 'application/zip'); update(key, { notice: full ? '完全保存ファイルを作成しました。端末のダウンロードを確認してください。' : '素材bytesを除いたファイルを作成しました。完全復元には素材が別途必要です。' }); }
+    catch (cause) { recordDiagnostic(cause,{accountId:scenarioStore.accountId,revision:project?.revision});update(key, { error: (cause as Error).message }); }
     finally { update(key, { busy: false, controller: undefined, progress: '' }); }
   }
   return <section className="backup-page">{project && <div className="backup-card"><Icon name="download" size={26}/><div><h3>作品を完全保存</h3><p>本文・状態・固定世界・履歴・送信待ち・添付を .scenario ファイルに保存します。</p><button className="button primary" disabled={draft.busy} onClick={() => void exportBackup()}>完全保存ファイルを作成</button><button className="text-button" disabled={draft.busy} onClick={() => void exportBackup(false)}>素材bytesを除いて保存</button></div></div>}

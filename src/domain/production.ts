@@ -22,6 +22,7 @@ export async function reconcileDeliverables(before: ProjectData, candidate: Proj
  const changedData=new Set<ID>();
  for(const [id,entity] of current) {
   const old=previous.get(id);
+  if(old===entity)continue;
   if(!old||Boolean(old.deletedAt)!==Boolean(entity.deletedAt)||stable(old.data)!==stable(entity.data))changedData.add(id);
  }
  for(const id of previous.keys())if(!current.has(id))changedData.add(id);
@@ -39,6 +40,7 @@ export async function reconcileDeliverables(before: ProjectData, candidate: Proj
   const line=current.get(entity.data.sourceLineId);
   if(!line||line.kind!=='dialogue_line'||line.deletedAt||['rejected','alternate'].includes(line.status)||entity.data.sourceHash!==await dialogueContentHash(candidate,line))staleApprovals.add(entity.id);
  }
+ if(!changedData.size&&!changed.size&&!staleApprovals.size)return candidate;
  const entities=candidate.entities.map(entity=>{
   if(entity.deletedAt)return entity;
   if((entity.kind==='localization'||entity.kind==='recording')&&(changed.has(entity.data.sourceLineId)||staleApprovals.has(entity.id))&&entity.data.stage!=='needs_review')return {...entity,data:{...entity.data,stage:'needs_review' as const}} as Entity;

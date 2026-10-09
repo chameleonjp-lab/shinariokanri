@@ -1,5 +1,8 @@
+import {ListPager,useListWindow} from './ListWindow';
 import {registerAuthorCache,registerAuthorBusy} from './StoreContext';
 import {useAuthorScope} from './StoreContext';
+import {WindowedList} from './WindowedList';
+import {PagedSelect} from './PagedSelect';
 import { PresentationCues } from './PresentationCues';
 import { checkChapterForeshadows, chapterNarrativeOccurrences } from '../domain/presentation';
 import { reuseTargetAnchor } from '../domain/reuse';
@@ -93,8 +96,7 @@ export function WritingWorkspace({ project, initialAxis = 'character', onOpenEnt
       </select>
     </label>}
     {!lanes.length && <p className="field-hint">この軸に表示できる項目はありません。</p>}
-    <div className="story-lanes">
-      {lanes.map(lane => {
+    <WindowedList className="story-lanes" items={lanes} scope={`writing-lanes:${project.projectId}:${axis}`} label="物語の並び" size={8} searchText={lane=>lane.label} render={lane => {
         const arc = lane.kind === 'character' ? buildCharacterArc(project, lane.id, arcOrder) : undefined;
         const sceneIds = arc ? arc.entries.map(entry => entry.scene.id) : lane.sceneIds;
         const actualChapter = lane.kind === 'chapter' ? chapters.find(chapter => chapter.id === lane.id) : undefined;
@@ -108,8 +110,7 @@ export function WritingWorkspace({ project, initialAxis = 'character', onOpenEnt
             </span>}
           </header>
           {!lane.sceneIds.length && <p className="field-hint">場面はまだありません。</p>}
-          <ol className="story-lane-scenes">
-            {sceneIds.map((sceneId, index) => {
+          <WindowedList as="ol" className="story-lane-scenes" items={sceneIds.map(id=>({id}))} scope={`writing-scenes:${project.projectId}:${axis}:${lane.id}:${arcOrder}`} label={`${lane.label}の場面`} size={20} searchText={({id})=>sceneTitle(project,id)} render={({id:sceneId}, index) => {
               const scene = project.entities.find((entity): entity is Entity<'scene'> => entity.id === sceneId && entity.kind === 'scene');
               if (!scene) return null;
               const entry = arc?.entries.find(item => item.scene.id === sceneId);
@@ -139,38 +140,29 @@ export function WritingWorkspace({ project, initialAxis = 'character', onOpenEnt
                   </>}
                   {axis === 'thread' && scene.data.threadIds?.includes(lane.id) && onSaveProject && <button type="button" className="text-button danger" onClick={() => void removeFromThread(scene.id, lane.id)}>この筋から外す</button>}
                   {axis === 'chapter' && chapters.length > 1 && onSaveProject && <label className="inline-move-control">章を移す
-                    <select aria-label={`${scene.name || '場面'}の移動先の章`} value={scene.data.chapterId ?? ''} onChange={event => void saveCandidate(moveScenePresentation(project, scene.id, event.target.value || null, 999), '場面の所属章と提示順を変更')}>
-                      {chapters.map(chapter => <option key={chapter.id} value={chapter.id}>{chapter.name || '名称未設定の章'}</option>)}
-                      <option value="">章に所属させない</option>
-                    </select>
+                    <PagedSelect label={`${scene.name||'場面'}の移動先の章`} scope={`writing-move:${project.projectId}:${scene.id}`} value={scene.data.chapterId??''} emptyLabel="章に所属させない" items={chapters.map(chapter=>({id:chapter.id,label:chapter.name||'名称未設定の章'}))} onChange={id=>void saveCandidate(moveScenePresentation(project,scene.id,id||null,999),'場面の所属章と提示順を変更')}/>
                   </label>}
                 </div>
               </li>;
-            })}
-          </ol>
+            }}/>
           {lane.kind === 'character' && arc && <>
             <section className="character-arc-goals" aria-label={`${lane.label}の人物目標`}>
               <h4>人物の目的</h4>
-              {!arc.goals.length ? <p className="field-hint">登録された目的はありません。</p> : <ul>
-                {arc.goals.map(goal => <li key={goal.id}>
+              {!arc.goals.length ? <p className="field-hint">登録された目的はありません。</p> : <WindowedList as="ul" items={arc.goals} scope={`writing-goals:${project.projectId}:${lane.id}`} label={`${lane.label}の目標`} size={10} searchText={goal=>goal.name} render={goal => <li key={goal.id}>
                   <strong>{goal.name || '名称未設定の目的'}</strong>
                   <p>{fieldText(goal.data.description) || '説明は未入力です。'}</p>
-                  {goal.data.evidenceSceneIds?.length ? <ul className="goal-evidence-scenes" aria-label={`${goal.name || '人物の目的'}の根拠場面`}>
-                    {goal.data.evidenceSceneIds.map(sceneId => {
+                  {goal.data.evidenceSceneIds?.length ? <WindowedList as="ul" className="goal-evidence-scenes" items={goal.data.evidenceSceneIds.map(id=>({id}))} scope={`writing-goal-evidence:${project.projectId}:${goal.id}`} label={`${goal.name||'人物の目的'}の根拠場面`} searchText={({id})=>sceneTitle(project,id)} render={({id:sceneId}) => {
                       const evidenceScene = project.entities.find((entity): entity is Entity<'scene'> => entity.kind === 'scene' && entity.id === sceneId && !entity.deletedAt);
                       return <li key={sceneId}>{evidenceScene
                         ? <button type="button" className="text-button" aria-label={`${goal.name || '人物の目的'}の根拠場面 ${evidenceScene.name || '名称未設定の場面'}を開く`} onClick={() => onOpenEntity(evidenceScene.id)}>{evidenceScene.name || '名称未設定の場面'}</button>
                         : <span>参照先の場面が見つかりません（{sceneId.slice(-6)}）</span>}</li>;
-                    })}
-                  </ul> : <p className="field-hint">根拠場面はまだ結び付いていません。</p>}
-                </li>)}
-              </ul>}
+                    }}/> : <p className="field-hint">根拠場面はまだ結び付いていません。</p>}
+                </li>}/> }
             </section>
             <p className="field-hint">人物の目的は{arc.goals.length}件です。場面の役割欄が空でも保存できます。</p>
           </>}
         </section>;
-      })}
-    </div>
+      }}/>
     {!canEdit && <p className="field-hint">並べ替えや筋からの除外を行うには、保存先を指定してください。</p>}
     {busy && <p role="status">構成の変更を保存中…</p>}{error && <p role="alert" className="field-error">{error}</p>}
   </fieldset></section>;
@@ -328,32 +320,26 @@ export function ChapterReadingView({ project, chapterIds, scenePath, currentVers
     </div>
     {effectiveRouteMode === 'chapters' && chapters.length > 0 && <fieldset className="reading-chapter-picker">
       <legend>読む章を選ぶ</legend>
-      {chapters.map(chapter => <label key={chapter.id}><input type="checkbox" checked={effectiveChapterIds.includes(chapter.id)} disabled={busy || chapterIds !== undefined} onChange={event => setChapterSelected(chapter.id, event.target.checked)}/>{chapter.name || '名称未設定の章'}</label>)}
+      <WindowedList items={chapters} scope={`reading-chapters:${project.projectId}:${contentVersionId}`} label="読む章" searchText={chapter=>chapter.name} render={chapter => <label key={chapter.id}><input type="checkbox" checked={effectiveChapterIds.includes(chapter.id)} disabled={busy || chapterIds !== undefined} onChange={event => setChapterSelected(chapter.id, event.target.checked)}/>{chapter.name || '名称未設定の章'}</label>}/>
     </fieldset>}
     {effectiveRouteMode === 'custom' && <section className="reading-route-builder" aria-label="選んだ経路の編集">
-      <label className="form-field"><span>経路に加える場面</span><select aria-label="経路に加える場面" value={routeSceneToAdd} disabled={busy || scenePath !== undefined} onChange={event => setRouteSceneToAdd(event.target.value)}>
-        <option value="">場面を選択</option>{sceneOptions.map(scene => <option key={scene.id} value={scene.id}>{scene.name || '名称未設定の場面'}</option>)}
-      </select></label>
+      <PagedSelect label="経路に加える場面" scope={`reading-route-scene:${project.projectId}:${contentVersionId}`} value={routeSceneToAdd} disabled={busy||scenePath!==undefined} emptyLabel="場面を選択" items={sceneOptions.map(scene=>({id:scene.id,label:scene.name||'名称未設定の場面'}))} onChange={setRouteSceneToAdd}/>
       <button type="button" className="button secondary small" disabled={busy || scenePath !== undefined || !routeSceneToAdd} onClick={addRouteScene}>経路の末尾に加える</button>
       {!displayedRouteSceneIds.length && scenePath === undefined && <p className="field-hint">経路に場面を加えてください。同じ場面を複数回加えて再訪を表せます。</p>}
-      {!!displayedRouteSceneIds.length && <ol className="reading-route-draft" aria-label="選んだ場面の順序">
-        {displayedRouteSceneIds.map((sceneId, index) => <li key={`${sceneId}:${index}`}>
+      {!!displayedRouteSceneIds.length && <WindowedList as="ol" className="reading-route-draft" items={displayedRouteSceneIds.map((sceneId,index)=>({id:sceneId+':'+index,sceneId}))} scope={`reading-route-order:${project.projectId}:${contentVersionId}`} label="選んだ場面の順序" render={({sceneId}, index) => <li key={`${sceneId}:${index}`}>
           <span>{index + 1}. {sceneOptions.find(scene => scene.id === sceneId)?.name ?? `見つからない場面 ${sceneId.slice(-6)}`}</span>
           <button type="button" className="text-button" aria-label={`${index + 1}番目の場面を上へ`} disabled={busy || scenePath !== undefined || index === 0} onClick={() => moveRouteScene(index, -1)}>上へ</button>
           <button type="button" className="text-button" aria-label={`${index + 1}番目の場面を下へ`} disabled={busy || scenePath !== undefined || index === routeSceneIds.length - 1} onClick={() => moveRouteScene(index, 1)}>下へ</button>
           <button type="button" className="text-button danger" aria-label={`${index + 1}番目の場面を経路から外す`} disabled={busy || scenePath !== undefined} onClick={() => setRouteSceneIds(current => current.filter((_, itemIndex) => itemIndex !== index))}>外す</button>
-        </li>)}
-      </ol>}
+        </li>}/> }
     </section>}
     <div className="reference-controls" aria-label="通読の表示方向">
       <button type="button" className="button secondary small" aria-pressed={!vertical} onClick={() => setVertical(false)}>横書き</button>
       <button type="button" className="button secondary small" aria-pressed={vertical} onClick={() => setVertical(true)}>縦書き</button>
     </div>
     <div className="reading-session-controls">
-      <label className="form-field"><span>読む作品の版</span><select aria-label="読む作品の版" disabled={busy} value={contentVersionId} onChange={event => setContentVersionId(event.target.value)}>
-        <option value="">{currentVersionLabel} · 版 {project.revision}</option>{project.snapshots.map(snapshot => <option value={snapshot.id} key={snapshot.id}>固定版：{snapshot.versionLabel}</option>)}
-      </select></label>
-      <label>開始状態<select aria-label="章試読の開始状態" disabled={busy} value={selectedCheckpointId} onChange={event => { const id = event.target.value; setSelectedCheckpointId(id); const checkpoint = checkpoints.find(item => item.id === id); if (checkpoint) setContentVersionId(checkpoint.data.contentVersionId); }}><option value="">対象版の初期値</option>{checkpoints.map(checkpoint => <option key={checkpoint.id} value={checkpoint.id}>{labelOf(checkpoint)} · {checkpoint.data.origin ?? '途中開始'} · 固定版 {checkpoint.data.contentRevision}</option>)}</select></label>
+      <PagedSelect label="読む作品の版" scope={`reading-version:${project.projectId}`} value={contentVersionId} disabled={busy} emptyLabel={`${currentVersionLabel} · 版 ${project.revision}`} items={project.snapshots.map(snapshot=>({id:snapshot.id,label:'固定版：'+snapshot.versionLabel}))} onChange={setContentVersionId}/>
+      <PagedSelect label="章試読の開始状態" scope={`reading-checkpoint:${project.projectId}:${contentVersionId}`} value={selectedCheckpointId} disabled={busy} emptyLabel="対象版の初期値" items={checkpoints.map(checkpoint=>({id:checkpoint.id,label:labelOf(checkpoint)+' · '+(checkpoint.data.origin??'途中開始')+' · 固定版 '+checkpoint.data.contentRevision}))} onChange={id=>{setSelectedCheckpointId(id);const checkpoint=checkpoints.find(item=>item.id===id);if(checkpoint)setContentVersionId(checkpoint.data.contentVersionId);}}/>
       <label>提示する世界内tick<input aria-label="章試読の世界内tick" disabled={busy} inputMode="numeric" value={worldTick} onChange={event => setWorldTick(event.target.value)}/></label><button type="button" className="button primary small" disabled={busy || !entries.length || !!selectedCheckpointId && checkpoints.find(item => item.id === selectedCheckpointId)?.data.contentVersionId !== (contentVersionId || project.projectId)} onClick={() => void startReading()}>{session ? '読み直す' : '記録付き読書を始める'}</button>
       <p className="field-hint">一覧を表示しただけでは提示証拠は残りません。記録付き読書では「次の場面を提示」を押した場面だけが状態・伏線判定へ進みます。</p>
     </div>
@@ -361,20 +347,18 @@ export function ChapterReadingView({ project, chapterIds, scenePath, currentVers
     {savedReadingRecords.length > 0 && <section className="saved-reading-records" aria-label="保存した章読み通しの再開">
       <h3>保存した章読み通しを再開</h3>
       <p className="field-hint">保存版で経路を再実行し、提示順と状態を確認して続きから読みます。</p>
-      {savedReadingRecords.map(trace => <button key={trace.id} type="button" className="reference-link" disabled={busy} onClick={() => void replayReadingRecord(trace)}>{trace.name || '名称未設定の章読み通し'}</button>)}
+      <WindowedList items={savedReadingRecords} scope={`reading-saved:${project.projectId}`} label="保存した章試読" searchText={trace=>trace.name} render={trace => <button key={trace.id} type="button" className="reference-link" disabled={busy} onClick={() => void replayReadingRecord(trace)}>{trace.name || '名称未設定の章読み通し'}</button>}/>
     </section>}
     {readingPreview.error && <p className="field-error" role="alert">{readingPreview.error}</p>}
     {error && <p className="field-error" role="alert">{error}</p>}{notice && <p className="success-notice" role="status">{notice}</p>}
     {!entries.length && !session && <p className="field-hint">選択した章や経路に場面はありません。</p>}
-    {!session && <ol className="chapter-reading-sequence">
-      {entries.map((entry, index) => <li key={`${entry.scene.id}:${index}`} data-scene-id={entry.scene.id}>
+    {!session && <WindowedList as="ol" className="chapter-reading-sequence" items={entries.map((entry,index)=>({id:entry.scene.id+':'+index,entry}))} scope={`reading-sequence:${project.projectId}:${contentVersionId}`} label="章試読の場面一覧" size={20} searchText={({entry})=>entry.scene.name} render={({entry}, index) => <li key={`${entry.scene.id}:${index}`} data-scene-id={entry.scene.id}>
         <article>
           <header><span>{index + 1}.</span>{onOpenEntity || onOpenTarget ? <button type="button" className="text-button" onClick={() => openReadingEntity(entry.scene.id)} disabled={!!contentVersionId && !onOpenTarget}>{entry.scene.name || '名称未設定の場面'}{contentVersionId ? 'の固定版を開く' : 'を編集'}</button> : <span>{entry.scene.name || '名称未設定の場面'}</span>}</header>
           <div className="reading-summary"><strong>要約</strong><RichTextView value={entry.scene.data.summary} vertical={vertical} onOpenTarget={onOpenEntity || onOpenTarget ? anchor => openReadingTarget(anchor) : undefined}/></div>
           <div className="reading-body"><strong>本文</strong><RichTextView value={entry.scene.data.body} vertical={vertical} onOpenTarget={onOpenEntity || onOpenTarget ? anchor => openReadingTarget(anchor) : undefined}/></div>
         </article>
-      </li>)}
-    </ol>}
+      </li>}/> }
     {session && <section className="chapter-reading-session" aria-label="記録付き読書">
       <div className="section-heading"><h3>記録付き読書</h3><span>{session.occurrences.length} / {session.sceneIds.length}場面を実際に提示</span></div>
       <p className="field-hint">この読書の順序と作品版は開始時の内容で固定しています。上の章・経路・版を変えて「読み直す」と、新しい条件で始められます。</p>
@@ -422,7 +406,8 @@ export function StructurePreview({ project, onApplyToDraft, initialPlan, onPlanC
   const template = STRUCTURE_TEMPLATES.find(item => item.id === templateId) ?? STRUCTURE_TEMPLATES[0]!;
   const activeTemplate: StructureTemplate = { ...template, name: templateId === 'custom' ? '自由構成' : template.name, beats: beatLabels.split('\n').map(label => label.trim()).filter(Boolean) };
   const profile = chapter ? buildTensionProfile(project, chapter.data.sceneIds) : undefined;
-  const chartPoints = profile?.points ?? [];
+  const chartWindow = useListWindow({items:(profile?.points??[]).map((point,index)=>({...point,id:String(index)})),scope:`structure-chart:${project.projectId}:${chapterId}`,size:40});
+  const chartPoints = chartWindow.items;
   const x = (index: number) => chartPoints.length < 2 ? 260 : 24 + index * (472 / (chartPoints.length - 1));
   const y = (value: number) => 100 - Math.max(0, Math.min(10, value)) * 9;
 
@@ -453,18 +438,12 @@ export function StructurePreview({ project, onApplyToDraft, initialPlan, onPlanC
   return <section className="structure-preview" aria-label="構成雛形と盛り上がり">
     <div className="section-heading"><h3>構成を試す</h3><span>雛形はプレビュー後に別案の下書きへ適用</span></div>
     {!chapters.length ? <p className="field-hint">章を作成すると、構成順を試せます。</p> : <>
-      <label className="form-field"><span>対象の章</span><select aria-label="構成を試す章" value={chapterId} onChange={event => { setChapterId(event.target.value); setAssignments({}); setPreview(undefined); setError(''); publishPlan({ chapterId: event.target.value, assignments: {} }); }}>
-        {chapters.map(item => <option key={item.id} value={item.id}>{item.name || '名称未設定の章'}</option>)}
-      </select></label>
+      <PagedSelect label="構成を試す章" scope={`structure-chapter:${project.projectId}`} value={chapterId} items={chapters.map(item=>({id:item.id,label:item.name||'名称未設定の章'}))} onChange={id=>{setChapterId(id);setAssignments({});setPreview(undefined);setError('');publishPlan({chapterId:id,assignments:{}});}}/>
       <label className="form-field"><span>構成雛形</span><select aria-label="構成雛形" value={templateId} onChange={event => chooseTemplate(event.target.value)}>
         {STRUCTURE_TEMPLATES.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}<option value="custom">自由構成</option>
       </select></label>
       <label className="form-field"><span>構成の役割（1行に1つ）</span><textarea aria-label="構成の役割" rows={Math.min(8, Math.max(3, activeTemplate.beats.length))} value={beatLabels} onChange={event => { const labels = event.target.value.split('\n').map(label => label.trim()).filter(Boolean); setTemplateId('custom'); setBeatLabels(event.target.value); setPreview(undefined); setError(''); publishPlan({ templateId: 'custom', beatLabels: labels }); }}/></label>
-      {activeTemplate.beats.map((beat, index) => <label className="form-field" key={`${beat}:${index}`}><span>{beat}に置く場面</span>
-        <select aria-label={`${beat}に置く場面`} value={assignments[beat] ?? ''} onChange={event => { const next = { ...assignments }; if (event.target.value) next[beat] = event.target.value; else delete next[beat]; setAssignments(next); publishPlan({ assignments: next }); }}>
-          <option value="">未割当</option>{(chapter?.data.sceneIds ?? []).map(id => <option key={id} value={id}>{sceneTitle(project, id)}</option>)}
-        </select>
-      </label>)}
+      <WindowedList items={activeTemplate.beats.map((beat,index)=>({id:beat+':'+index,beat}))} scope={`structure-beats:${project.projectId}:${chapterId}:${templateId}`} label="構成の役割" render={({beat})=><PagedSelect key={beat} label={`${beat}に置く場面`} scope={`structure-beat:${project.projectId}:${chapterId}:${beat}`} value={assignments[beat]??''} emptyLabel="未割当" items={(chapter?.data.sceneIds??[]).map(id=>({id,label:sceneTitle(project,id)}))} onChange={id=>{const next={...assignments};if(id)next[beat]=id;else delete next[beat];setAssignments(next);publishPlan({assignments:next});}}/>}/>
       {error && <p className="field-error" role="alert">{error}</p>}
       <button type="button" className="button secondary small" onClick={createPreview} disabled={!chapter}>順序の差分を確認</button>
       {preview && <div className="structure-order-diff" role="region" aria-label="構成順の差分">
@@ -486,7 +465,8 @@ export function StructurePreview({ project, onApplyToDraft, initialPlan, onPlanC
             ? <g key={point.sceneId}><circle cx={x(index)} cy="108" r="5" fill="none" stroke="currentColor" strokeDasharray="2 2"/><text x={x(index)} y="119" textAnchor="middle" fontSize="9">未入力</text></g>
             : <g key={point.sceneId}><circle cx={x(index)} cy={y(point.value)} r="5" fill="currentColor"/><text x={x(index)} y={y(point.value) - 8} textAnchor="middle" fontSize="10">{point.value}</text></g>)}
         </svg>
-        <ol className="tension-values">{chartPoints.map(point => <li key={point.sceneId}><span>{point.sceneName}</span><span>緊張度 {point.value === null ? '未入力' : point.value} · 重要度 {point.importance === null ? '未入力' : point.importance}</span></li>)}</ol>
+        <p className="field-hint">図の対象: 章内の順番 {chartWindow.offset+1}〜{chartWindow.offset+chartPoints.length} / {chartWindow.total}。ページを移動して全場面を確認できます。</p><ListPager {...chartWindow} label="緊張度の図"/>
+        <WindowedList as="ol" className="tension-values" items={profile.points.map((point,index)=>({...point,id:String(index)}))} scope={`structure-tension:${project.projectId}:${chapterId}`} label="緊張度と重要度" render={point => <li key={point.sceneId}><span>{point.sceneName}</span><span>緊張度 {point.value === null ? '未入力' : point.value} · 重要度 {point.importance === null ? '未入力' : point.importance}</span></li>}/>
       </div>}
     </>}
   </section>;

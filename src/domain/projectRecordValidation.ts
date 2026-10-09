@@ -1,6 +1,6 @@
-import type { ProjectData, ProjectSnapshot, ProjectContent, ValidationIssue, ContentState, AuthorAlternative, AlternativeVersion, AlternativeApplyReceipt } from './types';
+import type { Entity, ProjectData, ProjectSnapshot, ProjectContent, ValidationIssue, ContentState, AuthorAlternative, AlternativeVersion, AlternativeApplyReceipt } from './types';
 import type { ProjectValidationOptions } from './model';
-import { validateProject } from './model';
+import { validateProject,validateCurrentProject, type DomainReference } from './model';
 import { validateAuthorAlternatives } from './authorAlternativeIntegrity';
 import { validateReadingTraceRecord } from './runtimeRecordValidation';
 import { captureRuntimeContent } from './runtimeVersions';
@@ -126,15 +126,29 @@ async function checkChapterTraces(project: ProjectData, validationOptions: Proje
 }
 
 /** Async durable-boundary checks for hashes, isolated branch contents, and replayable chapter evidence. */
-export async function validateProjectIntegrity(input: ProjectData, options: ProjectValidationOptions = {}, requireReceiptHistory = input.history.length > 0): Promise<ValidationIssue[]> {
+export async function validateProjectIntegrity(input: ProjectData, options: ProjectValidationOptions = {}, requireReceiptHistory = input.history.length > 0, verifiedStorage?:{previous:ProjectData;references:WeakMap<Entity,DomainReference[]>}): Promise<ValidationIssue[]> {
   try {const {verifyStoredGameEvidence}=await import('./gameProtocol');await verifyStoredGameEvidence(input,options.worldSnapshots??{});}catch(error){return [{code:'INTEGRITY_FAILED',path:'project.entities.handoffReceipt',message:(error as Error).message}];}
   // Freeze the exact dependency images at the durable boundary. Async hash checks
   // must never validate a different world map from the one structural validation read.
   const digestCache = createPinnedWorldDigestCache();
   const validationOptions = { ...options, worldSnapshots: freezePinnedWorldRegistry(options.worldSnapshots ?? {}, digestCache), worlds: options.worlds ? structuredClone(options.worlds) : undefined };
-  const structural = validateProject(input, validationOptions);
+  // Storage has already verified immutable snapshots and the previous content.
+  // Recheck every changed current record and every affected reference using the
+  // same structural contract; imports/history still take the full validator.
+  const structural = verifiedStorage&&!requireReceiptHistory&&!input.history.length
+    ?validateCurrentProject(input,validationOptions,verifiedStorage):validateProject(input, validationOptions);
   if (!structural.ok) return structural.issues;
   const issues: ValidationIssue[] = [];
+  const reviewChanges=(before:ProjectData['entities'],after:ProjectData['entities'],path:string)=>{
+    const old=new Map(before.filter(e=>e.kind==='review'&&e.data.sharedSource).map(e=>[e.id,e]));
+    for(const entity of after){const prior=old.get(entity.id);if(entity.kind!=='review'||prior?.kind!=='review')continue;
+      if(canonicalJson(prior.data.sharedSource)!==canonicalJson(entity.data.sharedSource??null))issues.push({code:'INTEGRITY_FAILED',path:`${path}.${entity.id}.data.sharedSource`,message:'元の共有指摘・公開版・位置・引用の記録は変更できません。解決文を別に保存してください。'});
+      if(canonicalJson([prior.data.target,prior.data.targetVersionId,prior.data.quotedText??null])!==canonicalJson([entity.data.target,entity.data.targetVersionId,entity.data.quotedText??null]))issues.push({code:'INTEGRITY_FAILED',path:`${path}.${entity.id}.data.target`,message:'元の共有指摘の私的固定版と引用は変更できません。現在稿の修正は別に保存してください。'});
+      if(prior.data.stage==='open'&&entity.data.stage==='verified')issues.push({code:'INTEGRITY_FAILED',path:`${path}.${entity.id}.data.stage`,message:'共有指摘は修正済みを保存してから再確認してください。'});
+    }
+  };
+  if(verifiedStorage)reviewChanges(verifiedStorage.previous.entities,input.entities,'project.entities');
+  for(const [index,command]of input.history.entries())reviewChanges(command.before.entities,command.after.entities,`project.history[${index}].after.entities`);
   issues.push(...await verifyPinnedWorlds(input, validationOptions.worldSnapshots, 'project.worldReferences', digestCache));
   for (const [index, snapshot] of input.snapshots.entries()) issues.push(...await verifyPinnedWorlds(snapshot.content, validationOptions.worldSnapshots, `project.snapshots[${index}].content.worldReferences`, digestCache));
   issues.push(...await checkAlternatives(input, validationOptions, 'project', digestCache));

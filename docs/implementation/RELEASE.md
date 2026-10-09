@@ -11,3 +11,13 @@
 証拠は対象commitを検証した後のActions artifact `release-evidence` に `release-evidence.json` として保存する。ソースのcommitにそのcommit自身のhashを書き込もうとせず、外部の検証artifactで版を固定する。完成版受入が整った後、`Publish verified release` workflowへ同じcommitの証拠run IDを渡す。現時点ではこのartifactを生成していない。
 
 公開前に対象commitのbuildでサブパス・素材・キャッシュ更新・再読込・直リンクを確認し、公開後にもbuild-infoと表示版を確認する。ルート単独の成功をサブパスの確認として扱わない。
+
+## RB10候補の確認手順
+
+対象は[RB10候補](RB10_COMPLETION_CANDIDATE.md)。production buildの `build-info.json` に記録したcommit/tree/baseと、検査artifactのsource・dist hashを照合する。ソースにそのcommit自身のhashを埋め込まず、検査後の外部artifactへ版を固定する。証拠だけを追加したcommitを、前のbuildの試験対象commitと混同しない。
+
+実端末確認はスマートフォン／タブレットの通常画面で新規登録→保存→再読込→固定リンク→読み位置へ戻る→完全保存→空領域new/clone復元を行う。利用に毎回PCを必要としない。320/390/768/1024/1440幅、回転、IME、Files、録音、offline、キーボード、文字200%、VoiceOver／NVDA、ドラッグ代替の結果とOS/browser実版を個別に残す。自動WebKitを実Safariの証拠へ変えない。
+
+専用実接続にはURL/public key、owner/editor/commenter/viewer/non-memberの試験accountとfixture tenant、private bucket、region/tier、許容量と現行quota／費用が必要。利用者の別用途DBを代用せず、自動migration適用・課金・公開をしない。prepared/rebase/原子ACK/二案UIと9migrationの局所契約は実接続試験から区別する。
+
+公開を別途承認して実施した後は、直リンクから開いたbuild-infoと完成commit、サブパス・キャッシュ更新・cold/offline・保存/復元・権限撤回を再確認する。公開先が未設定であることや未実行の受入を、公開成功や費用ゼロへ読み替えない。

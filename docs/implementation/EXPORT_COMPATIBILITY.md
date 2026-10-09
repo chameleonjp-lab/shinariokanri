@@ -1,3 +1,18 @@
+# RB10追加の保存互換性（同一候補の最終受入前）
+
+2026-10-09。native形式1.0.0と既存6出力profileの規則を保持する。[候補の確認条件](RB10_COMPLETION_CANDIDATE.md)を併用する。以下のRB08/RB09記録は各確認時点の範囲として残す。
+
+| 変更 | 保持する値・対応 | 拒否・互換条件 |
+| --- | --- | --- |
+| 完全ファイルの `shared-records-v1` | 全kind、順序付き段落／台詞／履歴、同じIDの異なる案、変更前後、送信待ち、世界pin推移依存、素材bytesを辞書で損失なく往復 | 必須機能を宣言。未知reader、未参照辞書、破損hash、不正参照・上限超過は確定前に拒否 |
+| `shared-review-source-v1` | 私有の共有指摘出所、旧公開版、Unicode引用位置、修正／確認段階。cloneではprivate IDを対応し、外部public IDは保持 | 共有指摘があるファイルだけ必須機能を宣言。作者用の対応map／認証情報を公開profileへ転用しない |
+| ローカルDB v7 `recordParts` | 大きな履歴／送信待ちの元の完全値をSHA256付きpartsから返す。marker、parts、索引、古いpartsの除去を同じトランザクションで確定 | 旧v6行はそのまま読取。未知codec・欠損・改ざん・scope不一致・取消で安全に停止。専用ファイルの仕様版とは別 |
+| 共有指摘migration 9 | 旧resolved=trueは修正済み。元版・公開引用は不変、確認済みへ自動昇格しない | service-only対応表と現在のmembership・session・期限を検査。実Auth/RLS/Storageは専用環境で別受入 |
+
+portable上限はZIP64MiB、展開256MiB、JSON64MiB／file、素材32MiB／file、100,000 records、500,000 objects、深さ32を保持する。ローカルpartsの8MiB分割を、専用ファイルの上限緩和として扱わない。metadata-onlyは完全復元ではない。入力途中の持出しと完成素材bytesも区別する。
+
+## RB08時点の互換記録
+
 # 現在の出力互換性（RB08実装候補・最終受入保留）
 
 2026-10-08。原104要件・116受入の条件は維持する。以下は通常画面で生成・保存・再読込する現在の実装範囲であり、全実端末／実API／最終受入の合格ではない。[制作・受渡し手順](RB08_PRODUCTION_HANDOFF.md)と対象commitの検査記録を併用する。

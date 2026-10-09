@@ -1,3 +1,9 @@
+2026-10-09の現在作業は[RB10候補の準備と確認条件](RB10_COMPLETION_CANDIDATE.md)を参照。PR #14〜#17の競合を順に解消し、各CI成功を確認した。#17の最終headは `01676a27d1f7bbc03d421c8c64187ef385e86ed4`、CI run `37867912548` が735単体、225 productionブラウザー、RB03/RB04、Python15、文書・計画・buildで成功。取り込みは利用者側で行われ、最新mainは `33f3c8c4bd22fb0d79ebdd037c36ca9bf30aabf3` / tree `5b66f5d6295082e2eb033d3613beec516b720149`。本作業からmainへのマージ・公開・外部DB変更は行っていない。
+
+RB10は章／執筆／分岐／制作／参照候補の分割、任意診断の実失敗導線、共有指摘→制作タスクの原子保存、同義／反対状態候補、Largeのlossless DB partsと完全ファイル辞書、取消中の入力・原子性とcold読込を接続した。開発中の単体754件と追加通常画面27件（3ブラウザー）が成功している。これらは固定した完成候補の全受入結果ではない。Standard各30回、Large素材付き／取消／空復元／2時間と独立レビューを同一候補へ結合する工程を継続する。
+
+[104要件の現在照合](../quality/current-review/CURRENT_REQUIREMENTS.md)は原契約と現在の関連source hashを保持する。元116の正常／境界・失敗は未実行を合格へ変えない。実iPhone／iPad／PC各OS・VoiceOver／NVDA・実Auth/RLS/private Storage・専用接続quota／費用は不足しており公開gateを保留する。以下の段階候補・main観察・工程表は各確認時点の歴史的記録として保持する。
+
 RB09局所候補 `af0c2b983f1146cc7977f13d119b8748c867db2f` / tree `134fc3adb342600bebc8dccaa93ff5cec9254c08` は[同期・限定共有](RB09_SYNC_SHARING.md)を通常操作→原子保存→cold→完全new/cloneへ接続。735単体/結合、75 production Chromium153、Python15、schema/build/docs/plan、隔離PostgreSQLの8migration+23模擬RLS契約を確認。独立指摘の遅延許可/期限後解決/復元承認・入力DB原子性・遅延画面intentを補修。専用実接続先/5実アカウント/quota未指定、実Auth/RLS/Storage/二実端末・原116最終は未実行。公開gateは保留してRB10へ継続。
 
 RB08局所候補 `bf0f6b07d4a3f782870ab11894d410936e7e1eff` / tree `10e62dbf528d2290a5d18222216498faaf992908` は[制作・受渡し](RB08_PRODUCTION_HANDOFF.md)を通常操作→原子保存→cold/完全復元へ接続。703単体/結合、68 production Chromium153、Python15、build/docs/plan/schemaと独立対象検査が成功。[5候補の負例](../quality/current-review/evidence/rb08-handoff/candidate-history.json)は不変保持。承認待ちの後続file busy、相談の本文IDと公開位置、有限capabilities、旧版からの受領実行再構成、入力全体のawait前capture、受領hashの固定承認を補修。元116全体・実端末・性能/Large/2時間・実API・release evidenceは未実行、RB09/10へ継続。RB07証拠63ファイルのGit梱包不足をSHA不変で候補3に補完済み。

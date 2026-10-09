@@ -7,9 +7,9 @@ async function files(dir) {
   return (await Promise.all((await readdir(dir,{withFileTypes:true})).map(async entry => entry.isDirectory() ? files(`${dir}/${entry.name}`) : [`${dir}/${entry.name}`]))).flat();
 }
 const paths = (await files('dist')).filter(path=> !path.endsWith('/sw.js')&&!path.endsWith('/build-info.json'));
-let commit='unknown';let dirty=true;
-try {commit=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim();dirty=Boolean(execFileSync('git',['status','--porcelain'],{encoding:'utf8'}).trim());}catch{}
-const metadata={commit,dirty,base,builtAt:new Date().toISOString(),versionHashScope:'sorted paths and bytes plus build info before version'};
+let commit='unknown',tree='unknown';let dirty=true;
+try {commit=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8',maxBuffer:16*1024*1024}).trim();tree=execFileSync('git',['rev-parse','HEAD^{tree}'],{encoding:'utf8',maxBuffer:16*1024*1024}).trim();dirty=Boolean(execFileSync('git',['status','--porcelain'],{encoding:'utf8',maxBuffer:16*1024*1024}).trim());}catch{}
+const metadata={commit,tree,dirty,base,builtAt:new Date().toISOString(),versionHashScope:'sorted paths and bytes plus build info before version'};
 const hash = createHash('sha256');
 hash.update(JSON.stringify(metadata));
 for(const path of paths.sort()){hash.update(path);hash.update(await readFile(path));}

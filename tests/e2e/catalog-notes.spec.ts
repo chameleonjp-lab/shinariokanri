@@ -28,7 +28,7 @@ test('保存した複合一覧の再適用、一括変更、索引分類を通�
   await page.getByRole('button', { name: '一覧を保存', exact: true }).click();
   await expect(page.locator('.search-page [role=status]').first()).toContainText('一覧を保存しました');
   await page.reload(); await expect(page.getByLabel('作品内を検索', { exact: true })).toHaveValue('あかり');
-  await page.getByLabel('保存した一覧を再表示').selectOption({ label: '人物候補' });
+  await page.getByLabel('保存した一覧を再表示',{exact:true}).selectOption({ label: '人物候補' });
   await page.getByText('結果をまとめて編集', { exact: true }).click();
   await page.getByRole('button', { name: '結果をすべて選択', exact: true }).click();
   await page.getByLabel('まとめて設定する状態').selectOption('needs_review');

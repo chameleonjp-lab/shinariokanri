@@ -10,4 +10,6 @@
 
 単体: `npm test -- tests/sync.test.ts src/storage/rb09Sync.test.ts tests/rb09Features.test.ts`。SQL: 隔離コンテナ限定 `scripts/sync/check-sql-local.sh`。server bundle: `npm run sync:build`。実API用opt-in driverはガイド参照。WP17/18・AT-E05/E06・RB09全体の受入完了は別判定する。
 
-最終局所候補はnative DBv6、限定編集DBv2、8migration。内容版とauthorizationRevision/ExpiresAtを別評価し、解決/復元のDB確定時にも期限を再検証する。workspaceInputs+authorToolDraftsの原子復元とキャッシュ失敗後のcold再開を保持する。詳細は実装ガイド参照。
+RB09の最終局所候補はnative DBv6、限定編集DBv2、8migration。内容版とauthorizationRevision/ExpiresAtを別評価し、解決/復元のDB確定時にも期限を再検証する。workspaceInputs+authorToolDraftsの原子復元とキャッシュ失敗後のcold再開を保持する。詳細は実装ガイド参照。
+
+RB10ではnative DBv7の大行の原子分割と9個目の共有指摘lifecycle migrationを準備する。[RB10候補ガイド](../../docs/implementation/RB10_COMPLETION_CANDIDATE.md)を参照。元版・公開引用・private ID対応はownerだけが取得できる。旧resolved=trueから確認済みは推定しない。専用実接続の適用・受入は未実行。

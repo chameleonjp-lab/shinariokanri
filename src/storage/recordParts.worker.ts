@@ -1,0 +1,2 @@
+import {packRecordData,unpackRecordData} from './recordPartsCore';
+self.onmessage=async event=>{try{const value=event.data.action==='pack'?await packRecordData(event.data.value,event.data.scope):await unpackRecordData(event.data.packed,event.data.parts);self.postMessage({ok:true,value});}catch(error){const cause=error as {code?:string};self.postMessage({ok:false,code:cause.code??'SAVE_FAILED'});}};
