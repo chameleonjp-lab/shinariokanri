@@ -26,6 +26,10 @@ C7F05の旧全体passed判断は、1章内の場面順変更だけで原『章�
 
 C11は固定版/世界hash検証と同じ実行器の解析をWorkerへ接続し、時間8ms目安と128状態のyieldをfanout/continueにも接続。準備時間を元30秒に含め、100,000状態/10,000遷移・原子性・ID/形式を維持する。同じ元Large全88,522件/72MiBの取消/unknown/結果保持/不正JSON再開/全27native内容不変、3browser×2通常と全770/82単体がdirty準備で成功。最初のviewStates比較位置差とChromium設定漏れ2件の失敗を保持し、clean最終30回/復元/実7200秒/原116/33境界を別実行する。実機/実権限/専用現行費用の不足と公開gate保留は維持する。
 
+固定C11 2806287/tree85fe/builddde35は全CI21（770/82単体・270production・元Large解析1）、原Standard/Large各30回、元88,003件＋実72MiBの完全new/clone/cold、独立元Large取消・実サーバー停止offlineが局所成功。一方原AT-B01の要約だけの出来事は通常保存で名前必須により拒否された。実7200秒は14:45:13〜14:54:34の9編集/試読で中断、未合格としてcandidate-11へ保存する。
+
+C12は出来事の名前または非空要約を許し、両空/空白、人物名、型/参照/2048CP、原子保存、旧版/ID/完全形式/公開投影を保持する。dirty773/83と3production browserで通常登録・一覧/詳細/検索・native12拒否不変・入力再開・最終入力ID→保存→cold全project/待ち一致→空390new/cloneを確認。fixture/JSON表示/全置換比較位置/Python対象の途中失敗を別保存。cleanCI・正式各30回・復元・元116/33・実7200は別実行、実OS/IME/Files/録音/VoiceOver/NVDA/実AuthRLSprivateStorage/5実accounts/現行quota費用と公開gateは保留。
+
 [104要件の現在照合](../quality/current-review/CURRENT_REQUIREMENTS.md)は原契約と現在の関連source hashを保持する。元116の正常／境界・失敗は未実行を合格へ変えない。実iPhone／iPad／PC各OS・VoiceOver／NVDA・実Auth/RLS/private Storage・専用接続quota／費用は不足しており公開gateを保留する。以下の段階候補・main観察・工程表は各確認時点の歴史的記録として保持する。
 
 RB09局所候補 `af0c2b983f1146cc7977f13d119b8748c867db2f` / tree `134fc3adb342600bebc8dccaa93ff5cec9254c08` は[同期・限定共有](RB09_SYNC_SHARING.md)を通常操作→原子保存→cold→完全new/cloneへ接続。735単体/結合、75 production Chromium153、Python15、schema/build/docs/plan、隔離PostgreSQLの8migration+23模擬RLS契約を確認。独立指摘の遅延許可/期限後解決/復元承認・入力DB原子性・遅延画面intentを補修。専用実接続先/5実アカウント/quota未指定、実Auth/RLS/Storage/二実端末・原116最終は未実行。公開gateは保留してRB10へ継続。
