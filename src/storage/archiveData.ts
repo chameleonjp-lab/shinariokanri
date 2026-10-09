@@ -6,7 +6,7 @@ import type { Entity,Relation,ProjectContent, ProjectData, WorldReference } from
 import { newId, validateProject,collectReferences,collectRelationReferences,ENTITY_KINDS } from '../domain/model';
 import { validateProjectIntegrity } from '../domain/projectRecordValidation';
 import { checkCancelled, StorageError } from './errors';
-import { ARCHIVE_LIMITS, FORMAT_VERSION, equalJson, jsonBytes, parseStrictJson, resolveLimits, safeArchivePath, sha256,
+import { ARCHIVE_LIMITS, FORMAT_VERSION, equalJson, exceedsJsonBytes, jsonBytes, parseStrictJson, resolveLimits, safeArchivePath, sha256,
   type ArchiveLimits, type LimitOverrides } from './json';
 
 export type AssetMode = 'embedded' | 'metadata_only';
@@ -464,7 +464,9 @@ export async function exportScenarioData(input: ProjectData, options: ExportOpti
   options.onProgress?.({stage:'serializing',completed:0,total:1});
   // Larger retained images share exact record variants and ordered array deltas.
   // Older readers reject the required feature before interpreting any image.
-  const dictionary=recordCount>=5000&&(project.history.length+project.snapshots.length+(project.authorAlternatives?.length??0)+(recovery?.pending.length??0)+(syncRecovery?.length??0)>0)?new RecordDictionaryWriter():undefined;
+  const retained = project.history.length + project.snapshots.length + (project.authorAlternatives?.length ?? 0) + (recovery?.pending.length ?? 0) + (syncRecovery?.length ?? 0);
+  const needsDictionary = recordCount >= 5000 && retained > 0 || [project, ...Object.values(worlds), recovery, syncRecovery].some(value => value !== undefined && exceedsJsonBytes(value, ARCHIVE_LIMITS.jsonBytes));
+  const dictionary = needsDictionary ? new RecordDictionaryWriter() : undefined;
   const encode=(value:unknown)=>jsonBytes(dictionary?dictionary.encode(value):value);
   const files: Record<string, Uint8Array> = { 'data/project.json': encode(project), ...(recovery ? { 'data/recovery.json': encode(recovery) } : {}),...(syncRecovery?{'data/sync-recovery.json':encode(syncRecovery)}:{}) };
   for (const [id, world] of Object.entries(worlds)) {
