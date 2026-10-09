@@ -1,4 +1,4 @@
-2026-10-09の現在作業は[RB10候補の準備と確認条件](RB10_COMPLETION_CANDIDATE.md)を参照。PR #14〜#17の競合を順に解消し、各CI成功を確認した。#17の最終headは `01676a27d1f7bbc03d421c8c64187ef385e86ed4`、CI run `37867912548` が735単体、225 productionブラウザー、RB03/RB04、Python15、文書・計画・buildで成功。PR #18〜#21も利用者側で取り込まれ、最新確認mainは `449de9b469792b8778a7340b8ae27585d9d31e3a` / tree `45726131d7f818d07b57aa8a26a9b7293b7cc129`（PR #21、2026-10-09T09:34:51Z）。本作業からmainへのマージ・公開・外部DB変更は行っていない。
+2026-10-09の現在作業は[RB10候補の準備と確認条件](RB10_COMPLETION_CANDIDATE.md)を参照。PR #14〜#17の競合を順に解消し、各CI成功を確認した。#17の最終headは `01676a27d1f7bbc03d421c8c64187ef385e86ed4`、CI run `37867912548` が735単体、225 productionブラウザー、RB03/RB04、Python15、文書・計画・buildで成功。PR #18〜#22も利用者側で取り込まれ、最新確認mainは `4bd437153aa29e8ecc3024f139db9fea97a47474` / tree `1822ac96925fa765068a6339c5e828fe24f3e998`（PR #22外部取り込み後）。本作業からmainへのマージ・公開・外部DB変更は行っていない。
 
 RB10は章／執筆／分岐／制作／参照候補の分割、任意診断の実失敗導線、共有指摘→制作タスクの原子保存、同義／反対状態候補、Largeのlossless DB partsと完全ファイル辞書、取消中の入力・原子性とcold読込を接続した。固定C4 `746cc68` のCI run `37880375499` は758単体、255 production画面、RB03/RB04、Python15、文書・計画・buildで成功。Standard各30回の局所値は基準内。Largeの一覧描画は10秒内だったが、実際に入力可能となる時点を要求する補足30回は19回で環境中断、再起動後の診断3回はp95=10,569.3msで未達。異なる測定終点や中断を合格へ換算しない。
 
@@ -21,6 +21,10 @@ C9は同じreadonly transactionの全範囲を2048件ずつ読み、編集読込
 C7F05の旧全体passed判断は、1章内の場面順変更だけで原『章順変更』が未観測だったため撤回した。原rawは保持し、C9の複数章通常変更/原子失敗/再試行/cold/旧版/new-clone/tick不変を別の観測へ結合する。実OS/IME/Files/録音/VoiceOver/NVDA/専用実Auth・RLS・privateStorage/実accounts/現行quota・費用と公開先の不足を未実行のまま残す。
 
 独立した小fixtureで原AT-N05の取消→資料→試読の結果消失もC9通常productionで再現した。取消結果はunknown/truncated、正本12tableと未保存JSONは不変だったが、結果と保存導線が再入時に失われた。この追加観測は旧C9sealを変更せず別証拠へ保持する。C10は作者・作品別ReaderDraftへ結果/進捗/実行状態と共有取消を保持し、旧作者purge後の遅延書込を防ぐ。改訂後の現稿結果は再確認を明示、選択版が異なっても元対象版を保持する。dirty通常3browser×2ケースと全764/81単体が成功。原Large＋長い分岐・実時間7200秒・最終原116・実機・実APIの不足は別判定のまま。
+
+固定C10 f76d5e9/treee5fc7/build187dのCI37927467219は764/81単体・270production・全20step成功。元Standard各30回とLarge実入力開始8851.90000000596ms/検索489.3999999910593msは局所数値内、元88,003件＋実72MiBの完全new/clone/cold復元も一致した。一方、同じ元Largeに長い分岐を追加した独立N05では初回進捗12498.9ms/取消pointer19653.4msで2秒条件を超えた。実7200秒は未開始、元116全体passed0としてcandidate-10へ封印する。
+
+C11は固定版/世界hash検証と同じ実行器の解析をWorkerへ接続し、時間8ms目安と128状態のyieldをfanout/continueにも接続。準備時間を元30秒に含め、100,000状態/10,000遷移・原子性・ID/形式を維持する。同じ元Large全88,522件/72MiBの取消/unknown/結果保持/不正JSON再開/全27native内容不変、3browser×2通常と全770/82単体がdirty準備で成功。最初のviewStates比較位置差とChromium設定漏れ2件の失敗を保持し、clean最終30回/復元/実7200秒/原116/33境界を別実行する。実機/実権限/専用現行費用の不足と公開gate保留は維持する。
 
 [104要件の現在照合](../quality/current-review/CURRENT_REQUIREMENTS.md)は原契約と現在の関連source hashを保持する。元116の正常／境界・失敗は未実行を合格へ変えない。実iPhone／iPad／PC各OS・VoiceOver／NVDA・実Auth/RLS/private Storage・専用接続quota／費用は不足しており公開gateを保留する。以下の段階候補・main観察・工程表は各確認時点の歴史的記録として保持する。
 

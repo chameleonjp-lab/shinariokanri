@@ -23,6 +23,7 @@ jobs:
       - run: npm test
       - run: npm run build
       - run: BROWSER_ENGINES=all npm run test:e2e
+      - run: npx playwright test -c tests/rb10/playwright.config.ts --project=chromium --output=test-results/rb10-large-analysis-chromium
       - run: RB03_ENGINES=chromium,firefox,webkit node tests/browser/run-rb03-components.mjs
       - run: |
           for engine in chromium firefox webkit; do
