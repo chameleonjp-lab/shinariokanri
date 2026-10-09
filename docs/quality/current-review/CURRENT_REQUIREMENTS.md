@@ -1,10 +1,10 @@
 # 104要件の現在実装照合（最終受入は未完了）
 
-2026-10-09。原104/24/116/6と26原文hash不変。固定C10のCI/各30回/完全復元局所成功と元LargeN05応答未達を分離保存。C11の同じ元Large取消/全27native不変・通常6・770単体はdirty準備。clean最終/実7200/116全体/実環境は別判定。
+2026-10-09。原104/24/116/6と26原文を保持。C11固定の局所CI/各30回/復元/探索取消成功と原B01失敗・実7200中断を分けて保存。C12基本登録の773/83・通常3成功はdirty準備、clean最終/116/33/実2時間/実環境は別判定。
 
 | 要件 | 工程/担当 | 現在の実装観察 | 残る確認 | 原ケース最終結果 |
 | --- | --- | --- | --- | --- |
-| REQ-B01 作品の作成と情報の登録 | WP04/RB02 | 作品・人物・出来事・場所・物品・メモの共通登録、編集、アーカイブ、名前からの登録がある。  C6: cold読取の不要な全配列コピーを省き、全marker/hash/順序/欠損/foreign拒否とnative原子性を保持。新しいnative生行不変・mixed/late corrupt検査を追加。C5のCI全体watchdog失敗とLarge入力開始未達は別版原結果へ保持。 C7: 作品一覧の表示wrapperから元projectだけを開き、再選択後の未知id混入と通常保存拒否を補修。2作品・容量不足・入力再開・cold・旧snapshot・Unicodeリンク・空new/cloneのdirty3browserが成功。 | 原AT-B01のgiven/when/then/negative_or_edge全体を同一固定候補で受入し、現在source・手順・fixture・正常/失敗の実結果へ結合する。下欄に元の未確認条件を保持。段階/部品の成功を全体完成へ換算しない。 | not_run |
+| REQ-B01 作品の作成と情報の登録 | WP04/RB02 | 作品・人物・出来事・場所・物品・メモの共通登録、編集、アーカイブ、名前からの登録がある。  C6: cold読取の不要な全配列コピーを省き、全marker/hash/順序/欠損/foreign拒否とnative原子性を保持。新しいnative生行不変・mixed/late corrupt検査を追加。C5のCI全体watchdog失敗とLarge入力開始未達は別版原結果へ保持。 C7: 作品一覧の表示wrapperから元projectだけを開き、再選択後の未知id混入と通常保存拒否を補修。2作品・容量不足・入力再開・cold・旧snapshot・Unicodeリンク・空new/cloneのdirty3browserが成功。 C11原AT-B01の要約だけevent保存拒否を保持。C12は名前又は非空要約を許可し両空/空白・人物名・参照/2048CP/原子性を保持。通常空作品→2最小情報→一覧/詳細/検索→不正入力保持/native12不変→修正/cold→完全new/clone、全773/83と3production browserがdirty成功。最終独立原4節はclean対象で別確認。 | 原AT-B01のgiven/when/then/negative_or_edge全体を同一固定候補で受入し、現在source・手順・fixture・正常/失敗の実結果へ結合する。下欄に元の未確認条件を保持。段階/部品の成功を全体完成へ換算しない。 | not_run |
 | REQ-B02 共通の出来事と人物別の出来事 | WP07/RB03 | 世界時間を横軸、グループと人物を縦軸にした年表。共通／参加者のレーンを分ける。  | 原AT-B02のgiven/when/then/negative_or_edge全体を同一固定候補で受入し、現在source・手順・fixture・正常/失敗の実結果へ結合する。下欄に元の未確認条件を保持。段階/部品の成功を全体完成へ換算しない。 | not_run |
 | REQ-B03 グループと人物レーン | WP07/RB03 | グループの階層、並べ替え、折りたたみ、多重参照を年表へ接続。  | 原AT-B03のgiven/when/then/negative_or_edge全体を同一固定候補で受入し、現在source・手順・fixture・正常/失敗の実結果へ結合する。下欄に元の未確認条件を保持。段階/部品の成功を全体完成へ換算しない。 | not_run |
 | REQ-B04 人物ラベルを固定して横移動 | WP07/RB03 | 固定ラベル、期間移動、選択／表示位置の端末別保持を実装。  | 原AT-B04のgiven/when/then/negative_or_edge全体を同一固定候補で受入し、現在source・手順・fixture・正常/失敗の実結果へ結合する。下欄に元の未確認条件を保持。段階/部品の成功を全体完成へ換算しない。 | not_run |

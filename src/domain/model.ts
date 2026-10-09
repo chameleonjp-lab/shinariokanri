@@ -584,7 +584,10 @@ export function validateVariableValue(variable: Entity<'variable'>, value: Typed
 function validateLocalRules(entity: Entity, path: string, issues: ValidationIssue[]): void {
   const issue = (field: string, message: string): void => addIssue(issues, `${path}.${field}`, message);
   const unnamed: EntityKind[] = ['dialogue_line', 'effect', 'assertion', 'disclosure', 'cue', 'storyboard_frame', 'localization', 'recording', 'checkpoint', 'trace'];
-  if (!unnamed.includes(entity.kind) && !entity.name.trim()) issue('name', '名称を入力してください。');
+  if (!unnamed.includes(entity.kind) && !entity.name.trim()) {
+    if (entity.kind !== 'event') issue('name', '名称を入力してください。');
+    else if (!richTextToPlainText(entity.data.summary).trim()) issue('data.summary', '名称または要約を入力してください。');
+  }
   if (entity.visibility === 'projection' && !entity.projectionProfileId) issue('projectionProfileId', '公開投影の対象プロファイルを指定してください。');
   if (entity.deletedAt && !entity.deletionOperationId) issue('deletionOperationId', '削除には削除操作IDが必要です。');
   if (!entity.deletedAt && entity.deletionOperationId) issue('deletionOperationId', '削除されていない情報に削除操作IDは保存できません。');

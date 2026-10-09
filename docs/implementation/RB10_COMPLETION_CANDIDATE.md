@@ -121,3 +121,9 @@ C7F05の旧全体passed判断は、1章内の場面順変更だけで原『章�
 固定C10 f76d5e9/treee5fc7/build187dのCI37927467219は764/81単体・270production・全20step成功。元Standard各30回とLarge実入力開始8851.90000000596ms/検索489.3999999910593msは局所数値内、元88,003件＋実72MiBの完全new/clone/cold復元も一致した。一方、同じ元Largeに長い分岐を追加した独立N05では初回進捗12498.9ms/取消pointer19653.4msで2秒条件を超えた。実7200秒は未開始、元116全体passed0としてcandidate-10へ封印する。
 
 C11は固定版/世界hash検証と同じ実行器の解析をWorkerへ接続し、時間8ms目安と128状態のyieldをfanout/continueにも接続。準備時間を元30秒に含め、100,000状態/10,000遷移・原子性・ID/形式を維持する。同じ元Large全88,522件/72MiBの取消/unknown/結果保持/不正JSON再開/全27native内容不変、3browser×2通常と全770/82単体がdirty準備で成功。最初のviewStates比較位置差とChromium設定漏れ2件の失敗を保持し、clean最終30回/復元/実7200秒/原116/33境界を別実行する。実機/実権限/専用現行費用の不足と公開gate保留は維持する。
+
+## C11の原B01差分とC12の基本登録補修
+
+固定C11 2806287/tree85fe/builddde35は全CI21（770/82単体・270production・元Large解析1）、原Standard/Large各30回、元88,003件＋実72MiBの完全new/clone/cold、独立元Large取消・実サーバー停止offlineが局所成功。一方原AT-B01の要約だけの出来事は通常保存で名前必須により拒否された。実7200秒は14:45:13〜14:54:34の9編集/試読で中断、未合格としてcandidate-11へ保存する。
+
+C12は出来事の名前または非空要約を許し、両空/空白、人物名、型/参照/2048CP、原子保存、旧版/ID/完全形式/公開投影を保持する。dirty773/83と3production browserで通常登録・一覧/詳細/検索・native12拒否不変・入力再開・最終入力ID→保存→cold全project/待ち一致→空390new/cloneを確認。fixture/JSON表示/全置換比較位置/Python対象の途中失敗を別保存。cleanCI・正式各30回・復元・元116/33・実7200は別実行、実OS/IME/Files/録音/VoiceOver/NVDA/実AuthRLSprivateStorage/5実accounts/現行quota費用と公開gateは保留。
