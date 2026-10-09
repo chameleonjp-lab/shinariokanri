@@ -15,7 +15,7 @@ import { sealAuthorAlternative } from '../domain/authorAlternativeIntegrity';
 import { appendAlternativeVersion, applyAlternativeChanges, projectContent } from '../domain/writingWorkspace';
 import { assetPath, attachmentMetadata, closureAttachmentMetadata, exportScenario, referencedWorlds, validateAsset, verifySnapshotHashes, verifyWorlds, worldSnapshotContents, type PreparedScenario } from './archive';
 import { checkCancelled, saveError, StorageError } from './errors';
-import { canonicalJson, equalJson, jsonBytes, sha256 } from './json';
+import { canonicalJson, equalJson, jsonBytes, sha256, validateJsonValue } from './json';
 import { recoveryImages, projectWithRecoveryHistory, validateRecovery, type PortableRecovery } from './recovery';
 import { planCrossProjectImport, type CrossProjectImportPlan } from './importMapping';
 import { assertAck } from '../sync/validation';
@@ -194,7 +194,7 @@ const blankBefore = (project: ProjectData): ContentState => {
 function validated(input: unknown, worldSnapshots: Record<string, ProjectContent> = {}): ProjectData {
   const result = validateProject(input, { worldSnapshots });
   if (!result.ok) throw Object.assign(new StorageError('VALIDATION_FAILED', result.issues.map(issue => `${issue.path}: ${issue.message}`).join('\n')), { issues: result.issues });
-  canonicalJson(result.value);
+  validateJsonValue(result.value);
   return result.value;
 }
 function validatedCurrent(input: ProjectData, worldSnapshots: Record<string, ProjectContent>, previous?: ProjectData, references = new WeakMap<Entity, DomainReference[]>()): ProjectData {
