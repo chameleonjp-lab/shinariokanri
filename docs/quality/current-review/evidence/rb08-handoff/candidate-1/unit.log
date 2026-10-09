@@ -1,0 +1,67 @@
+
+> shinariokanri@0.1.0 pretest
+> node scripts/build/portable-runtime.mjs
+
+Production portable runtime generated: 141549 characters
+
+> shinariokanri@0.1.0 test
+> vitest run --maxWorkers=2 --testTimeout=30000
+
+
+ RUN  v5.0.3 /workspace/shinariokanri-rb08
+
+ ❯ src/storage/rb07Production.test.ts (22 tests | 1 failed) 971ms
+   ❯ RB07 authored production workflow and complete recovery (12)
+     × exports only task-assigned deliverables and their material dependencies, keeps stable public IDs and never exposes the private assignee ID 11ms
+ ❯ tests/rb05-reviewed-regressions.test.ts (9 tests | 1 failed) 194ms
+   ❯ Independent RB05 original-contract review; not whole AT credit (9)
+     × R5P02 existing executable exporters reject an unsupported exclusion instead of silently dropping it 33ms
+ ❯ tests/readingExportOrder.test.ts (1 test | 1 failed) 35ms
+   × reader Markdown and HTML follow the chosen version chapter order rather than inclusion-list order 33ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/rb05-reviewed-regressions.test.ts > Independent RB05 original-contract review; not whole AT credit > R5P02 existing executable exporters reject an unsupported exclusion instead of silently dropping it
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ tests/rb05-reviewed-regressions.test.ts:129:357
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  tests/readingExportOrder.test.ts > reader Markdown and HTML follow the chosen version chapter order rather than inclusion-list order
+AssertionError: [{"code":"VALIDATION_FAILED","message":"REFERENCE_INVALID: 引用固定版の公開範囲が未確認です。"}]: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ tests/readingExportOrder.test.ts:29:80
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  src/storage/rb07Production.test.ts > RB07 authored production workflow and complete recovery > exports only task-assigned deliverables and their material dependencies, keeps stable public IDs and never exposes the private assignee ID
+Error: [{"code":"VALIDATION_FAILED","message":"REFERENCE_INVALID: 引用固定版の公開範囲が未確認です。"}]
+ ❯ src/storage/rb07Production.test.ts:83:1059
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  3 failed | 69 passed (72)
+      Tests  3 failed | 695 passed (698)
+   Start at  14:59:38
+   Duration  25.05s (tests 78%, import 13%, transform 8%, worker 1%)
+
+    Isolate  72 workers spawned · ~102ms startup each (spawn + environment, per file)
+             at least ~3.59s faster with isolate: false — reuses workers across files instead of one per file
+

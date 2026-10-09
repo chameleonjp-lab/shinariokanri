@@ -4436,6 +4436,198 @@
         "data": {
           "type": "object",
           "properties": {
+            "handoffReceipt": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "approval": {
+                      "type": "object",
+                      "properties": {
+                        "entityId": {
+                          "$ref": "#/$defs/ID",
+                          "$comment": "{\"referenceScope\":\"entity\"}"
+                        },
+                        "sourceVersionId": {
+                          "$ref": "#/$defs/ID",
+                          "$comment": "{\"referenceScope\":\"snapshot\"}"
+                        }
+                      },
+                      "required": [
+                        "entityId",
+                        "sourceVersionId"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "sourceVersionId": {
+                      "$ref": "#/$defs/ID",
+                      "$comment": "{\"referenceScope\":\"snapshot\"}"
+                    },
+                    "verificationVersionId": {
+                      "$ref": "#/$defs/ID",
+                      "$comment": "{\"referenceScope\":\"snapshot\"}"
+                    },
+                    "profileVersionId": {
+                      "$ref": "#/$defs/ID",
+                      "$comment": "{\"referenceScope\":\"snapshot\"}"
+                    },
+                    "sourceRevision": {
+                      "$ref": "#/$defs/Revision"
+                    },
+                    "profileId": {
+                      "$ref": "#/$defs/ID",
+                      "$comment": "{\"targetKinds\":[\"projection_profile\"],\"referenceScope\":\"entity\"}"
+                    },
+                    "packageHash": {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{64}$"
+                    },
+                    "receiptHash": {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{64}$"
+                    },
+                    "mode": {
+                      "enum": [
+                        "stub",
+                        "actual",
+                        "mixed"
+                      ]
+                    },
+                    "rawJson": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 1048576
+                    },
+                    "idMappings": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "entityId": {
+                            "$ref": "#/$defs/ID",
+                            "$comment": "{\"referenceScope\":\"record\"}"
+                          },
+                          "sourceVersionId": {
+                            "$ref": "#/$defs/ID",
+                            "$comment": "{\"referenceScope\":\"snapshot\"}"
+                          },
+                          "publicId": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256
+                          }
+                        },
+                        "required": [
+                          "entityId",
+                          "sourceVersionId",
+                          "publicId"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "maxItems": 100000
+                    },
+                    "projectionBindings": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "entityId": {
+                            "$ref": "#/$defs/ID",
+                            "$comment": "{\"referenceScope\":\"projection_record\"}"
+                          },
+                          "sourceVersionId": {
+                            "$ref": "#/$defs/ID",
+                            "$comment": "{\"referenceScope\":\"snapshot\"}"
+                          },
+                          "editionVersionId": {
+                            "$ref": "#/$defs/ID",
+                            "$comment": "{\"referenceScope\":\"snapshot\"}"
+                          },
+                          "publicId": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256
+                          }
+                        },
+                        "required": [
+                          "entityId",
+                          "sourceVersionId",
+                          "editionVersionId",
+                          "publicId"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "maxItems": 100000
+                    },
+                    "citationBindings": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "sourceVersionId": {
+                            "$ref": "#/$defs/ID",
+                            "$comment": "{\"referenceScope\":\"snapshot\"}"
+                          },
+                          "publicVersionId": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256
+                          }
+                        },
+                        "required": [
+                          "sourceVersionId",
+                          "publicVersionId"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "maxItems": 100000
+                    },
+                    "worldVersions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "sourceVersionId": {
+                            "$ref": "#/$defs/ID",
+                            "$comment": "{\"referenceScope\":\"snapshot\"}"
+                          },
+                          "contentHash": {
+                            "type": "string",
+                            "pattern": "^[0-9a-f]{64}$"
+                          }
+                        },
+                        "required": [
+                          "sourceVersionId",
+                          "contentHash"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "maxItems": 100000
+                    }
+                  },
+                  "required": [
+                    "approval",
+                    "sourceVersionId",
+                    "verificationVersionId",
+                    "profileVersionId",
+                    "sourceRevision",
+                    "profileId",
+                    "packageHash",
+                    "receiptHash",
+                    "mode",
+                    "rawJson",
+                    "idMappings",
+                    "projectionBindings",
+                    "citationBindings",
+                    "worldVersions"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
             "body": {
               "$ref": "#/$defs/RichText"
             },
@@ -6389,6 +6581,278 @@
                   },
                   "maxItems": 100000,
                   "uniqueItems": true
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "replacedByLineIds": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/ID",
+                    "$comment": "{\"targetKinds\":[\"dialogue_line\"],\"referenceScope\":\"entity\"}"
+                  },
+                  "maxItems": 100000,
+                  "uniqueItems": true
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "lineage": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "mode": {
+                      "enum": [
+                        "split",
+                        "merge",
+                        "copy"
+                      ]
+                    },
+                    "baseRevision": {
+                      "$ref": "#/$defs/Revision"
+                    },
+                    "reason": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "segments": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "source": {
+                            "type": "object",
+                            "properties": {
+                              "entityId": {
+                                "$ref": "#/$defs/ID",
+                                "$comment": "{\"referenceScope\":\"entity\"}"
+                              },
+                              "blockId": {
+                                "anyOf": [
+                                  {
+                                    "$ref": "#/$defs/ID",
+                                    "$comment": "{\"referenceScope\":\"block\"}"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "lineId": {
+                                "anyOf": [
+                                  {
+                                    "$ref": "#/$defs/ID",
+                                    "$comment": "{\"targetKinds\":[\"dialogue_line\"],\"referenceScope\":\"entity\"}"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "start": {
+                                "anyOf": [
+                                  {
+                                    "type": "integer",
+                                    "minimum": 0,
+                                    "maximum": 9007199254740991
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "end": {
+                                "anyOf": [
+                                  {
+                                    "type": "integer",
+                                    "minimum": 0,
+                                    "maximum": 9007199254740991
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "sourceVersionId": {
+                                "anyOf": [
+                                  {
+                                    "$ref": "#/$defs/ID",
+                                    "$comment": "{\"referenceScope\":\"snapshot\"}"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "positionStatus": {
+                                "anyOf": [
+                                  {
+                                    "enum": [
+                                      "unresolved"
+                                    ]
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "positionReason": {
+                                "anyOf": [
+                                  {
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "quotedText": {
+                                "anyOf": [
+                                  {
+                                    "type": "string",
+                                    "minLength": 0
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              }
+                            },
+                            "required": [
+                              "entityId"
+                            ],
+                            "additionalProperties": false
+                          },
+                          "target": {
+                            "type": "object",
+                            "properties": {
+                              "entityId": {
+                                "$ref": "#/$defs/ID",
+                                "$comment": "{\"referenceScope\":\"entity\"}"
+                              },
+                              "blockId": {
+                                "anyOf": [
+                                  {
+                                    "$ref": "#/$defs/ID",
+                                    "$comment": "{\"referenceScope\":\"block\"}"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "lineId": {
+                                "anyOf": [
+                                  {
+                                    "$ref": "#/$defs/ID",
+                                    "$comment": "{\"targetKinds\":[\"dialogue_line\"],\"referenceScope\":\"entity\"}"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "start": {
+                                "anyOf": [
+                                  {
+                                    "type": "integer",
+                                    "minimum": 0,
+                                    "maximum": 9007199254740991
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "end": {
+                                "anyOf": [
+                                  {
+                                    "type": "integer",
+                                    "minimum": 0,
+                                    "maximum": 9007199254740991
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "sourceVersionId": {
+                                "anyOf": [
+                                  {
+                                    "$ref": "#/$defs/ID",
+                                    "$comment": "{\"referenceScope\":\"snapshot\"}"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "positionStatus": {
+                                "anyOf": [
+                                  {
+                                    "enum": [
+                                      "unresolved"
+                                    ]
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "positionReason": {
+                                "anyOf": [
+                                  {
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "quotedText": {
+                                "anyOf": [
+                                  {
+                                    "type": "string",
+                                    "minLength": 0
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              }
+                            },
+                            "required": [
+                              "entityId"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "required": [
+                          "source",
+                          "target"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "minItems": 1,
+                      "maxItems": 100000
+                    }
+                  },
+                  "required": [
+                    "mode",
+                    "baseRevision",
+                    "reason",
+                    "segments"
+                  ],
+                  "additionalProperties": false
                 },
                 {
                   "type": "null"
@@ -19292,6 +19756,33 @@
         "data": {
           "type": "object",
           "properties": {
+            "previousVariantId": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ID",
+                  "$comment": "{\"targetKinds\":[\"media_variant\"],\"referenceScope\":\"entity\"}"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "confirmationRecipientIds": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/ID",
+                    "$comment": "{\"referenceScope\":\"identity\"}"
+                  },
+                  "maxItems": 100000,
+                  "uniqueItems": true
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
             "medium": {
               "enum": [
                 "game",
@@ -20544,6 +21035,57 @@
         "data": {
           "type": "object",
           "properties": {
+            "blockSources": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": {
+                    "$ref": "#/$defs/ID",
+                    "$comment": "{\"referenceScope\":\"block\"}"
+                  },
+                  "propertyNames": {
+                    "$ref": "#/$defs/ID",
+                    "$comment": "{\"referenceScope\":\"projection_record\"}"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "citedVersions": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "sourceVersionId": {
+                        "$ref": "#/$defs/ID",
+                        "$comment": "{\"referenceScope\":\"snapshot\"}"
+                      },
+                      "profileId": {
+                        "$ref": "#/$defs/ID",
+                        "$comment": "{\"targetKinds\":[\"projection_profile\"],\"referenceScope\":\"entity\"}"
+                      },
+                      "publicVersionId": {
+                        "$ref": "#/$defs/ID"
+                      }
+                    },
+                    "required": [
+                      "sourceVersionId",
+                      "profileId",
+                      "publicVersionId"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "maxItems": 100000
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
             "audience": {
               "type": "string",
               "minLength": 1,
@@ -20817,6 +21359,36 @@
                           }
                         ]
                       },
+                      "examples": {
+                        "anyOf": [
+                          {
+                            "$ref": "#/$defs/RichText"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "action": {
+                        "anyOf": [
+                          {
+                            "$ref": "#/$defs/RichText"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "tutorial": {
+                        "anyOf": [
+                          {
+                            "$ref": "#/$defs/RichText"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
                       "label": {
                         "anyOf": [
                           {
@@ -21005,6 +21577,182 @@
                         ]
                       },
                       "eventKey": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "minLength": 0
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "resetReason": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "minLength": 0
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "exclusionReason": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "minLength": 0
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "exceptionReason": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "minLength": 0
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "camera": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "minLength": 0
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "parameters": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "minLength": 0
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "variants": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "minLength": 0
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "estimateAssumptions": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "minLength": 0
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "estimateSource": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "minLength": 0
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "blockingReason": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "minLength": 0
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "mechanic": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "minLength": 0
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "intentionalDifference": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "minLength": 0
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "excerptLocation": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "minLength": 0
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "estimateUnit": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "minLength": 0
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "firstPerson": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "minLength": 0
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "addressing": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "minLength": 0
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "phrasing": {
                         "anyOf": [
                           {
                             "type": "string",

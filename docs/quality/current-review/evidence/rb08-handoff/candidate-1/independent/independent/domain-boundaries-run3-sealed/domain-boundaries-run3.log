@@ -1,0 +1,86 @@
+
+ RUN  v5.0.3 /tmp/shinariokanri-independent-rb08-b59fddc
+
+ ❯ tests/independent-rb08-boundaries.test.ts (9 tests | 5 failed) 428ms
+   × R8D01 buildGameReceipt captures requests before its first await, later caller progress is a separate operation 64ms
+   × R8D02 verifyGameReceipt captures valid received bytes before awaiting package verification 33ms
+   × R8D03 durable save rejects rehashed final state that cannot replay from the original received package 120ms
+   × R8D05 normal internal route is not labeled external stub 11ms
+   × R8D06 consultation replaces branch text without invalidating existing public paragraph correspondence; stale approval rejects and archive clones 74ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/independent-rb08-boundaries.test.ts > R8D01 buildGameReceipt captures requests before its first await, later caller progress is a separate operation
+AssertionError: expected [ {} ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   {},
++ ]
+
+ ❯ tests/independent-rb08-boundaries.test.ts:29:452
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+ FAIL  tests/independent-rb08-boundaries.test.ts > R8D02 verifyGameReceipt captures valid received bytes before awaiting package verification
+Error: INTEGRITY_FAILED: 受領証跡または受取パッケージのhashが一致しません。
+ ❯ failure src/domain/gameProtocol.ts:15:46
+
+ ❯ verifyGameReceipt src/domain/gameProtocol.ts:45:1122
+ ❯ tests/independent-rb08-boundaries.test.ts:30:410
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+
+ FAIL  tests/independent-rb08-boundaries.test.ts > R8D03 durable save rejects rehashed final state that cannot replay from the original received package
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ tests/independent-rb08-boundaries.test.ts:31:1422
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+
+ FAIL  tests/independent-rb08-boundaries.test.ts > R8D05 normal internal route is not labeled external stub
+AssertionError: expected 'stub' to be null // Object.is equality
+
+- Expected:
+null
+
++ Received:
+"stub"
+
+ ❯ tests/independent-rb08-boundaries.test.ts:33:1109
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
+
+ FAIL  tests/independent-rb08-boundaries.test.ts > R8D06 consultation replaces branch text without invalidating existing public paragraph correspondence; stale approval rejects and archive clones
+StorageError: project.authorAlternatives[0].versions[1].content.project.entities[13].data.blockSources.a5f3cba2-b34b-484e-ac97-d7d474b9630c: 参照先が存在しないか、指定した作品・共通世界の範囲外です。
+project.history[0].after.authorAlternatives[0].versions[1].content.project.entities[13].data.blockSources.a5f3cba2-b34b-484e-ac97-d7d474b9630c: 参照先が存在しないか、指定した作品・共通世界の範囲外です。
+ ❯ validateDurableIntegrity src/storage/store.ts:182:42
+    180| async function validateDurableIntegrity(project: ProjectData, worldSna…
+    181|   const issues = await validateProjectIntegrity(project, { worldSnapsh…
+    182|   if (issues.length) throw Object.assign(new StorageError('VALIDATION_…
+       |                                          ^
+    183| }
+    184|
+ ❯ ScenarioStore.saveProject src/storage/store.ts:668:7
+ ❯ tests/independent-rb08-boundaries.test.ts:36:766
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  5 failed | 4 passed (9)
+   Start at  15:12:52
+   Duration  1.39s (transform 55%, tests 34%, import 10%)
+

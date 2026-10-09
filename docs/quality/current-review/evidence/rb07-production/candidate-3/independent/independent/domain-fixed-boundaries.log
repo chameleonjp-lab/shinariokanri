@@ -1,0 +1,30 @@
+
+ RUN  v5.0.3 /tmp/shinariokanri-independent-rb07-92181f1
+
+ ❯ tests/independent-rb07-fixed-boundaries.test.ts (2 tests | 1 failed) 318ms
+   × R7D15 an explicit old-pin storyboard with no live cue dependency stays confirmed after current cue replacement 293ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/independent-rb07-fixed-boundaries.test.ts > R7D15 an explicit old-pin storyboard with no live cue dependency stays confirmed after current cue replacement
+AssertionError: expected 'needs_review' to be 'confirmed' // Object.is equality
+
+Expected: "confirmed"
+Received: "needs_review"
+
+ ❯ tests/independent-rb07-fixed-boundaries.test.ts:21:25
+     19|   const old=before.entities.find(e=>e.id===ids.frame),after=saved.enti…
+     20|   writeFileSync(root+'/R7D15.json',JSON.stringify({before:old,after,ol…
+     21|   expect(after?.status).toBe('confirmed');expect(after?.data).toEqual(…
+       |                         ^
+     22|  }finally{await db.deleteDatabase();}
+     23| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 1 passed (2)
+   Start at  11:51:02
+   Duration  1.63s (transform 64%, tests 23%, import 13%)
+

@@ -1,0 +1,30 @@
+
+> shinariokanri@0.1.0 pretest
+> node scripts/build/portable-runtime.mjs
+
+Production portable runtime generated: 138449 characters
+
+> shinariokanri@0.1.0 test
+> vitest run src/storage/rb08Handoff.test.ts --maxWorkers=2 --testTimeout=30000
+
+
+ RUN  v5.0.3 /workspace/shinariokanri-rb08
+
+ ❯ src/storage/rb08Handoff.test.ts (10 tests | 1 failed) 834ms
+   × exports independently approved old citations with Unicode positions and distinct old/new asset bytes, verifies receipt, and empty-restores native policies 15ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/storage/rb08Handoff.test.ts > exports independently approved old citations with Unicode positions and distinct old/new asset bytes, verifies receipt, and empty-restores native policies
+Error: [{"code":"VALIDATION_FAILED","message":"添付の再配布許可を確認してください。","field":""}]
+ ❯ src/storage/rb08Handoff.test.ts:47:100
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 9 passed (10)
+   Start at  14:17:16
+   Duration  1.59s (tests 56%, transform 36%, import 8%)
+

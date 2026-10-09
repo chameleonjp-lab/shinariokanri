@@ -1,0 +1,7 @@
+RB07候補 `92181f1dba3c07088bc409ece72e8b38e6ff980e` / tree `010ec0c71b1a80d3f27f46a74494c1254fdaca7b` の同じ正期待による独立再検査を確定した。以前の部品14件、通常App7群、production3件は成功した。歴史的lineage/没位置を保持し、現稿素材の演出→使用コマは原子保存で確認待ちとなる。確認previewは最初の入力revision/内容/ID配列を捕捉し、新しい追加検査でも素材bytes/nameを捕捉した。
+
+追加R7D15/R7U08は失敗した。固定旧版のL1/block文字位置だけを参照するconfirmed絵コンテ（cueIds=[]、現稿演出依存なし）で、現稿演出素材だけを通常確認→原子保存→cold reloadすると、絵コンテ状態は `needs_review` となる。正期待は旧版未変更ならconfirmedを保持すること。旧snapshotとanchorデータは不変で、新reverse依存がsourceVersionId文脈を落としている。追加部品2件は1成功1失敗、追加通常App1群は0成功1失敗と別記した。
+
+src169は当該commit全件一致、原15資料は凍結基底hash一致、旧4fixtureのhashは保持（今回未実行）。元の独立4入力bytesは生成し直していない。旧565のreport `0b8010ca41033f25eb1fa2b0f2e0e2eb998f2b07bac0fbaeda1736e0d0d759f7` と107成果物は不変。実Appはnative IndexedDB/Chromium151、部品はfake-indexeddb。入力ack/clearの制御検査と実OS Filesは区別し、原given/when/then/negativeとplanned/not_runを保持した。
+
+archive build-infoのunknown/dirty=trueはそのまま記録してclean releaseへ換算しない。Vite5331/preview5333を停止し、repo製品・既存証拠・commitは編集していない。全RB07/104要件/116受入/24工程/6回帰群、実iPhone/iPad/Files/録音/支援技術/全性能/長時間/実Auth/APIは判定していない。

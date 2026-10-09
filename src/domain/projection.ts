@@ -14,20 +14,22 @@ export interface ProjectedBlock {
   kind: 'paragraph' | 'heading' | 'list_item' | 'quote';
   text: string;
   ruby?: { start: number; end: number; text: string }[];
-  links?: { start: number; end: number; targetId: string; blockId?: string; lineId?: string }[];
+  links?: { start: number; end: number; targetId: string; blockId?: string; lineId?: string; sourceVersionId?:string; targetStart?:number; targetEnd?:number }[];
 }
 export interface ProjectedEntity { id: string; kind: EntityKind; name: string; status: string; data: Record<string, PublicValue> }
-export interface ProjectedRelation { id: string; fromId: string; toId: string; relationType: string; direction: 'forward' | 'symmetric'; evidenceIds: string[] }
+export interface ProjectedRelation { id: string; fromId: string; toId: string; relationType: string; direction: 'forward' | 'symmetric'; evidenceIds: string[]; validity?:PublicValue }
 export interface ProjectionSearchEntry { entityId: string; kind: EntityKind; name: string; text: string; normalized: string }
 export interface ProjectedCalendar { id: string; name: string; kind: 'gregorian' | 'repeating'; originLabel: string; ticksPerDay: string; years?: { months: { name: string; days: number }[] }[] }
 export interface PublicProjection {
   format: 'scenario-projection';
   formatVersion: '1.0.0';
   title: string;
+  mainStart?:string;
   calendars: ProjectedCalendar[];
   entities: ProjectedEntity[];
   relations: ProjectedRelation[];
   searchIndex: ProjectionSearchEntry[];
+  versions?:{id:string;projection:PublicProjection}[];
 }
 export type ProjectionResult =
   | { ok: true; projection: PublicProjection; omissions: ProjectionOmission[]; idMap: Record<string, string> }
@@ -39,12 +41,13 @@ export interface ProjectionOptions {
   confirmedOnly?: boolean;
   /** The caller must load and verify this snapshot before projecting it. */
   targetVersionId?: string;
+  versionTargets?:Record<string,{publicVersionId:string;idMap:Record<string,string>}>;
 }
 
 type ObjectValue = Record<string, unknown>;
 type SourceRecord = { id: string; projectId: string; kind: EntityKind; name: string; status: string; deletedAt?: string | null; data: ObjectValue };
 type FieldRule =
-  | { type: 'text' | 'rich' | 'ref' | 'refs' | 'number' | 'boolean' | 'time' | 'condition' | 'typed' | 'typeds' | 'allowed' | 'trigger' | 'participants' | 'pins' | 'anchor' | 'transitions' | 'semver' }
+  | { type: 'text' | 'datetime' | 'rich' | 'ref' | 'version_ref' | 'refs' | 'number' | 'boolean' | 'time' | 'condition' | 'typed' | 'typeds' | 'allowed' | 'trigger' | 'participants' | 'pins' | 'anchor' | 'transitions' | 'semver' | 'expression' | 'resets' | 'exclusions' | 'validity' | 'scope' | 'exception' | 'exceptions' | 'alternatives' | 'camera' | 'parameters' | 'public_strings' | 'real_date' | 'estimate' }
   | { type: 'enum'; values: readonly string[] };
 const text: FieldRule = { type: 'text' }, rich: FieldRule = { type: 'rich' }, ref: FieldRule = { type: 'ref' }, refs: FieldRule = { type: 'refs' };
 const number: FieldRule = { type: 'number' }, boolean: FieldRule = { type: 'boolean' }, time: FieldRule = { type: 'time' };
@@ -64,35 +67,36 @@ export const PROJECTION_FIELDS: Readonly<Partial<Record<EntityKind, Readonly<Rec
   goal: { ownerId: ref, description: rich, changes: refs, evidenceSceneIds: refs },
   flow_node: { nodeType: oneOf('scene', 'choice', 'automatic', 'call', 'entry', 'exit', 'terminal'), sceneId: ref, childGraphId: ref, terminalReason: text, trigger: { type: 'trigger' }, gate: condition, executionPolicy: oneOf('manual_choice', 'first_match', 'all_match'), fallbackId: ref, shownInformationIds: refs },
   flow_edge: { fromId: ref, toId: ref, edgeType: oneOf('choice', 'automatic', 'call_return'), label: text, condition, effectIds: refs, priority: number, choiceLineId: ref },
-  flow_graph: { nodeIds: refs, edgeIds: refs, entryIds: refs, exitIds: refs, parentGraphId: ref },
+  flow_graph: { nodeIds: refs, edgeIds: refs, entryIds: refs, exitIds: refs, parentGraphId: ref,parameters:{type:'parameters'} },
   dialogue_line: { text: rich, speakerId: ref, choiceEdgeId: ref, cueIds: refs },
   quest: { key: text, stateVariableId: ref, description: rich, flowIds: refs, transitionRules: { type: 'transitions' } },
   lore: { body: rich, assertionIds: refs, reading: text },
-  variable: { key: text, valueType: oneOf('boolean', 'integer', 'enum'), scope: oneOf('scene', 'chapter', 'character', 'run', 'across_runs'), initial: typed, allowed: { type: 'allowed' }, ownerId: ref, externalContractId: ref, externalUseDeclared: boolean, description: rich, transitionRules: { type: 'transitions' } },
-  effect: { operation: oneOf('set', 'add', 'grant', 'consume', 'move', 'assert', 'mark_seen', 'reset'), targetId: ref, value: typed, condition, instanceId: ref, reason: text },
-  assertion: { subjectId: ref, predicate: text, value: typed, truthKind: oneOf('author_truth', 'testimony', 'belief', 'hypothesis'), holderId: ref, sourceIds: refs, evidenceLocation: { type: 'anchor' }, reason: text },
-  foreshadow: { question: rich, intent: rich, truthAssertionIds: refs, clueIds: refs, payoffIds: refs, requiredInfo: refs, presentationDeadline: { type: 'anchor' }, resolutionPolicy: oneOf('this_work', 'sequel', 'intentional_open', 'red_herring', 'undecided', 'rejected') },
-  disclosure: { foreshadowId: ref, anchor: { type: 'anchor' }, stage: oneOf('hint', 'suspicion', 'reinforce', 'reveal', 'alternative'), role: oneOf('clue', 'payoff'), condition, knowledgeEffects: refs },
+  variable: { key: text, valueType: oneOf('boolean', 'integer', 'enum'), scope: oneOf('scene', 'chapter', 'character', 'run', 'across_runs'), initial: typed, allowed: { type: 'allowed' }, ownerId: ref, externalContractId: ref, externalUseDeclared: boolean, description: rich, derived:{type:'expression'},resetRules:{type:'resets'},exclusions:{type:'exclusions'}, transitionRules: { type: 'transitions' } },
+  effect: { operation: oneOf('set', 'add', 'grant', 'consume', 'move', 'assert', 'mark_seen', 'reset'), targetId: ref, value: typed, condition, instanceId: ref, reason: text, exceptionDetails:{type:'exception'} },
+  assertion: { subjectId: ref, predicate: text, value: typed, truthKind: oneOf('author_truth', 'testimony', 'belief', 'hypothesis'), holderId: ref, sourceIds: refs, evidenceLocation: { type: 'anchor' }, reason: text, validity:{type:'validity'} },
+  foreshadow: { question: rich, intent: rich, truthAssertionIds: refs, clueIds: refs, payoffIds: refs, requiredInfo: refs, alternativeInfo:{type:'alternatives'},deadline:{type:'scope'},exceptions:{type:'exceptions'}, presentationDeadline: { type: 'anchor' }, resolutionPolicy: oneOf('this_work', 'sequel', 'intentional_open', 'red_herring', 'undecided', 'rejected') },
+  disclosure: { foreshadowId: ref, anchor: { type: 'anchor' }, stage: oneOf('hint', 'suspicion', 'reinforce', 'reveal', 'alternative'), role: oneOf('clue', 'payoff'), targetScope:{type:'scope'},condition, knowledgeEffects: refs },
   attachment: { displayName: text },
-  source: { sourceType: oneOf('web', 'file', 'book', 'observation'), locator: text, interpretation: rich, redistributionAllowed: boolean },
-  cue: { anchor: { type: 'anchor' }, cueType: text, attachmentId: ref, speakerId: ref, expression: text, waitMs: number },
+  source: { accessedAt:{type:'datetime'},excerptLocation:text,attachmentId:ref,sourceType: oneOf('web', 'file', 'book', 'observation'), locator: text, interpretation: rich, redistributionAllowed: boolean },
+  cue: { anchor: { type: 'anchor' }, cueType: text, attachmentId: ref, speakerId: ref, expression: text, waitMs: number,mediaTime:number,camera:{type:'camera'} },
   storyboard_frame: { anchor: { type: 'anchor' }, mediaStartMs: number, mediaEndMs: number, referenceAssetId: ref, finalAssetId: ref, cueIds: refs, caption: rich },
   localization: { sourceLineId: ref, language: text, text: rich, stage: oneOf('draft', 'reviewed', 'needs_review'), recordingIds: refs },
   recording: { sourceLineId: ref, language: text, translationId: ref, attachmentId: ref, stage: oneOf('planned', 'recorded', 'reviewed', 'needs_review') },
-  terminology: { canonical: text, reading: text, language: text, usageNotes: rich, voiceOwnerId: ref },
+  terminology: { canonical: text, reading: text,variants:{type:'public_strings'},validity:{type:'validity'},exceptions:{type:'exceptions'}, language: text, usageNotes: rich, voiceOwnerId: ref },
+  voice_rule:{characterId:ref,validity:{type:'validity'},firstPerson:text,addressing:text,phrasing:text,examples:rich,exceptions:{type:'exceptions'}},
   map: { placeId: ref, coordinateSystem: oneOf('normalized'), attachmentId: ref, parentMapId: ref, pins: { type: 'pins' } },
   travel_route: { fromPlaceId: ref, toPlaceId: ref, direction: oneOf('one_way', 'two_way'), method: text },
   collection: { mode: oneOf('fixed'), memberIds: refs },
-  gameplay_spec: { sceneId: ref, action: rich, questId: ref, taskIds: refs },
-  production_task: { targetIds: refs, stage: oneOf('writing', 'review', 'implementation', 'translation', 'recording', 'verification', 'publication'), progress: oneOf('todo', 'doing', 'done', 'needs_review'), dependsOn: refs },
-  media_variant: { medium: oneOf('game', 'novel', 'video', 'audio', 'promotion', 'custom'), body: rich, sourceIds: refs, needsReview: boolean },
+  gameplay_spec: { sceneId: ref, action: rich, mechanic:text,tutorial:rich,reward:typed,questId: ref, taskIds: refs,intentionalDifference:text },
+  production_task: { deadline:{type:'real_date'},estimate:{type:'estimate'},blockingReason:text,targetIds: refs, stage: oneOf('writing', 'review', 'implementation', 'translation', 'recording', 'verification', 'publication'), progress: oneOf('todo', 'doing', 'done', 'needs_review'), dependsOn: refs },
+  media_variant: { medium: oneOf('game', 'novel', 'video', 'audio', 'promotion', 'custom'),baseSnapshotId:{type:'version_ref'},previousVariantId:ref,releaseAt:{type:'datetime'}, body: rich, sourceIds: refs, needsReview: boolean },
   external_contract: { key: text, owner: oneOf('tool', 'game'), inputType: oneOf('boolean', 'integer', 'enum'), outputType: oneOf('boolean', 'integer', 'enum'), missingPolicy: oneOf('unknown', 'block'), description: rich, version: { type: 'semver' }, stubValues: { type: 'typeds' } },
 });
 export const PROJECTABLE_KINDS = Object.freeze(Object.keys(PROJECTION_FIELDS) as EntityKind[]);
 const BEHAVIOR_REFS = new Set(['fromId', 'toId', 'effectIds', 'nodeIds', 'edgeIds', 'entryIds', 'exitIds', 'childGraphId', 'fallbackId', 'targetId', 'instanceId', 'stateVariableId', 'externalContractId', 'shownInformationIds', 'knowledgeEffects']);
-const FORBIDDEN_FIELDS = new Set(['authorNotes', 'aliases', 'quotedText', 'originLineIds', 'customValues', 'assetPath', 'licenseNote', 'history', 'query', 'sourceHash']);
+const FORBIDDEN_FIELDS = new Set(['handoffReceipt','authorNotes', 'aliases', 'quotedText', 'originLineIds', 'replacedByLineIds', 'lineage', 'customValues', 'assetPath', 'licenseNote', 'history', 'query', 'sourceHash']);
 const BLOCK_KINDS = new Set(['paragraph', 'heading', 'list_item', 'quote']);
-const ASSET_TYPES: Record<string, string> = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/gif': 'gif', 'image/webp': 'webp', 'audio/wav': 'wav', 'audio/mpeg': 'mp3', 'application/pdf': 'pdf' };
+const ASSET_TYPES: Record<string, string> = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/gif': 'gif', 'image/webp': 'webp', 'audio/wav': 'wav', 'audio/mpeg': 'mp3', 'application/pdf': 'pdf', 'video/mp4':'mp4','video/webm':'webm','video/ogg':'ogv','audio/ogg':'ogg','text/plain':'txt','application/json':'json','application/octet-stream':'bin' };
 const TICK = /^(?:0|-[1-9][0-9]{0,37}|[1-9][0-9]{0,37})$/;
 const object = (value: unknown): ObjectValue | undefined => value !== null && typeof value === 'object' && !Array.isArray(value) ? value as ObjectValue : undefined;
 const own = (value: ObjectValue | undefined, key: string): unknown => value && Object.prototype.hasOwnProperty.call(value, key) ? value[key] : undefined;
@@ -175,7 +179,9 @@ export function createProjection(project: ProjectData, profileId: string, option
   const allowedFields = object(own(policy, 'allowedFields'));
   const excludedFields = Array.isArray(policy.excludedFields) ? policy.excludedFields : [];
   const publicBlockIds = new Set<string>();
+  const publicBlockOwners=new Map<string,string>(),sourceBlockOwners=new Map<string,string>();
   for (const entity of selected) {
+    for(const value of Object.values(entity.data))if(Array.isArray(value))for(const raw of value){const block=object(raw);if(typeof block?.id==='string'&&typeof block.text==='string')sourceBlockOwners.set(block.id,entity.id);}
     const fields = object(own(publicTexts, entity.id));
     const schema = PROJECTION_FIELDS[entity.kind]!;
     const explicit = own(allowedFields, entity.kind);
@@ -184,7 +190,7 @@ export function createProjection(project: ProjectData, profileId: string, option
         const record = object(block);
         if (typeof record?.id === 'string') {
           if (source.has(record.id) || publicBlockIds.has(record.id)) fail('VALIDATION_FAILED', '公開文の段落IDが他の情報と重複しています。', entity.id, field);
-          else { publicBlockIds.add(record.id); addId(record.id); }
+          else { publicBlockIds.add(record.id);publicBlockOwners.set(record.id,entity.id); addId(record.id); }
         }
       }
     }
@@ -192,6 +198,8 @@ export function createProjection(project: ProjectData, profileId: string, option
     if (entity.kind === 'flow_node' && typeof trigger?.id === 'string') addId(trigger.id);
   }
   const selectedIds = new Set(selected.map(entity => entity.id));
+  const blockSources=object(policy.blockSources)??{};
+  for(const [publicBlock,sourceBlock]of Object.entries(blockSources)){if(typeof sourceBlock!=='string'||!publicBlockIds.has(publicBlock)||!idMap[publicBlock]||sourceBlockOwners.get(sourceBlock)!==publicBlockOwners.get(publicBlock)){fail('REFERENCE_INVALID','公開段落の元ID対応が不正です。',profileId,'blockSources');continue;}if(idMap[sourceBlock]&&idMap[sourceBlock]!==idMap[publicBlock]){fail('REFERENCE_INVALID','同じ原段落に複数の公開位置が指定されています。',profileId,'blockSources');continue;}idMap[sourceBlock]=idMap[publicBlock];}
   const calendars: ProjectedCalendar[] = [], calendarIds = new Map<string, string>();
   const publicCalendarId = (value: unknown, entity: SourceRecord, field: string): string | undefined => {
     if (typeof value !== 'string') { fail('REFERENCE_INVALID', '日時が使う暦を指定してください。', entity.id, field); return undefined; }
@@ -285,12 +293,14 @@ export function createProjection(project: ProjectData, profileId: string, option
   const anchorValue = (value: unknown, entity: SourceRecord, field: string): PublicValue | undefined => {
     const input = object(value); if (!input) { fail('VALIDATION_FAILED', '本文位置が不正です。', entity.id, field); return undefined; }
     if (input.positionStatus === 'unresolved') { if (options.strictReferences) fail('REFERENCE_INVALID', '公開する本文位置の再リンクが必要です。', entity.id, field); else omit(entity.id, '位置不明の本文参照を除外', field); return undefined; }
-    const targetId = reference(input.entityId, entity, field, true); if (!targetId) return undefined;
-    const output: Record<string, PublicValue> = { entityId: targetId };
+    const fixed=input.sourceVersionId&&input.sourceVersionId!==project.projectId&&input.sourceVersionId!==options.targetVersionId?options.versionTargets?.[String(input.sourceVersionId)]:undefined;
+    if(input.sourceVersionId&&input.sourceVersionId!==project.projectId&&input.sourceVersionId!==options.targetVersionId&&!fixed){fail('EXPORT_UNSUPPORTED','別の固定版を指す位置には、その版の公開範囲確認が必要です。黙って現在位置へ移しません。',entity.id,field);return undefined;}
+    const targetMap=fixed?.idMap??idMap,targetId=fixed?targetMap[String(input.entityId)]:reference(input.entityId, entity, field, true); if (!targetId){fail('REFERENCE_INVALID','引用固定版の公開対象がありません。',entity.id,field);return undefined;}
+    const output: Record<string, PublicValue> = { entityId: targetId,...fixed?{sourceVersionId:fixed.publicVersionId}:{} };
     for (const key of ['blockId', 'lineId']) if (input[key] != null) {
       const sourceId = input[key];
-      if (typeof sourceId !== 'string' || !Object.prototype.hasOwnProperty.call(idMap, sourceId)) { if (options.strictReferences) fail('REFERENCE_INVALID', '公開文に存在しない位置への参照です。', entity.id, field); else omit(entity.id, '非公開の本文位置を除外', field); return undefined; }
-      output[key] = idMap[sourceId];
+      if (typeof sourceId !== 'string' || !Object.prototype.hasOwnProperty.call(targetMap, sourceId)) { if (options.strictReferences) fail('REFERENCE_INVALID', '公開文に存在しない位置への参照です。', entity.id, field); else omit(entity.id, '非公開の本文位置を除外', field); return undefined; }
+      output[key] = targetMap[sourceId];
     }
     if (integer(input.start) && integer(input.end) && input.start >= 0 && input.end >= input.start) { output.start = input.start; output.end = input.end; }
     return output;
@@ -319,13 +329,16 @@ export function createProjection(project: ProjectData, profileId: string, option
           if (!range || !validRange(range)) { fail('VALIDATION_FAILED', '公開文のリンク範囲が不正です。', entity.id, field); continue; }
           const target = object(range.target) ?? range;
           if (target.positionStatus === 'unresolved') { if (options.strictReferences) fail('REFERENCE_INVALID', '公開文のリンク先位置の再リンクが必要です。', entity.id, field); else omit(entity.id, '位置不明のリンクを除外', field); continue; }
-          const targetId = reference(target.targetId ?? target.entityId, entity, `${field}.links`);
+          const fixed=target.sourceVersionId&&target.sourceVersionId!==project.projectId&&target.sourceVersionId!==options.targetVersionId?options.versionTargets?.[String(target.sourceVersionId)]:undefined,targetMap=fixed?.idMap??idMap;
+          if(target.sourceVersionId&&target.sourceVersionId!==project.projectId&&target.sourceVersionId!==options.targetVersionId&&!fixed){fail('EXPORT_UNSUPPORTED','公開リンクには別の固定版の公開確認が必要です。現在位置へ代用しません。',entity.id,field);continue;}
+          const targetId = fixed?targetMap[String(target.targetId??target.entityId)]:reference(target.targetId ?? target.entityId, entity, `${field}.links`);
           if (!targetId) continue;
           const link: Record<string, PublicValue> = { start: range.start as number, end: range.end as number, targetId };
+          if(target.sourceVersionId)link.sourceVersionId=fixed?.publicVersionId??'public-project';if(integer(target.start)&&integer(target.end)){link.targetStart=target.start;link.targetEnd=target.end;}
           let valid = true;
           for (const key of ['blockId', 'lineId']) if (target[key] != null) {
-            const origin = target[key]; if (typeof origin !== 'string' || !Object.prototype.hasOwnProperty.call(idMap, origin)) { if (options.strictReferences) fail('REFERENCE_INVALID', '公開文に存在しない位置へのリンクです。', entity.id, field); else omit(entity.id, '非公開の位置へのリンクを除外', field); valid = false; break; }
-            link[key] = idMap[origin];
+            const origin = target[key]; if (typeof origin !== 'string' || !Object.prototype.hasOwnProperty.call(targetMap, origin)) { if (options.strictReferences) fail('REFERENCE_INVALID', '公開文に存在しない位置へのリンクです。', entity.id, field); else omit(entity.id, '非公開の位置へのリンクを除外', field); valid = false; break; }
+            link[key] = targetMap[origin];
           }
           if (valid) links.push(link);
         }
@@ -335,12 +348,36 @@ export function createProjection(project: ProjectData, profileId: string, option
     }
     return output;
   };
+  const behaviorText=(entity:SourceRecord,field:string):string=>{const value=textValue(entity,field);return value??'';};
+  const scopeValue=(value:unknown,entity:SourceRecord,field:string):PublicValue|undefined=>{
+    const input=object(value);if(!input||input.projectId!==project.projectId){fail('REFERENCE_INVALID','対象作品の範囲を公開先へ対応できません。',entity.id,field);return;}
+    const output:Record<string,PublicValue>={projectId:'public-project'};
+    for(const key of ['graphId','chapterId'])if(input[key]!=null){const mapped=reference(input[key],entity,field,true);if(!mapped)return;output[key]=mapped;}
+    if(input.targetSnapshotId!=null){if(input.targetSnapshotId!==project.projectId&&input.targetSnapshotId!==options.targetVersionId){fail('EXPORT_UNSUPPORTED','別版限定の範囲を現在版へ代用しません。',entity.id,field);return;}output.targetSnapshotId='public-project';}
+    if(input.routeCondition!=null){const mapped=conditionValue(input.routeCondition,entity,field);if(!mapped)return;output.routeCondition=mapped;}return output;
+  };
+  const validityValue=(value:unknown,entity:SourceRecord,field:string):PublicValue|undefined=>{const input=object(value);if(!input)return;let range:PublicValue=null;if(input.worldRange!=null){const raw=object(input.worldRange);if(!raw||['start','end'].some(key=>raw[key]!==null&&(typeof raw[key]!=='string'||!TICK.test(String(raw[key]))))){fail('VALIDATION_FAILED','期間の整数tickが不正です。',entity.id,field);return;}range={start:raw.start as string|null,end:raw.end as string|null};}const route=input.routeCondition==null?null:conditionValue(input.routeCondition,entity,field),anchor=input.presentationAnchor==null?null:anchorValue(input.presentationAnchor,entity,field);if(route===undefined||anchor===undefined)return;return {worldRange:range,routeCondition:route,presentationAnchor:anchor};};
+  const exceptionValue=(value:unknown,entity:SourceRecord,field:string):PublicValue|undefined=>{const input=object(value);if(!input)return;const target=scopeValue(input.targetScope,entity,field),validity=validityValue(input.validity,entity,field);if(!target||!validity||!Array.isArray(input.evidenceIds))return;const evidence=input.evidenceIds.map(id=>reference(id,entity,field,true));if(evidence.some(id=>!id))return;const reason=behaviorText(entity,'exceptionReason');if(!reason.trim()){fail('PUBLIC_TEXT_REQUIRED','有限例外の公開用理由を指定してください。',entity.id,field);return;}return {reason,targetScope:target,validity,evidenceIds:evidence as string[]};};
+  const expressionValue=(value:unknown,entity:SourceRecord,field:string,depth=0):PublicValue|undefined=>{if(depth>64){fail('EXPORT_UNSUPPORTED','算出式の上限を超えています。',entity.id,field);return;}const input=object(value);if(!input)return;if(input.op==='value'){const mapped=typedValue(input.value,entity.id,entity,field);return mapped?{op:'value',value:mapped}:undefined;}if(input.op==='variable'){const id=reference(input.variableId,entity,field,true);return id?{op:'variable',variableId:id}:undefined;}if(['add','subtract','multiply'].includes(String(input.op))){const left=expressionValue(input.left,entity,field,depth+1),right=expressionValue(input.right,entity,field,depth+1);return left&&right?{op:String(input.op),left,right}:undefined;}if(input.op==='if'){const condition=conditionValue(input.condition,entity,field),yes=expressionValue(input.then,entity,field,depth+1),no=expressionValue(input.else,entity,field,depth+1);return condition&&yes&&no?{op:'if',condition,then:yes,else:no}:undefined;}return conditionValue(input,entity,field);};
   const serialize = (entity: SourceRecord, field: string, rule: FieldRule): PublicValue | undefined => {
     const value = entity.data[field];
     if (rule.type === 'text') return textValue(entity, field);
     if (rule.type === 'rich') return richValue(entity, field);
     if (value == null) return undefined;
     switch (rule.type) {
+      case 'public_strings':{if(Array.isArray(value)&&!value.length)return [];let approved:unknown;try{approved=JSON.parse(String(publicField(entity,field)));}catch{}if(Array.isArray(approved)&&approved.every(item=>typeof item==='string'))return approved;fail('PUBLIC_TEXT_REQUIRED','公開用の文字列一覧をJSON文章で指定してください。',entity.id,field);return;}
+      case 'real_date':{const input=object(value);if(input&&typeof input.date==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(input.date)&&typeof input.timeZone==='string')return {date:input.date,timeZone:input.timeZone};break;}
+      case 'estimate':{const input=object(value);let assumptions:unknown;try{assumptions=JSON.parse(String(publicField(entity,'estimateAssumptions')));}catch{}const source=publicField(entity,'estimateSource'),unit=publicField(entity,'estimateUnit');if(!input||!Array.isArray(assumptions)||assumptions.some(item=>typeof item!=='string')||typeof source!=='string'||typeof unit!=='string'){fail('PUBLIC_TEXT_REQUIRED','見積の公開用仮定と出所を指定してください。',entity.id,field);return;}const scope=scopeValue(input.scope,entity,field);if(!scope)return;return {unit,assumptions:assumptions as string[],source,unknownCount:Number(input.unknownCount),scope,...input.value!=null?{value:Number(input.value)}:{},...input.range?{range:input.range as PublicValue}:{},...input.speed!=null?{speed:Number(input.speed)}:{}};}
+      case 'parameters':{if(!Array.isArray(value))break;const approved=publicField(entity,'parameters');let names:unknown;try{names=typeof approved==='string'?JSON.parse(approved):undefined;}catch{}if(value.length&&!object(names)){fail('PUBLIC_TEXT_REQUIRED','公開用の引数名をkey→公開keyのJSON文章で指定してください。',entity.id,field);return;}const output:PublicValue[]=[];for(const raw of value){const input=object(raw),key=input&&own(object(names),String(input.key));if(!input||typeof key!=='string'||!/^[-_.a-zA-Z0-9]{1,128}$/.test(key)||!['boolean','integer','enum'].includes(String(input.type))){fail('PUBLIC_TEXT_REQUIRED','引数の公開名と型を確認してください。',entity.id,field);return;}const initial=input.default==null?undefined:typedValue(input.default,entity.id,entity,field);if(input.default!=null&&!initial)return;output.push({key,type:String(input.type),...initial?{default:initial}:{}});}return output;}
+      case 'expression':return expressionValue(value,entity,field);
+      case 'scope':return scopeValue(value,entity,field);
+      case 'validity':return validityValue(value,entity,field);
+      case 'exception':return exceptionValue(value,entity,field);
+      case 'exceptions':{if(!Array.isArray(value))break;const mapped=value.map(item=>exceptionValue(item,entity,field));return mapped.every(item=>item!==undefined)?mapped as PublicValue[]:undefined;}
+      case 'resets':{if(!Array.isArray(value))break;const output:PublicValue[]=[];for(const raw of value){const input=object(raw);if(!input||!['scene_end','chapter_end','run_end','new_loop','full_reset'].includes(String(input.on)))break;const mapped=typedValue(input.value,entity.id,entity,field);if(!mapped)return;output.push({on:String(input.on),value:mapped,reason:behaviorText(entity,'resetReason')});}if(output.length!==value.length)break;return output;}
+      case 'exclusions':{if(!Array.isArray(value))break;const output:PublicValue[]=[];for(const raw of value){const input=object(raw);if(!input)return;const variableId=reference(input.variableId,entity,field,true),current=typedValue(input.value,entity.id,entity,field),other=typedValue(input.otherValue,String(input.variableId),entity,field),exceptions=input.exceptions==null?[]:Array.isArray(input.exceptions)?input.exceptions.map(item=>exceptionValue(item,entity,field)):undefined;if(!variableId||!current||!other||!exceptions||exceptions.some(item=>!item))return;const reason=behaviorText(entity,'exclusionReason');if(!reason.trim()){fail('PUBLIC_TEXT_REQUIRED','相互排他の公開用理由を指定してください。',entity.id,field);return;}output.push({variableId,value:current,otherValue:other,reason,exceptions:exceptions as PublicValue[]});}return output;}
+      case 'alternatives':{const input=object(value);if(!input)break;const output:Record<string,PublicValue>={};for(const [key,ids] of Object.entries(input)){const id=reference(key,entity,field,true);if(!id||!Array.isArray(ids))return;const mapped=ids.map(item=>reference(item,entity,field,true));if(mapped.some(item=>!item))return;output[id]=mapped as string[];}return output;}
+      case 'camera':{const approved=publicField(entity,field);let input:unknown;try{input=typeof approved==='string'?JSON.parse(approved):undefined;}catch{break;}const camera=object(input);if(!camera){fail('PUBLIC_TEXT_REQUIRED','公開用カメラ指定をJSON文章で指定してください。',entity.id,field);return;}const output:Record<string,PublicValue>={};for(const [key,item] of Object.entries(camera)){if(!['shot','angle','movement','durationMs'].includes(key)||!(typeof item==='string'||typeof item==='number'&&Number.isFinite(item)&&item>=0)){fail('EXPORT_UNSUPPORTED','カメラの指定項目を安全に表せません。',entity.id,field);return;}output[key]=item;}return output;}
       case 'ref': return reference(value, entity, field, BEHAVIOR_REFS.has(field));
       case 'refs': {
         if (!Array.isArray(value)) break;
@@ -399,6 +436,8 @@ export function createProjection(project: ProjectData, profileId: string, option
         for (const raw of value) { const pin = object(raw); if (!pin) continue; const placeId = reference(pin.placeId, entity, field); if (!placeId) continue; if (typeof pin.x !== 'number' || typeof pin.y !== 'number' || pin.x < 0 || pin.x > 1 || pin.y < 0 || pin.y > 1) { fail('VALIDATION_FAILED', '地図座標が不正です。', entity.id, field); continue; } output.push({ placeId, x: pin.x, y: pin.y }); }
         return output;
       }
+      case 'datetime': if(typeof value==='string'&&Number.isFinite(Date.parse(value)))return value;break;
+      case 'version_ref': {const fixed=options.versionTargets?.[String(value)];if(!fixed){fail('EXPORT_UNSUPPORTED','媒体の元固定版の公開範囲を確認してください。',entity.id,field);return undefined;}return fixed.publicVersionId;}
       case 'anchor': return anchorValue(value, entity, field);
       case 'trigger': {
         const input = object(value); if (!input || !['enter', 'talk', 'battle_result', 'manual', 'custom'].includes(String(input.event)) || !['once', 'repeatable'].includes(String(input.repeat))) break;
@@ -419,8 +458,8 @@ export function createProjection(project: ProjectData, profileId: string, option
         for (const raw of value) {
           const transition = object(raw); if (!transition) { fail('VALIDATION_FAILED', '状態遷移の形が不正です。', entity.id, field); continue; }
           const from = typedValue(transition.from, variableId, entity, field), to = typedValue(transition.to, variableId, entity, field);
-          if (transition.exception === true || transition.exceptionDetails) { fail('EXPORT_UNSUPPORTED', '例外付きの状態遷移は制作出力へ対応していません。', entity.id, field); continue; }
-          if (from !== undefined && to !== undefined) output.push({ from, to });
+          const details=transition.exceptionDetails?exceptionValue(transition.exceptionDetails,entity,field):undefined;if(transition.exception===true&&!details){fail('EXPORT_UNSUPPORTED','理由・範囲・期限・根拠のある例外を公開範囲へ含めてください。',entity.id,field);continue;}
+          if(from!==undefined&&to!==undefined)output.push({from,to,...(details?{exception:true,exceptionDetails:details}:{})});
         }
         return output;
       }
@@ -466,10 +505,11 @@ export function createProjection(project: ProjectData, profileId: string, option
     const publicRelationType = own(object(own(publicTexts, rawId)), 'relationType');
     if (typeof publicRelationType !== 'string' || !publicRelationType) { fail('PUBLIC_TEXT_REQUIRED', '公開用の関係名を指定してください。', rawId, 'relationType'); continue; }
     addId(rawId);
-    relations.push({ id: idMap[rawId], fromId: idMap[relation.fromId], toId: idMap[relation.toId], relationType: publicRelationType, direction: relation.direction, evidenceIds: relation.evidenceIds.filter(id => selectedIds.has(id)).map(id => idMap[id]) });
+    const validity=validityValue(relation.validity,{id:rawId,projectId:project.projectId,kind:'note',name:'',status:relation.status,data:{}},'validity');
+    relations.push({ ...validity?{validity}:{},id: idMap[rawId], fromId: idMap[relation.fromId], toId: idMap[relation.toId], relationType: publicRelationType, direction: relation.direction, evidenceIds: relation.evidenceIds.filter(id => selectedIds.has(id)).map(id => idMap[id]) });
   }
   if (issues.length) return { ok: false, issues, omissions };
-  const projection: PublicProjection = { format: 'scenario-projection', formatVersion: '1.0.0', title: title as string, calendars, entities, relations, searchIndex: [] };
+  const projection: PublicProjection = { format: 'scenario-projection', formatVersion: '1.0.0', title: title as string, mainStart:project.mainStart, calendars, entities, relations, searchIndex: [] };
   projection.searchIndex = buildProjectionSearchIndex(projection);
   return { ok: true, projection, omissions, idMap };
 }

@@ -1,0 +1,78 @@
+
+ RUN  v5.0.3 /tmp/shinariokanri-independent-rb07-5651747
+
+ ❯ tests/independent-rb07-boundaries.test.ts (12 tests | 4 failed) 2337ms
+   ❯ Independent RB07 semantic boundaries, original contract retained (12)
+     × R7D02 previous copy lineage retains its original source after originals are merged 213ms
+     × R7D06 replacing a cue material also marks the dependent storyboard frame for review 37ms
+     × R7D08 material plan captures base/content/replacement input before hashing yields 10ms
+     × R7D09 source-approval preview captures its initial revision before awaiting source hash 10ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/independent-rb07-boundaries.test.ts > Independent RB07 semantic boundaries, original contract retained > R7D02 previous copy lineage retains its original source after originals are merged
+AssertionError: expected { …(5) } to deeply equal { …(5) }
+
+- Expected
++ Received
+
+  {
+-   "blockId": "7cf5396e-e69e-4e58-a7aa-43b61725bc31",
++   "blockId": "04e18d3b-de52-4458-8be9-7b2b68545a46",
+    "end": 6,
+-   "entityId": "c9d5a8dc-2cb1-4f24-b1d4-039938d3c66b",
+-   "lineId": "c9d5a8dc-2cb1-4f24-b1d4-039938d3c66b",
++   "entityId": "5d13e0c8-2d5f-4211-9f19-d1f0fdec085c",
++   "lineId": "5d13e0c8-2d5f-4211-9f19-d1f0fdec085c",
+    "start": 0,
+  }
+
+ ❯ tests/independent-rb07-boundaries.test.ts:67:80
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  tests/independent-rb07-boundaries.test.ts > Independent RB07 semantic boundaries, original contract retained > R7D06 replacing a cue material also marks the dependent storyboard frame for review
+AssertionError: expected 'confirmed' to be 'needs_review' // Object.is equality
+
+Expected: "needs_review"
+Received: "confirmed"
+
+ ❯ tests/independent-rb07-boundaries.test.ts:89:56
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  tests/independent-rb07-boundaries.test.ts > Independent RB07 semantic boundaries, original contract retained > R7D08 material plan captures base/content/replacement input before hashing yields
+AssertionError: expected '9' to be '0' // Object.is equality
+
+Expected: "0"
+Received: "9"
+
+ ❯ tests/independent-rb07-boundaries.test.ts:98:230
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  tests/independent-rb07-boundaries.test.ts > Independent RB07 semantic boundaries, original contract retained > R7D09 source-approval preview captures its initial revision before awaiting source hash
+AssertionError: expected '9' to be '0' // Object.is equality
+
+Expected: "0"
+Received: "9"
+
+ ❯ tests/independent-rb07-boundaries.test.ts:101:186
+     99|  });
+    100|  it('R7D09 source-approval preview captures its initial revision befor…
+    101|   const p=fresh();const pending=previewSourceApproval(p,base.ids.loc);…
+       |                                                                                                                                                                                          ^
+    102|  });
+    103|  it('R7D10 expired/rejected/unknown rules, literal Unicode and finite …
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  4 failed | 9 passed (13)
+   Start at  11:33:31
+   Duration  3.71s (tests 62%, transform 26%, import 11%)
+

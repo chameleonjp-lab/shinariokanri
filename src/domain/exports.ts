@@ -1,8 +1,13 @@
-import type { Entity, ID, ProjectData, RichText, TypedValue } from './types';
+import type { Entity, ID, ProjectContent, ProjectData, ProjectSnapshot, RichText, TypedValue } from './types';
+import portableScript from '../portable/generated/runtime.js?raw';
+import { portableRuntimeProject } from './portableRuntimeProject';
+import { sha256, jsonBytes } from '../storage/json';
+import { prepareAsset } from './attachments';
 import { dialogueContentHash } from './production';
-import { collectReferences, validateProject } from './model';
+import { validateProject,ENTITY_SCHEMAS,type Schema } from './model';
 import { strToU8, zipSync } from 'fflate';
 import { createProjection, PROJECTION_FIELDS } from './projection';
+import { selectExportSource as selectSource, executionExportView, prepareExportCitations, validatePublicPositions, type CitationSource } from './exportPreparation';
 import type { ProjectedBlock, ProjectedEntity, ProjectionIssue, ProjectionOmission, PublicProjection, PublicValue } from './projection';
 
 export type ExportProfile = 'reader' | 'runtime_json' | 'localization' | 'production' | 'consultation' | 'playable_preview';
@@ -11,11 +16,13 @@ export interface ExportArtifact { filename: string; mimeType: string; content: s
 export interface ExportPreview {
   profile: ExportProfile;
   sourceRevision: string;
+  /** Author-only provenance and ID map never enter downloadable payloads. */
+  sourceVersionId?:ID;sourceContentHash?:string;sourceIdMap?:Record<ID,ID>;
   includedCount: number;
   omissions: ProjectionOmission[];
   warnings: string[];
   assetCount: number;
-  assetBytesIncluded: false;
+  assetBytesIncluded: boolean;
 }
 export type ExportResult =
   | { ok: true; artifact: ExportArtifact; artifacts: ExportArtifact[]; preview: ExportPreview }
@@ -32,21 +39,15 @@ export interface RuntimeExportProfile {
   omissions: readonly string[];
 }
 export const GENERIC_RUNTIME_PROFILE: Readonly<RuntimeExportProfile> = Object.freeze({
-  profileId: 'scenario-runtime', profileVersion: '1.0.0', schemaVersion: '1.0.0',
+  profileId: 'scenario-runtime', profileVersion: '1.1.0', schemaVersion: '1.0.0',
   supportedNodeTypes: Object.freeze(['scene', 'choice', 'automatic', 'call', 'entry', 'exit', 'terminal']),
   supportedConditions: Object.freeze(['constant', 'all', 'any', 'not', 'compare', 'item', 'known', 'visited', 'external']),
   supportedEffects: Object.freeze(['set', 'add', 'grant', 'consume', 'move', 'assert', 'mark_seen', 'reset']),
   externalContracts: Object.freeze(['boolean', 'integer', 'enum']),
-  assetTypes: Object.freeze(['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'audio/wav', 'audio/mpeg', 'application/pdf']),
+  assetTypes: Object.freeze(['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'audio/wav', 'audio/mpeg', 'application/pdf', 'video/mp4', 'video/webm', 'video/ogg', 'audio/ogg', 'text/plain', 'application/json', 'application/octet-stream']),
   omissions: Object.freeze(['author_notes', 'rejected_and_alternate_records', 'private_names_and_aliases', 'original_source_ids_unless_explicitly_approved', 'asset_bytes', 'playtest_traces']),
 });
-export const PLAYABLE_PREVIEW_PROFILE: Readonly<RuntimeExportProfile> = Object.freeze({
-  ...GENERIC_RUNTIME_PROFILE,
-  supportedNodeTypes: Object.freeze(['scene', 'choice', 'automatic', 'entry', 'exit', 'terminal']),
-  supportedConditions: Object.freeze(['constant', 'all', 'any', 'not', 'compare', 'visited']),
-  supportedEffects: Object.freeze(['set', 'add', 'reset', 'mark_seen']),
-  externalContracts: Object.freeze([]), assetTypes: Object.freeze([]),
-});
+export const PLAYABLE_PREVIEW_PROFILE: Readonly<RuntimeExportProfile> = GENERIC_RUNTIME_PROFILE;
 export interface ExportOptions {
   profile: ExportProfile;
   projectionProfileId: ID;
@@ -57,6 +58,12 @@ export interface ExportOptions {
   writingMode?: 'horizontal' | 'vertical';
   runtimeProfile?: RuntimeExportProfile;
   sourceLanguage?: string;
+  /** Filters production deliverables by authored task assignment; identity IDs stay private. */
+  assigneeId?: ID;
+  worldSnapshots?: Record<ID, ProjectContent>;
+  worldPins?:readonly Pick<ProjectSnapshot,'id'|'contentHash'|'content'>[];
+  /** Captured verified bytes. Metadata-only output explicitly records their absence. */
+  assetBytes?: Record<string, Uint8Array>;
   consultationContext?: { focusIds?: ID[]; beforeValues?: Record<ID, TypedValue>; afterValues?: Record<ID, TypedValue> };
 }
 const record = (value: unknown): Record<string, unknown> | undefined => value !== null && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : undefined;
@@ -73,57 +80,34 @@ async function hash(value: unknown): Promise<string> {
   return [...new Uint8Array(await crypto.subtle.digest('SHA-256', bytes))].map(value => value.toString(16).padStart(2, '0')).join('');
 }
 
-async function selectSource(project: ProjectData, options: ExportOptions): Promise<{ ok: true; project: ProjectData } | { ok: false; issues: ProjectionIssue[] }> {
-  if ((options.targetRevision === undefined) === (options.targetVersionId === undefined)) return { ok: false, issues: [{ code: 'VALIDATION_FAILED', message: '出力する正本の版を一つ指定してください。' }] };
-  if (options.targetRevision !== undefined) {
-    if (!revisionPattern.test(options.targetRevision) || options.targetRevision !== project.revision) return { ok: false, issues: [{ code: 'VALIDATION_FAILED', message: '選択した版と出力元の版が一致しません。対象版を読み直してください。' }] };
-    return { ok: true, project };
-  }
-  const snapshot = project.snapshots.find(snapshot => snapshot.id === options.targetVersionId);
-  if (!snapshot || snapshot.content.projectId !== project.projectId) return { ok: false, issues: [{ code: 'REFERENCE_INVALID', message: '選択した公開版の保存内容が見つかりません。', entityId: options.targetVersionId }] };
-  // Private checkpoints, reviews and anchors can reference another pinned version.
-  // Keep only that immutable dependency closure for validation, never live content.
-  const dependencies: ProjectData['snapshots'] = [];
-  const pending = [snapshot], visited = new Set<ID>();
-  while (pending.length) {
-    const dependency = pending.pop()!;
-    if (visited.has(dependency.id)) continue;
-    visited.add(dependency.id);
-    if (project.snapshots.filter(candidate => candidate.id === dependency.id).length !== 1 || dependency.content.projectId !== project.projectId) return { ok: false, issues: [{ code: 'REFERENCE_INVALID', message: '保存版の依存内容を一意に確認できません。', entityId: dependency.id }] };
-    if (await hash(dependency.content) !== dependency.contentHash) return { ok: false, issues: [{ code: 'VALIDATION_FAILED', message: '保存版の内容hashが一致しないため出力を停止しました。', entityId: dependency.id }] };
-    dependencies.push(dependency);
-    for (const entity of dependency.content.entities) for (const reference of collectReferences(entity)) if (reference.scope === 'snapshot') {
-      const target = project.snapshots.find(candidate => candidate.id === reference.id);
-      if (target && !visited.has(target.id)) pending.push(target);
-    }
-  }
-  return { ok: true, project: { ...structuredClone(snapshot.content), snapshots: dependencies, history: [] } };
-}
-
 /** Captures the input before hashing, so editing during an export cannot mix versions. */
 export async function exportProject(input: ProjectData, options: ExportOptions): Promise<ExportResult> {
   try { return await exportCapturedProject(input, structuredClone(options)); }
-  catch { return { ok: false, issues: [{ code: 'VALIDATION_FAILED', message: '出力に必要な情報または参照が不正です。作品を確認してください。' }] }; }
+  catch(cause) {const message=cause instanceof Error&&/^(?:EXPORT_UNSUPPORTED|INTEGRITY_FAILED|REFERENCE_INVALID|IMPORT_LIMIT):/.test(cause.message)?cause.message:'出力に必要な情報または参照が不正です。作品を確認してください。';const details=cause&&typeof cause==='object'&&'issues' in cause&&Array.isArray(cause.issues)?cause.issues:[];return { ok: false, issues: details.length?details.map(issue=>({code:'VALIDATION_FAILED' as const,message:String(issue.message),field:String(issue.path??issue.field??'')})):[{ code:message.startsWith('EXPORT_UNSUPPORTED:')?'EXPORT_UNSUPPORTED':'VALIDATION_FAILED', message }] }; }
 }
 async function exportCapturedProject(input: ProjectData, options: ExportOptions): Promise<ExportResult> {
   let captured: ProjectData;
   try { captured = structuredClone(input); } catch { return { ok: false, issues: [{ code: 'VALIDATION_FAILED', message: '作品の出力内容を固定できませんでした。' }] }; }
   const selected = await selectSource(captured, options);
   if (!selected.ok) return selected;
-  const project = selected.project;
-  const sourceValidation = validateProject(project);
+  const authorProject = selected.project;
+  const sourceValidation = validateProject(authorProject, {worldSnapshots: options.worldSnapshots ?? {}});
   if (!sourceValidation.ok) return { ok: false, issues: sourceValidation.issues.map(issue => ({ code: issue.code === 'REFERENCE_INVALID' ? 'REFERENCE_INVALID' as const : 'VALIDATION_FAILED' as const, message: issue.message, field: issue.path })) };
+  const project = await executionExportView(captured, authorProject, options);
   const policyEntity = project.entities.find((entity): entity is Entity<'projection_profile'> => entity.id === options.projectionProfileId && entity.kind === 'projection_profile' && !entity.deletedAt);
   if (policyEntity?.data.sourceVersionId != null && policyEntity.data.sourceVersionId !== options.targetVersionId && policyEntity.data.sourceVersionId !== project.revision) return { ok: false, issues: [{ code: 'VALIDATION_FAILED', message: 'この公開範囲が対象とする版と、選択した版が一致しません。', entityId: policyEntity.id, field: 'sourceVersionId' }] };
   const executable = options.profile === 'runtime_json' || options.profile === 'playable_preview';
-  const result = createProjection(project, options.projectionProfileId, { strictReferences: executable, confirmedOnly: options.profile !== 'consultation', targetVersionId: options.targetVersionId });
+  const citations=await prepareExportCitations(captured,project,options,executable);
+  const result = createProjection(project, options.projectionProfileId, { strictReferences: executable, confirmedOnly: options.profile !== 'consultation', targetVersionId: options.targetVersionId,versionTargets:citations.targets });
+  if(result.ok&&citations.versions.length)result.projection.versions=citations.versions;
   const preview: ExportPreview = {
-    profile: options.profile, sourceRevision: project.revision, includedCount: result.ok ? result.projection.entities.length : 0,
+    profile: options.profile, sourceRevision: project.revision,sourceVersionId:options.targetVersionId??authorProject.projectId,sourceContentHash:await sha256(jsonBytes({...authorProject,history:[]})),sourceIdMap:result.ok?result.idMap:undefined, includedCount: result.ok ? result.projection.entities.length : 0,
     omissions: result.omissions, warnings: ['公開用の文面は作者が内容を確認してください。文章から秘密を自動で判定する機能ではありません。'],
-    assetCount: result.ok ? result.projection.entities.filter(entity => entity.kind === 'attachment').length : 0, assetBytesIncluded: false,
+    assetCount: result.ok ? [result.projection,...citations.versions.map(version=>version.projection)].reduce((count,edition)=>count+edition.entities.filter(entity=>entity.kind==='attachment').length,0) : 0, assetBytesIncluded: false,
   };
   if (!result.ok) return { ok: false, issues: result.issues, preview };
   const projection = result.projection;
+  const positions=validatePublicPositions(projection);if(positions.length)return {ok:false,issues:positions,preview};
   const policy = policyEntity!.data;
   const publicVersionLabel = policy.publicVersionLabel ?? '公開版';
   const artifact = (filename: string, mimeType: string, content: string): ExportArtifact => ({ filename, mimeType, content });
@@ -137,11 +121,15 @@ async function exportCapturedProject(input: ProjectData, options: ExportOptions)
     }
     case 'runtime_json': {
       const runtimeProfile = options.runtimeProfile ?? GENERIC_RUNTIME_PROFILE;
-      const issues = validateRuntimeExport(project, projection, result.idMap, policy, runtimeProfile);
+      const issues = runtimeCapabilityIssues(project,projection,result.idMap,policy,runtimeProfile,citations.sources);
       if (issues.length) return { ok: false, issues, preview };
-      const contentVersionId = `sha256:${await hash(projection)}`;
+      const includedAssets = await exportAllAssetBytes(project,projection,result.idMap,citations.sources,options.assetBytes);
+      const portable=await portableRuntimeProject(projection);
+      preview.assetBytesIncluded = includedAssets.complete&&Object.keys(includedAssets.data).length>0;
+      if(preview.assetBytesIncluded)preview.warnings=preview.warnings.filter(w=>!w.includes('素材bytesは含まれません'));
+      const contentVersionId=`sha256:${await hash(projection)}`;
       const payload = {
-        format: 'scenario-runtime', formatVersion: '1.0.0', profile: publicRuntimeProfile(runtimeProfile), title: projection.title, versionLabel: publicVersionLabel, contentVersionId,
+        format: 'scenario-runtime', formatVersion: '1.0.0',requiredFeatures:['runtime-project-1','lifecycle-1','presentation-1','reuse-flattening-1','finite-exceptions-1'], profile: publicRuntimeProfile(runtimeProfile,preview.assetBytesIncluded), title: projection.title, versionLabel: publicVersionLabel, contentVersionId,
         hashScope: 'public_projection',
         entities: projection.entities, relations: projection.relations, calendars: projection.calendars,
         flow: { graphs: byKind(projection, 'flow_graph'), nodes: byKind(projection, 'flow_node'), edges: byKind(projection, 'flow_edge') },
@@ -149,7 +137,7 @@ async function exportCapturedProject(input: ProjectData, options: ExportOptions)
         variables: byKind(projection, 'variable'), effects: byKind(projection, 'effect'), items: byKind(projection, 'item'), assertions: byKind(projection, 'assertion'),
         quests: byKind(projection, 'quest'), disclosures: byKind(projection, 'disclosure'), cues: byKind(projection, 'cue'),
         externalContracts: byKind(projection, 'external_contract'), assets: byKind(projection, 'attachment'),
-        externalEvidence: 'not_included', assetBytesIncluded: false,
+        externalEvidence: 'not_included', publicProjection:projection, assetBytesIncluded: includedAssets.complete&&Object.keys(includedAssets.data).length>0, runtimeProject:portable.project, runtimeProjectHash:await sha256(jsonBytes(portable.project)), publicToRuntime:portable.publicToRuntime, assetData:includedAssets.data,
       };
       return succeed([artifact('runtime.json', 'application/json;charset=utf-8', JSON.stringify(payload, null, 2))]);
     }
@@ -162,12 +150,25 @@ async function exportCapturedProject(input: ProjectData, options: ExportOptions)
       if (issues.length) return { ok: false, issues, preview };
       const language = options.sourceLanguage ?? 'ja';
       if (!validLanguage(language)) return { ok: false, issues: [{ code: 'VALIDATION_FAILED', message: '有効な言語コードを指定してください。', field: 'sourceLanguage' }], preview };
-      const exportedLines = await localizedLines(project, projection, result.idMap, language);
-      const payload = { format: 'scenario-localization', formatVersion: '1.0.0', title: projection.title, versionLabel: publicVersionLabel, hashScope: 'projected_line', lines: exportedLines, terminology: byKind(projection, 'terminology'), assets: byKind(projection, 'attachment'), assetBytesIncluded: false };
+      let assigned: Set<ID> | undefined;
+      if (options.assigneeId) {
+        assigned = new Set(project.entities.filter(entity => entity.kind === 'production_task' && !entity.deletedAt && !['rejected', 'alternate'].includes(entity.status) && entity.data.assigneeId === options.assigneeId).flatMap(entity => entity.kind === 'production_task' ? entity.data.targetIds : []));
+        const pending=[...assigned];for(let at=0;at<pending.length;at++){const target=project.entities.find(entity=>entity.id===pending[at]),children=target?.kind==='chapter'?target.data.sceneIds:target?.kind==='scene'?target.data.dialogueLineIds??[]:[];for(const id of children)if(!assigned.has(id)){assigned.add(id);pending.push(id);}}
+        if (!assigned.size) return { ok: false, issues: [{ code: 'REFERENCE_INVALID', message: 'この担当者に対応する制作タスクの対象がありません。対象版・担当・公開範囲を確認してください。' }], preview };
+      }
+      const exportedLines = await localizedLines(project, projection, result.idMap, language, assigned);
+      if (assigned && !exportedLines.length) return { ok: false, issues: [{ code: 'REFERENCE_INVALID', message: '担当の台詞・翻訳・収録が公開範囲にありません。公開範囲を確認してください。' }], preview };
+      if (assigned) preview.warnings.push('作者が指定した制作タスクの担当範囲へ絞っています。担当者の識別情報は公開ファイルへ含めません。');
+      const selectedLineIds = new Set(exportedLines.map(line => line.lineId));
+      const assetIds = new Set(exportedLines.flatMap(line => line.recordings.flatMap(recording => recording.attachmentId ? [recording.attachmentId] : [])));
+      for (const line of byKind(projection, 'dialogue_line').filter(line => selectedLineIds.has(line.id))) for (const cue of byKind(projection, 'cue').filter(cue => Array.isArray(line.data.cueIds) && line.data.cueIds.includes(cue.id))) if (typeof cue.data.attachmentId === 'string') assetIds.add(cue.data.attachmentId);
+      const deliveredAssets=await exportAllAssetBytes(project,{...projection,entities:projection.entities.filter(entity=>entity.kind!=='attachment'||!assigned||assetIds.has(entity.id))},result.idMap,citations.sources,options.assetBytes);preview.assetBytesIncluded=deliveredAssets.complete&&Object.keys(deliveredAssets.data).length>0;
+      const payload = { format: options.profile==='production'?'scenario-production':'scenario-localization', formatVersion: '1.0.0', title: projection.title, versionLabel: publicVersionLabel, hashScope: 'projected_line', lines: exportedLines, terminology: byKind(projection, 'terminology'),voiceRules:byKind(projection,'voice_rule'),citedVersions:projection.versions??[],...(options.profile==='production'?{tasks:byKind(projection,'production_task').filter(task=>!assigned||project.entities.some(entity=>entity.kind==='production_task'&&entity.data.assigneeId===options.assigneeId&&result.idMap[entity.id]===task.id)),scenes:byKind(projection,'scene').filter(scene=>!assigned||assigned.has(Object.keys(result.idMap).find(id=>result.idMap[id]===scene.id)??'')),cues:byKind(projection,'cue').filter(cue=>!assigned||exportedLines.some(line=>byKind(projection,'dialogue_line').find(source=>source.id===line.lineId)?.data.cueIds instanceof Array&&(byKind(projection,'dialogue_line').find(source=>source.id===line.lineId)!.data.cueIds as string[]).includes(cue.id))),storyboards:byKind(projection,'storyboard_frame').filter(frame=>!assigned||assigned.has(Object.keys(result.idMap).find(id=>result.idMap[id]===frame.id)??'')||project.entities.some(entity=>entity.kind==='storyboard_frame'&&result.idMap[entity.id]===frame.id&&assigned.has(entity.data.anchor.lineId??entity.data.anchor.entityId))),media:byKind(projection,'media_variant').filter(media=>!assigned||assigned.has(Object.keys(result.idMap).find(id=>result.idMap[id]===media.id)??''))}:{ }),assets: byKind(projection, 'attachment').filter(asset => !assigned || assetIds.has(asset.id)),assetData:deliveredAssets.data,assetBytesIncluded:preview.assetBytesIncluded };
+      if(preview.assetBytesIncluded)preview.warnings=preview.warnings.filter(w=>!w.includes('素材bytesは含まれません'));
       preview.warnings.push('台詞hashは公開用本文・ルビ・話者・演出から計算します。作者原稿のhashは公開ファイルに含めません。');
       return succeed([
-        artifact('localization.json', 'application/json;charset=utf-8', JSON.stringify(payload, null, 2)),
-        artifact('localization.md', 'text/markdown;charset=utf-8', renderLocalizationMarkdown(projection.title, publicVersionLabel, exportedLines)),
+        artifact(options.profile==='production'?'production.json':'localization.json', 'application/json;charset=utf-8', JSON.stringify(payload, null, 2)),
+        artifact(options.profile==='production'?'production.md':'localization.md', 'text/markdown;charset=utf-8', renderLocalizationMarkdown(projection.title, publicVersionLabel, exportedLines)),
       ]);
     }
     case 'consultation': {
@@ -177,11 +178,14 @@ async function exportCapturedProject(input: ProjectData, options: ExportOptions)
       return succeed([artifact('consultation.md', 'text/markdown;charset=utf-8', content)]);
     }
     case 'playable_preview': {
-      const issues = validateRuntimeExport(project, projection, result.idMap, policy, PLAYABLE_PREVIEW_PROFILE);
-      issues.push(...validatePlayableSubset(project, projection, result.idMap));
+      const issues = runtimeCapabilityIssues(project,projection,result.idMap,policy,PLAYABLE_PREVIEW_PROFILE,citations.sources);
       if (issues.length) return { ok: false, issues, preview };
-      const output = await buildPlayableArchive(projection, publicVersionLabel);
-      preview.warnings.push('簡易試遊は対応した状態・条件・効果だけを実行します。実ゲームでの確認結果を示すものではありません。');
+      const assets=await exportAllAssetBytes(project,projection,result.idMap,citations.sources,options.assetBytes);
+      if(!assets.complete)return {ok:false,issues:[{code:'REFERENCE_INVALID',message:'試遊に含める素材bytesが不足しています。完全保存から復元して再検査してください。'}],preview};
+      preview.assetBytesIncluded=assets.complete&&Object.keys(assets.data).length>0;
+      const output = await buildPlayableArchive(projection, publicVersionLabel,assets);
+      preview.warnings=preview.warnings.filter(w=>!w.includes('素材bytesは含まれません'));
+      preview.warnings.push('本体と同じ状態・物品・知識・提示・再利用の実行器を含みます。外部値の仮入力はstubとして記録し、実ゲームの確認結果へ換算しません。');
       return succeed([output]);
     }
     default: return { ok: false, issues: [{ code: 'EXPORT_UNSUPPORTED', message: 'この出力目的には対応していません。' }], preview };
@@ -189,13 +193,13 @@ async function exportCapturedProject(input: ProjectData, options: ExportOptions)
 }
 
 function byKind(projection: PublicProjection, kind: ProjectedEntity['kind']): ProjectedEntity[] { return projection.entities.filter(entity => entity.kind === kind); }
-function publicRuntimeProfile(profile: RuntimeExportProfile): RuntimeExportProfile {
+function publicRuntimeProfile(profile: RuntimeExportProfile,bytesIncluded=false): RuntimeExportProfile {
   return { profileId: profile.profileId, profileVersion: profile.profileVersion, schemaVersion: profile.schemaVersion,
     supportedNodeTypes: [...profile.supportedNodeTypes], supportedConditions: [...profile.supportedConditions], supportedEffects: [...profile.supportedEffects],
-    externalContracts: [...profile.externalContracts], assetTypes: [...profile.assetTypes], omissions: [...GENERIC_RUNTIME_PROFILE.omissions] };
+    externalContracts: [...profile.externalContracts], assetTypes: [...profile.assetTypes], omissions: GENERIC_RUNTIME_PROFILE.omissions.filter(omission=>omission!=='asset_bytes'||!bytesIncluded) };
 }
 function stableIdIssues(idMap: Record<string, string>, policy: Entity<'projection_profile'>['data']): ProjectionIssue[] {
-  return policy.idPolicy !== 'preserve' && Object.keys(idMap).some(id => !policy.publicIds?.[id])
+  return policy.idPolicy !== 'preserve' && Object.keys(idMap).some(id => !policy.publicIds?.[id]&&!Object.entries(policy.blockSources??{}).some(([publicBlock,sourceBlock])=>sourceBlock===id&&policy.publicIds?.[publicBlock]))
     ? [{ code: 'EXPORT_UNSUPPORTED', message: '制作出力には安定した公開IDを全対象へ指定するか、選択した正本IDの公開を明示してください。', field: 'publicIds' }]
     : [];
 }
@@ -210,18 +214,25 @@ function presentationDisclosures(project: ProjectData, idMap: Record<string, str
   return project.entities.filter((entity): entity is Entity<'disclosure'> => entity.kind === 'disclosure' && !entity.deletedAt && entity.status !== 'rejected' && anchors.has(entity.data.anchor.entityId));
 }
 const SAFE_RUNTIME_OMISSIONS: Readonly<Record<string, readonly string[]>> = {
+  note:['handoffReceipt','originNoteId','convertedToIds'],
   character: ['aliases', 'authorNotes', 'goals', 'voiceRules'], group: [], event: ['authorNotes', 'constraints'], place: ['aliases', 'changes'], item: ['changes'],
-  scene: ['authorNotes', 'goals', 'conflicts', 'results', 'newInformation'], chapter: ['authorNotes', 'structureRole'], dialogue_line: ['originLineIds'],
-  variable: [], flow_node: [], flow_edge: [], flow_graph: [], effect: [], assertion: ['reason', 'validity'], foreshadow: ['exceptions', 'deadline'], disclosure: ['targetScope'],
+  scene: ['authorNotes', 'goals', 'conflicts', 'results', 'newInformation'], chapter: ['authorNotes', 'structureRole'], dialogue_line: ['originLineIds', 'replacedByLineIds', 'lineage'],
+  variable: [], flow_node: [], flow_edge: [], flow_graph: [], effect: [], assertion: [], foreshadow: [], disclosure: [],
   attachment: ['assetPath', 'licenseNote', 'provenanceId', 'stage', 'revisionHistory', 'mediaType', 'contentHash', 'byteSize'], source: ['accessedAt', 'excerptLocation', 'attachmentId'],
+  external_contract:['adapterProfileIds'],
   cue: ['stage'], quest: ['gameplaySpecIds'], lore: ['aliases', 'sourceIds'], recording: ['sourceHash', 'notes', 'reviewedBy'], localization: ['sourceHash', 'reviewedBy'],
 };
-function validateRuntimeExport(project: ProjectData, projection: PublicProjection, idMap: Record<string, string>, policy: Entity<'projection_profile'>['data'], profile: RuntimeExportProfile): ProjectionIssue[] {
+function runtimeCapabilityIssues(project:ProjectData,projection:PublicProjection,idMap:Record<string,string>,policy:Entity<'projection_profile'>['data'],profile:RuntimeExportProfile,citations:readonly CitationSource[]){
+ const issues=validateRuntimeExport(project,projection,idMap,policy,profile);
+ for(const citation of citations){const policy=citation.project.entities.find((entity):entity is Entity<'projection_profile'>=>entity.id===citation.profileId&&entity.kind==='projection_profile');if(!policy)issues.push({code:'REFERENCE_INVALID',message:'引用版の公開範囲がありません。'});else issues.push(...validateRuntimeExport(citation.project,citation.projection,citation.idMap,policy.data,profile,false));}
+ return issues;
+}
+function validateRuntimeExport(project: ProjectData, projection: PublicProjection, idMap: Record<string, string>, policy: Entity<'projection_profile'>['data'], profile: RuntimeExportProfile,requireGraph=true): ProjectionIssue[] {
   const issues: ProjectionIssue[] = [];
   const fail = (message: string, entityId?: string, field?: string) => { issues.push({ code: 'EXPORT_UNSUPPORTED', message, ...(entityId ? { entityId } : {}), ...(field ? { field } : {}) }); };
-  if (profile.profileId !== 'scenario-runtime' || profile.schemaVersion !== '1.0.0' || profile.profileVersion !== '1.0.0') fail('この制作出力は汎用scenario-runtime 1.0.0専用です。未実装のゲームエンジンへ直接変換できません。');
+  if (profile.profileId !== 'scenario-runtime' || profile.schemaVersion !== '1.0.0' || profile.profileVersion !== '1.1.0') fail('この制作出力は汎用scenario-runtime 1.1.0専用です。未実装のゲームエンジンへ直接変換できません。');
   for (const field of ['supportedNodeTypes', 'supportedConditions', 'supportedEffects', 'externalContracts', 'assetTypes'] as const) if (!Array.isArray(profile[field]) || profile[field].some(value => !GENERIC_RUNTIME_PROFILE[field].includes(value))) fail('対応先の機能一覧に未対応の種類が含まれています。', undefined, field);
-  const included = new Set(Object.keys(idMap));
+  const included = new Set(Object.keys(idMap)),projectedById=new Map(projection.entities.map(entity=>[entity.id,entity]));
   issues.push(...stableIdIssues(idMap, policy));
   for (const disclosure of presentationDisclosures(project, idMap)) {
     if (disclosure.data.anchor.positionStatus === 'unresolved') fail('提示位置が不明な開示があります。本文へ再リンクしてから実行用出力を作成してください。', disclosure.id, 'anchor');
@@ -232,7 +243,7 @@ function validateRuntimeExport(project: ProjectData, projection: PublicProjectio
   }
   for (const entity of project.entities) {
     if (!included.has(entity.id)) continue;
-    const projected = projection.entities.find(projected => projected.id === idMap[entity.id])!;
+    const projected = projectedById.get(idMap[entity.id])!;
     const schema = PROJECTION_FIELDS[entity.kind] ?? {};
     const data = entity.data as unknown as Record<string, unknown>;
     if (Object.keys(entity.customValues).length && ['flow_node', 'flow_edge', 'flow_graph', 'variable', 'effect', 'quest'].includes(entity.kind)) fail('制作処理に追加したカスタム項目の意味を対応先で表せません。', entity.id, 'customValues');
@@ -247,7 +258,7 @@ function validateRuntimeExport(project: ProjectData, projection: PublicProjectio
     };
     for (const field of required[entity.kind] ?? []) if (!has(projected.data, field)) fail('制作に必要な項目が公開範囲から除かれています。', entity.id, field);
     // Omitting an optional author field is safe; omitting a present behavior field is not.
-    const behaviorFields = new Set(['condition', 'gate', 'trigger', 'executionPolicy', 'fallbackId', 'effectIds', 'knowledgeEffects', 'sceneId', 'childGraphId', 'parentGraphId', 'choiceLineId', 'dialogueLineIds', 'blockIds', 'priority', 'initial', 'allowed', 'ownerId', 'externalContractId', 'transitionRules', 'value', 'instanceId', 'cueIds', 'stateVariableId']);
+    const behaviorFields = new Set(['condition', 'gate', 'trigger', 'executionPolicy', 'fallbackId', 'effectIds', 'knowledgeEffects', 'sceneId', 'childGraphId', 'parentGraphId', 'choiceLineId', 'dialogueLineIds', 'blockIds', 'priority', 'initial', 'allowed', 'ownerId', 'externalContractId', 'transitionRules', 'value', 'instanceId', 'cueIds', 'stateVariableId','derived','resetRules','exclusions','exceptionDetails','targetScope','validity','presentationDeadline','deadline','alternativeInfo','parameters','mediaTime','camera']);
     for (const [field, value] of Object.entries(data)) if (behaviorFields.has(field) && value != null && !(Array.isArray(value) && !value.length) && !has(projected.data, field)) fail('分岐や状態の動作を変える項目を除外できません。', entity.id, field);
     if (entity.kind === 'flow_node') {
       if (!profile.supportedNodeTypes.includes(entity.data.nodeType)) fail('このノード種類を対応先で表せません。', entity.id, 'nodeType');
@@ -257,7 +268,7 @@ function validateRuntimeExport(project: ProjectData, projection: PublicProjectio
     if (entity.kind === 'flow_edge' && typeof entity.data.toId !== 'string') fail('未完成の分岐先を制作出力には含められません。', entity.id, 'toId');
     if (entity.kind === 'effect' && !profile.supportedEffects.includes(entity.data.operation)) fail('この効果を対応先で表せません。', entity.id, 'operation');
     if (entity.kind === 'variable') {
-      if (entity.data.initial.type === 'unknown' || entity.data.initial.type !== entity.data.valueType) fail('変数の初期値を正しい型で確定してください。', entity.id, 'initial');
+      if (entity.data.initial.type === 'unknown' ? !entity.data.externalContractId : entity.data.initial.type !== entity.data.valueType) fail('変数の初期値を正しい型で確定してください。', entity.id, 'initial');
       if (entity.data.initial.type === 'enum' && !(entity.data.allowed.values ?? []).includes(entity.data.initial.value)) fail('初期値が許可列挙に含まれていません。', entity.id, 'initial');
       if (entity.data.initial.type === 'integer' && (entity.data.initial.value < (entity.data.allowed.min ?? -2147483648) || entity.data.initial.value > (entity.data.allowed.max ?? 2147483647))) fail('変数の初期値が許可範囲から外れています。', entity.id, 'initial');
       if (entity.data.valueType === 'enum' && !entity.data.allowed.values?.length) fail('列挙変数の許可値を指定してください。', entity.id, 'allowed');
@@ -265,12 +276,23 @@ function validateRuntimeExport(project: ProjectData, projection: PublicProjectio
     }
     if (entity.kind === 'external_contract' && (!profile.externalContracts.includes(entity.data.inputType) || !profile.externalContracts.includes(entity.data.outputType))) fail('この外部値の型を対応先で表せません。', entity.id);
     if (entity.kind === 'attachment' && !profile.assetTypes.includes(entity.data.mediaType)) fail('この素材形式を対応先で表せません。', entity.id, 'mediaType');
-    for (const field of ['gate', 'condition']) if (data[field] != null) checkConditionCapability(data[field], profile, message => fail(message, entity.id, field));
+    checkTypedConditionCapabilities(projected.data,ENTITY_SCHEMAS[entity.kind],profile,(message,field)=>fail(message,entity.id,field));
   }
-  if (!byKind(projection, 'flow_graph').length) fail('制作出力には公開されたフローグラフが必要です。');
+  for(const relation of projection.relations){const validity=record(relation.validity);if(validity?.routeCondition)checkConditionCapability(validity.routeCondition,profile,message=>fail(message,relation.id,'validity.routeCondition'));}
+  if (requireGraph&&!byKind(projection, 'flow_graph').length) fail('制作出力には公開されたフローグラフが必要です。');
   const keys = byKind(projection, 'variable').map(variable => variable.data.key);
   if (new Set(keys).size !== keys.length) fail('公開用の変数キーが重複しています。', undefined, 'key');
   return issues;
+}
+/** Walk only typed executable conditions/expressions, preserving opaque camera and author text semantics. */
+function checkTypedConditionCapabilities(value:unknown,schema:Schema,profile:RuntimeExportProfile,fail:(message:string,path:string)=>void,path='',depth=0):void{
+ if(value==null)return;if(depth>32){fail('条件構造の上限を超えています。',path);return;}
+ if(schema.type==='condition'){checkConditionCapability(value,profile,message=>fail(message,path));return;}
+ if(schema.type==='expression'){const ast=record(value);if(!ast)return;if(['value','variable'].includes(String(ast.op)))return;if(['add','subtract','multiply'].includes(String(ast.op))){for(const field of ['left','right'])checkTypedConditionCapabilities(ast[field],schema,profile,fail,`${path}.${field}`,depth+1);return;}if(ast.op==='if'){checkTypedConditionCapabilities(ast.condition,{type:'condition'},profile,fail,`${path}.condition`,depth+1);for(const field of ['then','else'])checkTypedConditionCapabilities(ast[field],schema,profile,fail,`${path}.${field}`,depth+1);return;}checkConditionCapability(value,profile,message=>fail(message,path));return;}
+ if(schema.type==='array'&&Array.isArray(value))value.forEach((item,index)=>checkTypedConditionCapabilities(item,schema.item,profile,fail,`${path}[${index}]`,depth+1));
+ else if(schema.type==='object'){const object=record(value);if(object)for(const [field,definition]of Object.entries(schema.fields))checkTypedConditionCapabilities(object[field],definition.schema,profile,fail,path?`${path}.${field}`:field,depth+1);}
+ else if(schema.type==='record'){const object=record(value);if(object)for(const [field,item]of Object.entries(object))checkTypedConditionCapabilities(item,schema.value,profile,fail,`${path}.${field}`,depth+1);}
+ else if(schema.type==='union')for(const choice of schema.choices)checkTypedConditionCapabilities(value,choice,profile,fail,path,depth+1);
 }
 function checkConditionCapability(input: unknown, profile: RuntimeExportProfile, fail: (message: string) => void, depth = 1): void {
   const ast = record(input);
@@ -282,7 +304,10 @@ function checkConditionCapability(input: unknown, profile: RuntimeExportProfile,
 const escapeHtml = (value: string): string => value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 const escapeMarkdown = (value: string): string => escapeHtml(value).replace(/([\\`*_[\]{}()#+.!|~>-])/g, '\\$1');
 function blocks(value: PublicValue | undefined): ProjectedBlock[] { return Array.isArray(value) ? value as unknown as ProjectedBlock[] : []; }
-function blockHtml(block: ProjectedBlock, markdown = false): string {
+const readerId=(id:string,version='public-project')=>version==='public-project'?id:`${version}--${id}`;
+type ReaderRange={version:string;blockId:string;start:number;end:number};
+function readerRanges(projection:PublicProjection):ReaderRange[]{const ranges=([{id:'public-project',projection},...projection.versions??[]]).flatMap(({id:version,projection:edition})=>edition.entities.flatMap(entity=>entityDocuments(entity).flatMap(([,document])=>document.flatMap(block=>(block.links??[]).flatMap(link=>link.blockId&&link.targetStart!=null&&link.targetEnd!=null?[{version:link.sourceVersionId??version,blockId:link.blockId,start:link.targetStart,end:link.targetEnd}]:[])))));return [...new Map(ranges.map(range=>[JSON.stringify(range),range])).values()];}
+function blockHtml(block: ProjectedBlock, markdown = false,version='public-project',ranges:readonly ReaderRange[]=[]): string {
   const escape = markdown ? escapeMarkdown : escapeHtml;
   const letters = [...block.text];
   let position = 0, output = '';
@@ -293,7 +318,8 @@ function blockHtml(block: ProjectedBlock, markdown = false): string {
     position = ruby.end;
   }
   output += escape(letters.slice(position).join(''));
-  for (const link of block.links ?? []) output += ` <a href="#${escapeHtml(link.blockId ?? link.lineId ?? link.targetId)}">関連</a>`;
+  for(const range of ranges.filter(range=>range.version===version&&range.blockId===block.id))output+=` <mark id="${escapeHtml(readerId(block.id,version))}--${range.start}--${range.end}" data-target-start="${range.start}" data-target-end="${range.end}">${escape(letters.slice(range.start,range.end).join(''))}</mark>`;
+  for (const link of block.links ?? []) {const target=readerId(link.blockId??link.lineId??link.targetId,link.sourceVersionId??version),position=link.blockId&&link.targetStart!=null&&link.targetEnd!=null?`--${link.targetStart}--${link.targetEnd}`:'';output+=` <a href="#${escapeHtml(target+position)}"${link.sourceVersionId?` data-source-version="${escapeHtml(link.sourceVersionId)}"`:''}>関連${position?`（文字${link.targetStart}〜${link.targetEnd}）`:''}</a>`;}
   return output;
 }
 function readingEntities(projection: PublicProjection): ProjectedEntity[] {
@@ -301,35 +327,27 @@ function readingEntities(projection: PublicProjection): ProjectedEntity[] {
   const order: ProjectedEntity[] = [], seen = new Set<string>();
   const add = (entity: ProjectedEntity) => { if (!seen.has(entity.id)) { seen.add(entity.id); order.push(entity); } };
   for (const chapter of byKind(projection, 'chapter')) { add(chapter); for (const id of Array.isArray(chapter.data.sceneIds) ? chapter.data.sceneIds : []) if (typeof id === 'string' && scenes.has(id)) add(scenes.get(id)!); }
-  for (const entity of projection.entities) if (['scene', 'dialogue_line', 'character', 'event', 'place', 'item', 'note', 'lore', 'goal', 'terminology', 'media_variant'].includes(entity.kind)) add(entity);
+  for (const entity of projection.entities) if (entityDocuments(entity).length || ['scene', 'dialogue_line', 'character', 'event', 'place', 'item', 'note', 'lore', 'goal', 'terminology', 'media_variant'].includes(entity.kind)) add(entity);
   return order;
 }
 function entityDocuments(entity: ProjectedEntity): [string, ProjectedBlock[]][] {
-  return ['body', 'text', 'summary', 'description', 'usageNotes'].filter(field => blocks(entity.data[field]).length).map(field => [field, blocks(entity.data[field])]);
+  return ['body', 'text', 'summary', 'description', 'usageNotes','caption','action','tutorial','interpretation','targetAudience','experience','theme','tone','scope'].filter(field => blocks(entity.data[field]).length).map(field => [field, blocks(entity.data[field])]);
 }
 export function renderReaderMarkdown(projection: PublicProjection, versionLabel = '公開版'): string {
-  const output = [`# ${escapeMarkdown(projection.title)}`, '', `対象版: ${escapeMarkdown(versionLabel)}`, ''];
-  for (const entity of readingEntities(projection)) {
-    output.push(`<a id="${escapeHtml(entity.id)}"></a>`, `## ${escapeMarkdown(entity.name || entity.kind)}`, '');
-    if (entity.status !== 'confirmed') output.push(`採用状態: ${escapeMarkdown(entity.status)}`, '');
-    for (const [field, document] of entityDocuments(entity)) {
-      if (field === 'summary' && entityDocuments(entity).length > 1) output.push('### 要約', '');
-      for (const block of document) {
-        output.push(`<a id="${escapeHtml(block.id)}"></a>`);
-        const prefix = block.kind === 'heading' ? '### ' : block.kind === 'quote' ? '> ' : block.kind === 'list_item' ? '- ' : '';
-        // The only embedded HTML is our fixed ruby/link template; user text is escaped.
-        output.push(`${prefix}${block.ruby?.length || block.links?.length ? blockHtml(block, true) : escapeMarkdown(block.text)}`, '');
-      }
-    }
+ const output=[`# ${escapeMarkdown(projection.title)}`,'',`対象版: ${escapeMarkdown(versionLabel)}`,''],ranges=readerRanges(projection);
+ for(const [version,edition] of [['public-project',projection],...(projection.versions??[]).map(pin=>[pin.id,pin.projection])] as [string,PublicProjection][]){
+  if(version!=='public-project')output.push(`## 引用固定版 ${escapeMarkdown(edition.title)} (${escapeMarkdown(version)})`,'');
+  for(const entity of readingEntities(edition)){
+   output.push(`<a id="${escapeHtml(readerId(entity.id,version))}"></a>`,`## ${escapeMarkdown(entity.name||entity.kind)}`,'');
+   if(entity.status!=='confirmed')output.push(`採用状態: ${escapeMarkdown(entity.status)}`,'');
+   for(const [field,document]of entityDocuments(entity)){if(field==='summary'&&entityDocuments(entity).length>1)output.push('### 要約','');for(const block of document){output.push(`<a id="${escapeHtml(readerId(block.id,version))}"></a>`);const prefix=block.kind==='heading'?'### ':block.kind==='quote'?'> ':block.kind==='list_item'?'- ':'';output.push(`${prefix}${blockHtml(block,true,version,ranges)}`,'');}}
   }
-  return `${output.join('\n')}\n`;
+ }
+ return `${output.join('\n')}\n`;
 }
 export function renderReaderHtml(projection: PublicProjection, versionLabel = '公開版', writingMode: 'horizontal' | 'vertical' = 'horizontal'): string {
-  const sections = readingEntities(projection).map(entity => `<section id="${escapeHtml(entity.id)}"><h2>${escapeHtml(entity.name || entity.kind)}</h2>${entityDocuments(entity).map(([, document]) => document.map(block => {
-    const tag = block.kind === 'heading' ? 'h3' : block.kind === 'quote' ? 'blockquote' : 'p';
-    return `<${tag} id="${escapeHtml(block.id)}">${blockHtml(block)}</${tag}>`;
-  }).join('')).join('')}</section>`).join('\n');
-  return `<!doctype html>\n<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'"><title>${escapeHtml(projection.title)}</title><style>body{font-family:serif;line-height:1.9;margin:2rem;overflow-wrap:anywhere;${writingMode === 'vertical' ? 'writing-mode:vertical-rl;' : ''}}section{margin-block:2rem}rt{font-size:.55em}</style></head><body><h1>${escapeHtml(projection.title)}</h1><p>対象版: ${escapeHtml(versionLabel)}</p>${sections}</body></html>\n`;
+ const ranges=readerRanges(projection),sections=([['public-project',projection],...(projection.versions??[]).map(pin=>[pin.id,pin.projection])] as [string,PublicProjection][]).map(([version,edition])=>`${version!=='public-project'?`<h2>引用固定版 ${escapeHtml(edition.title)} (${escapeHtml(version)})</h2>`:''}${readingEntities(edition).map(entity=>`<section id="${escapeHtml(readerId(entity.id,version))}"><h2>${escapeHtml(entity.name||entity.kind)}</h2>${entityDocuments(entity).map(([,document])=>document.map(block=>{const tag=block.kind==='heading'?'h3':block.kind==='quote'?'blockquote':'p';return `<${tag} id="${escapeHtml(readerId(block.id,version))}">${blockHtml(block,false,version,ranges)}</${tag}>`;}).join('')).join('')}</section>`).join('\n')}`).join('\n');
+ return `<!doctype html>\n<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'"><title>${escapeHtml(projection.title)}</title><style>body{font-family:serif;line-height:1.9;margin:2rem;overflow-wrap:anywhere;${writingMode==='vertical'?'writing-mode:vertical-rl;':''}}section{margin-block:2rem}rt{font-size:.55em}</style></head><body><h1>${escapeHtml(projection.title)}</h1><p>対象版: ${escapeHtml(versionLabel)}</p>${sections}</body></html>\n`;
 }
 
 function validLanguage(value: string): boolean { try { return value.length < 64 && Intl.getCanonicalLocales(value).length === 1; } catch { return false; } }
@@ -338,17 +356,20 @@ interface ExportedLine {
   translations: { id: string; language: string; text: PublicValue; stage: string }[];
   recordings: { id: string; language: string; attachmentId: string | null; stage: string }[];
 }
-async function localizedLines(project: ProjectData, projection: PublicProjection, idMap: Record<string, string>, language: string): Promise<ExportedLine[]> {
+async function localizedLines(project: ProjectData, projection: PublicProjection, idMap: Record<string, string>, language: string, assigned?: ReadonlySet<ID>): Promise<ExportedLine[]> {
   const lines: ExportedLine[] = [];
   for (const line of byKind(projection, 'dialogue_line')) {
     const original = project.entities.find((entity): entity is Entity<'dialogue_line'> => entity.kind === 'dialogue_line' && idMap[entity.id] === line.id)!;
+    const assignedLine = assigned?.has(original.id);
+    if (assigned && !assignedLine && !project.entities.some(entity => (entity.kind === 'localization' || entity.kind === 'recording') && entity.data.sourceLineId === original.id && assigned.has(entity.id))) continue;
+    const allowed = (publicId: string) => !assigned || assignedLine || project.entities.some(entity => idMap[entity.id] === publicId && assigned.has(entity.id));
     const originalHash = await dialogueContentHash(project, original);
     const sourceHash = await hash({ text: blocks(line.data.text).map(block => ({ kind: block.kind, text: block.text, ruby: block.ruby ?? [] })), speakerId: line.data.speakerId ?? null, cues: byKind(projection, 'cue').filter(cue => Array.isArray(line.data.cueIds) && line.data.cueIds.includes(cue.id)).map(cue => cue.data) });
-    const translations = byKind(projection, 'localization').filter(translation => translation.data.sourceLineId === line.id).map(translation => {
+    const translations = byKind(projection, 'localization').filter(translation => translation.data.sourceLineId === line.id && allowed(translation.id)).map(translation => {
       const source = project.entities.find((entity): entity is Entity<'localization'> => entity.kind === 'localization' && idMap[entity.id] === translation.id)!;
       return { id: translation.id, language: String(translation.data.language ?? ''), text: translation.data.text ?? [], stage: source.data.sourceHash !== originalHash ? 'needs_review' : String(translation.data.stage ?? 'draft') };
     });
-    const recordings = byKind(projection, 'recording').filter(recording => recording.data.sourceLineId === line.id).map(recording => {
+    const recordings = byKind(projection, 'recording').filter(recording => recording.data.sourceLineId === line.id && allowed(recording.id)).map(recording => {
       const source = project.entities.find((entity): entity is Entity<'recording'> => entity.kind === 'recording' && idMap[entity.id] === recording.id)!;
       return { id: recording.id, language: String(recording.data.language ?? ''), attachmentId: typeof recording.data.attachmentId === 'string' ? recording.data.attachmentId : null, stage: source.data.sourceHash !== originalHash ? 'needs_review' : String(recording.data.stage ?? 'planned') };
     });
@@ -418,196 +439,32 @@ export function createConsultationProposal(project: ProjectData, input: { id: ID
   };
 }
 
-function validatePlayableSubset(project: ProjectData, projection: PublicProjection, idMap: Record<string, string>): ProjectionIssue[] {
-  const issues: ProjectionIssue[] = [];
-  const fail = (message: string, field?: string, entityId?: string) => { issues.push({ code: 'EXPORT_UNSUPPORTED', message, ...(field ? { field } : {}), ...(entityId ? { entityId } : {}) }); };
-  const graphs = byKind(projection, 'flow_graph');
-  if (graphs.length !== 1 || !Array.isArray(graphs[0]?.data.entryIds) || graphs[0].data.entryIds.length !== 1) fail('持ち出す簡易試遊には、開始位置が一つの単一グラフが必要です。', 'entryIds');
-  for (const node of byKind(projection, 'flow_node')) {
-    if (node.data.trigger != null) fail('宣言したきっかけの入力を伴う処理は、持ち出す簡易試遊では未対応です。', 'trigger');
-    if (node.data.executionPolicy === 'all_match') fail('全候補を同時に実行する分岐は、持ち出す簡易試遊では未対応です。', 'executionPolicy');
-    const policy = node.data.executionPolicy ?? (node.data.nodeType === 'automatic' ? 'first_match' : 'manual_choice');
-    const outgoing = byKind(projection, 'flow_edge').filter(edge => edge.data.fromId === node.id);
-    if (policy === 'first_match' && new Set(outgoing.map(edge => edge.data.priority ?? 0)).size !== outgoing.length) fail('自動分岐の優先値が重複しているため簡易試遊を作成できません。', 'priority');
-  }
-  for (const edge of byKind(projection, 'flow_edge')) if (edge.data.edgeType === 'call_return') fail('呼び出しから戻る分岐は、持ち出す簡易試遊では未対応です。', 'edgeType');
-  if (byKind(projection, 'cue').length || byKind(projection, 'storyboard_frame').length) fail('演出・収録を再生する処理は、持ち出す簡易試遊では未対応です。');
-  const dependencies = new Set(presentationDisclosures(project, idMap).map(entity => entity.id));
-  for (const disclosure of presentationDisclosures(project, idMap)) if (disclosure.data.anchor.positionStatus === 'unresolved') fail('提示位置が不明な開示があります。本文へ再リンクしてから簡易試遊を作成してください。', 'anchor', disclosure.id);
-  for (const entity of project.entities) if (entity.kind === 'disclosure' && !entity.deletedAt && entity.status !== 'rejected' && entity.data.knowledgeEffects?.length && (has(idMap, entity.id) || dependencies.has(entity.id))) {
-    // An excluded disclosure can still change a selected scene's state on arrival.
-    // The portable interpreter does not implement those arrival effects.
-    fail('提示時の開示効果は、持ち出す簡易試遊では未対応です。開示を省略して動作を変えず、出力を停止しました。', 'knowledgeEffects', entity.id);
-  }
-  return issues;
+type ExportAssets={data:Record<string,{mediaType:string;base64:string}>;files:Record<string,Uint8Array>;complete:boolean};
+async function exportAssetBytes(project:ProjectData,projection:PublicProjection,idMap:Record<string,string>,supplied?:Record<string,Uint8Array>):Promise<ExportAssets>{
+ const data:ExportAssets['data']={},files:ExportAssets['files']={};let complete=true;
+ for(const projected of byKind(projection,'attachment')){const original=project.entities.find((entity):entity is Entity<'attachment'>=>entity.kind==='attachment'&&idMap[entity.id]===projected.id)!;const bytes=supplied?.[original.data.contentHash];if(!bytes){complete=false;continue;}if(bytes.byteLength!==original.data.byteSize||await sha256(bytes)!==original.data.contentHash)throw Error('INTEGRITY_FAILED: 出力素材のbytes/hash/sizeが一致しません。');const verified=await prepareAsset(new Uint8Array(bytes),String(projected.data.displayName??'素材'),original.data.mediaType);if(verified.contentHash!==original.data.contentHash)throw Error('INTEGRITY_FAILED: 素材形式を検証できません。');let binary='';for(let offset=0;offset<bytes.length;offset+=16384)binary+=String.fromCharCode(...bytes.subarray(offset,offset+16384));data[projected.id]={mediaType:original.data.mediaType,base64:btoa(binary)};files[String(projected.data.assetPath)]=new Uint8Array(bytes);}
+ return {data,files,complete};
 }
-
-/** Fixed, self-contained interpreter. Story strings are parsed as JSON and rendered with textContent. */
-const PLAYABLE_SCRIPT = String.raw`(() => {
-  'use strict';
-  const data = JSON.parse(document.getElementById('scenario-data').textContent);
-  const entities = new Map(data.entities.map(entity => [entity.id, entity]));
-  const ofKind = kind => data.entities.filter(entity => entity.kind === kind);
-  const nodes = ofKind('flow_node'), edges = ofKind('flow_edge'), variables = ofKind('variable');
-  const variableById = new Map(variables.map(variable => [variable.id, variable]));
-  const graph = ofKind('flow_graph')[0];
-  const clone = value => JSON.parse(JSON.stringify(value));
-  const message = document.getElementById('message'), choices = document.getElementById('choices');
-  const scene = document.getElementById('scene'), heading = document.getElementById('node-name'), stateView = document.getElementById('state');
-  const history = [];
-  let state;
-  document.getElementById('title').textContent = data.title;
-  document.getElementById('version').textContent = data.versionLabel;
-  const contains = (list, id) => list.includes(id);
-  function present(candidate, nodeId) {
-    candidate.presentationPosition = nodeId;
-    candidate.visitCounts[nodeId] = (candidate.visitCounts[nodeId] || 0) + 1;
-    if (!contains(candidate.seenIds, nodeId)) candidate.seenIds.push(nodeId);
-    const node = entities.get(nodeId);
-    if (!node || node.kind !== 'flow_node') throw Error('進行先が見つかりません。');
-    for (const edge of edges.filter(edge => edge.data.fromId === nodeId)) if (edge.data.choiceLineId && !contains(candidate.seenIds, edge.data.choiceLineId)) candidate.seenIds.push(edge.data.choiceLineId);
-    if (node.data.sceneId) {
-      const sceneId = node.data.sceneId;
-      candidate.visitCounts[sceneId] = (candidate.visitCounts[sceneId] || 0) + 1;
-      if (!contains(candidate.seenIds, sceneId)) candidate.seenIds.push(sceneId);
-      const content = entities.get(sceneId);
-      for (const block of content && content.data.body || []) if (!contains(candidate.seenIds, block.id)) candidate.seenIds.push(block.id);
-      for (const blockId of content && content.data.blockIds || []) if (!contains(candidate.seenIds, blockId)) candidate.seenIds.push(blockId);
-    }
-    return candidate;
-  }
-  function initialState() {
-    const values = Object.create(null);
-    for (const variable of variables) values[variable.id] = clone(variable.data.initial);
-    return present({ contentVersionId: data.contentVersionId, variableValues: values, itemInstances: [], assertions: [], seenIds: [], visitCounts: Object.create(null), onceTriggers: [], rngSeed: 'preview-fixed', rngPosition: 0, callStack: [], loopNumber: 0, provenance: 'full_play', steps: 0 }, graph.data.entryIds[0]);
-  }
-  function evaluate(ast, candidate) {
-    if (!ast) return true;
-    switch (ast.op) {
-      case 'constant': return ast.value;
-      case 'all': return ast.children.every(child => evaluate(child, candidate));
-      case 'any': return ast.children.some(child => evaluate(child, candidate));
-      case 'not': return !evaluate(ast.child, candidate);
-      case 'visited': return (candidate.visitCounts[ast.entityId] || 0) >= ast.count;
-      case 'compare': {
-        const actual = candidate.variableValues[ast.variableId];
-        if (!actual || actual.type === 'unknown') throw Error('状態値が未確認です。');
-        const wanted = ast.comparator === 'in' ? ast.value : [ast.value];
-        if (wanted.some(value => value.type !== actual.type)) throw Error('条件と状態の型が一致しません。');
-        const expected = wanted[0].value;
-        switch (ast.comparator) {
-          case 'eq': return actual.value === expected;
-          case 'ne': return actual.value !== expected;
-          case 'lt': return actual.value < expected;
-          case 'le': return actual.value <= expected;
-          case 'gt': return actual.value > expected;
-          case 'ge': return actual.value >= expected;
-          case 'in': return wanted.some(value => value.value === actual.value);
-        }
-      }
-    }
-    throw Error('未対応の条件があるため停止しました。');
-  }
-  function same(left, right) { return left.type === right.type && left.value === right.value; }
-  function checkValue(variable, value) {
-    if (!value || value.type !== variable.data.valueType) throw Error('状態の型が一致しません。');
-    const allowed = variable.data.allowed;
-    if (value.type === 'boolean' && typeof value.value !== 'boolean') throw Error('真偽値が不正です。');
-    if (value.type === 'integer' && (!Number.isSafeInteger(value.value) || value.value < (allowed.min === undefined ? -2147483648 : allowed.min) || value.value > (allowed.max === undefined ? 2147483647 : allowed.max))) throw Error('状態が許可範囲を超えています。変更は適用されません。');
-    if (value.type === 'enum' && !allowed.values.includes(value.value)) throw Error('列挙値が許可範囲にありません。');
-  }
-  function applyEffect(candidate, id) {
-    const entity = entities.get(id);
-    if (!entity || entity.kind !== 'effect') throw Error('効果が見つかりません。');
-    const effect = entity.data;
-    if (!evaluate(effect.condition, candidate)) return;
-    if (effect.operation === 'mark_seen') {
-      if (!contains(candidate.seenIds, effect.targetId)) candidate.seenIds.push(effect.targetId);
-      return;
-    }
-    const variable = variableById.get(effect.targetId);
-    if (!variable) throw Error('更新する状態が見つかりません。');
-    const before = candidate.variableValues[effect.targetId];
-    let next;
-    if (effect.operation === 'reset') next = clone(effect.value || variable.data.initial);
-    else if (effect.operation === 'set') next = clone(effect.value);
-    else if (effect.operation === 'add') {
-      if (before.type !== 'integer' || effect.value.type !== 'integer') throw Error('加算には整数の状態と入力が必要です。');
-      next = { type: 'integer', value: before.value + effect.value.value };
-    } else throw Error('未対応の効果があるため停止しました。');
-    checkValue(variable, next);
-    if (effect.operation !== 'reset' && !same(before, next)) {
-      const quests = ofKind('quest').filter(quest => quest.data.stateVariableId === variable.id);
-      const rules = (variable.data.transitionRules || []).concat(...quests.map(quest => quest.data.transitionRules || []));
-      if ((rules.length || quests.length) && !rules.some(rule => same(rule.from, before) && same(rule.to, next)) && !(effect.reason || '').trim()) throw Error('許可された状態遷移ではありません。変更は適用されません。');
-    }
-    candidate.variableValues[effect.targetId] = next;
-  }
-  function available(node) {
-    if (!evaluate(node.data.gate, state)) return [];
-    return edges.filter(edge => edge.data.fromId === node.id && evaluate(edge.data.condition, state));
-  }
-  function advance(edgeId, fallback) {
-    try {
-      if (state.steps >= 10000) throw Error('移動の上限に達しました。戻るか、初期値から開始してください。');
-      const node = entities.get(state.presentationPosition);
-      const candidates = available(node);
-      const policy = node.data.executionPolicy || (node.data.nodeType === 'automatic' ? 'first_match' : 'manual_choice');
-      const selected = fallback ? undefined : candidates.find(edge => edge.id === edgeId);
-      if (fallback ? candidates.length || !node.data.fallbackId : !selected) throw Error('この選択肢では進めません。');
-      if (!fallback && policy === 'first_match' && candidates.slice().sort((left, right) => (left.data.priority || 0) - (right.data.priority || 0))[0].id !== edgeId) throw Error('最初の有効候補を選んでください。');
-      const next = clone(state);
-      for (const id of selected && selected.data.effectIds || []) applyEffect(next, id);
-      next.steps += 1;
-      present(next, fallback ? node.data.fallbackId : selected.data.toId);
-      history.push(clone(state)); state = next;
-      render();
-    } catch (error) { message.textContent = error.message; }
-  }
-  function render() {
-    const node = entities.get(state.presentationPosition);
-    heading.textContent = node.name;
-    scene.replaceChildren(); choices.replaceChildren(); message.textContent = '';
-    const content = entities.get(node.data.sceneId);
-    for (const block of content && (content.data.body || content.data.summary) || []) {
-      const paragraph = document.createElement(block.kind === 'heading' ? 'h3' : 'p');
-      paragraph.id = block.id; paragraph.textContent = block.text; scene.appendChild(paragraph);
-    }
-    stateView.textContent = JSON.stringify(state, null, 2);
-    document.getElementById('undo').disabled = history.length === 0;
-    if (node.data.nodeType === 'terminal' || node.data.nodeType === 'exit') { message.textContent = node.data.terminalReason || '終了'; return; }
-    if (state.steps >= 10000) { message.textContent = '移動の上限に達しました。'; return; }
-    try {
-      const candidates = available(node);
-      const policy = node.data.executionPolicy || (node.data.nodeType === 'automatic' ? 'first_match' : 'manual_choice');
-      const shown = policy === 'first_match' ? candidates.slice().sort((left, right) => (left.data.priority || 0) - (right.data.priority || 0)).slice(0, 1) : candidates;
-      for (const edge of shown) {
-        const button = document.createElement('button'); button.type = 'button';
-        const line = entities.get(edge.data.choiceLineId);
-        button.textContent = edge.data.label || line && (line.data.text || []).map(block => block.text).join('\n') || edge.name || '次へ';
-        button.addEventListener('click', () => advance(edge.id, false)); choices.appendChild(button);
-      }
-      if (!shown.length && node.data.fallbackId) {
-        const button = document.createElement('button'); button.type = 'button'; button.textContent = '代替の進行先へ'; button.addEventListener('click', () => advance(undefined, true)); choices.appendChild(button);
-      } else if (!shown.length) message.textContent = '有効な選択肢がありません。意図した終端とは別の停止です。';
-    } catch (error) { message.textContent = error.message; }
-  }
-  document.getElementById('undo').addEventListener('click', () => { if (history.length) { state = history.pop(); render(); } });
-  document.getElementById('restart').addEventListener('click', () => { history.length = 0; state = initialState(); render(); });
-  state = initialState(); render();
-})();`;
-
-async function buildPlayableArchive(projection: PublicProjection, versionLabel: string): Promise<ExportArtifact> {
-  const payload = { format: 'scenario-playable-preview', formatVersion: '1.0.0', profile: publicRuntimeProfile(PLAYABLE_PREVIEW_PROFILE), title: projection.title, versionLabel,
-    contentVersionId: `sha256:${await hash(projection)}`, entities: projection.entities, calendars: projection.calendars, externalEvidence: 'not_included', assetBytesIncluded: false, transitionLimit: 10000 };
-  const json = JSON.stringify(payload, null, 2);
-  const embeddedJson = json.replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026');
-  const scriptDigest = new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(PLAYABLE_SCRIPT)));
-  const scriptHash = btoa(String.fromCharCode(...scriptDigest));
-  const html = `<!doctype html>\n<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-${scriptHash}'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'"><title>${escapeHtml(projection.title)} 簡易試遊</title><style>body{font-family:system-ui,sans-serif;max-width:48rem;margin:2rem auto;padding:0 1rem;line-height:1.8;color:#202624}button{font:inherit;margin:.3rem;padding:.55rem 1rem;cursor:pointer}button:focus-visible{outline:3px solid #17765a}#message{min-height:2rem}pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:.85rem}</style></head><body><h1 id="title"></h1><p>対象版: <span id="version"></span></p><p>対応した分岐と状態による簡易試遊です。実ゲームでの確認結果を示すものではありません。</p><main><h2 id="node-name"></h2><div id="scene"></div><p id="message" role="status" aria-live="polite"></p><div id="choices"></div><p><button id="undo" type="button">戻る</button><button id="restart" type="button">初期値から再開</button></p><details><summary>試遊の値・訪問記録</summary><pre id="state"></pre></details></main><script type="application/json" id="scenario-data">${embeddedJson}</script><script>${PLAYABLE_SCRIPT}</script></body></html>\n`;
-  const readme = '簡易試遊 1.0.0\nZIPを展開しindex.htmlをブラウザーで開いてください。通信は不要です。\n対応:単一開始グラフ、手動選択/優先候補、定数/論理/比較/訪問条件、boolean/integer/enumのset/add/resetと既読。\n戻る操作は状態値・既読・訪問回数・現在位置を一緒に復元します。初期値から再開は全状態を初期化します。\n外部ゲーム処理、呼出、トリガー、全候補実行、物品・認識処理、演出・素材再生は未対応です。該当機能を含む作品は出力時に拒否します。\nこのファイルは作者の正本を更新しません。実ゲームで確認した証跡は含まれません。\n';
-  const files: Record<string, Uint8Array> = { 'index.html': strToU8(html), 'runtime.json': strToU8(json), 'README.txt': strToU8(readme) };
-  const manifestFiles = await Promise.all(Object.entries(files).map(async ([path, bytes]) => ({ path, byteSize: bytes.byteLength, sha256: [...new Uint8Array(await crypto.subtle.digest('SHA-256', new Uint8Array(bytes)))].map(value => value.toString(16).padStart(2, '0')).join('') })));
-  files['manifest.json'] = strToU8(JSON.stringify({ format: 'scenario-playable-package', formatVersion: '1.0.0', files: manifestFiles, contentVersionId: payload.contentVersionId, externalEvidence: 'not_included', assetBytesIncluded: false }, null, 2));
-  return { filename: 'playable-preview.zip', mimeType: 'application/zip', content: '', bytes: new Uint8Array(zipSync(files, { level: 6 })) };
+async function exportAllAssetBytes(project:ProjectData,projection:PublicProjection,idMap:Record<string,string>,citations:readonly CitationSource[],supplied?:Record<string,Uint8Array>):Promise<ExportAssets>{
+ const result=await exportAssetBytes(project,projection,idMap,supplied);
+ for(const asset of byKind(projection,'attachment'))asset.data.bytesIncluded=!!result.data[asset.id];
+ for(const source of citations){
+  const assets=await exportAssetBytes(source.project,source.projection,source.idMap,supplied);result.complete&&=assets.complete;
+  for(const [id,data]of Object.entries(assets.data))result.data[`${source.publicVersionId}:${id}`]=data;
+  for(const [path,bytes]of Object.entries(assets.files))result.files[`citations/${source.publicVersionId}/${path}`]=bytes;
+  for(const asset of byKind(source.projection,'attachment'))asset.data.bytesIncluded=!!assets.data[asset.id];
+ }
+ return result;
+}
+async function buildPlayableArchive(projection:PublicProjection,versionLabel:string,assets:ExportAssets):Promise<ExportArtifact>{
+ const portable=await portableRuntimeProject(projection),payload={format:'scenario-playable-preview',formatVersion:'1.0.0',profile:publicRuntimeProfile(PLAYABLE_PREVIEW_PROFILE,assets.complete&&Object.keys(assets.data).length>0),title:projection.title,versionLabel,contentVersionId:`sha256:${await hash(projection)}`,entities:projection.entities,calendars:projection.calendars,project:portable.project,projectHash:await sha256(jsonBytes(portable.project)),publicToRuntime:portable.publicToRuntime,externalEvidence:'not_included',assetBytesIncluded:assets.complete&&Object.keys(assets.data).length>0,transitionLimit:10000,assetData:assets.data};
+ const json=JSON.stringify(payload,null,2),embedded=json.replace(/</g,'\\u003c').replace(/>/g,'\\u003e').replace(/&/g,'\\u0026'),scriptDigest=new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(portableScript))),scriptHash=btoa(String.fromCharCode(...scriptDigest));
+ if(/<\/script/i.test(portableScript))throw Error('INTEGRITY_FAILED: Portable script contains an unsafe HTML boundary');
+ const html=`<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-${scriptHash}'; style-src 'unsafe-inline'; img-src blob:; media-src blob:; base-uri 'none'; form-action 'none'"><title>${escapeHtml(projection.title)} 試遊</title><style>body{font-family:system-ui,sans-serif;max-width:48rem;margin:2rem auto;padding:0 1rem;line-height:1.8;color:#202624}button,input,select{font:inherit;margin:.3rem;padding:.55rem}button:focus-visible{outline:3px solid #17765a}pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:.85rem}img,video{max-width:100%}</style></head><body><h1 id="title"></h1><p>対象版: <span id="version"></span></p><p>外部値の仮入力はstubです。実ゲームの副作用は実行しません。</p><main><button id="start" type="button">選択した入口から開始</button><h2 id="node-name"></h2><div id="scene"></div><p id="message" role="status" aria-live="polite"></p><div id="choices"></div><p><button id="undo" type="button">戻る</button><button id="restart" type="button">初期値から再開</button><button id="loop" type="button">次周回へ</button></p><details><summary>試遊の値・訪問記録</summary><pre id="state"></pre></details></main><script type="application/json" id="scenario-data">${embedded}</script><script>${portableScript}</script></body></html>
+`;
+ const readme='試遊 1.0.0\nZIPを展開しindex.htmlをブラウザーで開いてください。通信は不要です。\n本アプリと同じ実行器で三値条件・効果群の原子拒否・scope初期化・相互排他・算出・呼出/復帰・all_match・物品・認識・提示時効果を評価します。\n全宣言入口の選択、戻る、全初期化、次周回、演出msと素材を提供します。固定共通元と世界版はhash検証後に公開範囲で投影した出力用内容です。\n未確認の条件は停止します。一経路10,000遷移が上限です。外部値はstubで、実ゲーム副作用・実受領証跡は含まれません。\n出力は作者の正本を変更しません。素材不足・非公開の必要な効果・未対応項目は出力時に拒否します。\n';
+ const files:Record<string,Uint8Array>={'index.html':strToU8(html),'runtime.json':strToU8(json),'README.txt':strToU8(readme),...assets.files},manifestFiles=await Promise.all(Object.entries(files).map(async([path,bytes])=>({path,byteSize:bytes.byteLength,sha256:await sha256(bytes)})));
+ files['manifest.json']=strToU8(JSON.stringify({format:'scenario-playable-package',formatVersion:'1.0.0',files:manifestFiles,contentVersionId:payload.contentVersionId,externalEvidence:'not_included',assetBytesIncluded:assets.complete},null,2));
+ return {filename:'playable-preview.zip',mimeType:'application/zip',content:'',bytes:new Uint8Array(zipSync(files,{level:6}))};
 }

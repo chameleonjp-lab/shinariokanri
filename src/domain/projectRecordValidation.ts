@@ -127,6 +127,7 @@ async function checkChapterTraces(project: ProjectData, validationOptions: Proje
 
 /** Async durable-boundary checks for hashes, isolated branch contents, and replayable chapter evidence. */
 export async function validateProjectIntegrity(input: ProjectData, options: ProjectValidationOptions = {}, requireReceiptHistory = input.history.length > 0): Promise<ValidationIssue[]> {
+  try {const {verifyStoredGameEvidence}=await import('./gameProtocol');await verifyStoredGameEvidence(input,options.worldSnapshots??{});}catch(error){return [{code:'INTEGRITY_FAILED',path:'project.entities.handoffReceipt',message:(error as Error).message}];}
   // Freeze the exact dependency images at the durable boundary. Async hash checks
   // must never validate a different world map from the one structural validation read.
   const digestCache = createPinnedWorldDigestCache();

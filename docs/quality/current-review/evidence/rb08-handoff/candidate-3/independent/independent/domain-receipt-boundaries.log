@@ -1,0 +1,50 @@
+
+ RUN  v5.0.3 /tmp/shinariokanri-independent-rb08-22db870
+
+ ❯ tests/independent-rb08-receipt-boundaries.test.ts (4 tests | 3 failed) 1122ms
+   × R8V11 unknown receiver, foreign work edition and hand-entered actual classification reject atomically 102ms
+   × R8D08 historical receipt images are captured before async verification, later caller mutation cannot replace the submitted snapshot receipt 89ms
+   × R8D09 rebuilding verified execution captures evidence metadata before its first await 54ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/independent-rb08-receipt-boundaries.test.ts > R8V11 unknown receiver, foreign work edition and hand-entered actual classification reject atomically
+AssertionError: expected [Function] to throw error including '分類' but got 'INTEGRITY_FAILED: stub/actual/mixedの表…'
+
+Expected: "分類"
+Received: "INTEGRITY_FAILED: stub/actual/mixedの表示が実行証跡と一致しません。"
+
+ ❯ tests/independent-rb08-receipt-boundaries.test.ts:15:733
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  tests/independent-rb08-receipt-boundaries.test.ts > R8D08 historical receipt images are captured before async verification, later caller mutation cannot replace the submitted snapshot receipt
+Error: INTEGRITY_FAILED: 保存したゲーム受領のhash・実行分類が元証跡と一致しません。
+ ❯ failure src/domain/gameProtocol.ts:17:46
+
+ ❯ verifyStoredGameEvidence src/domain/gameProtocol.ts:59:206
+ ❯ tests/independent-rb08-receipt-boundaries.test.ts:16:597
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  tests/independent-rb08-receipt-boundaries.test.ts > R8D09 rebuilding verified execution captures evidence metadata before its first await
+Error: INTEGRITY_FAILED: 保存したゲーム受領の対象revisionが一致しません。
+ ❯ fail src/domain/gameEvidence.ts:7:43
+      5| import { portableRuntimeProject } from './portableRuntimeProject';
+      6|
+      7| const fail=(message:string):never=>{throw Error(`INTEGRITY_FAILED: ${m…
+       |                                           ^
+      8| function ids(project:ProjectContent):Set<ID>{
+      9|  const result=new Set([...project.entities.map(e=>e.id),...project.rel…
+ ❯ rebuildGameExecution src/domain/gameEvidence.ts:36:56
+ ❯ tests/independent-rb08-receipt-boundaries.test.ts:17:424
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 1 passed (4)
+   Start at  15:57:58
+   Duration  2.01s (tests 60%, transform 33%, import 8%)
+

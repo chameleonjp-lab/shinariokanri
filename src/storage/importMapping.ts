@@ -47,6 +47,7 @@ export function collectImportIds(project: ProjectData): ImportId[] {
       add(record.id, role, ownerId);
     }
     if (typeof record.instanceId === 'string' && 'quantity' in record && 'consumed' in record) runtimeItems.add(record.instanceId);
+    if(typeof record.sourceVersionId==='string'&&typeof record.profileId==='string'&&typeof record.publicVersionId==='string')add(record.publicVersionId,'public_id');
     if (record.mode === 'anonymize' && typeof record.publicId === 'string') add(record.publicId, 'public_id');
     for (const [key, item] of Object.entries(record)) {
       if (key === 'publicIds' && item && typeof item === 'object') for (const id of Object.values(item)) if (typeof id === 'string') add(id, 'public_id');

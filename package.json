@@ -11,7 +11,9 @@
     "test:e2e": "playwright test",
     "schema:generate": "node src/domain/generate-schema.mjs",
     "check:docs": "python3 scripts/check_docs.py",
-    "check:completion-plan": "python3 scripts/check_completion_plan.py"
+    "check:completion-plan": "python3 scripts/check_completion_plan.py",
+    "prebuild": "node scripts/build/portable-runtime.mjs",
+    "pretest": "node scripts/build/portable-runtime.mjs"
   },
   "dependencies": {
     "dexie": "4.4.6",

@@ -1,0 +1,46 @@
+[WebServer] (node:243032) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 5 tests using 1 worker
+
+(node:243056) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [chromium] › tests/e2e/rb08-handoff.spec.ts:21:1 › 制作見積の入力を移動とcold再開から保持し、quota拒否後の原子保存を完全ファイルへつなぐ (3.3s)
+  ✓  2 [chromium] › tests/e2e/rb08-handoff.spec.ts:23:1 › 旧媒体と元pinを保持し、未保存候補を再開して独立改訂・予定日・完全復元を確認する (2.7s)
+  ✓  3 [chromium] › tests/e2e/rb08-handoff.spec.ts:25:1 › 相談MDの出所と対象版をcold再開し、作者別案へ保存・選択採用して正本と採用記録を復元する (4.4s)
+  ✓  4 [chromium] › tests/e2e/rb08-handoff.spec.ts:27:1 › 通常出力を独立ゲームへ渡し、実勝利・経路・受領証跡を戻して原子保存・cold・完全復元する (3.2s)
+  ✘  5 [chromium] › tests/e2e/rb08-handoff.spec.ts:29:1 › 通常画面で旧版と現稿の公開範囲を作り、固定引用のUnicode位置を試遊ZIPから開いて戻り、承認をcold復元する (30.1s)
+
+
+  1) [chromium] › tests/e2e/rb08-handoff.spec.ts:29:1 › 通常画面で旧版と現稿の公開範囲を作り、固定引用のUnicode位置を試遊ZIPから開いて戻り、承認をcold復元する 
+
+    Test timeout of 30000ms exceeded.
+
+    Error: locator.fill: Test timeout of 30000ms exceeded.
+    Call log:
+      - waiting for getByRole('dialog').locator('.form-field').filter({ has: getByRole('dialog').getByText('公開用の作品名', { exact: true }) }).locator('input')
+
+
+      29 | test('通常画面で旧版と現稿の公開範囲を作り、固定引用のUnicode位置を試遊ZIPから開いて戻り、承認をcold復元する',async({page,context})=>{
+      30 |  const f=story(),p=await createWorldSnapshot(f.p,'引用する旧本文'),pin=p.snapshots.at(-1)!,oldScene=pin.content.entities.find(entity=>entity.id===f.scene.id)!;if(oldScene.kind!=='scene')throw Error('fixture');const current=p.entities.find(entity=>entity.id===f.scene.id)!;if(current.kind!=='scene')throw Error('fixture');current.data.body=[{...textToRichText('😀現在稿から旧本文へ')[0],links:[{start:0,end:1,target:{entityId:f.scene.id,sourceVersionId:pin.id,blockId:oldScene.data.body[0].id,start:0,end:1}}]}];await seed(page,p);await output(page);
+    > 31 |  async function createScope(title:string,version:string){const create=page.getByRole('button',{name:'公開範囲を作成',exact:true});if(await create.isVisible())await create.click();else await page.getByRole('button',{name:'新しい範囲',exact:true}).click();const modal=page.getByRole('dialog');await modal.getByLabel('公開範囲の元作品版',{exact:true}).selectOption(version);await modal.locator('.form-field').filter({has:modal.getByText('公開用の作品名',{exact:true})}).locator('input').fill(title);for(const entity of [f.scene,f.line,f.entry,f.terminal,f.edge,f.p.entities.find(entity=>entity.kind==='flow_graph')!])await modal.getByLabel('追加する対象',{exact:true}).selectOption(entity.id);await modal.getByLabel('選んだ対象の本文・表記を公開文へコピーする',{exact:true}).check();await modal.getByRole('button',{name:'範囲を作成して内容を確認',exact:true}).click();await expect(modal).toBeHidden();await page.getByLabel('情報の状態',{exact:true}).selectOption('confirmed');await expect(page.locator('.editor-save-state')).toContainText('端末内保存済み');const id=await page.locator('.detail-panel').getAttribute('data-entity-id');await page.getByRole('button',{name:'詳細を閉じる',exact:true}).click();const selected=await page.getByLabel('出力する公開範囲',{exact:true}).inputValue();expect(selected).toBeTruthy();return selected;}
+         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                         ^
+      32 |  const child=await createScope('旧版の公開文',pin.id),root=await createScope('現在版の公開文','');await page.getByLabel('出力する公開範囲',{exact:true}).selectOption(root);await page.getByLabel('公開出力へ引用する固定版',{exact:true}).selectOption(pin.id);await page.getByLabel('引用版の確認済み公開範囲',{exact:true}).selectOption(child);await quota(page);await page.getByRole('button',{name:'この固定版の公開引用を保存',exact:true}).click();await expect(page.getByRole('alert')).toContainText('容量');await page.getByRole('button',{name:'この固定版の公開引用を保存',exact:true}).click();await expect(page.getByRole('button',{name:'引用承認を外す',exact:true})).toBeEnabled();await page.getByLabel('出力目的',{exact:true}).selectOption('playable_preview');await page.getByRole('button',{name:'内容を検査・プレビュー',exact:true}).click();await expect(page.locator('.export-result')).toContainText('playable-preview.zip');const pending=page.waitForEvent('download');await page.locator('.export-artifact').getByRole('button',{name:'この内容を保存',exact:true}).click();const files=unzipSync(new Uint8Array(await readFile((await(await pending).path())!))),htmlPath=join(await mkdtemp(join(tmpdir(),'rb08-citation-ui-')),'index.html');await writeFile(htmlPath,strFromU8(files['index.html']));const trial=await context.newPage();await trial.goto(pathToFileURL(htmlPath).href);await expect(trial.getByText('😀現在稿から旧本文へ',{exact:true})).toBeVisible();const link=trial.getByRole('button',{name:'関連: 😀',exact:true});await link.click();await expect(trial.getByRole('dialog')).toContainText(oldScene.data.body[0].text);await expect(trial.getByRole('dialog').locator('mark')).toHaveText('😀');await trial.getByRole('button',{name:'元の読み位置へ戻る',exact:true}).click();await expect(link).toBeFocused();await trial.close();await page.reload();const restored=(await backup(page)).project,parent=restored.entities.find(entity=>entity.id===root);expect(parent?.kind==='projection_profile'&&parent.data.citedVersions).toMatchObject([{sourceVersionId:pin.id,profileId:child}]);
+      33 | });
+      34 |
+        at createScope (/workspace/shinariokanri-rb08/tests/e2e/rb08-handoff.spec.ts:31:457)
+        at /workspace/shinariokanri-rb08/tests/e2e/rb08-handoff.spec.ts:32:14
+
+    Error Context: test-results/rb08-handoff-通常画面で旧版と現稿の公開-035d7-位置を試遊ZIPから開いて戻り、承認をcold復元する-chromium/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/rb08-handoff-通常画面で旧版と現稿の公開-035d7-位置を試遊ZIPから開いて戻り、承認をcold復元する-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/rb08-handoff-通常画面で旧版と現稿の公開-035d7-位置を試遊ZIPから開いて戻り、承認をcold復元する-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    [chromium] › tests/e2e/rb08-handoff.spec.ts:29:1 › 通常画面で旧版と現稿の公開範囲を作り、固定引用のUnicode位置を試遊ZIPから開いて戻り、承認をcold復元する 
+  4 passed (45.4s)

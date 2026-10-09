@@ -1,3 +1,7 @@
+import { mkdtemp, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { createConsultationProposal, exportProject, GENERIC_RUNTIME_PROFILE } from '../src/domain/exports';
 import { createEntity, createProject, emptyRuntimeState, validateProject } from '../src/domain/model';
@@ -271,7 +275,10 @@ describe('purpose-specific export', () => {
     for (const bytes of Object.values(files)) expect(strFromU8(bytes)).not.toContain('SECRET');
     expect(strFromU8(files['index.html'])).toContain("script-src 'sha256-");
     const runtime = JSON.parse(strFromU8(files['runtime.json']));
-    expect(runtime.profile.supportedConditions).not.toContain('external');
+    expect(runtime.profile.supportedConditions).toContain('external');
+    expect(runtime.profile.supportedEffects).toContain('grant');
+    expect(runtime.profile.supportedNodeTypes).toContain('call');
+    expect(await sha256(new TextEncoder().encode(canonicalJson(runtime.project)))).toBe(runtime.projectHash);
     expect(runtime.externalEvidence).toBe('not_included');
   });
 
@@ -288,7 +295,8 @@ describe('purpose-specific export', () => {
     const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || '/usr/bin/chromium', headless: true, args: ['--no-sandbox'] });
     try {
       const page = await browser.newPage();
-      await page.setContent(strFromU8(files['index.html']));
+      const htmlPath=join(await mkdtemp(join(tmpdir(),'scenario-playable-test-')),'index.html');await writeFile(htmlPath,files['index.html']);await page.goto(pathToFileURL(htmlPath).href);
+      await page.waitForFunction(()=>!!document.getElementById('state')?.textContent);
       expect(await page.locator('#scene').textContent()).toBe(content);
       expect(await page.evaluate(() => (window as unknown as Record<string, unknown>).__injected)).toBeUndefined();
       const initial = JSON.parse((await page.locator('#state').textContent())!);
@@ -296,11 +304,11 @@ describe('purpose-specific export', () => {
       await page.locator('#choices button').click();
       const after = JSON.parse((await page.locator('#state').textContent())!);
       expect(after.presentationPosition).toBe(terminal.id); expect(after.variableValues[variable.id].value).toBe(true);
-      expect(after.visitCounts[terminal.id]).toBe(1); expect(after.steps).toBe(1);
+      expect(after.visitCounts[terminal.id]).toBe(1); expect(await page.evaluate(() => (window as any).ScenarioSession().trace.length)).toBe(1);
       await page.locator('#undo').click();
       expect(JSON.parse((await page.locator('#state').textContent())!)).toEqual(initial);
       await page.locator('#choices button').click(); await page.locator('#restart').click();
-      expect(JSON.parse((await page.locator('#state').textContent())!)).toEqual(initial);
+      const restarted=JSON.parse((await page.locator('#state').textContent())!);expect({...restarted,resetCauses:undefined}).toEqual({...initial,resetCauses:undefined});expect(restarted.resetCauses).toContainEqual(expect.objectContaining({variableId:variable.id,on:'full_reset',before:{type:'boolean',value:true},after:{type:'boolean',value:false}}));
       expect(await page.locator('#undo').isDisabled()).toBe(true);
     } finally { await browser.close(); }
   }, 15000);
@@ -318,26 +326,27 @@ describe('purpose-specific export', () => {
     const files = unzipSync(result.artifact.bytes!);
     const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || '/usr/bin/chromium', headless: true, args: ['--no-sandbox'] });
     try {
-      const page = await browser.newPage(); await page.setContent(strFromU8(files['index.html']));
+      const page = await browser.newPage(); const htmlPath=join(await mkdtemp(join(tmpdir(),'scenario-playable-test-')),'index.html');await writeFile(htmlPath,files['index.html']);await page.goto(pathToFileURL(htmlPath).href);
+      await page.waitForFunction(()=>!!document.getElementById('state')?.textContent);
       const initial = JSON.parse((await page.locator('#state').textContent())!);
       await page.locator('#choices button').click();
-      expect(await page.locator('#message').textContent()).toContain('許可範囲');
+      expect(await page.locator('#message').textContent()).toContain('TRANSITION_BLOCKED');expect(await page.evaluate(()=>(window as any).ScenarioSession().trace.length)).toBe(0);
       expect(JSON.parse((await page.locator('#state').textContent())!)).toEqual(initial);
       expect(await page.locator('#undo').isDisabled()).toBe(true);
     } finally { await browser.close(); }
   }, 15000);
 
-  it('refuses unsupported playable execution instead of stripping it from the ZIP', async () => {
+  it('retains declared triggers, all_match and every declared entry in the executable ZIP', async () => {
     const first = fixture(); first.entry.data.trigger = { event: 'manual', eventKey: 'manual', repeat: 'once' }; first.profile.data.publicTexts![first.entry.id] = { eventKey: 'manual' };
     const second = fixture(); second.entry.data.executionPolicy = 'all_match';
     const third = fixture(); third.graph.data.entryIds.push(third.terminal.id);
     for (const { project, profile } of [first, second, third]) {
       const result = await exportProject(project, options(profile.id, 'playable_preview'));
-      expect(result.ok).toBe(false); expect('artifact' in result).toBe(false);
+      if(!result.ok)throw Error(JSON.stringify(result.issues));const payload=JSON.parse(strFromU8(unzipSync(result.artifact.bytes!)['runtime.json']));expect(payload.project.entities.find((e:Entity)=>e.id===first.entry.id)?.data).toBeDefined();expect(payload.project.entities.filter((e:Entity)=>e.kind==='flow_graph')[0].data.entryIds).toEqual(project.entities.find(e=>e.kind==='flow_graph')!.data.entryIds);
     }
   });
 
-  it('refuses disclosure arrival effects even when the public profile hides that dependency', async () => {
+  it('retains disclosure arrival effects even when the public profile hides that dependency', async () => {
     const { project, profile, entry, edge, variable, effect } = fixture();
     const scene = createEntity(project.projectId, 'scene', 'SECRET_DISCLOSURE_SCENE', { body: rich(741, 'SECRET_BODY') }); scene.id = id(740);
     const foreshadow = createEntity(project.projectId, 'foreshadow', 'SECRET_FORESHADOW'); foreshadow.id = id(743);
@@ -358,7 +367,7 @@ describe('purpose-specific export', () => {
       expect(result.ok).toBe(false); expect('artifact' in result).toBe(false);
       if (!result.ok) expect(result.issues).toContainEqual(expect.objectContaining({ code: 'EXPORT_UNSUPPORTED', entityId: disclosure.id, field: 'knowledgeEffects' }));
     };
-    await assertUnsupported();
+    const supported=await exportProject(project,options(profile.id,'playable_preview'));if(!supported.ok)throw Error(JSON.stringify(supported.issues));const portable=JSON.parse(strFromU8(unzipSync(supported.artifact.bytes!)['runtime.json']));expect(startTrial(portable.project).state.variableValues[variable.id]).toEqual({type:'boolean',value:true});
     profile.data.allowedFields = { disclosure: ['foreshadowId', 'anchor', 'stage', 'role'] };
     await assertUnsupported();
     expect((await exportProject(project, options(profile.id, 'runtime_json'))).ok).toBe(false);

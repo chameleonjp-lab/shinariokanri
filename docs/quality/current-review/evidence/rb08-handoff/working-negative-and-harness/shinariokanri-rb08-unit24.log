@@ -1,0 +1,84 @@
+
+> shinariokanri@0.1.0 pretest
+> node scripts/build/portable-runtime.mjs
+
+Production portable runtime generated: 141549 characters
+
+> shinariokanri@0.1.0 test
+> vitest run --maxWorkers=2 --testTimeout=30000 tests/readingExportOrder.test.ts tests/rb05-reviewed-regressions.test.ts src/storage/rb07Production.test.ts
+
+
+ RUN  v5.0.3 /workspace/shinariokanri-rb08
+
+ ❯ tests/rb05-reviewed-regressions.test.ts (9 tests | 1 failed) 337ms
+   ❯ Independent RB05 original-contract review; not whole AT credit (9)
+     × R5P02 executable exporters refuse unpublished exclusions and preserve approved exclusion behavior 50ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/rb05-reviewed-regressions.test.ts > Independent RB05 original-contract review; not whole AT credit > R5P02 executable exporters refuse unpublished exclusions and preserve approved exclusion behavior
+AssertionError: expected [ { operation: 'set', …(2) }, …(1) ] to deeply equal { …(13) }
+
+- Expected:
+{
+  "assertions": [],
+  "callStack": [],
+  "contentVersionId": "9134ce50-67b0-4501-a82a-ea09fdb1a332",
+  "itemInstances": [],
+  "loopNumber": 0,
+  "onceTriggers": [],
+  "presentationPosition": "7515e46a-1839-4b99-bbb1-b4bb417bc41f",
+  "provenance": "full_play",
+  "rngPosition": 0,
+  "rngSeed": "scenario-1",
+  "seenIds": [
+    "7515e46a-1839-4b99-bbb1-b4bb417bc41f",
+    "a71e06de-445a-4f7b-9d90-66e0b923b116",
+  ],
+  "variableValues": {
+    "0b710ccb-7901-4713-b3bd-3fb495b0db1d": {
+      "type": "boolean",
+      "value": false,
+    },
+    "3ef5bdf9-c5e5-4f62-aaed-b4c4ec067756": {
+      "type": "boolean",
+      "value": false,
+    },
+  },
+  "visitCounts": {
+    "7515e46a-1839-4b99-bbb1-b4bb417bc41f": 1,
+    "a71e06de-445a-4f7b-9d90-66e0b923b116": 1,
+  },
+}
+
++ Received:
+[
+  {
+    "operation": "set",
+    "targetId": "3ef5bdf9-c5e5-4f62-aaed-b4c4ec067756",
+    "value": {
+      "type": "boolean",
+      "value": true,
+    },
+  },
+  {
+    "operation": "set",
+    "targetId": "0b710ccb-7901-4713-b3bd-3fb495b0db1d",
+    "value": {
+      "type": "boolean",
+      "value": true,
+    },
+  },
+]
+
+ ❯ tests/rb05-reviewed-regressions.test.ts:136:349
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 2 passed (3)
+      Tests  1 failed | 31 passed (32)
+   Start at  15:02:20
+   Duration  2.50s (transform 44%, tests 41%, import 15%)
+
