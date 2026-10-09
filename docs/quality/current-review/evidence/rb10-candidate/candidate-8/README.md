@@ -1,0 +1,7 @@
+# C8の正式測定未達を保持する
+
+fd67f0e91ae8b2d63f54d23c78dafbd924ba8a10 / tree45726131d7f818d07b57aa8a26a9b7293b7cc129 / clean build f5ddcb3389fa4e046d3c。CI37905586728は763単体・261 production・全step成功。同treeの実checkout486bd21e613f6b7f4c36f16887128eb398a961ffをAPIで照合した。
+
+Standard各30回の原8局所指標は数値内。Largeの強い入力開始は30回p95=10,306.79999999702ms、元10,000msを超過した。検索504.59999999403954ms、88,003記録・履歴31・待ち31・実素材72MiBは一致。初回2回を捨てず、丸めや弱い一覧描画終点、旧C7成功を代用しない。全sample・source/build/helper・fixture・実bytes/hash・環境・CIrawを保持する。
+
+同じreadonly transaction内の全compound範囲を分割して読むC9へ進む。database.*は要求開始から完了までの待ちを含み、純粋な各tableのCPU時間とは扱わない。C8のLarge復元・実7200秒・原116は未実行。独立準備891ファイルは実行0としてSHA/bytesを梱包後にも検算したtar.gzに保持する。実機・支援技術・実Auth/RLS/privateStorage・専用現行quota/費用のgateは未合格。

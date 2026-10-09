@@ -93,3 +93,13 @@ C7 905aad8997bd4218fc3da84bba96687120ebb4dd / tree b89ea2600f3b9d5298e6cb0bda227
 C7のStandard60秒診断は旧名「試読」を探して停止し、Large実7200秒は未開始。新measure-appは現行「試読・検査」とApp準備待ちを使う。時間・fixture・操作・原子性・冷再読込／完全復元条件は不変。補足性能helper v4の測定区間も不変：実行artifactSHA、生成元の旧scriptSHA、現在tracked helperSHA、C8製品source/distを別々に結合し、performanceモードだけを使用する。soak/recoveryは新tracked helperを実行する。
 
 歴史candidate-7の633独立証拠／269実artifactはSHA照合済みtar.gzと主要JSONに保持。C7台帳の2文書SHAが後の追記で古くなった準備失敗も残し、C8は全本文更新後に104関連source SHAと359source、26原文不変を再照合する。cleanC8の全CI・各30回・Large復元・実7200秒・独立原116が未確認の間は未実行のまま扱う。実機・支援技術・実Auth/RLS/privateStorage・専用quota／費用の公開gateを維持する。
+
+## C8の正式未達とC9の全件分割読込
+
+固定C8 `fd67f0e91ae8b2d63f54d23c78dafbd924ba8a10` / tree `45726131d7f818d07b57aa8a26a9b7293b7cc129` / clean build `f5ddcb3389fa4e046d3c` はCI37905586728の763単体・261 production・全20step成功。同tree checkout486bd21e613f6b7f4c36f16887128eb398a961ffを確認。Standard原8局所指標各30回は数値内だが、Large実入力開始30回p95=10,306.79999999702msで10秒未達（検索504.6ms）。全sample、88,003記録・history/pending31・実素材72MiBのhashと未達をcandidate-8に保持する。C8のLarge復元・実7200秒・原116は未実行。
+
+C9は同じreadonly transactionの全範囲を2048件ずつ読み、編集読込の取消をbatch間でも確認する。全schema/hash/parts/scope/作者順/固定版/欠損拒否、原子性・完全形式・上限を保持。順序だけの試作3回は遅く採用せず、分割読込dirty3回8,285/7,434/7,693msは診断だけ。新2049件の取消/末尾破損/修復を含む全764単体、関係表/一覧回帰3browser6件、実保存失敗とparts取消/再試行/cold3browser6件が成功。cleanC9の正式各30回・Large復元・実7200秒・原116を別に判定する。
+
+初回新規機能検査の30秒超過と120秒再実行、存在しない診断CLIフィルター、順序試作の不改善をworking-bounded-cold-readで個別に保持。時間条件や元受入を緩めず、実OS/IME/Files/録音/VoiceOver/NVDA/専用実Auth・RLS・privateStorage/5実アカウント/現行quota・費用が必要な条件をnot_runとして残す。候補buildと具体的な短い確認手順を用意し、release evidence gateを維持する。
+
+PR #21は外部操作で2026-10-09T09:34:51Zにmain 449de9b469792b8778a7340b8ae27585d9d31e3a / tree 45726131d7f818d07b57aa8a26a9b7293b7cc129へ取り込まれた。同treeの固定C8のCI成功とLarge30未達をそのまま保持する。C9の分割読込を最新mainからfeat/rb10-bounded-cold-readへ移した。移す前の6a963aa buildは測定未実行の準備artifactとして別保存し、正式測定には新候補commit/treeのclean buildを用いる。

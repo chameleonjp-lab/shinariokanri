@@ -1,4 +1,4 @@
-2026-10-09の現在作業は[RB10候補の準備と確認条件](RB10_COMPLETION_CANDIDATE.md)を参照。PR #14〜#17の競合を順に解消し、各CI成功を確認した。#17の最終headは `01676a27d1f7bbc03d421c8c64187ef385e86ed4`、CI run `37867912548` が735単体、225 productionブラウザー、RB03/RB04、Python15、文書・計画・buildで成功。PR #18〜#20も利用者側で取り込まれ、最新確認mainは `ae22dcae465236891f58cf8c1ea63174b9483cdb` / tree `8cc78ddae0a579a6063c358e0b58c5695f7d2d8a`（PR #20、2026-10-09T06:58:21Z）。本作業からmainへのマージ・公開・外部DB変更は行っていない。
+2026-10-09の現在作業は[RB10候補の準備と確認条件](RB10_COMPLETION_CANDIDATE.md)を参照。PR #14〜#17の競合を順に解消し、各CI成功を確認した。#17の最終headは `01676a27d1f7bbc03d421c8c64187ef385e86ed4`、CI run `37867912548` が735単体、225 productionブラウザー、RB03/RB04、Python15、文書・計画・buildで成功。PR #18〜#21も利用者側で取り込まれ、最新確認mainは `449de9b469792b8778a7340b8ae27585d9d31e3a` / tree `45726131d7f818d07b57aa8a26a9b7293b7cc129`（PR #21、2026-10-09T09:34:51Z）。本作業からmainへのマージ・公開・外部DB変更は行っていない。
 
 RB10は章／執筆／分岐／制作／参照候補の分割、任意診断の実失敗導線、共有指摘→制作タスクの原子保存、同義／反対状態候補、Largeのlossless DB partsと完全ファイル辞書、取消中の入力・原子性とcold読込を接続した。固定C4 `746cc68` のCI run `37880375499` は758単体、255 production画面、RB03/RB04、Python15、文書・計画・buildで成功。Standard各30回の局所値は基準内。Largeの一覧描画は10秒内だったが、実際に入力可能となる時点を要求する補足30回は19回で環境中断、再起動後の診断3回はp95=10,569.3msで未達。異なる測定終点や中断を合格へ換算しない。
 
@@ -9,6 +9,10 @@ C5 `5720bc89410e39cc3ed0de50f2135367f24c47bf` / tree `a2d73e65a2332b1c2d02c8e267
 固定C7 `905aad8997bd4218fc3da84bba96687120ebb4dd` / tree `b89ea2600f3b9d5298e6cb0bda227a822ea27f8c` / clean build `4aa7686ea50ba1b3f89e` はCI37898131383の763単体・261 production・全20stepが成功。同じtreeの実checkoutはc1abadd2bbad5757a329595470ae0ef115e3e29d。Standard各30回の局所指標、Largeの実入力開始30回p95=7,997.8ms／検索446.3msは元数値内。元Large復元手順で取消→一覧再選択→通常保存→完全出力→空390幅new/clone→coldと88,003記録・元履歴／送信待ち・素材72MiBの実bytes/hashが一致した。
 
 独立通常8成功／部品53成功後、320pxの関係表で参照経路ラベルが58pxの全体横スクロールを発生する不具合を確認。C7の成功・失敗・原116条項別結果・実artifactをcandidate-7へ封印した。短いStandard60秒は旧タブ名を用いた検査側の停止、実7200秒は未開始。C8は全文の折返しと現行タブ名／App準備待ちを補修。通常graphの元期待を保持して320/200%を追加し、dirty3browserで通過。検査側の絞込み解除忘れの初回rawをworking-relation-wrapへ保持する。元116／全品質gateを同じcleanC8で再検証する。
+
+固定C8 `fd67f0e91ae8b2d63f54d23c78dafbd924ba8a10` / tree `45726131d7f818d07b57aa8a26a9b7293b7cc129` / clean build `f5ddcb3389fa4e046d3c` はCI37905586728の763単体・261 production・全20step成功。同tree checkout486bd21e613f6b7f4c36f16887128eb398a961ffを確認。Standard原8局所指標各30回は数値内だが、Large実入力開始30回p95=10,306.79999999702msで10秒未達（検索504.6ms）。全sample、88,003記録・history/pending31・実素材72MiBのhashと未達をcandidate-8に保持する。C8のLarge復元・実7200秒・原116は未実行。
+
+C9は同じreadonly transactionの全範囲を2048件ずつ読み、編集読込の取消をbatch間でも確認する。全schema/hash/parts/scope/作者順/固定版/欠損拒否、原子性・完全形式・上限を保持。順序だけの試作3回は遅く採用せず、分割読込dirty3回8,285/7,434/7,693msは診断だけ。新2049件の取消/末尾破損/修復を含む全764単体、関係表/一覧回帰3browser6件、実保存失敗とparts取消/再試行/cold3browser6件が成功。cleanC9の正式各30回・Large復元・実7200秒・原116を別に判定する。
 
 [104要件の現在照合](../quality/current-review/CURRENT_REQUIREMENTS.md)は原契約と現在の関連source hashを保持する。元116の正常／境界・失敗は未実行を合格へ変えない。実iPhone／iPad／PC各OS・VoiceOver／NVDA・実Auth/RLS/private Storage・専用接続quota／費用は不足しており公開gateを保留する。以下の段階候補・main観察・工程表は各確認時点の歴史的記録として保持する。
 
