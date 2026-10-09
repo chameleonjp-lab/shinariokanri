@@ -1,5 +1,5 @@
 import {useScenarioStore,useAuthorScope} from './StoreContext';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ProjectData, ViewState } from '../domain/types';
 
 function actor() { try { const key = 'scenario-local-view-user', current = localStorage.getItem(key); if (current) return current; const id = crypto.randomUUID(); localStorage.setItem(key, id); return id; } catch { return 'local-device'; } }
@@ -25,9 +25,12 @@ export function useRelationView(project: ProjectData) {
   const [record, setRecord] = useState(() => ({ key, view: mirroredView(key, initial) ?? initial }));
   const currentKey = useRef(key), loadedProject = useRef(project.projectId), dirtyKey = useRef<string | null>(null); currentKey.current = key;
   const carried = record.key !== key && loadedProject.current === project.projectId ? semanticFilters(record.view.filters) : undefined;
-  const incoming = mirroredView(key, initial) ?? initial;
-  const state = record.key === key ? record.view : withSemanticFilters(incoming, carried, record.view.lastOpenedId);
-  const update = (change: ViewState | ((previous: ViewState) => ViewState)) => { dirtyKey.current = key; setRecord(previous => { const view = previous.key === key ? previous.view : state; return { key, view: typeof change === 'function' ? change(view) : change }; }); };
+  const state = record.key === key ? record.view : withSemanticFilters(mirroredView(key, initial) ?? initial, carried, record.view.lastOpenedId);
+  // Each scope owns its fallback cell, including callbacks queued before a
+  // device/project switch. Position-only updates keep the same callback, so
+  // unchanged graph elements do not need to redraw during every movement.
+  const scopeView = useMemo(() => ({ current: state }), [key]); scopeView.current = state;
+  const update = useCallback((change: ViewState | ((previous: ViewState) => ViewState)) => { dirtyKey.current = key; setRecord(previous => { const view = previous.key === key ? previous.view : scopeView.current; return { key, view: typeof change === 'function' ? change(view) : change }; }); }, [key, scopeView]);
   useEffect(() => { const resize = () => setDevice(deviceClass()); window.addEventListener('resize', resize); return () => window.removeEventListener('resize', resize); }, []);
   useEffect(() => {
     let live = true; dirtyKey.current = null;
