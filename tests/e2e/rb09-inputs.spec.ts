@@ -1,12 +1,15 @@
 import {test,expect,type Page} from '@playwright/test';
 import {readFile} from 'node:fs/promises';
 import {readFileSync} from 'node:fs';
-const endpoint='https://input-contract.invalid',account='00000000-0000-4000-8000-000000000002';
+import {createHttpContract,type HttpContract} from './httpContract';
+let endpoint='',contract:HttpContract|undefined;
+test.afterEach(async()=>{await contract?.close();contract=undefined;});
+const account='00000000-0000-4000-8000-000000000002';
 const fixture=(name:string)=>readFileSync(new URL(`../fixtures/sync/browser/${name}`,import.meta.url));
 const editor=JSON.parse(fixture('editor-base.json').toString()),remote=JSON.parse(fixture('remote-native.json').toString()),shared=JSON.parse(fixture('shared.json').toString());
-// Production browser UI with intercepted HTTPS. This proves neither real Auth/RLS nor a physical device.
+// Production browser UI with real local HTTP fixture. This proves neither real Auth/RLS nor a physical device.
 async function wire(page:Page,role:'owner'|'editor'='editor'){
- await page.route(endpoint+'/**',async route=>{const r=route.request(),u=new URL(r.url()),body=r.postDataJSON();
+ contract=await createHttpContract(async route=>{const r=route.request(),u=new URL(r.url()),body=r.postDataJSON() as {action?:string}|null;
   if(r.method()==='OPTIONS')return route.fulfill({status:204,headers:{'Access-Control-Allow-Origin':'*','Access-Control-Allow-Headers':'*','Access-Control-Allow-Methods':'*'}});
   if(u.pathname.includes('/auth/v1/token'))return route.fulfill({json:{access_token:'input-fixture-memory-token',user:{id:account},expires_in:3600}});
   if(u.pathname.endsWith('scenario_snapshots'))return route.fulfill({json:[{id:shared.id}]});
@@ -17,12 +20,12 @@ async function wire(page:Page,role:'owner'|'editor'='editor'){
   if(body?.action==='pull')return route.fulfill({json:remote});
   if(body?.action==='download_archive'){await new Promise(resolve=>setTimeout(resolve,1200));return route.fulfill({contentType:'application/octet-stream',body:fixture('remote-complete.scenario')});}
   return route.fulfill({status:500,json:{code:'UNEXPECTED_CONTRACT_ACTION'}});
- });
+ });endpoint=contract.url;
 }
 async function login(page:Page,cold=false){
  await page.getByRole('button',{name:'アカウント・専用同期',exact:true}).click();
  if(!cold){await page.getByLabel('専用Supabase URL',{exact:true}).fill(endpoint);await page.getByLabel('公開用APIキー',{exact:true}).fill('sb_publishable_input_fixture');await page.getByRole('button',{name:'接続設定を保持',exact:true}).click();}
- await page.getByLabel('メール',{exact:true}).fill('input@example.invalid');await page.getByLabel('パスワード',{exact:true}).fill('fixture-only');await page.getByRole('button',{name:'認証してアカウント領域を開く',exact:true}).click();await expect(page.getByRole('button',{name:'接続先から取得',exact:true})).toBeVisible();
+ await page.getByLabel('メール',{exact:true}).fill('input@example.invalid');await page.getByLabel('パスワード',{exact:true}).fill('fixture-only');await page.getByRole('button',{name:'認証してアカウント領域を開く',exact:true}).click();await expect(page.getByRole('status').filter({hasText:'認証したアカウントの領域を開きました。'})).toBeVisible();await expect(page.getByRole('button',{name:'接続先から取得',exact:true})).toBeVisible();
 }
 async function enterEditor(page:Page){await page.getByRole('button',{name:'接続先から取得',exact:true}).click();await page.getByRole('button',{name:'許可された作品を確認',exact:true}).click();await page.getByRole('button',{name:'許可項目を編集',exact:true}).click();await page.getByRole('button',{name:'現在の権限で項目を取得',exact:true}).click();await expect(page.getByRole('textbox',{name:/^name/}).first()).toBeVisible();}
 async function rows(page:Page){return page.evaluate(async account=>{const db=await new Promise<IDBDatabase>((resolve,reject)=>{const r=indexedDB.open('scenario-manager-account-'+account);r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});try{const get=(name:string)=>new Promise<unknown[]>((resolve,reject)=>{const r=db.transaction(name,'readonly').objectStore(name).getAll();r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});return {tools:await get('authorToolDrafts'),workspace:await get('workspaceInputs'),projects:await get('projects'),bases:await get('syncBases')};}finally{db.close();}},account);}
