@@ -1,0 +1,7 @@
+# 完全ファイル拒否の対象パスを保持する
+
+C9原AT-N09では拒否とnative12table不変を確認したが、7種類中5種類で対象パスの表示が欠落した。C10はBackupPanelでStorageError.pathと元messageを共に表示する。検査・保存・形式・上限・diagnosticの任意持出し規則は変更しない。
+
+同じ8ファイルbytesとSHAをfixtureに保持し、原7拒否の全てにパスと理由の厳密期待を設定、追加ZIP末尾破損では選択した名前を表示。native15tableの実binaryと復元下書き不変、確認済みclone入力の保持、原子ack後の再起動と完全再出力を検査。最終run5は同60秒条件の3browser全てで成功。旧WebKit単独再実行18.888秒と中間結果も保持。最終表示sourceでも元764/81単体が単独成功。初回の保存完了前reload、WebKitの30/60秒watchdog、5001相対連鎖の元20秒超過をsource/rawと共に残す。時間条件・fixture・期待を緩めない。
+
+tar.gz内の全memberを梱包後にSHA/bytes再検算済み。dirty準備成功をcleanC10の正式30回・Large復元・実7200秒・原116・実端末・実APIへ換算しない。

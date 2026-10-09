@@ -1,0 +1,3 @@
+# C10補修の最終dirty回帰
+
+同じproduction buildで完全ファイル原7拒否＋ZIP末尾破損、探索取消後移動と固定版hash待ち退出を3browserで再実行。全9ケース成功。7行のexpected_path必須を検査し、理由とパスの期待を無条件に適用する。764/81単体、文書・計画・Python15・schema生成も成功。dirty準備証拠を最終clean受入へ換算しない。tar全memberのSHA/bytesを梱包後再確認済み。

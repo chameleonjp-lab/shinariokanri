@@ -1,0 +1,73 @@
+{
+  "candidate": "C10 dirty preparation",
+  "historical_failure_target": {
+    "commit": "572c6df91d09e141555c2f752b246107a2512786",
+    "tree": "1822ac96925fa765068a6339c5e828fe24f3e998",
+    "build": "d20d298b7ea8ae89db82"
+  },
+  "original_case": {
+    "id": "AT-N05",
+    "requirement_ids": [
+      "REQ-N05"
+    ],
+    "package_id": "WP14",
+    "given": "大規模データと長い分岐",
+    "when": "探索を打ち切り別の画面へ移る",
+    "then": "編集中の内容を保ち結果を未確認として開ける",
+    "negative_or_edge": "探索の途中終了を全経路の安全証明にしない",
+    "result": "not_run"
+  },
+  "observed_failure": "Independent normal C9 small fixture: cancelled truncated unknown result disappears on materials → reader; canonical12 rows and unsaved JSON remain. Newly observed after immutable C9 partial seal; that seal stays unchanged.",
+  "source_change": "Author/project ReaderDraft retains result, progress, analyzing and shared controller. Navigation aborts the same operation; epoch/controller guard rejects late writes after author purge. Revision/edition mismatch stays explicit and stale current targets are disabled.",
+  "working_build": {
+    "commit": "4bd437153aa29e8ecc3024f139db9fea97a47474",
+    "tree": "1822ac96925fa765068a6339c5e828fe24f3e998",
+    "dirty": true,
+    "base": "/shinariokanri/",
+    "builtAt": "2026-10-09T11:46:02.125Z",
+    "versionHashScope": "sorted paths and bytes plus build info before version",
+    "version": "1f2e1a46bf548dd3bdd8"
+  },
+  "normal_browsers": {
+    "startTime": "2026-10-09T11:46:16.579Z",
+    "duration": 44512.803,
+    "expected": 6,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "covered": [
+    "explicit cancel then navigate",
+    "fixed snapshot capture pending then navigate and immediately reenter",
+    "unknown/truncated and original100000/10000/30000 limits",
+    "native12 unchanged",
+    "unsaved invalid JSON resumes",
+    "selection changes retain original target edition/result",
+    "current revision change shows reconfirmation and disables stale targets",
+    "old fixed result remains valid when current draft changes"
+  ],
+  "unit": "764/81 isolated passed with original test limits",
+  "npm_audit": {
+    "info": 0,
+    "low": 0,
+    "moderate": 0,
+    "high": 0,
+    "critical": 0,
+    "total": 0
+  },
+  "unverified": [
+    "original Large + long branch N05 given",
+    "actual author purge and account switch",
+    "old snapshot deletion UI",
+    "clean final CI/formal30/full restore/real7200/original116",
+    "physical OS/assistive technology/live Auth-RLS-privateStorage"
+  ],
+  "original_documents": "26 SHA unchanged; 104/24/116/6 preserved",
+  "independent_precheck": {
+    "sealSHA256": "682401b94973862c153b591bb8c987c1428651c1c9a97b34a5d5fad56385fd52",
+    "files": 774,
+    "bytes": 16751334,
+    "status": "C9 original N05 small supplementary product FAIL; WIP C10 static-only",
+    "claim_limit": "Fixed C9 actual failure and C10 dirty static review. Not a final C10 execution."
+  }
+}

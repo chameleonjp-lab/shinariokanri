@@ -14,6 +14,14 @@ C5 `5720bc89410e39cc3ed0de50f2135367f24c47bf` / tree `a2d73e65a2332b1c2d02c8e267
 
 C9は同じreadonly transactionの全範囲を2048件ずつ読み、編集読込の取消をbatch間でも確認する。全schema/hash/parts/scope/作者順/固定版/欠損拒否、原子性・完全形式・上限を保持。順序だけの試作3回は遅く採用せず、分割読込dirty3回8,285/7,434/7,693msは診断だけ。新2049件の取消/末尾破損/修復を含む全764単体、関係表/一覧回帰3browser6件、実保存失敗とparts取消/再試行/cold3browser6件が成功。cleanC9の正式各30回・Large復元・実7200秒・原116を別に判定する。
 
+固定C9 572c6df/tree1822ac/buildd20dのCI37912747066、外部main4bd4371のCI37918015985は全20step764/261成功。原Standard8指標各30回とLarge実入力開始p95=7675.7ms／検索579.9msは局所数値内。元Large完全保存の取消/再入/2通常保存/空390new・clone/coldは88,003件・履歴/回復待ち・素材72MiBの全bytes/hashが一致した。
+
+独立原AT-N09で7拒否のnative12table不変を確認したが、5種類で対象パスが画面から欠落。C9実7200秒は10:25:36から10:45:48、21編集/試読で中断し未完了として保持。C10はBackupPanelの全10エラー境界でpathと理由を表示し、内部パス不明の読込では選択したファイル名を示す。同じ7破損fixtureの3browser通常・native15binary/下書き不変・clone原子ack/cold再試行と764/81単体がdirty準備で成功。cleanC10の全CI・正式各30回・Large復元・実7200秒・独立原116は別実行する。原文・schema・形式・上限・公開gateは不変。
+
+C7F05の旧全体passed判断は、1章内の場面順変更だけで原『章順変更』が未観測だったため撤回した。原rawは保持し、C9の複数章通常変更/原子失敗/再試行/cold/旧版/new-clone/tick不変を別の観測へ結合する。実OS/IME/Files/録音/VoiceOver/NVDA/専用実Auth・RLS・privateStorage/実accounts/現行quota・費用と公開先の不足を未実行のまま残す。
+
+独立した小fixtureで原AT-N05の取消→資料→試読の結果消失もC9通常productionで再現した。取消結果はunknown/truncated、正本12tableと未保存JSONは不変だったが、結果と保存導線が再入時に失われた。この追加観測は旧C9sealを変更せず別証拠へ保持する。C10は作者・作品別ReaderDraftへ結果/進捗/実行状態と共有取消を保持し、旧作者purge後の遅延書込を防ぐ。改訂後の現稿結果は再確認を明示、選択版が異なっても元対象版を保持する。dirty通常3browser×2ケースと全764/81単体が成功。原Large＋長い分岐・実時間7200秒・最終原116・実機・実APIの不足は別判定のまま。
+
 [104要件の現在照合](../quality/current-review/CURRENT_REQUIREMENTS.md)は原契約と現在の関連source hashを保持する。元116の正常／境界・失敗は未実行を合格へ変えない。実iPhone／iPad／PC各OS・VoiceOver／NVDA・実Auth/RLS/private Storage・専用接続quota／費用は不足しており公開gateを保留する。以下の段階候補・main観察・工程表は各確認時点の歴史的記録として保持する。
 
 RB09局所候補 `af0c2b983f1146cc7977f13d119b8748c867db2f` / tree `134fc3adb342600bebc8dccaa93ff5cec9254c08` は[同期・限定共有](RB09_SYNC_SHARING.md)を通常操作→原子保存→cold→完全new/cloneへ接続。735単体/結合、75 production Chromium153、Python15、schema/build/docs/plan、隔離PostgreSQLの8migration+23模擬RLS契約を確認。独立指摘の遅延許可/期限後解決/復元承認・入力DB原子性・遅延画面intentを補修。専用実接続先/5実アカウント/quota未指定、実Auth/RLS/Storage/二実端末・原116最終は未実行。公開gateは保留してRB10へ継続。
