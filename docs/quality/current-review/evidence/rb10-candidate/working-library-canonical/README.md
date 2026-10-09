@@ -1,0 +1,9 @@
+# C7 作品一覧からの再入と正本保存
+
+元ProjectDataへ表示専用idを混ぜず、WindowedListの{id,project} wrapperを解いて保存側へ元projectを渡す。検索・ページ・順序・キーを保持する。
+
+新通常検査は2作品・同名人物・Unicode位置付きリンク・改名前の固定snapshotを完全newで読み、一覧から再選択する。容量不足を一度注入しnative8table不変と入力保持を確認。Bの保存、A未保存入力再開・保存、cold、完全出力、390幅の空new/clone復元・cold・完全出力で本文/ID/旧版/historyを検査する。schemaへ未知項目を許可しない。
+
+working1は元fixtureの履歴0に対し編集後2件を誤って期待した。working2は新規と複製を同じrevision1/history1と誤って期待し、Chromium/WebKitは仕様上のclone操作追加でrevision2/history2となった。Firefoxはcold直後にApp準備前のメニュー非表示を判定し、閉じたsidebarへ待機して全体120秒超過。raw/source/dist/traceを保持する。working3では元履歴のbefore0/after1とclone追加command（基底0、after2、ID対応、空before）を明示検査し、App準備後にmenuを判定する。全機能watchdog120秒と性能条件は不変。Chromium/Firefox/WebKit全3件成功。製品不具合と検査側の補正を区別する。
+
+cleanC7で全CI、Standard/Large各30回、元Large復元helper、実7200秒、独立原116を再実行する。dirty検査は候補全体の合格ではない。
