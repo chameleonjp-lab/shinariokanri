@@ -1,0 +1,105 @@
+{
+  "target": {
+    "commit": "f76d5e997efc45506bb21c88c5b8d275e093ead6",
+    "tree": "e5fc7afa2c861af1249559c148df902905502559",
+    "build": "187d47a7aa5851672542",
+    "candidateBindingSHA256": "7c07cd30aaabf2b4211ee420d1f4c9a9ef70595f1fd3818ec060a74de3ac6d90"
+  },
+  "status": "PARTIAL_FAILED_N05_LARGE_RESPONSIVENESS",
+  "allOriginalAcceptanceCasesCompleted": false,
+  "originalCaseCounts": {
+    "requirements": 104,
+    "acceptanceCases": 116,
+    "workPackages": 24,
+    "regressionGroups": 6,
+    "reviewDifferences": 30
+  },
+  "executions": {
+    "compiler": {
+      "passed": 2,
+      "functionalAcceptancePromotion": 0
+    },
+    "normalProduction": {
+      "passed": 1,
+      "failed": 2,
+      "smallCasePassed": 1,
+      "originalLargeCasePassed": 0,
+      "supplementaryResponsivenessDiagnosticsFailed": 1
+    },
+    "selectedUnitOrExistingNormalTests": {
+      "executed": 0,
+      "reason": "N05 original Large preflight blocked final-target continuation; unchanged controls retained for next fixed candidate."
+    },
+    "actualOSDevices": "not_run",
+    "actualAuthAPIStorage": "not_run",
+    "actual7200SecondSoak": "not_started_on_C10"
+  },
+  "confirmedProductDifference": {
+    "id": "S10-N05-LARGE-MAIN-THREAD",
+    "originalRequirements": [
+      "REQ-N05",
+      "REQ-N04"
+    ],
+    "originalAcceptance": "AT-N05",
+    "expectation": "Original Large and long branch; processing beyond two seconds must show usable progress/cancellation. Cancel→another screen→reopen unknown/truncated result with unfinished input retained. No whole-route safety promotion.",
+    "actual": {
+      "sameFixedInputArchiveSHA256": "1ca2b19dcf4c8464c68a24a1bbe02cd1b1c4be20187ed2cee99d4e541822d0d0",
+      "originalRecords": 88003,
+      "additionalLongBranchRecords": 519,
+      "longFiniteTransitions": 256,
+      "actualMaterialBytes": 75497472,
+      "analysisCapsUnchanged": {
+        "maxStates": 100000,
+        "maxTransitions": 10000,
+        "maxMs": 30000
+      },
+      "firstRenderedCancellationAfterStartMs": 12498.90000000596,
+      "actualCancellationEventAfterStartMs": 19653.40000000596,
+      "cancelPointerSentAfterStartWallMs": 2201,
+      "mainThreadLongTasks": [
+        {
+          "at": 150305.20000000298,
+          "duration": 12502
+        },
+        {
+          "at": 162813.09999999404,
+          "duration": 7146
+        },
+        {
+          "at": 169974.59999999404,
+          "duration": 131
+        }
+      ],
+      "maximumRAFGapMs": 12509.5,
+      "maximum50msTimerGapMs": 19844.5,
+      "pageErrors": [],
+      "resultObserved": "不明・探索未完了\n256状態 · 版 0 · 探索打切り",
+      "resultCorrectlyUnknown": true,
+      "largeCancellationNavigationInputResumeAndFullNativeEquality": "not_observed_in_diagnostic; original run failed before those assertions"
+    },
+    "causeEvidence": "Original pointer click execution blocked 25.19sec before scheduled navigation wait. Independent native pointer + RAF/timer/LongTask confirms actual event-loop delay, not only Playwright navigation waiting. Synchronous initial iterator/prevalidation and 128-state batches are source candidates.",
+    "artifacts": [
+      "/tmp/shinariokanri-independent-rb10-c10-f76d5e9/results/c10-n05-large-1/EXECUTION_BINDING.json",
+      "/tmp/shinariokanri-independent-rb10-c10-f76d5e9/results/c10-n05-large-1/review-adjudication.json",
+      "/tmp/shinariokanri-independent-rb10-c10-f76d5e9/results/c10-n05-large-heartbeat-1/EXECUTION_BINDING.json",
+      "/workspace/shinariokanri-independent-artifacts/rb10-c10-f76d5e9/c10-n05-large-heartbeat-1/artifacts/n05-large-heartbeat-AT-N05-95c24-nd-RAF-timer-responsiveness/N05-Large-native-pointer-heartbeat.json"
+    ],
+    "sharedSourceEdited": false
+  },
+  "smallSupportOnly": {
+    "result": "passed",
+    "fixture": "23 entities, exact3537B archive; distinct from original Large/long branch",
+    "observed": "Cancel unknown/truncated→materials→reader identical result JSON; unfinished input resumed; native12 tables unchanged",
+    "artifact": "/tmp/shinariokanri-independent-rb10-c10-f76d5e9/results/c10-n05-small-1/EXECUTION_BINDING.json",
+    "wholeATN05Promotion": false
+  },
+  "historicalCorrection": {
+    "C7_AT_F05": "Earlier full-case pass was withdrawn: one-chapter fixture did not observe original multiple-chapter ordering. Historical raw stays unchanged; C9 separate three-chapter result is historical support, no C10 or later pass inferred."
+  },
+  "currentStaticAssessment": {
+    "path": "/tmp/shinariokanri-independent-rb10-c10-f76d5e9/prepared/CURRENT104_WP24_RG6_RV30_C10_STATIC_REASSESSMENT.json",
+    "sha256": "546afe9cf5f3a0d0f66ba2f0db59a5013ce91bc0634b34f37899cb2002759934",
+    "proofLayer": "static source/original clause matching only; no 104/116 total completion"
+  },
+  "futureTargetRule": "C10 results remain historical. New worker correction requires clean candidate source/dist/hash and same fixed archive/expectations; all available original clauses and33 real boundaries must be rerun on that target. No best-run selection or source mutation."
+}

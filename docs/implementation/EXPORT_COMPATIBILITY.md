@@ -81,3 +81,7 @@ RB09 C8の限定編集workでは任意の`permissionObservation`を私的復旧�
 ## C10の復元エラー表示
 
 C9→C10で完全形式・requiredFeatures・DBv7・ID対応・上限・出力profileは変更しない。元のStorageError.pathを完全保存/復元の画面へ渡し、理由と共に表示する。拒否時の正本・素材bytes・復元下書き不変、同じ元ファイルの再試行と冷間復元を確認する。表示修正は未対応profileの拒否や互換条件を緩めない。
+
+## C11の分岐解析Worker
+
+ブラウザー分岐検査は同じ固定版/共通世界のhash検証と実行規則をWorkerで実行する。完全ファイル/requiredFeatures/DBv7/公開投影/素材bytes/ID対応/6出力profileは不変。準備時間を含む30秒・100,000状態・一経路10,000遷移を保持し、取消/未探索/未知を全経路安全へ換算しない。キャッシュ対象に生成Workerを含む。Worker起動拒否は入力と保存済み内容を保ってエラーを表示する。

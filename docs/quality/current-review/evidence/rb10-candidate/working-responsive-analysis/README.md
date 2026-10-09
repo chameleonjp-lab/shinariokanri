@@ -1,0 +1,7 @@
+# 元Largeの探索応答と取消結果の準備補修
+
+C10の同じ元88,003件＋519宣言分岐・実72MiBで、画面停止を実ポインター/LongTaskにより独立再現した。C11は同じ版検証と実行器をWorkerへ接続し、元上限を保持する。結果受取前の取消を全体確認済みにしない。
+
+準備版の通常3browser×2、小fixture以外の元Large取消1、770単体が成功。Largeは進捗/取消/unknown結果/入力再開/全27nativeとbinary不変を確認したが、全探索・clean最終・実時間2時間・116全体・実機/実権限へ換算しない。最初のviewStates観測位置差、Chromium設定漏れ、fixture修正と元source/rawを保持する。Worker要求待ちとdigest途中待ちを混同しない。
+
+全memberを梱包後にSHA/bytes再検算した。C10の失敗と部分成功はcandidate-10に別保存する。
