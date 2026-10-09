@@ -18,4 +18,21 @@ describe('normalized search position navigation', () => {
     const project = createProject('空白'); const note = createEntity(project.projectId, 'note', 'メモ', { body: [{ id:newId(), kind:'paragraph', text:'ア オ' }] }); project.entities = [note];
     expect(findCatalogTextPositions(project, [note], 'アオ')[0].anchor).toMatchObject({ start:0,end:3 });
   });
+  it('keeps current labels, IDs and Unicode positions after status changes and in-place text edits', () => {
+    const project = createProject('再検索');
+    const block = { id: newId(), kind: 'paragraph' as const, text: '😀ガラスと㍿' };
+    const scene = createEntity(project.projectId, 'scene', '以前の名称', { body: [block] });
+    project.entities = [scene];
+    expect(findCatalogTextPositions(project, [scene], 'がらす')[0].anchor).toMatchObject({ start: 1, end: 4, blockId: block.id });
+    const renamed = { ...scene, name: '改名後', status: 'confirmed' as const };
+    expect(findCatalogTextPositions(project, [renamed], '株式会社')[0]).toMatchObject({ name: '改名後', anchor: { entityId: scene.id, blockId: block.id, start: 5, end: 6 } });
+    const mutableBlock = renamed.data.body[0];
+    mutableBlock.text = '前😀ガ ラ スと㍿';
+    expect(findCatalogTextPositions(project, [renamed], 'がらす')[0].anchor).toMatchObject({ start: 2, end: 7, blockId: mutableBlock.id });
+    expect(findCatalogTextPositions(project, [renamed], '株式会社')[0].anchor).toMatchObject({ start: 8, end: 9 });
+    mutableBlock.id = newId();
+    expect(findCatalogTextPositions(project, [renamed], 'がらす')[0].anchor.blockId).toBe(mutableBlock.id);
+    mutableBlock.text = '別の内容';
+    expect(findCatalogTextPositions(project, [renamed], 'がらす')).toEqual([]);
+  });
 });
