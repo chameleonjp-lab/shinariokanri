@@ -1,4 +1,4 @@
-import { inspectScenarioData, type ArchiveProgress } from './archive';
+import { inspectScenarioData, type ArchiveProgress } from './archiveData';
 import { StorageError } from './errors';
 import type { LimitOverrides } from './json';
 

@@ -18625,6 +18625,123 @@
                   "type": "null"
                 }
               ]
+            },
+            "sharedSource": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "connection": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "sharedSnapshot": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "comment": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "publicVersion": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "publicEntity": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "publicRelation": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "publicBlock": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "startCp": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "endCp": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "projectionHash": {
+                      "type": "string",
+                      "minLength": 64,
+                      "maxLength": 64
+                    },
+                    "commentBodyHash": {
+                      "type": "string",
+                      "minLength": 64,
+                      "maxLength": 64
+                    },
+                    "quotedText": {
+                      "type": "string",
+                      "minLength": 0
+                    },
+                    "observedStage": {
+                      "enum": [
+                        "open",
+                        "fixed",
+                        "verified"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "connection",
+                    "sharedSnapshot",
+                    "comment",
+                    "publicVersion",
+                    "projectionHash",
+                    "commentBodyHash",
+                    "quotedText",
+                    "observedStage"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "null"
+                }
+              ]
             }
           },
           "required": [

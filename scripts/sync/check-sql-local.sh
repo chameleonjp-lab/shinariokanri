@@ -10,3 +10,4 @@ repo_root=$(cd "$(dirname "$0")/../.." && pwd)
 docker exec -i "$contract_container" psql -U postgres -d "$contract_database" -v ON_ERROR_STOP=1 < "$repo_root/tests/fixtures/sync/postgres-auth-storage-fixture.sql"
 for migration in "$repo_root"/supabase/migrations/*.sql; do docker exec -i "$contract_container" psql -U postgres -d "$contract_database" -v ON_ERROR_STOP=1 < "$migration"; done
 docker exec -i "$contract_container" psql -U postgres -d "$contract_database" -v ON_ERROR_STOP=1 < "$repo_root/tests/fixtures/sync/rls-contract.sql"
+docker exec -i "$contract_container" psql -U postgres -d "$contract_database" -v ON_ERROR_STOP=1 < "$repo_root/tests/fixtures/sync/review-lifecycle-contract.sql"

@@ -1,0 +1,30 @@
+import type {Entity,ProjectData} from '../domain/types';
+import {createEntity} from '../domain/model';
+import {commentStage,createSharedCommentReview,type ReviewSourceEnvelope,type SharedComment} from '../domain/sharedReviews';
+import {worldSnapshotContents} from '../storage/archive';
+import {useSyncClient} from './SyncContext';
+import {useAuthorScope,useScenarioStore} from './StoreContext';
+import {authorField,AuthorDraftNotice,flushAuthorDraft,useAuthorField,useAuthorInput} from './authorOperation';
+import {PagedSelect} from './PagedSelect';
+import {WindowedList} from './WindowedList';
+import {REVIEW_STAGE_LABELS} from './ReviewActions';
+import {useEffect,useRef} from 'react';
+
+interface Preview{revision:string;review:Entity<'review'>;task:Entity<'production_task'>|null}
+export function SharedReviewInbox({project,shares,onSaveProject,onOpen}:{project:ProjectData;shares:{id:string;withdrawnAt:string|null}[];onSaveProject:(p:ProjectData,reason:string)=>Promise<ProjectData>;onOpen:(id:string)=>void}){
+ const client=useSyncClient(),store=useScenarioStore(),scope=useAuthorScope(`shared-review-inbox:${project.projectId}`),[selected,setSelected]=useAuthorInput(scope,'snapshot','',project.projectId,project.revision),[task,setTask]=useAuthorInput(scope,'task',true,project.projectId,project.revision),[rows,setRows]=useAuthorField<SharedComment[]>(scope,'rows',[]),[page,setPage]=useAuthorField(scope,'page',0),[preview,setPreview]=useAuthorField<Preview|null>(scope,'preview',null),[busy,setBusy]=useAuthorField(scope,'busy',false),[error,setError]=useAuthorField(scope,'error',''),[notice,setNotice]=useAuthorField(scope,'notice','');
+ const mounted=useRef(true);useEffect(()=>{mounted.current=true;return()=>{mounted.current=false;};},[]);
+ async function run(action:()=>Promise<void>){if(authorField<boolean>(scope,'busy'))return;setBusy(true);setError('');try{if(!client||!store.accountId||client.getSession().accountId!==store.accountId)throw Error('AUTH_REQUIRED');await flushAuthorDraft(scope);await action();}catch(cause){setError((cause as Error).message);}finally{setBusy(false);}}
+ async function list(offset:number){const snapshot=selected,result=await client!.publicComments(snapshot,undefined,offset*60) as SharedComment[];setRows(result);setPage(offset);}
+ async function prepare(comment:SharedComment){const captured=structuredClone(project),connection=client!.config.url,expected=client!.getSession();
+  const existing=captured.entities.find(e=>e.kind==='review'&&e.data.sharedSource?.connection===connection&&e.data.sharedSource.sharedSnapshot===comment.snapshot_id&&e.data.sharedSource.comment===comment.id);if(existing){onOpen(existing.id);setNotice('この共有指摘は保存済みです。既存の指摘と元の引用を開きました。');return;}
+  const origin=await client!.request<ReviewSourceEnvelope>('review_source',{projectId:captured.projectId,snapshotId:comment.snapshot_id},expected),worlds=worldSnapshotContents(await store.listWorldSnapshots()),review=await createSharedCommentReview(captured,origin,structuredClone(comment),connection,worlds);
+  const target=typeof review.data.target==='string'?review.data.target:review.data.target.entityId,targets=[review.id,...captured.entities.some(e=>e.id===target&&!e.deletedAt)||captured.relations.some(r=>r.id===target&&!r.deletedAt)?[target]:[]];
+  setPreview({revision:captured.revision,review,task:task?createEntity(captured.projectId,'production_task','共有指摘への対応',{targetIds:targets,stage:'review',progress:'todo'}):null});
+ }
+ async function confirm(){const approved=structuredClone(preview!);if(project.revision!==approved.revision)throw Error('確認後に作品が更新されました。選択と入力を保持して再確認してください。');
+  const records:Entity[]=[approved.review,...approved.task?[approved.task]:[]],saved=await onSaveProject({...project,entities:[...project.entities,...records]},'共有固定版の指摘・引用・制作タスクを一括保存');
+  if(!saved.entities.some(e=>e.id===approved.review.id))throw Error('SAVE_NOT_CONFIRMED');setPreview(null);setNotice('指摘と元の固定版・引用を端末へ保存しました。修正と確認はそれぞれ明示操作で記録できます。');if(mounted.current)onOpen(approved.review.id);
+ }
+ return <section aria-label="共有指摘を制作へ取り込む"><h3>共有指摘を制作へ取り込む</h3><p>公開版と私的な元の固定版の対応をサーバーで確認し、元の引用を保持します。現在稿の位置が不明でも、引用を別の段落へ自動で移しません。</p><fieldset disabled={busy}><PagedSelect label="指摘を確認する共有版" scope={`${scope}:snapshots`} value={selected} items={shares.filter(s=>!s.withdrawnAt).map(s=>({id:s.id,label:s.id}))} onChange={id=>{setSelected(id);setRows([]);setPage(0);setPreview(null);}}/><button className="button secondary" disabled={!selected} onClick={()=>void run(()=>list(0))}>共有版の指摘を取得</button><label className="check-label"><input type="checkbox" checked={task} onChange={e=>{setTask(e.target.checked);setPreview(null);}}/>指摘と制作タスクを同時に保存</label><WindowedList items={rows} scope={`${scope}:comments:${selected}:${page}`} label="取得した共有指摘" render={comment=><article><p>{comment.body} · {REVIEW_STAGE_LABELS[commentStage(comment)]} · 元公開版 {comment.public_version_id}</p><button className="button secondary small" onClick={()=>void run(()=>prepare(comment))}>この指摘の元版と引用を確認</button></article>}/><button disabled={!selected||page===0} onClick={()=>void run(()=>list(page-1))}>前の60件</button><span>{page+1}ページ</span><button disabled={!selected||rows.length<60} onClick={()=>void run(()=>list(page+1))}>次の60件</button>{preview&&<div><p>確認した基底版 {preview.revision} · 元固定版 {preview.review.data.targetVersionId} · 引用「{preview.review.data.quotedText}」</p><p>受け取った状態 {REVIEW_STAGE_LABELS[preview.review.data.sharedSource!.observedStage]}。ローカルでは未処理から確認を始めます。</p>{typeof preview.review.data.target!=='string'&&preview.review.data.target.positionStatus==='unresolved'&&<p role="alert">元の公開引用を保持しています。私的本文との位置対応は不明です。</p>}<button className="button primary" disabled={project.revision!==preview.revision} onClick={()=>void run(confirm)}>確認した指摘と引用を原子保存</button>{project.revision!==preview.revision&&<p role="alert">確認後に作品が更新されました。入力を保持しています。同じ指摘を再確認してください。</p>}</div>}</fieldset>{busy&&<p role="status">元の共有版を確認・保存中…</p>}{error&&<p role="alert">{error} · 選択と入力は保持しています。</p>}{notice&&<p role="status">{notice}</p>}<AuthorDraftNotice scope={scope} revision={project.revision}/></section>;
+}

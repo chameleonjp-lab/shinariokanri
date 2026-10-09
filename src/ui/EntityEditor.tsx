@@ -1,6 +1,9 @@
+import {referencesTo} from './referenceIndex';
+import {StateMeaningPanel} from './StateMeaningPanel';
+import {WindowedList} from './WindowedList';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ContentAnchor, Entity, ProjectData } from '../domain/types';
-import { KIND_LABELS, collectReferences } from '../domain/model';
+import { KIND_LABELS } from '../domain/model';
 import { FIELD_SPECS, type FieldSpec } from './fieldSpecs';
 import { DataField, dataOf, JsonField, labelOf, RefSelect, RichTextView } from './Fields';
 import { downloadBytes, Icon, Modal, safeFileName, STATUS_LABELS } from './components';
@@ -18,6 +21,7 @@ import { resolveReuseContent, reuseTargetAnchor } from '../domain/reuse';
 import { ReuseManager } from './ReuseManager';
 import { MediaRevisionTools } from './MediaConsultationTools';
 import { ProductionTools } from './ProductionTools';
+import {ReviewActions} from './ReviewActions';
 
 const EDITOR_TABS = [['main', '要約'], ['body', '本文'], ['notes', '作者メモ'], ['detail', '詳細'], ['preview', '確認表示']] as const;
 
@@ -46,7 +50,9 @@ export function EntityEditor({ entity, project, referenceProject, isNew, hasUnsa
   const effectiveEntity = reuseView.entities.find(record => record.id === draft.id) ?? draft;
   const reuse = draft.kind === 'scene' || draft.kind === 'flow_node' ? draft.data.reuse : undefined;
   const inherited = (field: string) => !!reuse && reuse.mode !== 'clone' && !['reuse', 'chapterId'].includes(field) && !reuse.overrideFields.includes(field);
-  const formProject = referenceProject ? { ...referenceProject, snapshots: [...project.snapshots, ...referenceProject.snapshots.filter(pin => !project.snapshots.some(own => own.id === pin.id))], entities: [...reuseView.entities, ...referenceProject.entities.filter(record => !project.entities.some(entity => entity.id === record.id))] } : reuseView;
+  const borrowedEntities=useMemo(()=>{const own=new Set(project.entities.map(record=>record.id));return referenceProject?.entities.filter(record=>!own.has(record.id))??[];},[project.entities,referenceProject?.entities]);
+  const borrowedSnapshots=useMemo(()=>{const own=new Set(project.snapshots.map(pin=>pin.id));return referenceProject?.snapshots.filter(pin=>!own.has(pin.id))??[];},[project.snapshots,referenceProject?.snapshots]);
+  const formProject = referenceProject ? { ...referenceProject, snapshots: [...project.snapshots, ...borrowedSnapshots], entities: [...reuseView.entities, ...borrowedEntities] } : reuseView;
   const [dirty, setDirty] = useState(isNew || hasUnsavedDraft);
   const [saving, setSaving] = useState(false);
   const [reuseBusy, setReuseBusy] = useState(false);
@@ -211,7 +217,7 @@ export function EntityEditor({ entity, project, referenceProject, isNew, hasUnsa
     } finally { savingRef.current = false; setSaving(false); }
   };
   const related = project.relations.filter(r => !r.deletedAt && (r.fromId === draft.id || r.toId === draft.id));
-  const referencedBy = project.entities.filter(e => e.id !== draft.id && !e.deletedAt && collectReferences(e).some(ref => ref.id === draft.id));
+  const referencedBy = referencesTo(project.entities,draft.id);
   const archiveImpacts = useMemo(() => archiveConfirm ? deletionImpact(project, draft.id) : [], [archiveConfirm, project, draft.id]);
   const activeArchiveImpacts = archiveImpacts.filter(impact => !impact.snapshotId);
   const archivePageCount = Math.max(1, Math.ceil(archiveImpacts.length / 20));
@@ -254,20 +260,22 @@ export function EntityEditor({ entity, project, referenceProject, isNew, hasUnsa
         : <fieldset className="editor-data-field" key={field.key} disabled={reuseBusy || inherited(field.key)}>{inherited(field.key) && <p className="field-hint">共通元の固定版から継承 · {field.label}</p>}<DataField field={field} entity={inherited(field.key) ? effectiveEntity : draft} value={dataOf(inherited(field.key) ? effectiveEntity : draft)[field.key]} project={formProject} onChange={value => changeData(field.key, value)} rawOverride={inherited(field.key) ? undefined : jsonBuffers[field.key]} onInvalidRaw={raw => onJsonBuffer(field.key, raw)} onValid={valid => markValid(field.key, valid)} onOpenTarget={(anchor: ContentAnchor, sourceAnchor?: ContentAnchor) => followTextTarget(inherited(field.key) ? reuseTargetAnchor(reuseView, anchor) : anchor, sourceAnchor, field.key)} onOpenReferences={showReverseReferences} onOpenReference={openTextReference}/></fieldset>)}
       <FieldVisibilityControls fields={displayFields} customFields={assignedTemplate?.data.fields ?? []} tabs={hasTextTabs ? EDITOR_TABS : []} preferences={display} onChange={changeDisplay}/>
       <TemplateChooser entity={draft} project={project} onChange={change}/>
+      {draft.kind==='variable'&&<StateMeaningPanel project={project} variable={draft} onOpen={onOpen}/>}
+      {!isNew&&draft.kind==='review'&&onSaveProject&&<ReviewActions project={project} review={draft} disabled={dirty||saving||composing||invalidJson.length>0} onSaveProject={onSaveProject} onBusy={busy=>{savingRef.current=busy;setSaving(busy);setReuseBusy(busy);}} onApplied={record=>{setDraft(record);setDirty(false);}} onOpenTarget={onOpenTarget} onOpen={onOpen}/>}
       <CustomFieldsEditor entity={draft} project={formProject} hidden={display.hiddenFields} onChange={change} onValid={valid => markValid('_customFields', valid)}/>
       {draft.kind === 'note' && !isNew && !dirty && !saving && onSaveMany && onSaveProject && <NotesTools project={project} note={draft} onSaveMany={onSaveMany} onSaveProject={onSaveProject} onOpen={onOpen} captureDraft={jsonBuffers._noteCapture} onCaptureDraft={(raw, expectedRaw) => onJsonBuffer('_noteCapture', raw, expectedRaw)}/>}
       {draft.visibility === "projection" && <div className="form-field"><label>公開投影プロファイル</label><RefSelect project={project} kinds={["projection_profile"]} value={draft.projectionProfileId} label="公開投影プロファイル" onChange={id => change({...draft,projectionProfileId:id || null})}/></div>}
       <details className="advanced-details"><summary>詳細データ・ルビ・本文リンクを編集</summary><p className="field-hint">全フィールドをJSONで編集できます。保存前に型と参照先を検査します。本文のブロックIDは維持してください。</p><fieldset disabled={saving || !!reuse && reuse.mode !== 'clone'}><JsonField label="詳細データ" validate={v => !v || typeof v !== "object" || Array.isArray(v) ? "詳細データはJSONのオブジェクト（{}）で入力してください。" : undefined} rawOverride={jsonBuffers._data} onInvalidRaw={raw => onJsonBuffer("_data", raw)} value={draft.data} onChange={data => { if (data && typeof data === 'object' && !Array.isArray(data)) change({ ...draft, data } as Entity); }} onValid={valid => setInvalidJson(previous => valid ? previous.filter(k => k !== '_data') : previous.includes('_data') ? previous : [...previous, '_data'])}/></fieldset></details>
       <details className="advanced-details"><summary>カスタム項目を編集</summary><p className="field-hint">雛形に定義したkeyと型を使用してください。</p><JsonField label="カスタム項目" value={draft.customValues} rawOverride={jsonBuffers._customValues} onInvalidRaw={raw => onJsonBuffer("_customValues",raw)} validate={v => !v || typeof v !== "object" || Array.isArray(v) ? "カスタム項目はJSONのオブジェクト（{}）で入力してください。" : undefined} onChange={v=>change({...draft,customValues:v as Entity["customValues"]})} onValid={valid=>setInvalidJson(previous=>valid?previous.filter(k=>k!=="_customValues"):previous.includes("_customValues")?previous:[...previous,"_customValues"])}/></details>
-      {(related.length > 0 || referencedBy.length > 0) && <section className="references-section"><h3>この情報への参照</h3><button type="button" className="text-button" onClick={() => showReverseReferences(draft.id)}>本文からの参照位置を表示</button>{related.map(r => <p key={r.id}>{labelOf(project.entities.find(e => e.id === r.fromId))} → {labelOf(project.entities.find(e => e.id === r.toId))}<span className="field-hint">{r.relationType}</span></p>)}{referencedBy.map(e => <button type="button" key={e.id} className="reference-link" onClick={() => onOpen(e.id)}><Icon name="link" size={16}/>{labelOf(e)}<small>{KIND_LABELS[e.kind]}</small></button>)}</section>}
+      {(related.length > 0 || referencedBy.length > 0) && <section className="references-section"><h3>この情報への参照</h3><button type="button" className="text-button" onClick={() => showReverseReferences(draft.id)}>本文からの参照位置を表示</button><WindowedList items={related} scope={`entity-relations:${project.projectId}:${draft.id}`} label="この情報の関係" render={r=><p key={r.id}>{labelOf(project.entities.find(e => e.id === r.fromId))} → {labelOf(project.entities.find(e => e.id === r.toId))}<span className="field-hint">{r.relationType}</span></p>}/><WindowedList items={referencedBy} scope={`entity-references:${project.projectId}:${draft.id}`} label="この情報への参照" searchText={labelOf} render={e=><button type="button" key={e.id} className="reference-link" onClick={()=>onOpen(e.id)}><Icon name="link" size={16}/>{labelOf(e)}<small>{KIND_LABELS[e.kind]}</small></button>}/></section>}
       <details className="advanced-details"><summary>IDと履歴情報</summary><dl className="record-meta"><dt>固定ID</dt><dd className="mono">{draft.id}</dd><dt>作成</dt><dd>{new Date(draft.createdAt).toLocaleString('ja-JP')}</dd><dt>更新</dt><dd>{new Date(draft.updatedAt).toLocaleString('ja-JP')}</dd></dl></details>
     </fieldset></div>
     {invalidJson.length > 0 && <div className="error-notice"><span>入力内容を修正できます。画面を切り替えても未保存入力を保持します。</span><button type="button" className="text-button" onClick={() => downloadBytes(JSON.stringify({ entity: draft, invalidJsonInput: jsonBuffers }, null, 2), `${safeFileName(draft.name)}-未保存入力.json`)}>未保存の入力を持ち出す</button></div>}<div className="editor-footer"><button type="button" className="text-button danger" disabled={isNew || saving || !!draft.deletedAt} onClick={() => { setArchivePage(0); setArchiveConfirm(true); }}>アーカイブ</button><button type="button" className="button primary" disabled={saving || invalidJson.length > 0 || composing} onClick={() => void save(true)}><Icon name="check" size={18}/>{saving ? '保存中' : draft.kind === 'template' ? '保存前の差分を確認' : error ? '保存を再試行' : '保存する'}</button></div>
     {templateReview && templatePreview && <Modal title="雛形の変更・適用差分" wide onClose={() => { if (!saving) setTemplateReview(null); }}><p>雛形と影響する情報を一度の保存で更新します。現在の値は、置換値を指定した項目だけ変更します。</p>
-      <fieldset className="template-targets"><legend>追加でこの雛形を適用する情報</legend>{templateReview.project.entities.filter(record => !record.deletedAt && record.kind === templateReview.template.data.targetKind).map(record => {
+      <fieldset className="template-targets"><legend>追加でこの雛形を適用する情報</legend><WindowedList items={templateReview.project.entities.filter(record => !record.deletedAt && record.kind === templateReview.template.data.targetKind)} scope={`template-targets:${project.projectId}:${draft.id}`} label="雛形の追加適用先" searchText={labelOf} render={record => {
         const assigned = record.templateId === templateReview.template.id;
         return <label className="check-label" key={record.id}><input type="checkbox" aria-label={`${labelOf(record)}に適用 · ${record.id}`} checked={assigned || templateTargets.includes(record.id)} disabled={assigned || saving} onChange={event => setTemplateTargets(previous => event.target.checked ? [...previous, record.id] : previous.filter(id => id !== record.id))}/><span>{labelOf(record)} <small>{record.id}</small>{assigned && ' · 適用済み'}</span></label>;
-      })}</fieldset><p className="field-hint">既存の適用先 {templateReview.project.entities.filter(record => !record.deletedAt && record.templateId === templateReview.template.id).length}件 · 差分の対象 {templatePreview.impacts.length}件</p>
+      }}/></fieldset><p className="field-hint">既存の適用先 {templateReview.project.entities.filter(record => !record.deletedAt && record.templateId === templateReview.template.id).length}件 · 差分の対象 {templatePreview.impacts.length}件</p>
       <fieldset disabled={saving} className="index-editor-controls"><TemplateImpactList impacts={templatePreview.impacts} template={templateReview.template} project={templateReview.project} replacements={templateReplacements} onReplacements={setTemplateReplacements}/></fieldset>
       {templatePreview.issues.filter(issue => !issue.path.includes('.customValues.')).map((issue, index) => <p className="field-error" role="alert" key={index}>{issue.message}</p>)}
       {previewStale && <p className="field-error" role="alert">差分の確認後に作品が更新されました。中止して現在の版で差分を確認し直してください。</p>}{templateFailure && <p className="error-notice" role="alert">{templateFailure}</p>}

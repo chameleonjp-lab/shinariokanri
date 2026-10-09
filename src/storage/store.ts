@@ -1,3 +1,7 @@
+import {recordDiagnostic} from '../diagnostics';
+import {bindRecordPartsSignal,installRecordPartsDatabase} from './recordPartsDatabase';
+import {validateColdRead,type ReadStage} from './readValidation';
+import {commandCommitted,commandMeasurementStart,readMeasured} from '../performance';
 import {validateSyncRecovery,syncRecoveryImages,type NativeSyncRecovery,type RetainedSyncRecovery} from './syncRecovery';
 import Dexie, { type Table } from 'dexie';
 import { prepareWorldPin, type WorldPinInput } from './worldPins';
@@ -43,6 +47,7 @@ interface StoredCommand {
 interface AssetRecord { contentHash: string; mediaType: string; path: string; bytes: Uint8Array }
 export interface AssetInput { contentHash: string; bytes: Uint8Array; mediaType: string; assetPath?: string }
 export type Presence = { present: false } | { present: true; value: unknown };
+const absentPresence:Presence=Object.freeze({present:false});
 export interface FieldChange { field: string; oldValueHash: string; before: Presence; after: Presence }
 export type ProjectTarget = Omit<ContentState, 'entities' | 'relations'> & { id: string; kind: 'project' };
 type TargetRecord = Entity | Relation | ProjectTarget;
@@ -62,7 +67,7 @@ interface StoredView extends SavedView { projectId: string }
 interface StoredViewState extends ViewState { key: string; projectId: string }
 interface ImportLog { operationId: string; projectId: string; mode: ImportMode; createdAt: string; idMap?: Record<string, string> }
 export interface SaveResult { project: ProjectData; operationId: string; localSaved: true; pendingSync: boolean }
-export interface SaveOptions { worldPin?: WorldPinInput; reason: string; operationId?: string; assets?: AssetInput[]; signal?: AbortSignal; compensatesOperationId?: string; includeHistory?: boolean }
+export interface SaveOptions { worldPin?: WorldPinInput; reason: string; operationId?: string; assets?: AssetInput[]; signal?: AbortSignal; compensatesOperationId?: string; includeHistory?: boolean; immutableView?:boolean; measurementStartedAt?: number }
 export type FaultStage = 'after-content' | 'after-history' | 'after-outbox' | 'before-commit';
 export interface SaveMetrics {
   operationId: string; projectId: string;
@@ -126,20 +131,28 @@ class ScenarioDatabase extends Dexie {
     this.version(4).stores({ authorToolDrafts: 'key,projectId' });
     this.version(5).stores({ syncBases:'projectId', preparedSync:'operationId,projectId', syncConflicts:'operationId,projectId', syncAckEvidence:'operationId,projectId',retainedSyncRecovery:'key,projectId',syncAssetAcks:'key,projectId',sharedSnapshots:'id,createdAt' });
     this.version(6).stores({ workspaceInputs: 'key' });
+    this.version(7).stores({ recordParts:'key,scope' });
+    installRecordPartsDatabase(this);
   }
 }
 
 const copy = <T>(value: T): T => structuredClone(value);
 const sameJson = (left: unknown, right: unknown): boolean => left === right || equalJson(left ?? null, right ?? null);
+const immutableValues=new WeakSet<object>();
 function freeze<T>(value: T): T {
-  if (value && typeof value === 'object' && !Object.isFrozen(value)) {
+  if (value && typeof value === 'object' && !immutableValues.has(value)) {
     for (const child of Object.values(value)) freeze(child);
-    Object.freeze(value);
+    Object.freeze(value);immutableValues.add(value);
   }
   return value;
 }
-function projectCopy(project: ProjectData): ProjectData {
-  return { ...copy(withoutHistory(project)), history: project.history };
+function projectCopy(project:ProjectData):ProjectData{return {...copy(withoutHistory(project)),history:project.history};}
+function captureRequestProject(project: ProjectData): ProjectData {
+  // Only values recursively frozen by this store may be shared. User supplied
+  // mutable/shallow-frozen inputs are still captured before the first await.
+  const copied=new WeakMap<object,unknown>();
+  const capture=(value:unknown):unknown=>{if(!value||typeof value!=='object')return typeof value==='function'?copy(value):value;if(immutableValues.has(value))return value;if(copied.has(value))return copied.get(value);if(!Array.isArray(value)&&Object.getPrototypeOf(value)!==Object.prototype&&Object.getPrototypeOf(value)!==null)return copy(value);const result:unknown[]|Record<string,unknown>=Array.isArray(value)?new Array(value.length):{};copied.set(value,result);for(const key of Object.keys(value))Object.defineProperty(result,key,{value:capture((value as Record<string,unknown>)[key]),enumerable:true,configurable:true,writable:true});return result;};
+  return { ...capture(withoutHistory(project)) as ContentState, history: project.history };
 }
 function contentDelta(before: ContentState, after: ContentState): ContentDelta {
   const changes = <T extends Entity | Relation>(previous: T[], next: T[]) => {
@@ -193,8 +206,8 @@ function validatedCurrent(input: ProjectData, worldSnapshots: Record<string, Pro
   }
   return input;
 }
-async function validateDurableIntegrity(project: ProjectData, worldSnapshots: Record<string, ProjectContent> = {}, requireReceiptHistory = project.history.length > 0): Promise<void> {
-  const issues = await validateProjectIntegrity(project, { worldSnapshots }, requireReceiptHistory);
+async function validateDurableIntegrity(project: ProjectData, worldSnapshots: Record<string, ProjectContent> = {}, requireReceiptHistory = project.history.length > 0,verifiedStorage?:{previous:ProjectData;references:WeakMap<Entity,DomainReference[]>}): Promise<void> {
+  const issues = await validateProjectIntegrity(project, { worldSnapshots }, requireReceiptHistory,verifiedStorage);
   if (issues.length) throw Object.assign(new StorageError('VALIDATION_FAILED', issues.map(issue => `${issue.path}: ${issue.message}`).join('\n')), { issues });
 }
 
@@ -361,16 +374,17 @@ async function targetChanges(before: ContentState, after: ContentState, isNew = 
   const old = new Map<string, TargetRecord>([...before.entities, ...before.relations, ...(isNew ? [] : [headerTarget(before)])].map(record => [record.id, record]));
   const current = new Map<string, TargetRecord>([...after.entities, ...after.relations, headerTarget(after)].map(record => [record.id, record]));
   const result: TargetChange[] = [];
+  let absentHash:string|undefined;
   for (const id of new Set([...old.keys(), ...current.keys()])) {
     const previous = old.get(id) ?? null, next = current.get(id) ?? null;
     if (id !== after.projectId && (previous === next || sameJson(previous ? withoutRevision(previous) : null, next ? withoutRevision(next) : null))) continue;
     const fields: FieldChange[] = [];
     for (const field of new Set([...Object.keys(previous ?? {}), ...Object.keys(next ?? {})])) {
       if (['revision', 'updatedAt'].includes(field)) continue;
-      const previousValue: Presence = previous && field in previous ? { present: true, value: (previous as unknown as Record<string, unknown>)[field] } : { present: false };
-      const nextValue: Presence = next && field in next ? { present: true, value: (next as unknown as Record<string, unknown>)[field] } : { present: false };
+      const previousValue: Presence = previous && field in previous ? { present: true, value: (previous as unknown as Record<string, unknown>)[field] } : absentPresence;
+      const nextValue: Presence = next && field in next ? { present: true, value: (next as unknown as Record<string, unknown>)[field] } : absentPresence;
       if (previousValue.present && nextValue.present && previousValue.value === nextValue.value) continue;
-      if (!sameJson(previousValue, nextValue)) fields.push({ field, oldValueHash: await sha256(jsonBytes(previousValue)), before: previousValue, after: nextValue });
+      if (!sameJson(previousValue, nextValue)) fields.push({ field, oldValueHash: previousValue.present?await sha256(jsonBytes(previousValue)):(absentHash??=await sha256(jsonBytes(previousValue))), before: previousValue, after: nextValue });
     }
     result.push({ targetId: id, before: previous, after: next, fields });
   }
@@ -431,10 +445,10 @@ export class ScenarioStore {
     this.cacheEpochs.set(project.projectId, epoch + 1);
     return cached;
   }
-  private editingCopy(project: ProjectData, historyIds = project.history.map(command => command.operationId)): ProjectData {
+  private editingCopy(project: ProjectData, historyIds = project.history.map(command => command.operationId),immutableView=false): ProjectData {
     const history: CommandRecord[] = freeze([]);
     this.editingHistories.set(history, { projectId: project.projectId, revision: project.revision, historyIds });
-    return { ...copy(withoutHistory(project)), history };
+    return { ...(immutableView?withoutHistory(project):copy(withoutHistory(project))), history };
   }
   getHistoryCount(project: ProjectData): number { return this.editingHistories.get(project.history)?.historyIds.length ?? project.history.length; }
 
@@ -458,23 +472,40 @@ export class ScenarioStore {
     return record;
   }
 
-  private async readProject(projectId: string, includeHistory = true): Promise<{ project: ProjectData; historyIds: string[]; contentHeadOperationId?: string } | undefined> {
-    const header = await this.db.projects.get(projectId);
+  private async readProject(projectId: string, includeHistory = true, timing?:Record<string,number>, capturedHeader?:StoredProject): Promise<{ project: ProjectData; historyIds: string[]; contentHeadOperationId?: string } | undefined> {
+    const timed=<T>(stage:string,read:()=>PromiseLike<T>)=>{if(!timing)return read();const started=performance.now();return read().then(value=>{timing[`database.${stage}`]=performance.now()-started;return value;});};
+    // A caller inside this same read transaction already decoded the header.
+    // Reusing that private value avoids another large parts worker and keeps
+    // the header and all of its rows on the same atomic database snapshot.
+    const header = capturedHeader ?? await this.db.projects.get(projectId);
     if (!header) return undefined;
+    if(header.projectId!==projectId)throw new StorageError('SAVE_FAILED','作品の保存情報が別の作品を指しています。',projectId);
     const { entityIds, relationIds, snapshotIds, historyIds, viewIds, contentHeadOperationId, ...project } = header;
-    const [entities, relations, snapshots, commands, views, blockRows] = await Promise.all([
-      this.db.entities.bulkGet(entityIds.map(id => [projectId, id] as [string, string])),
-      this.db.relations.bulkGet(relationIds.map(id => [projectId, id] as [string, string])),
-      this.db.snapshots.bulkGet(snapshotIds.map(id => [projectId, id] as [string, string])),
-      includeHistory ? this.db.commands.bulkGet(historyIds) : Promise.resolve([] as StoredCommand[]), this.db.views.bulkGet(viewIds.map(id => [projectId, id] as [string, string])),
-      this.db.blocks.where('projectId').equals(projectId).toArray(),
+    // The compound primary keys keep one project's rows contiguous. Reading
+    // that range avoids a secondary-index lookup for every native record.
+    const projectRows=<T>(table:Table<T,[string,string]>)=>table.where('[projectId+id]').between([projectId,Dexie.minKey],[projectId,Dexie.maxKey],true,true).toArray();
+    const [entityRows, relationRows, snapshotRows, commands, viewRows, blockRows] = await Promise.all([
+      timed('entities',()=>projectRows(this.db.entities)),
+      timed('relations',()=>projectRows(this.db.relations)),
+      timed('snapshots',()=>projectRows(this.db.snapshots)),
+      includeHistory ? this.db.commands.bulkGet(historyIds) : Promise.resolve([] as StoredCommand[]), projectRows(this.db.views),
+      timed('blocks',()=>projectRows(this.db.blocks)),
     ]);
+    // Read each project range in one native request, then restore its committed
+    // header order. Missing rows still fail; index sorting cannot reorder content.
+    const ordered=<T extends {id:string}>(ids:string[],rows:T[])=>{const byId=new Map(rows.map(row=>[row.id,row]));return ids.map(id=>byId.get(id));};
+    const entities=ordered(entityIds,entityRows),relations=ordered(relationIds,relationRows),snapshots=ordered(snapshotIds,snapshotRows),views=ordered(viewIds,viewRows);
     if ([...entities, ...relations, ...snapshots, ...commands, ...views].some(item => !item)) throw new StorageError('SAVE_FAILED', '作品の保存情報が不足しています。完全保存ファイルから復元してください。', projectId);
     const blocks = new Map(blockRows.map(row => [row.id, row.block]));
     const commandRows = new Map(commands.map(row => [row!.operationId, row!])), ready = new Map<string, CommandRecord>();
     const history: CommandRecord[] = [];
-    for (const row of commands) history.push(await this.materializeCommand(row!, commandRows, ready));
-    return { historyIds, contentHeadOperationId, project: { ...project, entities: entities.map(row => hydrateBlocks(row!.record, blocks)), relations: relations as Relation[],
+    // A checkpoint can materialize entirely in memory, with no pending IDB
+    // request. Keep its native read transaction alive until all history is ready.
+    if(commands.length)await Dexie.waitFor((async()=>{for (const row of commands) history.push(await this.materializeCommand(row!, commandRows, ready));})());
+    const hydrateStarted=timing?performance.now():undefined;
+    const hydrated=entities.map(row => hydrateBlocks(row!.record, blocks));
+    if(hydrateStarted!==undefined)timing!['database.hydrate']=performance.now()-hydrateStarted;
+    return { historyIds, contentHeadOperationId, project: { ...project, entities: hydrated, relations: relations as Relation[],
       snapshots: snapshots.map(row => { const { projectId: _projectId, ...snapshot } = row!; return snapshot; }),
       history, views: views.map(row => { const { projectId: _projectId, ...view } = row!; return view; }) } };
   }
@@ -485,7 +516,7 @@ export class ScenarioStore {
       const read = await this.db.transaction('r', this.writeTables, async () => {
         const header = await this.db.projects.get(projectId), cached = this.cachedProjects.get(projectId);
         if (!header) return undefined;
-        return cached?.revision === header.revision && this.completeHistories.has(projectId) && sameJson(this.cachedHistoryIds.get(projectId), header.historyIds) ? { project: cached, historyIds: header.historyIds, contentHeadOperationId: header.contentHeadOperationId } : this.readProject(projectId);
+        return cached?.revision === header.revision && this.completeHistories.has(projectId) && sameJson(this.cachedHistoryIds.get(projectId), header.historyIds) ? { project: cached, historyIds: header.historyIds, contentHeadOperationId: header.contentHeadOperationId } : this.readProject(projectId,true,undefined,header);
       });
       if (!read) return undefined;
       let { project } = read;
@@ -499,29 +530,53 @@ export class ScenarioStore {
     catch (error) { throw saveError(error); }
   }
   /** Editing reads current rows only. Its immutable history token lets saves retain history without loading it. */
-  async getProjectForEditing(projectId: string): Promise<ProjectData | undefined> {
-    if(this.authorAccess&&await this.db.syncBases.get(projectId)&&this.authorAccess.get(projectId)!=='owner')return undefined;
+  async getProjectForEditing(projectId: string,options:{signal?:AbortSignal;onStage?:(stage:ReadStage)=>void;immutableView?:boolean}={}): Promise<ProjectData | undefined> {
+    checkCancelled(options.signal);
+    const started=commandMeasurementStart(),milliseconds:Record<string,number>={};let last=started;
+    const measure=(stage:string)=>{if(last===undefined)return;const now=performance.now();milliseconds[stage]=(milliseconds[stage]??0)+now-last;last=now;};
+    const denied=this.authorAccess&&await this.db.syncBases.get(projectId)&&this.authorAccess.get(projectId)!=='owner';
+    checkCancelled(options.signal);
+    if(denied)return undefined;
     try {
       const readEpoch = { project: this.cacheEpochs.get(projectId) ?? 0, lifetime: this.cacheLifetime };
       const read = await this.db.transaction('r', this.writeTables, async () => {
+        bindRecordPartsSignal(options.signal);checkCancelled(options.signal);
+        const headerStarted=started===undefined?undefined:performance.now();
         const header = await this.db.projects.get(projectId), cached = this.cachedProjects.get(projectId);
+        if(headerStarted!==undefined)milliseconds['database.header']=performance.now()-headerStarted;
         if (!header) return undefined;
-        return cached?.revision === header.revision && sameJson(this.cachedHistoryIds.get(projectId), header.historyIds) ? { project: cached, historyIds: header.historyIds, contentHeadOperationId: header.contentHeadOperationId } : this.readProject(projectId, false);
+        return cached?.revision === header.revision && sameJson(this.cachedHistoryIds.get(projectId), header.historyIds) ? { project: cached, historyIds: header.historyIds, contentHeadOperationId: header.contentHeadOperationId } : this.readProject(projectId, false,started===undefined?undefined:milliseconds,header);
       });
+      checkCancelled(options.signal);
       if (!read) return undefined;
+      measure('database');
       let { project } = read;
       if (project !== this.cachedProjects.get(projectId)) {
         const worlds = await this.validationWorlds();
-        validated({ ...project, history: [] }, worldSnapshotContents(worlds));
-        verifyWorlds([{ ...project, history: [] }], worlds); await verifySnapshotHashes([{ ...project, history: [] }]); await validateDurableIntegrity(project, worldSnapshotContents(worlds), false);
+        measure('dependencies');let phase='transfer';
+        await validateColdRead(project,worlds,{...options,onStage:stage=>{measure(phase);phase=`validation.${stage}`;options.onStage?.(stage);}});
+        measure(phase);
+        checkCancelled(options.signal);
         project = this.rememberProject(project, read.contentHeadOperationId, read.historyIds, readEpoch);
+        measure('immutable');
       }
-      return this.editingCopy(project, read.historyIds);
+      checkCancelled(options.signal);
+      const view=this.editingCopy(project,read.historyIds,options.immutableView);measure('view');readMeasured(started,project.projectId,milliseconds);return view;
     } catch (error) { throw saveError(error); }
   }
-  async listProjectsForEditing(): Promise<ProjectData[]> {
-    const headers = await this.db.projects.toArray();
-    return (await Promise.all(headers.map(header => this.getProjectForEditing(header.projectId)))).filter((project): project is ProjectData => !!project);
+  async listProjectsForEditing(options: { signal?: AbortSignal; onProgress?: (completed: number, total: number) => void;onStage?:(stage:ReadStage)=>void;immutableView?:boolean } = {}): Promise<ProjectData[]> {
+    checkCancelled(options.signal);
+    const projectIds = await this.db.projects.toCollection().primaryKeys();
+    const projects: ProjectData[] = [];
+    options.onProgress?.(0, projectIds.length);
+    for (const [index,projectId] of projectIds.entries()) {
+      checkCancelled(options.signal);
+      const project = await this.getProjectForEditing(projectId,options);
+      checkCancelled(options.signal);
+      if (project) projects.push(project);
+      options.onProgress?.(index+1, projectIds.length);
+    }
+    return projects;
   }
   async listProjects(): Promise<ProjectData[]> {
     try {
@@ -627,13 +682,13 @@ export class ScenarioStore {
   }
 
   async saveProject(input: ProjectData, options: SaveOptions): Promise<SaveResult> {
-    const started = performance.now();
+    const started = performance.now(),diagnosticOperationId=options.operationId??newId();
     let mark = started;
     const milliseconds: SaveMetrics['milliseconds'] = { prepare: 0, hash: 0, read: 0, reconcile: 0, validate: 0, diff: 0, database: 0, total: 0 };
     const measure = (stage: keyof SaveMetrics['milliseconds']) => { const time = performance.now(); milliseconds[stage] += time - mark; mark = time; };
     try {
       checkCancelled(options.signal);
-      const draft = projectCopy(input), operationId = options.operationId ?? newId(), now = new Date().toISOString();
+      const draft = captureRequestProject(input), operationId = diagnosticOperationId, now = new Date().toISOString();
       if(this.authorAccess&&await this.db.syncBases.get(draft.projectId)&&this.authorAccess.get(draft.projectId)!=='owner')throw new SyncProtocolError('FORBIDDEN');
       const assets = await this.checkedAssets(options.assets);
       measure('prepare');
@@ -688,7 +743,7 @@ export class ScenarioStore {
       const command: CommandRecord = { operationId, projectId: candidate.projectId, baseRevision: draft.revision, revision: candidate.revision, targetIds: changes.map(change => change.targetId), reason: options.reason, createdAt: now, before, after, ...(options.compensatesOperationId ? { compensatesOperationId: options.compensatesOperationId } : {}) };
       freeze(command);
       candidate.history = freeze(editingHistory ? [] : [...(previous?.history ?? []), command]);
-      await validateDurableIntegrity(candidate, worldContents, !editingHistory);
+      await validateDurableIntegrity(candidate, worldContents, !editingHistory,previous?{previous,references:this.validationReferences}:undefined);
       const historyIds = [...previousHistoryIds, operationId];
       const parentOperationId = this.contentHeads.get(candidate.projectId);
       const checkpoint = !parentOperationId || previousHistoryIds.length % 64 === 0;
@@ -697,6 +752,7 @@ export class ScenarioStore {
       let written: SaveMetrics['written'] = { entities: 0, relations: 0, blocks: 0, snapshots: 0, views: 0, commands: 1, outbox: 1 };
       measure('diff');
       const result = await this.db.transaction('rw', this.writeTables, async () => {
+        bindRecordPartsSignal(options.signal);
         checkCancelled(options.signal);
         if(this.authorAccess&&await this.db.syncBases.get(candidate.projectId)&&this.authorAccess.get(candidate.projectId)!=='owner')throw new SyncProtocolError('FORBIDDEN');
         const replay = await this.db.commands.get(operationId);
@@ -724,6 +780,7 @@ export class ScenarioStore {
         return { project: candidate, operationId, localSaved: true as const, pendingSync: true as const };
       });
       measure('database'); milliseconds.total = performance.now() - started;
+      commandCommitted(options.measurementStartedAt, operationId,milliseconds);
       if (result.project === candidate) this.rememberProject(candidate, operationId, historyIds);
       try { this.onSaveMetrics?.({ operationId, projectId: candidate.projectId, milliseconds, written, historyRead: previous === cachedBefore ? 0 : previous?.history.length ?? 0 }); } catch { /* Diagnostics never change a committed save's result. */ }
       if (editingHistory && options.includeHistory === true) {
@@ -732,8 +789,8 @@ export class ScenarioStore {
         const history: CommandRecord[] = []; for (const row of rows) history.push(await this.materializeCommand(row!, byId, ready));
         return { ...result, project: { ...projectCopy(result.project), history } };
       }
-      return { ...result, project: editingHistory || options.includeHistory === false ? this.editingCopy(result.project, result.project === candidate ? historyIds : result.project.history.map(command => command.operationId)) : projectCopy(result.project) };
-    } catch (error) { throw saveError(error); }
+      return { ...result, project: editingHistory || options.includeHistory === false ? this.editingCopy(result.project, result.project === candidate ? historyIds : result.project.history.map(command => command.operationId),options.immutableView) : projectCopy(result.project) };
+    } catch (error) { const failure=saveError(error);recordDiagnostic(failure,{accountId:this.accountId,operationId:diagnosticOperationId,revision:input.revision});throw failure; }
   }
 
   private async duplicateResult(command: StoredCommand, hash: string, projectId: string): Promise<SaveResult> {
@@ -978,7 +1035,7 @@ export class ScenarioStore {
     return this.db.transaction('rw', this.writeTables, async () => {
       const read = await this.readProject(projectId), project = read?.project;
       if (!project) throw new StorageError('NOT_FOUND', '復元点を作る作品が見つかりません。');
-      await this.writeAssets([], project, true);
+      await Dexie.waitFor(this.writeAssets([], project, true));
       const point = { id: newId(), projectId, createdAt: new Date().toISOString(), reason, project, assetHashes: attachmentMetadata(project).map(item => item.contentHash) };
       await this.db.restorePoints.add(point); return point;
     });
@@ -1037,9 +1094,11 @@ export class ScenarioStore {
     const pending = options.snapshotId ? [] : capturedPending, retained = options.snapshotId ? [] : captured.retained;
     const operations = new Map(retained.map(row => [row.operation.operationId, row.operation]));
     for (const row of pending) {
+      checkCancelled(options.signal);
       const commandHash = await sha256(jsonBytes(row.command)), previous = operations.get(row.operationId);
       if (previous && previous.commandHash !== commandHash) throw new StorageError('OPERATION_CONFLICT', '復元した送信待ちと現在の送信待ちが同じIDで異なります。');
       operations.set(row.operationId, { operationId: row.operationId, command: row.command, commandHash, origin: { projectId, operationId: row.operationId, serverRevision: row.baseRevision } });
+      options.onProgress?.({stage:'hashes',completed:operations.size,total:pending.length});
     }
     const recovery = operations.size ? { version: 1 as const, projectId, sourceRevision: project.revision, serverRevision: captured.metadata?.serverRevision ?? '0', pending: [...operations.values()] } : undefined;
     const syncRecovery:NativeSyncRecovery[]=options.snapshotId?[]:captured.syncRetained.map(r=>r.evidence);
@@ -1225,6 +1284,7 @@ export class ScenarioStore {
       // New recovery retains the original content revisions/history; the local import audit is separate.
       const point: RestorePoint | undefined = preview.target ? { id: newId(), projectId: preview.target.projectId, createdAt: now, reason: `専用ファイル${options.mode}の前の復元点`, project: preview.target, assetHashes: attachmentMetadata(preview.target).map(item => item.contentHash) } : undefined;
       const result = await this.db.transaction('rw', this.writeTables, async () => {
+        bindRecordPartsSignal(options.signal);
         checkCancelled(options.signal);
         if (await this.db.importLogs.get(operationId) || await this.db.outbox.get(operationId) || await this.db.commands.get(operationId)) throw new StorageError('OPERATION_CONFLICT', 'この読み込み操作IDは既に使われています。');
         const header = await this.db.projects.get(project.projectId);

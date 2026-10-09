@@ -10,6 +10,23 @@ function barrier() { let release!: () => void; const ready = new Promise<void>(r
 const stores: ScenarioStore[] = [];
 afterEach(async () => { vi.restoreAllMocks(); for (const store of stores.splice(0)) await store.deleteDatabase(); });
 
+it('rejects a cancelled cached read after the database completes and leaves the saved edition intact', async () => {
+  const project=createProject('cancel cached read'),store=new ScenarioStore({databaseName:`cache-cancel-${newId()}`});stores.push(store);
+  await store.saveProject(project,{reason:'initial'});
+  const captured=barrier(),resume=barrier(),internals=store as unknown as {db:Dexie};
+  const transaction=internals.db.transaction.bind(internals.db);
+  vi.spyOn(internals.db,'transaction').mockImplementationOnce(((...args:unknown[])=>{
+    const read=(transaction as (...values:unknown[])=>Promise<unknown>)(...args);
+    return read.then(async value=>{captured.release();await resume.ready;return value;});
+  }) as typeof internals.db.transaction);
+  const controller=new AbortController(),reading=store.getProjectForEditing(project.projectId,{signal:controller.signal});
+  const rejection=expect(reading).rejects.toMatchObject({code:'CANCELLED'});
+  await captured.ready;controller.abort();resume.release();await rejection;
+  const current=(await store.getProject(project.projectId))!;
+  expect(current.name).toBe('cancel cached read');expect(current.revision).toBe('1');expect(current.history).toHaveLength(1);
+  expect(await store.listOutbox(project.projectId)).toHaveLength(1);
+});
+
 it('does not attach an older completed history read to a newer editing revision', async () => {
   const project = createProject('cache race'), store = new ScenarioStore({ databaseName: `cache-race-${newId()}` }); stores.push(store);
   project.entities.push(createEntity(project.projectId, 'scene', 'scene', { body: textToRichText('一行の本文') }));

@@ -233,7 +233,7 @@ export const ENTITY_SCHEMAS: Record<EntityKind, Schema> = {
   travel_route: obj({ fromPlaceId: req(ref('place')), toPlaceId: req(ref('place')), direction: req(en('one_way', 'two_way')), method: opt(txt()), minimumTicks: opt(tick), maximumTicks: opt(tick), evidence: opt(refs()), validity: opt(nullableValidity) }),
   template: obj({ targetKind: req(en(...ENTITY_KINDS)), fields: req(arr(fieldDefinition)), description: opt(txt()), version: opt({ type: 'revision' }), defaults: opt(record({ type: 'custom' }, key)) }),
   collection: obj({ purpose: opt(en('regression')), mode: req(en('dynamic', 'fixed')), query: opt({ type: 'query' }), memberIds: opt(refs()), sort: opt(obj({ field: req(en('name', 'createdAt', 'updatedAt', 'kind')), direction: req(en('asc', 'desc')) })) }),
-  review: obj({ target: req(union(anchor, ref())), targetVersionId: req(scopedRef('snapshot')), body: req(rich), stage: req(en('open', 'fixed', 'verified')), assigneeId: opt(scopedRef('identity')), quotedText: opt(txt()), resolution: opt(rich) }),
+  review: obj({ target: req(union(anchor, ref())), targetVersionId: req(scopedRef('snapshot')), body: req(rich), stage: req(en('open', 'fixed', 'verified')), assigneeId: opt(scopedRef('identity')), quotedText: opt(txt()), resolution: opt(rich),sharedSource:opt(obj({connection:req(txt(1)),sharedSnapshot:req(txt(1)),comment:req(txt(1)),publicVersion:req(txt(1)),publicEntity:opt(txt(1)),publicRelation:opt(txt(1)),publicBlock:opt(txt(1)),startCp:opt(num(0,undefined,true)),endCp:opt(num(0,undefined,true)),projectionHash:req(txt(64,64)),commentBodyHash:req(txt(64,64)),quotedText:req(txt()),observedStage:req(en('open','fixed','verified'))})) }),
   creative_brief: obj({ targetAudience: req(rich), experience: req(rich), theme: req(rich), tone: req(rich), scope: req(rich), deliverableIds: opt(refs()), decisionIds: opt(refs('decision')) }),
   decision: obj({ subject: req(txt(1)), reason: req(rich), targetVersionId: req(scopedRef('snapshot')), outcome: req(en('accepted', 'rejected', 'deferred')), priority: opt(short), requirementIds: opt(arr(short, true)), reviewIds: opt(refs('review')) }),
   gameplay_spec: obj({ sceneId: req(ref('scene')), action: req(rich), mechanic: opt(txt()), tutorial: opt(rich), reward: opt(typed), questId: opt(ref('quest')), taskIds: opt(refs('production_task')), intentionalDifference: opt(txt()) }),
@@ -499,7 +499,7 @@ function walk(schema: Schema, value: unknown, path: string, issues: ValidationIs
 const commonFields: Record<string, Field> = { id: req(idSchema), projectId: req(scopedRef('project')), kind: req(en(...ENTITY_KINDS)), revision: req({ type: 'revision' }), name: req(short), status: req(en(...STATUSES)), visibility: req(en('private', 'team', 'projection')), retainIfUnreferenced: opt(bool), projectionProfileId: opt(ref('projection_profile')), templateId: opt(ref('template')), createdAt: req({ type: 'datetime' }), updatedAt: req({ type: 'datetime' }), deletedAt: opt({ type: 'datetime' }), deletionOperationId: opt(idSchema), customValues: req(record({ type: 'custom' }, key)) };
 const relationSchema = obj({ id: req(idSchema), projectId: req(scopedRef('project')), revision: req({ type: 'revision' }), fromId: req(ref()), toId: req(ref()), relationType: req(txt(1, 128)), direction: req(en('forward', 'symmetric')), validity: req(nullableValidity), evidenceIds: req(refs()), status: req(en(...STATUSES)), visibility: req(en('private', 'team', 'projection')), projectionProfileId: opt(ref('projection_profile')), deletedAt: opt({ type: 'datetime' }), deletionOperationId: opt(idSchema) });
 function entitySchema(kind: EntityKind): Schema { return obj({ ...commonFields, kind: req(en(kind)), data: req(ENTITY_SCHEMAS[kind]) }); }
-function simpleValidate<T>(schema: Schema, value: unknown, path: string): ValidationResult<T> { const issues: ValidationIssue[] = []; walk(schema, value, path, issues, []); return issues.length ? { ok: false, issues } : { ok: true, value: value as T }; }
+function simpleValidate<T>(schema: Schema, value: unknown, path: string, references:DomainReference[]=[]): ValidationResult<T> { const issues: ValidationIssue[] = []; walk(schema, value, path, issues, references); return issues.length ? { ok: false, issues } : { ok: true, value: value as T }; }
 export function validateCondition(input: unknown, path = 'condition'): ValidationResult<Condition> { return simpleValidate(cond, input, path); }
 export function validateExpression(input: unknown, path = 'expression'): ValidationResult<Expression> { return simpleValidate({ type: 'expression' }, input, path); }
 export function validateTypedValue(input: unknown, path = 'value'): ValidationResult<TypedValue> { return simpleValidate(typed, input, path); }
@@ -540,13 +540,14 @@ export function validateInitialPresentationResults(state: RuntimeState, input: u
   return issues;
 }
 export function validateEffectData(input: unknown, path = 'effect'): ValidationResult<EntityDataMap['effect']> { return simpleValidate(ENTITY_SCHEMAS.effect, input, path); }
-export function validateEntity(input: unknown, path = 'entity'): ValidationResult<Entity> {
+function validateEntityRecord(input: unknown, path: string, references?:DomainReference[]): ValidationResult<Entity> {
   if (!isObject(input) || !ENTITY_KINDS.includes(input.kind as EntityKind)) return { ok: false, issues: [{ code: 'VALIDATION_FAILED', path: `${path}.kind`, message: '未対応の情報種別です。' }] };
-  const result = simpleValidate<Entity>(entitySchema(input.kind as EntityKind), input, path);
+  const result = simpleValidate<Entity>(entitySchema(input.kind as EntityKind), input, path,references);
   if (!result.ok) return result;
   const issues: ValidationIssue[] = []; validateLocalRules(result.value, path, issues);
   return issues.length ? { ok: false, issues } : result;
 }
+export function validateEntity(input: unknown, path = 'entity'): ValidationResult<Entity> {return validateEntityRecord(input,path);}
 export function validateRelation(input: unknown, path = 'relation'): ValidationResult<Relation> { return simpleValidate(relationSchema, input, path); }
 
 export function validateVariableValue(variable: Entity<'variable'>, value: TypedValue, path = 'value', allowUnknown = true): ValidationIssue[] {
@@ -639,6 +640,13 @@ function validateLocalRules(entity: Entity, path: string, issues: ValidationIssu
         if (['reading_minutes', 'playing_minutes'].includes(estimate.unit) && !estimate.speed) issue('data.estimate.speed', '本文量からの時間見積もりには速度が必要です。');
       }
       break;
+    case 'review':{
+      const source=entity.data.sharedSource;if(!source)break;
+      try{const url=new URL(source.connection);if(url.origin!==source.connection||url.username||url.password||!['https:','http:'].includes(url.protocol)||url.protocol==='http:'&&!['localhost','127.0.0.1','[::1]'].includes(url.hostname))issue('data.sharedSource.connection','指摘の専用接続先のoriginを確認してください。');}catch{issue('data.sharedSource.connection','指摘の接続先が不正です。');}
+      if(!ID_PATTERN.test(source.sharedSnapshot)||!ID_PATTERN.test(source.comment)||!source.publicVersion||!/^([a-f0-9]{64})$/.test(source.projectionHash)||!/^([a-f0-9]{64})$/.test(source.commentBodyHash))issue('data.sharedSource','元の公開版・指摘・hashが不正です。');
+      if((!!source.publicEntity)===(!!source.publicRelation)||source.publicRelation&&(source.publicBlock!==undefined||source.startCp!==undefined||source.endCp!==undefined)||source.publicBlock!==undefined&&(source.startCp===undefined||source.endCp===undefined||source.endCp<=source.startCp)||source.publicBlock===undefined&&(source.startCp!==undefined||source.endCp!==undefined))issue('data.sharedSource','元指摘の対象とUnicode位置の組合せを確認してください。');
+      break;
+    }
     case 'localization': case 'recording': if (!/^[a-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$/.test(entity.data.language)) issue('data.language', '言語コードを指定してください（例: ja、en-US）。'); break;
   }
   validateNestedRanges(entity.data, `${path}.data`, issues);
@@ -736,8 +744,12 @@ function validateContent(input: unknown, path: string, options: ProjectValidatio
   const entities = input.entities as unknown[], relations = input.relations as unknown[], calendars = input.calendars as unknown[];
   if (entities.length + relations.length > 100_000) return { ok: false, issues: [{ code: 'IMPORT_LIMIT', path, message: 'entityとrelationの合計は100,000件までです。' }] };
   const previousEntities = new Map(reuse?.previous.entities.map(entity => [entity.id, entity])), previousRelations = new Map(reuse?.previous.relations.map(relation => [relation.id, relation]));
-  entities.forEach((entity, i) => { if (reuse && isObject(entity) && previousEntities.get(entity.id as ID) === entity) return; const result = validateEntity(entity, `${path}.entities[${i}]`); if (!result.ok) issues.push(...result.issues); });
-  relations.forEach((relation, i) => { if (reuse && isObject(relation) && Object.is(previousRelations.get(relation.id as ID), relation)) return; const result = validateRelation(relation, `${path}.relations[${i}]`); if (!result.ok) issues.push(...result.issues); });
+  // The structural walk already sees every typed reference. Keep those exact
+  // observations for this synchronous validation instead of walking it twice.
+  const entityReferences=new WeakMap<Entity,DomainReference[]>(),relationReferences=new WeakMap<Relation,DomainReference[]>();
+  const relative=(references:DomainReference[],prefix:string)=>references.map(reference=>({...reference,path:reference.path.slice(prefix.length+1)}));
+  entities.forEach((entity, i) => { if (reuse && isObject(entity) && previousEntities.get(entity.id as ID) === entity) return; const prefix=`${path}.entities[${i}]`,references:DomainReference[]=[];const result = validateEntityRecord(entity,prefix,references); if (!result.ok) issues.push(...result.issues);else entityReferences.set(result.value,relative(references,prefix)); });
+  relations.forEach((relation, i) => { if (reuse && isObject(relation) && Object.is(previousRelations.get(relation.id as ID), relation)) return;const prefix=`${path}.relations[${i}]`,references:DomainReference[]=[];const result = simpleValidate<Relation>(relationSchema,relation,prefix,references); if (!result.ok) issues.push(...result.issues);else relationReferences.set(result.value,relative(references,prefix)); });
   calendars.forEach((calendar, i) => { const result = validateCalendar(calendar, `${path}.calendars[${i}]`); if (!result.ok) issues.push(...result.issues); });
   const viewRefs: DomainReference[] = []; walk(arr(viewSchema), input.views, `${path}.views`, issues, viewRefs);
   if (issues.length) return { ok: false, issues: issues.slice(0, 256) };
@@ -819,6 +831,7 @@ function validateContent(input: unknown, path: string, options: ProjectValidatio
     if (!exists) addIssue(issues, location, '参照先が存在しないか、指定した作品・共通世界の範囲外です。', 'REFERENCE_INVALID');
   }
   const referencesFor = (entity: Entity): DomainReference[] => {
+    const observed=entityReferences.get(entity);if(observed)return observed;
     if (!reuse || previousEntities.get(entity.id) !== entity) return collectReferences(entity);
     const cached = reuse.references.get(entity);
     if (cached) return cached;
@@ -845,7 +858,7 @@ function validateContent(input: unknown, path: string, options: ProjectValidatio
       } else inspect(reference, prefix);
     }
   });
-  project.relations.forEach((relation, i) => collectRelationReferences(relation).forEach(reference => inspect(reference, `${path}.relations[${i}]`)));
+  project.relations.forEach((relation, i) => (relationReferences.get(relation)??collectRelationReferences(relation)).forEach(reference => inspect(reference, `${path}.relations[${i}]`)));
   viewRefs.forEach(reference => inspect(reference));
   const relationTypes = options.relationTypes ?? RELATION_TYPES;
   project.relations.forEach((relation, i) => {

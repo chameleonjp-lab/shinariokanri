@@ -43,7 +43,7 @@ test('幅390pxの手動試読で候補がない場合の代替進行を確認・
 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.getByRole('tab', { name: '試読・検査', exact: true }).click();
-  const start = page.getByLabel('試読の開始点');
+  const start = page.getByRole('combobox', { name: '試読の開始点', exact: true });
   const mergeId = await start.locator('option').filter({ hasText: '同じ門へ合流' }).getAttribute('value');
   expect(mergeId).toBeTruthy();
   await start.selectOption(mergeId!);
