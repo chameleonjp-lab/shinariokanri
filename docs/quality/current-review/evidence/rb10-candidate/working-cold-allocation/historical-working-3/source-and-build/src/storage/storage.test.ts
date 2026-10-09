@@ -45,12 +45,7 @@ describe('atomic IndexedDB commands', () => {
     project.entities.sort((a,b)=>b.id.localeCompare(a.id));project.relations.sort((a,b)=>b.id.localeCompare(a.id));
     project.snapshots.push(await snapshot(project));const saved=(await writer.saveProject(project,{reason:'元の順序を保存'})).project;
     const native=(store(undefined,name) as unknown as {db:Dexie}).db;
-    await native.open();
-    const raw=()=>new Promise<Record<string,unknown[]>>((resolve,reject)=>{
-      const tables=['projects','entities','relations','blocks','snapshots','commands','outbox','recordParts'],tx=native.backendDB().transaction(tables,'readonly'),rows:Record<string,unknown[]>={};
-      for(const table of tables){const request=tx.objectStore(table).getAll();request.onsuccess=()=>{rows[table]=request.result;};}
-      tx.oncomplete=()=>resolve(rows);tx.onerror=()=>reject(tx.error);tx.onabort=()=>reject(tx.error);
-    });
+    const raw=()=>native.transaction('r',['projects','entities','relations','blocks','snapshots','commands','outbox','recordParts'],async()=>Object.fromEntries(await Promise.all(['projects','entities','relations','blocks','snapshots','commands','outbox','recordParts'].map(async key=>[key,await native.table(key).toArray()]))));
     const before=await raw();writer.close();const reader=store(undefined,name),cold=(await reader.getProjectForEditing(project.projectId))!;
     expect(cold.entities.map(entity=>entity.id)).toEqual(project.entities.map(entity=>entity.id));expect(cold.relations.map(relation=>relation.id)).toEqual(project.relations.map(relation=>relation.id));expect(cold.snapshots).toEqual(saved.snapshots);expect(await raw()).toEqual(before);reader.close();
     const id=project.entities[0]!.id,row=await native.table('entities').get([project.projectId,id]);await native.table('entities').delete([project.projectId,id]);const missing=await raw();

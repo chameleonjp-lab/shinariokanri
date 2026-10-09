@@ -59,3 +59,15 @@ C4 Standard各30回の局所値は基準内。Large検索p95=470.8ms、一覧描
 EntityEditorの同期逆参照検査が最初の編集欄描画を待たせていたため、C5では元のcollectReferencesを保ち、派生索引を短い区間に分けて入力を先に表示する。全件確認前は未確認を示し、取消・失敗・再試行を区別する。完了した索引だけをimmutable source配列別に公開し、遅れた旧source結果を現稿へ混ぜない。全ID/本文位置/版/採用状態/参照検査は保持し、正本・履歴・outbox・partsに派生索引を書き込まない。既存の検索/30件ページ/戻り位置を維持する。
 
 補修中の99単体/結合と12,002件の実通常画面が3ブラウザーで成功。pointer取消の位置が進捗の桁で動くFirefoxの差分も補修した。取消→同じ対象で12,000件再試行→別対象6,000件→末尾検索→原子保存→cold→完全fileの全note不変を検査する。失敗fixture・selector・watchdog・一時並走と実製品差分を `working-reference-index/` に分けて残す。予備Large入力開始3回p95=8,413.6msはdirty buildの診断のみ。C5は最新mainから独立ブランチへまとめ、clean commit/tree/buildを固定して正式各30回・復元・実2時間・原116を検証する。全品質gateと実機/実Auth不足は保留のまま。
+
+## C5の未達とC6のcold読取補修
+
+固定C5 `5720bc8` / tree `a2d73e6`、clean build `27f23e6d00216dccad52` はStandard各30回の局所8指標が数値内。Largeの同じCSS/focus入力開始30回はp95=10,082.6msで10秒未達。全sample・fixture・source/build・環境・実素材72MiB・history/outbox31を `evidence/rb10-candidate/candidate-5/` に保持する。別の起動終点や予備3回を代用しない。
+
+CI37889230895は761単体/build/docs/plan/Python15成功、production257成功/Firefox1全体watchdog失敗。元の12,002件と22expectを保持し、機能検査全体watchdog240秒と5段階名を追加。保存の60秒待ち、10秒入力開始等の性能条件は変えない。CI成功を原116や実端末の完成へ換算しない。
+
+C6はmarkerがないcold DB配列を二度コピーせず、markerがあれば全marker検証を保って一度コピーする。header順のMap作成と不足検査で全件の一時配列を省く。コードポイント・Unicode・schema・hash・parts・native atomic transaction・元ファイル上限は保持。欠損/foreign/corruptを全拒否しnative8tableが読み取り前後で不変な検査を追加する。dirty3回p95=7,728msは診断のみ。単体fixtureと型の途中失敗は `working-cold-allocation/` に残す。freezeのfor-in置換は比較上遅いため採用していない。
+
+次のclean対象を固定し、全CI、正式30回、Large全bytes復元、実7200秒の編集と独立原116の正常/境界を進める。実機/支援技術/実Auth/専用費用の不足と公開gate保留は維持する。
+
+C6準備sourceで全単体763件／81ファイル、schema生成差分なし、文書・計画・Python15、対象通常操作3ブラウザーが成功。次のclean対象と各実証拠を別に固定する。

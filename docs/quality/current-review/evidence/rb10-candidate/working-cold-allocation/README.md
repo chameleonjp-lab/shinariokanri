@@ -1,0 +1,11 @@
+# C6 cold読取の余分な配列コピーの補修
+
+C5の入力開始30回p95=10,082.6ms未達を保持して進める。markerがないgetMany/queryの結果をそのまま読み、markerがある時は一度だけ配列をコピーして全markerのscope/header/hash/partsを検証する。Map作成用の全件pair配列と不足確認の全件spreadを省く。header宣言順・未存在slot・重複keyの結果・未知/破損拒否・取消・原子性は保持する。freeze/schema/hydrate、完全ファイル形式、上限は変えない。
+
+補修中unit1は新fixtureのrelation revision/evidenceIds欠落、unit2は新testのDexie overload型誤り。修正前rawを消さず、製品不具合や合格へ換算しない。unit3は70対象成功、build3成功。dirty Large入力開始3回p95=7,728msは診断のみ。working3のsource4/配信12を固定。後のunit4は実在3testファイルの54件が成功（要求した存在しないtest pathはVitestに無視されたため70として数えない）。build4成功、同じ12,002件の3browser機能検査のrawは別に保持する。
+
+独立静的レビュー後、新storage testはcodec経由比較からbackendDBの8table単一readonly transaction/getAllの生行比較へ強化。新E2Eの全体watchdogだけ120→240秒、5step名を追加し、全22expect・fixture・保存待ち等を保持した。C5 CIはFirefoxの全体watchdog超過、257成功/1失敗であり原結果をcandidate-5へ保存。watchdogを性能基準へ流用しない。
+
+次のclean commit/tree/buildで正式Standard/Large各30回、Large取消・new/clone・素材bytes、実7200秒、原116の独立case別確認を行う。実OS/端末/VoiceOver/NVDA/実Auth/RLS/private Storage/現行専用費用はnot_runを維持する。
+
+補修中の全`npm test`は81ファイル763件成功。schema生成は差分なし、文書・計画・Python15も成功。これはC6準備sourceの確認で、次のclean候補の配信・正式性能・原116は別に固定する。

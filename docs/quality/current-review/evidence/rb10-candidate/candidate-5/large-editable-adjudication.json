@@ -1,0 +1,97 @@
+{
+  "candidate": "RB10 C5",
+  "commit": "5720bc89410e39cc3ed0de50f2135367f24c47bf",
+  "tree": "a2d73e65a2332b1c2d02c8e267f86e6e887078e5",
+  "buildVersion": "27f23e6d00216dccad52",
+  "adjudicatedAt": "2026-10-09T05:51:04.335634+00:00",
+  "rawResult": "/workspace/shinariokanri-rb10-measurements/c5-large-editable-performance-30.json",
+  "rawSha256": "ebeaa210a92a8892f29050a5151f20569f28bd4881ddd29c50c7c868fff600bf",
+  "helperSha256": "ae0845d9856e3932013af73901e0f77d58e84d82370fd1e16bdeb186533640ae",
+  "checks": [
+    {
+      "metric": "cached_startup",
+      "count": 30,
+      "p95Milliseconds": 10082.59999999404,
+      "thresholdMilliseconds": 10000,
+      "passed": false,
+      "rounding": "no rounding or omitted samples"
+    },
+    {
+      "metric": "compound_search",
+      "count": 30,
+      "p95Milliseconds": 459.1000000089407,
+      "thresholdMilliseconds": 2000,
+      "passed": true,
+      "rounding": "no rounding or omitted samples"
+    }
+  ],
+  "result": "failed_input_ready_startup_target_preserved",
+  "actualStartupOver10sec": [
+    {
+      "sample": 3,
+      "milliseconds": 10163.5
+    },
+    {
+      "sample": 6,
+      "milliseconds": 10082.59999999404
+    }
+  ],
+  "diagnosticOtherLargeMetrics": {
+    "selection": {
+      "count": 30,
+      "p95Milliseconds": 43.3999999910593
+    },
+    "list_switch": {
+      "count": 30,
+      "p95Milliseconds": 80
+    },
+    "command_save": {
+      "count": 30,
+      "p95Milliseconds": 5187.20000000298
+    },
+    "next_period": {
+      "count": 30,
+      "p95Milliseconds": 90.5
+    },
+    "timeline_observation_frames": {
+      "count": 360,
+      "p95Milliseconds": 50
+    },
+    "timeline_frames": {
+      "count": 330,
+      "p95Milliseconds": 149.89999999999418
+    },
+    "graph_frames": {
+      "count": 330,
+      "p95Milliseconds": 50
+    }
+  },
+  "scope": "Managed Linux automated Chromium/production App/native IndexedDB. All30 retained. Standard thresholds are not applied to Large diagnostic values. No physical/assistive/liveAuth/original116 pass.",
+  "recordAssetVerification": {
+    "contentHash": "80619717f2efc7312d18fe5a4ce7cd158aeacc86e6b331fa6ccf49d3946083e6",
+    "revision": "31",
+    "records": 88003,
+    "historyCount": 31,
+    "outboxCount": 31,
+    "recoveredPendingCount": 0,
+    "assets": [
+      {
+        "hash": "cb2412ade4973232e3a878bab47bfe95ab73852e9c30d10e6783284e93d07ac8",
+        "bytes": 25165824,
+        "verified": true
+      },
+      {
+        "hash": "95dfa16729f2abcd367ff6a0b44d80d117d02e18be4b696b120b7a24238f298e",
+        "bytes": 25165824,
+        "verified": true
+      },
+      {
+        "hash": "7f2bed51835af886a64f04b343803cb8f86b5c368e3de147401bba2efe21b71b",
+        "bytes": 25165824,
+        "verified": true
+      }
+    ],
+    "verificationScope": "current image hash, full material byte hashes, history/pending counts; full historical images are verified by the complete-file reader and separate lossless round-trip tests"
+  },
+  "next": "Find and measure concrete repeated cold work while preserving every validation/immutable/hash/native/clone rule; do not rerun unchanged candidate until lucky."
+}
