@@ -36,7 +36,8 @@ async function mount(kind, width = 1440) {
       p.relations = [{ id: newId(), projectId: p.projectId, revision: '0', fromId: a.id, toId: b.id, relationType: 'trust', direction: 'forward', validity: { ...emptyValidity(), worldRange: { start: '0', end: '2' } }, evidenceIds: [], status: 'provisional', visibility: 'private' }];
       p.views = [{ id: newId(), name: '保存した別時点', view: 'relation_graph', entityIds: [], settings: { layout: JSON.stringify({ positions: {}, filters: { at: '7', checkpoint: 'bad', focus: b.id, mode: 'table', hops: '2' }, zoom: 1 }) } }];
       const user = `rb03-view-${newId()}`; localStorage.setItem('scenario-local-view-user', user);
-      const key = device => `scenario-relations:v1:${user}:${p.projectId}:${device}`;
+      // These fixtures mount in the default guest author scope, like the App.
+      const key = device => `guest:scenario-relations:v1:${user}:${p.projectId}:${device}`;
       localStorage.setItem(key('desktop'), JSON.stringify({ positions: { [a.id]: { x: 120, y: 100 } }, filters: {}, zoom: 1 }));
       localStorage.setItem(key('phone'), JSON.stringify({ positions: { [a.id]: { x: 400, y: 300 } }, filters: { mode: 'graph', at: '9', checkpoint: 'bad', focus: a.id, query: 'old', category: 'family', hierarchy: false, unknown: false, hops: '2', scrollX: '0', scrollY: '0' }, zoom: 1 }));
       extra = { selectedId: a.id }; window.fixtureIds = { a: a.id, b: b.id };
@@ -48,7 +49,7 @@ async function mount(kind, width = 1440) {
       p.worldReferences = [{ projectId: world.projectId, immutableSnapshotId: snapshot.id, contentHash: snapshot.contentHash }];
       const localAlias = { ...alias, id: newId(), text: '作品の公開名' }, local = add(p, 'character', '作品内人物', { aliases: [localAlias] });
       const profile = add(p, 'projection_profile', '作品の限定投影', { audience: 'reader', publicTitle: '読者版', allowedKinds: ['character'], includedIds: [local.id, borrowed.id], namePolicy: { mode: 'replace', replacement: '人物' } });
-      localStorage.setItem(`scenario-world:v1:${p.projectId}`, JSON.stringify({ tab: 'maps', at: '0', checkpoint: '', holder: '' }));
+      localStorage.setItem(`scenario-world:v1:guest:${p.projectId}`, JSON.stringify({ tab: 'maps', at: '0', checkpoint: '', holder: '' }));
       extra = { worlds: [world], selectedEntityId: borrowed.id, requestedSection: 'histories' }; window.fixtureIds = { borrowed: borrowed.id, local: local.id, localAlias: localAlias.id, alias: alias.id, profile: profile.id, world: world.projectId };
     } else if (kind === 'borrowed') {
       Component = (await import(`${base}src/ui/Timeline.tsx`)).Timeline;
