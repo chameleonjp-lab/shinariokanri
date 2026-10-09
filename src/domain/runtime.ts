@@ -1040,7 +1040,13 @@ function* analysisIterator(project: ProjectData, options: AnalysisOptions): Gene
   let checkedStates = 0;
   let cursor = 0;
   let truncated = false;
+  let lastYield = started;
   while (cursor < queue.length || nextEntry < entryIds.length) {
+    const batchTime = now();
+    if (checkedStates > 0 && batchTime - lastYield >= 8) {
+      lastYield = batchTime;
+      yield { checkedStates, pendingStates: queue.length - cursor, elapsedMs: batchTime - started, limits };
+    }
     if (options.signal?.aborted || checkedStates >= limits.maxStates || now() - started >= limits.maxMs) {
       truncated = true;
       add('unknown', 'ANALYSIS_LIMIT', options.signal?.aborted ? '解析を取り消しました。確認済み範囲だけを表示します。' : '探索上限に達しました。残りの経路は未確認です。');
@@ -1105,6 +1111,11 @@ function* analysisIterator(project: ProjectData, options: AnalysisOptions): Gene
         ? [{}] : choices.filter(choice => choice.result === 'true').map(choice => ({ edgeId: choice.edgeId }));
       if (requests.length === 0 && node.data.fallbackId) requests.push({});
       for (const request of requests) {
+        const requestTime = now();
+        if (requestTime - lastYield >= 8) {
+          lastYield = requestTime;
+          yield { checkedStates, pendingStates: queue.length - cursor, elapsedMs: requestTime - started, limits };
+        }
         if (queue.length >= limits.maxStates || options.signal?.aborted || now() - started >= limits.maxMs) { truncated = true; add('unknown', 'ANALYSIS_LIMIT', '探索の上限または取消により、残る経路は未確認です。'); break; }
         request.worldTick = options.worldTick;
         if (node.data.trigger) request.event = { event: node.data.trigger.event, eventKey: node.data.trigger.eventKey, occurrenceId: `analysis:${checkedStates}:${request.edgeId ?? 'auto'}` };
@@ -1116,7 +1127,11 @@ function* analysisIterator(project: ProjectData, options: AnalysisOptions): Gene
         }
       }
     }
-    if (checkedStates % 128 === 0) yield { checkedStates, pendingStates: queue.length - cursor, elapsedMs: now() - started, limits };
+    const currentTime = now();
+    if (checkedStates % 128 === 0 || currentTime - lastYield >= 8) {
+      lastYield = currentTime;
+      yield { checkedStates, pendingStates: queue.length - cursor, elapsedMs: currentTime - started, limits };
+    }
   }
   for (const node of nodes(project)) if (!reached.has(node.id)) add('candidate', 'NOT_REACHED_IN_CHECKED_SCOPE', '指定した開始状態と確認範囲では到達を見つけていません。到達不能の断定ではありません。', node.id);
   const status: AnalysisStatus = findings.some(finding => finding.status === 'confirmed_issue') ? 'confirmed_issue'

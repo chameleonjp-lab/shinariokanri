@@ -13,7 +13,8 @@ import { resolvePinnedWorlds } from '../domain/pinnedWorlds';
 import { NarrativeClaims } from './NarrativeClaims';
 import { stateUsageIndex } from '../domain/stateUsage';
 import { declaredRegressionPaths } from '../domain/regressionPaths';
-import { startTrialVerified, replaySavedTraceVerified, analyzeFlowVerified } from '../domain/runtimeVerified';
+import { startTrialVerified, replaySavedTraceVerified } from '../domain/runtimeVerified';
+import { analyzeFlowInBrowser } from './flowAnalysis';
 import { useEffect, useMemo, useState } from 'react';
 import type { ContentAnchor, Entity, ProjectContent, ProjectData, ProjectSnapshot, TypedValue } from '../domain/types';
 import { createEntity, newId, getEntitiesByKind } from '../domain/model';
@@ -178,7 +179,7 @@ export function Reader({ project, worldSnapshots = {}, onOpen, onOpenTarget, onS
     const epoch = authorCacheEpoch(authorScope);
     const active = () => epoch === authorCacheEpoch(authorScope) && analysisOperation.controller === abort;
     updateReaderDraft(authorScope, { analyzing: true, error: '', notice: '', analysis: null, progress: 0 });
-    try { const result = await analyzeFlowVerified(project, { entryId: entry || undefined, worldTick: worldTick || undefined, contentVersionId: version || undefined, maxStates: 100000, maxTransitions: 10000, maxMs: 30000, signal: abort.signal, onProgress: p => { if (active()) updateReaderDraft(authorScope, { progress: p.checkedStates }); } }, worldSnapshots); if (active()) updateReaderDraft(authorScope, { analysis: result }); }
+    try { const result = await analyzeFlowInBrowser(project, { entryId: entry || undefined, worldTick: worldTick || undefined, contentVersionId: version || undefined, maxStates: 100000, maxTransitions: 10000, maxMs: 30000, signal: abort.signal, onProgress: p => { if (active()) updateReaderDraft(authorScope, { progress: p.checkedStates }); } }, worldSnapshots); if (active()) updateReaderDraft(authorScope, { analysis: result }); }
     catch (e) { if (active()) { if (!abort.signal.aborted) { recordDiagnostic(e,{revision:project.revision}); setError((e as Error).message); } else setNotice('探索を中止しました。全体の確認は完了していません。'); } }
     finally { if (active()) { operation.current = false; analysisOperation.controller = null; updateReaderDraft(authorScope, { busy: false, analyzing: false }); } }
   };

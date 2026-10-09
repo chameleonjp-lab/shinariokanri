@@ -46,7 +46,7 @@ async function result(page: Page): Promise<AnalysisResult> {
 
 // This small regression checks the navigation contract. The original Large
 // fixture, long path and real timing limits require their separate evidence.
-for (const fixedEdition of [false, true]) test(`AT-N05 retains cancelled ${fixedEdition ? 'fixed-edition analysis when navigating during capture' : 'current analysis after explicit cancellation'}, input and target edition`, async ({ page }) => {
+for (const fixedEdition of [false, true]) test(`AT-N05 retains cancelled ${fixedEdition ? 'fixed-edition analysis when navigating during captured request' : 'current analysis after explicit cancellation'}, input and target edition`, async ({ page }) => {
   test.setTimeout(60_000);
   const project = createProject('取消した検査と入力を保持する作品');
   const scene = createEntity(project.projectId, 'scene', '未保存入力を保持する場面', { body: textToRichText('😀編集を続ける場面') });
@@ -79,11 +79,23 @@ for (const fixedEdition of [false, true]) test(`AT-N05 retains cancelled ${fixed
   await page.getByLabel('試読開始時点の世界内tick', { exact: true }).fill('5');
   const before = await native(page);
   if (fixedEdition) await page.evaluate(() => {
-    const digest = crypto.subtle.digest.bind(crypto.subtle);
+    const postMessage = Worker.prototype.postMessage;
+    const pending: unknown[] = [];
+    let held: Worker | undefined;
     let first = true;
-    crypto.subtle.digest = async (...args: Parameters<SubtleCrypto['digest']>) => {
-      if (first) { first = false; (window as any).__analysisWaiting = true; await new Promise<void>(resolve => { (window as any).__releaseAnalysis = resolve; }); }
-      return digest(...args);
+    // Delay the actual captured worker request, preserving its bytes and order.
+    // The real worker still verifies the fixed content hash after release.
+    Worker.prototype.postMessage = function(message: any, ...rest: any[]) {
+      if (first && message?.type === 'start') { first = false; held = this; (window as any).__analysisWaiting = true; }
+      if (this === held) {
+        pending.push(structuredClone(message));
+        (window as any).__releaseAnalysis = () => {
+          Worker.prototype.postMessage = postMessage;
+          for (const request of pending) postMessage.call(held!, request);
+        };
+        return;
+      }
+      return (postMessage as any).call(this, message, ...rest);
     };
   });
   await page.getByRole('button', { name: '到達性と行き止まりを検査', exact: true }).click();
