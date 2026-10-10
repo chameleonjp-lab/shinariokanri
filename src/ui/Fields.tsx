@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import type { Comparator, ContentAnchor, Entity, EntityKind, ProjectData, RichText } from '../domain/types';
 import { KIND_LABELS, validateCondition } from '../domain/model';
 import { referenceChoices } from '../domain/referenceChoices';
@@ -76,18 +76,52 @@ export function describeCondition(value: unknown, project: ProjectData): string 
   return `外部値：${target(c.contractId)}`;
 }
 
-export function ConditionEditor({ value, onChange, project, depth = 0, onValid }: { value: unknown; onChange: (value: unknown) => void; project: ProjectData; depth?: number; onValid?: (valid: boolean) => void }) {
+type ConditionUiDraft = { pendingComparator?: Comparator; selectedValue?: number; expanded?: boolean; revealedChild?: string; revealedValue?: string };
+const ConditionInputContext = createContext<{
+  drafts: Record<string, ConditionUiDraft>;
+  update: (path: string, changes: Partial<ConditionUiDraft>) => void;
+  clear: (path: string) => void;
+  removeChild: (path: string, index: number) => void;
+} | null>(null);
+interface ConditionEditorProps { value: unknown; onChange: (value: unknown) => void; project: ProjectData; depth?: number; onValid?: (valid: boolean) => void; scope?: string; nodeLabel?: string }
+
+/** Keep pending confirmation inputs above pages and collapsed child editors. */
+export function ConditionEditor(props: ConditionEditorProps) {
+  const inherited = useContext(ConditionInputContext);
+  const [drafts, setDrafts] = useState<Record<string, ConditionUiDraft>>({});
+  const owned = {
+    drafts,
+    update: (path: string, changes: Partial<ConditionUiDraft>) => setDrafts(current => ({ ...current, [path]: { ...current[path], ...changes } })),
+    clear: (path: string) => setDrafts(current => Object.fromEntries(Object.entries(current).filter(([key]) => key !== path && !key.startsWith(`${path}:`)))),
+    removeChild: (path: string, index: number) => setDrafts(current => {
+      const prefix = `${path}:children:`;
+      return Object.fromEntries(Object.entries(current).flatMap(([key, draft]) => {
+        if (!key.startsWith(prefix)) return [[key, draft]];
+        const rest = key.slice(prefix.length), separator = rest.indexOf(':'), head = separator < 0 ? rest : rest.slice(0, separator), position = Number(head);
+        if (position === index) return [];
+        return [[position > index ? `${prefix}${position - 1}${separator < 0 ? '' : rest.slice(separator)}` : key, draft]];
+      }));
+    }),
+  };
+  return <ConditionInputContext.Provider value={inherited ?? owned}><ConditionEditorNode {...props}/></ConditionInputContext.Provider>;
+}
+
+function ConditionEditorNode({ value, onChange, project, depth = 0, onValid, scope = `${project.projectId}:condition`, nodeLabel = '条件' }: ConditionEditorProps) {
+  const inputs = useContext(ConditionInputContext)!;
+  const ui = inputs.drafts[scope] ?? {};
   const c = value && typeof value === 'object' ? value as Record<string, any> : { op: 'constant', value: true };
-  const [pendingComparator, setPendingComparator] = useState<Comparator>();
-  const [selectedValue, setSelectedValue] = useState(0);
+  const pendingComparator = ui.pendingComparator, selectedValue = ui.selectedValue ?? 0;
+  const setPendingComparator = (pendingComparator: Comparator | undefined) => inputs.update(scope, { pendingComparator });
+  const setSelectedValue = (selectedValue: number) => inputs.update(scope, { selectedValue });
   const error = !depth ? conditionInputError(c, project) : undefined;
   useEffect(() => { if (!depth) onValid?.(!error); }, [error, depth]);
   const variable = project.entities.find((entity): entity is Entity<'variable'> => entity.kind === 'variable' && entity.id === c.variableId);
   const values = Array.isArray(c.value) ? c.value : [c.value];
   const update = (key: string, val: unknown) => onChange({ ...c, [key]: val });
-  return <div className={`condition-editor ${depth ? 'condition-child' : ''}`}><div className="condition-top"><select aria-label="条件の種類" value={c.op} onChange={e => onChange(conditionDefault(e.target.value))}>{Object.entries(CONDITION_LABELS).map(([op, label]) => <option key={op} value={op} disabled={depth >= 15 && ['all', 'any', 'not'].includes(op)}>{label}</option>)}</select>{c.op === 'constant' && <select aria-label="条件の真偽" value={String(c.value)} onChange={e => update('value', e.target.value === 'true')}><option value="true">真</option><option value="false">偽</option></select>}</div>
-    {(c.op === 'all' || c.op === 'any') && <div className="condition-children">{(c.children || []).map((child: unknown, i: number) => <div key={i} className="condition-row"><ConditionEditor project={project} depth={depth + 1} value={child} onChange={next => update('children', c.children.map((v: unknown, j: number) => i === j ? next : v))}/><button type="button" className="icon-button small" aria-label={`条件${i + 1}を削除`} disabled={c.children.length <= 1} onClick={() => update('children', c.children.filter((_: unknown, j: number) => i !== j))}><Icon name="close" size={16}/></button></div>)}<button type="button" className="text-button" onClick={() => update('children', [...c.children, { op: 'constant', value: true }])}><Icon name="plus" size={16}/>条件を追加</button></div>}
-    {c.op === 'not' && <ConditionEditor project={project} depth={depth + 1} value={c.child} onChange={next => update('child', next)}/>}
+  if (depth && !ui.expanded) return <button type="button" className="button secondary small" aria-expanded="false" onClick={() => inputs.update(scope, { expanded: true })}>{nodeLabel}を編集 · {CONDITION_LABELS[c.op] ?? '形式を確認'}{Array.isArray(c.children) ? ` · ${c.children.length}件` : ''}</button>;
+  return <div className={`condition-editor ${depth ? 'condition-child' : ''}`}>{depth > 0 && <button type="button" className="text-button" aria-expanded="true" onClick={() => inputs.update(scope, { expanded: false })}>{nodeLabel}の編集を閉じる</button>}<div className="condition-top"><select aria-label="条件の種類" value={c.op} onChange={e => { inputs.clear(scope); onChange(conditionDefault(e.target.value)); }}>{Object.entries(CONDITION_LABELS).map(([op, label]) => <option key={op} value={op} disabled={depth >= 15 && ['all', 'any', 'not'].includes(op)}>{label}</option>)}</select>{c.op === 'constant' && <select aria-label="条件の真偽" value={String(c.value)} onChange={e => update('value', e.target.value === 'true')}><option value="true">真</option><option value="false">偽</option></select>}</div>
+    {(c.op === 'all' || c.op === 'any') && <div className="condition-children"><WindowedList items={(Array.isArray(c.children) ? c.children : []).map((child: unknown, i: number) => ({ id: String(i), child }))} scope={`${scope}:children`} label={`${nodeLabel}の子条件`} size={10} selectedId={ui.revealedChild} render={({ child, id }, i) => <div key={id} className="condition-row"><ConditionEditor project={project} depth={depth + 1} scope={`${scope}:children:${i}`} nodeLabel={`条件${i + 1}`} value={child} onChange={next => update('children', c.children.map((v: unknown, j: number) => i === j ? next : v))}/><button type="button" className="icon-button small" aria-label={`条件${i + 1}を削除`} disabled={c.children.length <= 1} onClick={() => { inputs.removeChild(scope, i); update('children', c.children.filter((_: unknown, j: number) => i !== j)); }}><Icon name="close" size={16}/></button></div>}/><button type="button" className="text-button" disabled={c.children.length >= 256} onClick={() => { update('children', [...c.children, { op: 'constant', value: true }]); inputs.update(scope, { revealedChild: String(c.children.length) }); }}><Icon name="plus" size={16}/>条件を追加</button></div>}
+    {c.op === 'not' && <ConditionEditor project={project} depth={depth + 1} scope={`${scope}:not`} nodeLabel="否定する条件" value={c.child} onChange={next => update('child', next)}/>}
     {c.op === 'compare' && <div className="condition-parts"><RefSelect project={project} kinds={['variable']} value={c.variableId} label="比較する状態" onChange={id => {
       const nextVariable = project.entities.find((entity): entity is Entity<'variable'> => entity.kind === 'variable' && entity.id === id);
       const nextValue = c.variableId ? c.value : defaultComparisonValue(nextVariable);
@@ -97,8 +131,8 @@ export function ConditionEditor({ value, onChange, project, depth = 0, onValid }
       if (next) { setPendingComparator(undefined); onChange(next); }
       else { setSelectedValue(0); setPendingComparator(comparator); }
     }}>{[['eq', '等しい'], ['ne', '等しくない'], ['lt', 'より小さい'], ['le', '以下'], ['gt', 'より大きい'], ['ge', '以上'], ['in', '含まれる']].map(([v, l]) => <option key={v} value={v} disabled={['lt', 'le', 'gt', 'ge'].includes(v) && variable?.data.valueType !== 'integer' && c.comparator !== v}>{l}</option>)}</select>
-      {c.comparator === 'in' ? <div className="condition-values" role="group" aria-label="含まれる値">{values.map((v: unknown, i: number) => <div className="condition-row" key={i}><div role="group" aria-label={`比較値${i + 1}`}><TypedField project={project} value={v} onChange={next => update('value', values.map((item: unknown, j: number) => i === j ? next : item))} preferredType={variable?.data.valueType}/></div><button type="button" className="icon-button small" aria-label={`比較値${i + 1}を削除`} onClick={() => update('value', values.filter((_: unknown, j: number) => i !== j))}><Icon name="close" size={16}/></button></div>)}<button type="button" className="text-button" disabled={values.length >= 256} onClick={() => update('value', [...values, defaultComparisonValue(variable)])}><Icon name="plus" size={16}/>比較値を追加</button></div> : <TypedField project={project} value={c.value} onChange={v => update('value', v)} preferredType={variable?.data.valueType}/>}
-      {pendingComparator && <div className="field-hint" role="group" aria-label="演算切替の確認"><p>単値比較に残す値を選んでください。ほかの値は条件から外れます。</p><select aria-label="単値比較に残す値" value={selectedValue} onChange={e => setSelectedValue(Number(e.target.value))}>{values.map((v: any, i: number) => <option value={i} key={i}>{i + 1}: {v?.type === 'unknown' ? '不明' : String(v?.value ?? '未入力')}</option>)}</select><button type="button" className="text-button" disabled={!values.length} onClick={() => { const next = switchComparisonOperator(c as ComparisonCondition, pendingComparator, selectedValue); if (next) onChange(next); setPendingComparator(undefined); }}>選んだ値で単値比較に変更</button><button type="button" className="text-button" onClick={() => setPendingComparator(undefined)}>演算切替を取消</button></div>}
+      {c.comparator === 'in' ? <div className="condition-values" role="group" aria-label="含まれる値"><WindowedList items={values.map((v: unknown, i: number) => ({ id: String(i), v }))} scope={`${scope}:values`} label={`${nodeLabel}の比較値`} size={20} selectedId={ui.revealedValue} render={({ v, id }, i) => <div className="condition-row" key={id}><div role="group" aria-label={`比較値${i + 1}`}><TypedField project={project} value={v} onChange={next => update('value', values.map((item: unknown, j: number) => i === j ? next : item))} preferredType={variable?.data.valueType}/></div><button type="button" className="icon-button small" aria-label={`比較値${i + 1}を削除`} onClick={() => { update('value', values.filter((_: unknown, j: number) => i !== j)); setSelectedValue(selectedValue > i ? selectedValue - 1 : selectedValue === i ? 0 : selectedValue); }}><Icon name="close" size={16}/></button></div>}/><button type="button" className="text-button" disabled={values.length >= 256} onClick={() => { update('value', [...values, defaultComparisonValue(variable)]); inputs.update(scope, { revealedValue: String(values.length) }); }}><Icon name="plus" size={16}/>比較値を追加</button></div> : <TypedField project={project} value={c.value} onChange={v => update('value', v)} preferredType={variable?.data.valueType}/>}
+      {pendingComparator && <div className="field-hint" role="group" aria-label="演算切替の確認"><p>単値比較に残す値を選んでください。ほかの値は条件から外れます。</p><PagedSelect label="単値比較に残す値" scope={`${scope}:retained-value`} value={String(selectedValue)} items={values.map((v: any, i: number) => ({ id: String(i), label: `${i + 1}: ${v?.type === 'unknown' ? '不明' : String(v?.value ?? '未入力')}` }))} onChange={id => { if (id !== '') setSelectedValue(Number(id)); }}/><button type="button" className="text-button" disabled={!values.length || selectedValue < 0 || selectedValue >= values.length} onClick={() => { const next = switchComparisonOperator(c as ComparisonCondition, pendingComparator, selectedValue); if (next) { onChange(next); setPendingComparator(undefined); } }}>選んだ値で単値比較に変更</button><button type="button" className="text-button" onClick={() => setPendingComparator(undefined)}>演算切替を取消</button></div>}
     </div>}
     {c.op === 'item' && <><RefSelect project={project} kinds={['item']} value={c.itemId} onChange={id => update('itemId', id || '')}/><input aria-label="必要な個数" type="number" min="1" value={c.quantity ?? 1} onChange={e => update('quantity', Number(e.target.value))}/></>}
     {c.op === 'known' && <><RefSelect project={project} kinds={['assertion']} value={c.assertionId} label="知識" onChange={id => update('assertionId', id || '')}/><RefSelect project={project} kinds={['character']} value={c.holderId} label="知識を持つ人物" onChange={id => update('holderId', id || '')}/></>}
@@ -125,9 +159,10 @@ export function TimeEditor({ value, onChange, project }: { value: unknown; onCha
   </div>;
 }
 
-export function ParticipantsEditor({ value, onChange, project }: { value: unknown; onChange: (v: unknown) => void; project: ProjectData }) {
+export function ParticipantsEditor({ value, onChange, project, scope = `${project.projectId}:participants` }: { value: unknown; onChange: (v: unknown) => void; project: ProjectData; scope?: string }) {
   const participants = Array.isArray(value) ? value as any[] : [];
-  return <div className="participant-editor">{participants.map((p, i) => <div className="participant-row" key={i}><RefSelect project={project} kinds={['character']} value={p.characterId} label={`参加者${i + 1}`} onChange={id => onChange(participants.map((v, j) => i === j ? { ...v, characterId: id || '' } : v))}/><select aria-label={`参加者${i + 1}の役割`} value={p.role} onChange={e => onChange(participants.map((v, j) => i === j ? { ...v, role: e.target.value } : v))}>{[['actor', '当事者'], ['witness', '目撃者'], ['mentioned', '言及される'], ['informed', '情報を得る'], ['custom', '独自の役割']].map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select><button type="button" className="icon-button small" aria-label={`参加者${i + 1}を外す`} onClick={() => onChange(participants.filter((_, j) => i !== j))}><Icon name="close" size={16}/></button></div>)}<button type="button" className="text-button" onClick={() => onChange([...participants, { characterId: '', role: 'actor' }])}><Icon name="plus" size={16}/>参加者を追加</button><span className="field-hint">参加・目撃・知識取得を別の役割として記録します。</span></div>;
+  const [revealedId, setRevealedId] = useState<string>();
+  return <div className="participant-editor"><WindowedList items={participants.map((p, i) => ({ id: String(i), p }))} scope={scope} label="参加者" size={10} selectedId={revealedId} render={({ p, id }, i) => <div className="participant-row" key={id}><RefSelect project={project} kinds={['character']} value={p.characterId} label={`参加者${i + 1}`} onChange={id => onChange(participants.map((v, j) => i === j ? { ...v, characterId: id || '' } : v))}/><select aria-label={`参加者${i + 1}の役割`} value={p.role} onChange={e => onChange(participants.map((v, j) => i === j ? { ...v, role: e.target.value } : v))}>{[['actor', '当事者'], ['witness', '目撃者'], ['mentioned', '言及される'], ['informed', '情報を得る'], ['custom', '独自の役割']].map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select><button type="button" className="icon-button small" aria-label={`参加者${i + 1}を外す`} onClick={() => onChange(participants.filter((_, j) => i !== j))}><Icon name="close" size={16}/></button></div>}/><button type="button" className="text-button" onClick={() => { onChange([...participants, { characterId: '', role: 'actor' }]); setRevealedId(String(participants.length)); }}><Icon name="plus" size={16}/>参加者を追加</button><span className="field-hint">参加・目撃・知識取得を別の役割として記録します。</span></div>;
 }
 
 function RichTextEditor({ value, onChange, label, rows, placeholder, project, entity, fieldKey, onOpenTarget, onOpenReferences, onOpenReference }: { value: unknown; onChange: (value: RichText) => void; label: string; rows: number; placeholder: string; project: ProjectData; entity: Entity; fieldKey: string; onOpenTarget?: (anchor: ContentAnchor, sourceAnchor?: ContentAnchor) => void; onOpenReferences?: (targetEntityId: string) => void; onOpenReference?: (reference: TextLinkReference) => void }) {
@@ -150,7 +185,9 @@ function RichTextEditor({ value, onChange, label, rows, placeholder, project, en
   }, []);
   const editorId = `rich-text-editor-${entity.id}-${fieldKey}`;
   let blockStart = 0;
-  const blockAnchors = blocks.map(block => {
+  // These optional markers stay bounded. Navigation resolves every paragraph
+  // from the authored text and focuses its field, including later paragraphs.
+  const blockAnchors = blocks.slice(0, 25).map(block => {
     const anchor = { id: block.id, start: blockStart };
     blockStart += Array.from(block.text).length + 1;
     return anchor;
@@ -195,7 +232,8 @@ function RichTextEditor({ value, onChange, label, rows, placeholder, project, en
     onCompositionEnd={e => { composing.current = false; change(e.currentTarget.value); }}
     onChange={e => change(e.target.value, (e.nativeEvent as InputEvent).inputType)}/>
     <div className="rich-text-block-anchors" aria-hidden="true">{blockAnchors.map(block => <span key={block.id} data-block-id={block.id} data-editor-id={editorId} data-block-start={block.start}/>)}</div>
-    {blocks.map((block, i) => block.unresolvedAnnotations?.map((annotation, j) => <div className="field-error" key={`${block.id}-${j}`} role="status"><strong>{annotation.kind === 'ruby' ? 'ルビ' : 'リンク'}の再リンク待ち：「{annotation.originalText}」</strong><p>{annotation.reason}</p><button type="button" className="text-button" onClick={() => relink(i, j)}>選択範囲に再リンク</button></div>))}
+    <WindowedList items={blocks.flatMap((block, i) => (block.unresolvedAnnotations ?? []).map((annotation, j) => ({ id: `${block.id}:${j}`, annotation, i, j })))}
+      scope={`${project.projectId}:${entity.id}:${fieldKey}:relink-selection`} label="選択範囲へ付け直す注記" render={({ id, annotation, i, j }) => <div className="field-error" key={id} role="status"><strong>{annotation.kind === 'ruby' ? 'ルビ' : 'リンク'}の再リンク待ち：「{annotation.originalText}」</strong><p>{annotation.reason}</p><button type="button" className="text-button" onClick={() => relink(i, j)}>選択範囲に再リンク</button></div>}/>
     {selectionError && <span className="field-error" role="alert">{selectionError}</span>}
     {fieldKey !== 'authorNotes' && <TextAnnotations value={blocks} project={project} sourceEntityId={entity.id} fieldLabel={label} onChange={onChange} onOpenTarget={onOpenTarget} onOpenReferences={onOpenReferences} onOpenReference={onOpenReference}/>}
   </div>;
@@ -213,9 +251,9 @@ export function DataField({ field, value, onChange, project, entity, onValid, ra
   else if (field.type === 'ref') input = <RefSelect value={value} project={project} kinds={field.kinds} excludeId={entity.id} label={field.label} onChange={onChange}/>;
   else if (field.type === 'refs') input = <RefList value={value} project={project} kinds={field.kinds} excludeId={entity.id} onChange={onChange}/>;
   else if (field.type === 'time') input = <TimeEditor project={project} value={value} onChange={onChange}/>;
-  else if (field.type === 'condition') input = <ConditionEditor project={project} value={value} onChange={onChange} onValid={onValid}/>;
+  else if (field.type === 'condition') input = <ConditionEditor project={project} value={value} scope={`${project.projectId}:${entity.id}:${field.key}:condition`} onChange={onChange} onValid={onValid}/>;
   else if (field.type === 'typed') input = <TypedField project={project} value={value} onChange={onChange} preferredType={entity.kind === 'variable' ? dataOf(entity).valueType : undefined}/>;
-  else if (field.type === 'participants') input = <ParticipantsEditor value={value} project={project} onChange={onChange}/>;
+  else if (field.type === 'participants') input = <ParticipantsEditor value={value} project={project} scope={`${project.projectId}:${entity.id}:${field.key}:participants`} onChange={onChange}/>;
   else if (field.type === 'json' && ['anchor', 'evidenceLocation'].includes(field.key)) {
     const anchor = value && typeof value === 'object' ? value as any : { entityId: '' };
     const pinned = anchor.sourceVersionId ? project.snapshots.find(snapshot => snapshot.id === anchor.sourceVersionId) : undefined;

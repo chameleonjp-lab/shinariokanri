@@ -4,6 +4,9 @@ import type { Entity, EntityKind, ProjectData } from '../domain/types';
 import { referenceChoices, referenceProject, type ReferenceScope } from '../domain/referenceChoices';
 import { clearStructuredNumberDrafts, parseStructuredNumberDrafts, reindexStructuredNumberDrafts, renameStructuredDraftPath, serializeStructuredNumberDrafts, type StructuredNumberDrafts } from './structuredNumberDrafts';
 import './StructuredDataField.css';
+import {PagedSelect} from './PagedSelect';
+import {ListPager,useListWindow} from './ListWindow';
+import { WindowedList } from './WindowedList';
 
 export type JsonSchemaNode = Record<string, unknown>;
 export type ReferenceKinds = Readonly<Record<string, readonly EntityKind[]>>;
@@ -37,6 +40,39 @@ const NumberDraftContext = createContext<{
   reindex: (path: string, mapIndex: (index: number) => number | undefined) => void;
 }>({ drafts: {}, update: () => undefined, clear: () => undefined, rename: () => undefined, reindex: () => undefined });
 const ReferenceVersionContext = createContext<string | undefined>(undefined);
+const StructuredScopeContext = createContext('structured-data');
+
+interface RetainedSwitchPreview {
+  format: 'structured-switch-preview-v1';
+  mode: 'type' | 'union';
+  choice: string;
+  previousJson: string;
+  plan: VariantSwitchPlan;
+}
+
+function readSwitchPreview(raw: string | undefined, mode: RetainedSwitchPreview['mode']): RetainedSwitchPreview | undefined {
+  if (!raw) return undefined;
+  try {
+    const draft = JSON.parse(raw) as RetainedSwitchPreview;
+    if (draft.format !== 'structured-switch-preview-v1' || draft.mode !== mode || typeof draft.choice !== 'string' || typeof draft.previousJson !== 'string') return undefined;
+    if (draft.previousJson) JSON.parse(draft.previousJson);
+    if (!draft.plan || typeof draft.plan.nextLabel !== 'string' || !Array.isArray(draft.plan.changes) || !Object.hasOwn(draft.plan, 'value')) return undefined;
+    if (!draft.plan.changes.every(change => change && ['remove', 'replace', 'add'].includes(change.kind) && typeof change.key === 'string')) return undefined;
+    return draft;
+  } catch { return undefined; }
+}
+
+/** Confirmation is unfinished editor input, retained with the row and common draft. */
+function useSwitchPreview(path: string, mode: RetainedSwitchPreview['mode'], value: unknown) {
+  const drafts = useContext(NumberDraftContext), key = `${path}.$switchPreview`;
+  const raw = drafts.drafts[key], pending = readSwitchPreview(raw, mode);
+  return {
+    raw, pending,
+    start: (choice: string, plan: VariantSwitchPlan) => drafts.update(key, JSON.stringify({ format: 'structured-switch-preview-v1', mode, choice, previousJson: JSON.stringify(value) ?? '', plan } satisfies RetainedSwitchPreview)),
+    cancel: () => drafts.update(key, undefined),
+    unchanged: pending?.previousJson === (JSON.stringify(value) ?? ''),
+  };
+}
 
 function useValidityCleanup(path: string, onValidity: (path: string, valid: boolean) => void) {
   useEffect(() => () => onValidity(path, true), [path, onValidity]);
@@ -542,18 +578,13 @@ function ReferenceValue({ value, label, path, project, kinds, scope = 'entity', 
   useValidityCleanup(path, onValidity);
   const versionId = useContext(ReferenceVersionContext);
   const id = typeof value === 'string' ? value : '';
+  const controlScope=useContext(StructuredScopeContext);
   const target = referenceProject(project, scope === 'snapshot' ? undefined : versionId)?.entities.find(entity => entity.id === id);
   const issue = id ? referenceIssue(id, project, kinds, scope, versionId) : '対象を選んでください。';
   useEffect(() => { onValidity(path, !issue); }, [path, issue]);
   const choices = referenceChoices(project, scope, kinds, { versionId });
-  const hasOption = choices.some(entity => entity.id === id);
   return <div className="sd-control">
-    <label htmlFor={pathId(path)}>{label}</label>
-    <select id={pathId(path)} value={id} onChange={event => { onChange(event.target.value); onValidity(path, !!event.target.value); }}>
-      <option value="">対象を選択</option>
-      {id && !hasOption && <option value={id}>{target ? `${target.deletedAt ? 'アーカイブ済みの保存された参照' : '種類が一致しない対象'} · ${target.name} · ${KIND_LABELS[target.kind]}` : `見つからない参照 · ${id}`}</option>}
-      {choices.map(choice => <option value={choice.id} key={choice.id}>{choice.label} · {choice.id.slice(-6)}</option>)}
-    </select>
+    <PagedSelect id={pathId(path)} label={label} scope={`${controlScope}:${path}:reference:${scope}:${versionId??'current'}`} value={id} items={choices.map(choice=>({id:choice.id,label:`${choice.label} · ${choice.id.slice(-6)}`}))} emptyLabel="対象を選択" unavailableLabel={target?`${target.deletedAt?'アーカイブ済みの保存された参照':'種類が一致しない対象'} · ${target.name} · ${KIND_LABELS[target.kind]}`:`見つからない参照 · ${id}`} onChange={next=>{onChange(next);onValidity(path,!!next);}}/>
     {issue && id && <span className="field-error" role="alert">{issue}</span>}
     {kinds?.length ? <span className="field-hint">{kinds.map(kind => KIND_LABELS[kind]).join('・')}から選択します。</span> : null}
     {versionId && versionId !== project.projectId && scope !== 'snapshot' && <span className="field-hint">参照先の固定版から選択しています。</span>}
@@ -562,7 +593,8 @@ function ReferenceValue({ value, label, path, project, kinds, scope = 'entity', 
 
 function CalendarValue({ value, label, path, project, onChange }: { value: unknown; label: string; path: string; project: ProjectData; onChange: (value: unknown) => void }) {
   const versionId = useContext(ReferenceVersionContext);
-  return <div className="sd-control"><label htmlFor={pathId(path)}>{label}</label><select id={pathId(path)} value={typeof value === 'string' ? value : ''} onChange={event => onChange(event.target.value)}><option value="">暦を選択</option>{referenceChoices(project, 'calendar', undefined, { versionId }).map(calendar => <option key={calendar.id} value={calendar.id}>{calendar.label} · {calendar.id}</option>)}</select></div>;
+  const controlScope=useContext(StructuredScopeContext);
+  return <div className="sd-control"><PagedSelect id={pathId(path)} label={label} scope={`${controlScope}:${path}:calendar:${versionId??'current'}`} value={typeof value==='string'?value:''} items={referenceChoices(project,'calendar',undefined,{versionId}).map(calendar=>({id:calendar.id,label:`${calendar.label} · ${calendar.id}`}))} emptyLabel="暦を選択" onChange={onChange}/></div>;
 }
 
 function BooleanValue({ value, label, path, onChange }: { value: unknown; label: string; path: string; onChange: (value: unknown) => void }) {
@@ -571,14 +603,8 @@ function BooleanValue({ value, label, path, onChange }: { value: unknown; label:
 
 function EnumValue({ value, schema, label, path, onChange, root }: { value: unknown; schema: JsonSchemaNode; label: string; path: string; onChange: (value: unknown) => void; root: JsonSchemaNode }) {
   const options = schemaArray(schema, 'enum');
-  return <div className="sd-control"><label htmlFor={pathId(path)}>{label}</label><select id={pathId(path)} value={value === undefined ? '' : JSON.stringify(value)} onChange={event => {
-    if (!event.target.value) return;
-    try { onChange(JSON.parse(event.target.value)); } catch { onChange(event.target.value); }
-  }}>
-    <option value="">選択してください</option>
-    {options.map((option, index) => <option key={`${String(option)}-${index}`} value={JSON.stringify(option)}>{enumLabel(option, path.split('.').at(-1) ?? '')}</option>)}
-  </select>
-  </div>;
+  const controlScope=useContext(StructuredScopeContext);
+  return <div className="sd-control"><PagedSelect id={pathId(path)} label={label} scope={`${controlScope}:${path}:enum`} value={value===undefined?'':JSON.stringify(value)} items={options.map(option=>({id:JSON.stringify(option),label:enumLabel(option,path.split('.').at(-1)??'')}))} onChange={next=>{if(!next)return;try{onChange(JSON.parse(next));}catch{onChange(next);}}}/></div>;
 }
 
 function PropertyField({ schema, value, exists, required, label, path, parentValue, onChange, root, project, referenceKinds, onValidity, maxVisibleItems }: {
@@ -631,6 +657,7 @@ function ObjectValue({ schema, value, label, path, onChange, root, project, refe
 }) {
   const numericDrafts = useContext(NumberDraftContext);
   const objectValue = isRecord(value) ? value : {};
+  const controlScope = useContext(StructuredScopeContext), versionId = useContext(ReferenceVersionContext);
   const properties = schemaProperties(schema), required = requiredProperties(schema);
   const recordSchema = asSchema(schema.additionalProperties);
   const isRecordOnly = !Object.keys(properties).length && !!recordSchema;
@@ -642,19 +669,19 @@ function ObjectValue({ schema, value, label, path, onChange, root, project, refe
   };
   return <div className={`sd-object ${isRecordOnly ? 'sd-record' : ''}`}>
     {!isRecordOnly && <div className="sd-section-heading"><strong>{label}</strong><span>{Object.keys(properties).length}個の項目</span></div>}
-    {Object.entries(properties).map(([key, childSchema]) => <PropertyField
+    <WindowedList items={Object.entries(properties).map(([key, childSchema]) => ({ id: key, childSchema }))} scope={`${controlScope}:${path}:properties:${versionId ?? 'current'}`} label={`${label}の入力項目`} size={maxVisibleItems} searchText={({ id }) => propertyLabel(id)} render={({ id: key, childSchema }) => <PropertyField
       key={key} schema={childSchema} value={objectValue[key]} exists={Object.hasOwn(objectValue, key)} required={required.has(key)}
       label={propertyLabel(key)} path={`${path}.${key}`} parentValue={objectValue} onChange={(next, exists) => update(key, next, exists !== false)}
       root={root} project={project} referenceKinds={referenceKinds} onValidity={onValidity} maxVisibleItems={maxVisibleItems}
-    />)}
+    />}/>
     {recordSchema && <RecordValue schema={schema} entries={objectValue} path={path} onChange={onChange} root={root} project={project} referenceKinds={referenceKinds} onValidity={onValidity} maxVisibleItems={maxVisibleItems}/>}
     {extras.length > 0 && <details className="sd-unknown" open>
       <summary>スキーマにない項目（{extras.length}件、保持中）</summary>
       <p className="field-hint">この項目はスキーマにありません。削除を選ぶまで値を保持します。</p>
-      {extras.map(key => <div className="sd-unknown-row" key={key}>
+      <WindowedList items={extras.map(key => ({ id: key }))} scope={`${controlScope}:${path}:extras:${versionId ?? 'current'}`} label={`${label}の未定義項目`} size={maxVisibleItems} searchText={({ id }) => propertyLabel(id)} render={({ id: key }) => <div className="sd-unknown-row" key={key}>
         <div className="sd-control"><label>{propertyLabel(key)}</label><SchemaValue schema={inferSchema(objectValue[key])} value={objectValue[key]} label={propertyLabel(key)} path={`${path}.${key}`} parentValue={objectValue} onChange={next => update(key, next)} root={root} project={project} referenceKinds={referenceKinds} onValidity={onValidity} maxVisibleItems={maxVisibleItems}/></div>
         <button type="button" className="button subtle small" onClick={() => update(key, undefined, false)}>この項目を削除</button>
-      </div>)}
+      </div>}/>
     </details>}
     {isRecordOnly && <p className="field-hint">{Object.keys(objectValue).length}件を保持しています。キーと値を個別に編集できます。</p>}
   </div>;
@@ -685,13 +712,22 @@ function RecordValue({ schema, entries, path, onChange, root, project, reference
   useValidityCleanup(`${path}.$newKey`, onValidity);
   const numericDrafts = useContext(NumberDraftContext);
   const versionId = useContext(ReferenceVersionContext);
-  const [newKey, setNewKey] = useState('');
+  const newKeyInputPath = `${path}.$newKeyInput`;
+  const retainedNewKey = numericDrafts.drafts[newKeyInputPath];
+  const [newKey, setNewKey] = useState(retainedNewKey ?? '');
+  useEffect(() => { setNewKey(retainedNewKey ?? ''); }, [retainedNewKey]);
+  const changeNewKey = (next: string) => { setNewKey(next); numericDrafts.update(newKeyInputPath, next || undefined); onValidity(`${path}.$newKey`, true); };
+  const controlScope=useContext(StructuredScopeContext);
   const rowIds = useRef(new Map<string, string>());
-  const rowId = (key: string) => { let id = rowIds.current.get(key); if (!id) { id = newId(); rowIds.current.set(key, id); } return id; };
+  const rowSequence = useRef(0);
+  const rowId = (key: string) => { let id = rowIds.current.get(key); if (id === undefined) { id = String(rowSequence.current++); rowIds.current.set(key, id); } return id; };
   const additional = asSchema(schema.additionalProperties) ?? { type: 'string' };
   const propertyNames = asSchema(schema.propertyNames);
   const entriesList = Object.entries(entries);
-  const visible = entriesList.slice(0, maxVisibleItems);
+  const view=useListWindow({items:entriesList.map(([key,value],index)=>({id:rowId(key),key,value,index})),scope:`${controlScope}:${path}:record:${versionId??'current'}`,size:maxVisibleItems,followSelected:false});
+  const [addedPage, setAddedPage] = useState<number | null>(null);
+  useEffect(() => { if (addedPage !== null && addedPage <= view.maximum) { view.setPage(addedPage); setAddedPage(null); } }, [addedPage, view.maximum]);
+  const visible = view.items;
   const keyError = newKey && Object.hasOwn(entries, newKey) ? '同じキーがすでにあります。' : '';
   const keyChoices = propertyNames && (refName(propertyNames) === 'ID' || schemaReferenceScope(propertyNames))
     ? referenceChoices(project, schemaReferenceScope(propertyNames) ?? 'entity', getReferenceKinds(path, undefined, referenceKinds, entries, propertyNames), { versionId }).filter(choice => !Object.hasOwn(entries, choice.id)) : undefined;
@@ -700,7 +736,7 @@ function RecordValue({ schema, entries, path, onChange, root, project, reference
     const issue = propertyNames ? validateNestedValue(propertyNames, newKey, root) || formatValidation(propertyNames, newKey, `${path}.$newKey`, root, project, referenceKinds, 0, entries, versionId).at(0) : undefined;
     if (issue) { onValidity(`${path}.$newKey`, false); return; }
     onChange({ ...entries, [newKey]: schemaDefault(additional, root, 0, false) });
-    onValidity(`${path}.$newKey`, true); setNewKey('');
+    onValidity(`${path}.$newKey`, true); changeNewKey(''); setAddedPage(Math.floor(entriesList.length / maxVisibleItems));
   };
   const rename = (oldKey: string, nextKey: string) => {
     if (nextKey === oldKey || Object.hasOwn(entries, nextKey)) return;
@@ -710,7 +746,7 @@ function RecordValue({ schema, entries, path, onChange, root, project, reference
     onChange(Object.fromEntries(Object.entries(entries).map(([key, value]) => [key === oldKey ? nextKey : key, value])));
   };
   return <div className="sd-record-rows">
-    {visible.map(([key, value], index) => <div className="sd-record-row" key={rowId(key)}>
+    {visible.map(({id,key,value,index}) => <div className="sd-record-row" key={id}>
       {propertyNames && refName(propertyNames) === 'ID' ? <ReferenceValue value={key} label={`項目${index + 1}のキー`} path={`${recordEntryPath(path, key)}.$key`} project={project} scope={schemaReferenceScope(propertyNames)} kinds={getReferenceKinds(path, key, referenceKinds, entries, propertyNames)} onChange={next => rename(key, String(next))} onValidity={onValidity}/> : <RecordKeyInput entryKey={key} entries={entries} label={`項目${index + 1}のキー`} path={path} propertyNames={propertyNames} project={project} root={root} referenceKinds={referenceKinds} onRename={next => rename(key, next)} onValidity={onValidity}/>}
       <PropertyField schema={additional} value={value} exists required label={`項目${index + 1}の値`} path={recordEntryPath(path, key)} parentValue={entries} onChange={(next, exists) => {
         if (exists === false || next === undefined) { const copy = { ...entries }; delete copy[key]; rowIds.current.delete(key); numericDrafts.clear(recordEntryPath(path, key)); onChange(copy); onValidity(recordEntryPath(path, key), true); }
@@ -718,8 +754,9 @@ function RecordValue({ schema, entries, path, onChange, root, project, reference
       }} root={root} project={project} referenceKinds={referenceKinds} onValidity={onValidity} maxVisibleItems={maxVisibleItems}/>
       <button type="button" className="button subtle small" aria-label={`項目${index + 1}を削除`} onClick={() => { const copy = { ...entries }; delete copy[key]; rowIds.current.delete(key); numericDrafts.clear(recordEntryPath(path, key)); onValidity(recordEntryPath(path, key), true); onChange(copy); }}>削除</button>
     </div>)}
-    {entriesList.length > maxVisibleItems && <p className="field-hint">件数が多いため、最初の{maxVisibleItems}件のみ表示しています。絞り込みまたは分割して編集してください。</p>}
-    <div className="sd-add-row">{keyChoices ? <select aria-label="新しいキー" value={newKey} onChange={event => { setNewKey(event.target.value); onValidity(`${path}.$newKey`, true); }}><option value="">対象を選択</option>{keyChoices.map(choice => <option key={choice.id} value={choice.id}>{choice.label} · {choice.id.slice(-6)}</option>)}</select> : <input aria-label="新しいキー" value={newKey} onChange={event => { setNewKey(event.target.value); onValidity(`${path}.$newKey`, true); }} placeholder="新しいキー"/>}<button type="button" className="button secondary small" onClick={add} disabled={!newKey || !!keyError}>項目を追加</button></div>
+    <ListPager {...view} label={`${propertyLabel(path.split('.').at(-1)??path)}の項目`}/>
+    <div className="sd-add-row">{keyChoices ? <PagedSelect label="新しいキー" scope={`${controlScope}:${path}:new-key:${versionId??'current'}`} value={newKey} items={keyChoices.map(choice=>({id:choice.id,label:`${choice.label} · ${choice.id.slice(-6)}`}))} emptyLabel="対象を選択" onChange={changeNewKey}/> : <input aria-label="新しいキー" value={newKey} onChange={event => changeNewKey(event.target.value)} placeholder="新しいキー"/>}<button type="button" className="button secondary small" onClick={add} disabled={!newKey || !!keyError}>項目を追加</button></div>
+    {newKey && <span className="field-hint">追加するキーの入力を保持しています。「項目を追加」で反映するか、入力を空にしてから保存してください。</span>}
     {keyError && <span className="field-error" role="alert">{keyError}</span>}
   </div>;
 }
@@ -728,8 +765,11 @@ function ArrayValue({ schema, value, label, path, onChange, root, project, refer
   schema: JsonSchemaNode; value: unknown; label: string; path: string; onChange: (value: unknown) => void; root: JsonSchemaNode; project: ProjectData; referenceKinds: ReferenceKinds; onValidity: (path: string, valid: boolean) => void; maxVisibleItems: number;
 }) {
   const numericDrafts = useContext(NumberDraftContext);
-  const [page, setPage] = useState(0);
   const items = Array.isArray(value) ? value : [];
+  const controlScope=useContext(StructuredScopeContext),versionId=useContext(ReferenceVersionContext);
+  const {page,setPage,maximum:maximumPage}=useListWindow({items:items.map((_,index)=>({id:String(index)})),scope:`${controlScope}:${path}:array:${versionId??'current'}`,size:maxVisibleItems,followSelected:false});
+  const [addedPage,setAddedPage]=useState<number|null>(null);
+  useEffect(()=>{if(addedPage!==null&&addedPage<=maximumPage){setPage(addedPage);setAddedPage(null);}},[addedPage,maximumPage]);
   const start = page * maxVisibleItems, visible = items.slice(start, start + maxVisibleItems);
   const itemSchema = asSchema(schema.items) ?? { type: 'string' };
   const maximum = typeof schema.maxItems === 'number' ? schema.maxItems : 100_000;
@@ -761,7 +801,7 @@ function ArrayValue({ schema, value, label, path, onChange, root, project, refer
         </div>
       </div>;
     })}
-    <button type="button" className="button secondary small" disabled={!canAdd} onClick={() => { onChange(insertArrayItem(items, items.length, schemaDefault(itemSchema, root, 0, false))); setPage(Math.floor(items.length / maxVisibleItems)); }}>項目を追加</button>
+    <button type="button" className="button secondary small" disabled={!canAdd} onClick={() => { onChange(insertArrayItem(items, items.length, schemaDefault(itemSchema, root, 0, false))); setAddedPage(Math.floor(items.length / maxVisibleItems)); }}>項目を追加</button>
     {!canAdd && <span className="field-hint">この一覧には最大{maximum}件まで追加できます。</span>}
   </div>;
 }
@@ -772,17 +812,24 @@ function TypeArrayValue({ schema, value, label, path, onChange, root, project, r
   const numericDrafts = useContext(NumberDraftContext);
   const types = schemaArray(resolveSchema(schema, root), 'type').filter((type): type is string => typeof type === 'string');
   const selected = types.find(type => simpleTypeMatches(type, value)) ?? types[0];
-  const [pending, setPending] = useState<{ type: string; nextValue: unknown }>();
-  const nextValue = (type: string) => schemaDefault({ type }, root, 0, false);
+  const preview = useSwitchPreview(path, 'type', value), pending = preview.pending;
+  const planFor = (type: string): VariantSwitchPlan | undefined => {
+    if (!types.includes(type)) return undefined;
+    const next = schemaDefault({ type }, root, 0, false);
+    return { value: next, nextLabel: ENUM_LABELS[type] ?? type, changes: [{ kind: 'replace', key: 'value', current: value, next }] };
+  };
+  const nextPlan = pending ? planFor(pending.choice) : undefined;
+  const stale = !preview.unchanged || JSON.stringify(nextPlan) !== JSON.stringify(pending?.plan);
   return <div className="sd-union">
-    <div className="sd-control"><label htmlFor={pathId(`${path}-type`)}>{label}の種類</label><select id={pathId(`${path}-type`)} value={selected ?? ''} onChange={event => setPending({ type: event.target.value, nextValue: nextValue(event.target.value) })}>{types.map(type => <option value={type} key={type}>{ENUM_LABELS[type] ?? type}</option>)}</select></div>
-    {pending && <SwitchPreview current={value} next={pending.nextValue} label={`${label}の種類`} nextLabel={ENUM_LABELS[pending.type] ?? pending.type} changes={[{ kind: 'replace', key: 'value', current: value, next: pending.nextValue }]} onCancel={() => setPending(undefined)} onConfirm={() => { numericDrafts.clear(path); onChange(pending.nextValue); onValidity(path, true); setPending(undefined); }}/ >}
-    <div hidden={!!pending}><SchemaValue schema={{ type: selected }} value={value} label={label} path={path} parentValue={undefined} onChange={onChange} root={root} project={project} referenceKinds={referenceKinds} onValidity={onValidity} maxVisibleItems={maxVisibleItems}/ ></div>
+    <div className="sd-control"><label htmlFor={pathId(`${path}-type`)}>{label}の種類</label><select id={pathId(`${path}-type`)} value={selected ?? ''} onChange={event => { const plan = planFor(event.target.value); if (plan) preview.start(event.target.value, plan); }}>{types.map(type => <option value={type} key={type}>{ENUM_LABELS[type] ?? type}</option>)}</select></div>
+    {pending && <SwitchPreview current={pending.previousJson ? JSON.parse(pending.previousJson) : undefined} next={pending.plan.value} label={`${label}の種類`} nextLabel={pending.plan.nextLabel} changes={pending.plan.changes} stale={stale} onRefresh={nextPlan ? () => preview.start(pending.choice, nextPlan) : undefined} onCancel={preview.cancel} onConfirm={() => { if (stale) return; numericDrafts.clear(path); onChange(pending.plan.value); onValidity(path, true); }}/ >}
+    {preview.raw && !pending && <div role="alert">切替の入力を確認できません。<button type="button" onClick={preview.cancel}>切替を取り消す</button></div>}
+    <div hidden={!!preview.raw}><SchemaValue schema={{ type: selected }} value={value} label={label} path={path} parentValue={undefined} onChange={onChange} root={root} project={project} referenceKinds={referenceKinds} onValidity={onValidity} maxVisibleItems={maxVisibleItems}/ ></div>
   </div>;
 }
 
-function SwitchPreview({ current, next, label, nextLabel, changes, onCancel, onConfirm }: {
-  current: unknown; next: unknown; label: string; nextLabel: string; changes: PreviewChange[]; onCancel: () => void; onConfirm: () => void;
+function SwitchPreview({ current, next, label, nextLabel, changes, onCancel, onConfirm, stale = false, onRefresh }: {
+  current: unknown; next: unknown; label: string; nextLabel: string; changes: PreviewChange[]; onCancel: () => void; onConfirm: () => void; stale?: boolean; onRefresh?: () => void;
 }) {
   return <div className="sd-switch-preview" role="group" aria-label={`${label}の切替確認`}>
     <strong>切替内容を確認</strong>
@@ -790,7 +837,8 @@ function SwitchPreview({ current, next, label, nextLabel, changes, onCancel, onC
     {!changes.length ? <p>入力済みの項目をそのまま保てます。</p> : <ul>{changes.map((change, index) => <li key={`${change.kind}-${change.key}-${index}`}>
       {change.kind === 'remove' ? `${propertyLabel(change.key)}を削除します（現在：${scalarPreview(change.current)}）。` : change.kind === 'replace' ? `${propertyLabel(change.key)}を置き換えます（現在：${scalarPreview(change.current)}、切替後：${scalarPreview(change.next)}）。` : `${propertyLabel(change.key)}を新しく追加します（初期値：${scalarPreview(change.next)}）。`}
     </li>)}</ul>}
-    <div className="reference-controls"><button type="button" className="button primary small" onClick={onConfirm}>内容を確認して切り替える</button><button type="button" className="button secondary small" onClick={onCancel}>切替を取り消す</button></div>
+    {stale && <p role="alert">確認後に入力または選択肢が変わりました。現在の入力から切替内容を再確認してください。</p>}
+    <div className="reference-controls">{stale && onRefresh && <button type="button" className="button secondary small" onClick={onRefresh}>切替内容を再確認</button>}<button type="button" className="button primary small" disabled={stale} onClick={onConfirm}>内容を確認して切り替える</button><button type="button" className="button secondary small" onClick={onCancel}>切替を取り消す</button></div>
   </div>;
 }
 
@@ -799,18 +847,23 @@ function UnionValue({ schema, value, label, path, onChange, root, project, refer
 }) {
   const numericDrafts = useContext(NumberDraftContext);
   const unionKey = Array.isArray(schema.oneOf) ? 'oneOf' : 'anyOf';
+  const controlScope = useContext(StructuredScopeContext);
   const branches = schemaArray(schema, unionKey).flatMap(branch => asSchema(branch) ? [asSchema(branch)!] : []).filter(branch => branch.type !== 'null');
   const selected = currentVariantIndex(branches, value, root);
-  const [pending, setPending] = useState<{ index: number; plan: VariantSwitchPlan }>();
+  const preview = useSwitchPreview(path, 'union', value), pending = preview.pending;
+  const nextPlan = pending && /^\d+$/.test(pending.choice) && Number.isSafeInteger(Number(pending.choice)) ? planVariantSwitch(schema, value, Number(pending.choice), root) : undefined;
+  const stale = !preview.unchanged || JSON.stringify(nextPlan) !== JSON.stringify(pending?.plan);
   const branch = branches[selected];
   const planSwitch = (index: number) => {
     const plan = planVariantSwitch(schema, value, index, root);
-    if (plan) setPending({ index, plan });
+    if (plan) preview.start(String(index), plan);
   };
   return <div className="sd-union">
-    <div className="sd-control"><label htmlFor={pathId(`${path}-variant`)}>{label}の種類</label><select id={pathId(`${path}-variant`)} value={selected} onChange={event => planSwitch(Number(event.target.value))}>{branches.map((option, index) => <option key={index} value={index}>{variantLabel(option, root, index)}</option>)}</select></div>
-    {pending && <SwitchPreview current={value} next={pending.plan.value} label={label} nextLabel={pending.plan.nextLabel} changes={pending.plan.changes} onCancel={() => setPending(undefined)} onConfirm={() => { numericDrafts.clear(path); onChange(pending.plan.value); onValidity(path, true); setPending(undefined); }}/ >}
-    {branch && <div hidden={!!pending}><SchemaValue schema={branch} value={value} label={label} path={path} parentValue={undefined} onChange={onChange} root={root} project={project} referenceKinds={referenceKinds} onValidity={onValidity} maxVisibleItems={maxVisibleItems}/ ></div>}
+    <div className="sd-control"><PagedSelect id={pathId(`${path}-variant`)} label={`${label}の種類`} scope={`${controlScope}:${path}:variants`} value={String(selected)}
+      items={branches.map((option, index) => ({ id: String(index), label: variantLabel(option, root, index) }))} onChange={id => { if (id !== '') planSwitch(Number(id)); }}/></div>
+    {pending && <SwitchPreview current={pending.previousJson ? JSON.parse(pending.previousJson) : undefined} next={pending.plan.value} label={label} nextLabel={pending.plan.nextLabel} changes={pending.plan.changes} stale={stale} onRefresh={nextPlan ? () => preview.start(pending.choice, nextPlan) : undefined} onCancel={preview.cancel} onConfirm={() => { if (stale) return; numericDrafts.clear(path); onChange(pending.plan.value); onValidity(path, true); }}/ >}
+    {preview.raw && !pending && <div role="alert">切替の入力を確認できません。<button type="button" onClick={preview.cancel}>切替を取り消す</button></div>}
+    {branch && <div hidden={!!preview.raw}><SchemaValue schema={branch} value={value} label={label} path={path} parentValue={undefined} onChange={onChange} root={root} project={project} referenceKinds={referenceKinds} onValidity={onValidity} maxVisibleItems={maxVisibleItems}/ ></div>}
   </div>;
 }
 
@@ -917,7 +970,7 @@ export function StructuredDataField({
   const valid = !!schema && (!fieldRequired || value !== undefined) && !fieldErrors.length && !Object.keys(numberDrafts).length && Object.values(invalidPaths).every(Boolean);
   useEffect(() => { onValid?.(valid); }, [valid, onValid]);
 
-  return <NumberDraftContext.Provider value={numberDraftContext}><ReferenceVersionContext.Provider value={versionId ?? undefined}><section className="structured-data-field" aria-label={`${label}の構造化入力`}>
+  return <StructuredScopeContext.Provider value={`${project.projectId}:${entity?.id??label}:${fieldKey??label}`}><NumberDraftContext.Provider value={numberDraftContext}><ReferenceVersionContext.Provider value={versionId ?? undefined}><section className="structured-data-field" aria-label={`${label}の構造化入力`}>
     <div className="sd-section-heading"><h3>{label}</h3><span>{fieldRequired ? '必須' : '任意'}の構造化データ</span></div>
     {!schema ? <p className="field-error" role="alert">この項目の構造スキーマを取得できません。既存値は保持されています。</p> : <PropertyField
       schema={schema}
@@ -935,7 +988,7 @@ export function StructuredDataField({
       maxVisibleItems={Math.max(1, Math.min(100, maxVisibleItems))}
     />}
     {schema && fieldErrors.length > 0 && <div className="sd-validation" role="status"><strong>入力を確認してください</strong><ul>{fieldErrors.slice(0, 5).map((issue, index) => <li key={`${issue}-${index}`}>{issue}</li>)}</ul></div>}
-  </section></ReferenceVersionContext.Provider></NumberDraftContext.Provider>;
+  </section></ReferenceVersionContext.Provider></NumberDraftContext.Provider></StructuredScopeContext.Provider>;
 }
 
 export default StructuredDataField;

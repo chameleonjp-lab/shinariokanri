@@ -46,14 +46,16 @@ function characterOrigins(before: string[], after: string[], replacement?: TextR
   return origins;
 }
 
-function startsOf(blocks: { text: string }[]) {
+function startsOf(lengths: number[]) {
   let offset = 0;
-  return blocks.map(block => { const start = offset; offset += Array.from(block.text).length + 1; return start; });
+  return lengths.map(length => { const start = offset; offset += length + 1; return start; });
 }
 
 /** Build a mapping without modifying the supplied blocks or their fixed IDs. */
 export function buildTextTransform(before: RichText, after: RichText, replacement?: TextReplacement): TextTransform {
-  const beforeText = plain(before), afterText = plain(after), oldChars = Array.from(beforeText), newChars = Array.from(afterText), oldStarts = startsOf(before), newStarts = startsOf(after);
+  const beforeText = plain(before), afterText = plain(after), oldChars = Array.from(beforeText), newChars = Array.from(afterText);
+  const oldPoints = before.map(block => Array.from(block.text)), newLengths = after.map(block => Array.from(block.text).length);
+  const oldLengths = oldPoints.map(points => points.length), oldStarts = startsOf(oldLengths), newStarts = startsOf(newLengths);
   const origins = characterOrigins(oldChars, newChars, replacement);
   const oldByText = new Map<string, number[]>(), newByText = new Map<string, number[]>();
   before.forEach((block, i) => oldByText.set(block.text, [...(oldByText.get(block.text) ?? []), i]));
@@ -64,7 +66,7 @@ export function buildTextTransform(before: RichText, after: RichText, replacemen
     const newIndex = after.findIndex(candidate => candidate.id === block.id && candidate.text === block.text);
     if (newIndex < 0) return;
     exact.set(oldIndex, newIndex);
-    for (let j = 0; j < Array.from(block.text).length; j++) reserved.add(newStarts[newIndex] + j);
+    for (let j = 0; j < oldLengths[oldIndex]; j++) reserved.add(newStarts[newIndex] + j);
   });
   // Whole, unchanged paragraphs can move independently of the text diff.
   for (const [text, oldIndexes] of oldByText) {
@@ -73,12 +75,12 @@ export function buildTextTransform(before: RichText, after: RichText, replacemen
     oldIndexes.forEach((oldIndex, i) => {
       if (exact.has(oldIndex)) return;
       const newIndex = newIndexes[i]; exact.set(oldIndex, newIndex);
-      for (let j = 0; j < Array.from(text).length; j++) reserved.add(newStarts[newIndex] + j);
+      for (let j = 0; j < oldLengths[oldIndex]; j++) reserved.add(newStarts[newIndex] + j);
     });
   }
   before.forEach((block, i) => {
     const exactIndex = exact.get(i);
-    for (let j = 0; j < Array.from(block.text).length; j++) {
+    for (let j = 0; j < oldLengths[i]; j++) {
       const index = oldStarts[i] + j;
       if (exactIndex !== undefined) origins[index] = newStarts[exactIndex] + j;
       else if (origins[index] !== undefined && reserved.has(origins[index]!)) origins[index] = undefined;
@@ -86,7 +88,7 @@ export function buildTextTransform(before: RichText, after: RichText, replacemen
     }
   });
   const positions = new Map<number, TextPosition>();
-  after.forEach((block, i) => { for (let j = 0; j < Array.from(block.text).length; j++) positions.set(newStarts[i] + j, { block: i, offset: j }); });
+  after.forEach((_, i) => { for (let j = 0; j < newLengths[i]; j++) positions.set(newStarts[i] + j, { block: i, offset: j }); });
   const oldIndexes = new Map(before.map((block, i) => [block.id, i]));
   const wholeTextPreserved = oldChars.every((_, i) => origins[i] !== undefined && origins[i] === origins[0]! + i);
   const countOccurrences = (text: string, quote: string) => {
@@ -99,7 +101,7 @@ export function buildTextTransform(before: RichText, after: RichText, replacemen
   before.forEach((block, i) => {
     if (exact.has(i)) { owners.set(i, exact.get(i)!); return; }
     const counts = new Map<number, number>();
-    for (let j = 0; j < Array.from(block.text).length; j++) {
+    for (let j = 0; j < oldLengths[i]; j++) {
       const mapped = origins[oldStarts[i] + j], position = mapped === undefined ? undefined : positions.get(mapped);
       if (position) counts.set(position.block, (counts.get(position.block) ?? 0) + 1);
     }
@@ -129,8 +131,8 @@ export function buildTextTransform(before: RichText, after: RichText, replacemen
       return contiguous(start, end);
     },
     range: (blockId, start, end) => {
-      const i = oldIndexes.get(blockId); if (i === undefined || end > Array.from(before[i].text).length) return undefined;
-      const quoted = Array.from(before[i].text).slice(start, end).join('');
+      const i = oldIndexes.get(blockId); if (i === undefined || end > oldLengths[i]) return undefined;
+      const quoted = oldPoints[i].slice(start, end).join('');
       if (!exact.has(i) && ambiguousInsertion(quoted)) return undefined;
       if (!replacement && !exact.has(i) && quoted && beforeText !== afterText && afterText.indexOf(quoted, afterText.indexOf(quoted) + 1) >= 0 && beforeText.indexOf(quoted, beforeText.indexOf(quoted) + 1) < 0) return undefined;
       // Without the actual textarea edit range, repeated text cannot identify

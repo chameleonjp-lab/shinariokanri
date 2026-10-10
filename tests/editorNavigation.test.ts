@@ -1,8 +1,19 @@
 import { describe, expect, it } from 'vitest';
 import { createEntity, createProject, newId } from '../src/domain/model';
-import { resolveEditorNavigation } from '../src/ui/editorNavigation';
+import { resolveEditorNavigation, resolveEditorReturnNavigation } from '../src/ui/editorNavigation';
 
 describe('RB02: precise editor reference navigation', () => {
+  it('returns to the captured Unicode selection only while its source text still matches', () => {
+    const project = createProject('固定版から戻る'), block = { id: newId(), kind: 'paragraph' as const, text: '😀葵' };
+    const scene = createEntity(project.projectId, 'scene', '元の場面', { body: [block] });
+    const origin = { anchor: { entityId: scene.id, blockId: block.id, start: 1, end: 2 }, fieldPath: 'body', sourceText: block.text };
+    expect(resolveEditorReturnNavigation({ ...scene, revision: '2' }, origin)).toMatchObject({ ok: true, start: 2, end: 3 });
+    const changed = { ...scene, data: { ...scene.data, body: [{ ...block, text: '前文😀葵' }] } };
+    expect(resolveEditorNavigation(changed, origin.anchor)).toMatchObject({ ok: true, start: 1, end: 2 });
+    expect(resolveEditorReturnNavigation(changed, origin)).toMatchObject({ ok: false, message: expect.stringContaining('参照元の本文が変わりました') });
+    expect(resolveEditorReturnNavigation({ ...scene, data: { ...scene.data, body: [] } }, origin)).toMatchObject({ ok: false });
+    expect(resolveEditorReturnNavigation(createEntity(project.projectId, 'scene', scene.name, { body: [block] }), origin)).toMatchObject({ ok: false });
+  });
   it('chooses the stable paragraph ID among repeated words and translates Unicode offsets', () => {
     const project = createProject('段落の移動');
     const first = { id: newId(), kind: 'paragraph' as const, text: '😀アオ。' }, second = { id: newId(), kind: 'paragraph' as const, text: '再び😀アオ。' };

@@ -13,7 +13,7 @@ import { applyTemplatePreview, getEntityTemplate, previewTemplateChange, type Te
 import { CustomFieldsEditor, FieldVisibilityControls, loadEditorDisplayPreferences, TemplateChooser, TemplateFieldsEditor, TemplateImpactList, type EditorDisplayPreferences } from './TemplateFields';
 import { NotesTools } from './NotesTools';
 import type { AssetInput } from '../storage';
-import { resolveEditorNavigation } from './editorNavigation';
+import { resolveEditorNavigation, type EditorReturnOrigin } from './editorNavigation';
 import { deletionImpact } from '../domain/maintenance';
 import { findTextLinkReferences, type TextLinkReference } from '../domain/linkCandidates';
 import { editorStateKey, editorTextFingerprint, loadEditorViewState, restorableEditorSelection, saveEditorViewState, type EditorSelection, type EditorTab } from './editorState';
@@ -40,7 +40,7 @@ export function EntityEditor({ entity, project, referenceProject, isNew, hasUnsa
   onDraft: (entity: Entity, dirty: boolean) => void;
   onArchive: (entity: Entity) => Promise<void>;
   onOpen: (id: string) => void;
-  onOpenTarget?: (anchor: ContentAnchor, fieldPath?: string) => void;
+  onOpenTarget?: (anchor: ContentAnchor, fieldPath?: string, origin?: EditorReturnOrigin) => void;
   navigationTarget?: { anchor: ContentAnchor; fieldPath?: string } | null;
   jsonBuffers: Record<string, string>;
   onJsonBuffer: (field: string, raw: string | undefined, expectedRaw?: string) => void;
@@ -139,9 +139,7 @@ export function EntityEditor({ entity, project, referenceProject, isNew, hasUnsa
     setDisplay(previous => ({ hiddenFields: previous.hiddenFields.filter(key => key !== (target.fieldKey ?? 'name')), hiddenTabs: previous.hiddenTabs.filter(key => key !== targetTab) }));
     let frame = requestAnimationFrame(() => {
       frame = requestAnimationFrame(() => {
-        const marker = target.blockId ? document.querySelector<HTMLElement>(`[data-block-id="${CSS.escape(target.blockId)}"]`) : null;
-        const editorId = marker?.dataset.editorId;
-        const control = editorId ? document.getElementById(editorId) : target.fieldKey ? document.querySelector<HTMLElement>(`[data-field="${CSS.escape(target.fieldKey)}"] textarea, [data-field="${CSS.escape(target.fieldKey)}"] input, [data-field="${CSS.escape(target.fieldKey)}"] select`) : document.getElementById('entity-name');
+        const control = target.fieldKey ? editorContent.current?.querySelector<HTMLElement>(`[data-field="${CSS.escape(target.fieldKey)}"] textarea, [data-field="${CSS.escape(target.fieldKey)}"] input, [data-field="${CSS.escape(target.fieldKey)}"] select`) : document.getElementById('entity-name');
         if (!control) { setNavigationNotice('参照先の項目を表示できませんでした。詳細データから保存された段落IDを確認できます。'); return; }
         control.scrollIntoView({ block: 'center' }); control.focus();
         if (control instanceof HTMLTextAreaElement && target.start != null && target.end != null) control.setSelectionRange(target.start, target.end);
@@ -228,15 +226,17 @@ export function EntityEditor({ entity, project, referenceProject, isNew, hasUnsa
     if (onOpenTarget) onOpenTarget(anchor, reference.sourceField); else onOpen(reference.sourceEntityId);
   };
   const followTextTarget = (anchor: ContentAnchor, sourceAnchor: ContentAnchor | undefined, fieldKey: string) => {
+    let origin: EditorReturnOrigin | undefined;
     if (sourceAnchor) {
       const source = resolveEditorNavigation(draftRef.current, sourceAnchor, fieldKey);
       const control = editorContent.current?.querySelector<HTMLTextAreaElement>(`[data-field="${CSS.escape(fieldKey)}"] textarea[data-rich-text-editor]`);
       if (source.ok && source.start != null && source.end != null && control) {
         lastSelection.current = { fieldKey, start: source.start, end: source.end, textHash: editorTextFingerprint(control.value), focus: true };
         persistPosition();
+        origin = { anchor: sourceAnchor, fieldPath: fieldKey, sourceText: control.value };
       }
     }
-    if (onOpenTarget) onOpenTarget(anchor); else onOpen(anchor.lineId ?? anchor.entityId);
+    if (onOpenTarget) onOpenTarget(anchor, undefined, origin); else onOpen(anchor.lineId ?? anchor.entityId);
   };
 
   return <aside className="detail-panel" aria-label={`${KIND_LABELS[draft.kind]}の詳細`} onSelectCapture={event => persistPosition(event.target)} onBlurCapture={event => persistPosition(event.target)} onCompositionStart={() => setComposing(true)} onCompositionEnd={() => setComposing(false)}>
@@ -255,9 +255,9 @@ export function EntityEditor({ entity, project, referenceProject, isNew, hasUnsa
       {reuse && reuse.mode !== 'clone' && <p className="field-hint">共通元の固定版 {reuse.pinnedSnapshotId} を継承しています。上書き対象にした項目以外は共通元で編集し、更新差分を確認してください。</p>}
       {hasTextTabs && visibleTabs.length > 0 && <div className="editor-tabs" role="tablist" aria-label="編集内容">{visibleTabs.map(([key, label]) => <button key={key} type="button" role="tab" aria-selected={tab === key} className={tab === key ? 'active' : ''} onClick={() => setTab(key)}>{label}</button>)}</div>}
       {tab === 'preview' && hasTextTabs && visibleTabs.length > 0 ? <div className="editor-preview"><label className="check-label"><input type="checkbox" checked={vertical} onChange={e => setVertical(e.target.checked)}/>縦書きで確認</label><RichTextView value={dataOf(effectiveEntity).body} vertical={vertical} onOpenTarget={anchor => followTextTarget(reuseTargetAnchor(reuseView, anchor), undefined, 'body')}/></div> : shownFields.map(field => draft.kind === 'template' && field.key === 'fields'
-        ? <TemplateFieldsEditor key={field.key} template={draft.data} project={project} onChange={data => change({ ...draft, data })} onValid={valid => markValid('_templateFields', valid)}/>
+        ? <TemplateFieldsEditor key={field.key} template={draft.data} ownerId={draft.id} project={project} onChange={data => change({ ...draft, data })} onValid={valid => markValid('_templateFields', valid)}/>
         : <fieldset className="editor-data-field" key={field.key} disabled={reuseBusy || inherited(field.key)}>{inherited(field.key) && <p className="field-hint">共通元の固定版から継承 · {field.label}</p>}<DataField field={field} entity={inherited(field.key) ? effectiveEntity : draft} value={dataOf(inherited(field.key) ? effectiveEntity : draft)[field.key]} project={formProject} onChange={value => changeData(field.key, value)} rawOverride={inherited(field.key) ? undefined : jsonBuffers[field.key]} onInvalidRaw={raw => onJsonBuffer(field.key, raw)} onValid={valid => markValid(field.key, valid)} onOpenTarget={(anchor: ContentAnchor, sourceAnchor?: ContentAnchor) => followTextTarget(inherited(field.key) ? reuseTargetAnchor(reuseView, anchor) : anchor, sourceAnchor, field.key)} onOpenReferences={showReverseReferences} onOpenReference={openTextReference}/></fieldset>)}
-      <FieldVisibilityControls fields={displayFields} customFields={assignedTemplate?.data.fields ?? []} tabs={hasTextTabs ? EDITOR_TABS : []} preferences={display} onChange={changeDisplay}/>
+      <FieldVisibilityControls fields={displayFields} customFields={assignedTemplate?.data.fields ?? []} tabs={hasTextTabs ? EDITOR_TABS : []} scope={`${project.projectId}:${draft.id}:display-fields`} preferences={display} onChange={changeDisplay}/>
       <TemplateChooser entity={draft} project={project} onChange={change}/>
       {draft.kind==='variable'&&<StateMeaningPanel project={project} variable={draft} onOpen={onOpen}/>}
       {!isNew&&draft.kind==='review'&&onSaveProject&&<ReviewActions project={project} review={draft} disabled={dirty||saving||composing||invalidJson.length>0} onSaveProject={onSaveProject} onBusy={busy=>{savingRef.current=busy;setSaving(busy);setReuseBusy(busy);}} onApplied={record=>{setDraft(record);setDirty(false);}} onOpenTarget={onOpenTarget} onOpen={onOpen}/>}

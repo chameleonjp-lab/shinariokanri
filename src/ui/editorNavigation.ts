@@ -1,9 +1,19 @@
 import type { Block, ContentAnchor, Entity } from '../domain/types';
 
 export type EditorNavigation = { ok: true; fieldKey?: string; blockId?: string; start?: number; end?: number } | { ok: false; message: string };
+export interface EditorReturnOrigin { anchor: ContentAnchor; fieldPath?: string; sourceText: string }
 
 function richText(value: unknown): value is Block[] {
   return Array.isArray(value) && value.every(block => block && typeof block === 'object' && typeof block.id === 'string' && typeof block.text === 'string');
+}
+
+/** A valid old offset can still point at another word after an intervening edit. */
+export function resolveEditorReturnNavigation(entity: Entity, origin: EditorReturnOrigin): EditorNavigation {
+  const navigation = resolveEditorNavigation(entity, origin.anchor, origin.fieldPath);
+  if (!navigation.ok) return navigation;
+  const blocks = navigation.fieldKey && (entity.data as unknown as Record<string, unknown>)[navigation.fieldKey];
+  if (!richText(blocks) || blocks.map(block => block.text).join('\n') !== origin.sourceText) return { ok: false, message: '固定版を開いている間に参照元の本文が変わりました。現在の本文で戻る位置を確認してください。' };
+  return navigation;
 }
 
 /** Stable IDs choose the paragraph. Code-point offsets become DOM UTF-16 offsets. */

@@ -133,7 +133,6 @@ export function targetAnchorForTerm(entity: Entity, term: string): ContentAnchor
         blockId: block.id,
         start: occurrence.start,
         end: occurrence.end,
-        quotedText: Array.from(block.text).slice(occurrence.start, occurrence.end).join(''),
       };
     }
   }
@@ -295,13 +294,15 @@ export function moveRichTextBlock(blocks: RichText, blockId: string, delta: -1 |
   return next;
 }
 
-export function findTextLinkReferences(project: ProjectData, targetEntityId: string): TextLinkReference[] {
-  const refs: TextLinkReference[] = [];
+/** Index incoming links once without changing their source order or pinned targets. */
+export function indexTextLinkReferences(project: ProjectData): Map<string, TextLinkReference[]> {
+  const byTarget = new Map<string, TextLinkReference[]>();
   for (const entity of project.entities) {
     if (entity.deletedAt) continue;
     for (const [sourceField, raw] of Object.entries(dataRecord(entity))) {
       if (!RICH_TEXT_FIELDS.has(sourceField) || !isRichText(raw)) continue;
-      for (const block of raw) for (const link of block.links ?? []) if (link.target.entityId === targetEntityId) {
+      for (const block of raw) for (const link of block.links ?? []) {
+        const refs = byTarget.get(link.target.entityId) ?? [];
         refs.push({
           sourceEntityId: entity.id,
           sourceEntityName: entity.name,
@@ -313,8 +314,13 @@ export function findTextLinkReferences(project: ProjectData, targetEntityId: str
           text: Array.from(block.text).slice(link.start, link.end).join(''),
           target: structuredClone(link.target),
         });
+        byTarget.set(link.target.entityId, refs);
       }
     }
   }
-  return refs;
+  return byTarget;
+}
+
+export function findTextLinkReferences(project: ProjectData, targetEntityId: string): TextLinkReference[] {
+  return indexTextLinkReferences(project).get(targetEntityId) ?? [];
 }

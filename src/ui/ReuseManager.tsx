@@ -7,6 +7,7 @@ import { prepareReuse } from '../domain/reuse';
 import { FIELD_SPECS } from './fieldSpecs';
 import { labelOf } from './Fields';
 import { ListPager, useListWindow } from './ListWindow';
+import { PagedSelect } from './PagedSelect';
 
 type Owner = Entity<'scene'> | Entity<'flow_node'>;
 type Draft = { sourceId: string; snapshotId: string; mode: Reuse['mode']; overrideFields: string[] };
@@ -57,7 +58,8 @@ export function ReuseManager({ project, owner, disabled, onSaveProject, onApplie
   };
   return <details className="settings-card"><summary>共通元の固定参照・複製・部分上書き</summary><p>参照は固定した共通元を使い、複製は別IDの独立した内容になります。部分上書きでは選択した項目に使用先の入力を使います。共通元の改訂は確認して適用します。</p>
     <fieldset disabled={disabled || outcome.busy || preparing}>
-      <label>共通元の版<select aria-label="共通元の版" value={draft.snapshotId} onChange={event => change({ ...draft, snapshotId: event.target.value })}><option value="">現在稿を新しい固定版にする</option>{project.snapshots.map(snapshot => <option value={snapshot.id} key={snapshot.id}>{snapshot.versionLabel} · {snapshot.content.revision}</option>)}</select></label>
+      <PagedSelect label="共通元の版" scope={`${key}:source-versions`} value={draft.snapshotId} onChange={id => change({ ...draft, snapshotId: id })}
+        emptyLabel="現在稿を新しい固定版にする" items={project.snapshots.map(snapshot => ({ id: snapshot.id, label: `${snapshot.versionLabel} · ${snapshot.content.revision}` }))}/>
       <fieldset><legend>共通元</legend>{view.items.map(entity => <label className="check-label" key={entity.id}><input type="radio" name={key} checked={draft.sourceId === entity.id} onChange={() => change({ ...draft, sourceId: entity.id })}/>{labelOf(entity)}</label>)}<ListPager {...view} label="共通元"/></fieldset>
       <label>再利用方式<select aria-label="再利用方式" value={draft.mode} onChange={event => change({ ...draft, mode: event.target.value as Reuse['mode'] })}><option value="reference">固定版を参照</option><option value="clone">独立した複製</option><option value="override">指定項目だけ上書き</option></select></label>
       {draft.mode === 'override' && <fieldset><legend>使用先の入力で上書きする項目</legend>{fields.map(field => <label className="check-label" key={field}><input type="checkbox" checked={draft.overrideFields.includes(field)} onChange={event => change({ ...draft, overrideFields: event.target.checked ? [...draft.overrideFields, field] : draft.overrideFields.filter(key => key !== field) })}/>{fieldLabel(field)}</label>)}</fieldset>}
