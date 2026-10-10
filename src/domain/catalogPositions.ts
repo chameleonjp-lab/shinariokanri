@@ -17,6 +17,17 @@ function tracedText(text: string) {
   if (parts.at(-1) === ' ') { parts.pop(); starts.pop(); ends.pop(); }
   return { text: parts.join(''), starts, ends };
 }
+// Saved records share unchanged blocks between revisions. Reuse their Unicode
+// mapping without retaining discarded records; mutable caller inputs must still
+// be checked against the exact current text.
+const traces = new WeakMap<object, { source: string; trace: ReturnType<typeof tracedText> }>();
+function blockTrace(block: RichText[number]) {
+  const cached = traces.get(block);
+  if (cached?.source === block.text) return cached.trace;
+  const trace = tracedText(block.text);
+  traces.set(block, { source: block.text, trace });
+  return trace;
+}
 /** Search normalization is traced back to the untouched Unicode text, including width expansions. */
 export function findCatalogTextPositions(project: ProjectData, entities: Entity[], query: string): CatalogTextPosition[] {
   const needle = normalizeCatalogText(query); if (!needle) return [];
@@ -26,7 +37,7 @@ export function findCatalogTextPositions(project: ProjectData, entities: Entity[
     for (const [key, value] of Object.entries(entity.data)) {
       if (!Array.isArray(value) || !value.every(block => block && typeof block === 'object' && typeof block.id === 'string' && typeof block.text === 'string' && ['paragraph', 'heading', 'list_item', 'quote'].includes(String(block.kind)))) continue;
       for (const block of value as RichText) {
-        const trace = tracedText(block.text); let offset = 0;
+        const trace = blockTrace(block); let offset = 0;
         while ((offset = trace.text.indexOf(needle, offset)) >= 0) {
           const first = Array.from(trace.text.slice(0, offset)).length, last = first + Array.from(needle).length - 1;
           const start = trace.starts[first], end = trace.ends[last];

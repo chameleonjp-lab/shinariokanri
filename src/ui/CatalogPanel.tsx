@@ -51,7 +51,7 @@ export function CatalogPanel({ project, selectedId, onOpen, onSave, onSaveProjec
   const [notice, setNotice] = useState('');
   const [busy, setBusy] = useState(false);
   const active = useMemo(()=>project.entities.filter(entity => !entity.deletedAt),[project.entities]);
-  const query: Query = { op: 'all', children: [
+  const query = useMemo<Query>(() => ({ op: 'all', children: [
     ...(text.trim() ? [{ op: 'text' as const, value: text }] : []),
     ...(kind !== 'all' ? [{ op: 'kind' as const, value: kind as EntityKind }] : []),
     ...(status !== 'all' ? [{ op: 'status' as const, value: status as Status }] : []),
@@ -59,10 +59,10 @@ export function CatalogPanel({ project, selectedId, onOpen, onSave, onSaveProjec
     ...(chapter ? [{ op: 'chapter' as const, chapterId: chapter }] : []),
     ...(foreshadow || resolution || disclosureRole || disclosureStage ? [{ op: 'foreshadow' as const, ...(foreshadow ? { foreshadowId: foreshadow } : {}), ...(resolution ? { resolutionPolicy: resolution as ResolutionPolicy } : {}), ...(disclosureRole ? { role: disclosureRole as 'clue' | 'payoff' } : {}), ...(disclosureStage ? { stage: disclosureStage as DisclosureData['stage'] } : {}) }] : []),
     ...(production !== 'all' ? [{ op: 'production' as const, value: production as 'todo' | 'doing' | 'done' | 'needs_review' }] : []),
-  ] };
-  const effectiveQuery: Query = query.children.length ? query : { op: 'text', value: '' };
+  ] }), [text, kind, status, participant, chapter, foreshadow, resolution, disclosureRole, disclosureStage, production]);
+  const effectiveQuery = useMemo<Query>(() => query.op === 'all' && !query.children.length ? { op: 'text', value: '' } : query, [query]);
   const collection = active.find((entity): entity is Entity<'collection'> => entity.id === collectionId && entity.kind === 'collection');
-  const results = collection ? evaluateCollection(project, collection).entities : filterCatalogEntities(project, effectiveQuery, active);
+  const results = useMemo(() => collection ? evaluateCollection(project, collection).entities : filterCatalogEntities(project, effectiveQuery, active), [project, collection, effectiveQuery, active]);
   const textPositions = useMemo(() => findCatalogTextPositions(project, results, text), [project, results, text]);
   const index = useMemo(() => tab==='index'?buildJapaneseAuthorIndex(project):[], [project,tab]);
   const indexClasses = [...new Set(index.flatMap(entry => entry.classifications))];

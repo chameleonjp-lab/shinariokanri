@@ -1,0 +1,82 @@
+{
+  "adjudicatedAt": "2026-10-09T18:16:44.707032+00:00",
+  "candidate": "C12",
+  "commit": "1a604f0bcdb44a879b29b052008216e61aea3777",
+  "tree": "3d9d914aeddae2192ee77fb7f5b467158d73959f",
+  "build": "57f913e16b0a69e4494f",
+  "result": "failed_original_numeric_limit_and_harness_full_replacement_id_assumption",
+  "raw": {
+    "path": "raw.json",
+    "sha256": "3577cb2a44b469aec7859c2b3769604b01d0a7af460aae062015c81a64d4866f"
+  },
+  "executedProcedure": {
+    "path": "executed-procedure.mjs",
+    "sha256": "6ca4f9c53fe8fbf8353235b09f53c8c265ffed1426bad919196501f7b789115e"
+  },
+  "completedGroups": [
+    {
+      "fixture": "original Standard8800 without materials",
+      "form": "project_name_one_field",
+      "summary": {
+        "count": 30,
+        "commandP95": 311.69999998807907,
+        "uiP95": 337,
+        "commandTarget": 1000,
+        "commandAllFinite": true,
+        "uiAllFinite": true,
+        "commandNumericResult": "within_original_limit"
+      }
+    },
+    {
+      "fixture": "original Standard8800 without materials",
+      "form": "one_dialogue_text",
+      "summary": {
+        "count": 30,
+        "commandP95": 663.8000000119209,
+        "uiP95": 1549.4000000059605,
+        "commandTarget": 1000,
+        "commandAllFinite": true,
+        "uiAllFinite": true,
+        "commandNumericResult": "within_original_limit"
+      }
+    },
+    {
+      "fixture": "original Standard8800 without materials",
+      "form": "atomic_two_dialogue_records",
+      "summary": {
+        "count": 30,
+        "commandP95": 1249.4000000059605,
+        "uiP95": 2209,
+        "commandTarget": 1000,
+        "commandAllFinite": true,
+        "uiAllFinite": true,
+        "commandNumericResult": "failed_original_limit"
+      }
+    }
+  ],
+  "genuineUnmetLimit": {
+    "form": "atomic_two_dialogue_records",
+    "p95Milliseconds": 1249.4000000059605,
+    "originalLimitMilliseconds": 1000,
+    "debounceIncludedInCommand": false,
+    "instrumentation": "production performance.measure validation entry through native transaction commit; original 500ms input debounce excluded",
+    "status": "failed_not_promoted"
+  },
+  "procedureStop": {
+    "assertion": "all original paragraph IDs survive whole textarea.fill",
+    "cause": "fill selects and replaces the complete text through beforeinput; no old character origin survives. The original normal-edit contract must be checked using an actual caret insertion, retaining current text/IDs through subsequent save/cold/restore.",
+    "adjudication": "harness_full_replacement_assumption_not_a_save_or_restore_ID_failure",
+    "sourceProof": [
+      "src/ui/Fields.tsx native beforeinput range",
+      "src/domain/text.ts characterOrigins + editRichText"
+    ]
+  },
+  "unexecuted": [
+    "attached Standard groups",
+    "cold current-content comparison",
+    "complete file",
+    "empty environment restoration"
+  ],
+  "claimLimit": "Three bare Standard groups have all30 command samples and actual changed-row counters; the 2-record group fails original p95. Overall RG06 and restoration are not passed. No physical/live/actual7200 or original116 inference.",
+  "next": "Retain frozen C12 bytes. Repair redundant Catalog renders and trace recalculation in a new candidate. Repeat original contracts and all180 three-form samples without limit changes."
+}
