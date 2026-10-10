@@ -1,4 +1,5 @@
 import {validateSyncRecovery,syncRecoveryImages,type NativeSyncRecovery} from './syncRecovery';
+import {captureImmutablePlainData} from '../domain/immutablePlainData';
 import {RECORD_DICTIONARY_FEATURE,RecordDictionaryWriter,RecordDictionaryReader} from './recordDictionary';
 import { Inflate, zipSync } from 'fflate';
 import { validateRecovery, recoveryImages, type PortableRecovery } from './recovery';
@@ -453,9 +454,12 @@ export async function inspectScenarioData(bytes: Uint8Array, options: InspectOpt
 }
 
 export async function exportScenarioData(input: ProjectData, options: ExportOptions = {}): Promise<Uint8Array> {
+  options = { ...options };
   checkCancelled(options.signal);
+  const captured = captureImmutablePlainData({ input, worlds: options.worlds ?? {}, recovery: options.recovery, syncRecovery: options.syncRecovery });
+  input = captured.value.input;
   options.onProgress?.({stage:'validating',completed:0,total:1});
-  const worlds = options.worlds ?? {};
+  const worlds = captured.value.worlds;
   const worldContents = worldSnapshotContents(worlds);
   const project = checkedProject(input, 'data/project.json', ARCHIVE_LIMITS, worldContents);
   const selected = options.snapshotId ? project.snapshots.find(item => item.id === options.snapshotId) : undefined;
@@ -469,8 +473,8 @@ export async function exportScenarioData(input: ProjectData, options: ExportOpti
   for (const [id, world] of Object.entries(worlds)) await checkedProjectIntegrity(world, `worlds/${id}.json`, worldContents);
   const recordCount = [project, ...Object.values(worlds)].reduce((sum, source) => sum + source.entities.length + source.relations.length, 0);
   if (recordCount > ARCHIVE_LIMITS.records) throw new StorageError('LIMIT_EXCEEDED', '参照世界を含むentityとrelationの件数が上限を超えています。');
-  const recovery = options.recovery ? await validateRecovery(options.recovery, project, worldContents, options.signal) : undefined;
-  const syncRecovery=options.syncRecovery?.length?await validateSyncRecovery(options.syncRecovery,worldContents,options.signal):undefined;
+  const recovery = captured.value.recovery ? await validateRecovery(captured.value.recovery, project, worldContents, options.signal) : undefined;
+  const syncRecovery=captured.value.syncRecovery?.length?await validateSyncRecovery(captured.value.syncRecovery,worldContents,options.signal):undefined;
   const operationalImages = [...recoveryImages(recovery),...syncRecoveryImages(syncRecovery)];
   verifyWorlds(operationalImages, worlds); await verifySnapshotHashes(operationalImages);
   const mode = options.assetMode ?? 'embedded';

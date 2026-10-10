@@ -1,4 +1,6 @@
 import {mergeImportConflicts} from './importWork';
+import {freezeCapturedPlainData} from '../domain/immutablePlainData';
+import {createSharedArrayJsonEncoder} from './sharedArrayJson';
 import {cloneProject as clonePrivateProject} from './clone';
 import {recordDiagnostic} from '../diagnostics';
 import {bindRecordPartsSignal,installRecordPartsDatabase} from './recordPartsDatabase';
@@ -948,17 +950,22 @@ export class ScenarioStore {
   }
   async getAsset(contentHash: string): Promise<Uint8Array | undefined> { const asset = await this.db.assets.get(contentHash); return asset?.bytes.slice(); }
   async availableAssetHashes(): Promise<Set<string>> { return new Set(await this.db.assets.toCollection().primaryKeys()); }
-  private async materializeOutbox(rows: StoredOutbox[], commands: Map<string, StoredCommand>): Promise<OutboxRecord[]> {
+  private async materializeOutbox(rows: StoredOutbox[], commands: Map<string, StoredCommand>, ready = new Map<string, CommandRecord>()): Promise<OutboxRecord[]> {
     rows = [...rows].sort((left, right) => BigInt(left.localRevision) < BigInt(right.localRevision) ? -1 : BigInt(left.localRevision) > BigInt(right.localRevision) ? 1 : left.createdAt.localeCompare(right.createdAt));
-    const ready = new Map<string, CommandRecord>(), result: OutboxRecord[] = [];
+    const result: OutboxRecord[] = [], indexes = new WeakMap<object, Map<string, TargetRecord>>();
+    const recordIndex = (records: (Entity | Relation)[]) => {
+      let index = indexes.get(records);
+      if (!index) { index = new Map(records.map(record => [record.id, record])); indexes.set(records, index); }
+      return index;
+    };
+    const target = (state: ContentState, id: string) => id === state.projectId ? headerTarget(state)
+      : recordIndex(state.relations).get(id) ?? recordIndex(state.entities).get(id) ?? null;
     for (const row of rows) {
       const stored = row.commandOperationId ? commands.get(row.commandOperationId) : undefined;
       const command = row.command ?? (stored ? await this.materializeCommand(stored, commands, ready, new Set(), false) : undefined);
       if (!command || command.projectId !== row.projectId) throw new StorageError('SAVE_FAILED', '送信待ちに必要な履歴が不足しています。', row.operationId);
-      const before = new Map<string, TargetRecord>([...command.before.entities, ...command.before.relations, headerTarget(command.before)].map(record => [record.id, record]));
-      const after = new Map<string, TargetRecord>([...command.after.entities, ...command.after.relations, headerTarget(command.after)].map(record => [record.id, record]));
       const { commandOperationId: _commandOperationId, ...metadata } = row;
-      result.push({ ...metadata, command, changes: row.changes.map(change => ({ ...change, before: Object.hasOwn(change, 'before') ? change.before! : before.get(change.targetId) ?? null, after: Object.hasOwn(change, 'after') ? change.after! : after.get(change.targetId) ?? null })) });
+      result.push({ ...metadata, command, changes: row.changes.map(change => ({ ...change, before: Object.hasOwn(change, 'before') ? change.before! : target(command.before, change.targetId), after: Object.hasOwn(change, 'after') ? change.after! : target(command.after, change.targetId) })) });
     }
     return result;
   }
@@ -1152,6 +1159,7 @@ export class ScenarioStore {
   }
 
   async exportProject(projectId: string, options: Omit<NonNullable<Parameters<typeof exportScenario>[1]>, 'loadAsset' | 'worlds' | 'recovery' | 'syncRecovery'> = {}): Promise<Uint8Array> {
+    options = { ...options };
     // Content, all history and pending intents come from one database read image.
     checkCancelled(options.signal);
     const captured = await this.db.transaction('r', this.writeTables, async () => ({ current: await this.readProject(projectId, false), commands: await this.db.commands.where('projectId').equals(projectId).toArray(), rows: await this.db.outbox.where('projectId').equals(projectId).toArray(), retained: await this.listRecoveredPending(projectId), metadata: await this.db.syncMetadata.get(projectId), syncBase:await this.db.syncBases.get(projectId),syncPrepared:await this.db.preparedSync.where('projectId').equals(projectId).toArray(),syncConflicts:await this.db.syncConflicts.where('projectId').equals(projectId).toArray(),syncAcks:await this.db.syncAckEvidence.where('projectId').equals(projectId).toArray(),syncAssetAcks:await this.db.syncAssetAcks.where('projectId').equals(projectId).toArray(),syncRetained:await this.db.retainedSyncRecovery.where('projectId').equals(projectId).toArray(), registry: await this.validationWorlds() }));
@@ -1163,15 +1171,19 @@ export class ScenarioStore {
       if (!row) throw new StorageError('SAVE_FAILED', '完全保存に必要な履歴が不足しています。', id);
       history.push(await this.materializeCommand(row, commandRows, ready, new Set(), false));
     }
-    const content = { ...captured.current.project, history }, capturedPending = await this.materializeOutbox(captured.rows, commandRows);
+    const content = { ...captured.current.project, history }, capturedPending = await this.materializeOutbox(captured.rows, commandRows, ready);
     const selected = options.snapshotId ? content.snapshots.find(snapshot => snapshot.id === options.snapshotId) : undefined;
     if (options.snapshotId && !selected) throw new StorageError('NOT_FOUND', '書き出す固定版が見つかりません。');
     const project = selected ? { ...copy(selected.content), snapshots: content.snapshots, history: content.history.filter(command => BigInt(command.revision) <= BigInt(selected.content.revision)) } : content;
     const pending = options.snapshotId ? [] : capturedPending, retained = options.snapshotId ? [] : captured.retained;
+    // These graphs came from the single private read transaction above. Freeze
+    // only plain own-data captures; unusual legacy language retains its old path.
+    freezeCapturedPlainData({ project, pending, retained });
+    const commandBytes = createSharedArrayJsonEncoder();
     const operations = new Map(retained.map(row => [row.operation.operationId, row.operation]));
     for (const row of pending) {
       checkCancelled(options.signal);
-      const commandHash = await sha256(jsonBytes(row.command)), previous = operations.get(row.operationId);
+      const commandHash = await sha256(commandBytes(row.command)), previous = operations.get(row.operationId);
       if (previous && previous.commandHash !== commandHash) throw new StorageError('OPERATION_CONFLICT', '復元した送信待ちと現在の送信待ちが同じIDで異なります。');
       operations.set(row.operationId, { operationId: row.operationId, command: row.command, commandHash, origin: { projectId, operationId: row.operationId, serverRevision: row.baseRevision } });
       options.onProgress?.({stage:'hashes',completed:operations.size,total:pending.length});

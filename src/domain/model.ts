@@ -5,6 +5,8 @@ import type { Alias, CalendarDefinition, Condition, Entity, EntityDataMap, Entit
 import { GREGORIAN_CALENDAR, compareTicks, isTick, parseTick, validateCalendar, validateEventTimes, sameCalendarDefinition } from './time';
 import { validateTemplateAssignments, validateTemplateDefinition } from './templates';
 import { measureText } from './textMetrics';
+import { contentValidationContext, type ContentValidationMemo } from './contentValidationMemo';
+import { captureImmutablePlainData, isImmutablePlainData } from './immutablePlainData';
 
 export const KIND_LABELS: Record<EntityKind, string> = {
   character: '人物', group: 'グループ', event: '出来事', place: '場所', item: '物品', note: 'メモ', chapter: '章', scene: '場面', goal: '目標',
@@ -764,7 +766,7 @@ function validateActiveRecordNamespace(project: ProjectContent, worlds: ProjectC
   }
 }
 interface ValidationReuse { previous: ProjectData; references: WeakMap<Entity, DomainReference[]> }
-function validateContent(input: unknown, path: string, options: ProjectValidationOptions, snapshotIds: Set<ID>, versionContents: Map<ID, ProjectContent> = new Map(), reuse?: ValidationReuse): ValidationResult<ProjectContent> {
+function validateContent(input: unknown, path: string, options: ProjectValidationOptions, snapshotIds: Set<ID>, versionContents: Map<ID, ProjectContent> = new Map(), reuse?: ValidationReuse, memo?: ContentValidationMemo): ValidationResult<ProjectContent> {
   const issues: ValidationIssue[] = [];
   if (!isObject(input)) return { ok: false, issues: [{ code: 'VALIDATION_FAILED', path, message: '作品はオブジェクトです。' }] };
   for (const field of Object.keys(input)) if (!projectContentKeys.includes(field)) addIssue(issues, `${path}.${field}`, '作品に未知の項目があります。');
@@ -776,6 +778,7 @@ function validateContent(input: unknown, path: string, options: ProjectValidatio
   if (issues.length) return { ok: false, issues };
   const entities = input.entities as unknown[], relations = input.relations as unknown[], calendars = input.calendars as unknown[];
   if (entities.length + relations.length > 100_000) return { ok: false, issues: [{ code: 'IMPORT_LIMIT', path, message: 'entityとrelationの合計は100,000件までです。' }] };
+  if (memo?.has(input as unknown as ProjectContent, snapshotIds, versionContents)) return { ok: true, value: input as unknown as ProjectContent };
   const previousEntities = new Map(reuse?.previous.entities.map(entity => [entity.id, entity])), previousRelations = new Map(reuse?.previous.relations.map(relation => [relation.id, relation]));
   // The structural walk already sees every typed reference. Keep those exact
   // observations for this synchronous validation instead of walking it twice.
@@ -913,6 +916,7 @@ function validateContent(input: unknown, path: string, options: ProjectValidatio
     for (const id of previousRelations.keys()) if (!relationMap.has(id)) affectedIds.add(id);
   }
   validateCrossEntityRules(project, entityMap, aliases, knownVersions, blocks, issues, path, options, versionIndex, affectedIds ? entity => previousEntities.get(entity.id) !== entity || referencesFor(entity).some(reference => affectedIds!.has(reference.id)) : undefined);
+  if (!issues.length) memo?.remember(project, snapshotIds, versionContents);
   return issues.length ? { ok: false, issues: issues.slice(0, 256) } : { ok: true, value: project };
 }
 /** These fields contain independent copies, not canonical authored blocks. */
@@ -1126,6 +1130,29 @@ function validateAnchors(value: unknown, path: string, entities: Map<ID, Entity>
 }
 export function validateProject(input: unknown, options: ProjectValidationOptions = {}): ValidationResult<ProjectData> {
   if (!isObject(input)) return { ok: false, issues: [{ code: 'VALIDATION_FAILED', path: 'project', message: '作品はオブジェクトです。' }] };
+  const context = contentValidationContext(input, options, RELATION_TYPES), memo = context?.memo;
+  options = context?.options ?? options;
+  return validateProjectData(input, options, memo);
+}
+
+/** A durable operation captures its dependencies once. Only actual successful
+ * full-content checks on immutable captures can be shared inside this scope. */
+export function createProjectValidator(options: ProjectValidationOptions = {}): (input: unknown) => ValidationResult<ProjectData> {
+  const captured = captureImmutablePlainData(options);
+  if (!captured.captured) return input => validateProject(input, options);
+  const dependencies = captureImmutablePlainData({ ...captured.value, relationTypes: captured.value.relationTypes ?? RELATION_TYPES });
+  if (!dependencies.captured) return input => validateProject(input, options);
+  let context: ReturnType<typeof contentValidationContext>;
+  return input => {
+    const owned = captureImmutablePlainData(input);
+    if (!owned.captured || !isImmutablePlainData(owned.value)) return validateProject(input, dependencies.value);
+    context ??= contentValidationContext(owned.value, dependencies.value, RELATION_TYPES);
+    return validateProjectData(owned.value, context?.options ?? dependencies.value, context?.memo);
+  };
+}
+
+function validateProjectData(input: unknown, options: ProjectValidationOptions, memo?: ContentValidationMemo): ValidationResult<ProjectData> {
+  if (!isObject(input)) return { ok: false, issues: [{ code: 'VALIDATION_FAILED', path: 'project', message: '作品はオブジェクトです。' }] };
   const issues: ValidationIssue[] = [];
   for (const field of Object.keys(input)) if (![...projectKeys, 'snapshots', 'history'].includes(field)) addIssue(issues, `project.${field}`, '作品に未知の項目があります。');
   if (!Array.isArray(input.snapshots)) addIssue(issues, 'project.snapshots', '必須の配列です。');
@@ -1133,10 +1160,10 @@ export function validateProject(input: unknown, options: ProjectValidationOption
   const snapshotIds = new Set<ID>((Array.isArray(input.snapshots) ? input.snapshots : []).flatMap(snapshot => isObject(snapshot) && typeof snapshot.id === 'string' ? [snapshot.id] : []));
   if (Object.hasOwn(input, 'authorAlternatives')) walk(alternativesSchema, input.authorAlternatives, 'project.authorAlternatives', issues, []);
   const content = Object.fromEntries(projectContentKeys.filter(field => Object.hasOwn(input, field)).map(field => [field, input[field]]));
-  const validated = validateContent(content, 'project', options, snapshotIds, snapshotContentMap(input.snapshots)); if (!validated.ok) issues.push(...validated.issues);
+  const validated = validateContent(content, 'project', options, snapshotIds, snapshotContentMap(input.snapshots), undefined, memo); if (!validated.ok) issues.push(...validated.issues);
   if (issues.length) return { ok: false, issues: issues.slice(0, 256) };
   const project = input as unknown as ProjectData;
-  validateSnapshotCollection(project.snapshots, 'project.snapshots', project.projectId, options, issues);
+  validateSnapshotCollection(project.snapshots, 'project.snapshots', project.projectId, options, issues, memo);
   const historyIds = new Set<ID>();
   project.history.forEach((command, i) => {
     const path = `project.history[${i}]`, raw = command as unknown;
@@ -1153,9 +1180,9 @@ export function validateProject(input: unknown, options: ProjectValidationOption
       if (Object.hasOwn(state, 'authorAlternatives')) walk(alternativesSchema, state.authorAlternatives, `${path}.${field}.authorAlternatives`, issues, []);
       const historical = Object.fromEntries(Object.entries(state).filter(([key]) => key !== 'snapshots' && key !== 'authorAlternatives'));
       const historicalIds = new Set<ID>((Array.isArray(state.snapshots) ? state.snapshots : []).flatMap(item => isObject(item) && typeof item.id === 'string' ? [item.id] : []));
-      const result = validateContent(historical, `${path}.${field}`, options, historicalIds, snapshotContentMap(state.snapshots)); if (!result.ok) issues.push(...result.issues);
+      const result = validateContent(historical, `${path}.${field}`, options, historicalIds, snapshotContentMap(state.snapshots), undefined, memo); if (!result.ok) issues.push(...result.issues);
       else if (result.value.projectId !== project.projectId) addIssue(issues, `${path}.${field}.projectId`, '履歴の内容が別の作品に属しています。');
-      if (Array.isArray(state.snapshots)) validateSnapshotCollection(state.snapshots, `${path}.${field}.snapshots`, project.projectId, options, issues);
+      if (Array.isArray(state.snapshots)) validateSnapshotCollection(state.snapshots, `${path}.${field}.snapshots`, project.projectId, options, issues, memo);
     }
   });
   return issues.length ? { ok: false, issues: issues.slice(0, 256) } : { ok: true, value: project };
@@ -1172,7 +1199,7 @@ export function validateCurrentProject(input: ProjectData, options: ProjectValid
   const result = validateContent(content, 'project', options, ids, snapshotContentMap(input.snapshots), reuse);
   return result.ok ? { ok: true, value: input } : result;
 }
-function validateSnapshotCollection(snapshots: unknown[], path: string, projectId: ID, options: ProjectValidationOptions, issues: ValidationIssue[]): void {
+function validateSnapshotCollection(snapshots: unknown[], path: string, projectId: ID, options: ProjectValidationOptions, issues: ValidationIssue[], memo?: ContentValidationMemo): void {
   const ids = new Set<ID>(snapshots.flatMap(snapshot => isObject(snapshot) && typeof snapshot.id === 'string' ? [snapshot.id] : [])), duplicates = new Set<ID>(), contents = snapshotContentMap(snapshots);
   snapshots.forEach((snapshot, i) => {
     const location = `${path}[${i}]`;
@@ -1184,7 +1211,7 @@ function validateSnapshotCollection(snapshots: unknown[], path: string, projectI
       if (duplicates.has(snapshot.id)) addIssue(issues, `${location}.id`, '公開版のIDが重複しています。'); duplicates.add(snapshot.id);
       if (snapshot.id === projectId) addIssue(issues, `${location}.id`, '公開版IDは作品IDと別にしてください。');
     }
-    const result = validateContent(snapshot.content, `${location}.content`, options, ids, contents);
+    const result = validateContent(snapshot.content, `${location}.content`, options, ids, contents, undefined, memo);
     if (!result.ok) issues.push(...result.issues);
     else if (result.value.projectId !== projectId) addIssue(issues, `${location}.content.projectId`, '公開版が別の作品に属しています。');
   });
