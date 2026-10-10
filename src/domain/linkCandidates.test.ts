@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { createEntity, createProject, newId } from './model';
+import { createEntity, createProject, newId, validateProject } from './model';
 import type { Entity, RichText } from './types';
 import {
   addRubyAnnotation,
   addTextLink,
   findTextLinkReferences,
+  indexTextLinkReferences,
   findTextOccurrences,
   ignoredLinkCandidateKey,
   mergeRichTextBlocks,
@@ -40,7 +41,7 @@ describe('link candidates and annotation helpers', () => {
     expect(candidates.find(candidate => candidate.entityId === target.id && candidate.term === 'あお')).toMatchObject({ start: 7, end: 9, suggestedReading: undefined });
     expect(candidates.find(candidate => candidate.entityId === target.id && candidate.term === '青')).toMatchObject({ start: 10, end: 11, sources: ['alias'] });
     expect(candidates.every(candidate => candidate.entityId !== source.id && candidate.entityId !== project.entities[3].id)).toBe(true);
-    expect(targetAnchorForTerm(target, 'アオ')).toMatchObject({ entityId: target.id, blockId: 'summary-1', start: 1, end: 3, quotedText: 'アオ' });
+    expect(targetAnchorForTerm(target, 'アオ')).toEqual({ entityId: target.id, blockId: 'summary-1', start: 1, end: 3 });
   });
 
   it('excludes deleted, current, explicitly excluded, and preference-ignored candidates', () => {
@@ -136,5 +137,37 @@ describe('link candidates and annotation helpers', () => {
       text: 'アオ',
       target: { entityId: target.id, blockId: 'summary-1', start: 1, end: 3 },
     }]);
+  });
+
+  it('keeps pinned targets and Unicode source positions across every incoming field without mutating the authored anchors', () => {
+    const { project, target, source, twin } = projectFixture();
+    const fixed = { entityId: target.id, sourceVersionId: newId(), blockId: newId(), start: 7, end: 9 };
+    (source as Entity<'scene'>).data.body = [{ id: 'first', kind: 'paragraph', text: '😀旧語', links: [{ start: 1, end: 3, target: fixed }, { start: 0, end: 1, target: { entityId: twin.id } }] }];
+    (source as Entity<'scene'>).data.summary = [{ id: 'notes', kind: 'quote', text: '旧語😀', links: [{ start: 0, end: 2, target: fixed }] }];
+    const before = structuredClone(project), index = indexTextLinkReferences(project);
+    expect(index.get(target.id)?.map(reference => ({ block: reference.sourceBlockId, field: reference.sourceField, start: reference.start, end: reference.end, text: reference.text, target: reference.target }))).toEqual([
+      { block: 'notes', field: 'summary', start: 0, end: 2, text: '旧語', target: fixed },
+      { block: 'first', field: 'body', start: 1, end: 3, text: '旧語', target: fixed },
+    ]);
+    expect(index.get(twin.id)).toHaveLength(1);
+    expect(index.get(newId())).toBeUndefined();
+    index.get(target.id)![0]!.target.sourceVersionId = 'view-only-change';
+    expect(project).toEqual(before);
+    expect(index.get(target.id)![1]!.target).toEqual(fixed);
+  });
+
+  it('creates a known Unicode target position that passes the actual saved-project contract', () => {
+    const project = createProject('確定した対象位置の通常リンク');
+    const targetBlock = { id: newId(), kind: 'paragraph' as const, text: '😀アオの説明' };
+    const target = createEntity(project.projectId, 'character', 'アオ', { summary: [targetBlock] });
+    const source = createEntity(project.projectId, 'scene', '参照元', { body: [{ id: newId(), kind: 'paragraph', text: '😀アオが登場' }] });
+    project.entities = [source, target];
+    const anchor = targetAnchorForTerm(target, 'アオ');
+    expect(anchor).toEqual({ entityId: target.id, blockId: targetBlock.id, start: 1, end: 3 });
+    const added = addTextLink(source.data.body!, source.data.body![0]!.id, 1, 3, anchor);
+    expect(added.ok).toBe(true);
+    if (!added.ok) return;
+    source.data.body = added.value;
+    expect(validateProject(project)).toMatchObject({ ok: true });
   });
 });

@@ -21,6 +21,21 @@ function fixture(text = 'アオが歩く。') {
 }
 
 describe('RG-R01 Unicode text annotations and content anchors', () => {
+  it('retains exact code-point origins through splitting and merging a long emoji paragraph', () => {
+    const heading = { id: newId(), kind: 'paragraph' as const, text: '先頭😀' }, tail = { id: newId(), kind: 'paragraph' as const, text: `${'😀'.repeat(10_000)}末尾語句` };
+    const before = [heading, tail], original = structuredClone(before), points = Array.from(tail.text);
+    const right = { id: newId(), kind: 'paragraph' as const, text: points.slice(10_001).join('') };
+    const split = [heading, { ...tail, text: points.slice(0, 10_001).join('') }, right];
+    const offset = Array.from(heading.text).length + 1 + 10_001;
+    const dividing = buildTextTransform(before, split, { start: offset, end: offset });
+    expect(dividing.range(tail.id, 9_998, 10_000)).toEqual({ blockId: tail.id, start: 9_998, end: 10_000 });
+    expect(dividing.range(tail.id, 10_000, 10_004)).toBeUndefined();
+    expect(dividing.range(tail.id, 10_001, 10_004)).toEqual({ blockId: right.id, start: 0, end: 3 });
+    const merging = buildTextTransform(split, before, { start: offset, end: offset + 1 });
+    expect(merging.range(right.id, 0, 3)).toEqual({ blockId: tail.id, start: 10_001, end: 10_004 });
+    expect(merging.range(heading.id, 2, 3)).toEqual({ blockId: heading.id, start: 2, end: 3 });
+    expect(before).toEqual(original);
+  });
   it('detaches untracked repeated insertions for block and line anchors', () => {
     const { body, scene } = fixture('アオアオ');
     const after = structuredClone(body); after[0].text = 'アオアオアオ';

@@ -4,7 +4,7 @@ import type { ContentAnchor, Entity, ProjectData, RichText, UnresolvedTextAnnota
 import {
   addRubyAnnotation,
   addTextLink,
-  findTextLinkReferences,
+  indexTextLinkReferences,
   findTextOccurrences,
   mergeRichTextBlocks,
   moveRichTextBlock,
@@ -18,7 +18,10 @@ import {
   type TextLinkReference,
 } from '../domain/linkCandidates';
 import { KIND_LABELS } from '../domain/model';
+import { referenceProject } from '../domain/referenceChoices';
 import { candidateIgnoreKey, loadIgnoredLinkCandidates, saveIgnoredLinkCandidate } from './linkCandidatePreferences';
+import { PagedSelect } from './PagedSelect';
+import { WindowedList } from './WindowedList';
 
 export interface TextAnnotationsProps {
   value: RichText;
@@ -36,7 +39,6 @@ export interface TextAnnotationsProps {
   fieldLabel?: string;
 }
 
-function pointLength(value: string): number { return Array.from(value).length; }
 function snippet(value: string, max = 48): string {
   const chars = Array.from(value);
   return chars.length <= max ? value : `${chars.slice(0, max).join('')}…`;
@@ -78,7 +80,7 @@ export function TextAnnotations({
   const [markKind, setMarkKind] = useState<'link' | 'ruby'>('link');
   const [targetEntityId, setTargetEntityId] = useState('');
   const [reading, setReading] = useState('');
-  const [splitOffset, setSplitOffset] = useState(1);
+  const [splitInput, setSplitInput] = useState('1');
   const [error, setError] = useState('');
   const [locallyIgnored, setLocallyIgnored] = useState<ReadonlySet<string>>(() => new Set());
   const [persistedIgnored, setPersistedIgnored] = useState<ReadonlySet<string>>(() => storedIgnored(authorScope, sourceEntityId));
@@ -99,6 +101,19 @@ export function TextAnnotations({
   const occurrence = occurrences[occurrenceIndex];
   const selectableTargets = project.entities.filter(entity => !entity.deletedAt && entity.id !== sourceEntityId);
   const selectedTarget = selectableTargets.find(entity => entity.id === targetEntityId);
+  const scope = `${project.projectId}:${sourceEntityId}:${fieldLabel}:annotations`;
+  const targetOptions = useMemo(() => selectableTargets.map(entity => ({ id: entity.id, label: targetLabel(entity) })), [project.entities, sourceEntityId]);
+  const blockPoints = useMemo(() => Array.from(activeBlock?.text ?? ''), [activeBlock?.text]);
+  const splitOffset = /^\d+$/.test(splitInput) ? Number(splitInput) : NaN;
+  const splitValid = Number.isSafeInteger(splitOffset) && splitOffset > 0 && splitOffset < blockPoints.length;
+  const incomingByTarget = useMemo(() => indexTextLinkReferences(project), [project]);
+  const marks = useMemo(() => blocks.flatMap(block => [
+    ...(block.ruby ?? []).map((annotation, index) => ({ id: `${block.id}:ruby:${index}`, kind: 'ruby' as const, block, annotation, index })),
+    ...(block.links ?? []).map((annotation, index) => ({ id: `${block.id}:link:${index}`, kind: 'link' as const, block, annotation, index })),
+  ]), [blocks]);
+  const incoming = useMemo(() => [...new Set(blocks.flatMap(block => (block.links ?? []).map(link => link.target.entityId)))].flatMap(targetId =>
+    (incomingByTarget.get(targetId) ?? []).map((reference, index) => ({ id: `${targetId}:${index}`, reference }))), [blocks, incomingByTarget]);
+  const unresolved = useMemo(() => blocks.flatMap(block => (block.unresolvedAnnotations ?? []).map((annotation, index) => ({ id: unresolvedKey(block.id, index), block, annotation, index }))), [blocks]);
 
   const chooseCandidate = (candidate: LinkCandidate | undefined) => {
     if (!candidate) {
@@ -144,6 +159,7 @@ export function TextAnnotations({
 
   const split = () => {
     if (!activeBlock) return;
+    if (!splitValid) { setError('段落の途中にある整数の文字位置を入力してください。'); return; }
     const result = splitRichTextBlock(blocks, activeBlock.id, splitOffset);
     if (result.ok) { onChange(result.value); setError(''); }
     else setError(result.reason);
@@ -158,11 +174,12 @@ export function TextAnnotations({
   const resolve = (ownerBlockId: string, index: number, annotation: UnresolvedTextAnnotation) => {
     if (!activeBlock || !occurrence) { setError('再リンク先の段落と語句を選んでください。'); return; }
     const key = unresolvedKey(ownerBlockId, index);
-    const overrideId = unresolvedTargetIds[key] || (annotation.kind === 'link' ? annotation.target.entityId : '');
+    const overrideId = unresolvedTargetIds[key] ?? (annotation.kind === 'link' ? annotation.target.entityId : '');
+    const keepTarget = annotation.kind === 'link' && overrideId === annotation.target.entityId;
     const target = annotation.kind === 'link'
-      ? selectableTargets.find(entity => entity.id === overrideId)
+      ? keepTarget ? referenceProject(project, annotation.target.sourceVersionId ?? undefined)?.entities.find(entity => entity.id === overrideId && !entity.deletedAt) : selectableTargets.find(entity => entity.id === overrideId)
       : undefined;
-    if (annotation.kind === 'link' && !target) { setError('有効なリンク先を選んでください。'); return; }
+    if (annotation.kind === 'link' && !target) { setError('対象の版と参照先を確認できません。再リンク待ちと元の対象位置を保持しています。'); return; }
     const result = resolveUnresolvedAnnotation(
       blocks,
       ownerBlockId,
@@ -170,34 +187,29 @@ export function TextAnnotations({
       activeBlock.id,
       occurrence.start,
       occurrence.end,
-      annotation.kind === 'link' ? anchorFromSelection(target, phrase) : undefined,
+      annotation.kind === 'link' && !keepTarget ? anchorFromSelection(target, phrase) : undefined,
     );
     if (!result.ok) { setError(result.reason); return; }
     onChange(result.value);
     setError('');
   };
 
-  const blockForText = (blockId: string) => blocks.find(block => block.id === blockId);
-
   return <section className="text-annotations" aria-label={`${fieldLabel}のルビとリンク`}>
     <div className="section-heading"><h3>本文のルビ・リンク</h3><span>段落と語句を選んで追加</span></div>
     {!blocks.length ? <p className="field-hint">先に本文を入力すると、段落内の語句にルビやリンクを付けられます。</p> : <>
       <div className="form-field">
         <label htmlFor={`annotation-block-${sourceEntityId}`}>注記する段落</label>
-        <select id={`annotation-block-${sourceEntityId}`} value={activeBlock?.id ?? ''} onChange={event => {
-          setSelectedBlockId(event.target.value); setCandidateId(''); setPhrase(''); setOccurrenceIndex(0); setError('');
-        }}>
-          {blocks.map((block, index) => <option key={block.id} value={block.id}>{index + 1}. {snippet(block.text || '（空の段落）')}</option>)}
-        </select>
+        <PagedSelect id={`annotation-block-${sourceEntityId}`} label="注記する段落" scope={`${scope}:blocks`} value={activeBlock?.id ?? ''}
+          items={blocks.map((block, index) => ({ id: block.id, label: `${index + 1}. ${snippet(block.text || '（空の段落）')}` }))}
+          onChange={id => { setSelectedBlockId(id); setCandidateId(''); setPhrase(''); setOccurrenceIndex(0); setError(''); }}/>
       </div>
       {activeBlock && <>
         <p className="field-hint" aria-label="選択中の段落">{activeBlock.text || '（空の段落）'}</p>
         <div className="form-field">
           <label htmlFor={`annotation-candidate-${sourceEntityId}`}>本文に見つかった候補</label>
-          <select id={`annotation-candidate-${sourceEntityId}`} value={selectedCandidate?.id ?? ''} onChange={event => chooseCandidate(candidates.find(candidate => candidate.id === event.target.value))}>
-            <option value="">候補を選ぶ（手入力もできます）</option>
-            {candidates.map(candidate => <option key={candidate.id} value={candidate.id}>{candidate.label} · 「{candidate.term}」 · {candidate.start + 1}〜{candidate.end}文字目</option>)}
-          </select>
+          <PagedSelect id={`annotation-candidate-${sourceEntityId}`} label="本文に見つかった候補" scope={`${scope}:${activeBlock.id}:candidates`} value={selectedCandidate?.id ?? ''}
+            items={candidates.map(candidate => ({ id: candidate.id, label: `${candidate.label} · 「${candidate.term}」 · ${candidate.start + 1}〜${candidate.end}文字目` }))}
+            emptyLabel="候補を選ぶ（手入力もできます）" onChange={id => chooseCandidate(candidates.find(candidate => candidate.id === id))}/>
           {!candidates.length && <span className="field-hint">一致する候補はありません。本文の語句を直接入力できます。</span>}
         </div>
         <div className="form-field">
@@ -206,9 +218,10 @@ export function TextAnnotations({
         </div>
         <div className="form-field">
           <label htmlFor={`annotation-occurrence-${sourceEntityId}`}>本文での出現位置</label>
-          <select id={`annotation-occurrence-${sourceEntityId}`} value={occurrence ? String(occurrenceIndex) : ''} onChange={event => setOccurrenceIndex(Number(event.target.value))} disabled={!occurrences.length}>
-            {occurrences.length ? occurrences.map((item, index) => <option key={`${item.start}:${item.end}`} value={index}>{index + 1}回目 · {item.start + 1}〜{item.end}文字目</option>) : <option value="">語句と一致する位置がありません</option>}
-          </select>
+          <PagedSelect id={`annotation-occurrence-${sourceEntityId}`} label="本文での出現位置" scope={`${scope}:${activeBlock.id}:${phrase}:occurrences`} value={occurrence ? String(occurrenceIndex) : ''}
+            items={occurrences.map((item, index) => ({ id: String(index), label: `${index + 1}回目 · ${item.start + 1}〜${item.end}文字目` }))}
+            onChange={id => setOccurrenceIndex(id === '' ? -1 : Number(id))} disabled={!occurrences.length}
+            emptyLabel={occurrences.length ? '出現位置を選択' : '語句と一致する位置がありません'}/>
         </div>
         <div className="form-field">
           <label htmlFor={`annotation-kind-${sourceEntityId}`}>注記の種類</label>
@@ -218,10 +231,8 @@ export function TextAnnotations({
         </div>
         {markKind === 'link' ? <div className="form-field">
           <label htmlFor={`annotation-target-${sourceEntityId}`}>リンク先</label>
-          <select id={`annotation-target-${sourceEntityId}`} value={targetEntityId} onChange={event => setTargetEntityId(event.target.value)}>
-            <option value="">対象を選択</option>
-            {selectableTargets.map(entity => <option key={entity.id} value={entity.id}>{targetLabel(entity)}</option>)}
-          </select>
+          <PagedSelect id={`annotation-target-${sourceEntityId}`} label="リンク先" scope={`${scope}:targets`} value={targetEntityId} items={targetOptions}
+            emptyLabel="対象を選択" onChange={setTargetEntityId}/>
           {selectedCandidate && onIgnoreCandidate && <button type="button" className="text-button" onClick={ignoreSelectedCandidate}>この語句とリンク先の候補を表示しない</button>}
         </div> : <div className="form-field">
           <label htmlFor={`annotation-reading-${sourceEntityId}`}>読み</label>
@@ -238,12 +249,13 @@ export function TextAnnotations({
       <p className="field-hint">本文の編集後も注記範囲を追跡し、位置が曖昧な注記は再リンク待ちとして残します。</p>
       <div className="form-field">
         <label htmlFor={`annotation-split-${sourceEntityId}`}>分割位置</label>
-        <select id={`annotation-split-${sourceEntityId}`} value={splitOffset} onChange={event => setSplitOffset(Number(event.target.value))} disabled={pointLength(activeBlock.text) < 2}>
-          {Array.from({ length: Math.max(0, pointLength(activeBlock.text) - 1) }, (_, index) => index + 1).map(offset => <option key={offset} value={offset}>{offset}文字目の後 · 「{snippet(Array.from(activeBlock.text).slice(0, offset).join(''), 24)}｜</option>)}
-        </select>
+        <input id={`annotation-split-${sourceEntityId}`} type="text" inputMode="numeric" value={splitInput} onChange={event => setSplitInput(event.target.value)} disabled={blockPoints.length < 2}
+          aria-invalid={blockPoints.length > 1 && !splitValid} aria-describedby={`annotation-split-hint-${sourceEntityId}`}/>
+        <span id={`annotation-split-hint-${sourceEntityId}`} className="field-hint">Unicodeコードポイントで1〜{Math.max(0, blockPoints.length - 1)}文字目の後を指定します。
+          {splitValid && ` 「${blockPoints.slice(Math.max(0, splitOffset - 24), splitOffset).join('')}｜${blockPoints.slice(splitOffset, splitOffset + 24).join('')}」`}</span>
       </div>
       <div className="reference-controls">
-        <button type="button" className="button secondary small" onClick={split} disabled={pointLength(activeBlock.text) < 2}>この位置で段落を分割</button>
+        <button type="button" className="button secondary small" onClick={split} disabled={!splitValid}>この位置で段落を分割</button>
         <button type="button" className="button secondary small" onClick={merge} disabled={blocks.indexOf(activeBlock) >= blocks.length - 1}>次の段落と結合</button>
         <button type="button" className="button secondary small" onClick={() => onChange(moveRichTextBlock(blocks, activeBlock.id, -1))} disabled={blocks.indexOf(activeBlock) <= 0}>前へ移動</button>
         <button type="button" className="button secondary small" onClick={() => onChange(moveRichTextBlock(blocks, activeBlock.id, 1))} disabled={blocks.indexOf(activeBlock) >= blocks.length - 1}>後へ移動</button>
@@ -252,50 +264,56 @@ export function TextAnnotations({
 
     <div className="advanced-details">
       <strong>設定済みの注記</strong>
-      {!blocks.some(block => block.ruby?.length || block.links?.length) && <p className="field-hint">まだありません。</p>}
-      {blocks.map(block => <div key={`marks-${block.id}`} className="reference-editor">
-        {block.ruby?.map((ruby, index) => <div className="condition-row" key={`ruby-${index}`}>
-          <span>ルビ：「{annotationText(block, ruby.start, ruby.end)}」→「{ruby.text}」</span>
-          <button type="button" className="text-button danger" aria-label={`ルビ ${annotationText(block, ruby.start, ruby.end)} を削除`} onClick={() => onChange(removeTextAnnotation(blocks, block.id, 'ruby', index))}>削除</button>
-        </div>)}
-        {block.links?.map((link, index) => {
-          const target = project.entities.find(entity => entity.id === link.target.entityId);
-          const references = findTextLinkReferences(project, link.target.entityId);
-          return <div className="condition-row" key={`link-${index}`}>
-            <span>リンク：「{annotationText(block, link.start, link.end)}」→ {targetLabel(target)}</span>
+      {!marks.length && <p className="field-hint">まだありません。</p>}
+      <WindowedList items={marks} scope={`${scope}:marks`} label="設定済みの注記" render={mark => {
+        const { block, index } = mark;
+        if (mark.kind === 'ruby') {
+          const ruby = mark.annotation;
+          return <div className="condition-row" key={mark.id}>
+            <span>ルビ：「{annotationText(block, ruby.start, ruby.end)}」→「{ruby.text}」</span>
+            <button type="button" className="text-button danger" aria-label={`ルビ ${annotationText(block, ruby.start, ruby.end)} を削除`} onClick={() => onChange(removeTextAnnotation(blocks, block.id, 'ruby', index))}>削除</button>
+          </div>;
+        } else {
+          const link = mark.annotation;
+          const target = link.target.sourceVersionId ? undefined : project.entities.find(entity => entity.id === link.target.entityId);
+          const references = incomingByTarget.get(link.target.entityId) ?? [];
+          return <div className="condition-row" key={mark.id}>
+            <span>リンク：「{annotationText(block, link.start, link.end)}」→ {link.target.sourceVersionId ? `固定版 ${link.target.sourceVersionId} · 対象 ${link.target.entityId}` : targetLabel(target)}</span>
             {onOpenTarget && <button type="button" className="text-button" onClick={() => onOpenTarget(link.target, { entityId: sourceEntityId, blockId: block.id, start: link.start, end: link.end })}>対象を開く</button>}
             {onOpenReferences && <button type="button" className="text-button" onClick={() => onOpenReferences(link.target.entityId)}>参照元 {references.length}件</button>}
             <button type="button" className="text-button danger" aria-label={`リンク ${annotationText(block, link.start, link.end)} を削除`} onClick={() => onChange(removeTextAnnotation(blocks, block.id, 'link', index))}>削除</button>
           </div>;
-        })}
-      </div>)}
-      {onOpenReference && blocks.flatMap(block => block.links ?? []).flatMap(link => findTextLinkReferences(project, link.target.entityId)).map((reference, index) => <button type="button" className="text-button" key={`${reference.sourceEntityId}:${reference.sourceBlockId}:${reference.start}:${index}`} onClick={() => onOpenReference(reference)}>
+        }
+      }}/>
+      {onOpenReference && <WindowedList items={incoming} scope={`${scope}:incoming`} label="注記の参照元" searchText={item => `${item.reference.sourceEntityName} ${item.reference.sourceField} ${item.reference.text}`} render={({ id, reference }) => <button type="button" className="text-button" key={id} onClick={() => onOpenReference(reference)}>
         参照元を開く：{reference.sourceEntityName} · {reference.sourceField} · 「{reference.text}」
-      </button>)}
+      </button>}/>}
     </div>
 
-    {blocks.some(block => block.unresolvedAnnotations?.length) && <div className="advanced-details">
+    {unresolved.length > 0 && <div className="advanced-details">
       <strong>再リンク待ち</strong>
       <p className="field-hint">本文の範囲を選んでから適用してください。新しい注記を追加できた場合だけ、元の再リンク待ちを取り除きます。</p>
-      {blocks.flatMap(block => (block.unresolvedAnnotations ?? []).map((annotation, index) => ({ block, annotation, index }))).map(({ block, annotation, index }) => {
+      <WindowedList items={unresolved} scope={`${scope}:unresolved`} label="再リンク待ち" render={({ block, annotation, index }) => {
         const key = unresolvedKey(block.id, index);
-        const originalTarget = annotation.kind === 'link' ? project.entities.find(entity => entity.id === annotation.target.entityId) : undefined;
-        const unresolvedTargetId = unresolvedTargetIds[key] ?? (originalTarget && !originalTarget.deletedAt ? originalTarget.id : '');
+        const originalTarget = annotation.kind === 'link' ? referenceProject(project, annotation.target.sourceVersionId ?? undefined)?.entities.find(entity => entity.id === annotation.target.entityId && !entity.deletedAt) : undefined;
+        const originalId = annotation.kind === 'link' ? annotation.target.entityId : '';
+        const unresolvedTargetId = unresolvedTargetIds[key] ?? originalId;
+        const keepsTarget = unresolvedTargetId === originalId;
+        const targetAvailable = annotation.kind !== 'link' || (keepsTarget ? !!originalTarget : selectableTargets.some(entity => entity.id === unresolvedTargetId));
+        const retainedLabel = annotation.kind === 'link' && annotation.target.sourceVersionId ? `固定版 ${annotation.target.sourceVersionId} · 対象 ${originalId} · 元の対象位置を保持` : `${targetLabel(originalTarget)} · 元の対象位置を保持`;
+        const relinkOptions = originalTarget ? [{ id: originalId, label: retainedLabel }, ...targetOptions.filter(option => option.id !== originalId)] : targetOptions.filter(option => option.id !== originalId);
         return <div className="reference-editor" key={key}>
           <p><strong>{annotation.kind === 'ruby' ? 'ルビ' : 'リンク'}：「{annotation.originalText}」</strong> · {annotation.reason}</p>
           {annotation.kind === 'link' && <div className="form-field">
-            <label htmlFor={`unresolved-target-${sourceEntityId}-${index}`}>再リンク先</label>
-            <select id={`unresolved-target-${sourceEntityId}-${index}`} value={unresolvedTargetId} onChange={event => setUnresolvedTargetIds(current => ({ ...current, [key]: event.target.value }))}>
-              <option value="">対象を選択</option>
-              {selectableTargets.map(entity => <option key={entity.id} value={entity.id}>{targetLabel(entity)}</option>)}
-            </select>
+            <PagedSelect id={`unresolved-target-${sourceEntityId}-${key}`} label="再リンク先" scope={`${scope}:unresolved:${key}:targets`} value={unresolvedTargetId} items={relinkOptions} unavailableLabel={`${retainedLabel} · 対象の版を確認できません`} emptyLabel="対象を選択"
+              onChange={id => setUnresolvedTargetIds(current => ({ ...current, [key]: id }))}/>
           </div>}
           <div className="reference-controls">
-            <button type="button" className="button secondary small" onClick={() => resolve(block.id, index, annotation)} disabled={!activeBlock || !occurrence || (annotation.kind === 'link' && !unresolvedTargetId)}>選択した語句に再リンク</button>
+            <button type="button" className="button secondary small" onClick={() => resolve(block.id, index, annotation)} disabled={!activeBlock || !occurrence || !targetAvailable || (annotation.kind === 'link' && !unresolvedTargetId)}>選択した語句に再リンク</button>
             <button type="button" className="text-button danger" onClick={() => onChange(removeUnresolvedAnnotation(blocks, block.id, index))}>再リンク待ちを削除</button>
           </div>
         </div>;
-      })}
+      }}/>
     </div>}
   </section>;
 }

@@ -23,6 +23,8 @@ import { resolvePinnedWorlds } from '../domain/pinnedWorlds';
 import { DataField } from './Fields';
 import { remapEditedTextReferences, remapEditedTextRelationReferences } from '../domain/text';
 import { ChapterReadingView, StructurePreview } from './WritingWorkspace';
+import { PagedSelect } from './PagedSelect';
+import { WindowedList } from './WindowedList';
 import './WritingWorkspace.css';
 
 const BRANCH_STATUS_LABEL: Record<AuthorAlternative['status'], string> = {
@@ -337,16 +339,14 @@ export function AuthorAlternativeStudio({ project, alternatives: incoming, world
     <div className="alternative-panel">
       <h3>別案を作る</h3>
       <label className="form-field"><span>別案の名前</span><input aria-label="新しい別案の名前" value={newBranchName} onChange={event => setNewBranchName(event.target.value)} placeholder="例：門を開けない展開"/></label>
-      <label className="form-field"><span>分岐元</span><select aria-label="別案の分岐元" value={sourceSnapshotId} onChange={event => setSourceSnapshotId(event.target.value)}>
-        <option value="">現在の正本</option>{project.snapshots.map(snapshot => <option value={snapshot.id} key={snapshot.id}>公開版：{snapshot.versionLabel}</option>)}
-      </select></label>
+      <PagedSelect label="別案の分岐元" scope={`${project.projectId}:alternatives:source`} value={sourceSnapshotId} onChange={setSourceSnapshotId}
+        emptyLabel="現在の正本" items={project.snapshots.map(snapshot => ({ id: snapshot.id, label: `公開版：${snapshot.versionLabel}` }))}/>
       <button type="button" className="button secondary small" disabled={busy || !newBranchName.trim()} onClick={() => void createBranch()}>分岐して別案を作る</button>
     </div>
 
     {!alternatives.length ? <p className="field-hint">別案はまだありません。正本や公開版を保ったまま、新しい制作案を作れます。</p> : <>
-      <label className="form-field"><span>編集する作者別案</span><select aria-label="編集する作者別案" value={selectedAlternativeId} onChange={event => setSelectedAlternativeId(event.target.value)}>
-        {alternatives.map(item => <option value={item.id} key={item.id}>{item.name} · {BRANCH_STATUS_LABEL[item.status]}</option>)}
-      </select></label>
+      <PagedSelect label="編集する作者別案" scope={`${project.projectId}:alternatives:edit`} value={selectedAlternativeId} onChange={setSelectedAlternativeId}
+        items={alternatives.map(item => ({ id: item.id, label: `${item.name} · ${BRANCH_STATUS_LABEL[item.status]}` }))}/>
       {alternative && contentDraft && draftOwner?.id === alternative.id && <>
         <div className="alternative-heading">
           <label className="form-field"><span>別案の名前</span><input aria-label="別案の名前" value={branchName} onChange={event => setBranchName(event.target.value)}/></label>
@@ -359,12 +359,10 @@ export function AuthorAlternativeStudio({ project, alternatives: incoming, world
 
         <div className="alternative-panel">
           <div className="alternative-heading"><h3>別案の本文・場面</h3><button type="button" className="button secondary small" onClick={addBranchScene}>別案の場面を作る</button></div>
-          {chapters.length > 0 && <label className="form-field"><span>新しい場面を加える章</span><select aria-label="新しい場面を加える章" value={newSceneChapterId} onChange={event => setNewSceneChapterId(event.target.value)}>
-            <option value="">章に所属させない</option>{chapters.map(chapter => <option key={chapter.id} value={chapter.id}>{chapter.name || '名称未設定の章'}</option>)}
-          </select></label>}
-          <label className="form-field"><span>編集対象</span><select aria-label="別案内の編集対象" value={selectedEntityId} onChange={event => setSelectedEntityId(event.target.value)}>
-            {entities.map(entity => <option key={entity.id} value={entity.id}>{entityLabel(entity)}</option>)}
-          </select></label>
+          {chapters.length > 0 && <PagedSelect label="新しい場面を加える章" scope={`${project.projectId}:${alternative.id}:alternatives:scene-chapter`} value={newSceneChapterId}
+            onChange={setNewSceneChapterId} emptyLabel="章に所属させない" items={chapters.map(chapter => ({ id: chapter.id, label: chapter.name || '名称未設定の章' }))}/>}
+          <PagedSelect label="別案内の編集対象" scope={`${project.projectId}:${alternative.id}:alternatives:entity`} value={selectedEntityId} onChange={setSelectedEntityId}
+            items={entities.map(entity => ({ id: entity.id, label: entityLabel(entity) }))}/>
           <div className="form-row">
             <label className="form-field"><span>別案に追加する情報の種類</span><select aria-label="別案に追加する情報の種類" value={newEntityKind} onChange={event => setNewEntityKind(event.target.value as EntityKind)}>{Object.entries(KIND_LABELS).map(([kind, label]) => <option key={kind} value={kind}>{label}</option>)}</select></label>
             <label className="form-field"><span>追加する情報の名前</span><input aria-label="別案に追加する情報の名前" value={newEntityName} onChange={event => setNewEntityName(event.target.value)}/></label>
@@ -398,10 +396,11 @@ export function AuthorAlternativeStudio({ project, alternatives: incoming, world
 
         <div className="alternative-panel">
           <div className="alternative-heading"><h3>別案の版履歴</h3><span>保存済み {alternative.versions.length}版</span></div>
-          <ol>{[...alternative.versions].reverse().map(version => <li key={version.id}>
+          <WindowedList items={[...alternative.versions].reverse()} scope={`${project.projectId}:${alternative.id}:alternatives:versions`} label="別案の版履歴" as="ol" selectedId={alternative.headVersionId} followSelected={false}
+            searchText={version => `${version.label} ${version.createdAt}`} render={version => <li key={version.id}>
             <span>{version.label} · {new Date(version.createdAt).toLocaleString()}</span>
             {version.id === alternative.headVersionId ? <strong>現在の版</strong> : <button type="button" className="text-button" disabled={busy} onClick={() => void rollbackHead(version.id)}>この版を現在に戻す</button>}
-          </li>)}</ol>
+          </li>}/>
           {head && <p className="field-hint">現在の版「{head.label}」を編集しても、過去の別案版は残ります。</p>}
         </div>
 
@@ -414,15 +413,14 @@ export function AuthorAlternativeStudio({ project, alternatives: incoming, world
         <div className="alternative-panel">
           <div className="alternative-heading"><h3>正本との差分</h3><span>{currentBaseLabel}との比較</span></div>
           {!changes.length && <p className="field-hint">この別案には正本との差分がありません。</p>}
-          <div className="alternative-diff-list">
-            {changes.map(change => <div className={`alternative-diff-row ${change.conflict ? 'alternative-conflict' : ''}`} key={change.key}>
+          <WindowedList items={changes.map(change => ({ ...change, id: change.key }))} scope={`${project.projectId}:${alternative.id}:alternatives:diffs`} label="正本との差分" className="alternative-diff-list"
+            searchText={change => change.label} render={change => <div className={`alternative-diff-row ${change.conflict ? 'alternative-conflict' : ''}`} key={change.key}>
               <label><input type="checkbox" checked={selectedChangeKeys.has(change.key)} disabled={change.conflict || !onCommitCanonical} onChange={event => toggleChange(change, event.target.checked)}/>
                 <span><strong>{change.label}</strong><p>正本：{displayValue(change.canonicalValue)} → 別案：{displayValue(change.alternativeValue)}</p>
                   {change.conflict && <small>分岐元の後に正本側も変更された項目です。別案を最新の正本から分岐し直して確認してください。</small>}
                 </span>
               </label>
-            </div>)}
-          </div>
+            </div>}/>
           <button type="button" className="button primary small" disabled={busy || !onCommitCanonical || !selectedChangeKeys.size} onClick={() => void adoptSelected()}>選択した変更を正本へ採用</button>
           {!onCommitCanonical && <p className="field-hint">正本へ採用するには、正本・別案・適用記録を同じ保存処理で確定するホスト連携が必要です。</p>}
           {alternative.applyReceipts.length > 0 && <p className="field-hint">正本へ採用した記録 {alternative.applyReceipts.length}件 · 最後の適用 revision {alternative.applyReceipts.at(-1)?.appliedRevision ?? '未設定'}</p>}
