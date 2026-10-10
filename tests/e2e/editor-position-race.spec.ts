@@ -56,7 +56,7 @@ test('a delayed saved cursor yields to a new text selection; invalid replacement
   await input.fill(summary + '・訂正');
   // Replacing every character can assign a new paragraph ID. The accepted
   // correction, rather than its discarded predecessor, must survive reload.
-  const correctedBlockId = JSON.parse(await page.getByRole('textbox', {name: '詳細データ', exact: true}).inputValue()).summary[0].id;
+  const correctedBlockId = await page.locator('[data-field="summary"] [data-block-id]').first().getAttribute('data-block-id');
   expect(correctedBlockId).toBeTruthy();
   await page.locator('.editor-footer').getByRole('button', {name: /^(保存する|保存を再試行)$/}).click();
   await expect(page.locator('.editor-save-state')).toContainText('端末内保存済み');
