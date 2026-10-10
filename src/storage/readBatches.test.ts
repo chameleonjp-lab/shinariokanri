@@ -80,6 +80,41 @@ it('後から差し替えたsignalの取消を読込エラーへ借用せず、�
   expect(await rows(restarted)).toEqual(before);
 }, 90_000);
 
+it.each([0, 1])('作品一覧の%s件取得後にoptionsを差し替えても、開始時の取消と保存行を保持する', async completedToCancel => {
+  const first = open(), inputs = [fixture(3), fixture(2)];
+  for (const input of inputs) await first.saveProject(input, {reason: '作品一覧の取消前', includeHistory: false});
+  const name = db(first).name; first.close(); const restarted = open(name), before = await rows(restarted);
+  const original = new AbortController(), replacement = new AbortController(), progress: number[] = [], replacementProgress: number[] = [];
+  const options = {signal: original.signal, onProgress: (completed: number, total: number) => {
+    expect(total).toBe(2); progress.push(completed);
+    if (completed === completedToCancel) {
+      options.signal = replacement.signal; options.onProgress = completed => {replacementProgress.push(completed);}; original.abort();
+    }
+  }};
+  await expect(restarted.listProjectsForEditing(options)).rejects.toMatchObject({code: 'CANCELLED'});
+  expect(original.signal.aborted).toBe(true); expect(replacement.signal.aborted).toBe(false);
+  expect(progress).toEqual(completedToCancel === 0 ? [0] : [0, 1]); expect(replacementProgress).toEqual([]);
+  expect(await rows(restarted)).toEqual(before);
+  const recovered = open(name); for (const input of inputs) expect((await recovered.getProject(input.projectId))!.entities).toEqual(input.entities);
+});
+
+it('作品一覧は後から差し替えたsignalの取消を借用せず、開始時の進捗と全作品を返す', async () => {
+  const first = open(), inputs = [fixture(3), fixture(2)];
+  for (const input of inputs) await first.saveProject(input, {reason: '作品一覧のsignal起点', includeHistory: false});
+  const name = db(first).name; first.close(); const restarted = open(name), before = await rows(restarted);
+  const original = new AbortController(), replacement = new AbortController(), progress: number[] = [], replacementProgress: number[] = [];
+  const options = {signal: original.signal, onProgress: (completed: number, total: number) => {
+    expect(total).toBe(2); progress.push(completed);
+    if (completed === 0) {
+      options.signal = replacement.signal; options.onProgress = completed => {replacementProgress.push(completed);}; replacement.abort();
+    }
+  }};
+  const actual = await restarted.listProjectsForEditing(options);
+  expect(actual).toHaveLength(2); expect(progress).toEqual([0, 1, 2]); expect(replacementProgress).toEqual([]);
+  expect(original.signal.aborted).toBe(false); expect(replacement.signal.aborted).toBe(true); expect(await rows(restarted)).toEqual(before);
+  for (const input of inputs) expect(actual.find(project => project.projectId === input.projectId)!.entities).toEqual(input.entities);
+});
+
 it.each(['missing', 'foreign', 'id', 'kind'] as const)('取得後半の%s行は保存済みデータを変更せず拒否する', async fault => {
   const first = open(), input = fixture(8193); await first.saveProject(input, {reason: '末尾確認', includeHistory: false});
   const name = db(first).name; first.close(); const restarted = open(name), table = db(restarted).table('entities'), target = input.entities[0];

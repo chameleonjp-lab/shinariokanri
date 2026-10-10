@@ -633,17 +633,21 @@ export class ScenarioStore {
     } catch (error) { checkCancelled(signal); throw saveError(error); }
   }
   async listProjectsForEditing(options: { signal?: AbortSignal; onProgress?: (completed: number, total: number) => void;onStage?:(stage:ReadStage)=>void;immutableView?:boolean } = {}): Promise<ProjectData[]> {
-    checkCancelled(options.signal);
+    const {signal, onProgress, onStage, immutableView} = options;
+    const readOptions = {signal, onStage, immutableView};
+    checkCancelled(signal);
     const projectIds = await this.db.projects.toCollection().primaryKeys();
+    checkCancelled(signal);
     const projects: ProjectData[] = [];
-    options.onProgress?.(0, projectIds.length);
+    onProgress?.(0, projectIds.length);
     for (const [index,projectId] of projectIds.entries()) {
-      checkCancelled(options.signal);
-      const project = await this.getProjectForEditing(projectId,options);
-      checkCancelled(options.signal);
+      checkCancelled(signal);
+      const project = await this.getProjectForEditing(projectId,readOptions);
+      checkCancelled(signal);
       if (project) projects.push(project);
-      options.onProgress?.(index+1, projectIds.length);
+      onProgress?.(index+1, projectIds.length);
     }
+    checkCancelled(signal);
     return projects;
   }
   async listProjects(): Promise<ProjectData[]> {
