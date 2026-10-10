@@ -15,7 +15,7 @@ import { sealAuthorAlternative } from '../domain/authorAlternativeIntegrity';
 import { appendAlternativeVersion, applyAlternativeChanges, projectContent } from '../domain/writingWorkspace';
 import { assetPath, attachmentMetadata, closureAttachmentMetadata, exportScenario, referencedWorlds, validateAsset, verifySnapshotHashes, verifyWorlds, worldSnapshotContents, type PreparedScenario } from './archive';
 import { checkCancelled, saveError, StorageError } from './errors';
-import { canonicalJson, equalJson, jsonBytes, sha256, validateJsonValue } from './json';
+import { canonicalJson, createCanonicalJsonCache, equalJson, jsonBytes as encodeJsonBytes, sha256, validateJsonValue } from './json';
 import { recoveryImages, projectWithRecoveryHistory, validateRecovery, type PortableRecovery } from './recovery';
 import { planCrossProjectImport, type CrossProjectImportPlan } from './importMapping';
 import { assertAck } from '../sync/validation';
@@ -139,6 +139,8 @@ class ScenarioDatabase extends Dexie {
 const copy = <T>(value: T): T => structuredClone(value);
 const sameJson = (left: unknown, right: unknown): boolean => left === right || equalJson(left ?? null, right ?? null);
 const immutableValues=new WeakSet<object>();
+const jsonEncodingCache = createCanonicalJsonCache(value => immutableValues.has(value));
+const jsonBytes = (value: unknown): Uint8Array => encodeJsonBytes(value, jsonEncodingCache);
 function freeze<T>(value: T): T {
   if (value && typeof value === 'object' && !immutableValues.has(value)) {
     for (const child of Object.values(value)) freeze(child);

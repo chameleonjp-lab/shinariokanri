@@ -1,5 +1,7 @@
 # RB10追加の保存互換性（同一候補の最終受入前）
 
+2026-10-10の[原子保存JSON補修](RB10_BOUNDED_JSON_ENCODING.md)は内部処理だけを変更し、完全保存・clone・公開投影・旧形式・各出力profileの仕様版とserialized fieldsを変更しない。新6件のexact canonical bytesと全810単体、schema生成差分なしをdirty準備で確認した。portable runtimeの実生成SHAは6871ea016635d84981e405880e56a7a2b9a9e3aa9edfa34f48bda27dddcf161fへ更新され、最終clean artifactは別に固定する。前候補C17の保存性能超過と実復元成功は別結果で保持し、未実行profile・実機・実権限を合格へ変換しない。以下の互換表と履歴は各対象版の証拠を保つ。
+
 2026-10-09。native形式1.0.0と既存6出力profileの規則を保持する。[候補の確認条件](RB10_COMPLETION_CANDIDATE.md)を併用する。以下のRB08/RB09記録は各確認時点の範囲として残す。
 
 | 変更 | 保持する値・対応 | 拒否・互換条件 |
