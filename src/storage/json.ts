@@ -29,15 +29,11 @@ export function resolveLimits(overrides: LimitOverrides = {}): ArchiveLimits {
   return result as ArchiveLimits;
 }
 
+// Unicode mode consumes valid pairs as supplementary code points. Only an
+// isolated surrogate can match this class; no global state survives a check.
+const isolatedSurrogate = /[\uD800-\uDFFF]/u;
 export function isValidUnicode(value: string): boolean {
-  for (let i = 0; i < value.length; i++) {
-    const code = value.charCodeAt(i);
-    if (code >= 0xd800 && code <= 0xdbff) {
-      const next = value.charCodeAt(++i);
-      if (!(next >= 0xdc00 && next <= 0xdfff)) return false;
-    } else if (code >= 0xdc00 && code <= 0xdfff) return false;
-  }
-  return true;
+  return !isolatedSurrogate.test(value);
 }
 
 /** Parse while checking duplicate keys and structural quotas, before building an unchecked object graph. */

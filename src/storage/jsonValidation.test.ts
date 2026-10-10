@@ -1,6 +1,38 @@
 import {expect,it} from 'vitest';
-import {validateJsonValue,canonicalJson,exceedsJsonBytes} from './json';
+import {validateJsonValue,canonicalJson,exceedsJsonBytes,isValidUnicode,parseStrictJson,safeArchivePath} from './json';
 import {StorageError} from './errors';
+
+it('accepts every Unicode scalar and every supplementary pair, refusing each isolated surrogate',()=>{
+ let bmp=0,supplementary=0;
+ for(let code=0;code<=0x10ffff;code++){
+  const value=String.fromCodePoint(code),expected=code<0xd800||code>0xdfff;
+  if(isValidUnicode(value)!==expected)throw new Error(`Incorrect Unicode scalar U+${code.toString(16)}`);
+  if(code<0x10000)bmp++;else supplementary++;
+ }
+ expect({bmp,supplementary}).toEqual({bmp:65536,supplementary:1048576});
+});
+
+it('refuses malformed pairs at JSON and archive boundaries on every check, then accepts corrected values',()=>{
+ const encoder=new TextEncoder(),value={text:''};
+ const prefix='漢字😀e\u0301'.repeat(8192);
+ const malformed=['\ud800','\udfff','\udc00\ud800','\ud800x\udc00','\ud800\ud800\udc00','\ud800\udc00\udfff',`${prefix}\ud800`];
+ for(let round=0;round<3;round++)for(const text of malformed){
+  value.text=text;
+  expect(isValidUnicode(text)).toBe(false);
+  expect(()=>validateJsonValue(value)).toThrow(StorageError);
+  expect(()=>canonicalJson(value)).toThrow(StorageError);
+  expect(()=>parseStrictJson(encoder.encode(JSON.stringify(value)),'data.json')).toThrow(StorageError);
+  expect(()=>parseStrictJson(encoder.encode(JSON.stringify({[text]:0})),'data.json')).toThrow(StorageError);
+  expect(()=>safeArchivePath(`assets/${text}.txt`)).toThrow(StorageError);
+ }
+ value.text=`${prefix}\ud800\udc00`;
+ expect(isValidUnicode(value.text)).toBe(true);
+ expect(()=>validateJsonValue(value)).not.toThrow();
+ const encoded=canonicalJson(value);
+ expect(encoded).toBe(JSON.stringify(value));
+ expect(parseStrictJson(encoder.encode(encoded),'data.json')).toEqual(value);
+ expect(()=>safeArchivePath('assets/漢字😀.txt')).not.toThrow();
+});
 
 it('keeps ordered Unicode JSON, omitted fields and shared values unchanged before a cold read',()=>{
  const shared={text:'漢字😀\n',values:[null,true,false,0,-1,1.5]};
