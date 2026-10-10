@@ -27,3 +27,5 @@ schema registryとkind/status/scope辞書の置換・内部変更をcanonical内
 元104要件・116ケース・24工程・6回帰群、歴史的baseline、元受入句は変更しない。実Large 113履歴・空環境new/clone・2時間最終復元・実端末・実Auth/RLS/Storage・release完成は、それぞれの同一対象版の実証拠が閉じるまで未確認のまま保持する。
 
 2026-10-10のcommit `5448c30b6f950418b9747052f1c1525f25f7e171` の887単体・schema/build・文書/計画・Python15は成功したが、通常112保存→113履歴/送信待ち・88,003記録・72MiBの完全保存は22:18:09.297〜22:28:11.600999 UTCに元600,000ms上限で失敗した。raw SHA256 `a166b479d8da5f2beedd1069b61da0d180e5f22394cc32d457c9b83ce8cc96ab`、封印SHA256 `353e9d50c11c7eb2a2748d3589c53c0ae1848273728945989ae7b50b49349c32`、source456/build14の前後hash/clean不変。失敗を消さず、新しいschema/上限検査の共有は別の対象版で再検証する。実ファイルと空環境復元はこの失敗実行では未観測である。
+
+commit `4232966214e5c4cc90007e3247a2f3adba169c9d` のclean局所検査は2026-10-10 22:51:23〜23:03:01 UTCにschema/build/docs/plan/Python15と単体890件/96 filesが成功した。一方、GitHub CI run38093333559は単体888成功/2失敗で、`rb06Recovery.test.ts` の71回保存後の旧版復元と明示ID対応統合が既存5000ms timeoutへ到達した。build/browserはskippedである。既存の5000ms・全assertion・fixtureを保持し、CIの単体file並列だけを止め、clean局所検査と同じ `--maxWorkers=1 --fileParallelism=false` を使用する。製品の応答/検索/保存・解析・600000ms export条件を変更しない。失敗runとserial局所成功は別記録であり、修正CIと実Large結果は対象版ごとに再確認する。
