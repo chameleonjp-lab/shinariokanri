@@ -7,6 +7,7 @@ import { validateTemplateAssignments, validateTemplateDefinition } from './templ
 import { measureText } from './textMetrics';
 import { contentValidationContext, type ContentValidationMemo } from './contentValidationMemo';
 import { captureImmutablePlainData, isImmutablePlainData } from './immutablePlainData';
+import { canonicalJson } from '../storage/json';
 
 export const KIND_LABELS: Record<EntityKind, string> = {
   character: '人物', group: 'グループ', event: '出来事', place: '場所', item: '物品', note: 'メモ', chapter: '章', scene: '場面', goal: '目標',
@@ -784,8 +785,22 @@ function validateContent(input: unknown, path: string, options: ProjectValidatio
   // observations for this synchronous validation instead of walking it twice.
   const entityReferences=new WeakMap<Entity,DomainReference[]>(),relationReferences=new WeakMap<Relation,DomainReference[]>();
   const relative=(references:DomainReference[],prefix:string)=>references.map(reference=>({...reference,path:reference.path.slice(prefix.length+1)}));
-  entities.forEach((entity, i) => { if (reuse && isObject(entity) && previousEntities.get(entity.id as ID) === entity) return; const prefix=`${path}.entities[${i}]`,references:DomainReference[]=[];const result = validateEntityRecord(entity,prefix,references); if (!result.ok) issues.push(...result.issues);else entityReferences.set(result.value,relative(references,prefix)); });
-  relations.forEach((relation, i) => { if (reuse && isObject(relation) && Object.is(previousRelations.get(relation.id as ID), relation)) return;const prefix=`${path}.relations[${i}]`,references:DomainReference[]=[];const result = simpleValidate<Relation>(relationSchema,relation,prefix,references); if (!result.ok) issues.push(...result.issues);else relationReferences.set(result.value,relative(references,prefix)); });
+  entities.forEach((entity, i) => {
+    if (reuse && isObject(entity) && previousEntities.get(entity.id as ID) === entity) return;
+    const cached = isObject(entity) ? memo?.entityReferences(entity as unknown as Entity) : undefined;
+    if (cached) { entityReferences.set(entity as unknown as Entity, cached); return; }
+    const prefix=`${path}.entities[${i}]`, references:DomainReference[]=[], result=validateEntityRecord(entity,prefix,references);
+    if (!result.ok) issues.push(...result.issues);
+    else { const observed=relative(references,prefix); entityReferences.set(result.value,observed); memo?.rememberEntity(result.value,observed); }
+  });
+  relations.forEach((relation, i) => {
+    if (reuse && isObject(relation) && Object.is(previousRelations.get(relation.id as ID), relation)) return;
+    const cached = isObject(relation) ? memo?.relationReferences(relation as unknown as Relation) : undefined;
+    if (cached) { relationReferences.set(relation as unknown as Relation,cached); return; }
+    const prefix=`${path}.relations[${i}]`, references:DomainReference[]=[], result=simpleValidate<Relation>(relationSchema,relation,prefix,references);
+    if (!result.ok) issues.push(...result.issues);
+    else { const observed=relative(references,prefix); relationReferences.set(result.value,observed); memo?.rememberRelation(result.value,observed); }
+  });
   calendars.forEach((calendar, i) => { const result = validateCalendar(calendar, `${path}.calendars[${i}]`); if (!result.ok) issues.push(...result.issues); });
   const viewRefs: DomainReference[] = []; walk(arr(viewSchema), input.views, `${path}.views`, issues, viewRefs);
   if (issues.length) return { ok: false, issues: issues.slice(0, 256) };
@@ -1130,9 +1145,15 @@ function validateAnchors(value: unknown, path: string, entities: Map<ID, Entity>
 }
 export function validateProject(input: unknown, options: ProjectValidationOptions = {}): ValidationResult<ProjectData> {
   if (!isObject(input)) return { ok: false, issues: [{ code: 'VALIDATION_FAILED', path: 'project', message: '作品はオブジェクトです。' }] };
-  const context = contentValidationContext(input, options, RELATION_TYPES), memo = context?.memo;
+  const context = validationSchemaSignature() === undefined ? undefined : contentValidationContext(input, options, RELATION_TYPES), memo = context?.memo;
   options = context?.options ?? options;
   return validateProjectData(input, options, memo);
+}
+
+function validationSchemaSignature(): string | undefined {
+  const captured = captureImmutablePlainData({ schemas: ENTITY_SCHEMAS, kinds: ENTITY_KINDS, statuses: STATUSES, scopes: SCOPES });
+  if (!captured.captured) return undefined;
+  try { return canonicalJson(captured.value); } catch { return undefined; }
 }
 
 /** A durable operation captures its dependencies once. Only actual successful
@@ -1143,7 +1164,11 @@ export function createProjectValidator(options: ProjectValidationOptions = {}): 
   const dependencies = captureImmutablePlainData({ ...captured.value, relationTypes: captured.value.relationTypes ?? RELATION_TYPES });
   if (!dependencies.captured) return input => validateProject(input, options);
   let context: ReturnType<typeof contentValidationContext>;
+  let schemaSignature: string | undefined;
   return input => {
+    const currentSchema = validationSchemaSignature();
+    if (currentSchema === undefined) return validateProject(input, dependencies.value);
+    if (currentSchema !== schemaSignature) { context = undefined; schemaSignature = currentSchema; }
     const owned = captureImmutablePlainData(input);
     if (!owned.captured || !isImmutablePlainData(owned.value)) return validateProject(input, dependencies.value);
     context ??= contentValidationContext(owned.value, dependencies.value, RELATION_TYPES);

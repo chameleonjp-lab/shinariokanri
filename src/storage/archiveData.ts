@@ -1,5 +1,5 @@
 import {validateSyncRecovery,syncRecoveryImages,type NativeSyncRecovery} from './syncRecovery';
-import {captureImmutablePlainData} from '../domain/immutablePlainData';
+import {captureImmutablePlainData,isImmutablePlainData} from '../domain/immutablePlainData';
 import {RECORD_DICTIONARY_FEATURE,RecordDictionaryWriter,RecordDictionaryReader} from './recordDictionary';
 import { Inflate, zipSync } from 'fflate';
 import { validateRecovery, recoveryImages, type PortableRecovery } from './recovery';
@@ -251,11 +251,14 @@ async function checkedProjectIntegrity(project: ProjectData, path: string, world
   if (issues.length) throw new StorageError('VALIDATION_FAILED', issues.map(issue => `${issue.path}: ${issue.message}`).join('\n'), path);
 }
 
-function enforceFieldLimits(value: unknown, path: string, limits: ArchiveLimits): void {
+function enforceFieldLimits(value: unknown, path: string, limits: ArchiveLimits, checked = new WeakSet<object>()): void {
+  const immutable = value !== null && typeof value === 'object' && isImmutablePlainData(value);
+  if (immutable && checked.has(value as object)) return;
   if (typeof value === 'string') {
     if (new TextEncoder().encode(value).byteLength > limits.fieldBytes) throw new StorageError('LIMIT_EXCEEDED', '本文フィールドが1 MiBの上限を超えています。', path);
-  } else if (Array.isArray(value)) value.forEach((item, index) => enforceFieldLimits(item, `${path}/${index}`, limits));
-  else if (value && typeof value === 'object') for (const [key, item] of Object.entries(value)) enforceFieldLimits(item, `${path}/${key}`, limits);
+  } else if (Array.isArray(value)) value.forEach((item, index) => enforceFieldLimits(item, `${path}/${index}`, limits, checked));
+  else if (value && typeof value === 'object') for (const [key, item] of Object.entries(value)) enforceFieldLimits(item, `${path}/${key}`, limits, checked);
+  if (immutable) checked.add(value as object);
 }
 
 interface AttachmentMetadata { contentHash: string; mediaType: string; byteSize: number; assetPath: string }

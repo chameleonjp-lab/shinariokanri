@@ -952,14 +952,33 @@ export class ScenarioStore {
   async availableAssetHashes(): Promise<Set<string>> { return new Set(await this.db.assets.toCollection().primaryKeys()); }
   private async materializeOutbox(rows: StoredOutbox[], commands: Map<string, StoredCommand>, ready = new Map<string, CommandRecord>()): Promise<OutboxRecord[]> {
     rows = [...rows].sort((left, right) => BigInt(left.localRevision) < BigInt(right.localRevision) ? -1 : BigInt(left.localRevision) > BigInt(right.localRevision) ? 1 : left.createdAt.localeCompare(right.createdAt));
-    const result: OutboxRecord[] = [], indexes = new WeakMap<object, Map<string, TargetRecord>>();
-    const recordIndex = (records: (Entity | Relation)[]) => {
-      let index = indexes.get(records);
-      if (!index) { index = new Map(records.map(record => [record.id, record])); indexes.set(records, index); }
-      return index;
+    const result: OutboxRecord[] = [], indexes = new Map<object, Map<string, TargetRecord>>();
+    const probes = new WeakMap<object, Map<string, TargetRecord | null>>();
+    const recordTarget = (records: (Entity | Relation)[], id: string): TargetRecord | null => {
+      const indexed = indexes.get(records);
+      if (indexed) return indexed.get(id) ?? null;
+      let observed = probes.get(records);
+      if (!observed) { observed = new Map(); probes.set(records, observed); }
+      if (observed.has(id)) return observed.get(id)!;
+      let found: TargetRecord | null;
+      if (records.length < 32 || observed.size < 16) {
+        // Ordinary single-record saves need one lookup, not an 88,003-row map
+        // for every historical image. Preserve the previous last-ID priority.
+        found = null;
+        for (let position = records.length - 1; position >= 0; position--) {
+          if (records[position].id === id) { found = records[position]; break; }
+        }
+      } else {
+        const index = new Map(records.map(record => [record.id, record]));
+        if (indexes.size >= 4) indexes.delete(indexes.keys().next().value!);
+        indexes.set(records, index);
+        found = index.get(id) ?? null;
+      }
+      if (observed.size < 32) observed.set(id, found);
+      return found;
     };
     const target = (state: ContentState, id: string) => id === state.projectId ? headerTarget(state)
-      : recordIndex(state.relations).get(id) ?? recordIndex(state.entities).get(id) ?? null;
+      : recordTarget(state.relations, id) ?? recordTarget(state.entities, id);
     for (const row of rows) {
       const stored = row.commandOperationId ? commands.get(row.commandOperationId) : undefined;
       const command = row.command ?? (stored ? await this.materializeCommand(stored, commands, ready, new Set(), false) : undefined);

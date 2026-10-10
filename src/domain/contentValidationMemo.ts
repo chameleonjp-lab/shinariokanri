@@ -1,10 +1,14 @@
-import type { ID, ProjectContent, RelationTypeDefinition } from './types';
-import type { ProjectValidationOptions } from './model';
+import type { Entity, ID, ProjectContent, Relation, RelationTypeDefinition } from './types';
+import type { DomainReference, ProjectValidationOptions } from './model';
 import { captureImmutablePlainData, isImmutablePlainData } from './immutablePlainData';
 
 export interface ContentValidationMemo {
   has(content: ProjectContent, ids: Set<ID>, versions: Map<ID, ProjectContent>): boolean;
   remember(content: ProjectContent, ids: Set<ID>, versions: Map<ID, ProjectContent>): void;
+  entityReferences(entity: Entity): DomainReference[] | undefined;
+  relationReferences(relation: Relation): DomainReference[] | undefined;
+  rememberEntity(entity: Entity, references: DomainReference[]): void;
+  rememberRelation(relation: Relation, references: DomainReference[]): void;
 }
 
 /** A full-validation session with captured dependencies owns this proof. Metadata and
@@ -19,6 +23,20 @@ export function contentValidationContext(input: unknown, options: ProjectValidat
   if (!context.captured) return undefined;
   type Proof = { content: ProjectContent; ids: Set<ID>; versions: Map<ID, ProjectContent> };
   let successful: Proof[] = [];
+  // These are only successful record-schema observations. Every content still
+  // checks its namespace, reference targets, rules and fixed-version anchors.
+  // Different ordered arrays can contain the same immutable records.
+  let entities = new WeakMap<Entity, DomainReference[]>(), relations = new WeakMap<Relation, DomainReference[]>(), records = 0;
+  const rememberRecord = (record: Entity | Relation, references: DomainReference[], entity: boolean) => {
+    if (!isImmutablePlainData(record)) return;
+    // A reference kind list originates in the public schema registry. Do not
+    // keep an alias to a detached schema when its equal replacement is active.
+    const owned = captureImmutablePlainData(references);
+    if (!owned.captured) return;
+    if (records >= 100_000) { entities = new WeakMap(); relations = new WeakMap(); records = 0; }
+    if (entity) entities.set(record as Entity, owned.value); else relations.set(record as Relation, owned.value);
+    records++;
+  };
   const same = (proof: Proof, content: ProjectContent, ids: Set<ID>, versions: Map<ID, ProjectContent>) => {
     const before = proof.content;
     return before.projectId === content.projectId && before.formatVersion === content.formatVersion
@@ -29,6 +47,10 @@ export function contentValidationContext(input: unknown, options: ProjectValidat
       && proof.versions.size === versions.size && [...versions].every(([id, value]) => proof.versions.get(id) === value);
   };
   return { options: context.value, memo: {
+    entityReferences: entity => entities.get(entity),
+    relationReferences: relation => relations.get(relation),
+    rememberEntity: (entity, references) => rememberRecord(entity, references, true),
+    rememberRelation: (relation, references) => rememberRecord(relation, references, false),
     has: (content, ids, versions) => successful.some(proof => same(proof, content, ids, versions)),
     remember(content, ids, versions) {
       if (successful.length >= 256) successful = [];

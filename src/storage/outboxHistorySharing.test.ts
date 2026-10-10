@@ -19,6 +19,8 @@ it('keeps every historical image and pending hash across checkpoint 64 and cold 
   const other = createEntity(project.projectId, 'character', '相手');
   const scene = createEntity(project.projectId, 'scene', 'Unicode本文', { body: textToRichText('😀旧本文 e\u0301') });
   project.entities.push(person, other, scene);
+  const bulk = Array.from({ length: 36 }, (_, index) => createEntity(project.projectId, 'character', `まとめた人物 ${index}`));
+  project.entities.push(...bulk);
   project.relations.push({ id: newId(), projectId: project.projectId, fromId: person.id, toId: other.id,
     revision: '0', evidenceIds: [], relationType: 'trust', direction: 'forward', status: 'confirmed',
     visibility: 'private', validity: { worldRange: null, routeCondition: null, presentationAnchor: null } });
@@ -32,6 +34,7 @@ it('keeps every historical image and pending hash across checkpoint 64 and cold 
       const current = project.entities.find(entity => entity.id === scene.id)!;
       if (current.kind === 'scene') current.data.body[0].text = '😀新本文 e\u0301';
     }
+    if (index === 66) for (const record of bulk) project.entities.find(entity => entity.id === record.id)!.name = `${record.name}の新名`;
     project = (await writer.saveProject(project, { reason: `独立した通常保存 ${index}`, includeHistory: true })).project;
   }
   const expected = structuredClone(project), pending = await writer.listOutbox(project.projectId);
@@ -39,6 +42,7 @@ it('keeps every historical image and pending hash across checkpoint 64 and cold 
   expect(pending.at(-1)?.command).toEqual(expected.history.at(-1));
   expect(pending[63].changes.find(change => change.targetId === person.id)).toMatchObject({ before: { name: '人物の旧名' }, after: { name: '人物の新名' } });
   expect(pending[64].changes.find(change => change.targetId === project.relations[0].id)).toMatchObject({ before: { status: 'confirmed' }, after: { status: 'needs_review' } });
+  for (const record of bulk) expect(pending[66].changes.find(change => change.targetId === record.id)).toMatchObject({ before: { id: record.id, name: record.name }, after: { id: record.id, name: `${record.name}の新名` } });
   const bytes = await writer.exportProject(project.projectId), prepared = await inspectScenario(bytes, { worker: false });
   expect(prepared.project).toEqual(expected);
   expect(prepared.project.snapshots[0]).toEqual(pin);
