@@ -1,0 +1,1 @@
+F39の旧候補ラベルと、F41の旧textarea locatorを準備側の誤りとして別捕捉しました。現構造化regionの3原transition/from/toと通常詳細データの同一値を両方観測する訂正版を用意し、reset理由・対象・固定hash・native不変・完全内容一致の期待は維持しています。元prep4は不変、独立実行0、訂正版の型とruntime selectorはまだ未検査です。

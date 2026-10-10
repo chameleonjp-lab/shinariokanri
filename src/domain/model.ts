@@ -261,6 +261,23 @@ function validDate(value: string): boolean {
   return valid;
 }
 const dateValidity = new Map<string, boolean>();
+const dateTimeValidity = new Map<string, boolean>();
+const utcDateTimePattern = /^\d{4}-\d{2}-\d{2}T(?:[01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](?:\.\d+)?(?:Z|\+00:00)$/;
+/** Cache scalar syntax/calendar validity only, never expiry or record validity.
+ * Long fractional seconds still use the original checks without being kept. */
+function validDateTime(value: string): boolean {
+  const cacheable = value.length <= 64;
+  if (cacheable) {
+    const previous = dateTimeValidity.get(value);
+    if (previous !== undefined) return previous;
+  }
+  const valid = utcDateTimePattern.test(value) && Number.isFinite(Date.parse(value)) && validDate(value.slice(0, 10));
+  if (cacheable) {
+    if (dateTimeValidity.size >= 512) dateTimeValidity.delete(dateTimeValidity.keys().next().value!);
+    dateTimeValidity.set(value, valid);
+  }
+  return valid;
+}
 function conditionSchema(value: Record<string, unknown>): Schema | undefined {
   switch (value.op) {
     case 'constant': return obj({ op: req(en('constant')), value: req(bool) });
@@ -380,7 +397,7 @@ function walk(schema: Schema, value: unknown, path: string, issues: ValidationIs
     case 'tick': if (!isTick(value)) fail('tickは38桁以内の正規整数文字列です。'); return;
     case 'revision': if (typeof value !== 'string' || !REVISION_PATTERN.test(value)) fail('revisionは0以上の整数文字列です。'); return;
     case 'datetime':
-      if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}T(?:[01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](?:\.\d+)?(?:Z|\+00:00)$/.test(value) || !Number.isFinite(Date.parse(value)) || !validDate(value.slice(0, 10))) fail('UTCのRFC 3339日時を指定してください。');
+      if (typeof value !== 'string' || !validDateTime(value)) fail('UTCのRFC 3339日時を指定してください。');
       return;
     case 'date': if (typeof value !== 'string' || !validDate(value)) fail('実在するYYYY-MM-DD形式の日付を指定してください。'); return;
     case 'hash': if (typeof value !== 'string' || !/^[0-9a-f]{64}$/.test(value)) fail('SHA-256は小文字16進数64文字です。'); return;

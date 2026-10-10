@@ -54,6 +54,13 @@ describe('Unicode measurements used by every text validation', () => {
       expect(check('2026-10-05T23:59:59+00:00')).toBe(true);
       expect(check('2026-10-05T24:00:00Z')).toBe(false);
       expect(check('2026-10-05T00:00:00+09:00')).toBe(false);
+      expect(check('2026-10-05T00:00:00.Z')).toBe(false);
+      expect(check('2026-10-05T00:00:00.123456789+00:00')).toBe(true);
+      const longFraction = '0'.repeat(80);
+      expect(check(`2000-02-29T00:00:00.${longFraction}Z`)).toBe(true);
+      expect(check(`1900-02-29T00:00:00.${longFraction}Z`)).toBe(false);
+      expect(check(`2026-10-05T24:00:00.${longFraction}Z`)).toBe(false);
+      for (let fraction = 0; fraction < 640; fraction++) expect(check(`2026-10-05T00:00:00.${fraction.toString().padStart(3, '0')}Z`)).toBe(true);
       for (let year = 1000; year < 1640; year++) expect(check(`${year}-01-01T00:00:00Z`)).toBe(true);
     }
   });
