@@ -233,7 +233,7 @@ export function TextAnnotations({
           <label htmlFor={`annotation-target-${sourceEntityId}`}>リンク先</label>
           <PagedSelect id={`annotation-target-${sourceEntityId}`} label="リンク先" scope={`${scope}:targets`} value={targetEntityId} items={targetOptions}
             emptyLabel="対象を選択" onChange={setTargetEntityId}/>
-          {selectedCandidate && onIgnoreCandidate && <button type="button" className="text-button" onClick={ignoreSelectedCandidate}>この語句とリンク先の候補を表示しない</button>}
+          {selectedCandidate && <button type="button" className="text-button" onClick={ignoreSelectedCandidate}>この語句とリンク先の候補を表示しない</button>}
         </div> : <div className="form-field">
           <label htmlFor={`annotation-reading-${sourceEntityId}`}>読み</label>
           <input id={`annotation-reading-${sourceEntityId}`} value={reading} onChange={event => setReading(event.target.value)} placeholder="ふりがな" />
