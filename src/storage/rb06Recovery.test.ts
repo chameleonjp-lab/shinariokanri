@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { readFileSync, mkdirSync, writeFileSync } from 'node:fs';
 import Dexie from 'dexie';
 import { unzipSync, zipSync } from 'fflate';
-import { createEntity, createProject, ENTITY_KINDS, newId, textToRichText, validateProject } from '../domain/model';
+import { createEntity, createProject, emptyRuntimeState, ENTITY_KINDS, newId, textToRichText, validateProject } from '../domain/model';
 import { createWorldSnapshot, previewWorldVersion } from '../domain/world';
 import { appendAlternativeVersion, applyAlternativeChanges, diffAuthorAlternative, forkAuthorAlternative, projectContent, recordAlternativeApplication } from '../domain/writingWorkspace';
 import { sealAuthorAlternative } from '../domain/authorAlternativeIntegrity';
@@ -24,7 +24,69 @@ function record(name: string, data: unknown) { const dir = '/tmp/shinariokanri-r
 async function basic(db: ScenarioStore, name = '復元元') { const p = createProject(name); p.entities.push(createEntity(p.projectId, 'scene', '原場面', { body: textToRichText('😀原段落を保持') })); return (await db.saveProject(p, { reason: '原作品を保存' })).project; }
 function mapping(source: ProjectData, target: ProjectData) { return Object.fromEntries(collectImportIds(source).map(item => [item.id, item.id === source.projectId ? target.projectId : newId()])); }
 
+async function publicCopyFixture() {
+  let project = createProject('公開コピーの明示ID対応');
+  const proseId = newId(), note = createEntity(project.projectId, 'note', '元の原稿', { body: textToRichText('私用本文😀') });
+  const publicBlock = textToRichText('独立した公開段落😀')[0]!, publicId = newId();
+  const profile = createEntity(project.projectId, 'projection_profile', '承認した別公開本文', {
+    audience: 'reader', includedIds: [note.id], allowedKinds: ['note'],
+    namePolicy: { mode: 'replace', replacement: '公開名' }, idPolicy: 'remap', publicIds: { [note.id]: publicId },
+    publicTexts: { [note.id]: { body: [{ ...structuredClone(note.data.body[0]), text: `公開本文😀 ${proseId}` }], summary: [publicBlock] } },
+    blockSources: { [note.data.body[0].id]: note.data.body[0].id, [publicBlock.id]: note.data.body[0].id },
+  });
+  const item = createEntity(project.projectId, 'item', '生成する物品');
+  note.status = profile.status = item.status = 'confirmed'; project.entities = [profile, note, item];
+  project = await createWorldSnapshot(project, '公開コピー付きの旧版');
+  const instanceId = newId(), state = emptyRuntimeState(project.snapshots[0]!.id); state.provenance = 'partial';
+  state.itemInstances.push({ instanceId, typeId: item.id, quantity: 1, ownerId: null, locationId: null, consumed: false });
+  project.entities.push(createEntity(project.projectId, 'checkpoint', '生成個体を持つ途中状態', { contentVersionId: state.contentVersionId, origin: 'partial', runtimeState: state }));
+  expect(validateProject(project)).toMatchObject({ ok: true });
+  return { project, note, profile, publicBlock, publicId, proseId, instanceId };
+}
+
 describe('RB06 complete recovery and arbitrary historical selection', () => {
+  it('enumerates canonical paragraph ownership once while keeping independent public blocks, runtime instances and public IDs', async () => {
+    const f = await publicCopyFixture(), ids = collectImportIds(f.project);
+    expect(ids.filter(row => row.id === f.note.data.body[0].id)).toEqual([{ id: f.note.data.body[0].id, role: 'block', ownerId: f.note.id }]);
+    expect(ids.find(row => row.id === f.publicBlock.id)).toEqual({ id: f.publicBlock.id, role: 'block', ownerId: f.profile.id });
+    expect(ids.find(row => row.id === f.instanceId)).toEqual({ id: f.instanceId, role: 'runtime_item' });
+    expect(ids.find(row => row.id === f.publicId)).toEqual({ id: f.publicId, role: 'public_id' });
+    expect(ids.some(row => row.id === f.proseId)).toBe(false);
+  });
+  it('maps copied and independently authored public paragraphs through approved cross-project recovery and cold reexport', async () => {
+    const f = await publicCopyFixture(), writer = open();
+    const original = (await writer.saveProject(f.project, { reason: '公開コピーを原子保存' })).project;
+    const prepared = await inspectScenario(await writer.exportProject(original.projectId), { worker: false });
+    const destinationStore = open(), destination = (await destinationStore.saveProject(createProject('統合先'), { reason: '統合先を保存' })).project;
+    const incoming = projectWithRecoveryHistory(prepared.project, prepared.recovery), idMap = mapping(incoming, destination);
+    const first = await destinationStore.previewImport(prepared, { mode: 'mapped_merge', targetProjectId: destination.projectId, idMap });
+    const resolutions = Object.fromEntries(first.conflicts.map(conflict => [conflict.id, 'existing' as const]));
+    const approved = await destinationStore.previewImport(prepared, { mode: 'mapped_merge', targetProjectId: destination.projectId, idMap, resolutions });
+    const incomplete = { ...idMap }; delete incomplete[f.publicBlock.id];
+    await expect(destinationStore.importScenario(prepared, { mode: 'mapped_merge', targetProjectId: destination.projectId, baseRevision: destination.revision, idMap: incomplete, resolutions })).rejects.toMatchObject({ code: 'IMPORT_CONFLICT' });
+    expect(await destinationStore.getProject(destination.projectId)).toEqual(destination);
+    const restored = (await destinationStore.importScenario(prepared, { mode: 'mapped_merge', targetProjectId: destination.projectId, baseRevision: destination.revision, idMap, resolutions, confirmationHash: approved.confirmationHash })).project;
+    const archive = await inspectScenario(await destinationStore.exportProject(restored.projectId), { worker: false }), name = `public-id-cold-${newId()}`, empty = open(undefined, name);
+    await empty.importScenario(archive, { mode: 'new' }); empty.close();
+    const cold = (await open(undefined, name).getProject(restored.projectId))!;
+    expect(cold).toEqual(restored);
+    const mappedNote = cold.entities.find((entity): entity is Entity<'note'> => entity.id === idMap[f.note.id])!;
+    const mappedProfile = cold.entities.find((entity): entity is Entity<'projection_profile'> => entity.id === idMap[f.profile.id])!;
+    expect(mappedNote.data.body[0]).toEqual({ ...f.note.data.body[0], id: idMap[f.note.data.body[0].id] });
+    expect(mappedProfile.data.publicTexts![mappedNote.id].body![0]).toEqual({ ...f.profile.data.publicTexts![f.note.id].body![0], id: mappedNote.data.body[0].id });
+    expect(mappedProfile.data.publicTexts![mappedNote.id].summary![0]).toEqual({ ...f.publicBlock, id: idMap[f.publicBlock.id] });
+    expect(mappedProfile.data.publicIds![mappedNote.id]).toBe(idMap[f.publicId]);
+    const checkpoint = cold.entities.find((entity): entity is Entity<'checkpoint'> => entity.kind === 'checkpoint')!;
+    expect(checkpoint.data.runtimeState.itemInstances[0].instanceId).toBe(idMap[f.instanceId]);
+    expect(collectImportIds(cold).find(row => row.id === idMap[f.note.data.body[0].id])?.ownerId).toBe(mappedNote.id);
+  });
+  it.each(['canonical-owner', 'public-only-owner', 'other-role'] as const)('refuses a real %s ID collision instead of treating it as a canonical copy', async kind => {
+    const f = await publicCopyFixture();
+    if (kind === 'canonical-owner') f.project.entities.push(createEntity(f.project.projectId, 'note', '別原稿', { body: structuredClone(f.note.data.body) }));
+    if (kind === 'public-only-owner') { const other = structuredClone(f.profile); other.id = newId(); f.project.entities.push(other); }
+    if (kind === 'other-role') (f.project.entities.find((entity): entity is Entity<'projection_profile'> => entity.id === f.profile.id)!).data.publicTexts![f.note.id].body![0].id = f.note.id;
+    expect(() => collectImportIds(f.project)).toThrow('同じIDが別の種別・所有者');
+  });
   it('preserves a declared item ID shared with runtime inventories through enumeration and clone recovery', async () => {
     const p = JSON.parse(readFileSync('tests/fixtures/rb05-reader-editions.json', 'utf8')).project as ProjectData;
     const prepared = await inspectScenario(await exportScenario(p), { worker: false });
