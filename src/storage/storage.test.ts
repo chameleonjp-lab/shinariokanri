@@ -5,7 +5,7 @@ import { zipSync, unzipSync } from 'fflate';
 import { createEntity, createProject, newId, textToRichText, validateProject } from '../domain/model';
 import { dialogueContentHash } from '../domain/production';
 import type { Entity, ProjectData, ProjectSnapshot } from '../domain/types';
-import { exportScenario, inspectScenario, type PreparedScenario } from './archive';
+import { exportScenario, inspectScenario, verifySnapshotHashes, type PreparedScenario } from './archive';
 import { canonicalCode, StorageError } from './errors';
 import { ARCHIVE_LIMITS, canonicalJson, jsonBytes, parseStrictJson, sha256 } from './json';
 import { ScenarioStore, cloneProject, type FaultStage } from './store';
@@ -42,13 +42,13 @@ describe('atomic IndexedDB commands', () => {
     const name = `bounded-cold-read-${newId()}`, writer = store(undefined, name), project = createProject('分割読込の全件と途中取消');
     const entityId = (index: number) => `ca91a401-0000-4000-8000-${index.toString(16).padStart(12, '0')}`;
     const blockId = (index: number) => `ca91a402-0000-4000-8000-${index.toString(16).padStart(12, '0')}`;
-    project.entities = Array.from({ length: 2049 }, (_, index) => {
+    project.entities = Array.from({ length: 4097 }, (_, index) => {
       const entity = createEntity(project.projectId, 'note', `情報${index}`, { body: [{ id: blockId(index), kind: 'paragraph', text: `段落${index}😀` }] });
       entity.id = entityId(index); entity.status = 'confirmed'; return entity;
     }).reverse();
     phase('save'); const saved = (await writer.saveProject(project, { reason: '元の全件と順序' })).project;
     const other = createProject('別作品の同一ID'), unrelated = createEntity(other.projectId, 'note', '別作品の値');
-    unrelated.id = entityId(2048); other.entities.push(unrelated); await writer.saveProject(other, { reason: '別scope' });
+    unrelated.id = entityId(4096); other.entities.push(unrelated); await writer.saveProject(other, { reason: '別scope' });
     const native = (store(undefined, name) as unknown as { db: Dexie }).db; await native.open();
     const raw = () => new Promise<Record<string, unknown[]>>((resolve, reject) => {
       const tables = ['projects', 'entities', 'relations', 'blocks', 'snapshots', 'commands', 'outbox', 'recordParts'], tx = native.backendDB().transaction(tables, 'readonly'), rows: Record<string, unknown[]> = {};
@@ -58,17 +58,17 @@ describe('atomic IndexedDB commands', () => {
     phase('raw before'); const before = await raw(); writer.close();
     const reader = store(undefined, name), controller = new AbortController(), readerDb = (reader as unknown as { db: Dexie }).db;
     let observed = 0;
-    const cancelRead = (row: { projectId: string }) => { if (row.projectId === project.projectId && ++observed === 2048) controller.abort(); return row; };
+    const cancelRead = (row: { projectId: string }) => { if (row.projectId === project.projectId && ++observed === 4096) controller.abort(); return row; };
     readerDb.table('entities').hook('reading', cancelRead);
     phase('cancel'); await expect(reader.getProjectForEditing(project.projectId, { signal: controller.signal })).rejects.toMatchObject({ code: 'CANCELLED' });
     expect(await raw()).toEqual(before); readerDb.table('entities').hook('reading').unsubscribe(cancelRead);
     phase('resume'); expect((await reader.getProjectForEditing(project.projectId))!.entities).toEqual(saved.entities);
     expect(await raw()).toEqual(before); reader.close();
-    const id = entityId(2048), row = await native.table('entities').get([project.projectId, id]);
+    const id = entityId(4096), row = await native.table('entities').get([project.projectId, id]);
     await native.table('entities').put({ ...row, record: { ...row.record, projectId: other.projectId } }); const foreign = await raw(), broken = store(undefined, name);
     phase('late foreign'); await expect(broken.getProjectForEditing(project.projectId)).rejects.toMatchObject({ code: 'VALIDATION_FAILED' }); expect(await raw()).toEqual(foreign);
     phase('repair entity'); await native.table('entities').put(row);
-    const block = await native.table('blocks').get([project.projectId, blockId(2048)]);
+    const block = await native.table('blocks').get([project.projectId, blockId(4096)]);
     await native.table('blocks').put({ ...block, block: { ...block.block, text: 42 } }); const malformed = await raw();
     await expect(broken.getProjectForEditing(project.projectId)).rejects.toMatchObject({ code: 'VALIDATION_FAILED' }); expect(await raw()).toEqual(malformed);
     await native.table('blocks').put(block);
@@ -118,6 +118,97 @@ describe('atomic IndexedDB commands', () => {
       expect(archive.project).toEqual(saved);
       expect(await durable()).toBe(before);
     } finally { raw.close(); }
+  });
+  it('keeps legitimate public-text block copies independent in cold mutable drafts and preserves pins, native rows and complete files', async () => {
+    const project = createProject('原稿と公開用コピー'), name = `public-copy-${newId()}`;
+    const note = createEntity(project.projectId, 'note', '原稿', { body: textToRichText('同じ本文😀') });
+    const profile = createEntity(project.projectId, 'projection_profile', '公開用本文', {
+      audience: 'reader', includedIds: [note.id], allowedKinds: ['note'],
+      namePolicy: { mode: 'replace', replacement: '公開の呼称' }, idPolicy: 'preserve',
+      publicTexts: { [note.id]: { body: structuredClone(note.data.body) } },
+      blockSources: { [note.data.body[0].id]: note.data.body[0].id },
+    });
+    profile.data.publicTexts![note.id].body![0].text = '公開用の別本文😀';
+    note.status = 'confirmed'; profile.status = 'confirmed'; project.entities = [note, profile];
+    expect(validateProject(project)).toMatchObject({ ok: true });
+    project.snapshots.push(await snapshot(project));
+    const writer = store(undefined, name), saved = (await writer.saveProject(project, { reason: '独立した本文コピー' })).project;
+    writer.close(); const native = new Dexie(name); await native.open();
+    const durable = async () => sha256(jsonBytes({ entities: await native.table('entities').toArray(), blocks: await native.table('blocks').toArray() }));
+    try {
+      const before = await durable(), reader = store(undefined, name), draft = (await reader.getProjectForEditing(project.projectId))!;
+      const original = draft.entities.find((entity): entity is Entity<'note'> => entity.id === note.id)!;
+      const publicProfile = draft.entities.find((entity): entity is Entity<'projection_profile'> => entity.id === profile.id)!;
+      const publicBody = publicProfile.data.publicTexts![note.id].body!;
+      expect(original.data.body[0].text).toBe('同じ本文😀');
+      expect(publicBody[0].text).toBe('公開用の別本文😀');
+      expect(original.data.body[0]).not.toBe(publicBody[0]);
+      original.data.body[0].text = '原稿の未保存編集'; expect(publicBody[0].text).toBe('公開用の別本文😀');
+      publicBody[0].text = '公開用の未保存編集'; expect(original.data.body[0].text).toBe('原稿の未保存編集');
+      expect(draft.snapshots).toEqual(saved.snapshots); expect(await durable()).toBe(before);
+      expect((await reader.getProjectForEditing(project.projectId))!.entities).toEqual(saved.entities);
+      reader.close(); const restarted = store(undefined, name);
+      expect(await restarted.getProject(project.projectId)).toEqual(saved);
+      const archive = await inspectScenario(await restarted.exportProject(project.projectId), { worker: false });
+      expect(archive.project).toEqual(saved);
+      for (const mode of ['new', 'clone'] as const) {
+        const restoredName = `public-copy-${mode}-${newId()}`, target = store(undefined, restoredName);
+        const restored = await target.importScenario(archive, { mode }); target.close();
+        const coldRestored = (await store(undefined, restoredName).getProject(restored.project.projectId))!;
+        const restoredNoteId = restored.idMap?.[note.id] ?? note.id, restoredProfileId = restored.idMap?.[profile.id] ?? profile.id;
+        const restoredNote = coldRestored.entities.find((entity): entity is Entity<'note'> => entity.id === restoredNoteId)!;
+        const restoredProfile = coldRestored.entities.find((entity): entity is Entity<'projection_profile'> => entity.id === restoredProfileId)!;
+        expect(restoredNote.data.body[0].text).toBe('同じ本文😀');
+        expect(restoredProfile.data.publicTexts![restoredNoteId].body![0].text).toBe('公開用の別本文😀');
+        expect(restoredNote.data.body[0].id).toBe(restoredProfile.data.publicTexts![restoredNoteId].body![0].id);
+        expect(coldRestored.entities).toEqual(restored.project.entities); expect(coldRestored.snapshots).toEqual(restored.project.snapshots);
+        await verifySnapshotHashes([coldRestored]);
+      }
+      expect(await durable()).toBe(before);
+    } finally { native.close(); }
+  });
+  it('reads legacy public-text markers as independent copies without changing native rows or the fixed image', async () => {
+    const project = createProject('旧markerの公開用コピー'), name = `legacy-public-copy-${newId()}`;
+    const note = createEntity(project.projectId, 'note', '旧原稿', { body: textToRichText('旧形式本文😀') });
+    const profile = createEntity(project.projectId, 'projection_profile', '旧公開用本文', {
+      audience: 'reader', includedIds: [note.id], allowedKinds: ['note'],
+      namePolicy: { mode: 'replace', replacement: '公開の呼称' }, idPolicy: 'preserve',
+      publicTexts: { [note.id]: { body: structuredClone(note.data.body) } },
+      blockSources: { [note.data.body[0].id]: note.data.body[0].id },
+    });
+    note.status = 'confirmed'; profile.status = 'confirmed'; project.entities = [profile, note];
+    project.snapshots.push(await snapshot(project));
+    const writer = store(undefined, name), saved = (await writer.saveProject(project, { reason: '旧marker互換' })).project;
+    writer.close(); const native = new Dexie(name); await native.open();
+    try {
+      const row = await native.table('entities').get([project.projectId, profile.id]);
+      row.record.data.publicTexts[note.id].body = { __scenarioRichText: [note.data.body[0].id] };
+      await native.table('entities').put(row);
+      const durable = async () => sha256(jsonBytes({ entities: await native.table('entities').toArray(), blocks: await native.table('blocks').toArray() }));
+      const before = await durable(), reader = store(undefined, name), draft = (await reader.getProjectForEditing(project.projectId))!;
+      expect(draft.entities).toEqual(saved.entities); expect(draft.snapshots).toEqual(saved.snapshots);
+      const original = draft.entities.find((entity): entity is Entity<'note'> => entity.id === note.id)!;
+      const publicBody = (draft.entities.find((entity): entity is Entity<'projection_profile'> => entity.id === profile.id)!).data.publicTexts![note.id].body!;
+      expect(original.data.body[0]).not.toBe(publicBody[0]); publicBody[0].text = '旧公開コピーの未保存編集';
+      expect(original.data.body[0].text).toBe('旧形式本文😀'); expect(await durable()).toBe(before);
+      reader.close(); const restarted = store(undefined, name);
+      expect(await restarted.getProject(project.projectId)).toEqual(saved);
+      expect((await inspectScenario(await restarted.exportProject(project.projectId), { worker: false })).project).toEqual(saved);
+      expect(await durable()).toBe(before);
+      const blockRowsBefore = await native.table('blocks').toArray(), changed = structuredClone(saved);
+      const changedProfile = changed.entities.find((entity): entity is Entity<'projection_profile'> => entity.id === profile.id)!;
+      changedProfile.data.publicTexts![note.id].body![0].text = '旧形式から保存した別公開本文😀';
+      const updated = (await restarted.saveProject(changed, { reason: '旧公開コピーだけを編集' })).project;
+      expect(await native.table('blocks').toArray()).toEqual(blockRowsBefore);
+      const updatedRow = await native.table('entities').get([project.projectId, profile.id]);
+      expect(updatedRow.record.data.publicTexts[note.id].body).toEqual(changedProfile.data.publicTexts![note.id].body);
+      restarted.close(); const afterSave = store(undefined, name), cold = (await afterSave.getProject(project.projectId))!;
+      expect(cold).toEqual(updated); expect(cold.snapshots).toEqual(saved.snapshots);
+      expect((cold.entities.find((entity): entity is Entity<'note'> => entity.id === note.id)!).data.body[0].text).toBe('旧形式本文😀');
+      expect((cold.entities.find((entity): entity is Entity<'projection_profile'> => entity.id === profile.id)!).data.publicTexts![note.id].body![0].text).toBe('旧形式から保存した別公開本文😀');
+      expect((await inspectScenario(await afterSave.exportProject(project.projectId), { worker: false })).project).toEqual(updated);
+      await verifySnapshotHashes([cold]);
+    } finally { native.close(); }
   });
   it('persists stable IDs, links, original text and huge negative ticks across restart; undo appends history', async () => {
     const dbName = `restart-${newId()}`, first = store(undefined, dbName);

@@ -915,6 +915,10 @@ function validateContent(input: unknown, path: string, options: ProjectValidatio
   validateCrossEntityRules(project, entityMap, aliases, knownVersions, blocks, issues, path, options, versionIndex, affectedIds ? entity => previousEntities.get(entity.id) !== entity || referencesFor(entity).some(reference => affectedIds!.has(reference.id)) : undefined);
   return issues.length ? { ok: false, issues: issues.slice(0, 256) } : { ok: true, value: project };
 }
+/** These fields contain independent copies, not canonical authored blocks. */
+export function isContentCopyField(key: string): boolean {
+  return key === 'runtimeState' || key === 'before' || key === 'after' || key === 'publicTexts';
+}
 function collectContentIds(value: unknown, owner: ID, blocks: Map<ID, { entityId: ID; text: string }>, aliases: Map<ID, { entityId: ID; alias: Alias }>, issues: ValidationIssue[], path: string, depth = 0): void {
   if (depth > 32 || !value || typeof value !== 'object') return;
   if (Array.isArray(value)) { value.forEach((child, i) => collectContentIds(child, owner, blocks, aliases, issues, `${path}[${i}]`, depth + 1)); return; }
@@ -930,7 +934,7 @@ function collectContentIds(value: unknown, owner: ID, blocks: Map<ID, { entityId
   for (const key of Object.keys(object)) {
     const child = object[key];
     // Trace/checkpoint values and projection public text are copies, not canonical blocks.
-    if (['runtimeState', 'before', 'after', 'publicTexts'].includes(key)) continue;
+    if (isContentCopyField(key)) continue;
     if (child && typeof child === 'object') collectContentIds(child, owner, blocks, aliases, issues, `${path}.${key}`, depth + 1);
   }
 }
