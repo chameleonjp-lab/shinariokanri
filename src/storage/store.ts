@@ -1155,7 +1155,7 @@ export class ScenarioStore {
     if (options.mode === 'mapped_merge') {
       if (!options.idMap) throw new StorageError('IMPORT_CONFLICT', '別作品の統合には全IDの明示対応表が必要です。');
       const mappedPlan = await planCrossProjectImport({ ...prepared, project: projectWithRecoveryHistory(prepared.project, prepared.recovery) }, target, { idMap: options.idMap, resolutions: options.resolutions, knownWorlds: await this.validationWorlds(prepared.worlds), loadAsset: hash => this.getAsset(hash), signal: options.signal });
-      const mappedRecovery = prepared.recovery ? await mappedPortableRecovery(prepared.recovery, mappedPlan.mappedProject, mappedPlan.idMap) : undefined;
+      const mappedRecovery = prepared.recovery ? await mappedPortableRecovery(prepared.recovery, mappedPlan.mappedProject, mappedPlan.idMap, options.signal) : undefined;
       const historyIds = new Set(prepared.project.history.map(command => mappedPlan.idMap[command.operationId]));
       mappedPlan.mappedProject.history = mappedPlan.mappedProject.history.filter(command => historyIds.has(command.operationId));
       const confirmationHash = await sha256(jsonBytes({ sourceContentHash: mappedPlan.sourceContentHash, manifest: prepared.manifest, targetId, targetRevision: target.revision, idMap: mappedPlan.idMap, resolutions: options.resolutions ?? {}, changes: mappedPlan.changes, assets: mappedPlan.assets }));
@@ -1260,7 +1260,7 @@ export class ScenarioStore {
       }
       if (options.mode === 'clone') {
         const cloned = await cloneProject(projectWithRecoveryHistory(project, recovery)); idMap = cloned.idMap;
-        recovery = recovery ? await mappedPortableRecovery(recovery, cloned.project, idMap) : undefined;
+        recovery = recovery ? await mappedPortableRecovery(recovery, cloned.project, idMap, options.signal) : undefined;
         const historyIds = new Set(project.history.map(command => idMap![command.operationId]));
         project = { ...cloned.project, history: cloned.project.history.filter(command => historyIds.has(command.operationId)) };
       }
@@ -1299,10 +1299,12 @@ export class ScenarioStore {
       if (preview.target || options.mode === 'clone') project.history = [...project.history, command];
       if (recovery) {
         const history = new Map(project.history.map(record => [record.operationId, record]));
-        const pending = await Promise.all(recovery.pending.map(async item => {
+        const pending: PortableRecovery['pending'] = [];
+        for (const item of recovery.pending) {
+          checkCancelled(options.signal);
           const retainedCommand = history.get(item.operationId) ?? item.command;
-          return { ...item, command: retainedCommand, commandHash: await sha256(jsonBytes(retainedCommand)) };
-        }));
+          pending.push({ ...item, command: retainedCommand, commandHash: await sha256(jsonBytes(retainedCommand)) });
+        }
         recovery = { ...recovery, projectId: project.projectId, sourceRevision: project.revision, pending };
       }
       project = validated(project, worldContents);
@@ -1355,12 +1357,14 @@ export class ScenarioStore {
 
 function equalBytes(left: Uint8Array, right: Uint8Array): boolean { return left.byteLength === right.byteLength && left.every((byte, index) => byte === right[index]); }
 
-async function mappedPortableRecovery(recovery: PortableRecovery, mapped: ProjectData, idMap: Record<string, string>): Promise<PortableRecovery> {
-  const pending = await Promise.all(recovery.pending.map(async item => {
-    const operationId = idMap[item.operationId], command = mapped.history.find(record => record.operationId === operationId);
+async function mappedPortableRecovery(recovery: PortableRecovery, mapped: ProjectData, idMap: Record<string, string>, signal?: AbortSignal): Promise<PortableRecovery> {
+  const history = new Map(mapped.history.map(record => [record.operationId, record])), pending: PortableRecovery['pending'] = [];
+  for (const item of recovery.pending) {
+    checkCancelled(signal);
+    const operationId = idMap[item.operationId], command = history.get(operationId);
     if (!operationId || !command) throw new StorageError('IMPORT_CONFLICT', '復元する送信待ち操作の明示ID対応が不足しています。', item.operationId);
-    return { operationId, command, commandHash: await sha256(jsonBytes(command)), origin: item.origin ?? { projectId: recovery.projectId, operationId: item.operationId, serverRevision: recovery.serverRevision } };
-  }));
+    pending.push({ operationId, command, commandHash: await sha256(jsonBytes(command)), origin: item.origin ?? { projectId: recovery.projectId, operationId: item.operationId, serverRevision: recovery.serverRevision } });
+  }
   return { ...recovery, projectId: mapped.projectId, sourceRevision: mapped.revision, pending };
 }
 
@@ -1411,9 +1415,11 @@ function compensate(current: ProjectData, command: CommandRecord): ProjectData {
 
 export async function cloneProject(input: ProjectData): Promise<{ project: ProjectData; idMap: Record<string, string> }> {
   const idMap: Record<string, string> = { [input.projectId]: newId() };
+  const declarations = new WeakSet<object>();
   const collect = (value: unknown) => {
+    if (!value || typeof value !== 'object' || declarations.has(value)) return;
+    declarations.add(value);
     if (Array.isArray(value)) return value.forEach(collect);
-    if (!value || typeof value !== 'object') return;
     for (const [key, item] of Object.entries(value)) {
       if (['id', 'operationId', 'instanceId', 'deletionOperationId'].includes(key) && typeof item === 'string' && /^[0-9a-f-]{36}$/.test(item)) idMap[item] ??= newId();
       if (key === 'bindings' && item && typeof item === 'object' && !Array.isArray(item)) for (const id of Object.values(item)) if (typeof id === 'string' && /^[0-9a-f-]{36}$/.test(id)) idMap[id] ??= newId();
@@ -1422,13 +1428,17 @@ export async function cloneProject(input: ProjectData): Promise<{ project: Proje
   };
   collect(input);
   const originalEntities = new Map<string, Entity>(), originalRelations = new Map<string, Relation>();
+  const owners = new WeakSet<object>();
   const collectOwners = (value: unknown) => {
-    if (Array.isArray(value)) { value.forEach(collectOwners); return; }
-    if (!value || typeof value !== 'object') return;
+    if (!value || typeof value !== 'object' || owners.has(value)) return;
+    owners.add(value);
+    // Reverse the traversal and keep the first owner, preserving the original
+    // last-occurrence choice without revisiting every shared historic subtree.
+    if (Array.isArray(value)) { for (let index=value.length-1;index>=0;index--) collectOwners(value[index]); return; }
     const record = value as Record<string, unknown>;
-    if (typeof record.id === 'string' && 'kind' in record && 'data' in record && 'projectId' in record) originalEntities.set(record.id, record as unknown as Entity);
-    if (typeof record.id === 'string' && 'relationType' in record && 'fromId' in record && 'toId' in record) originalRelations.set(record.id, record as unknown as Relation);
-    Object.values(record).forEach(collectOwners);
+    const children=Object.values(record);for (let index=children.length-1;index>=0;index--) collectOwners(children[index]);
+    if (typeof record.id === 'string' && 'kind' in record && 'data' in record && 'projectId' in record && !originalEntities.has(record.id)) originalEntities.set(record.id, record as unknown as Entity);
+    if (typeof record.id === 'string' && 'relationType' in record && 'fromId' in record && 'toId' in record && !originalRelations.has(record.id)) originalRelations.set(record.id, record as unknown as Relation);
   };
   collectOwners(input);
   const readPath = (value: unknown, path: string[]): unknown => path.reduce<unknown>((current, segment) => current && typeof current === 'object' ? (current as Record<string, unknown>)[segment] : undefined, value);
@@ -1450,7 +1460,22 @@ export async function cloneProject(input: ProjectData): Promise<{ project: Proje
     if (record.publicIds && typeof record.publicIds === 'object') for (const [key, id] of Object.entries(record.publicIds)) if (typeof id === 'string') (record.publicIds as Record<string, string>)[key] = idMap[id] ?? id;
     for (const item of Object.values(record)) rewriteDeclarations(item);
   };
+  const rewrittenValues = new WeakMap<object, Map<string, unknown>>();
   const rewrite = (value: unknown, key = '', parent?: Record<string, unknown>): unknown => {
+    if (!value || typeof value !== 'object') return rewriteValue(value,key,parent);
+    // Dictionary keys, paths and ref-valued arrays have different contracts.
+    // Share only occurrences rewritten under the same interpretation.
+    let context=key;
+    if (Array.isArray(value)) {
+      if (key==='value') context+=parent?.type==='ref'?':ref':':literal';
+      if (key==='key' && parent && typeof parent.scope==='string' && Array.isArray(parent.path)) context+=canonicalJson([parent.scope,parent.itemId??null,parent.path]);
+      if (key==='publicId') context+=parent && typeof parent.entityId==='string' && typeof parent.sourceVersionId==='string'?':citation':':local';
+    }
+    const cache=rewrittenValues.get(value)??new Map<string,unknown>();
+    if (cache.has(context)) return cache.get(context);
+    const result=rewriteValue(value,key,parent);cache.set(context,result);rewrittenValues.set(value,cache);return result;
+  };
+  const rewriteValue = (value: unknown, key = '', parent?: Record<string, unknown>): unknown => {
     if (typeof value === 'string') {
       if (key === 'onceTriggers') return value.replace(/[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/g, id => idMap[id] ?? id);
       if (key === 'key' && parent && typeof parent.scope === 'string' && Array.isArray(parent.path)) return [parent.scope, typeof parent.itemId === 'string' ? idMap[parent.itemId] ?? parent.itemId : '', ...parent.path.map(part => String(part))].map(part => encodeURIComponent(part)).join(':');
@@ -1513,9 +1538,11 @@ export async function cloneProject(input: ProjectData): Promise<{ project: Proje
   };
   const project = rewrite(input) as ProjectData;
   const snapshots = new Map<string, Array<Record<string, unknown>>>();
+  const collectedSnapshots = new WeakSet<object>();
   const collectSnapshots = (value: unknown): void => {
+    if (!value || typeof value !== 'object' || collectedSnapshots.has(value)) return;
+    collectedSnapshots.add(value);
     if (Array.isArray(value)) { value.forEach(collectSnapshots); return; }
-    if (!value || typeof value !== 'object') return;
     const record = value as Record<string, unknown>;
     if (typeof record.id === 'string' && record.content && typeof record.content === 'object' && 'versionLabel' in record && 'contentHash' in record) {
       const copies = snapshots.get(record.id) ?? []; copies.push(record); snapshots.set(record.id, copies);
@@ -1538,9 +1565,11 @@ export async function cloneProject(input: ProjectData): Promise<{ project: Proje
     snapshotHashes.set(id, hash); activeSnapshots.delete(id); return hash;
   };
   for (const id of snapshots.keys()) await hashSnapshot(id);
+  const refreshedSnapshots = new WeakSet<object>();
   const refreshSnapshotReferences = (value: unknown): void => {
+    if (!value || typeof value !== 'object' || refreshedSnapshots.has(value)) return;
+    refreshedSnapshots.add(value);
     if (Array.isArray(value)) { value.forEach(refreshSnapshotReferences); return; }
-    if (!value || typeof value !== 'object') return;
     const record = value as Record<string, unknown>;
     if (record.kind === 'snapshot' && typeof record.id === 'string' && record.data && typeof record.data === 'object') {
       const contentHash = snapshotHashes.get(record.id);
@@ -1551,15 +1580,20 @@ export async function cloneProject(input: ProjectData): Promise<{ project: Proje
   refreshSnapshotReferences(project);
   const resealed = new Set<object>();
   const resealRetainedBranches = async (value: unknown): Promise<void> => {
-    if (Array.isArray(value)) { for (const item of value) await resealRetainedBranches(item); return; }
     if (!value || typeof value !== 'object' || resealed.has(value)) return;
     resealed.add(value);
+    if (Array.isArray(value)) { for (const item of value) await resealRetainedBranches(item); return; }
     const record = value as Record<string, unknown>;
     if (Array.isArray(record.authorAlternatives)) record.authorAlternatives = await Promise.all((record.authorAlternatives as ProjectData['authorAlternatives'] ?? []).map(sealAuthorAlternative));
     for (const item of Object.values(record)) await resealRetainedBranches(item);
   };
   await resealRetainedBranches(project);
-  return { project, idMap };
+  // The current image is independently editable; only immutable historic
+  // values may share bodies. Never share a clone with its original input.
+  const {history:_history,snapshots:_snapshots,authorAlternatives:_alternatives,...current}=project;
+  const result={...project,...copy(current)};freeze(result.history);
+  for (const snapshot of result.snapshots) freeze(snapshot);
+  return { project:result, idMap };
 }
 
 export function mergeConflicts(existing: ProjectData, incoming: ProjectData): ImportConflict[] {

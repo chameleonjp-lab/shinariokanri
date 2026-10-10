@@ -1,9 +1,11 @@
 import {PagedSelect} from './PagedSelect';
 import {ListPager,useListWindow} from './ListWindow';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { ContentAnchor, DisclosureData, Entity, EntityKind, ProjectData, Query, Relation, ResolutionPolicy, Status } from '../domain/types';
 import { createEntity, KIND_LABELS, newId } from '../domain/model';
-import { buildJapaneseAuthorIndex, evaluateCollection, filterCatalogEntities, findCatalogMaintenance, searchJapaneseAuthorIndex } from '../domain/catalog';
+import { buildJapaneseAuthorIndex, evaluateCollection, filterCatalogEntities, findCatalogMaintenance,findCatalogMaintenanceVerified, searchJapaneseAuthorIndex } from '../domain/catalog';
+import type {CatalogMaintenanceFinding} from '../domain/catalog';
+import {requiresFixedStateUsageVerification} from '../domain/stateUsage';
 import { previewMerge } from '../domain/maintenance';
 import { EntityCards, KindPicker } from './Lists';
 import { labelOf } from './Fields';
@@ -24,6 +26,13 @@ export function CatalogPanel({ project, selectedId, onOpen, onSave, onSaveProjec
 }) {
   const [resultView, setResultView] = useState<'cards' | 'table' | 'diagram' | 'timeline'>('cards');
   const [tab, setTab] = useState<'search' | 'index' | 'maintenance'>('search');
+  const [verifiedMaintenance,setVerifiedMaintenance]=useState<{project:ProjectData;revision:string;findings:CatalogMaintenanceFinding[]}|null>(null);
+  useEffect(()=>{
+    if(tab!=='maintenance'||!requiresFixedStateUsageVerification(project))return;
+    const revision=project.revision;
+    let current=true;void findCatalogMaintenanceVerified(project).then(findings=>{if(current&&project.revision===revision)setVerifiedMaintenance({project,revision,findings});});
+    return()=>{current=false;};
+  },[tab,project,project.revision]);
   const [localSearch, setLocalSearch] = useState({ text: '', kind: 'all', status: 'all' });
   const { text, kind, status } = searchState ?? localSearch;
   const updateSearch = (change: Partial<typeof localSearch>) => { const next = { ...(searchState ?? localSearch), ...change }; if (onSearchStateChange) onSearchStateChange(next); else setLocalSearch(next); };
@@ -69,7 +78,7 @@ export function CatalogPanel({ project, selectedId, onOpen, onSave, onSaveProjec
   const index = useMemo(() => tab==='index'?buildJapaneseAuthorIndex(project):[], [project,tab]);
   const indexClasses = [...new Set(index.flatMap(entry => entry.classifications))];
   const indexResults = searchJapaneseAuthorIndex(index, text).filter(entry => indexClass === 'all' || entry.classifications.includes(indexClass));
-  const findings = useMemo(() => tab==='maintenance'?findCatalogMaintenance(project):[], [project,tab]);
+  const findings = useMemo(() => tab==='maintenance'?(verifiedMaintenance?.project===project&&verifiedMaintenance.revision===project.revision?verifiedMaintenance.findings:findCatalogMaintenance(project)):[], [project,project.revision,tab,verifiedMaintenance]);
   const source = active.find(entity => entity.id === mergeSource);
   const survivor = active.find(entity => entity.id === mergeTarget);
   const fieldLabel = (field: string) => FIELD_SPECS[source?.kind ?? 'note']?.find(item => item.key === field)?.label ?? field;
@@ -125,8 +134,8 @@ export function CatalogPanel({ project, selectedId, onOpen, onSave, onSaveProjec
       {reviewPage.items.map(review => <article key={review.id}><h3>{labelOf(review)} · {review.data.stage === 'open' ? '確認待ち' : review.data.stage === 'fixed' ? '対応済み' : '再確認済み'}</h3><p>{fieldText(review.data.body)}</p><button type="button" className="reference-link" onClick={() => { const target = review.data.target; if (typeof target === 'string') onOpen(target); else onOpenTarget(target); }}>見直す箇所を開く</button><select aria-label={`${labelOf(review)}の対応状態`} value={review.data.stage} disabled={busy} onChange={event => { const stage = event.target.value as Entity<'review'>['data']['stage']; void run(async () => { await onSave({ ...review, data: { ...review.data, stage } }); setNotice('見直しの対応状態を保存しました。'); }); }}><option value="open">確認待ち</option><option value="fixed">対応済み</option><option value="verified">再確認済み</option></select><button type="button" className="text-button" onClick={() => onOpen(review.id)}>理由と解決内容を編集</button></article>)}
       <ListPager {...reviewPage} label="変更による見直し"/>
       <h2>同じ種類の情報を統合</h2><p>残すIDと採用する項目を選んでください。公開済みの版は保持されます。</p>
-      <select aria-label="統合する情報" value={mergeSource} onChange={event => { setMergeSource(event.target.value); setMergeTarget(''); setMergeFields({}); }}><option value="">統合元を選択</option>{active.map(entity => <option value={entity.id} key={entity.id}>{KIND_LABELS[entity.kind]} · {labelOf(entity)}</option>)}</select>
-      <select aria-label="統合後に残す情報" value={mergeTarget} onChange={event => { setMergeTarget(event.target.value); setMergeFields({}); }}><option value="">残すIDを選択</option>{active.filter(entity => source && entity.kind === source.kind && entity.id !== source.id).map(entity => <option value={entity.id} key={entity.id}>{labelOf(entity)} · {entity.id.slice(0, 8)}</option>)}</select>
+      <PagedSelect label="統合する情報" scope={`catalog:${project.projectId}:merge-source`} value={mergeSource} items={active.map(entity=>({id:entity.id,label:KIND_LABELS[entity.kind]+' · '+labelOf(entity)}))} emptyLabel="統合元を選択" onChange={value=>{setMergeSource(value);setMergeTarget('');setMergeFields({});}}/>
+      <PagedSelect label="統合後に残す情報" scope={`catalog:${project.projectId}:merge-target:${source?.kind??''}`} value={mergeTarget} items={active.filter(entity=>source&&entity.kind===source.kind&&entity.id!==source.id).map(entity=>({id:entity.id,label:labelOf(entity)+' · '+entity.id.slice(0,8)}))} emptyLabel="残すIDを選択" onChange={value=>{setMergeTarget(value);setMergeFields({});}}/>
       {fields.map(field => <div className="form-field" key={field}><label>{fieldLabel(field)}</label><select aria-label={`${fieldLabel(field)}の採用元`} value={mergeFields[field] ?? 'survivor'} onChange={event => setMergeFields(previous => ({ ...previous, [field]: event.target.value as 'source' | 'survivor' }))}><option value="survivor">残す情報の値</option><option value="source">統合元の値</option></select></div>)}
       <button className="button primary" disabled={busy || !source || !survivor} onClick={() => { try { const result = previewMerge(project, { sourceId: mergeSource, survivorId: mergeTarget, fields: mergeFields, operationId: newId(), deletedAt: new Date().toISOString() }); setPreview({ project: result.project, reason: '重複情報の統合', details: [`残すID: ${mergeTarget}`, ...result.changes.map(change => `${fieldLabel(change.field)}: ${displayValue(change.from)} → ${displayValue(change.to)}`), ...result.impact.map(impact => `${impact.sourceName} (${impact.path}${impact.snapshotId ? '・保存版は変更しない' : '・参照を書換え'})`)] }); setError(''); } catch (failure) { setError((failure as Error).message); } }}>統合差分を確認</button>
     </>}
