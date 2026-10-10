@@ -6,7 +6,7 @@ import {validateSyncRecovery,syncRecoveryImages,type NativeSyncRecovery,type Ret
 import Dexie, { type Table } from 'dexie';
 import { prepareWorldPin, type WorldPinInput } from './worldPins';
 import type { Block, CommandRecord, ContentState, Entity, ProjectContent, ProjectData, ProjectSnapshot, Relation, SavedView, ViewState } from '../domain/types';
-import { collectReferences, ID_PATTERN, newId, rewriteEntityReferences, rewriteRelationReferences, validateCurrentProject, validateProject, type DomainReference } from '../domain/model';
+import { collectReferences, ID_PATTERN, isContentCopyField, newId, rewriteEntityReferences, rewriteRelationReferences, validateCurrentProject, validateProject, type DomainReference } from '../domain/model';
 import { remapEditedTextReferences, remapEditedTextRelationReferences } from '../domain/text';
 import { reconcileDeliverables } from '../domain/production';
 import { addChangeReviews } from '../domain/changeReviews';
@@ -143,7 +143,10 @@ const jsonEncodingCache = createCanonicalJsonCache(value => immutableValues.has(
 const jsonBytes = (value: unknown): Uint8Array => encodeJsonBytes(value, jsonEncodingCache);
 function freeze<T>(value: T): T {
   if (value && typeof value === 'object' && !immutableValues.has(value)) {
-    for (const child of Object.values(value)) freeze(child);
+    for (const key of Object.keys(value)) {
+      const child = (value as Record<string, unknown>)[key];
+      if (child && typeof child === 'object') freeze(child);
+    }
     Object.freeze(value);immutableValues.add(value);
   }
   return value;
@@ -345,15 +348,17 @@ function extractBlocks(entity: Entity): { record: unknown; blocks: StoredBlock[]
       }
       return value.map(visit);
     }
-    if (value && typeof value === 'object') return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, visit(item)]));
+    if (value && typeof value === 'object') return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, isContentCopyField(key) ? copy(item) : visit(item)]));
     return value;
   };
   return { record: visit(entity), blocks };
 }
 
-function hydrateBlocks(record: unknown, blocks: Map<string, Block>): Entity {
+function hydrateBlocks(record: unknown, blocks: Map<string, Block>, consumedBlockIds: Set<string>): Entity {
   // These are private values read in one native transaction. Rebuild only
   // ancestors of a rich-text marker; unchanged JSON needs no additional copy.
+  // A native block belongs to its first marker. Later markers (including
+  // legitimate public-text copies) need independent objects in mutable drafts.
   // The input rows and the canonical block values remain untouched.
   const visit = (value: unknown): unknown => {
     if (Array.isArray(value)) {
@@ -369,7 +374,9 @@ function hydrateBlocks(record: unknown, blocks: Map<string, Block>): Entity {
       if (Array.isArray(data.__scenarioRichText)) return data.__scenarioRichText.map(id => {
         const block = blocks.get(id as string);
         if (!block) throw new StorageError('SAVE_FAILED', '本文blockが不足しています。完全保存ファイルから復元してください。', id as string);
-        return copy(block);
+        if (consumedBlockIds.has(id as string)) return copy(block);
+        consumedBlockIds.add(id as string);
+        return block;
       });
       let changed: Record<string, unknown> | undefined;
       for (const key of Object.keys(data)) {
@@ -502,7 +509,7 @@ export class ScenarioStore {
     // getAll requests avoid allocating every native result in one callback
     // and allow cancellation between batches without dropping any rows.
     const projectRows=async<T extends {id:string}>(table:Table<T,[string,string]>)=>{
-      const rows:T[]=[],batchSize=2048;let after:string|undefined;
+      const rows:T[]=[],batchSize=4096;let after:string|undefined;
       for(;;){
         checkCancelled(signal);
         const batch=await table.where('[projectId+id]').between([projectId,after??Dexie.minKey],[projectId,Dexie.maxKey],after===undefined,true).limit(batchSize).toArray();
@@ -533,7 +540,8 @@ export class ScenarioStore {
     // request. Keep its native read transaction alive until all history is ready.
     if(commands.length)await Dexie.waitFor((async()=>{for (const row of commands) history.push(await this.materializeCommand(row!, commandRows, ready));})());
     const hydrateStarted=timing?performance.now():undefined;
-    const hydrated=entities.map(row => hydrateBlocks(row!.record, blocks));
+    const consumedBlockIds = new Set<string>();
+    const hydrated=entities.map(row => hydrateBlocks(row!.record, blocks, consumedBlockIds));
     if(hydrateStarted!==undefined)timing!['database.hydrate']=performance.now()-hydrateStarted;
     return { historyIds, contentHeadOperationId, project: { ...project, entities: hydrated, relations: relations as Relation[],
       snapshots: snapshots.map(row => { const { projectId: _projectId, ...snapshot } = row!; return snapshot; }),

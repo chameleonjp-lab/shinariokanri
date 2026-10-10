@@ -1,0 +1,11 @@
+# C21準備とC20最終局所検査
+
+C20 commit `c61663e14b931edff96550af244bc50618a12e3c`、tree `6eb0be97b6e7f4a1e88500b48b11a006ad18cc84`、clean build `648343c00d09335598e0` の全434入力を収録・照合した。関連通常42件と実入力/完全保存出力24組、Standard元8指標各30回は局所成功。Largeは別々の30回で起動p95 **10593.5ms / 13204.90000000596ms > 元10000ms の不合格**を両方保持する。検索は元2000ms内。初回Standardの測定前Vite依存不足、歴史証拠tmpfs退避前後、CLI認証401と後の接続済みGitHub実取得も別記録である。
+
+CI38029161542の実checkout treeはC20と一致し、816単体/90files、306通常browserと記録した全stepは成功。実ZIP11,645,569bytesのGitHub SHAと全475CRCを照合した。C20独立はstrict type/135件の収集だけでbrowser/SQL0。初回のfixture宣言収集失敗と訂正後の結果を別attemptに保持する。
+
+C21はdirty source準備で関連57成功。初回の全817検査は815成功・2Chromium起動がsandbox socket権限で開始不可だった。同じsource394/原文26/runtimeで該当exports21件を必要な実行権限付き再実行し、全21成功から817期待結果のdispositionを照合した。初回exit1を書き換えない。dirty buildはcompile成功だがGit spawnSyncも環境で拒否され、実metadataはunknown/dirty trueであり最終build扱いしない。独立はownership静的9filesだけ、実行0。C21のclean固定候補で通常/性能/復元/長時間/原116を別実行する。
+
+MANIFESTの6343論理files/1250unique blobsを3つの48MiB以下partsから復元できる。全blob/part/連結archive SHAを照合済み。秘密転送configとstderrだけを除外し、public SQL/全434入力を保持する。ADDITIONAL_FILES_1は後の独立closure metadataだけで型/list結果を変更しない。元104/116・464原条項・24工程・6回帰、実7200秒、実端末、実Auth/API/RLS/Storage、release条件の合格は推定しない。
+
+全archive SHA: `a326e9673784c9c9ebd5c0690c96f7053a89a994ae0175d4a2a68b4020414f17`。展開先を用意し、順にpartsを連結してtarを展開する。ARCHIVE_MANIFESTの論理pathはblobs/<sha256>へ対応する。

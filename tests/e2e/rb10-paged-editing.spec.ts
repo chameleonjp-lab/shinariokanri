@@ -1,12 +1,13 @@
 import { expect, test, type Page } from '@playwright/test';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
-import { createEntity, createProject, emptyRuntimeState, emptyValidity, newId, validateProject } from '../../src/domain/model';
+import { createEntity, createProject, emptyRuntimeState, emptyValidity, newId, textToRichText, validateProject } from '../../src/domain/model';
 import type { Entity, ProjectData, RichText } from '../../src/domain/types';
 import { exportScenario, inspectScenario, verifySnapshotHashes } from '../../src/storage/archive';
 import { jsonBytes, sha256 } from '../../src/storage/json';
 
 async function navigate(page: Page, name: '年表' | '検索' | '作品・保存') {
+  await expect(page.locator('.app-shell')).toBeVisible();
   const menu = page.getByRole('button', { name: 'メニューを開く', exact: true });
   if (await menu.isVisible()) await menu.click();
   await page.locator('.sidebar').getByRole('button', { name, exact: true }).click();
@@ -39,19 +40,19 @@ async function open(page: Page, name: string) {
   await page.locator('.entity-card').filter({ hasText: name }).first().click();
   return page.locator('.detail-panel');
 }
-async function completeSave(page: Page) {
+async function completeSave(page: Page, prefix = 'complete-save') {
   await navigate(page, '作品・保存');
   await page.getByRole('tab', { name: '完全保存・復元', exact: true }).click();
   const download = page.waitForEvent('download');
   await page.getByRole('button', { name: '完全保存ファイルを作成', exact: true }).click();
   const result = await download;
   const bytes = new Uint8Array(await readFile((await result.path())!));
-  const archive = await preserveArtifact('complete-save-output.scenario', bytes, 'application/zip');
+  const archive = await preserveArtifact(`${prefix}-output.scenario`, bytes, 'application/zip');
   const restored = (await inspectScenario(bytes, { worker: false })).project;
   await verifySnapshotHashes([restored]);
   expect(validateProject(restored)).toMatchObject({ ok: true });
-  const model = await preserveArtifact('complete-save-output.json', jsonBytes(restored), 'application/json');
-  await preserveArtifact('complete-save-manifest.json', jsonBytes({ capturedAfterActualDownload: true, projectId: restored.projectId, test: test.info().title, engine: test.info().project.name, archive, model }), 'application/json');
+  const model = await preserveArtifact(`${prefix}-output.json`, jsonBytes(restored), 'application/json');
+  await preserveArtifact(`${prefix}-manifest.json`, jsonBytes({ capturedAfterActualDownload: true, projectId: restored.projectId, test: test.info().title, engine: test.info().project.name, archive, model }), 'application/json');
   return restored;
 }
 async function saved(page: Page) {
@@ -63,6 +64,61 @@ async function snapshot(project: ProjectData) {
   project.snapshots.push(edition);
   return edition;
 }
+
+test('同じ段落IDの原稿と別公開本文を通常編集・cold再読込・実完全ファイルの空環境new/cloneでも独立して保持する', async ({ page, browser }) => {
+  const project = createProject('原稿と別公開本文を保存');
+  const note = createEntity(project.projectId, 'note', '独立した原稿', { body: textToRichText('私用の原稿😀𠮷野') });
+  const profile = createEntity(project.projectId, 'projection_profile', '公開用の別本文', {
+    audience: 'reader', includedIds: [note.id], allowedKinds: ['note'],
+    namePolicy: { mode: 'replace', replacement: '公開名' }, idPolicy: 'preserve',
+    publicTexts: { [note.id]: { body: [{ ...structuredClone(note.data.body[0]), text: '公開の本文😀𠮷野' }] } },
+    blockSources: { [note.data.body[0].id]: note.data.body[0].id },
+  });
+  note.status = 'confirmed'; profile.status = 'confirmed'; project.entities = [profile, note];
+  await snapshot(project); await restore(page, project);
+  let editor = await open(page, note.name);
+  await expect(editor.getByLabel('メモ', { exact: true })).toHaveValue('私用の原稿😀𠮷野');
+  await editor.getByLabel('メモ', { exact: true }).press('ControlOrMeta+End');
+  await page.keyboard.insertText(' 追記を通常保存'); await saved(page);
+  await page.reload(); editor = await open(page, note.name);
+  await expect(editor.getByLabel('メモ', { exact: true })).toHaveValue('私用の原稿😀𠮷野 追記を通常保存');
+  editor = await open(page, profile.name);
+  await editor.locator('summary').filter({ hasText: '詳細データ・ルビ・本文リンクを編集' }).click();
+  expect(JSON.parse(await editor.getByLabel('詳細データ', { exact: true }).inputValue()).publicTexts[note.id].body).toEqual(profile.data.publicTexts![note.id].body);
+  const downloaded = await completeSave(page);
+  const downloadedNote = downloaded.entities.find((entity): entity is Entity<'note'> => entity.id === note.id)!;
+  expect(downloadedNote.data.body[0]).toEqual({ ...note.data.body[0], text: '私用の原稿😀𠮷野 追記を通常保存' });
+  expect((downloaded.entities.find((entity): entity is Entity<'projection_profile'> => entity.id === profile.id)!).data.publicTexts).toEqual(profile.data.publicTexts);
+  expect(downloaded.snapshots).toEqual(project.snapshots);
+  const bytes = new Uint8Array(await readFile(test.info().outputPath('complete-save-output.scenario')));
+  for (const mode of ['new', 'clone'] as const) {
+    const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
+    try {
+      const fresh = await context.newPage(); await fresh.goto(page.url());
+      await fresh.getByRole('button', { name: '保存ファイルを読み込む', exact: true }).click();
+      await fresh.locator('input[type=file][accept*=".scenario"]').setInputFiles({ name: 'actual-private-public.scenario', mimeType: 'application/zip', buffer: Buffer.from(bytes) });
+      await expect(fresh.getByRole('heading', { name: '検査済みの作品' })).toBeVisible();
+      await fresh.getByLabel('復元方法', { exact: true }).selectOption(mode);
+      await fresh.getByLabel('復元方法と対象への影響を確認しました').check();
+      await fresh.getByRole('button', { name: 'この内容で復元する', exact: true }).click();
+      await expect(fresh.locator('.app-shell')).toBeVisible(); await fresh.reload();
+      editor = await open(fresh, note.name);
+      await expect(editor.getByLabel('メモ', { exact: true })).toHaveValue('私用の原稿😀𠮷野 追記を通常保存');
+      const restored = await completeSave(fresh, `complete-save-${mode}`);
+      const restoredNote = restored.entities.find((entity): entity is Entity<'note'> => entity.kind === 'note')!;
+      const restoredProfile = restored.entities.find((entity): entity is Entity<'projection_profile'> => entity.kind === 'projection_profile')!;
+      expect(restoredNote.data.body[0].text).toBe('私用の原稿😀𠮷野 追記を通常保存');
+      expect(restoredProfile.data.publicTexts![restoredNote.id].body![0].text).toBe('公開の本文😀𠮷野');
+      expect(restoredProfile.data.publicTexts![restoredNote.id].body![0].id).toBe(restoredNote.data.body[0].id);
+      expect(restoredNote.id === note.id).toBe(mode === 'new');
+      expect(restored.projectId === project.projectId).toBe(mode === 'new');
+      const fixedNote = restored.snapshots[0]!.content.entities.find((entity): entity is Entity<'note'> => entity.kind === 'note')!;
+      const fixedProfile = restored.snapshots[0]!.content.entities.find((entity): entity is Entity<'projection_profile'> => entity.kind === 'projection_profile')!;
+      expect(fixedNote.data.body[0].text).toBe('私用の原稿😀𠮷野');
+      expect(fixedProfile.data.publicTexts![fixedNote.id].body![0].text).toBe('公開の本文😀𠮷野');
+    } finally { await context.close(); }
+  }
+});
 
 test('種類切替の確認をページ・行移動・詳細の往復で保持し、取消と明示適用を原子保存から再読込する', async ({ page }) => {
   const project = createProject('切替確認を持ってページを移動');

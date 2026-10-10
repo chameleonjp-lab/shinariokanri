@@ -1,4 +1,4 @@
-import { collectReferences, ID_PATTERN, rewriteEntityReferences, rewriteRelationReferences, validateCurrentProject, validateProject } from '../domain/model';
+import { collectReferences, ID_PATTERN, isContentCopyField, rewriteEntityReferences, rewriteRelationReferences, validateCurrentProject, validateProject } from '../domain/model';
 import { dialogueContentHash } from '../domain/production';
 import { sealAuthorAlternative } from '../domain/authorAlternativeIntegrity';
 import type { AuthorAlternative, ContentState, Entity, EntityKind, ProjectContent, ProjectData, ProjectSnapshot, Relation, SavedView } from '../domain/types';
@@ -32,19 +32,21 @@ export interface CrossProjectImportPlan {
 export function collectImportIds(project: ProjectData): ImportId[] {
   const found = new Map<string, ImportId>();
   const bindings: { id: string; ownerId: string }[] = [];
+  const copiedBlocks: { id: string; ownerId: string }[] = [];
   const runtimeItems = new Set<string>();
   const add = (id: string, role: ImportIdRole, ownerId?: string) => {
     const old = found.get(id);
     if (old && (old.role !== role || old.ownerId !== ownerId)) throw new StorageError('IMPORT_CONFLICT', '同じIDが別の種別・所有者で使われています。', id);
     found.set(id, { id, role, ...(ownerId ? { ownerId } : {}) });
   };
-  const declarations = (value: unknown, ownerId: string) => {
-    if (Array.isArray(value)) { value.forEach(item => declarations(item, ownerId)); return; }
+  const declarations = (value: unknown, ownerId: string, contentCopy = false) => {
+    if (Array.isArray(value)) { value.forEach(item => declarations(item, ownerId, contentCopy)); return; }
     if (!value || typeof value !== 'object') return;
     const record = value as Record<string, unknown>;
     if (typeof record.id === 'string') {
       const role: ImportIdRole = 'kind' in record && 'text' in record ? 'block' : 'audienceHolderIds' in record ? 'alias' : 'eventKey' in record ? 'trigger' : 'x' in record && 'y' in record ? 'map_pin' : (() => { throw new StorageError('IMPORT_CONFLICT', '未対応の埋込IDです。', record.id as string); })();
-      add(record.id, role, ownerId);
+      if (contentCopy && role === 'block') copiedBlocks.push({ id: record.id, ownerId });
+      else add(record.id, role, ownerId);
     }
     if (typeof record.instanceId === 'string' && 'quantity' in record && 'consumed' in record) runtimeItems.add(record.instanceId);
     if(typeof record.sourceVersionId==='string'&&typeof record.profileId==='string'&&typeof record.publicVersionId==='string')add(record.publicVersionId,'public_id');
@@ -52,7 +54,7 @@ export function collectImportIds(project: ProjectData): ImportId[] {
     for (const [key, item] of Object.entries(record)) {
       if (key === 'publicIds' && item && typeof item === 'object') for (const id of Object.values(item)) if (typeof id === 'string') add(id, 'public_id');
       if (key === 'bindings' && item && typeof item === 'object' && !Array.isArray(item)) for (const id of Object.values(item)) if (typeof id === 'string') bindings.push({ id, ownerId });
-      declarations(item, ownerId);
+      declarations(item, ownerId, contentCopy || isContentCopyField(key));
     }
   };
   const state = (content: ProjectContent | ContentState) => {
@@ -75,6 +77,11 @@ export function collectImportIds(project: ProjectData): ImportId[] {
   };
   state(project);
   for (const command of project.history) { add(command.operationId, 'operation'); state(command.before); state(command.after); }
+  // Source paragraphs can be copied into approval policies before their source
+  // entity appears. Resolve them against the complete canonical declaration set.
+  // Public-only paragraphs still own IDs; an earlier public copy is not canonical.
+  const canonicalBlockIds = new Set([...found.values()].filter(item => item.role === 'block').map(item => item.id));
+  for (const block of copiedBlocks) if (!canonicalBlockIds.has(block.id)) add(block.id, 'block', block.ownerId);
   // Declared individual items and aggregate type quantities use their entity ID in runtime.
   // Generated instances own independent IDs; they must still reject other roles.
   for (const id of runtimeItems) if (found.get(id)?.role !== 'entity:item') add(id, 'runtime_item');
