@@ -6,6 +6,7 @@
 | --- | --- | --- |
 | 完全ファイルの `shared-records-v1` | 全kind、順序付き段落／台詞／履歴、同じIDの異なる案、変更前後、送信待ち、世界pin推移依存、素材bytesを辞書で損失なく往復 | 必須機能を宣言。未知reader、未参照辞書、破損hash、不正参照・上限超過は確定前に拒否 |
 | `shared-review-source-v1` | 私有の共有指摘出所、旧公開版、Unicode引用位置、修正／確認段階。cloneではprivate IDを対応し、外部public IDは保持 | 共有指摘があるファイルだけ必須機能を宣言。作者用の対応map／認証情報を公開profileへ転用しない |
+| 共有履歴の成立性検査 | 全版/変更前後/全ID/送信待ちを保持し、未使用の巨大な全文字列を作らず既存JSON成立性を検査。対象hashのcanonical JSONは不変 | C13で91履歴new復元の文字列上限失敗を保持。C14同一最終版の実new/clone/cold/全受入は別判定。ファイル上限は緩めない |
 | ローカルDB v7 `recordParts` | 大きな履歴／送信待ちの元の完全値をSHA256付きpartsから返す。marker、parts、索引、古いpartsの除去を同じトランザクションで確定 | 旧v6行はそのまま読取。未知codec・欠損・改ざん・scope不一致・取消で安全に停止。専用ファイルの仕様版とは別 |
 | 共有指摘migration 9 | 旧resolved=trueは修正済み。元版・公開引用は不変、確認済みへ自動昇格しない | service-only対応表と現在のmembership・session・期限を検査。実Auth/RLS/Storageは専用環境で別受入 |
 

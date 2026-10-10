@@ -115,6 +115,7 @@ export function parseStrictJson(bytes: Uint8Array, path: string, limits: Archive
  * must be serializable. Shared values are allowed, active cycles are not. */
 export function validateJsonValue(value: unknown): void {
   const active = new Set<object>();
+  const complete = new WeakSet<object>();
   function visit(input: unknown): void {
     if (input === null || typeof input === 'boolean') return;
     if (typeof input === 'string') {
@@ -127,6 +128,7 @@ export function validateJsonValue(value: unknown): void {
     }
     if (typeof input !== 'object') throw new StorageError('VALIDATION_FAILED', 'JSONに保存できない値があります。');
     if (active.has(input)) throw new StorageError('VALIDATION_FAILED', '循環したJSONは保存できません。');
+    if (complete.has(input)) return;
     active.add(input);
     if (Array.isArray(input)) input.forEach(visit);
     else for (const key of Object.keys(input)) {
@@ -134,6 +136,7 @@ export function validateJsonValue(value: unknown): void {
       if (child !== undefined) visit(child);
     }
     active.delete(input);
+    complete.add(input);
   }
   visit(value);
 }
@@ -167,6 +170,39 @@ export function canonicalJson(value: unknown): string {
 
 export const jsonBytes = (value: unknown): Uint8Array => new TextEncoder().encode(canonicalJson(value));
 export const equalJson = (left: unknown, right: unknown): boolean => canonicalJson(left) === canonicalJson(right);
+
+/** Decide whether to use the lossless dictionary before allocating a flat
+ * JSON string. This is a size decision, not a replacement for validation. */
+export function exceedsJsonBytes(value: unknown, limit: number): boolean {
+  const sizes = new WeakMap<object, number>(), active = new Set<object>();
+  const text = (value: unknown) => new TextEncoder().encode(canonicalJson(value)).byteLength;
+  const size = (input: unknown): number => {
+    if (!input || typeof input !== 'object') return Math.min(limit + 1, text(input));
+    if (active.has(input)) throw new StorageError('VALIDATION_FAILED', '循環したJSONは保存できません。');
+    const prior = sizes.get(input);
+    if (prior !== undefined) return prior;
+    active.add(input);
+    let bytes = 2;
+    if (Array.isArray(input)) {
+      bytes += Math.max(0, input.length - 1);
+      for (let index = 0; index < input.length && bytes <= limit; index++) if (Object.hasOwn(input, index)) bytes += size(input[index]);
+    } else {
+      let first = true;
+      for (const key of Object.keys(input)) {
+        const child = (input as Record<string, unknown>)[key];
+        if (child === undefined) continue;
+        bytes += (first ? 0 : 1) + new TextEncoder().encode(JSON.stringify(key)).byteLength + 1 + size(child);
+        first = false;
+        if (bytes > limit) break;
+      }
+    }
+    active.delete(input);
+    bytes = Math.min(bytes, limit + 1);
+    sizes.set(input, bytes);
+    return bytes;
+  };
+  return size(value) > limit;
+}
 
 export async function sha256(bytes: Uint8Array): Promise<string> {
   const digest = await crypto.subtle.digest('SHA-256', bytes.slice().buffer);
