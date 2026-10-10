@@ -2,6 +2,8 @@ import {validateSyncRecovery,syncRecoveryImages,type NativeSyncRecovery} from '.
 import {RECORD_DICTIONARY_FEATURE,RecordDictionaryWriter,RecordDictionaryReader} from './recordDictionary';
 import { Inflate, zipSync } from 'fflate';
 import { validateRecovery, recoveryImages, type PortableRecovery } from './recovery';
+import { projectWithRecoveryHistory } from './recovery';
+import { collectImportIds } from './importMapping';
 import type { Entity,Relation,ProjectContent, ProjectData, WorldReference } from '../domain/types';
 import { newId, validateProject,collectReferences,collectRelationReferences,ENTITY_KINDS } from '../domain/model';
 import { validateProjectIntegrity } from '../domain/projectRecordValidation';
@@ -399,6 +401,7 @@ export async function inspectScenarioData(bytes: Uint8Array, options: InspectOpt
     options.onProgress?.({ stage: 'hashes', completed: index + 1, total: manifest.files.length, path: file.path });
   }
   const hasDictionary=manifest.requiredFeatures?.includes(RECORD_DICTIONARY_FEATURE)??false;
+  options.onProgress?.({ stage: 'validating', completed: 0, total: 1 });
   if(hasDictionary!==files.has('data/records.json'))throw new StorageError('FORMAT_UNSUPPORTED','共有レコード辞書には対応する必須機能の宣言が必要です。');
   const dictionary=hasDictionary?new RecordDictionaryReader(parseStrictJson(files.get('data/records.json')!,'data/records.json',limits,budget),limits):undefined;
   const read=(path:string)=>{const value=parseStrictJson(files.get(path)!,path,limits,budget);return dictionary?dictionary.decode(value,path):value;};
@@ -440,6 +443,8 @@ export async function inspectScenarioData(bytes: Uint8Array, options: InspectOpt
   }
   const missing = [...attachments.keys()].filter(path => !files.has(path));
   if (manifest.assetMode === 'embedded' && missing.length) throw new StorageError('ASSET_MISSING', '完全保存に必要な添付bytesが不足しています。', missing[0]);
+  checkCancelled(options.signal);
+  collectImportIds(projectWithRecoveryHistory(project, recovery));
   checkCancelled(options.signal);
   options.onProgress?.({ stage: 'validating', completed: 1, total: 1 });
   return { manifest, project, worlds, assets, ...(recovery ? { recovery } : {}),...(syncRecovery?{syncRecovery}:{}),

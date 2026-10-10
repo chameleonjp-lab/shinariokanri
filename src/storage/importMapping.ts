@@ -2,7 +2,7 @@ import { collectReferences, ID_PATTERN, isContentCopyField, rewriteEntityReferen
 import { dialogueContentHash } from '../domain/production';
 import { sealAuthorAlternative } from '../domain/authorAlternativeIntegrity';
 import type { AuthorAlternative, ContentState, Entity, EntityKind, ProjectContent, ProjectData, ProjectSnapshot, Relation, SavedView } from '../domain/types';
-import { attachmentMetadata, validateAsset, verifySnapshotHashes, verifyWorlds, worldSnapshotContents, type PreparedScenario } from './archive';
+import { attachmentMetadata, validateAsset, verifySnapshotHashes, verifyWorlds, worldSnapshotContents, type PreparedScenario } from './archiveData';
 import { checkCancelled, StorageError } from './errors';
 import { equalJson, jsonBytes, sha256 } from './json';
 
