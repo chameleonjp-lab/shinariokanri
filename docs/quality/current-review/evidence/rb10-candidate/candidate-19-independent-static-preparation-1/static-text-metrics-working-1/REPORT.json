@@ -1,0 +1,79 @@
+{
+  "phase": "working_static_only_not_frozen_candidate_acceptance",
+  "capturedAt": "2026-10-10T04:23:44.178817+00:00",
+  "candidateBefore": "7c275dc4c7608165e5eaba5d2ac63c58d119aa0a / 6a6009d272f7f88eaafd6e9559fdcec77c781a45 / 8ee704ee66910a13a54e",
+  "files": [
+    {
+      "source": "/workspace/shinariokanri-rb10-save-readiness/src/domain/textMetrics.ts",
+      "path": "working/src/domain/textMetrics.ts",
+      "bytes": 1676,
+      "sha256": "bc0f3c83f1dba12f1e0987699281c9d961e4e50f89d05834ac3500d26914f2b1"
+    },
+    {
+      "source": "/workspace/shinariokanri-rb10-save-readiness/src/domain/model.ts",
+      "path": "working/src/domain/model.ts",
+      "bytes": 150688,
+      "sha256": "206389be9996f07ef844acbffc2374ce319232bf1396f322dc2fd54b96103b3e"
+    },
+    {
+      "source": "/workspace/shinariokanri-rb10-save-readiness/src/storage/archiveData.ts",
+      "path": "working/src/storage/archiveData.ts",
+      "bytes": 43784,
+      "sha256": "5cd0f41d485f60a4fb19853cb37678dd6dd48ae8cb436b960d9af9bc58aabeb3"
+    },
+    {
+      "source": "/workspace/shinariokanri-rb10-save-readiness/tests/browser/rb04-author-regressions.mjs",
+      "path": "working/tests/browser/rb04-author-regressions.mjs",
+      "bytes": 35839,
+      "sha256": "c42ce08f80fa1b4fb4df05745e1dfb7474ee14d10ac7d68bad8760393a1bd21e"
+    }
+  ],
+  "productWrites": 0,
+  "browserCompilerUnitSQLRuns": 0,
+  "blockingFinding": null,
+  "findings": [
+    {
+      "id": "TEXT-UTF01",
+      "status": "static_equivalent",
+      "detail": "UTF-8 lengths match TextEncoder replacement: ASCII1, U+0080..07FF2, other BMP3, valid high+low pair4. Lone high/low adds replacement3 and validUnicode=false; unmatched high does not consume next character, so high-high-low yields replacement3 + pair4. Code-point count matches the prior string iterator for both valid and malformed input."
+    },
+    {
+      "id": "TEXT-CACHE01",
+      "status": "static_equivalent",
+      "detail": "Cache keys are exact immutable primitive strings. Value contains only frozen codePoints/utf8Bytes/validUnicode scalars; every caller retains its own schema limits and issue paths. Long >4096 UTF-16 unit strings are measured without caching. FIFO eviction enforces <=512 keys and <=1048576 logical UTF-16 source bytes."
+    },
+    {
+      "id": "TEXT-MEM01",
+      "status": "scope_note_not_product_blocker",
+      "detail": "1MiB is logical retained string-content length, not total heap/RSS. JavaScript map/object overhead and engine rope/sliced-string backing retention are not measured or bounded by this counter. Do not describe it as a 1MiB actual heap cap."
+    },
+    {
+      "id": "DATE-FALSE01",
+      "status": "static_equivalent",
+      "detail": "Regex enforces exact 10-character ASCII YYYY-MM-DD before lookup. previous!==undefined returns cached false correctly. Original Date+ISO roundtrip still runs on misses; 512 oldest keys bound logical date text. Correcting an invalid date creates a different exact key, so old false cannot suppress corrected acceptance."
+    },
+    {
+      "id": "WALK-OBJECT01",
+      "status": "static_equivalent_for_format_JSON",
+      "detail": "Changed four model and three archive object loops skip only values that the old callees immediately returned for (falsy or typeof!==object). Arrays stay object-valued and retain the old ordered forEach recursion. Depth increment, key order for JSON objects, exclusions, visited sets, immutable snapshot hash checks and field validators are unchanged."
+    },
+    {
+      "id": "WALK-ACCESSOR01",
+      "status": "scope_note",
+      "detail": "Object.keys followed by per-child recursion reads sibling accessors at a different time than Object.entries/values eager materialization. Plain parsed/native JSON rows have no accessors. No equivalence claim is made for adversarial getters/proxies; capture/strict JSON contracts remain the production boundary."
+    },
+    {
+      "id": "HASH-CAPS01",
+      "status": "static_unchanged",
+      "detail": "No native read batching, schema limits, canonical JSON encoding, content/SHA verification, unknown/required-field rules or archive caps were modified by these loops. Native/App startup improvement remains unmeasured independently."
+    }
+  ],
+  "meaningfulRequiredChecksNotExecutedIndependently": [
+    "measureText exact equality to TextEncoder/Array.from over valid pairs, isolated high/low, high-high-low, low-high, NUL and all byte-width boundaries",
+    "Text cache eviction >512 short keys, >1MiB logical retained source, >4096 units without cache, frozen scalar return",
+    "Repeated invalid validDate false plus correction/leap/end-year boundary",
+    "Nested malformed condition types, reversed worldRange, duplicate aliases/blocks, old/current anchor CP range, historical attachments/world dependencies and corrupt snapshot hash still refused with original paths/order",
+    "Original current-candidate full schema/atomic/cold/clone and exact formal 30; no previous candidate result promotion"
+  ],
+  "testHarnessStaticSeal": "../static-save-readiness-1/SEAL.json; same virtual fixture and 12 checks/8000 assertions held"
+}

@@ -1,5 +1,10 @@
 # RB10追加の保存互換性（同一候補の最終受入前）
 
+## 全件検証の計算を再利用する後続補修
+
+Unicodeコードポイント／UTF-8バイト数／サロゲート妥当性と実在日の計算を上限付きで再利用する。フィールドの合否・型・参照・期限・上限・hash・完全保存・履歴・素材bytesは毎回元の契約で確認する。新しいkind／保存field／required feature／形式版は追加していない。通常画面、旧形式、完全保存からの新規／clone／cold復元は、同じ最終対象版で改めて記録する。C18のLarge起動30回の2失敗を、この後続版や別の出力profileの成功へ置き換えない。[補修の範囲と証拠](RB10_TEXT_VALIDATION.md)を参照。
+
+
 2026-10-10の[原子保存JSON補修](RB10_BOUNDED_JSON_ENCODING.md)は内部処理だけを変更し、完全保存・clone・公開投影・旧形式・各出力profileの仕様版とserialized fieldsを変更しない。新6件のexact canonical bytesと全810単体、schema生成差分なしをdirty準備で確認した。portable runtimeの実生成SHAは6871ea016635d84981e405880e56a7a2b9a9e3aa9edfa34f48bda27dddcf161fへ更新され、最終clean artifactは別に固定する。前候補C17の保存性能超過と実復元成功は別結果で保持し、未実行profile・実機・実権限を合格へ変換しない。以下の互換表と履歴は各対象版の証拠を保つ。
 
 2026-10-09。native形式1.0.0と既存6出力profileの規則を保持する。[候補の確認条件](RB10_COMPLETION_CANDIDATE.md)を併用する。以下のRB08/RB09記録は各確認時点の範囲として残す。
