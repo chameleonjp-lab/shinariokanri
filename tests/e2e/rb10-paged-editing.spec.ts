@@ -76,11 +76,11 @@ test('同じ段落IDの原稿と別公開本文を通常編集・cold再読込�
   note.status = 'confirmed'; profile.status = 'confirmed'; project.entities = [profile, note];
   await snapshot(project); await restore(page, project);
   let editor = await open(page, note.name);
-  await expect(editor.getByLabel('本文', { exact: true })).toHaveValue('私用の原稿😀𠮷野');
-  await editor.getByLabel('本文', { exact: true }).press('ControlOrMeta+End');
+  await expect(editor.getByLabel('メモ', { exact: true })).toHaveValue('私用の原稿😀𠮷野');
+  await editor.getByLabel('メモ', { exact: true }).press('ControlOrMeta+End');
   await page.keyboard.insertText(' 追記を通常保存'); await saved(page);
   await page.reload(); editor = await open(page, note.name);
-  await expect(editor.getByLabel('本文', { exact: true })).toHaveValue('私用の原稿😀𠮷野 追記を通常保存');
+  await expect(editor.getByLabel('メモ', { exact: true })).toHaveValue('私用の原稿😀𠮷野 追記を通常保存');
   editor = await open(page, profile.name);
   await editor.locator('summary').filter({ hasText: '詳細データ・ルビ・本文リンクを編集' }).click();
   expect(JSON.parse(await editor.getByLabel('詳細データ', { exact: true }).inputValue()).publicTexts[note.id].body).toEqual(profile.data.publicTexts![note.id].body);
@@ -102,7 +102,7 @@ test('同じ段落IDの原稿と別公開本文を通常編集・cold再読込�
       await fresh.getByRole('button', { name: 'この内容で復元する', exact: true }).click();
       await expect(fresh.locator('.app-shell')).toBeVisible(); await fresh.reload();
       editor = await open(fresh, note.name);
-      await expect(editor.getByLabel('本文', { exact: true })).toHaveValue('私用の原稿😀𠮷野 追記を通常保存');
+      await expect(editor.getByLabel('メモ', { exact: true })).toHaveValue('私用の原稿😀𠮷野 追記を通常保存');
       const restored = await completeSave(fresh, `complete-save-${mode}`);
       const restoredNote = restored.entities.find((entity): entity is Entity<'note'> => entity.kind === 'note')!;
       const restoredProfile = restored.entities.find((entity): entity is Entity<'projection_profile'> => entity.kind === 'projection_profile')!;
