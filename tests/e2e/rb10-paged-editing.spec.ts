@@ -7,6 +7,7 @@ import { exportScenario, inspectScenario, verifySnapshotHashes } from '../../src
 import { jsonBytes, sha256 } from '../../src/storage/json';
 
 async function navigate(page: Page, name: '年表' | '検索' | '作品・保存') {
+  await expect(page.locator('.app-shell')).toBeVisible();
   const menu = page.getByRole('button', { name: 'メニューを開く', exact: true });
   if (await menu.isVisible()) await menu.click();
   await page.locator('.sidebar').getByRole('button', { name, exact: true }).click();
