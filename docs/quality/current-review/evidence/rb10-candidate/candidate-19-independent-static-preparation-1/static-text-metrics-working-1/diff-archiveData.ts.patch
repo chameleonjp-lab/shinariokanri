@@ -1,0 +1,38 @@
+--- /tmp/shinariokanri-independent-c18-original-executable-preparation-3/captured-final-c18/src/storage/archiveData.ts
++++ /workspace/shinariokanri-rb10-save-readiness/src/storage/archiveData.ts
+@@ -273,7 +273,10 @@
+       if (existing && (existing.assetPath !== attachment.assetPath || existing.byteSize !== attachment.byteSize || existing.mediaType !== attachment.mediaType)) throw new StorageError('ASSET_INVALID', '同じhashの素材に異なるメタデータがあります。', attachment.assetPath);
+       result.set(hash, attachment);
+     }
+-    for (const item of Object.values(data)) walk(item);
++    for (const key of Object.keys(data)) {
++      const item = data[key];
++      if (item && typeof item === 'object') walk(item);
++    }
+   }
+   // Historical attachments remain available for single-record restoration.
+   walk(project);
+@@ -322,7 +325,10 @@
+     // Explicit worldReferences above must still be checked when it is empty.
+     const typedReferences=!fixed.size?[]:typeof data.kind==='string'&&ENTITY_KINDS.includes(data.kind as Entity['kind'])&&typeof data.projectId==='string'&&data.data&&typeof data.data==='object'?collectReferences(data as unknown as Entity):typeof data.relationType==='string'&&typeof data.projectId==='string'&&typeof data.fromId==='string'&&typeof data.toId==='string'?collectRelationReferences(data as unknown as Relation):[];
+     for(const reference of typedReferences)if(reference.scope==='snapshot'){const pin=fixed.get(reference.id);if(pin&&pin.world.projectId!==data.projectId){const existing=references.get(reference.id);if(existing&&existing.contentHash!==pin.reference.contentHash)throw new StorageError('IMMUTABLE_SNAPSHOT','引用世界の期待hashが採用版と異なります。',reference.id);references.set(reference.id,pin.reference);}}
+-    for (const item of Object.values(data)) walk(item);
++    for (const key of Object.keys(data)) {
++      const item = data[key];
++      if (item && typeof item === 'object') walk(item);
++    }
+   }
+   projects.forEach(walk); return [...references.values()];
+ }
+@@ -364,7 +370,10 @@
+       if (previous && !equalJson(previous, snapshot)) throw new StorageError('IMMUTABLE_SNAPSHOT', '同じ不変snapshot IDに異なる内容があります。', snapshot.id);
+       snapshots.set(snapshot.id, snapshot);
+     }
+-    for (const item of Object.values(data)) walk(item);
++    for (const key of Object.keys(data)) {
++      const item = data[key];
++      if (item && typeof item === 'object') walk(item);
++    }
+   }
+   projects.forEach(walk);
+   for (const snapshot of snapshots.values()) if (await sha256(jsonBytes(snapshot.content)) !== snapshot.contentHash) throw new StorageError('HASH_MISMATCH', '不変snapshotの内容hashが一致しません。', `snapshots/${snapshot.id}`);

@@ -1,0 +1,103 @@
+--- /tmp/shinariokanri-independent-c18-original-executable-preparation-3/captured-final-c18/src/domain/model.ts
++++ /workspace/shinariokanri-rb10-save-readiness/src/domain/model.ts
+@@ -4,6 +4,7 @@
+ import type { Alias, CalendarDefinition, Condition, Entity, EntityDataMap, EntityKind, Expression, ID, PresentationConditionResult, ProjectContent, ProjectData, Relation, RelationTypeDefinition, RichText, RuntimeState, TimeSpec, TypedValue, ValidationIssue, ValidationResult, Validity } from './types';
+ import { GREGORIAN_CALENDAR, compareTicks, isTick, parseTick, validateCalendar, validateEventTimes, sameCalendarDefinition } from './time';
+ import { validateTemplateAssignments, validateTemplateDefinition } from './templates';
++import { measureText } from './textMetrics';
+ 
+ export const KIND_LABELS: Record<EntityKind, string> = {
+   character: '人物', group: 'グループ', event: '出来事', place: '場所', item: '物品', note: 'メモ', chapter: '章', scene: '場面', goal: '目標',
+@@ -246,31 +247,20 @@
+ };
+ 
+ const isObject = (value: unknown): value is Record<string, unknown> => !!value && typeof value === 'object' && !Array.isArray(value) && (Object.getPrototypeOf(value) === Object.prototype || Object.getPrototypeOf(value) === null);
+-const utf8Encoder = new TextEncoder();
+-const utf8Bytes = (value: string): number => utf8Encoder.encode(value).byteLength;
+-// Count the same Unicode code points as the string iterator, without building
+-// an array for every field. Invalid surrogates are still rejected separately.
+-function codePointLength(value: string): number {
+-  let count = 0;
+-  for (let i = 0; i < value.length; i++, count++) {
+-    const code = value.charCodeAt(i), next = value.charCodeAt(i + 1);
+-    if (code >= 0xd800 && code <= 0xdbff && next >= 0xdc00 && next <= 0xdfff) i++;
+-  }
+-  return count;
+-}
+-function validUnicode(value: string): boolean {
+-  for (let i = 0; i < value.length; i++) {
+-    const code = value.charCodeAt(i);
+-    if (code >= 0xd800 && code <= 0xdbff) { const next = value.charCodeAt(++i); if (!(next >= 0xdc00 && next <= 0xdfff)) return false; }
+-    else if (code >= 0xdc00 && code <= 0xdfff) return false;
+-  }
+-  return true;
+-}
++const utf8Bytes = (value: string): number => measureText(value).utf8Bytes;
++const codePointLength = (value: string): number => measureText(value).codePoints;
++const validUnicode = (value: string): boolean => measureText(value).validUnicode;
+ function addIssue(issues: ValidationIssue[], path: string, message: string, code: ValidationIssue['code'] = 'VALIDATION_FAILED'): void { if (issues.length < 256) issues.push({ code, path, message }); }
+ function validDate(value: string): boolean {
+   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+-  const date = new Date(`${value}T00:00:00Z`); return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value;
+-}
++  const previous = dateValidity.get(value);
++  if (previous !== undefined) return previous;
++  const date = new Date(`${value}T00:00:00Z`), valid = Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value;
++  if (dateValidity.size >= 512) dateValidity.delete(dateValidity.keys().next().value!);
++  dateValidity.set(value, valid);
++  return valid;
++}
++const dateValidity = new Map<string, boolean>();
+ function conditionSchema(value: Record<string, unknown>): Schema | undefined {
+   switch (value.op) {
+     case 'constant': return obj({ op: req(en('constant')), value: req(bool) });
+@@ -682,7 +672,10 @@
+     const range = object.worldRange; if (isTick(range.start) && isTick(range.end) && compareTicks(range.start, range.end) >= 0) addIssue(issues, `${path}.worldRange`, '有効期間はstart < endの半開区間です。');
+   }
+   if ('entityId' in object && typeof object.start === 'number' && typeof object.end === 'number' && object.start >= object.end) addIssue(issues, path, '位置の文字範囲はstart < endです。');
+-  for (const [field, item] of Object.entries(object)) validateNestedRanges(item, `${path}.${field}`, issues, depth + 1);
++  for (const field of Object.keys(object)) {
++    const item = object[field];
++    if (item && typeof item === 'object') validateNestedRanges(item, `${path}.${field}`, issues, depth + 1);
++  }
+ }
+ export function collectReferences(entity: Entity): DomainReference[] { const references: DomainReference[] = []; walk(entitySchema(entity.kind), entity, '', [], references); return references.map(reference => ({ ...reference, path: reference.path.replace(/^\./, '') })); }
+ export function collectRelationReferences(relation: Relation): DomainReference[] { const references: DomainReference[] = []; walk(relationSchema, relation, '', [], references); return references.map(reference => ({ ...reference, path: reference.path.replace(/^\./, '') })); }
+@@ -917,10 +910,11 @@
+     if (aliases.has(object.id)) addIssue(issues, `${path}.id`, '別名IDが重複しています。');
+     aliases.set(object.id, { entityId: owner, alias: object as unknown as Alias });
+   }
+-  for (const [key, child] of Object.entries(object)) {
++  for (const key of Object.keys(object)) {
++    const child = object[key];
+     // Trace/checkpoint values and projection public text are copies, not canonical blocks.
+     if (['runtimeState', 'before', 'after', 'publicTexts'].includes(key)) continue;
+-    collectContentIds(child, owner, blocks, aliases, issues, `${path}.${key}`, depth + 1);
++    if (child && typeof child === 'object') collectContentIds(child, owner, blocks, aliases, issues, `${path}.${key}`, depth + 1);
+   }
+ }
+ function cycleIssues(nodes: Entity[], edges: (entity: Entity) => ID[], issues: ValidationIssue[], path: string, label: string): void {
+@@ -1075,7 +1069,10 @@
+       values.forEach((item, i) => { if (item.type !== 'unknown' && item.type !== variable.data.valueType) addIssue(issues, `${path}.value${values.length > 1 ? `[${i}]` : ''}`, '比較値の型が状態変数と一致しません。'); });
+     }
+   }
+-  for (const [field, child] of Object.entries(object)) validateConditionTypesInValue(child, `${path}.${field}`, entities, issues, depth + 1);
++  for (const field of Object.keys(object)) {
++    const child = object[field];
++    if (child && typeof child === 'object') validateConditionTypesInValue(child, `${path}.${field}`, entities, issues, depth + 1);
++  }
+ }
+ function validateAnchors(value: unknown, path: string, entities: Map<ID, Entity>, blocks: Map<ID, { entityId: ID; text: string }>, issues: ValidationIssue[], depth = 0, resolveVersion?: (version: ID) => AnchorIndex | undefined, defaultVersion?: ID): void {
+   if (depth > 32 || !value || typeof value !== 'object') return;
+@@ -1101,7 +1098,10 @@
+       else if (typeof object.end === 'number' && object.end > codePointLength(targetText)) addIssue(issues, `${path}.end`, '文字範囲が参照元の本文を超えています。');
+     }
+   }
+-  for (const [field, child] of Object.entries(object)) if (!['publicTexts', 'before', 'after', 'runtimeState'].includes(field)) validateAnchors(child, `${path}.${field}`, entities, blocks, issues, depth + 1, resolveVersion);
++  for (const field of Object.keys(object)) {
++    const child = object[field];
++    if (child && typeof child === 'object' && !['publicTexts', 'before', 'after', 'runtimeState'].includes(field)) validateAnchors(child, `${path}.${field}`, entities, blocks, issues, depth + 1, resolveVersion);
++  }
+ }
+ export function validateProject(input: unknown, options: ProjectValidationOptions = {}): ValidationResult<ProjectData> {
+   if (!isObject(input)) return { ok: false, issues: [{ code: 'VALIDATION_FAILED', path: 'project', message: '作品はオブジェクトです。' }] };

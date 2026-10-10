@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { mkdtemp, mkdir, writeFile } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
+import { release, tmpdir } from 'node:os';
 import path from 'node:path';
 import { createServer } from 'vite';
 import { chromium, firefox, webkit, expect as playwrightExpect } from '@playwright/test';
@@ -17,7 +17,7 @@ const output = await mkdtemp(path.join(outputParent, `rb04-author-regressions-${
 const expect = playwrightExpect.configure({ timeout: 8000 });
 const checks = [], pageErrors = [];
 const startedAt = new Date().toISOString();
-let server, browser, page, failure;
+let server, browser, page, failure, browserVersion, userAgent;
 
 const source = String.raw`
 import React from 'react';
@@ -193,18 +193,30 @@ try {
   await server.listen();
   const executablePath = process.env.RB04_CHROMIUM_PATH ?? process.env.CHROMIUM_PATH;
   browser = await launcher.launch({ timeout: 30000, ...(engine === 'chromium' && executablePath ? { executablePath, args: ['--no-sandbox'] } : {}) });
+  browserVersion = browser.version();
   page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
   page.setDefaultTimeout(8000); page.setDefaultNavigationTimeout(20000);
   page.on('pageerror', error => pageErrors.push(error.message));
   await page.goto(`${server.resolvedUrls.local[0]}__rb04_author_review`);
+  userAgent = await page.evaluate(() => navigator.userAgent);
   await page.getByLabel('新しい別案の名前', { exact: true }).waitFor();
   assert.equal(await page.evaluate(() => window.fixtureValid), true, 'The starting fixture must be schema-valid.');
   const ids = await page.evaluate(() => window.fixtureIds);
   const body = page.getByLabel('別案内の場面本文', { exact: true });
   const save = page.getByRole('button', { name: '別案を新しい版として保存', exact: true });
-  const finish = async () => { await page.evaluate(() => window.completePending()); await page.waitForFunction(() => window.completed); await expect(body).toBeEnabled(); };
+  const finish = async () => {
+    await page.waitForFunction(() => typeof window.completePending === 'function');
+    await page.evaluate(() => window.completePending());
+    await page.waitForFunction(() => window.completed);
+    await expect(body).toBeEnabled();
+  };
   const reset = async mode => { await page.evaluate(mode => window.mount(mode, true), mode); await expect(body).toHaveValue('😀門'); };
-  const submit = async () => { await page.evaluate(() => window.completed = false); await save.click(); };
+  const submit = async () => {
+    // Sealing is asynchronous. A previous save's resolver cannot acknowledge
+    // this save before its host persistence callback has actually registered.
+    await page.evaluate(() => { window.completed = false; window.completePending = null; });
+    await save.click();
+  };
 
   await page.getByLabel('新しい別案の名前', { exact: true }).fill('Retain failed creation');
   await page.getByLabel('別案の分岐元', { exact: true }).selectOption(ids.snapshot);
@@ -228,8 +240,21 @@ try {
   await reset('early-publication'); await body.fill('Published before callback resolves'); await submit();
   await page.waitForFunction(() => !!window.completePending);
   await expect(page.locator('.alternative-panel').filter({ hasText: '別案の版履歴' })).toContainText('保存済み 2版');
-  await finish(); await body.fill('Next acknowledged edit'); await submit();
+  await finish();
+  await page.evaluate(() => {
+    const digest = crypto.subtle.digest.bind(crypto.subtle);
+    window.completeNextSaveHash = null;
+    crypto.subtle.digest = async (...args) => {
+      crypto.subtle.digest = digest;
+      await new Promise(resolve => window.completeNextSaveHash = resolve);
+      return digest(...args);
+    };
+  });
+  await body.fill('Next acknowledged edit'); await submit();
+  await page.waitForFunction(() => typeof window.completeNextSaveHash === 'function');
+  assert.equal(await page.evaluate(() => window.completePending), null, 'A delayed new seal must not retain the previous save resolver.');
   await expect(body).toBeDisabled(); await expect(page.getByRole('alert')).toHaveCount(0);
+  await page.evaluate(() => window.completeNextSaveHash());
   await finish();
   assert.equal(await page.evaluate(() => window.saved[0].versions.length), 3);
   checks.push('host-publication-before-promise-resolution-allows-next-save');
@@ -434,6 +459,6 @@ try {
   process.exitCode = 1;
 } finally {
   await browser?.close(); await server?.close();
-  await writeFile(path.join(output, 'results.json'), JSON.stringify({ engine, scope: 'isolated author components with an in-memory host; native/App acceptance excluded', startedAt, finishedAt: new Date().toISOString(), checks, pageErrors, failure }, null, 2));
+  await writeFile(path.join(output, 'results.json'), JSON.stringify({ engine, environment: { platform: process.platform, osVersion: release(), browserVersion, userAgent, physicalDevice: false }, scope: 'isolated author components with an in-memory host; native/App acceptance excluded', startedAt, finishedAt: new Date().toISOString(), checks, pageErrors, failure }, null, 2));
 }
 console.log(JSON.stringify({ engine, checksPassed: checks.length, output, ...(failure ? { failure } : {}) }));
