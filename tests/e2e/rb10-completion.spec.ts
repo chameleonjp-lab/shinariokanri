@@ -63,3 +63,30 @@ test('real native IndexedDB cancels a worker while a full import transaction con
  const counts=await page.evaluate(async()=>{const db=await new Promise<IDBDatabase>((resolve,reject)=>{const request=indexedDB.open('scenario-manager-local-v1');request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error);});try{return await new Promise<Record<string,number>>((resolve,reject)=>{const names=['projects','entities','commands','outbox','recordParts'],tx=db.transaction(names,'readonly'),counts:Record<string,number>={};for(const name of names){const request=tx.objectStore(name).count();request.onsuccess=()=>counts[name]=request.result;}tx.oncomplete=()=>resolve(counts);tx.onerror=()=>reject(tx.error);});}finally{db.close();}});expect(counts).toEqual({projects:0,entities:0,commands:0,outbox:0,recordParts:0});
  await page.getByRole('button',{name:'この内容で復元する',exact:true}).click();await page.locator('.app-shell').waitFor();await page.reload();await page.locator('.app-shell').waitFor();await nav(page,/^資料/);await page.getByRole('button',{name:/^メモ/}).click();await expect(page.locator('.entity-card')).toHaveCount(6);await nav(page,/^作品/);await page.getByRole('tab',{name:'完全保存・復元',exact:true}).click();const pending=page.waitForEvent('download');await page.getByRole('button',{name:'完全保存ファイルを作成',exact:true}).click();const restored=await inspectScenario(new Uint8Array(await readFile((await (await pending).path())!)),{worker:false});for(const original of p.entities)expect(restored.project.entities.find(e=>e.id===original.id)?.data).toEqual(original.data);
 });
+
+test('active and queued chapter saves warn before departure until both atomic commands finish, then retain order after cold reread and complete export', async ({page}) => {
+ const p = createProject('保存待ちの章を保持');
+ const chapters = [createEntity(p.projectId,'chapter','第一章'),createEntity(p.projectId,'chapter','第二章')];
+ const scenes = chapters.flatMap((chapter,index) => [0,1].map(position => createEntity(p.projectId,'scene',`章${index+1}場面${position+1}`,{chapterId:chapter.id,body:textToRichText(`待機中の本文😀 ${index}:${position}`)})));
+ chapters.forEach((chapter,index) => {chapter.data.sceneIds = scenes.slice(index*2,index*2+2).map(scene=>scene.id);});
+ p.entities.push(...chapters,...scenes);await seed(page,await exportScenario(p));await nav(page,/^構成/);await page.getByRole('tab',{name:'章・本文',exact:true}).click();
+ expect(await page.locator('.detail-panel').count()).toBe(0);
+ const warns = () => page.evaluate(() => {const event = new Event('beforeunload',{cancelable:true});window.dispatchEvent(event);return event.defaultPrevented;});
+ expect(await warns()).toBe(false);
+ await page.evaluate(() => {const digest = crypto.subtle.digest.bind(crypto.subtle);let first = true;crypto.subtle.digest = async (...args:Parameters<SubtleCrypto['digest']>) => {if(first){first=false;(window as any).__chapterHashWaiting=true;await new Promise<void>(resolve=>(window as any).__chapterHashRelease=resolve);}return digest(...args);};});
+ await page.getByRole('button',{name:'章1場面2を前へ',exact:true}).click();await page.waitForFunction(()=>(window as any).__chapterHashWaiting);
+ expect(await warns()).toBe(true);
+ await page.getByRole('button',{name:'章2場面2を前へ',exact:true}).click();expect(await warns()).toBe(true);
+ await page.evaluate(()=>(window as any).__chapterHashRelease());
+ for(const name of ['章1場面2','章2場面2']) await expect(page.locator('.scene-open').filter({hasText:name}).locator('.scene-index')).toHaveText('1');
+ await expect.poll(warns).toBe(false);await page.reload();
+ for(const name of ['章1場面2','章2場面2']) await expect(page.locator('.scene-open').filter({hasText:name}).locator('.scene-index')).toHaveText('1');
+ await nav(page,/^作品・保存/);await page.getByRole('tab',{name:'完全保存・復元',exact:true}).click();
+ const pending=page.waitForEvent('download');await page.getByRole('button',{name:'完全保存ファイルを作成',exact:true}).click();
+ const download=await pending, restored=(await inspectScenario(new Uint8Array(await readFile((await download.path())!)),{worker:false})).project;
+ expect(restored.history).toHaveLength(2);expect(restored.projectId).toBe(p.projectId);
+ chapters.forEach((chapter,index) => {const actual=restored.entities.find(entity=>entity.id===chapter.id)!;expect(actual.kind).toBe('chapter');if(actual.kind==='chapter')expect(actual.data.sceneIds).toEqual([scenes[index*2+1].id,scenes[index*2].id]);});
+ scenes.forEach(scene=>{const actual=restored.entities.find(entity=>entity.id===scene.id)!;expect(actual.kind).toBe('scene');if(actual.kind==='scene')expect(actual.data.body).toEqual(scene.data.body);});
+ // This dispatch proves the handler contract in Linux browser engines. It is
+ // separate from a physical device's native departure dialog verification.
+});
