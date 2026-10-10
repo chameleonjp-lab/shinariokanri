@@ -1,8 +1,46 @@
 export * from './archiveData';
 import {inspectScenarioData,exportScenarioData,type InspectOptions,type ExportOptions,type PreparedScenario,type ArchiveProgress} from './archiveData';
 import type {ProjectData} from '../domain/types';
-import {checkCancelled,StorageError} from './errors';
+import {checkCancelled,saveError,StorageError} from './errors';
 import {resolveLimits} from './json';
+import {runImportWork, type ImportWork, type ImportWorkResult} from './importWork';
+export type {ImportWorkStep} from './importWork';
+
+/** Revalidate captured import content off the UI thread; results never bypass
+ * the database's final revision, operation, world and atomic commit guards. */
+export async function performImportWork(work: ImportWork, options: {signal?: AbortSignal; loadAsset?: (hash: string) => Promise<Uint8Array | undefined> | Uint8Array | undefined} = {}): Promise<ImportWorkResult> {
+  const signal = options.signal, loadAsset = options.loadAsset;
+  checkCancelled(signal);
+  if (typeof window === 'undefined' || typeof Worker === 'undefined') return runImportWork(structuredClone(work), signal, loadAsset);
+  return new Promise((resolve, reject) => {
+    const worker = new Worker(new URL('./archive.worker.ts', import.meta.url), {type: 'module'});
+    let live = true;
+    const finish = (failure?: unknown, result?: ImportWorkResult) => {
+      if (!live) return;
+      live = false; worker.terminate(); signal?.removeEventListener('abort', abort);
+      if (failure) reject(failure); else resolve(result!);
+    };
+    const abort = () => finish(new StorageError('CANCELLED', '復元の確認を取り消しました。既存作品と元ファイルは変更していません。'));
+    worker.onmessage = event => {
+      const message = event.data;
+      if (message.type === 'done') { try { checkCancelled(signal); finish(undefined, message.result); } catch (error) { finish(error); } }
+      else if (message.type === 'error') finish(Object.assign(new StorageError(message.error.code, message.error.message, message.error.path), {issues: message.error.issues ?? []}));
+      else if (message.type === 'asset') {
+        void Promise.resolve().then(() => { checkCancelled(signal); return loadAsset?.(message.hash); }).then(bytes => {
+          if (!live || signal?.aborted) return;
+          const copy = bytes?.slice(); worker.postMessage({type: 'import-asset', id: message.id, bytes: copy}, copy ? [copy.buffer as ArrayBuffer] : []);
+        }).catch(cause => {
+          if (!live || signal?.aborted) return;
+          const error = saveError(cause);
+          worker.postMessage({type: 'import-asset', id: message.id, error: {code: error.code, message: error.message, path: error.path, issues: (cause as {issues?: unknown[]})?.issues}});
+        });
+      }
+    };
+    worker.onerror = () => finish(new StorageError('SAVE_FAILED', '復元の確認処理を完了できませんでした。既存作品と元ファイルは保持しています。'));
+    signal?.addEventListener('abort', abort, {once: true});
+    try { checkCancelled(signal); worker.postMessage({type: 'import-work', work}); } catch (error) { finish(error); }
+  });
+}
 
 /** Browser inspection runs in a worker, with progress and termination on cancellation. */
 export async function inspectScenario(bytes: Uint8Array, options: InspectOptions = {}): Promise<PreparedScenario> {

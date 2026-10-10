@@ -1,3 +1,5 @@
+import {mergeImportConflicts} from './importWork';
+import {cloneProject as clonePrivateProject} from './clone';
 import {recordDiagnostic} from '../diagnostics';
 import {bindRecordPartsSignal,installRecordPartsDatabase} from './recordPartsDatabase';
 import {validateColdRead,type ReadStage} from './readValidation';
@@ -13,11 +15,11 @@ import { addChangeReviews } from '../domain/changeReviews';
 import { validateProjectIntegrity } from '../domain/projectRecordValidation';
 import { sealAuthorAlternative } from '../domain/authorAlternativeIntegrity';
 import { appendAlternativeVersion, applyAlternativeChanges, projectContent } from '../domain/writingWorkspace';
-import { assetPath, attachmentMetadata, closureAttachmentMetadata, exportScenario, referencedWorlds, validateAsset, verifySnapshotHashes, verifyWorlds, worldSnapshotContents, type PreparedScenario } from './archive';
+import { assetPath, attachmentMetadata, closureAttachmentMetadata, exportScenario, performImportWork, referencedWorlds, validateAsset, verifySnapshotHashes, verifyWorlds, worldSnapshotContents, type PreparedScenario, type ImportWorkStep } from './archive';
 import { checkCancelled, saveError, StorageError } from './errors';
 import { canonicalJson, createCanonicalJsonCache, equalJson, jsonBytes as encodeJsonBytes, sha256, validateJsonValue } from './json';
-import { recoveryImages, projectWithRecoveryHistory, validateRecovery, type PortableRecovery } from './recovery';
-import { planCrossProjectImport, type CrossProjectImportPlan } from './importMapping';
+import { recoveryImages, projectWithRecoveryHistory, type PortableRecovery } from './recovery';
+import { type CrossProjectImportPlan } from './importMapping';
 import { assertAck } from '../sync/validation';
 import { assertDocumentTarget, createSyncOperation, sameValue, valueHash, SyncProtocolError, type SyncAck, type SyncDocument } from '../sync/protocol';
 import { nativeDocuments, nativeFromDocuments, prepareNativeOperation, acknowledgeNativeDocuments,sameDocumentContent, resolveCurrentNativeConflict, type ConfirmedSyncBase, type PreparedNativeOperation, type PreservedNativeConflict, type NativeSyncAck } from '../sync/nativeBridge';
@@ -81,6 +83,7 @@ export interface ImportOptions {
   mode: ImportMode; targetProjectId?: string; baseRevision?: string; operationId?: string; signal?: AbortSignal;
   resolutions?: Record<string, 'existing' | 'incoming'>;
   idMap?: Record<string, string>; confirmationHash?: string;
+  onStage?: (stage: ImportWorkStep | 'commit') => void;
 }
 export interface ImportPreview { conflicts: ImportConflict[]; pendingChanges: number; target?: ProjectData; additions: number; mappedPlan?: CrossProjectImportPlan; mappedRecovery?: PortableRecovery; confirmationHash?: string }
 export interface RecoveredPendingIntent { key: string; projectId: string; importOperationId: string; sequence: number; operation: PortableRecovery['pending'][number]; status: 'needs_reconnect' }
@@ -538,7 +541,7 @@ export class ScenarioStore {
     const history: CommandRecord[] = [];
     // A checkpoint can materialize entirely in memory, with no pending IDB
     // request. Keep its native read transaction alive until all history is ready.
-    if(commands.length)await Dexie.waitFor((async()=>{for (const row of commands) history.push(await this.materializeCommand(row!, commandRows, ready));})());
+    if(commands.length)await Dexie.waitFor((async()=>{for (const row of commands) { checkCancelled(signal); history.push(await this.materializeCommand(row!, commandRows, ready)); }})());
     const hydrateStarted=timing?performance.now():undefined;
     const consumedBlockIds = new Set<string>();
     const hydrated=entities.map(row => hydrateBlocks(row!.record, blocks, consumedBlockIds));
@@ -548,21 +551,29 @@ export class ScenarioStore {
       history, views: views.map(row => { const { projectId: _projectId, ...view } = row!; return view; }) } };
   }
 
-  async getProject(projectId: string): Promise<ProjectData | undefined> {
+  async getProject(projectId: string, options: {signal?: AbortSignal} = {}): Promise<ProjectData | undefined> {
+    const signal = options.signal;
     try {
+      checkCancelled(signal);
       const readEpoch = { project: this.cacheEpochs.get(projectId) ?? 0, lifetime: this.cacheLifetime };
       const read = await this.db.transaction('r', this.writeTables, async () => {
+        bindRecordPartsSignal(signal); checkCancelled(signal);
         const header = await this.db.projects.get(projectId), cached = this.cachedProjects.get(projectId);
         if (!header) return undefined;
-        return cached?.revision === header.revision && this.completeHistories.has(projectId) && sameJson(this.cachedHistoryIds.get(projectId), header.historyIds) ? { project: cached, historyIds: header.historyIds, contentHeadOperationId: header.contentHeadOperationId } : this.readProject(projectId,true,undefined,header);
+        return cached?.revision === header.revision && this.completeHistories.has(projectId) && sameJson(this.cachedHistoryIds.get(projectId), header.historyIds) ? { project: cached, historyIds: header.historyIds, contentHeadOperationId: header.contentHeadOperationId } : this.readProject(projectId,true,undefined,header,signal);
       });
+      checkCancelled(signal);
       if (!read) return undefined;
       let { project } = read;
       if (project !== this.cachedProjects.get(projectId)) {
-        const worlds = await this.validationWorlds();
-        validated(project, worldSnapshotContents(worlds)); verifyWorlds([project], worlds); await verifySnapshotHashes([project]); await validateDurableIntegrity(project, worldSnapshotContents(worlds));
+        const knownWorlds = await this.validationWorlds(), worlds = worldSnapshotContents(knownWorlds);
+        // Unlike the current-only editing validator, these checks retain every
+        // historical command and require its original full integrity contract.
+        for (const step of ['structure', 'worlds', 'hashes', 'integrity'] as const) await performImportWork({step, project, worlds, knownWorlds}, {signal});
+        checkCancelled(signal);
         project = this.rememberProject(project, read.contentHeadOperationId, read.historyIds, readEpoch);
       }
+      checkCancelled(signal);
       return projectCopy(project);
     }
     catch (error) { throw saveError(error); }
@@ -720,12 +731,12 @@ export class ScenarioStore {
   }
 
   async saveProject(input: ProjectData, options: SaveOptions): Promise<SaveResult> {
-    const started = performance.now(),diagnosticOperationId=options.operationId??newId();
+    const started = performance.now(),diagnosticOperationId=options.operationId??newId(), signal=options.signal;
     let mark = started;
     const milliseconds: SaveMetrics['milliseconds'] = { prepare: 0, hash: 0, read: 0, reconcile: 0, validate: 0, diff: 0, database: 0, total: 0 };
     const measure = (stage: keyof SaveMetrics['milliseconds']) => { const time = performance.now(); milliseconds[stage] += time - mark; mark = time; };
     try {
-      checkCancelled(options.signal);
+      checkCancelled(signal);
       const draft = captureRequestProject(input), operationId = diagnosticOperationId, now = new Date().toISOString();
       if(this.authorAccess&&await this.db.syncBases.get(draft.projectId)&&this.authorAccess.get(draft.projectId)!=='owner')throw new SyncProtocolError('FORBIDDEN');
       const assets = await this.checkedAssets(options.assets);
@@ -736,7 +747,7 @@ export class ScenarioStore {
       const cachedBefore = this.cachedProjects.get(draft.projectId);
       const currentHeader = await this.db.projects.get(draft.projectId);
       if (currentHeader && (cachedBefore?.revision !== currentHeader.revision || !sameJson(this.cachedHistoryIds.get(draft.projectId), currentHeader.historyIds) || !editingHistory && !this.completeHistories.has(draft.projectId))) {
-        if (editingHistory) await this.getProjectForEditing(draft.projectId); else await this.getProject(draft.projectId);
+        if (editingHistory) await this.getProjectForEditing(draft.projectId, {signal}); else await this.getProject(draft.projectId, {signal});
       }
       const previous = currentHeader ? this.cachedProjects.get(draft.projectId) : undefined;
       const knownWorlds = await this.validationWorlds();
@@ -751,7 +762,7 @@ export class ScenarioStore {
       if (!sameJson(expectedHistoryIds, suppliedHistoryIds) || !editingHistory && (expectedHistory.length !== draft.history.length || expectedHistory.some((command, index) => !sameJson(command, draft.history[index])))) throw new StorageError('OPERATION_CONFLICT', '履歴は保存コマンドからのみ追加できます。');
       const requestHash = await sha256(jsonBytes({ draft: duplicate && !duplicate.requestHashVersion ? draft : withoutHistory(draft), ...(duplicate && !duplicate.requestHashVersion ? {} : { historyIds: suppliedHistoryIds }), reason: options.reason, assets: (options.assets ?? []).map(asset => ({ contentHash: asset.contentHash, mediaType: asset.mediaType, path: asset.assetPath ?? null })), compensatesOperationId: options.compensatesOperationId ?? null, ...(options.worldPin ? { worldPins: pinnedWorlds } : {}) }));
       measure('hash');
-      if (duplicate) return this.duplicateResult(duplicate, requestHash, draft.projectId);
+      if (duplicate) return this.duplicateResult(duplicate, requestHash, draft.projectId, signal);
       if (!previous && draft.history.length) throw new StorageError('OPERATION_CONFLICT', '既存履歴の復元には専用読み込みを使用してください。');
       if (!ID_PATTERN.test(operationId) || options.compensatesOperationId && !ID_PATTERN.test(options.compensatesOperationId)) throw new StorageError('VALIDATION_FAILED', '操作IDは安定したUUIDで指定してください。');
       if (typeof options.reason !== 'string' || !options.reason.trim() || new TextEncoder().encode(options.reason).byteLength > 1024 * 1024) throw new StorageError('VALIDATION_FAILED', '変更の理由を1 MiB以内で指定してください。');
@@ -789,12 +800,15 @@ export class ScenarioStore {
       const storedCommand: StoredCommand = { operationId, projectId: candidate.projectId, revision: candidate.revision, requestHash, requestHashVersion: 2, delta: { metadata, ...(checkpoint ? { checkpoint: before } : { parentOperationId }), patch: contentDelta(before, after) } };
       let written: SaveMetrics['written'] = { entities: 0, relations: 0, blocks: 0, snapshots: 0, views: 0, commands: 1, outbox: 1 };
       measure('diff');
-      const result = await this.db.transaction('rw', this.writeTables, async () => {
-        bindRecordPartsSignal(options.signal);
-        checkCancelled(options.signal);
+      const committed = await this.db.transaction('rw', this.writeTables, async () => {
+        bindRecordPartsSignal(signal);
+        checkCancelled(signal);
         if(this.authorAccess&&await this.db.syncBases.get(candidate.projectId)&&this.authorAccess.get(candidate.projectId)!=='owner')throw new SyncProtocolError('FORBIDDEN');
         const replay = await this.db.commands.get(operationId);
-        if (replay) return this.duplicateResult(replay, requestHash, candidate.projectId);
+        // Read an already committed result after this native transaction ends.
+        // Its full-history validation may wait for a Worker and must not close
+        // an active write transaction before the save promise completes.
+        if (replay) return {kind: 'replay' as const, command: replay};
         const header = await this.db.projects.get(candidate.projectId);
         if (previous ? !header || header.revision !== previous.revision : !!header) throw new StorageError('REVISION_CONFLICT', '保存中に現在版が変わりました。変更を比較して再試行してください。', candidate.projectId);
         if (Object.keys(pinnedWorlds).length || addedSnapshots.length) await this.guardWorldRegistry([candidate, ...Object.values(pinnedWorlds)]);
@@ -814,9 +828,10 @@ export class ScenarioStore {
         await this.db.outbox.add({ operationId, projectId: candidate.projectId, accountId: this.accountId, baseRevision: metadata?.serverRevision ?? '0', localRevision: candidate.revision, createdAt: now, targetIds: command.targetIds, changes: changes.map(({ before, after, ...change }) => ({ ...change, ...(before === null ? { before: null } : {}), ...(after === null ? { after: null } : {}) })), commandOperationId: operationId });
         await this.db.syncMetadata.put({ projectId: candidate.projectId, serverRevision: metadata?.serverRevision ?? '0', state: 'pending' });
         this.faultInjector?.('after-outbox');
-        checkCancelled(options.signal); this.faultInjector?.('before-commit');
-        return { project: candidate, operationId, localSaved: true as const, pendingSync: true as const };
+        checkCancelled(signal); this.faultInjector?.('before-commit');
+        return {kind: 'saved' as const, result: { project: candidate, operationId, localSaved: true as const, pendingSync: true as const }};
       });
+      const result = committed.kind === 'replay' ? await this.duplicateResult(committed.command, requestHash, candidate.projectId, signal) : committed.result;
       measure('database'); milliseconds.total = performance.now() - started;
       commandCommitted(options.measurementStartedAt, operationId,milliseconds);
       if (result.project === candidate) this.rememberProject(candidate, operationId, historyIds);
@@ -831,9 +846,9 @@ export class ScenarioStore {
     } catch (error) { const failure=saveError(error);recordDiagnostic(failure,{accountId:this.accountId,operationId:diagnosticOperationId,revision:input.revision});throw failure; }
   }
 
-  private async duplicateResult(command: StoredCommand, hash: string, projectId: string): Promise<SaveResult> {
+  private async duplicateResult(command: StoredCommand, hash: string, projectId: string, signal?: AbortSignal): Promise<SaveResult> {
     if (command.projectId !== projectId || command.requestHash !== hash) throw new StorageError('OPERATION_CONFLICT', '同じ操作IDが異なる変更に使われています。', command.operationId);
-    const project = await this.getProject(projectId);
+    const project = await this.getProject(projectId, {signal});
     if (!project) throw new StorageError('NOT_FOUND', '作品が見つかりません。', projectId);
     const record = project.history.find(record => record.operationId === command.operationId) ?? await this.materializeCommand(command);
     return { project: { ...copy(record.after), history: project.history.filter(record => BigInt(record.revision) <= BigInt(command.revision)) }, operationId: command.operationId, localSaved: true, pendingSync: !!(await this.db.outbox.get(command.operationId)) };
@@ -1157,14 +1172,16 @@ export class ScenarioStore {
 
   async previewImport(preparedInput: PreparedScenario, optionsInput: ImportOptions): Promise<ImportPreview> {
     const prepared = copy(preparedInput), options = { ...optionsInput, idMap: optionsInput.idMap ? copy(optionsInput.idMap) : undefined, resolutions: optionsInput.resolutions ? copy(optionsInput.resolutions) : undefined };
-    const incoming = prepared.project, targetId = options.targetProjectId ?? incoming.projectId, target = await this.getProject(targetId);
+    checkCancelled(options.signal);
+    const incoming = prepared.project, targetId = options.targetProjectId ?? incoming.projectId, target = await this.getProject(targetId, {signal: options.signal});
     const pendingChanges = target ? (await this.listOutbox(targetId)).length : 0;
+    checkCancelled(options.signal);
     if (options.mode === 'new') return { conflicts: target ? [{ id: targetId, kind: 'project', existing: target, incoming }] : [], pendingChanges, target, additions: incoming.entities.length + incoming.relations.length };
     if (options.mode === 'clone') return { conflicts: [], pendingChanges: 0, additions: incoming.entities.length + incoming.relations.length };
     if (!target) throw new StorageError('NOT_FOUND', '置換・統合する既存作品が見つかりません。', targetId);
     if (options.mode === 'mapped_merge') {
       if (!options.idMap) throw new StorageError('IMPORT_CONFLICT', '別作品の統合には全IDの明示対応表が必要です。');
-      const mappedPlan = await planCrossProjectImport({ ...prepared, project: projectWithRecoveryHistory(prepared.project, prepared.recovery) }, target, { idMap: options.idMap, resolutions: options.resolutions, knownWorlds: await this.validationWorlds(prepared.worlds), loadAsset: hash => this.getAsset(hash), signal: options.signal });
+      const mappedPlan = (await performImportWork({step: 'mapped_plan', project: incoming, worlds: {}, target, idMap: options.idMap, resolutions: options.resolutions, mapped: {source: prepared, knownWorlds: await this.validationWorlds(prepared.worlds)}}, {signal: options.signal, loadAsset: hash => this.getAsset(hash)})).mappedPlan!;
       const mappedRecovery = prepared.recovery ? await mappedPortableRecovery(prepared.recovery, mappedPlan.mappedProject, mappedPlan.idMap, options.signal) : undefined;
       const historyIds = new Set(prepared.project.history.map(command => mappedPlan.idMap[command.operationId]));
       mappedPlan.mappedProject.history = mappedPlan.mappedProject.history.filter(command => historyIds.has(command.operationId));
@@ -1172,7 +1189,7 @@ export class ScenarioStore {
       return { conflicts: mappedPlan.conflicts, pendingChanges, target, additions: mappedPlan.changes.filter(change => change.action === 'add').length, mappedPlan, mappedRecovery, confirmationHash };
     }
     if (targetId !== incoming.projectId) throw new StorageError('IMPORT_CONFLICT', '置換・統合は同じprojectIdが必要です。別の作品には複製して追加してください。', targetId);
-    const conflicts = mergeConflicts(target, incoming);
+    const conflicts = (await performImportWork({step: 'merge_conflicts', project: incoming, worlds: {}, target}, {signal: options.signal})).conflicts!;
     const ids = new Set([...target.entities, ...target.relations].map(item => item.id));
     return { conflicts, pendingChanges, target, additions: [...incoming.entities, ...incoming.relations].filter(item => !ids.has(item.id)).length };
   }
@@ -1253,8 +1270,13 @@ export class ScenarioStore {
       if (!['new', 'clone', 'replace', 'merge', 'mapped_merge'].includes(options.mode)) throw new StorageError('FORMAT_UNSUPPORTED', '読み込みモードが未対応です。');
       const prepared = copy(preparedInput), operationId = options.operationId ?? newId();
       const knownWorlds = await this.validationWorlds(prepared.worlds), worldContents = worldSnapshotContents(knownWorlds);
-      prepared.project = validated(prepared.project, worldContents);
-      if (prepared.recovery) prepared.recovery = await validateRecovery(prepared.recovery, prepared.project, worldContents, options.signal);
+      const work = (step: ImportWorkStep, project: ProjectData, extra: {recovery?: PortableRecovery; syncRecovery?: NativeSyncRecovery[]; idMap?: Record<string, string>; target?: ProjectData; resolutions?: Record<string, 'existing' | 'incoming'>} = {}) => {
+        options.onStage?.(step);
+        return performImportWork({step, project, worlds: worldContents, ...extra}, {signal: options.signal});
+      };
+      prepared.project = (await work('structure', prepared.project)).project!;
+      if (prepared.recovery) prepared.recovery = (await work('recovery', prepared.project, {recovery: prepared.recovery})).recovery!;
+      await work('ids', prepared.project, {recovery: prepared.recovery});
       verifyWorlds([prepared.project, ...Object.values(prepared.worlds)], knownWorlds);
       if (prepared.manifest.projectId !== prepared.project.projectId) throw new StorageError('VALIDATION_FAILED', '読み込み候補とmanifestの作品IDが一致しません。');
       const preview = await this.previewImport(prepared, options);
@@ -1269,12 +1291,12 @@ export class ScenarioStore {
         recovery = preview.mappedRecovery;
       }
       if (options.mode === 'clone') {
-        const cloned = await cloneProject(projectWithRecoveryHistory(project, recovery)); idMap = cloned.idMap;
+        const cloned = (await work('clone', project, {recovery})).cloned!; idMap = cloned.idMap;
         recovery = recovery ? await mappedPortableRecovery(recovery, cloned.project, idMap, options.signal) : undefined;
         const historyIds = new Set(project.history.map(command => idMap![command.operationId]));
         project = { ...cloned.project, history: cloned.project.history.filter(command => historyIds.has(command.operationId)) };
       }
-      if (options.mode === 'merge') project = mergeProjects(preview.target!, project, options.resolutions ?? {});
+      if (options.mode === 'merge') project = (await work('merge', project, {target: preview.target!, resolutions: options.resolutions})).project!;
       if (options.mode === 'replace') {
         const snapshots = new Map(project.snapshots.map(item => [item.id, item]));
         for (const existing of preview.target!.snapshots) {
@@ -1288,13 +1310,16 @@ export class ScenarioStore {
       }
       const assetInputs = prepared.assets.map(asset => ({ contentHash: asset.contentHash, bytes: asset.bytes, mediaType: asset.mediaType, assetPath: asset.path }));
       const assets = await this.checkedAssets(assetInputs);
-      await verifySnapshotHashes([project]);
-      await validateDurableIntegrity(project, worldContents);
-      const worlds = Object.entries(prepared.worlds).map(([id, world]) => ({ id, project: validated(world, worldContents) }));
+      await work('hashes', project);
+      await work('integrity', project);
+      const worlds: {id: string; project: ProjectData}[] = [];
+      for (const [id, world] of Object.entries(prepared.worlds)) worlds.push({id, project: (await work('structure', world)).project!});
       const now = new Date().toISOString(), before = preview.target ? withoutHistory(preview.target) : blankBefore(project);
       let command: CommandRecord;
       if (preview.target) {
-        project = { ...project, revision: increment(preview.target.revision), history: combineHistories(preview.target.history, (preview.mappedPlan?.mappedProject.history ?? prepared.project.history).map((record, index) => options.mode === 'mapped_merge' ? { ...record, importOrigin: record.importOrigin ?? { sourceProjectId: prepared.project.projectId, sourceOperationId: prepared.project.history[index].operationId, importOperationId: operationId } } : record)) };
+        const incomingHistory = (preview.mappedPlan?.mappedProject.history ?? prepared.project.history).map((record, index) => options.mode === 'mapped_merge' ? { ...record, importOrigin: record.importOrigin ?? { sourceProjectId: prepared.project.projectId, sourceOperationId: prepared.project.history[index].operationId, importOperationId: operationId } } : record);
+        const history = (await work('combine_history', {...project, history: incomingHistory}, {target: preview.target})).history!;
+        project = { ...project, revision: increment(preview.target.revision), history };
         project.entities = normalizeRecords(preview.target.entities, project.entities, operationId, now);
         project.relations = normalizeRecords(preview.target.relations, project.relations, operationId, now);
         protectSnapshots(preview.target, project);
@@ -1303,26 +1328,26 @@ export class ScenarioStore {
       } else if (options.mode === 'clone') {
         project = { ...project, revision: increment(project.revision) };
       }
-      project = validated(project, worldContents);
+      project = (await work('structure', project)).project!;
       const changes = await targetChanges(before, withoutHistory(project), !preview.target);
       command = { operationId, projectId: project.projectId, baseRevision: preview.target?.revision ?? '0', revision: project.revision, targetIds: changes.map(change => change.targetId), createdAt: now, reason: `専用ファイルを${options.mode}で復元`, before: copy(before), after: copy(withoutHistory(project)), ...(idMap ? { idMap } : {}) };
       if (preview.target || options.mode === 'clone') project.history = [...project.history, command];
       if (recovery) {
-        const history = new Map(project.history.map(record => [record.operationId, record]));
-        const pending: PortableRecovery['pending'] = [];
-        for (const item of recovery.pending) {
-          checkCancelled(options.signal);
-          const retainedCommand = history.get(item.operationId) ?? item.command;
-          pending.push({ ...item, command: retainedCommand, commandHash: await sha256(jsonBytes(retainedCommand)) });
-        }
-        recovery = { ...recovery, projectId: project.projectId, sourceRevision: project.revision, pending };
+        recovery = (await work('rehash_recovery', project, {recovery})).recovery!;
       }
-      project = validated(project, worldContents);
-      await validateDurableIntegrity(project, worldContents);
-      if (recovery) recovery = await validateRecovery({ ...recovery, projectId: project.projectId, sourceRevision: project.revision }, project, worldContents, options.signal);
-      const syncRecovery=prepared.syncRecovery?await validateSyncRecovery(prepared.syncRecovery,worldContents,options.signal):[];
+      project = (await work('structure', project)).project!;
+      await work('integrity', project);
+      if (recovery) recovery = (await work('recovery', project, {recovery: {...recovery, projectId: project.projectId, sourceRevision: project.revision}})).recovery!;
+      const syncRecovery=prepared.syncRecovery?(await work('sync_recovery', project, {syncRecovery: prepared.syncRecovery})).syncRecovery!:[];
+      // Worker messages preserve graph identity but not freeze/realm-local
+      // registration. Clone already separates its editable current image.
+      if (options.mode === 'clone') {
+        freeze(project.history);
+        for (const snapshot of project.snapshots) freeze(snapshot);
+      }
       // New recovery retains the original content revisions/history; the local import audit is separate.
       const point: RestorePoint | undefined = preview.target ? { id: newId(), projectId: preview.target.projectId, createdAt: now, reason: `専用ファイル${options.mode}の前の復元点`, project: preview.target, assetHashes: attachmentMetadata(preview.target).map(item => item.contentHash) } : undefined;
+      options.onStage?.('commit');
       const result = await this.db.transaction('rw', this.writeTables, async () => {
         bindRecordPartsSignal(options.signal);
         checkCancelled(options.signal);
@@ -1368,14 +1393,7 @@ export class ScenarioStore {
 function equalBytes(left: Uint8Array, right: Uint8Array): boolean { return left.byteLength === right.byteLength && left.every((byte, index) => byte === right[index]); }
 
 async function mappedPortableRecovery(recovery: PortableRecovery, mapped: ProjectData, idMap: Record<string, string>, signal?: AbortSignal): Promise<PortableRecovery> {
-  const history = new Map(mapped.history.map(record => [record.operationId, record])), pending: PortableRecovery['pending'] = [];
-  for (const item of recovery.pending) {
-    checkCancelled(signal);
-    const operationId = idMap[item.operationId], command = history.get(operationId);
-    if (!operationId || !command) throw new StorageError('IMPORT_CONFLICT', '復元する送信待ち操作の明示ID対応が不足しています。', item.operationId);
-    pending.push({ operationId, command, commandHash: await sha256(jsonBytes(command)), origin: item.origin ?? { projectId: recovery.projectId, operationId: item.operationId, serverRevision: recovery.serverRevision } });
-  }
-  return { ...recovery, projectId: mapped.projectId, sourceRevision: mapped.revision, pending };
+  return (await performImportWork({step: 'map_recovery', project: mapped, worlds: {}, recovery, idMap}, {signal})).recovery!;
 }
 
 function preservePublishedVersions(candidate: ProjectData, current: ProjectData): ProjectData {
@@ -1388,16 +1406,6 @@ function preservePublishedVersions(candidate: ProjectData, current: ProjectData)
   const ids = new Set(candidate.entities.map(entity => entity.id));
   for (const [id, entity] of published) if (!ids.has(id)) candidate.entities.push(copy(entity));
   return candidate;
-}
-
-function combineHistories(existing: CommandRecord[], incoming: CommandRecord[]): CommandRecord[] {
-  const operations = new Map(existing.map(command => [command.operationId, command]));
-  for (const command of incoming) {
-    const previous = operations.get(command.operationId);
-    if (previous && !equalJson(previous, command)) throw new StorageError('IMPORT_CONFLICT', '同じ操作IDに異なる履歴があります。', command.operationId);
-    if (!previous) operations.set(command.operationId, copy(command));
-  }
-  return [...operations.values()];
 }
 
 function compensate(current: ProjectData, command: CommandRecord): ProjectData {
@@ -1423,213 +1431,16 @@ function compensate(current: ProjectData, command: CommandRecord): ProjectData {
   return next;
 }
 
-export async function cloneProject(input: ProjectData): Promise<{ project: ProjectData; idMap: Record<string, string> }> {
-  const idMap: Record<string, string> = { [input.projectId]: newId() };
-  const declarations = new WeakSet<object>();
-  const collect = (value: unknown) => {
-    if (!value || typeof value !== 'object' || declarations.has(value)) return;
-    declarations.add(value);
-    if (Array.isArray(value)) return value.forEach(collect);
-    for (const [key, item] of Object.entries(value)) {
-      if (['id', 'operationId', 'instanceId', 'deletionOperationId'].includes(key) && typeof item === 'string' && /^[0-9a-f-]{36}$/.test(item)) idMap[item] ??= newId();
-      if (key === 'bindings' && item && typeof item === 'object' && !Array.isArray(item)) for (const id of Object.values(item)) if (typeof id === 'string' && /^[0-9a-f-]{36}$/.test(id)) idMap[id] ??= newId();
-      collect(item);
-    }
-  };
-  collect(input);
-  const originalEntities = new Map<string, Entity>(), originalRelations = new Map<string, Relation>();
-  const owners = new WeakSet<object>();
-  const collectOwners = (value: unknown) => {
-    if (!value || typeof value !== 'object' || owners.has(value)) return;
-    owners.add(value);
-    // Reverse the traversal and keep the first owner, preserving the original
-    // last-occurrence choice without revisiting every shared historic subtree.
-    if (Array.isArray(value)) { for (let index=value.length-1;index>=0;index--) collectOwners(value[index]); return; }
-    const record = value as Record<string, unknown>;
-    const children=Object.values(record);for (let index=children.length-1;index>=0;index--) collectOwners(children[index]);
-    if (typeof record.id === 'string' && 'kind' in record && 'data' in record && 'projectId' in record && !originalEntities.has(record.id)) originalEntities.set(record.id, record as unknown as Entity);
-    if (typeof record.id === 'string' && 'relationType' in record && 'fromId' in record && 'toId' in record && !originalRelations.has(record.id)) originalRelations.set(record.id, record as unknown as Relation);
-  };
-  collectOwners(input);
-  const readPath = (value: unknown, path: string[]): unknown => path.reduce<unknown>((current, segment) => current && typeof current === 'object' ? (current as Record<string, unknown>)[segment] : undefined, value);
-  const writePath = (value: Record<string, unknown>, path: string[], item: unknown): void => {
-    let cursor = value;
-    for (const segment of path.slice(0, -1)) {
-      if (!cursor[segment] || typeof cursor[segment] !== 'object') cursor[segment] = {};
-      cursor = cursor[segment] as Record<string, unknown>;
-    }
-    if (path.length) cursor[path[path.length - 1]!] = structuredClone(item);
-  };
-  const rewriteDeclarations = (value: unknown): void => {
-    if (Array.isArray(value)) { value.forEach(rewriteDeclarations); return; }
-    if (!value || typeof value !== 'object') return;
-    const record = value as Record<string, unknown>;
-    if (typeof record.id === 'string') record.id = idMap[record.id] ?? record.id;
-    if (typeof record.instanceId === 'string' && 'quantity' in record && 'consumed' in record) record.instanceId = idMap[record.instanceId] ?? record.instanceId;
-    if (record.mode === 'anonymize' && typeof record.publicId === 'string') record.publicId = idMap[record.publicId] ?? record.publicId;
-    if (record.publicIds && typeof record.publicIds === 'object') for (const [key, id] of Object.entries(record.publicIds)) if (typeof id === 'string') (record.publicIds as Record<string, string>)[key] = idMap[id] ?? id;
-    for (const item of Object.values(record)) rewriteDeclarations(item);
-  };
-  const rewrittenValues = new WeakMap<object, Map<string, unknown>>();
-  const rewrite = (value: unknown, key = '', parent?: Record<string, unknown>): unknown => {
-    if (!value || typeof value !== 'object') return rewriteValue(value,key,parent);
-    // Dictionary keys, paths and ref-valued arrays have different contracts.
-    // Share only occurrences rewritten under the same interpretation.
-    let context=key;
-    if (Array.isArray(value)) {
-      if (key==='value') context+=parent?.type==='ref'?':ref':':literal';
-      if (key==='key' && parent && typeof parent.scope==='string' && Array.isArray(parent.path)) context+=canonicalJson([parent.scope,parent.itemId??null,parent.path]);
-      if (key==='publicId') context+=parent && typeof parent.entityId==='string' && typeof parent.sourceVersionId==='string'?':citation':':local';
-    }
-    const cache=rewrittenValues.get(value)??new Map<string,unknown>();
-    if (cache.has(context)) return cache.get(context);
-    const result=rewriteValue(value,key,parent);cache.set(context,result);rewrittenValues.set(value,cache);return result;
-  };
-  const rewriteValue = (value: unknown, key = '', parent?: Record<string, unknown>): unknown => {
-    if (typeof value === 'string') {
-      if (key === 'onceTriggers') return value.replace(/[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/g, id => idMap[id] ?? id);
-      if (key === 'key' && parent && typeof parent.scope === 'string' && Array.isArray(parent.path)) return [parent.scope, typeof parent.itemId === 'string' ? idMap[parent.itemId] ?? parent.itemId : '', ...parent.path.map(part => String(part))].map(part => encodeURIComponent(part)).join(':');
-      if(key==='publicId'&&parent&&typeof parent.entityId==='string'&&typeof parent.sourceVersionId==='string')return value;
-      return (/(?:Id|Ids)$/.test(key) || ['id', 'operationId'].includes(key) || key === 'value' && parent?.type === 'ref') && idMap[value] ? idMap[value] : value;
-    }
-    if (key === 'importOrigin' && value && typeof value === 'object') { const origin = value as NonNullable<CommandRecord['importOrigin']>; return { ...origin, importOperationId: idMap[origin.importOperationId] ?? origin.importOperationId }; }
-    if (key === 'path' && Array.isArray(value)) return [...value];
-    if (key === 'assignments' && value && typeof value === 'object' && !Array.isArray(value)) return Object.fromEntries(Object.entries(value as Record<string, unknown>).map(([beat, sceneId]) => [beat, typeof sceneId === 'string' ? idMap[sceneId] ?? sceneId : sceneId]));
-    if (Array.isArray(value)) return value.map(item => rewrite(item, key, parent));
-    if (value && typeof value === 'object') {
-      const source = value as Record<string, unknown>;
-      if (['entity', 'relation', 'project', 'presentation'].includes(String(source.scope)) && Array.isArray(source.path) && source.before && source.after && 'present' in (source.before as object) && 'present' in (source.after as object)) {
-        const scope = String(source.scope), path = source.path as string[], oldItemId = typeof source.itemId === 'string' ? source.itemId : undefined;
-        const itemId = oldItemId ? idMap[oldItemId] ?? oldItemId : undefined;
-        const mappedPath = [...path];
-        const remapValue = (raw: unknown): unknown => {
-          if (scope === 'entity' && oldItemId && originalEntities.has(oldItemId) && path.length) {
-            const owner = structuredClone(originalEntities.get(oldItemId)!);
-            writePath(owner as unknown as Record<string, unknown>, path, raw);
-            const rewrittenOwner = rewriteEntityReferences(owner, idMap);
-            rewrittenOwner.id = idMap[owner.id] ?? owner.id; rewrittenOwner.projectId = idMap[owner.projectId] ?? owner.projectId;
-            if (rewrittenOwner.deletionOperationId) rewrittenOwner.deletionOperationId = idMap[rewrittenOwner.deletionOperationId] ?? rewrittenOwner.deletionOperationId;
-            rewriteDeclarations(rewrittenOwner.data);
-            return readPath(rewrittenOwner, path);
-          }
-          if (scope === 'relation' && oldItemId && originalRelations.has(oldItemId) && path.length) {
-            const owner = structuredClone(originalRelations.get(oldItemId)!);
-            writePath(owner as unknown as Record<string, unknown>, path, raw);
-            const rewrittenOwner = rewriteRelationReferences(owner, idMap);
-            rewrittenOwner.id = idMap[owner.id] ?? owner.id; rewrittenOwner.projectId = idMap[owner.projectId] ?? owner.projectId;
-            return readPath(rewrittenOwner, path);
-          }
-          if (scope === 'project' && path[0] === 'worldReferences') return structuredClone(raw);
-          if (scope === 'presentation' && raw && typeof raw === 'object' && !Array.isArray(raw)) {
-            const presentation = structuredClone(raw) as Record<string, unknown>;
-            if (Array.isArray(presentation.chapterOrder)) presentation.chapterOrder = presentation.chapterOrder.map(id => typeof id === 'string' ? idMap[id] ?? id : id);
-            return rewrite(presentation);
-          }
-          const leaf = path.at(-1) ?? '';
-          return rewrite(raw, leaf);
-        };
-        const remapSide = (side: unknown) => {
-          const snapshot = structuredClone(side) as Record<string, unknown>;
-          if (snapshot.present === true) snapshot.value = remapValue(snapshot.value);
-          return snapshot;
-        };
-        const patch: Record<string, unknown> = { ...source, ...(itemId ? { itemId } : {}), path: mappedPath, before: remapSide(source.before), after: remapSide(source.after) };
-        patch.key = [scope, itemId ?? '', ...mappedPath].map(part => encodeURIComponent(part)).join(':');
-        return patch;
-      }
-      const keyedByReference = ['variableValues', 'visitCounts', 'publicTexts', 'publicIds', 'byEntityId', 'bindings'].includes(key);
-      const rewritten = Object.fromEntries(Object.entries(value).map(([name, item]) => [keyedByReference ? idMap[name] ?? name : name, ['idMap', 'bindings'].includes(key) && typeof item === 'string' ? idMap[item] ?? item : rewrite(item, name, value as Record<string, unknown>)]));
-      if ('kind' in rewritten && 'data' in rewritten && 'projectId' in rewritten) return rewriteEntityReferences(rewritten as Entity, idMap);
-      if ('relationType' in rewritten && 'fromId' in rewritten && 'toId' in rewritten) return rewriteRelationReferences(rewritten as unknown as Relation, idMap);
-      if (Array.isArray(rewritten.patches) && Array.isArray(rewritten.selectedChangeKeys)) rewritten.selectedChangeKeys = rewritten.patches.map((patch: { key: string }) => patch.key).sort();
-      return rewritten;
-    }
-    return value;
-  };
-  const project = rewrite(input) as ProjectData;
-  const snapshots = new Map<string, Array<Record<string, unknown>>>();
-  const collectedSnapshots = new WeakSet<object>();
-  const collectSnapshots = (value: unknown): void => {
-    if (!value || typeof value !== 'object' || collectedSnapshots.has(value)) return;
-    collectedSnapshots.add(value);
-    if (Array.isArray(value)) { value.forEach(collectSnapshots); return; }
-    const record = value as Record<string, unknown>;
-    if (typeof record.id === 'string' && record.content && typeof record.content === 'object' && 'versionLabel' in record && 'contentHash' in record) {
-      const copies = snapshots.get(record.id) ?? []; copies.push(record); snapshots.set(record.id, copies);
-    }
-    Object.values(record).forEach(collectSnapshots);
-  };
-  collectSnapshots(project);
-  const snapshotHashes = new Map<string, string>(), activeSnapshots = new Set<string>();
-  const hashSnapshot = async (id: string): Promise<string> => {
-    const cached = snapshotHashes.get(id); if (cached) return cached;
-    const copies = snapshots.get(id); if (!copies?.length) throw new StorageError('HASH_MISMATCH', '参照したsnapshotがclone後に見つかりません。', id);
-    if (activeSnapshots.has(id)) throw new StorageError('HASH_MISMATCH', 'snapshotの内容hashに循環があります。', id);
-    activeSnapshots.add(id);
-    for (const copy of copies) {
-      const content = copy.content as ProjectContent;
-      for (const entity of content.entities) if (entity.kind === 'snapshot' && snapshots.has(entity.id)) entity.data.contentHash = await hashSnapshot(entity.id);
-    }
-    const hash = await sha256(jsonBytes(copies[0]!.content));
-    for (const copy of copies) copy.contentHash = hash;
-    snapshotHashes.set(id, hash); activeSnapshots.delete(id); return hash;
-  };
-  for (const id of snapshots.keys()) await hashSnapshot(id);
-  const refreshedSnapshots = new WeakSet<object>();
-  const refreshSnapshotReferences = (value: unknown): void => {
-    if (!value || typeof value !== 'object' || refreshedSnapshots.has(value)) return;
-    refreshedSnapshots.add(value);
-    if (Array.isArray(value)) { value.forEach(refreshSnapshotReferences); return; }
-    const record = value as Record<string, unknown>;
-    if (record.kind === 'snapshot' && typeof record.id === 'string' && record.data && typeof record.data === 'object') {
-      const contentHash = snapshotHashes.get(record.id);
-      if (contentHash) (record.data as Record<string, unknown>).contentHash = contentHash;
-    }
-    Object.values(record).forEach(refreshSnapshotReferences);
-  };
-  refreshSnapshotReferences(project);
-  const resealed = new Set<object>();
-  const resealRetainedBranches = async (value: unknown): Promise<void> => {
-    if (!value || typeof value !== 'object' || resealed.has(value)) return;
-    resealed.add(value);
-    if (Array.isArray(value)) { for (const item of value) await resealRetainedBranches(item); return; }
-    const record = value as Record<string, unknown>;
-    if (Array.isArray(record.authorAlternatives)) record.authorAlternatives = await Promise.all((record.authorAlternatives as ProjectData['authorAlternatives'] ?? []).map(sealAuthorAlternative));
-    for (const item of Object.values(record)) await resealRetainedBranches(item);
-  };
-  await resealRetainedBranches(project);
-  // The current image is independently editable; only immutable historic
-  // values may share bodies. Never share a clone with its original input.
-  const {history:_history,snapshots:_snapshots,authorAlternatives:_alternatives,...current}=project;
-  const result={...project,...copy(current)};freeze(result.history);
-  for (const snapshot of result.snapshots) freeze(snapshot);
-  return { project:result, idMap };
+
+export async function cloneProject(input: ProjectData): Promise<{project: ProjectData; idMap: Record<string, string>}> {
+  const result = await clonePrivateProject(input);
+  freeze(result.project.history);
+  for (const snapshot of result.project.snapshots) freeze(snapshot);
+  return result;
 }
 
 export function mergeConflicts(existing: ProjectData, incoming: ProjectData): ImportConflict[] {
-  const conflicts: ImportConflict[] = [];
-  for (const field of ['name', 'calendarId', 'mainStart', 'calendars', 'worldReferences'] as const) if (!equalJson(existing[field], incoming[field])) conflicts.push({ id: `project.${field}`, kind: 'project', existing: existing[field], incoming: incoming[field] });
-  for (const [field, kind] of [['entities', 'entity'], ['relations', 'relation'], ['snapshots', 'snapshot'], ['views', 'view'], ['authorAlternatives', 'alternative']] as const) {
-    const map = new Map<string, unknown>((existing[field] ?? []).map(item => [item.id, item]));
-    for (const item of incoming[field] ?? []) if (map.has(item.id) && !equalJson(map.get(item.id), item)) conflicts.push({ id: item.id, kind, existing: map.get(item.id), incoming: item });
-  }
-  return conflicts;
-}
-function mergeProjects(existing: ProjectData, incoming: ProjectData, resolutions: Record<string, 'existing' | 'incoming'>): ProjectData {
-  const conflicts = mergeConflicts(existing, incoming);
-  for (const conflict of conflicts) {
-    if (!resolutions[conflict.id]) throw new StorageError('IMPORT_CONFLICT', '同じID・異なる内容の競合があります。採用する内容を選択してください。', conflict.id);
-    if (conflict.kind === 'snapshot' && resolutions[conflict.id] !== 'existing') throw new StorageError('IMMUTABLE_SNAPSHOT', '既存snapshotは別の内容へ置き換えられません。', conflict.id);
-    if (conflict.kind === 'alternative' && resolutions[conflict.id] !== 'existing') throw new StorageError('IMPORT_CONFLICT', '保存済み作者別案のIDへ別の履歴を上書きできません。', conflict.id);
-  }
-  const next = copy(existing);
-  for (const field of ['name', 'calendarId', 'mainStart', 'calendars', 'worldReferences'] as const) if (resolutions[`project.${field}`] === 'incoming') (next as unknown as Record<string, unknown>)[field] = copy(incoming[field]);
-  for (const field of ['entities', 'relations', 'snapshots', 'views', 'authorAlternatives'] as const) {
-    const map = new Map<string, unknown>((existing[field] ?? []).map(item => [item.id, item]));
-    for (const item of incoming[field] ?? []) if (!map.has(item.id) || resolutions[item.id] === 'incoming') map.set(item.id, copy(item));
-    (next as unknown as Record<string, unknown>)[field] = [...map.values()];
-  }
-  return next;
+  return mergeImportConflicts(existing, incoming);
 }
 
 export const scenarioStore = new ScenarioStore();

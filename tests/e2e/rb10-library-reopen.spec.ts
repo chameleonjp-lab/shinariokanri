@@ -22,7 +22,8 @@ async function importFile(page:Page,bytes:Uint8Array,mode='new'){
  else await page.getByRole('button',{name:'保存ファイルを読み込む',exact:true}).click();
  await page.locator('input[type=file][accept*=".scenario"]').setInputFiles({name:'library-reopen.scenario',mimeType:'application/zip',buffer:Buffer.from(bytes)});
  await page.getByLabel('復元方法',{exact:true}).selectOption(mode);await page.getByLabel('復元方法と対象への影響を確認しました').check();
- await page.getByRole('button',{name:'この内容で復元する',exact:true}).click();await expect(page.locator('.app-shell')).toBeVisible();
+ const commit = page.getByRole('button',{name:'この内容で復元する',exact:true});
+ await commit.click();await expect(commit).not.toBeVisible();await expect(page.locator('.app-shell')).toBeVisible();
 }
 async function selectProject(page:Page,title:string){
  await expect(page.locator('.app-shell')).toBeVisible();

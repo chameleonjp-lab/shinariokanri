@@ -1,0 +1,9 @@
+# C25復元の応答補修とC24実結果
+
+C24 commit42e8007134425f6b42a397e2e32b7915cc23d029 / tree821038bda68f7018a0f107f4b7a0d545d60ddefe / buildf72ec5973e5a904d4f9bの434入力と実45通常・Standard30・Large30・原3保存形式180を保持する。素材なし546cb013…/実素材ありaccc8279…の実完全ファイル、空環境390幅new/cold history91/recovered91、全helper/trace/元起点/p95を保持した。C24 CI実checkout tree同一、823単体/309通常、実ZIP全580memberのCRC/安全path/SHA確認も保持した。これらをC25の成功へ付け替えない。
+
+CPU診断の失敗前段と実ファイルの成功診断、unexecuted135原受入準備/35solo入口、静的提案と各レビューを保持する。Node時間・Linux browser・memory/SQLを実機や実Auth/RLS/private Storageへ換算しない。
+
+C25は元のJSON検証・全履歴・ID/hash・元native import TXを維持して計算をWorkerへ接続する。855全単体の旧dirty source、型/fixtureの各準備失敗と補正、最新71関連、3engineの実Worker取消/再試行/cold/実input-outputは別source捕捉として保持する。追加測定の全DB比較は正常なworkspace.scrollY保存を含んで失敗し、全表/全字段のrawで原因を分離した。補足の最終期待は全作品表の厳密一致と、UIも実scroll1字段以外の全字段一致であり、原116受入の条件は不変。30秒/retry0/3200件のfixture、停止・再試行・ID・全文の確認は変更していない。
+
+partsを番号順に結合しMANIFEST.jsonの全体SHAを照合する。全blob/part/結合を検証した。除外は明示した私有transportの4basenameだけ。公開SQLやprivate Storage検査の資料は除外しない。新候補の同一最終commit/buildでの原116全句・性能・復元・実時間7200秒・独立操作、および実機/専用実接続/費用/hostingは別判定する。完成/公開gateは未通過。
