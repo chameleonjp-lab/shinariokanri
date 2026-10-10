@@ -54,6 +54,10 @@ test('a delayed saved cursor yields to a new text selection; invalid replacement
   await expect(page.locator('.detail-panel').getByRole('alert')).toContainText('名称または要約');
   expect(await durable()).toEqual(before);
   await input.fill(summary + '・訂正');
+  // Replacing every character can assign a new paragraph ID. The accepted
+  // correction, rather than its discarded predecessor, must survive reload.
+  const correctedBlockId = JSON.parse(await page.getByRole('textbox', {name: '詳細データ', exact: true}).inputValue()).summary[0].id;
+  expect(correctedBlockId).toBeTruthy();
   await page.locator('.editor-footer').getByRole('button', {name: /^(保存する|保存を再試行)$/}).click();
   await expect(page.locator('.editor-save-state')).toContainText('端末内保存済み');
   await page.reload(); await expect(page.locator('.app-shell')).toBeVisible();
@@ -64,6 +68,6 @@ test('a delayed saved cursor yields to a new text selection; invalid replacement
   const file = await pending, restored = (await inspectScenario(new Uint8Array(await readFile((await file.path())!)), {worker: false})).project;
   const actual = restored.entities.find(entity => entity.id === event.id)!;
   expect(actual.kind).toBe('event'); expect(actual.name).toBe('');
-  if (actual.kind === 'event') {expect(actual.data.summary[0].text).toBe(summary + '・訂正'); expect(actual.data.summary[0].id).toBe(event.data.summary[0].id);}
-  await test.info().attach('delayed-cursor-contract', {body: Buffer.from(JSON.stringify({layer: 'Linux production browser, native IndexedDB; not physical device', originalInputPreserved: true, delayedCursorSuperseded: true, invalidNative12TablesUnchanged: true, correctionColdAndFullExport: true, unicodeAndBlockIdPreserved: true})), contentType: 'application/json'});
+  if (actual.kind === 'event') {expect(actual.data.summary[0].text).toBe(summary + '・訂正'); expect(actual.data.summary[0].id).toBe(correctedBlockId);}
+  await test.info().attach('delayed-cursor-contract', {body: Buffer.from(JSON.stringify({layer: 'Linux production browser, native IndexedDB; not physical device', originalInputPreserved: true, delayedCursorSuperseded: true, invalidNative12TablesUnchanged: true, correctionColdAndFullExport: true, unicodePreserved: true, acceptedBlockIdStableAfterColdAndFullExport: true})), contentType: 'application/json'});
 });
