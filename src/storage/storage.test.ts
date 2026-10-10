@@ -37,7 +37,7 @@ async function rewriteArchive(bytes: Uint8Array, mutate: (files: Record<string, 
 }
 
 describe('atomic IndexedDB commands', () => {
-  it('keeps all rows beyond a read batch, rejects late corruption and cancels without changing native storage', async () => {
+  it('keeps all committed rows, rejects late corruption and cancels without changing native storage', async () => {
     const phase = (name: string) => console.info('bounded-cold-read phase', name); phase('fixture');
     const name = `bounded-cold-read-${newId()}`, writer = store(undefined, name), project = createProject('分割読込の全件と途中取消');
     const entityId = (index: number) => `ca91a401-0000-4000-8000-${index.toString(16).padStart(12, '0')}`;

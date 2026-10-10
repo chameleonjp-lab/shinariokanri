@@ -512,7 +512,7 @@ export class ScenarioStore {
     // getAll requests avoid allocating every native result in one callback
     // and allow cancellation between batches without dropping any rows.
     const projectRows=async<T extends {id:string}>(table:Table<T,[string,string]>)=>{
-      const rows:T[]=[],batchSize=4096;let after:string|undefined;
+      const rows:T[]=[],batchSize=8192;let after:string|undefined;
       for(;;){
         checkCancelled(signal);
         const batch=await table.where('[projectId+id]').between([projectId,after??Dexie.minKey],[projectId,Dexie.maxKey],after===undefined,true).limit(batchSize).toArray();
@@ -536,7 +536,13 @@ export class ScenarioStore {
     const ordered=<T extends {id:string}>(ids:string[],rows:T[])=>{const byId=new Map<string,T>();for(const row of rows)byId.set(row.id,row);return ids.map(id=>byId.get(id));};
     const entities=ordered(entityIds,entityRows),relations=ordered(relationIds,relationRows),snapshots=ordered(snapshotIds,snapshotRows),views=ordered(viewIds,viewRows);
     if ([entities, relations, snapshots, commands, views].some(rows=>rows.some(item=>!item))) throw new StorageError('SAVE_FAILED', '作品の保存情報が不足しています。完全保存ファイルから復元してください。', projectId);
-    const blocks = new Map<string,Block>();for(const row of blockRows)blocks.set(row.id,row.block);
+    const blocks = new Map<string,Block>();
+    for (const row of blockRows) {
+      if (!row.block || typeof row.block !== 'object' || row.block.id !== row.id) {
+        throw new StorageError('SAVE_FAILED', '本文の保存索引と段落IDが一致しません。保存済みデータを保持しています。', row.id);
+      }
+      blocks.set(row.id,row.block);
+    }
     const commandRows = new Map(commands.map(row => [row!.operationId, row!])), ready = new Map<string, CommandRecord>();
     const history: CommandRecord[] = [];
     // A checkpoint can materialize entirely in memory, with no pending IDB
@@ -544,7 +550,19 @@ export class ScenarioStore {
     if(commands.length)await Dexie.waitFor((async()=>{for (const row of commands) { checkCancelled(signal); history.push(await this.materializeCommand(row!, commandRows, ready)); }})());
     const hydrateStarted=timing?performance.now():undefined;
     const consumedBlockIds = new Set<string>();
-    const hydrated=entities.map(row => hydrateBlocks(row!.record, blocks, consumedBlockIds));
+    const hydrated=entities.map(row => {
+      const record = row!.record;
+      if (!record || typeof record !== 'object' || Array.isArray(record)
+          || (record as Record<string, unknown>).id !== row!.id
+          || (record as Record<string, unknown>).kind !== row!.kind) {
+        throw new StorageError('SAVE_FAILED', '情報の保存索引と本文のID・種別が一致しません。保存済みデータを保持しています。', row!.id);
+      }
+      // A project-scope mismatch retains the existing validation failure code.
+      if ((record as Record<string, unknown>).projectId !== projectId) {
+        throw new StorageError('VALIDATION_FAILED', '情報の本文が別の作品を指しています。保存済みデータを保持しています。', row!.id);
+      }
+      return hydrateBlocks(record, blocks, consumedBlockIds);
+    });
     if(hydrateStarted!==undefined)timing!['database.hydrate']=performance.now()-hydrateStarted;
     return { historyIds, contentHeadOperationId, project: { ...project, entities: hydrated, relations: relations as Relation[],
       snapshots: snapshots.map(row => { const { projectId: _projectId, ...snapshot } = row!; return snapshot; }),
@@ -576,42 +594,43 @@ export class ScenarioStore {
       checkCancelled(signal);
       return projectCopy(project);
     }
-    catch (error) { throw saveError(error); }
+    catch (error) { checkCancelled(signal); throw saveError(error); }
   }
   /** Editing reads current rows only. Its immutable history token lets saves retain history without loading it. */
   async getProjectForEditing(projectId: string,options:{signal?:AbortSignal;onStage?:(stage:ReadStage)=>void;immutableView?:boolean}={}): Promise<ProjectData | undefined> {
-    checkCancelled(options.signal);
+    const {signal, onStage, immutableView} = options;
+    checkCancelled(signal);
     const started=commandMeasurementStart(),milliseconds:Record<string,number>={};let last=started;
     const measure=(stage:string)=>{if(last===undefined)return;const now=performance.now();milliseconds[stage]=(milliseconds[stage]??0)+now-last;last=now;};
     const denied=this.authorAccess&&await this.db.syncBases.get(projectId)&&this.authorAccess.get(projectId)!=='owner';
-    checkCancelled(options.signal);
+    checkCancelled(signal);
     if(denied)return undefined;
     try {
       const readEpoch = { project: this.cacheEpochs.get(projectId) ?? 0, lifetime: this.cacheLifetime };
       const read = await this.db.transaction('r', this.writeTables, async () => {
-        bindRecordPartsSignal(options.signal);checkCancelled(options.signal);
+        bindRecordPartsSignal(signal);checkCancelled(signal);
         const headerStarted=started===undefined?undefined:performance.now();
         const header = await this.db.projects.get(projectId), cached = this.cachedProjects.get(projectId);
         if(headerStarted!==undefined)milliseconds['database.header']=performance.now()-headerStarted;
         if (!header) return undefined;
-        return cached?.revision === header.revision && sameJson(this.cachedHistoryIds.get(projectId), header.historyIds) ? { project: cached, historyIds: header.historyIds, contentHeadOperationId: header.contentHeadOperationId } : this.readProject(projectId, false,started===undefined?undefined:milliseconds,header,options.signal);
+        return cached?.revision === header.revision && sameJson(this.cachedHistoryIds.get(projectId), header.historyIds) ? { project: cached, historyIds: header.historyIds, contentHeadOperationId: header.contentHeadOperationId } : this.readProject(projectId, false,started===undefined?undefined:milliseconds,header,signal);
       });
-      checkCancelled(options.signal);
+      checkCancelled(signal);
       if (!read) return undefined;
       measure('database');
       let { project } = read;
       if (project !== this.cachedProjects.get(projectId)) {
         const worlds = await this.validationWorlds();
         measure('dependencies');let phase='transfer';
-        await validateColdRead(project,worlds,{...options,onStage:stage=>{measure(phase);phase=`validation.${stage}`;options.onStage?.(stage);}});
+        await validateColdRead(project,worlds,{signal,onStage:stage=>{measure(phase);phase=`validation.${stage}`;onStage?.(stage);}});
         measure(phase);
-        checkCancelled(options.signal);
+        checkCancelled(signal);
         project = this.rememberProject(project, read.contentHeadOperationId, read.historyIds, readEpoch);
         measure('immutable');
       }
-      checkCancelled(options.signal);
-      const view=this.editingCopy(project,read.historyIds,options.immutableView);measure('view');readMeasured(started,project.projectId,milliseconds);return view;
-    } catch (error) { throw saveError(error); }
+      checkCancelled(signal);
+      const view=this.editingCopy(project,read.historyIds,immutableView);measure('view');readMeasured(started,project.projectId,milliseconds);return view;
+    } catch (error) { checkCancelled(signal); throw saveError(error); }
   }
   async listProjectsForEditing(options: { signal?: AbortSignal; onProgress?: (completed: number, total: number) => void;onStage?:(stage:ReadStage)=>void;immutableView?:boolean } = {}): Promise<ProjectData[]> {
     checkCancelled(options.signal);
