@@ -1,7 +1,7 @@
 import {PagedSelect} from './PagedSelect';
 import {ListPager,useListWindow} from './ListWindow';
 import { useMemo, useState } from 'react';
-import type { ContentAnchor, DisclosureData, Entity, EntityKind, ProjectData, Query, ResolutionPolicy, Status } from '../domain/types';
+import type { ContentAnchor, DisclosureData, Entity, EntityKind, ProjectData, Query, Relation, ResolutionPolicy, Status } from '../domain/types';
 import { createEntity, KIND_LABELS, newId } from '../domain/model';
 import { buildJapaneseAuthorIndex, evaluateCollection, filterCatalogEntities, findCatalogMaintenance, searchJapaneseAuthorIndex } from '../domain/catalog';
 import { previewMerge } from '../domain/maintenance';
@@ -12,15 +12,17 @@ import { FIELD_SPECS } from './fieldSpecs';
 import { JapaneseIndexEntryEditor } from './JapaneseIndexEntryEditor';
 import type { JapaneseAuthorIndexEntry } from '../domain/catalog';
 import { findCatalogTextPositions } from '../domain/catalogPositions';
+import { CatalogResultDiagram, CatalogResultTimeline } from './CatalogResultViews';
 
-export function CatalogPanel({ project, selectedId, onOpen, onSave, onSaveProject, onSaveMany, onOpenField, onOpenTarget, searchState, onSearchStateChange }: {
+export function CatalogPanel({ project, selectedId, onOpen, onSave, onSaveProject, onSaveMany, onSaveRelation, onOpenField, onOpenTarget, searchState, onSearchStateChange }: {
+  onSaveRelation: (relation: Relation) => Promise<void>;
   onOpenTarget: (anchor: ContentAnchor, fieldPath?: string) => void;
   onSaveMany: (entities: Entity[], reason: string) => Promise<void>; onOpenField: (entityId: string, fieldPath: string) => void;
   searchState?: { text: string; kind: string; status: string }; onSearchStateChange?: (next: { text: string; kind: string; status: string }) => void;
   project: ProjectData; selectedId: string | null; onOpen: (id: string) => void;
   onSave: (entity: Entity) => Promise<Entity>; onSaveProject: (project: ProjectData, reason: string) => Promise<ProjectData>;
 }) {
-  const [resultView, setResultView] = useState<'cards' | 'table'>('cards');
+  const [resultView, setResultView] = useState<'cards' | 'table' | 'diagram' | 'timeline'>('cards');
   const [tab, setTab] = useState<'search' | 'index' | 'maintenance'>('search');
   const [localSearch, setLocalSearch] = useState({ text: '', kind: 'all', status: 'all' });
   const { text, kind, status } = searchState ?? localSearch;
@@ -108,8 +110,11 @@ export function CatalogPanel({ project, selectedId, onOpen, onSave, onSaveProjec
         <button className="button primary" disabled={busy || !selected.length} onClick={() => setPreview({ project: { ...project, entities: project.entities.map(entity => selected.includes(entity.id) ? { ...entity, status: bulkStatus } : entity) }, reason: '一覧から情報の状態を一括変更', details: active.filter(entity => selected.includes(entity.id)).map(entity => `${labelOf(entity)}: ${STATUS_LABELS[entity.status]} → ${STATUS_LABELS[bulkStatus]}`) })}>変更差分を確認</button>
       </details>
       {textPositions.length > 0 && <section aria-label="本文の検索位置"><h3>一致した文章の位置 · {textPositions.length}件</h3>{positionPage.items.map(hit => <button key={hit.id} className="reference-link" type="button" onClick={() => onOpenTarget(hit.anchor, hit.fieldPath)}><strong>{hit.name || '無題'}</strong> · {FIELD_SPECS[active.find(entity => entity.id === hit.entityId)?.kind ?? 'note'].find(field => `data.${field.key}` === hit.fieldPath)?.label ?? '文章'}<span>{Array.from(hit.text).slice(Math.max(0, (hit.anchor.start ?? 0) - 12), (hit.anchor.end ?? 0) + 24).join('')}</span></button>)}<ListPager {...positionPage} label="本文の検索位置"/></section>}
-      <div className="filter-pills" aria-label="検索結果の表示"><button type="button" className={resultView === 'cards' ? 'active' : ''} onClick={() => setResultView('cards')}>カード</button><button type="button" className={resultView === 'table' ? 'active' : ''} onClick={() => setResultView('table')}>表</button></div>
-      {resultView === 'cards' ? <EntityCards entities={results} project={project} selectedId={selectedId} onSelect={onOpen}/> : <><div className="table-scroll"><table><caption>同じ検索結果の一覧</caption><thead><tr><th>名前</th><th>種類</th><th>状態</th><th>操作</th></tr></thead><tbody>{tablePage.items.map(entity => <tr key={entity.id}><td>{labelOf(entity)}</td><td>{KIND_LABELS[entity.kind]}</td><td>{STATUS_LABELS[entity.status]}</td><td><button type="button" className="text-button" onClick={() => onOpen(entity.id)}>詳細を開く</button></td></tr>)}</tbody></table></div><ListPager {...tablePage} label="検索結果表"/></>}
+      <div className="filter-pills" aria-label="検索結果の表示">{([['cards', 'カード'], ['table', '表'], ['diagram', '図'], ['timeline', '年表']] as const).map(([view, label]) => <button key={view} type="button" aria-pressed={resultView === view} className={resultView === view ? 'active' : ''} onClick={() => setResultView(view)}>{label}</button>)}</div>
+      {resultView === 'cards' && <EntityCards entities={results} project={project} selectedId={selectedId} onSelect={onOpen}/>}
+      {resultView === 'table' && <><div className="table-scroll"><table><caption>同じ検索結果の一覧</caption><thead><tr><th>名前</th><th>種類</th><th>状態</th><th>操作</th></tr></thead><tbody>{tablePage.items.map(entity => <tr key={entity.id}><td>{labelOf(entity)}</td><td>{KIND_LABELS[entity.kind]}</td><td>{STATUS_LABELS[entity.status]}</td><td><button type="button" className="text-button" onClick={() => onOpen(entity.id)}>詳細を開く</button></td></tr>)}</tbody></table></div><ListPager {...tablePage} label="検索結果表"/></>}
+      {resultView === 'diagram' && <CatalogResultDiagram project={project} results={results} selectedId={selectedId} scope={viewScope} onOpen={onOpen} onSaveRelation={onSaveRelation}/>}
+      {resultView === 'timeline' && <CatalogResultTimeline project={project} results={results} selectedId={selectedId} scope={viewScope} onOpen={onOpen}/>}
     </>}
     {tab === 'index' && <><select aria-label="索引の分類" value={indexClass} onChange={event => setIndexClass(event.target.value)}><option value="all">すべての分類</option>{indexClasses.map(label => <option key={label} value={label}>{label}</option>)}</select><p>同じ名前は種類と固定IDで選び分けられます。読みが未登録の項目は、見直し一覧から補えます。</p>{indexPage.items.map((entry, position) => <button className="reference-link" key={`${entry.entityId}-${position}`} onClick={() => setIndexEntry(entry)}>{entry.term}<small>{entry.reading} · {entry.classifications.join('、')} · {KIND_LABELS[entry.kind]} · {entry.entityId.slice(0, 8)}</small></button>)}<ListPager {...indexPage} label="五十音索引"/></>}
     {tab === 'maintenance' && <>
