@@ -1,3 +1,5 @@
+現在の固定候補はC29 `09d39faae9c7293fe77b5675cc7286605a1809a6`、tree `352863bf81bd56b3c563f76e6b7586fe5f471e24`、clean build `b59572f71d050cd96e0f`、base `/shinariokanri/`。[同版evidence](../quality/current-review/release-evidence-incomplete.json)を製品HEADから元check_release.pyへ渡した実判定はexit1、116受入・24工程・9gateの149保留、版/基底不一致0。チェックの条件は変更していない。候補ZIPは13distと依存LICENSE/NOTICEを実bytesで含み[短い実端末手順](C29_MANUAL_REVIEW.md)を用意したが、専用HTTPSへ未公開で実端末/実Auth等は未実行。文書delivery commitを製品buildの対象commitへ置き換えない。
+
 # 公開構成と完了条件
 
 公開候補は公開リポジトリのGitHub Pages。基底パスは `/shinariokanri/`、候補URLは `https://chameleonjp-lab.github.io/shinariokanri/`。これは候補であり、公開済みのURLではない。Pagesサイト設定と公開操作はまだ行っていない。

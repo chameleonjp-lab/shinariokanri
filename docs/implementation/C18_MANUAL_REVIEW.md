@@ -1,6 +1,6 @@
 # 固定候補を実端末・専用接続で確認する
 
-製品対象はC18 `7c275dc4c7608165e5eaba5d2ac63c58d119aa0a`、tree `6a6009d272f7f88eaafd6e9559fdcec77c781a45`、clean build `8ee704ee66910a13a54e`、base `/shinariokanri/`。実行入力432ファイルと配信13ファイルは[対象版の実hash](../quality/current-review/TESTED_PRODUCT_BINDING.json)に固定する。文書を届けるcommitを実行した製品commitとして扱わない。
+製品対象はC18 `7c275dc4c7608165e5eaba5d2ac63c58d119aa0a`、tree `6a6009d272f7f88eaafd6e9559fdcec77c781a45`、clean build `8ee704ee66910a13a54e`、base `/shinariokanri/`。実行入力432ファイルと配信13ファイルは[対象版の実hash](../quality/current-review/historical/candidate-18-TESTED_PRODUCT_BINDING.json)に固定する。文書を届けるcommitを実行した製品commitとして扱わない。
 
 2026-10-10の読み取りでは、候補 `https://chameleonjp-lab.github.io/shinariokanri/` とその `build-info.json` はHTTP404だった。公開・Pages設定・専用DBへの適用は実行していない。同じ配信bytesを提供する、別途承認されたHTTPS確認先が実端末試験に必要。候補配信物・fixtureの最終ファイル名とSHAは、実測後の候補証拠manifestで指定する。
 
