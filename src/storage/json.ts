@@ -142,7 +142,40 @@ export function validateJsonValue(value: unknown): void {
 }
 
 /** Keys are canonicalized, but all arrays retain their semantic order. */
-export function canonicalJson(value: unknown): string {
+/** Reuse only small record encodings whose entire value is known immutable.
+ * The caller must use its own recursively frozen plain-data registry; a
+ * shallow Object.freeze is insufficient. Successful canonical encodings
+ * retain every original byte. Both count and UTF-16 storage are bounded. */
+export interface CanonicalJsonCache {
+  get(value: object): string | undefined;
+  set(value: object, encoded: string): void;
+}
+
+export function createCanonicalJsonCache(isImmutable: (value: object) => boolean): CanonicalJsonCache {
+  const maximumEntryBytes = 64 * 1024;
+  const maximumTotalBytes = 32 * 1024 * 1024;
+  const maximumEntries = 16_384;
+  let values = new WeakMap<object, string>(), bytes = 0, entries = 0;
+  return {
+    get: value => values.get(value),
+    set(value, encoded) {
+      if (!isImmutable(value) || Array.isArray(value)) return;
+      const prototype = Object.getPrototypeOf(value);
+      if (prototype !== Object.prototype && prototype !== null) return;
+      const descriptors = Object.getOwnPropertyDescriptors(value);
+      if (typeof descriptors.id?.value !== 'string' || typeof descriptors.kind?.value !== 'string'
+        || Object.values(descriptors).some(property => !('value' in property))) return;
+      const encodedBytes = encoded.length * 2;
+      if (encodedBytes > maximumEntryBytes) return;
+      if (entries + 1 > maximumEntries || bytes + encodedBytes > maximumTotalBytes) {
+        values = new WeakMap<object, string>(); bytes = 0; entries = 0;
+      }
+      values.set(value, encoded); bytes += encodedBytes; entries++;
+    },
+  };
+}
+
+export function canonicalJson(value: unknown, cache?: CanonicalJsonCache): string {
   const active = new Set<object>();
   function encode(input: unknown): string {
     if (input === null) return 'null';
@@ -157,18 +190,21 @@ export function canonicalJson(value: unknown): string {
     }
     if (typeof input !== 'object') throw new StorageError('VALIDATION_FAILED', 'JSONに保存できない値があります。');
     if (active.has(input)) throw new StorageError('VALIDATION_FAILED', '循環したJSONは保存できません。');
+    const cached = cache?.get(input);
+    if (cached !== undefined) return cached;
     active.add(input);
     const encoded = Array.isArray(input)
       ? `[${input.map(encode).join(',')}]`
       : `{${Object.keys(input).filter(key => (input as Record<string, unknown>)[key] !== undefined).sort()
         .map(key => `${JSON.stringify(key)}:${encode((input as Record<string, unknown>)[key])}`).join(',')}}`;
     active.delete(input);
+    cache?.set(input, encoded);
     return encoded;
   }
   return encode(value);
 }
 
-export const jsonBytes = (value: unknown): Uint8Array => new TextEncoder().encode(canonicalJson(value));
+export const jsonBytes = (value: unknown, cache?: CanonicalJsonCache): Uint8Array => new TextEncoder().encode(canonicalJson(value, cache));
 export const equalJson = (left: unknown, right: unknown): boolean => canonicalJson(left) === canonicalJson(right);
 
 /** Decide whether to use the lossless dictionary before allocating a flat
