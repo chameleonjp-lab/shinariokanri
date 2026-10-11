@@ -205,10 +205,10 @@ test('AT-E12 キャッシュ済み未送信作品をoffline・容量拒否・実
     expect(beforeDocumentNonce).toEqual(expect.any(String));
     await page.context().setOffline(true);
     await expect.poll(() => page.evaluate(() => navigator.onLine)).toBe(false);
-    // A distinct scoped navigation must create a new document while offline.
-    // It exercises cached startup without WebKit's Page.reload protocol path.
-    const coldURL = new URL(url); coldURL.searchParams.set('e12-cold-document', beforeDocumentNonce);
-    await page.goto(coldURL.href); await expect(page.locator('.project-switch')).toContainText(given.project.name);
+    // A cached reload must create a new document while the context stays offline.
+    // The nonce and complete durable image verify actual cold startup.
+    const coldURL = new URL(url);
+    await page.reload(); await expect(page.locator('.project-switch')).toContainText(given.project.name);
     const offlineDocumentNonce = await page.evaluate(() => { const value: unknown = Reflect.get(window, '__ap04E12DocumentNonce'); if (typeof value !== 'string') throw new Error('E12 document nonce unavailable'); return value; });
     expect(offlineDocumentNonce).toEqual(expect.any(String)); expect(offlineDocumentNonce).not.toBe(beforeDocumentNonce);
     await expect.poll(() => page.evaluate(() => navigator.onLine)).toBe(false);

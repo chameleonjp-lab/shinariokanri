@@ -1,7 +1,7 @@
-# E12 offline cold navigation source correction
+# E12 official WebKit offline engine correction
 
-The retained PR45, PR46 and PR47 WebKit failures stop at the original offline `Page.reload` protocol call. Their cause remains unknown; later quota, migration and recovery observations were not reached.
+The retained PR45, PR46 and PR47 WebKit failures stop at the original offline `Page.reload` call. A standalone Playwright 1.63 literal service-worker response reproduces the failure without application or cache dependencies. Official Playwright 1.64 includes upstream fix microsoft/playwright#42894 for #42775. Actual old/new controls and E12 verification are retained separately.
 
-This source-only correction retains offline mode and uses a distinct scoped query navigation. It requires a different document nonce, exact cached base/index/assets bytes, the active controller, the genuinely installed waiting worker, and unchanged complete durable native data. Original fixtures, four clauses, limits and external-condition exclusions remain unchanged. The planned proof remains `not_run`; independent three-engine execution is recorded separately.
+The source retains the original offline `Page.reload`. It additionally requires a different document nonce, exact cached base/index/assets bytes, the active controller, the genuinely installed waiting worker, and unchanged complete durable native data. Original fixtures, four clauses, limits and external-condition exclusions remain unchanged. The planned proof remains `not_run`.
 
-Retained source diagnosis: `/tmp/pr45-e12-failure-diagnosis`. Original failed CI artifacts are immutable.
+The failed fresh-query candidate and its 2 PASS / 1 WebKit FAIL are immutable at `/tmp/ap02-e12-fix-1af9000/attempt1`. No failure result is promoted.
