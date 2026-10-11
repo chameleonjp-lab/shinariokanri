@@ -6,6 +6,7 @@
 
 現在は**アプリを実装・検証中で、完成版は未公開**です。完成版の全104要件・24工程を維持し、未確認の受入条件を完了扱いにしていません。
 
+- **[2026-10-11の計画・実装比較と追加機能の要件・実装計画](docs/review-2026-10-11/README.md)**（固定main基準、16残件、12追加候補。実装済み/最終合格とは区別）
 - **[全機能を完成させる実装計画書](docs/plan/COMPLETION_PLAN.md)**（PR #2レビュー後の残作業・10段階）
 - [104要件の作業カード](docs/plan/COMPLETION_TASKS.md) / [116受入と6回帰検査群](docs/plan/COMPLETION_ACCEPTANCE.md)
 - [前回レビューの固定基準](docs/quality/pr2/README.md)
@@ -28,6 +29,7 @@
 ```bash
 python3 scripts/check_docs.py
 python3 scripts/check_completion_plan.py
+python3 scripts/check_review_20261011.py
 python3 -m unittest discover -s scripts -p 'test_check_docs.py' -v
 ```
 
