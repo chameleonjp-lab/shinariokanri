@@ -1,0 +1,182 @@
+{
+  "config": {
+    "argv": [
+      "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+      "/workspace/runtime-verification/node_modules/.bin/playwright",
+      "test",
+      "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+      "--project=chromium",
+      "--workers=1",
+      "--retries=0",
+      "--max-failures=1",
+      "--trace=on",
+      "--reporter=list,json,html",
+      "--grep",
+      "AT-N16 ",
+      "--output",
+      "/tmp/ap04-c758-successor-smoke-preparation/01-condition/test-results"
+    ],
+    "configFile": "/workspace/runtime-verification/playwright.config.ts",
+    "rootDir": "/workspace/runtime-verification/tests/e2e",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 1,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/tmp/ap04-c758-successor-smoke-preparation/01-condition/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "/workspace/runtime-verification/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list"
+      ],
+      [
+        "json"
+      ],
+      [
+        "html"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": {
+      "command": "npm run preview -- --port 4173",
+      "url": "http://127.0.0.1:4173/shinariokanri/",
+      "reuseExistingServer": false
+    }
+  },
+  "suites": [
+    {
+      "title": "ap04-original-n-condition-parity.spec.ts",
+      "file": "ap04-original-n-condition-parity.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "AT-N16 同じ条件 ID を構造化画面と JSON で編集し、純粋評価の真偽不明・実エラーコードと試読表示を比較する",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 11253,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  - 0\u001b[39m\n\u001b[31m+ Received  + 2\u001b[39m\n\n\u001b[2m  Array [\u001b[22m\n\u001b[2m    \"2bf165ca-192e-42b7-a22c-de8c71f3dbbc\",\u001b[22m\n\u001b[2m    \"38712ab3-32ee-41f8-93ca-1685f5fd9a20\",\u001b[22m\n\u001b[31m+   \"6d12f441-fe98-4fa9-b494-f694c3d3ee2b\",\u001b[39m\n\u001b[2m    \"6dda186a-faa1-4e00-90bd-5c11b66e97a6\",\u001b[22m\n\u001b[2m    \"a16241fc-31c6-485e-9ba5-4de82ad2c9d3\",\u001b[22m\n\u001b[2m    \"c04f1ae8-8102-40bf-b8fb-074b9a2e1ecf\",\u001b[22m\n\u001b[31m+   \"fa18896d-907a-4fa1-a4b7-6edf3ca7a8f9\",\u001b[39m\n\u001b[2m    \"ff375996-0759-4f14-bdb9-f5a8b156f7d6\",\u001b[22m\n\u001b[2m  ]\u001b[22m",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  - 0\u001b[39m\n\u001b[31m+ Received  + 2\u001b[39m\n\n\u001b[2m  Array [\u001b[22m\n\u001b[2m    \"2bf165ca-192e-42b7-a22c-de8c71f3dbbc\",\u001b[22m\n\u001b[2m    \"38712ab3-32ee-41f8-93ca-1685f5fd9a20\",\u001b[22m\n\u001b[31m+   \"6d12f441-fe98-4fa9-b494-f694c3d3ee2b\",\u001b[39m\n\u001b[2m    \"6dda186a-faa1-4e00-90bd-5c11b66e97a6\",\u001b[22m\n\u001b[2m    \"a16241fc-31c6-485e-9ba5-4de82ad2c9d3\",\u001b[22m\n\u001b[2m    \"c04f1ae8-8102-40bf-b8fb-074b9a2e1ecf\",\u001b[22m\n\u001b[31m+   \"fa18896d-907a-4fa1-a4b7-6edf3ca7a8f9\",\u001b[39m\n\u001b[2m    \"ff375996-0759-4f14-bdb9-f5a8b156f7d6\",\u001b[22m\n\u001b[2m  ]\u001b[22m\n    at /workspace/runtime-verification/tests/e2e/ap04-original-n-condition-parity.spec.ts:133:65",
+                    "location": {
+                      "file": "/workspace/runtime-verification/tests/e2e/ap04-original-n-condition-parity.spec.ts",
+                      "column": 65,
+                      "line": 133
+                    },
+                    "snippet": "  131 |   // negative_or_edge: every display retains the same shared UUID references;\n  132 |   // trial input never creates replacement author IDs or commits runtime values.\n> 133 |   expect(cold.project.entities.map(entity => entity.id).sort()).toEqual(p.entities.map(entity => entity.id).sort());\n      |                                                                 ^\n  134 |   expect(cold.project.entities.find(entity => entity.id === edge.id)?.data).toMatchObject({ condition: externalCondition });\n  135 |   expect(cold.project.entities.find(entity => entity.id === variable.id)?.data).toEqual(variable.data);\n  136 |   await attachObservation(info, 'AT-N16-observation', { edgeId: edge.id, variableId: variable.id, contractId: contract.id, structuredCondition: structuredEdge.data.condition, jsonCondition: jsonEdge.data.condition, falseResult, trueResult, unknownResult, mismatchCode: mismatchIssue.code, runtimeErrorCode: externalIssue.code, externalCondition, canonicalRuntimeInputUnchanged: true, coldRevision: cold.project.revision, retainedEntityIds: cold.project.entities.map(entity => entity.id), guidanceWithoutEvaluatorIssueHasNoInventedCode: true });"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "/workspace/runtime-verification/tests/e2e/ap04-original-n-condition-parity.spec.ts",
+                        "column": 65,
+                        "line": 133
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  - 0\u001b[39m\n\u001b[31m+ Received  + 2\u001b[39m\n\n\u001b[2m  Array [\u001b[22m\n\u001b[2m    \"2bf165ca-192e-42b7-a22c-de8c71f3dbbc\",\u001b[22m\n\u001b[2m    \"38712ab3-32ee-41f8-93ca-1685f5fd9a20\",\u001b[22m\n\u001b[31m+   \"6d12f441-fe98-4fa9-b494-f694c3d3ee2b\",\u001b[39m\n\u001b[2m    \"6dda186a-faa1-4e00-90bd-5c11b66e97a6\",\u001b[22m\n\u001b[2m    \"a16241fc-31c6-485e-9ba5-4de82ad2c9d3\",\u001b[22m\n\u001b[2m    \"c04f1ae8-8102-40bf-b8fb-074b9a2e1ecf\",\u001b[22m\n\u001b[31m+   \"fa18896d-907a-4fa1-a4b7-6edf3ca7a8f9\",\u001b[39m\n\u001b[2m    \"ff375996-0759-4f14-bdb9-f5a8b156f7d6\",\u001b[22m\n\u001b[2m  ]\u001b[22m\n\n  131 |   // negative_or_edge: every display retains the same shared UUID references;\n  132 |   // trial input never creates replacement author IDs or commits runtime values.\n> 133 |   expect(cold.project.entities.map(entity => entity.id).sort()).toEqual(p.entities.map(entity => entity.id).sort());\n      |                                                                 ^\n  134 |   expect(cold.project.entities.find(entity => entity.id === edge.id)?.data).toMatchObject({ condition: externalCondition });\n  135 |   expect(cold.project.entities.find(entity => entity.id === variable.id)?.data).toEqual(variable.data);\n  136 |   await attachObservation(info, 'AT-N16-observation', { edgeId: edge.id, variableId: variable.id, contractId: contract.id, structuredCondition: structuredEdge.data.condition, jsonCondition: jsonEdge.data.condition, falseResult, trueResult, unknownResult, mismatchCode: mismatchIssue.code, runtimeErrorCode: externalIssue.code, externalCondition, canonicalRuntimeInputUnchanged: true, coldRevision: cold.project.revision, retainedEntityIds: cold.project.entities.map(entity => entity.id), guidanceWithoutEvaluatorIssueHasNoInventedCode: true });\n    at /workspace/runtime-verification/tests/e2e/ap04-original-n-condition-parity.spec.ts:133:65"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T09:40:45.285Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "AT-N16-given.scenario",
+                      "contentType": "application/zip",
+                      "body": "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"
+                    },
+                    {
+                      "name": "AT-N16-given.json",
+                      "contentType": "application/json",
+                      "body": "ewogICJmaXh0dXJlU2hhMjU2IjogIjFmMGUwMjJjMTM1YjM3NjBhNGY4MDBmMDM5NzRkN2FlYTMxZGFjZjM0YmNjOTExOTc0NzUzZjE5ZTIxZDkzNzQiLAogICJmaXh0dXJlQnl0ZXMiOiAxODMxLAogICJmYWN0cyI6IHsKICAgICJwcm9qZWN0SWQiOiAiMzM1M2M1NDMtNDE1Yy00NzdlLTk3MTUtZGZhNTVlNjRhZmZhIiwKICAgICJlbnRpdHlJZHMiOiBbCiAgICAgICJjMDRmMWFlOC04MTAyLTQwYmYtYjhmYi0wNzRiOWEyZTFlY2YiLAogICAgICAiNmRkYTE4NmEtZmFhMS00ZTAwLTkwYmQtNWMxMWI2NmU5N2E2IiwKICAgICAgImZmMzc1OTk2LTA3NTktNGYxNC1iZGI5LWY1YThiMTU2ZjdkNiIsCiAgICAgICJhMTYyNDFmYy0zMWM2LTQ4NWUtOWJhNS00ZGU4MmFkMmM5ZDMiLAogICAgICAiMmJmMTY1Y2EtMTkyZS00MmI3LWEyMmMtZGU4YzcxZjNkYmJjIiwKICAgICAgIjM4NzEyYWIzLTMyZWUtNDFmOC05M2NhLTE2ODVmNWZkOWEyMCIKICAgIF0sCiAgICAiZWRnZUlkIjogIjM4NzEyYWIzLTMyZWUtNDFmOC05M2NhLTE2ODVmNWZkOWEyMCIsCiAgICAidmFyaWFibGVJZCI6ICJjMDRmMWFlOC04MTAyLTQwYmYtYjhmYi0wNzRiOWEyZTFlY2YiLAogICAgImNvbnRyYWN0SWQiOiAiNmRkYTE4NmEtZmFhMS00ZTAwLTkwYmQtNWMxMWI2NmU5N2E2IiwKICAgICJpbml0aWFsQ29uZGl0aW9uIjogewogICAgICAib3AiOiAiY29tcGFyZSIsCiAgICAgICJ2YXJpYWJsZUlkIjogImMwNGYxYWU4LTgxMDItNDBiZi1iOGZiLTA3NGI5YTJlMWVjZiIsCiAgICAgICJjb21wYXJhdG9yIjogImVxIiwKICAgICAgInZhbHVlIjogewogICAgICAgICJ0eXBlIjogImludGVnZXIiLAogICAgICAgICJ2YWx1ZSI6IDAKICAgICAgfQogICAgfSwKICAgICJldmFsdWF0b3IiOiAic3JjL2RvbWFpbi9jb25kaXRpb25zLnRzOmV2YWx1YXRlQ29uZGl0aW9uIiwKICAgICJkaXNwbGF5cyI6IFsKICAgICAgInN0cnVjdHVyZWQgY29uZGl0aW9uIGVkaXRvciIsCiAgICAgICJmdWxsIGRhdGEgSlNPTiBlZGl0b3IiLAogICAgICAidHJpYWwgcmVhZGVyIgogICAgXQogIH0KfQ=="
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/tmp/ap04-c758-successor-smoke-preparation/01-condition/test-results/ap04-original-n-condition--19947-純粋評価の真偽不明・実エラーコードと試読表示を比較する-chromium/error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/tmp/ap04-c758-successor-smoke-preparation/01-condition/test-results/ap04-original-n-condition--19947-純粋評価の真偽不明・実エラーコードと試読表示を比較する-chromium/trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "/workspace/runtime-verification/tests/e2e/ap04-original-n-condition-parity.spec.ts",
+                    "column": 65,
+                    "line": 133
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "df7a248dc2e02ab1fd0a-fdb2ccc50eefa2506281",
+          "file": "ap04-original-n-condition-parity.spec.ts",
+          "line": 28,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "message": "Testing stopped early after 1 maximum allowed failures."
+    }
+  ],
+  "stats": {
+    "startTime": "2026-10-11T09:40:42.345Z",
+    "duration": 15366.188,
+    "expected": 0,
+    "skipped": 0,
+    "unexpected": 1,
+    "flaky": 0
+  }
+}

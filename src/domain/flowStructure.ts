@@ -1,7 +1,7 @@
 import type { Entity, ID, ProjectData } from './types';
 import { adoptedRecord } from './adoption';
-import { initializeRuntimeState, evaluateCondition } from './conditions';
-import { validateEntity } from './model';
+import { evaluateCondition } from './conditions';
+import { emptyRuntimeState, validateEntity } from './model';
 import { resolveReuseContent } from './reuse';
 
 export interface FlowStructureItem {
@@ -19,11 +19,20 @@ export function flowStructure(project: ProjectData, referenceEntities: Entity[] 
   const nodes = records.filter((entity): entity is Entity<'flow_node'> => entity.kind === 'flow_node' && adoptedRecord(entity));
   const edges = records.filter((entity): entity is Entity<'flow_edge'> => entity.kind === 'flow_edge' && adoptedRecord(entity));
   const graphs = records.filter((entity): entity is Entity<'flow_graph'> => entity.kind === 'flow_graph' && adoptedRecord(entity));
-  const state = initializeRuntimeState(project, project.projectId, referenceEntities);
-  const edgesFrom = new Map<ID, Entity<'flow_edge'>[]>(), nodesInScene = new Map<ID, Entity<'flow_node'>[]>(), graphsUnder = new Map<ID, Entity<'flow_graph'>[]>();
+  // The structural view must retain other diagnostics when a calculated value
+  // fails. Conditions evaluate derived declarations in their own error scope.
+  const state = emptyRuntimeState(project.projectId);
+  for (const entity of records) if (entity.kind === 'variable' && adoptedRecord(entity)) state.variableValues[entity.id] = structuredClone(entity.data.initial);
+  const edgesFrom = new Map<ID, Entity<'flow_edge'>[]>(), nodesInScene = new Map<ID, Entity<'flow_node'>[]>(), graphsUnder = new Map<ID, Entity<'flow_graph'>[]>(), graphsInScene = new Map<ID, Set<ID>>();
   for (const edge of edges) edgesFrom.set(edge.data.fromId, [...(edgesFrom.get(edge.data.fromId) ?? []), edge]);
   for (const node of nodes) if (node.data.sceneId) nodesInScene.set(node.data.sceneId, [...(nodesInScene.get(node.data.sceneId) ?? []), node]);
   for (const graph of graphs) if (graph.data.parentGraphId) graphsUnder.set(graph.data.parentGraphId, [...(graphsUnder.get(graph.data.parentGraphId) ?? []), graph]);
+  for (const graph of graphs) for (const id of graph.data.nodeIds) {
+    const node = byId.get(id);
+    if (node?.kind !== 'flow_node' || !node.data.sceneId) continue;
+    const ids = graphsInScene.get(node.data.sceneId) ?? new Set<ID>();
+    ids.add(graph.id); graphsInScene.set(node.data.sceneId, ids);
+  }
   const problems = new Map<ID, FlowStructureItem['problems']>();
   function add(id: ID, message: string, category: 'unfinished' | 'error' | 'unknown') {
     const found = problems.get(id) ?? []; if (!found.some(problem => problem.message === message && problem.category === category)) found.push({ targetId: id, message, category }); problems.set(id, found);
@@ -102,16 +111,13 @@ export function flowStructure(project: ProjectData, referenceEntities: Entity[] 
     const sceneNodes = nodesInScene.get(scene.id) ?? [];
     const lines = (scene.data.dialogueLineIds ?? []).map(id => summarize(id));
     const nodeItems = sceneNodes.map(node => summarize(node.id, [], [...(edgesFrom.get(node.id) ?? []).map(edge => edge.id), ...(node.data.childGraphId ? calledTargets(node.data.childGraphId) : [])]));
-    return summarize(scene.id, [...lines, ...nodeItems]);
+    // Entry/exit declarations belong to the graph, while its node content is
+    // shown inside scenes. Include those diagnostics in the same ancestors.
+    // summarize deduplicates shared graph problems across scenes by identity.
+    return summarize(scene.id, [...lines, ...nodeItems], [...(graphsInScene.get(scene.id) ?? [])]);
   };
   const chapters = local.filter((entity): entity is Entity<'chapter'> => entity.kind === 'chapter');
   const placed = new Set(chapters.flatMap(chapter => chapter.data.sceneIds));
-  const result = chapters.map(chapter => summarize(chapter.id, chapter.data.sceneIds.map(id => {
-    const scene = byId.get(id); if (scene?.kind === 'scene') return sceneItem(scene);
-    add(chapter.id, '章内の場面が削除・不採用または見つかりません。', 'error'); return summarize(id);
-  })));
-  const unplaced = local.filter((entity): entity is Entity<'scene'> => entity.kind === 'scene' && !placed.has(entity.id)).map(sceneItem);
-  if (unplaced.length) result.push({ ...summarize('unplaced', unplaced), name: '章に未配置の場面' });
   function graphItem(graph: Entity<'flow_graph'>, ancestors: Set<ID>): FlowStructureItem {
     if (ancestors.has(graph.id)) { add(graph.id, '図の階層が循環しています。', 'error'); return summarize(graph.id); }
     const next = new Set([...ancestors, graph.id]);
@@ -123,9 +129,19 @@ export function flowStructure(project: ProjectData, referenceEntities: Entity[] 
     return item;
   }
   const roots = graphs.filter(graph => graph.projectId === project.projectId && !graph.data.parentGraphId);
-  result.push(...roots.map(graph => graphItem(graph, new Set())));
-  const reachable = new Set<ID>(); function collect(item: FlowStructureItem) { reachable.add(item.id); item.children.forEach(collect); } result.forEach(collect);
-  for (const graph of graphs.filter(graph => graph.projectId === project.projectId)) if (!reachable.has(graph.id)) { add(graph.id, '上位の図が削除・不採用または接続されていません。', 'error'); result.push(graphItem(graph, new Set())); }
+  const graphItems = roots.map(graph => graphItem(graph, new Set()));
+  const reachable = new Set<ID>(); function collect(item: FlowStructureItem) { reachable.add(item.id); item.children.forEach(collect); } graphItems.forEach(collect);
+  for (const graph of graphs.filter(graph => graph.projectId === project.projectId)) if (!reachable.has(graph.id)) { add(graph.id, '上位の図が削除・不採用または接続されていません。', 'error'); graphItems.push(graphItem(graph, new Set())); }
+  // graphItem can add hierarchy diagnoses. Freeze scene/chapter summaries only
+  // after those diagnoses exist, while retaining the graph-root presentation.
+  const result = chapters.map(chapter => summarize(chapter.id, chapter.data.sceneIds.map(id => {
+    const scene = byId.get(id); if (scene?.kind === 'scene') return sceneItem(scene);
+    add(chapter.id, '章内の場面が削除・不採用または見つかりません。', 'error'); return summarize(id);
+  })));
+  const unplaced = local.filter((entity): entity is Entity<'scene'> => entity.kind === 'scene' && !placed.has(entity.id)).map(sceneItem);
+  if (unplaced.length) result.push({ ...summarize('unplaced', unplaced), name: '章に未配置の場面' });
+  result.forEach(collect);
+  result.push(...graphItems);
   const bareNodes = nodes.filter(node => node.projectId === project.projectId && !reachable.has(node.id)).map(node => summarize(node.id, [], (edgesFrom.get(node.id) ?? []).map(edge => edge.id)));
   if (bareNodes.length) result.push({ ...summarize('ungrouped', bareNodes), name: '図に未配置のノード' });
   return result;

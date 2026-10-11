@@ -3,7 +3,7 @@ import type { Comparator, ContentAnchor, Entity, EntityKind, ProjectData, RichTe
 import { KIND_LABELS, validateCondition } from '../domain/model';
 import { referenceChoices } from '../domain/referenceChoices';
 import { editRichText, type TextReplacement } from '../domain/text';
-import { conditionInputError, defaultComparisonValue, switchComparisonOperator, type ComparisonCondition } from '../domain/conditionDraft';
+import { conditionInputError, conditionInputIssue, defaultComparisonValue, switchComparisonOperator, type ComparisonCondition } from '../domain/conditionDraft';
 import { conditionToText } from '../domain/conditions';
 import {PagedSelect} from './PagedSelect';
 import {WindowedList} from './WindowedList';
@@ -114,6 +114,7 @@ function ConditionEditorNode({ value, onChange, project, depth = 0, onValid, sco
   const setPendingComparator = (pendingComparator: Comparator | undefined) => inputs.update(scope, { pendingComparator });
   const setSelectedValue = (selectedValue: number) => inputs.update(scope, { selectedValue });
   const error = !depth ? conditionInputError(c, project) : undefined;
+  const errorIssue = error ? conditionInputIssue(c, project) : undefined;
   useEffect(() => { if (!depth) onValid?.(!error); }, [error, depth]);
   const variable = project.entities.find((entity): entity is Entity<'variable'> => entity.kind === 'variable' && entity.id === c.variableId);
   const values = Array.isArray(c.value) ? c.value : [c.value];
@@ -138,7 +139,7 @@ function ConditionEditorNode({ value, onChange, project, depth = 0, onValid, sco
     {c.op === 'known' && <><RefSelect project={project} kinds={['assertion']} value={c.assertionId} label="知識" onChange={id => update('assertionId', id || '')}/><RefSelect project={project} kinds={['character']} value={c.holderId} label="知識を持つ人物" onChange={id => update('holderId', id || '')}/></>}
     {c.op === 'visited' && <><RefSelect project={project} value={c.entityId} onChange={id => update('entityId', id || '')}/><input aria-label="訪問回数" type="number" min="1" value={c.count ?? 1} onChange={e => update('count', Number(e.target.value))}/></>}
     {c.op === 'external' && <RefSelect project={project} kinds={['external_contract']} value={c.contractId} onChange={id => update('contractId', id || '')}/>}
-    {!depth && <><p className="condition-description">{describeCondition(c, project)}</p>{validateCondition(c).ok && <code className="condition-expression">{conditionToText(c as any, Object.fromEntries(project.entities.map(entity => [entity.id, labelOf(entity)])))}</code>}{error && <span className="field-error" role="alert">{error}</span>}</>}
+    {!depth && <><p className="condition-description">{describeCondition(c, project)}</p>{validateCondition(c).ok && <code className="condition-expression">{conditionToText(c as any, Object.fromEntries(project.entities.map(entity => [entity.id, labelOf(entity)])))}</code>}{error && <span className="field-error" role="alert">{errorIssue && <><code>{errorIssue.code}</code> · </>}{error}</span>}</>}
   </div>;
 }
 

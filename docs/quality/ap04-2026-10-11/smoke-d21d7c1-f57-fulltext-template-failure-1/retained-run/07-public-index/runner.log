@@ -1,0 +1,51 @@
+[WebServer] (node:70898) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:70911) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 1 test using 1 worker
+
+(node:70958) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  1 [chromium] › tests/e2e/ap04-original-f-index.spec.ts:25:1 › AT-F57 読み/旧名/別名/同名を原文と別に探し、作者の分類索引から実段落へ移り、秘密の読み・別名・参照数を出さない公開索引を保存する (8.0s)
+Testing stopped early after 1 maximum allowed failures.
+
+
+  1) [chromium] › tests/e2e/ap04-original-f-index.spec.ts:25:1 › AT-F57 読み/旧名/別名/同名を原文と別に探し、作者の分類索引から実段落へ移り、秘密の読み・別名・参照数を出さない公開索引を保存する 
+
+    Error: expect(locator).toHaveCount(expected) failed
+
+    Locator:  locator('.search-page').locator('.entity-card')
+    Expected: 1
+    Received: 2
+    Timeout:  5000ms
+
+    Call log:
+      - Expect "toHaveCount" locator('.search-page').locator('.entity-card') with timeout 5000ms
+      - waiting for locator('.search-page').locator('.entity-card')
+        14 × locator resolved to 2 elements
+           - unexpected value "2"
+
+
+      58 |   await panel.getByLabel('作品内を検索', { exact: true }).fill('全文だけの合言葉');
+      59 |   await expect(panel.getByRole('region', { name: '本文の検索位置', exact: true })).toContainText(firstBody[0].text);
+    > 60 |   await panel.getByLabel('作品内を検索', { exact: true }).fill('勇者'); await expect(panel.locator('.entity-card')).toHaveCount(1);
+         |                                                                                                             ^
+      61 |   await catalog(page, '五十音・分類索引'); await expect(panel.locator('button.reference-link')).toHaveCount(0);
+      62 |   await panel.getByLabel('作品内を検索', { exact: true }).fill('全文だけの合言葉'); await expect(panel.locator('button.reference-link')).toHaveCount(0);
+      63 |   await panel.getByLabel('作品内を検索', { exact: true }).fill('アオイ');
+        at /workspace/runtime-verification/tests/e2e/ap04-original-f-index.spec.ts:60:109
+
+    Error Context: ../../tmp/ap04-modal-successor-smoke-preparation/07-public-index/test-results/ap04-original-f-index-AT-F-813b5-、秘密の読み・別名・参照数を出さない公開索引を保存する-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../tmp/ap04-modal-successor-smoke-preparation/07-public-index/test-results/ap04-original-f-index-AT-F-813b5-、秘密の読み・別名・参照数を出さない公開索引を保存する-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace ../../tmp/ap04-modal-successor-smoke-preparation/07-public-index/test-results/ap04-original-f-index-AT-F-813b5-、秘密の読み・別名・参照数を出さない公開索引を保存する-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    [chromium] › tests/e2e/ap04-original-f-index.spec.ts:25:1 › AT-F57 読み/旧名/別名/同名を原文と別に探し、作者の分類索引から実段落へ移り、秘密の読み・別名・参照数を出さない公開索引を保存する 
+  1 error was not a part of any test, see above for details

@@ -1,0 +1,154 @@
+{
+  "config": {
+    "argv": [
+      "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+      "/workspace/runtime-verification/node_modules/.bin/playwright",
+      "test",
+      "tests/e2e/ap04-original-n-f14-trigger.spec.ts",
+      "--project=chromium",
+      "--workers=1",
+      "--retries=0",
+      "--max-failures=1",
+      "--trace=on",
+      "--reporter=list,json,html",
+      "--grep",
+      "AT-F14 ",
+      "--output",
+      "/tmp/ap04-modal-successor-smoke-preparation/06-trigger-resend/test-results"
+    ],
+    "configFile": "/workspace/runtime-verification/playwright.config.ts",
+    "rootDir": "/workspace/runtime-verification/tests/e2e",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 1,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/tmp/ap04-modal-successor-smoke-preparation/06-trigger-resend/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "/workspace/runtime-verification/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list"
+      ],
+      [
+        "json"
+      ],
+      [
+        "html"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": {
+      "command": "npm run preview -- --port 4173",
+      "url": "http://127.0.0.1:4173/shinariokanri/",
+      "reuseExistingServer": false
+    }
+  },
+  "suites": [
+    {
+      "title": "ap04-original-n-f14-trigger.spec.ts",
+      "file": "ap04-original-n-f14-trigger.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "AT-F14 鍵ありgate・入室trigger・once=runで、鍵状態だけの更新と入室・同じoccurrence再送・再入室を区別する",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 18646,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T10:14:51.160Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "AT-F14-given.scenario",
+                      "contentType": "application/zip",
+                      "body": "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"
+                    },
+                    {
+                      "name": "AT-F14-given.json",
+                      "contentType": "application/json",
+                      "body": "ewogICJmaXh0dXJlU2hhMjU2IjogIjQ1MzllNWYzN2FmZTE2NjhhNWQ3YTU0MTQ2ZjEwMmRiMDQ4Yzk5NzZlYTE4NWFmZTc4YjBjNDNiMjY3NDI3MzgiLAogICJmaXh0dXJlQnl0ZXMiOiAxOTA4LAogICJmYWN0cyI6IHsKICAgICJnYXRlIjogewogICAgICAib3AiOiAiY29tcGFyZSIsCiAgICAgICJ2YXJpYWJsZUlkIjogIjVhNWYyYzk4LTMxMjAtNGU0NS1hMGZjLWRiZjM2OTRlMzhhMSIsCiAgICAgICJjb21wYXJhdG9yIjogImVxIiwKICAgICAgInZhbHVlIjogewogICAgICAgICJ0eXBlIjogImJvb2xlYW4iLAogICAgICAgICJ2YWx1ZSI6IHRydWUKICAgICAgfQogICAgfSwKICAgICJ0cmlnZ2VyIjogewogICAgICAiaWQiOiAiMjQ4ZWMwOTQtOWU5ZC00YzY5LTg4ZTAtYTk3ZGNlMDU0MzFjIiwKICAgICAgImV2ZW50IjogImVudGVyIiwKICAgICAgImV2ZW50S2V5IjogIuWFpeWupCIsCiAgICAgICJyZXBlYXQiOiAib25jZSIsCiAgICAgICJzY29wZSI6ICJydW4iCiAgICB9LAogICAgImF1dG9tYXRpY1BvbGljeUV4cGxpY2l0IjogImZpcnN0X21hdGNoIiwKICAgICJrZXlWYXJpYWJsZUlkIjogIjVhNWYyYzk4LTMxMjAtNGU0NS1hMGZjLWRiZjM2OTRlMzhhMSIsCiAgICAiZWZmZWN0Q291bnRJZCI6ICJmYmNmYWQzMy04NjYzLTRmZDMtYTFjOS04MTAwZmIyZjJiN2QiLAogICAgImVmZmVjdElkIjogImY0ODUwNDdjLTE1NWEtNDM1OC1hMzAzLTE0YzNlYTc4MjgzMSIsCiAgICAiZW50cnlFZGdlSWQiOiAiY2U3Mjc0YjAtN2E4ZS00MTJkLTlhNjMtNThhYjUzYTBiMzkzIiwKICAgICJib29sZWFuS2V5U3RhdGVJc0F1dGhvckRlY2xhcmVkIjogdHJ1ZQogIH0KfQ=="
+                    },
+                    {
+                      "name": "AT-F14-observation.json",
+                      "contentType": "application/json",
+                      "body": "ewogICJ0cmlnZ2VySWQiOiAiMjQ4ZWMwOTQtOWU5ZC00YzY5LTg4ZTAtYTk3ZGNlMDU0MzFjIiwKICAic2NvcGUiOiAicnVuIiwKICAib2NjdXJyZW5jZUlkIjogImE3ZTdlYzQ1LWQ5MGYtNGQ4Zi04ZTMxLTVjZjhmOTRmZTA2MiIsCiAgInNhdmVkVHJhY2VJZHMiOiBbCiAgICAiZjMwNGY0YWEtMjA1ZC00NTgyLWIyNTEtNWEyZGZjYzI5OWZkIiwKICAgICI0ZDRlMTM4Yy0zMjgwLTRmNTctOWE5MS1jMzcwYzYzMWU1YTAiLAogICAgIjYyMDQ0NjFhLWIwNDgtNGViZC1iMzU5LWMyNTI4NzU5MTUwMSIsCiAgICAiYzcyNDcyYTctNzA0Yi00YzljLWIxOGEtZTI2M2U3NzNmMjI0IgogIF0sCiAgImluaXRpYWxDb3VudCI6IDAsCiAgImZpcnN0RW50cnlDb3VudCI6IDEsCiAgImR1cGxpY2F0ZURlbGl2ZXJ5QWRkZWRTdGVwcyI6IDAsCiAgInNhbWVSdW5FbnRyeUVmZmVjdENvdW50IjogMSwKICAibmV4dFJ1bkVudHJ5RWZmZWN0Q291bnQiOiAxLAogICJuZXh0UnVuTG9vcCI6IDEsCiAgImF1dGhvclZhcmlhYmxlc1VuY2hhbmdlZCI6IHRydWUsCiAgImNvbGRQcm9qZWN0QW5kUmVjb3Jkc1VuY2hhbmdlZCI6IHRydWUKfQ=="
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/tmp/ap04-modal-successor-smoke-preparation/06-trigger-resend/test-results/ap04-original-n-f14-trigge-e9561-と入室・同じoccurrence再送・再入室を区別する-chromium/trace.zip"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "85075da9a21a7f3d8323-a36adf4344ef431cb61c",
+          "file": "ap04-original-n-f14-trigger.spec.ts",
+          "line": 31,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-11T10:14:49.639Z",
+    "duration": 20682.565000000002,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

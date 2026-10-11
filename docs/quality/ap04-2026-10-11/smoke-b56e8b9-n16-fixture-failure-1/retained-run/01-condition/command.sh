@@ -1,0 +1,1 @@
+npx --no-install playwright test tests/e2e/ap04-original-n-condition-parity.spec.ts --project=chromium --workers=1 --retries=0 --max-failures=1 --trace=on --reporter=list\,json\,html --grep AT-N16\  --output /tmp/ap04-b56e8b9-smoke-preparation/01-condition/test-results 

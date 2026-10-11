@@ -1,0 +1,974 @@
+{
+  "format": "ap04-original-clause-proof-plan",
+  "format_version": "1.0.0",
+  "original_audit": "docs/review-2026-10-11/original_acceptance_audit.json",
+  "original_audit_sha256": "c3f843c573007c407266c75114cdb8f8fce5f6dd9020417599f05e60755d7e00",
+  "candidate": "pending root fixed candidate",
+  "test_execution": "not_run",
+  "case_count": 20,
+  "clause_count": 80,
+  "passing_case_count": 0,
+  "passing_clause_count": 0,
+  "normal_ui": "fixtures constructed as given and loaded via .scenario; actions use visible author/reader/game receiver controls; backup and downloaded receipts are observed outputs",
+  "original_exploration_limits": {
+    "maxStates": 100000,
+    "maxTransitions": 10000,
+    "maxMs": 30000
+  },
+  "cases": [
+    {
+      "id": "AT-E02",
+      "original_case": {
+        "id": "AT-E02",
+        "requirement_ids": [
+          "REQ-B05",
+          "REQ-B06",
+          "REQ-B13",
+          "REQ-B21",
+          "REQ-F44"
+        ],
+        "package_id": "WP23",
+        "given": "世界tick -10の出来事を後章で回想する作品",
+        "when": "表示単位、本編基準点、回想章順をそれぞれ変更する",
+        "then": "世界tickは不変、相対表示と開示順だけが所定に変わる",
+        "negative_or_edge": "暦の存在しない日付と相対制約循環は拒否される"
+      },
+      "source": "tests/e2e/ap04-original-e02-time-presentation.spec.ts",
+      "source_sha256": "85ab1f1d240086dc0fc4154a3ed595aab4615384163f2f2837e66f7a8374fcf9",
+      "clauses": [
+        {
+          "name": "given",
+          "original": "世界tick -10の出来事を後章で回想する作品",
+          "callback_line": 34,
+          "result": "not_run"
+        },
+        {
+          "name": "when",
+          "original": "表示単位、本編基準点、回想章順をそれぞれ変更する",
+          "callback_line": 41,
+          "result": "not_run"
+        },
+        {
+          "name": "then",
+          "original": "世界tickは不変、相対表示と開示順だけが所定に変わる",
+          "callback_line": 57,
+          "result": "not_run"
+        },
+        {
+          "name": "negative_or_edge",
+          "original": "暦の存在しない日付と相対制約循環は拒否される",
+          "callback_line": 63,
+          "result": "not_run"
+        }
+      ],
+      "result": "not_run"
+    },
+    {
+      "id": "AT-E03",
+      "original_case": {
+        "id": "AT-E03",
+        "requirement_ids": [
+          "REQ-B14",
+          "REQ-B15",
+          "REQ-B16",
+          "REQ-F16",
+          "REQ-F38",
+          "REQ-F40",
+          "REQ-F41"
+        ],
+        "package_id": "WP23",
+        "given": "鍵取得/未取得が同じ合流先へ続く固定作品",
+        "when": "二経路を実行し戻す、禁止遷移を含む一括効果を選ぶ",
+        "then": "合流後も鍵差が残り、戻すと全状態が復元され、不正効果は全体拒否となる",
+        "negative_or_edge": "未知の値は偽にされず、有効選択肢ゼロは意図した終端と区別される"
+      },
+      "source": "tests/e2e/ap04-original-e03-state.spec.ts",
+      "source_sha256": "6cb154f65e76555027708bf69bd22a0158d172b13b0fdf73efa3cd643913efc4",
+      "clauses": [
+        {
+          "name": "given",
+          "original": "鍵取得/未取得が同じ合流先へ続く固定作品",
+          "callback_line": 48,
+          "result": "not_run"
+        },
+        {
+          "name": "when",
+          "original": "二経路を実行し戻す、禁止遷移を含む一括効果を選ぶ",
+          "callback_line": 53,
+          "result": "not_run"
+        },
+        {
+          "name": "then",
+          "original": "合流後も鍵差が残り、戻すと全状態が復元され、不正効果は全体拒否となる",
+          "callback_line": 74,
+          "result": "not_run"
+        },
+        {
+          "name": "negative_or_edge",
+          "original": "未知の値は偽にされず、有効選択肢ゼロは意図した終端と区別される",
+          "callback_line": 81,
+          "result": "not_run"
+        }
+      ],
+      "result": "not_run"
+    },
+    {
+      "id": "AT-E04",
+      "original_case": {
+        "id": "AT-E04",
+        "requirement_ids": [
+          "REQ-B17",
+          "REQ-B19",
+          "REQ-F43",
+          "REQ-F45",
+          "REQ-F46",
+          "REQ-F47"
+        ],
+        "package_id": "WP23",
+        "given": "必須手掛かりを飛ばせる経路と嘘の証言と続編の謎",
+        "when": "真相へ行く二経路を解析する",
+        "then": "手掛かり欠落の証人経路を示し、人物の認識と真実を区別し続編謎を別集計する",
+        "negative_or_edge": "理解したと判定せず、外部条件を含む経路は未確認とする"
+      },
+      "source": "tests/e2e/ap04-original-e04-narrative.spec.ts",
+      "source_sha256": "4485df8926bef42dcc0635c49552558786c55edfc3f8bae5360068b7426199cc",
+      "clauses": [
+        {
+          "name": "given",
+          "original": "必須手掛かりを飛ばせる経路と嘘の証言と続編の謎",
+          "callback_line": 38,
+          "result": "not_run"
+        },
+        {
+          "name": "when",
+          "original": "真相へ行く二経路を解析する",
+          "callback_line": 47,
+          "result": "not_run"
+        },
+        {
+          "name": "then",
+          "original": "手掛かり欠落の証人経路を示し、人物の認識と真実を区別し続編謎を別集計する",
+          "callback_line": 58,
+          "result": "not_run"
+        },
+        {
+          "name": "negative_or_edge",
+          "original": "理解したと判定せず、外部条件を含む経路は未確認とする",
+          "callback_line": 66,
+          "result": "not_run"
+        }
+      ],
+      "result": "not_run"
+    },
+    {
+      "id": "AT-E08",
+      "original_case": {
+        "id": "AT-E08",
+        "requirement_ids": [
+          "REQ-F21",
+          "REQ-F23",
+          "REQ-F48"
+        ],
+        "package_id": "WP23",
+        "given": "原文と翻訳と音声が確認済みの台詞",
+        "when": "改名/並替え、原文編集、分割、差戻しを行う",
+        "then": "音声取り違えがなく内容変更時だけ見直し対象となり分割対応履歴を追える",
+        "negative_or_edge": "取消や単体復元も新revisionとなり古い成果物を自動確認済みにしない"
+      },
+      "source": "tests/e2e/ap04-original-e08-deliverables.spec.ts",
+      "source_sha256": "66c765076f08be521b5dcd747ea6a2a367fd22866543ab4badd2bf8144d41a16",
+      "clauses": [
+        {
+          "name": "given",
+          "original": "原文と翻訳と音声が確認済みの台詞",
+          "callback_line": 33,
+          "result": "not_run"
+        },
+        {
+          "name": "when",
+          "original": "改名/並替え、原文編集、分割、差戻しを行う",
+          "callback_line": 41,
+          "result": "not_run"
+        },
+        {
+          "name": "then",
+          "original": "音声取り違えがなく内容変更時だけ見直し対象となり分割対応履歴を追える",
+          "callback_line": 90,
+          "result": "not_run"
+        },
+        {
+          "name": "negative_or_edge",
+          "original": "取消や単体復元も新revisionとなり古い成果物を自動確認済みにしない",
+          "callback_line": 98,
+          "result": "not_run"
+        }
+      ],
+      "result": "not_run"
+    },
+    {
+      "id": "AT-E09",
+      "original_case": {
+        "id": "AT-E09",
+        "requirement_ids": [
+          "REQ-F09",
+          "REQ-F51",
+          "REQ-F52",
+          "REQ-F54"
+        ],
+        "package_id": "WP23",
+        "given": "二経路で再利用する場面と公開済み小説版",
+        "when": "世界設定改訂と制作集計、場面の日付変更を行う",
+        "then": "固有制作数は一回、体験量は各経路で算出し、小説旧版と実期限は不変",
+        "negative_or_edge": "未設定速度の所要時間は不明とし、執筆済でも実装未完了を抽出する"
+      },
+      "source": "tests/e2e/ap04-original-e09-world-production.spec.ts",
+      "source_sha256": "35537c84ddbb9537e1f46a316a8b6f5c89184cfc5e1cac6586b64ba0096b6ee6",
+      "clauses": [
+        {
+          "name": "given",
+          "original": "二経路で再利用する場面と公開済み小説版",
+          "callback_line": 42,
+          "result": "not_run",
+          "sources": [
+            {
+              "file": "tests/e2e/ap04-original-e09-world-production.spec.ts",
+              "line": 19,
+              "end_line": 49,
+              "excerpt_sha256": "254099119750cc37ae94d1846b3a303cad265605e6d77529ef4970fe773bd114",
+              "source_excerpt": "test('AT-E09 二経路の同じ場面と公開済み小説を世界改訂・制作集計・日付変更で保ち、未設定時間と実装未完了を区別する', async ({ page }, info) => {\n  let world = createProject('AT-E09 改訂する共通世界');\n  const place = createEntity(world.projectId, 'place', '旧世界設定の城', { body: textToRichText('公開済み小説が参照した旧世界設定。') });\n  place.status = 'confirmed'; world.entities.push(place); world = await createWorldSnapshot(world, '小説公開時の旧世界版');\n  const worldPin = world.snapshots.at(-1)!;\n  let p = createProject('AT-E09 二経路で同じ場面を再利用する作品');\n  const event = createEntity(p.projectId, 'event', '再利用場面の世界日付', { time: { mode: 'instant', at: '5', calendarId: p.calendarId }, locationId: place.id });\n  const scene = createEntity(p.projectId, 'scene', '二経路で使う一つの制作場面', { body: textToRichText('城の門を開く共通場面。'), eventIds: [event.id] });\n  const a = createEntity(p.projectId, 'flow_node', '再利用経路A', { nodeType: 'entry', sceneId: scene.id });\n  const b = createEntity(p.projectId, 'flow_node', '再利用経路B', { nodeType: 'entry', sceneId: scene.id });\n  const end = createEntity(p.projectId, 'flow_node', '二経路の終端', { nodeType: 'terminal', terminalReason: '同じ場面を体験して終了' });\n  const ea = createEntity(p.projectId, 'flow_edge', '経路Aを終える', { fromId: a.id, toId: end.id, label: '経路Aを終える' });\n  const eb = createEntity(p.projectId, 'flow_edge', '経路Bを終える', { fromId: b.id, toId: end.id, label: '経路Bを終える' });\n  const graph = createEntity(p.projectId, 'flow_graph', '同じ場面の二経路', { nodeIds: [a.id, b.id, end.id], edgeIds: [ea.id, eb.id], entryIds: [a.id, b.id], exitIds: [end.id] });\n  const deadline = { date: '2026-12-31', timeZone: 'Asia/Tokyo' };\n  const written = createEntity(p.projectId, 'production_task', '同じ場面の執筆完了', { targetIds: [scene.id], stage: 'writing', progress: 'done', deadline });\n  const implementation = createEntity(p.projectId, 'production_task', '執筆済み場面の実装未完了', { targetIds: [scene.id], stage: 'implementation', progress: 'todo', dependsOn: [written.id], deadline });\n  p.entities.push(event, scene, a, b, end, ea, eb, graph, written, implementation); p.entities.forEach(entity => { entity.status = 'confirmed'; });\n  p = (await previewWorldVersion(p, world, worldPin.id, [place.id], [world])).candidate;\n  p = await createWorldSnapshot(p, '公開済み小説の元設定版'); const oldEdition = p.snapshots.at(-1)!;\n  const novel = createEntity(p.projectId, 'media_variant', '公開済み小説旧版', { medium: 'novel', baseSnapshotId: oldEdition.id, body: textToRichText('旧世界の城を描いた公開済み小説本文。'), sourceIds: [scene.id, place.id], releaseAt: '2026-10-01T00:00:00Z', needsReview: false });\n  novel.status = 'confirmed'; p.entities.push(novel);\n  const bytes = await exportScenario(p, { worlds: { [worldPin.id]: world } });\n  await test.step('AT-E09 given: 二経路で再利用する場面と公開済み小説版', async () => {\n    await attachGiven(info, 'AT-E09', bytes, { sceneId: scene.id, routes: [a.id, b.id], novelId: novel.id, publishedEdition: oldEdition.id, oldWorldPin: worldPin.id, deadline, missingSpeed: null });\n    await seed(page, await exportScenario(world)); await page.locator('.project-switch').click();\n    await page.getByRole('button', { name: '保存ファイルを読み込む', exact: true }).click();\n    await page.locator('input[type=file][accept*=\".scenario\"]').setInputFiles({ name: 'AT-E09.scenario', mimeType: 'application/zip', buffer: Buffer.from(bytes) });\n    await page.getByLabel('復元方法と対象への影響を確認しました').check(); await page.getByRole('button', { name: 'この内容で復元する', exact: true }).click();\n    await expect(page.locator('.app-shell')).toBeVisible();\n  });\n",
+              "purpose": "Same original two-route reused scene, actual published novel/old world pin and deadline, imported with normal controls."
+            }
+          ]
+        },
+        {
+          "name": "when",
+          "original": "世界設定改訂と制作集計、場面の日付変更を行う",
+          "callback_line": 52,
+          "result": "not_run",
+          "sources": [
+            {
+              "file": "tests/e2e/ap04-original-e09-world-production.spec.ts",
+              "line": 50,
+              "end_line": 119,
+              "excerpt_sha256": "39505759a9435cdcc78a6129bc43ed3bf8d6db5b081deb51e32a608db6227187",
+              "source_excerpt": "  const revisedBody = textToRichText('新たに改訂した世界設定。旧公開本文へは自動反映しない。');\n  let newWorldPin!: ProjectSnapshot;\n  await test.step('AT-E09 when: 世界設定改訂と制作集計、場面の日付変更を行う', async () => {\n    await switchWork(page, world.name); await openEntity(page, 'place', place.name);\n    await editData(page, { ...place.data, body: revisedBody });\n    await worlds(page); await page.getByLabel('新しい共通世界版の名称', { exact: true }).fill('通常画面で改訂した新世界版');\n    await page.getByRole('button', { name: 'この内容を確定版として保存', exact: true }).click();\n    await expect(page.getByLabel('新しい共通世界版の名称', { exact: true })).toHaveValue('');\n    const revisedWorld = await backup(page);\n    const capturedPin = revisedWorld.project.snapshots.find(pin => pin.versionLabel === '通常画面で改訂した新世界版');\n    if (!capturedPin) throw new Error('通常画面で保存した新世界版がありません');\n    newWorldPin = capturedPin;\n    expect(newWorldPin.content.entities.find(entity => entity.id === place.id)).toMatchObject({ kind: 'place', name: place.name, data: { body: revisedBody } });\n    expect(revisedWorld.project.snapshots.find(pin => pin.id === worldPin.id)).toEqual(worldPin);\n    await switchWork(page, p.name); await worlds(page);\n    await page.getByLabel('参照する共通世界', { exact: true }).selectOption(world.projectId);\n    const selectedPin = await page.getByLabel('固定する共通世界版', { exact: true }).locator('option').filter({ hasText: newWorldPin.versionLabel }).getAttribute('value');\n    expect(selectedPin).toBe(newWorldPin.id);\n    await page.getByLabel('固定する共通世界版', { exact: true }).selectOption(newWorldPin.id);\n    await expect(page.getByRole('checkbox', { name: place.name, exact: true })).toBeChecked();\n    const beforePreview = await authorFingerprint(page);\n    await page.getByRole('button', { name: '適用前の差分・影響を確認', exact: true }).click();\n    const impact = page.getByRole('dialog', { name: '共通世界版の変更前の影響', exact: true });\n    await expect(impact.getByRole('heading', { name: '共通世界版の変更前の影響', level: 2, exact: true })).toBeVisible();\n    const impactTitleId = await impact.getAttribute('aria-labelledby');\n    expect(impactTitleId).toBeTruthy();\n    await expect(impact).toContainText(`現在版から ${newWorldPin.versionLabel} へ固定先を変更します。採用設定 1件。内容のhashを確認済みです。`);\n    const changedPlace = impact.locator('.world-version-change').filter({ has: page.locator('code').filter({ hasText: place.id }) });\n    await expect(changedPlace).toHaveCount(1);\n    await expect(changedPlace.locator('strong')).toHaveText(`変更 · ${place.name}`);\n    await expect(changedPlace.locator('code')).toHaveText(place.id);\n    for (const affected of [event, novel]) await expect(impact.getByRole('button', { name: `${affected.name} · ${affected.id.slice(-6)}`, exact: true })).toBeVisible();\n    expect(await authorFingerprint(page)).toBe(beforePreview);\n    const impactText = await impact.innerText();\n    await changedPlace.getByRole('button', { name: '元情報を確認', exact: true }).click();\n    const fixedPreview = page.getByRole('dialog', { name: '固定版の参照先', exact: true });\n    await expect(fixedPreview).toBeVisible();\n    await expect(fixedPreview.getByRole('heading', { name: '固定版の参照先', level: 2, exact: true })).toBeVisible();\n    const fixedTitleId = await fixedPreview.getAttribute('aria-labelledby');\n    expect(fixedTitleId).toBeTruthy();\n    expect(fixedTitleId).not.toBe(impactTitleId);\n    await expect(fixedPreview.getByRole('heading', { name: '固定版の参照先', level: 2, exact: true })).toHaveAttribute('id', fixedTitleId!);\n    await expect(fixedPreview.getByRole('heading', { name: place.name, level: 2, exact: true })).toBeVisible();\n    await expect(fixedPreview).toContainText(`固定版: ${newWorldPin.versionLabel} · 保存日時: ${newWorldPin.createdAt}`);\n    await expect(fixedPreview).toContainText(revisedBody[0].text);\n    await expect(fixedPreview).toContainText('世界作品の現在の編集とは区別して表示しています。');\n    expect(await authorFingerprint(page)).toBe(beforePreview);\n    const fixedPreviewText = await fixedPreview.innerText();\n    await fixedPreview.getByRole('button', { name: '閉じる', exact: true }).click();\n    await expect(fixedPreview).toHaveCount(0);\n    await expect(impact.getByRole('heading', { name: '共通世界版の変更前の影響', level: 2, exact: true })).toBeVisible();\n    expect(await authorFingerprint(page)).toBe(beforePreview);\n    await attachObservation(info, 'AT-E09-world-revision-preview', { changedPlaceId: place.id, newWorldPin: { id: newWorldPin.id, contentHash: newWorldPin.contentHash, versionLabel: newWorldPin.versionLabel, createdAt: newWorldPin.createdAt }, affectedIds: [event.id, novel.id], impactText, fixedPreviewText });\n    await expect(impact.getByRole('button', { name: '確認した固定版・採用設定を保存', exact: true })).toBeEnabled();\n    await impact.getByRole('button', { name: '確認した固定版・採用設定を保存', exact: true }).click();\n    await expect(impact).toHaveCount(0);\n    await openEntity(page, 'event', event.name); await editData(page, { ...event.data, time: { mode: 'instant', at: '15', calendarId: p.calendarId } });\n    await navigate(page, /^構成/); await page.getByRole('tab', { name: '試読・検査', exact: true }).click();\n    for (const [entry, edge] of [[a, ea], [b, eb]]) {\n      await page.getByLabel('試読する作品版', { exact: true }).selectOption(''); await page.getByLabel('試読の開始点', { exact: true }).selectOption(entry.id);\n      await page.getByRole('button', { name: /^(試読を始める|この状態から開始し直す)$/ }).click();\n      await page.getByRole('button', { name: edge.name, exact: true }).click(); await page.getByRole('button', { name: '経路を記録', exact: true }).click();\n      await expect(page.getByRole('status').filter({ hasText: '開始状態と経路を端末内に保存しました' })).toBeVisible();\n    }\n    await production(page);\n    await expect(page.locator('.production-planning')).toContainText('固有場面 1');\n    const route = page.getByLabel('制作量を比較する経路', { exact: true });\n    const ids = await route.locator('option').evaluateAll(options => options.map(option => (option as HTMLOptionElement).value).filter(Boolean)); expect(ids).toHaveLength(2);\n    for (const id of ids) { await route.selectOption(id); await expect(page.locator('.production-planning')).toContainText('選択経路の提示量 1'); }\n  });\n",
+              "purpose": "Save the exact revised body/new immutable world pin; observe changed UUID/name, actual affected event/novel and fixed-source full body/version through normal UI; verify preview/open/close changes no author records; save adoption and run both original routes."
+            }
+          ]
+        },
+        {
+          "name": "then",
+          "original": "固有制作数は一回、体験量は各経路で算出し、小説旧版と実期限は不変",
+          "callback_line": 120,
+          "result": "not_run",
+          "sources": [
+            {
+              "file": "tests/e2e/ap04-original-e09-world-production.spec.ts",
+              "line": 120,
+              "end_line": 132,
+              "excerpt_sha256": "b2d7889893588787013b998d740c4fed293dc46b538b94ce8636a027c207be05",
+              "source_excerpt": "  await test.step('AT-E09 then: 固有制作数は一回、体験量は各経路で算出し、小説旧版と実期限は不変', async () => {\n    const saved = await backup(page);\n    expect(saved.project.entities.filter(entity => entity.kind === 'scene')).toHaveLength(1);\n    expect(saved.project.entities.find(entity => entity.id === novel.id)).toMatchObject({ data: { body: novel.data.body, baseSnapshotId: oldEdition.id, releaseAt: novel.data.releaseAt } });\n    expect(saved.project.snapshots.find(pin => pin.id === oldEdition.id)).toEqual(oldEdition);\n    for (const id of [written.id, implementation.id]) expect(saved.project.entities.find(entity => entity.id === id)).toMatchObject({ data: { deadline } });\n    expect(saved.project.worldReferences.find(reference => reference.projectId === world.projectId)).toEqual({ projectId: world.projectId, immutableSnapshotId: newWorldPin.id, contentHash: newWorldPin.contentHash });\n    expect(saved.project.views.find(view => view.view === `world-adoption:${world.projectId}`)?.entityIds).toEqual([place.id]);\n    const savedNewPin = saved.worlds[newWorldPin.id]?.snapshots.find(pin => pin.id === newWorldPin.id);\n    expect(savedNewPin).toEqual(newWorldPin);\n    expect(savedNewPin?.content.entities.find(entity => entity.id === place.id)).toMatchObject({ kind: 'place', name: place.name, data: { body: revisedBody } });\n    expect(saved.worlds[worldPin.id]?.snapshots.find(pin => pin.id === worldPin.id)).toEqual(worldPin);\n  });\n",
+              "purpose": "Compare unique/route production quantities and downloaded current world reference ID/hash/body, original adoption IDs, old world snapshot, published novel/edition and actual deadlines."
+            }
+          ]
+        },
+        {
+          "name": "negative_or_edge",
+          "original": "未設定速度の所要時間は不明とし、執筆済でも実装未完了を抽出する",
+          "callback_line": 133,
+          "result": "not_run",
+          "sources": [
+            {
+              "file": "tests/e2e/ap04-original-e09-world-production.spec.ts",
+              "line": 133,
+              "end_line": 162,
+              "excerpt_sha256": "f53eb9c1de78a6b1d308f81a633ce06582819074a4055952877e7ea9e2279d1a",
+              "source_excerpt": "  await test.step('AT-E09 negative_or_edge: 未設定速度の所要時間は不明とし、執筆済でも実装未完了を抽出する', async () => {\n    await production(page); const panel = page.locator('.production-planning');\n    // A changed world/date may require review of the completed writing task.\n    // The authored text remains complete; it does not complete implementation.\n    await expect(panel.locator('article').filter({ hasText: written.name })).toContainText(/writing · (done|needs_review)/);\n    const implementationRow = panel.locator('article').filter({ hasText: implementation.name });\n    await expect(implementationRow).toContainText('implementation · todo');\n    await expect(implementationRow).toContainText('所要時間 不明');\n    await expect(implementationRow).toContainText('速度 未設定');\n    const pending = page.locator('.production-column').filter({ has: page.getByRole('heading', { name: /^未着手/ }) });\n    await expect(pending.locator('.task-card').filter({ hasText: implementation.name })).toContainText(scene.name);\n    await expect(pending.locator('.task-card').filter({ hasText: written.name })).toHaveCount(0);\n    await panel.getByLabel('見積する制作タスク', { exact: true }).selectOption(implementation.id);\n    await expect(panel.getByLabel('一作業日の固有件数', { exact: true })).toHaveValue('');\n    const unset = await backup(page);\n    const unsetTask = unset.project.entities.find(entity => entity.id === implementation.id);\n    expect(unsetTask).toMatchObject({ kind: 'production_task', data: { stage: 'implementation', progress: 'todo', estimate: null } });\n    expect(unset.project.entities.find(entity => entity.id === scene.id)).toMatchObject({ data: { body: scene.data.body } });\n    // An omitted speed is unknown. A supplied zero is separately invalid.\n    await production(page); await panel.getByLabel('見積する制作タスク', { exact: true }).selectOption(implementation.id);\n    await panel.getByLabel('一作業日の固有件数', { exact: true }).fill('0'); await panel.getByLabel('見積の仮定', { exact: true }).fill('明示した速度0は有効な所要時間に換算しない');\n    const before = await authorFingerprint(page); await panel.getByRole('button', { name: '制作見積を確認', exact: true }).click();\n    await expect(panel.getByRole('alert')).toContainText('速度');\n    await expect(panel.getByRole('button', { name: '確認した制作見積を保存', exact: true })).toHaveCount(0);\n    expect(await authorFingerprint(page)).toBe(before);\n    await page.reload(); const saved = await backup(page);\n    expect(saved.project.entities.find(entity => entity.id === implementation.id)).toMatchObject({ data: { estimate: null } });\n    await production(page); await expect(panel.locator('article').filter({ hasText: implementation.name })).toContainText('所要時間 不明');\n    await attachObservation(info, 'AT-E09-observed', { currentWorld: saved.project.worldReferences, oldWorldPin: worldPin.id, preservedPublishedEdition: oldEdition.id, novelBody: novel.data.body, productionSceneCount: 1, perRouteOccurrences: [1, 1], deadline, unsetEstimateExport: unsetTask, durationWithoutSpeed: { value: null, observedDisplay: '所要時間 不明 · 速度 未設定' }, invalidDefinedSpeed: { value: 0, rejected: true, authorRecordsUnchanged: true }, authoredSceneBody: scene.data.body, writingReviewState: saved.project.entities.find(entity => entity.id === written.id)?.data, implementationPending: saved.project.entities.find(entity => entity.id === implementation.id)?.data });\n  });\n",
+              "purpose": "Observe nullable unset-speed unknown duration and implementation todo in UI/download/cold; separately reject explicit zero without changing author records."
+            }
+          ]
+        }
+      ],
+      "result": "not_run",
+      "dependencies": [
+        {
+          "file": "src/ui/components.tsx",
+          "bytes": 5177,
+          "sha256": "890809c7b2ca2f0f9fdcc1d00c68029460aa4f17ed8815f323a4d3d59d9776e3",
+          "purpose": "Actual Modal title useId/aria-labelledby dependency; E09 opens outer world-impact and inner fixed-version dialogs by their distinct accessible names and verifies separate title IDs."
+        }
+      ]
+    },
+    {
+      "id": "AT-E10",
+      "original_case": {
+        "id": "AT-E10",
+        "requirement_ids": [
+          "REQ-F17",
+          "REQ-F18",
+          "REQ-F20",
+          "REQ-F42",
+          "REQ-N05",
+          "REQ-N12"
+        ],
+        "package_id": "WP23",
+        "given": "抽選・無制限ループ・外部戦闘を含む作品",
+        "when": "同じ記録を再実行して探索上限まで解析する",
+        "then": "抽選は再現され、未確認の範囲と分母を示し、仮戦闘結果と実ゲーム結果を別に記録する",
+        "negative_or_edge": "対象版の変更で再確認待ちになり、打切りを到達不能の証明としない"
+      },
+      "source": "tests/e2e/ap04-original-e10-exploration.spec.ts",
+      "source_sha256": "b0cb5a14c77a5e286cc287568b1f5b60ad5378bdfc65817a073e9c40b259e465",
+      "clauses": [
+        {
+          "name": "given",
+          "original": "抽選・無制限ループ・外部戦闘を含む作品",
+          "callback_line": 30,
+          "result": "not_run"
+        },
+        {
+          "name": "when",
+          "original": "同じ記録を再実行して探索上限まで解析する",
+          "callback_line": 36,
+          "result": "not_run"
+        },
+        {
+          "name": "then",
+          "original": "抽選は再現され、未確認の範囲と分母を示し、仮戦闘結果と実ゲーム結果を別に記録する",
+          "callback_line": 47,
+          "result": "not_run"
+        },
+        {
+          "name": "negative_or_edge",
+          "original": "対象版の変更で再確認待ちになり、打切りを到達不能の証明としない",
+          "callback_line": 73,
+          "result": "not_run"
+        }
+      ],
+      "result": "not_run",
+      "external_conditions": [
+        {
+          "result": "not_run",
+          "required": "target game engine/version, actual game adapter, physical game device and battle result evidence",
+          "observed_local_scope": "Linux Chromium generic browser-game receiver; no credit for actual target game or physical device"
+        }
+      ]
+    },
+    {
+      "id": "AT-F37",
+      "original_case": {
+        "id": "AT-F37",
+        "requirement_ids": [
+          "REQ-F37"
+        ],
+        "package_id": "WP11",
+        "given": "新しい作品と下書き状態",
+        "when": "生存をenumの存命/死亡で宣言し、integer好感度と未設定booleanを登録して型違い代入を試す",
+        "then": "「死亡」と「存命」のような反対の意味の値を重複して管理しない。未設定を偽と決め付けない。",
+        "negative_or_edge": "同義語・反対語は同じ状態の値として表現する候補を示す。型違い、許容値外、未定義の使用は拒否または未確認とする。"
+      },
+      "source": "tests/e2e/ap04-original-e-f37-42-state.spec.ts",
+      "source_sha256": "1f9811c9ccdef963c95a4b609b5ea3bee008a391be8f157c19b04132ce881e18",
+      "clauses": [
+        {
+          "name": "given",
+          "original": "新しい作品と下書き状態",
+          "callback_line": 11,
+          "result": "not_run"
+        },
+        {
+          "name": "when",
+          "original": "生存をenumの存命/死亡で宣言し、integer好感度と未設定booleanを登録して型違い代入を試す",
+          "callback_line": 12,
+          "result": "not_run"
+        },
+        {
+          "name": "then",
+          "original": "「死亡」と「存命」のような反対の意味の値を重複して管理しない。未設定を偽と決め付けない。",
+          "callback_line": 19,
+          "result": "not_run"
+        },
+        {
+          "name": "negative_or_edge",
+          "original": "同義語・反対語は同じ状態の値として表現する候補を示す。型違い、許容値外、未定義の使用は拒否または未確認とする。",
+          "callback_line": 25,
+          "result": "not_run"
+        }
+      ],
+      "result": "not_run"
+    },
+    {
+      "id": "AT-F38",
+      "original_case": {
+        "id": "AT-F38",
+        "requirement_ids": [
+          "REQ-F38"
+        ],
+        "package_id": "WP11",
+        "given": "run所持金10、across_runs記憶、好感度から算出する好意",
+        "when": "値更新、周回、全リセット、算出値への直接代入、循環式の保存を試す",
+        "then": "持ち越す記憶と初期化する所持金を分ける。「好感度が一定以上」を別の値として二重更新しない。",
+        "negative_or_edge": "算出状態への直接代入と循環式を拒否する。周回初期化と全リセットを別コマンドとし、持ち越し対象を一覧化する。"
+      },
+      "source": "tests/e2e/ap04-original-e-f37-42-state.spec.ts",
+      "source_sha256": "1f9811c9ccdef963c95a4b609b5ea3bee008a391be8f157c19b04132ce881e18",
+      "clauses": [
+        {
+          "name": "given",
+          "original": "run所持金10、across_runs記憶、好感度から算出する好意",
+          "callback_line": 38,
+          "result": "not_run"
+        },
+        {
+          "name": "when",
+          "original": "値更新、周回、全リセット、算出値への直接代入、循環式の保存を試す",
+          "callback_line": 39,
+          "result": "not_run"
+        },
+        {
+          "name": "then",
+          "original": "持ち越す記憶と初期化する所持金を分ける。「好感度が一定以上」を別の値として二重更新しない。",
+          "callback_line": 45,
+          "result": "not_run"
+        },
+        {
+          "name": "negative_or_edge",
+          "original": "算出状態への直接代入と循環式を拒否する。周回初期化と全リセットを別コマンドとし、持ち越し対象を一覧化する。",
+          "callback_line": 52,
+          "result": "not_run"
+        }
+      ],
+      "result": "not_run"
+    },
+    {
+      "id": "AT-F39",
+      "original_case": {
+        "id": "AT-F39",
+        "requirement_ids": [
+          "REQ-F39"
+        ],
+        "package_id": "WP11",
+        "given": "状態Xを条件で読む場面、更新する場面、resetする処理と未使用Y",
+        "when": "Xの利用箇所と試読変更履歴を開き、外部利用宣言のあるYを整理候補で確認する",
+        "then": "値が変わった理由から対象の選択や処理へ戻れる。使われていない状態も候補として見つかる。",
+        "negative_or_edge": "値の参照元と書込元を安定IDで追う。未使用状態は削除候補だけを示し、外部で使う宣言がある値を誤削除しない。"
+      },
+      "source": "tests/e2e/ap04-original-e-f37-42-state.spec.ts",
+      "source_sha256": "1f9811c9ccdef963c95a4b609b5ea3bee008a391be8f157c19b04132ce881e18",
+      "clauses": [
+        {
+          "name": "given",
+          "original": "状態Xを条件で読む場面、更新する場面、resetする処理と未使用Y",
+          "callback_line": 64,
+          "result": "not_run"
+        },
+        {
+          "name": "when",
+          "original": "Xの利用箇所と試読変更履歴を開き、外部利用宣言のあるYを整理候補で確認する",
+          "callback_line": 65,
+          "result": "not_run"
+        },
+        {
+          "name": "then",
+          "original": "値が変わった理由から対象の選択や処理へ戻れる。使われていない状態も候補として見つかる。",
+          "callback_line": 72,
+          "result": "not_run"
+        },
+        {
+          "name": "negative_or_edge",
+          "original": "値の参照元と書込元を安定IDで追う。未使用状態は削除候補だけを示し、外部で使う宣言がある値を誤削除しない。",
+          "callback_line": 76,
+          "result": "not_run"
+        }
+      ],
+      "result": "not_run"
+    },
+    {
+      "id": "AT-F40",
+      "original_case": {
+        "id": "AT-F40",
+        "requirement_ids": [
+          "REQ-F40"
+        ],
+        "package_id": "WP11",
+        "given": "鍵booleanと時刻enum昼/夜、同時成立する自動候補2件",
+        "when": "all(鍵,any(昼,夜))を作り真/偽/不明、優先同値、fallbackなしを順に評価する",
+        "then": "「鍵あり、かつ、昼または夜」の括弧を明示する。今の値で選択肢が出ない理由を説明する。",
+        "negative_or_edge": "括弧・優先順・不成立時処理を明示する。未知を偽にしない三値評価を行い、任意のコードを条件として実行しない。"
+      },
+      "source": "tests/e2e/ap04-original-e-f37-42-state.spec.ts",
+      "source_sha256": "1f9811c9ccdef963c95a4b609b5ea3bee008a391be8f157c19b04132ce881e18",
+      "clauses": [
+        {
+          "name": "given",
+          "original": "鍵booleanと時刻enum昼/夜、同時成立する自動候補2件",
+          "callback_line": 92,
+          "result": "not_run"
+        },
+        {
+          "name": "when",
+          "original": "all(鍵,any(昼,夜))を作り真/偽/不明、優先同値、fallbackなしを順に評価する",
+          "callback_line": 93,
+          "result": "not_run"
+        },
+        {
+          "name": "then",
+          "original": "「鍵あり、かつ、昼または夜」の括弧を明示する。今の値で選択肢が出ない理由を説明する。",
+          "callback_line": 101,
+          "result": "not_run"
+        },
+        {
+          "name": "negative_or_edge",
+          "original": "括弧・優先順・不成立時処理を明示する。未知を偽にしない三値評価を行い、任意のコードを条件として実行しない。",
+          "callback_line": 106,
+          "result": "not_run"
+        }
+      ],
+      "result": "not_run"
+    },
+    {
+      "id": "AT-F41",
+      "original_case": {
+        "id": "AT-F41",
+        "requirement_ids": [
+          "REQ-F41"
+        ],
+        "package_id": "WP11",
+        "given": "未受注→進行中→完了/失敗のみを許すクエスト",
+        "when": "完了→未受注と同時に所持金加算するeffect群を実行し、理由付きresetを別途試す",
+        "then": "完了済みのクエストが意図せず未受注へ戻った場合、変更した処理と規則を確認できる。",
+        "negative_or_edge": "禁止遷移は一連の効果を原子的に拒否する。例外は理由・対象経路・期限付きで明示し、以前の状態を記録する。"
+      },
+      "source": "tests/e2e/ap04-original-e-f37-42-state.spec.ts",
+      "source_sha256": "1f9811c9ccdef963c95a4b609b5ea3bee008a391be8f157c19b04132ce881e18",
+      "clauses": [
+        {
+          "name": "given",
+          "original": "未受注→進行中→完了/失敗のみを許すクエスト",
+          "callback_line": 122,
+          "result": "not_run"
+        },
+        {
+          "name": "when",
+          "original": "完了→未受注と同時に所持金加算するeffect群を実行し、理由付きresetを別途試す",
+          "callback_line": 123,
+          "result": "not_run"
+        },
+        {
+          "name": "then",
+          "original": "完了済みのクエストが意図せず未受注へ戻った場合、変更した処理と規則を確認できる。",
+          "callback_line": 127,
+          "result": "not_run"
+        },
+        {
+          "name": "negative_or_edge",
+          "original": "禁止遷移は一連の効果を原子的に拒否する。例外は理由・対象経路・期限付きで明示し、以前の状態を記録する。",
+          "callback_line": 132,
+          "result": "not_run"
+        }
+      ],
+      "result": "not_run"
+    },
+    {
+      "id": "AT-F42",
+      "original_case": {
+        "id": "AT-F42",
+        "requirement_ids": [
+          "REQ-F42"
+        ],
+        "package_id": "WP22",
+        "given": "ゲーム管理の戦闘結果enum契約とstub勝利、実ゲーム証跡未登録",
+        "when": "stubで通った道を出力し、後にactual結果をline/flow ID対応付きで記録して比較する",
+        "then": "仮の戦闘結果で通れた道と、ゲーム上で実際に確認した道を区別する。番号と値の対応を保つ。",
+        "negative_or_edge": "外部値の管理元・型・欠損時の扱いを固定する。仮の外部応答とゲーム実機の確認結果は別証跡とする。"
+      },
+      "source": "tests/e2e/ap04-original-e-f37-42-state.spec.ts",
+      "source_sha256": "1f9811c9ccdef963c95a4b609b5ea3bee008a391be8f157c19b04132ce881e18",
+      "clauses": [
+        {
+          "name": "given",
+          "original": "ゲーム管理の戦闘結果enum契約とstub勝利、実ゲーム証跡未登録",
+          "callback_line": 148,
+          "result": "not_run"
+        },
+        {
+          "name": "when",
+          "original": "stubで通った道を出力し、後にactual結果をline/flow ID対応付きで記録して比較する",
+          "callback_line": 150,
+          "result": "not_run"
+        },
+        {
+          "name": "then",
+          "original": "仮の戦闘結果で通れた道と、ゲーム上で実際に確認した道を区別する。番号と値の対応を保つ。",
+          "callback_line": 159,
+          "result": "not_run"
+        },
+        {
+          "name": "negative_or_edge",
+          "original": "外部値の管理元・型・欠損時の扱いを固定する。仮の外部応答とゲーム実機の確認結果は別証跡とする。",
+          "callback_line": 164,
+          "result": "not_run"
+        }
+      ],
+      "result": "not_run",
+      "external_conditions": [
+        {
+          "result": "not_run",
+          "required": "target game engine/version, actual game adapter, physical game device and battle result evidence",
+          "observed_local_scope": "Linux Chromium generic browser-game receiver; no credit for actual target game or physical device"
+        }
+      ]
+    },
+    {
+      "id": "AT-F43",
+      "original_case": {
+        "id": "AT-F43",
+        "requirement_ids": [
+          "REQ-F43"
+        ],
+        "package_id": "WP15",
+        "given": "独立伏線Qに二つの手掛かりと二つの回収がある",
+        "when": "手掛かり場面を分割/移動/削除し、Q本体を開いて根拠位置を付け直す",
+        "then": "場面を分割・移動しても伏線そのものは残り、手掛かりと回収先を付け直せる。",
+        "negative_or_edge": "場面を削除しても伏線本体は残す。複数の手掛かり・回収と代替説明を別IDで対応付ける。"
+      },
+      "source": "tests/e2e/ap04-original-e-f43-47-narrative.spec.ts",
+      "source_sha256": "8eee2595d821eb0875cb9b0bd8b2c219686cf2e7fe9b86084f88360548157dd4",
+      "clauses": [
+        {
+          "name": "given",
+          "original": "独立伏線Qに二つの手掛かりと二つの回収がある",
+          "callback_line": 15,
+          "result": "not_run"
+        },
+        {
+          "name": "when",
+          "original": "手掛かり場面を分割/移動/削除し、Q本体を開いて根拠位置を付け直す",
+          "callback_line": 16,
+          "result": "not_run"
+        },
+        {
+          "name": "then",
+          "original": "場面を分割・移動しても伏線そのものは残り、手掛かりと回収先を付け直せる。",
+          "callback_line": 26,
+          "result": "not_run"
+        },
+        {
+          "name": "negative_or_edge",
+          "original": "場面を削除しても伏線本体は残す。複数の手掛かり・回収と代替説明を別IDで対応付ける。",
+          "callback_line": 32,
+          "result": "not_run"
+        }
+      ],
+      "result": "not_run"
+    },
+    {
+      "id": "AT-F44",
+      "original_case": {
+        "id": "AT-F44",
+        "requirement_ids": [
+          "REQ-F44"
+        ],
+        "package_id": "WP15",
+        "given": "世界tickが古い回想を提示順の最後に置く構成",
+        "when": "回想を先頭/最後に移動し、人物と読者提示の開示段階を二経路で確認する",
+        "then": "回想の世界内の日付が古くても、読み手が後から見るなら後の開示として扱う。",
+        "negative_or_edge": "開示の段階は経路上の提示位置で評価する。章の並べ替えは世界時間を変えず開示評価だけを再確認待ちにする。"
+      },
+      "source": "tests/e2e/ap04-original-e-f43-47-narrative.spec.ts",
+      "source_sha256": "8eee2595d821eb0875cb9b0bd8b2c219686cf2e7fe9b86084f88360548157dd4",
+      "clauses": [
+        {
+          "name": "given",
+          "original": "世界tickが古い回想を提示順の最後に置く構成",
+          "callback_line": 52,
+          "result": "not_run"
+        },
+        {
+          "name": "when",
+          "original": "回想を先頭/最後に移動し、人物と読者提示の開示段階を二経路で確認する",
+          "callback_line": 53,
+          "result": "not_run"
+        },
+        {
+          "name": "then",
+          "original": "回想の世界内の日付が古くても、読み手が後から見るなら後の開示として扱う。",
+          "callback_line": 57,
+          "result": "not_run"
+        },
+        {
+          "name": "negative_or_edge",
+          "original": "開示の段階は経路上の提示位置で評価する。章の並べ替えは世界時間を変えず開示評価だけを再確認待ちにする。",
+          "callback_line": 63,
+          "result": "not_run"
+        }
+      ],
+      "result": "not_run"
+    },
+    {
+      "id": "AT-F45",
+      "original_case": {
+        "id": "AT-F45",
+        "requirement_ids": [
+          "REQ-F45"
+        ],
+        "package_id": "WP15",
+        "given": "必須情報Cと代替説明D、C/Dを両方飛ばして回収Pへ行けるgraph",
+        "when": "各経路の提示検査を行い、不足する証人経路と任意手掛かりの扱いを確認する",
+        "then": "手掛かりを飛ばして真相へ到達する経路を示せる。プレイヤーが推理できたと自動判定はしない。",
+        "negative_or_edge": "作者が必要とした情報の提示有無だけを評価する。探索の制限超過や外部条件は未確認、プレイヤーの理解は自動認定しない。"
+      },
+      "source": "tests/e2e/ap04-original-e-f43-47-narrative.spec.ts",
+      "source_sha256": "8eee2595d821eb0875cb9b0bd8b2c219686cf2e7fe9b86084f88360548157dd4",
+      "clauses": [
+        {
+          "name": "given",
+          "original": "必須情報Cと代替説明D、C/Dを両方飛ばして回収Pへ行けるgraph",
+          "callback_line": 79,
+          "result": "not_run"
+        },
+        {
+          "name": "when",
+          "original": "各経路の提示検査を行い、不足する証人経路と任意手掛かりの扱いを確認する",
+          "callback_line": 80,
+          "result": "not_run"
+        },
+        {
+          "name": "then",
+          "original": "手掛かりを飛ばして真相へ到達する経路を示せる。プレイヤーが推理できたと自動判定はしない。",
+          "callback_line": 85,
+          "result": "not_run"
+        },
+        {
+          "name": "negative_or_edge",
+          "original": "作者が必要とした情報の提示有無だけを評価する。探索の制限超過や外部条件は未確認、プレイヤーの理解は自動認定しない。",
+          "callback_line": 89,
+          "result": "not_run"
+        }
+      ],
+      "result": "not_run"
+    },
+    {
+      "id": "AT-F46",
+      "original_case": {
+        "id": "AT-F46",
+        "requirement_ids": [
+          "REQ-F46"
+        ],
+        "package_id": "WP15",
+        "given": "真実T、人物Aの嘘の証言、Bの誤解、Cの未取得知識",
+        "when": "出所と取得箇所を登録し、CがTを断言する台詞と理由付き嘘の台詞を検査する",
+        "then": "知らないはずの人物の発言を確認候補にする。意図した嘘や誤解は、その理由を添えて扱える。",
+        "negative_or_edge": "証言の誤り、意図した嘘、未確定案を真実から分離する。知識取得には出所と時点または経路位置を必要とする。"
+      },
+      "source": "tests/e2e/ap04-original-e-f43-47-narrative.spec.ts",
+      "source_sha256": "8eee2595d821eb0875cb9b0bd8b2c219686cf2e7fe9b86084f88360548157dd4",
+      "clauses": [
+        {
+          "name": "given",
+          "original": "真実T、人物Aの嘘の証言、Bの誤解、Cの未取得知識",
+          "callback_line": 102,
+          "result": "not_run"
+        },
+        {
+          "name": "when",
+          "original": "出所と取得箇所を登録し、CがTを断言する台詞と理由付き嘘の台詞を検査する",
+          "callback_line": 103,
+          "result": "not_run"
+        },
+        {
+          "name": "then",
+          "original": "知らないはずの人物の発言を確認候補にする。意図した嘘や誤解は、その理由を添えて扱える。",
+          "callback_line": 110,
+          "result": "not_run"
+        },
+        {
+          "name": "negative_or_edge",
+          "original": "証言の誤り、意図した嘘、未確定案を真実から分離する。知識取得には出所と時点または経路位置を必要とする。",
+          "callback_line": 115,
+          "result": "not_run"
+        }
+      ],
+      "result": "not_run"
+    },
+    {
+      "id": "AT-F47",
+      "original_case": {
+        "id": "AT-F47",
+        "requirement_ids": [
+          "REQ-F47"
+        ],
+        "package_id": "WP15",
+        "given": "今作回収Q、続編回収R、意図した未回収S、没T",
+        "when": "今作/特定分岐の未回収を抽出し、Qの回収先を変えて確認待ちを調べる",
+        "then": "続編用に残した謎が不具合一覧へ混ざらず、今作で回収する予定の漏れを見つけられる。",
+        "negative_or_edge": "今作・分岐・続編など対象範囲と意図を明示する。回収先変更時は再確認待ちにし、意図した未回収は警告の集計から分ける。"
+      },
+      "source": "tests/e2e/ap04-original-e-f43-47-narrative.spec.ts",
+      "source_sha256": "8eee2595d821eb0875cb9b0bd8b2c219686cf2e7fe9b86084f88360548157dd4",
+      "clauses": [
+        {
+          "name": "given",
+          "original": "今作回収Q、続編回収R、意図した未回収S、没T",
+          "callback_line": 126,
+          "result": "not_run"
+        },
+        {
+          "name": "when",
+          "original": "今作/特定分岐の未回収を抽出し、Qの回収先を変えて確認待ちを調べる",
+          "callback_line": 128,
+          "result": "not_run"
+        },
+        {
+          "name": "then",
+          "original": "続編用に残した謎が不具合一覧へ混ざらず、今作で回収する予定の漏れを見つけられる。",
+          "callback_line": 132,
+          "result": "not_run"
+        },
+        {
+          "name": "negative_or_edge",
+          "original": "今作・分岐・続編など対象範囲と意図を明示する。回収先変更時は再確認待ちにし、意図した未回収は警告の集計から分ける。",
+          "callback_line": 138,
+          "result": "not_run"
+        }
+      ],
+      "result": "not_run"
+    },
+    {
+      "id": "AT-F48",
+      "original_case": {
+        "id": "AT-F48",
+        "requirement_ids": [
+          "REQ-F48"
+        ],
+        "package_id": "WP19",
+        "given": "時期で一人称が変わる人物と表記ゆれ用語、意図した例外",
+        "when": "時期前後の台詞と字幕/翻訳へ候補検査を行い、本文が無断置換されないか確認する",
+        "then": "人物が成長して口調を変える場合は時期を指定する。指摘は候補として示し、本文を勝手に置換しない。",
+        "negative_or_edge": "表記・口調の期間と例外を保持する。指摘は置換候補であり、本文や翻訳を自動修正しない。"
+      },
+      "source": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
+      "source_sha256": "c6a12ccf621cf2bc98a56a64b305ba4b526c5135e29fd3f7a703d7a62815153f",
+      "clauses": [
+        {
+          "name": "given",
+          "original": "時期で一人称が変わる人物と表記ゆれ用語、意図した例外",
+          "callback_line": 18,
+          "result": "not_run"
+        },
+        {
+          "name": "when",
+          "original": "時期前後の台詞と字幕/翻訳へ候補検査を行い、本文が無断置換されないか確認する",
+          "callback_line": 20,
+          "result": "not_run"
+        },
+        {
+          "name": "then",
+          "original": "人物が成長して口調を変える場合は時期を指定する。指摘は候補として示し、本文を勝手に置換しない。",
+          "callback_line": 31,
+          "result": "not_run"
+        },
+        {
+          "name": "negative_or_edge",
+          "original": "表記・口調の期間と例外を保持する。指摘は置換候補であり、本文や翻訳を自動修正しない。",
+          "callback_line": 37,
+          "result": "not_run"
+        }
+      ],
+      "result": "not_run"
+    },
+    {
+      "id": "AT-F49",
+      "original_case": {
+        "id": "AT-F49",
+        "requirement_ids": [
+          "REQ-F49"
+        ],
+        "package_id": "WP21",
+        "given": "企画に対象/体験/主題と版1の採用判断がある",
+        "when": "修正指摘を企画目的へ結び付け、却下案の理由と版2の別判断を登録する",
+        "then": "修正依頼から企画のどの目的に関わるかを確認できる。却下した案の理由も後から分かる。",
+        "negative_or_edge": "企画・判断には対象版と根拠を保存する。却下・保留を削除せず、方針変更を公開済み版へ自動反映しない。"
+      },
+      "source": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
+      "source_sha256": "c6a12ccf621cf2bc98a56a64b305ba4b526c5135e29fd3f7a703d7a62815153f",
+      "clauses": [
+        {
+          "name": "given",
+          "original": "企画に対象/体験/主題と版1の採用判断がある",
+          "callback_line": 51,
+          "result": "not_run"
+        },
+        {
+          "name": "when",
+          "original": "修正指摘を企画目的へ結び付け、却下案の理由と版2の別判断を登録する",
+          "callback_line": 52,
+          "result": "not_run"
+        },
+        {
+          "name": "then",
+          "original": "修正依頼から企画のどの目的に関わるかを確認できる。却下した案の理由も後から分かる。",
+          "callback_line": 60,
+          "result": "not_run"
+        },
+        {
+          "name": "negative_or_edge",
+          "original": "企画・判断には対象版と根拠を保存する。却下・保留を削除せず、方針変更を公開済み版へ自動反映しない。",
+          "callback_line": 65,
+          "result": "not_run"
+        }
+      ],
+      "result": "not_run"
+    },
+    {
+      "id": "AT-F50",
+      "original_case": {
+        "id": "AT-F50",
+        "requirement_ids": [
+          "REQ-F50"
+        ],
+        "package_id": "WP21",
+        "given": "危険と説明する場面、実装仕様では無条件通過、意図は未入力",
+        "when": "探索/戦闘/報酬/チュートリアルと作業を関連付け、食い違いに意図を追記する",
+        "then": "物語で危険な場所が、実際には安全に通れるなどの食い違いを、意図も含めて確認できる。",
+        "negative_or_edge": "遊びの仕様と物語の記述の差は意図付き確認候補にする。ゲーム機能の未実装を執筆未完了と混同しない。"
+      },
+      "source": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
+      "source_sha256": "c6a12ccf621cf2bc98a56a64b305ba4b526c5135e29fd3f7a703d7a62815153f",
+      "clauses": [
+        {
+          "name": "given",
+          "original": "危険と説明する場面、実装仕様では無条件通過、意図は未入力",
+          "callback_line": 75,
+          "result": "not_run"
+        },
+        {
+          "name": "when",
+          "original": "探索/戦闘/報酬/チュートリアルと作業を関連付け、食い違いに意図を追記する",
+          "callback_line": 76,
+          "result": "not_run"
+        },
+        {
+          "name": "then",
+          "original": "物語で危険な場所が、実際には安全に通れるなどの食い違いを、意図も含めて確認できる。",
+          "callback_line": 80,
+          "result": "not_run"
+        },
+        {
+          "name": "negative_or_edge",
+          "original": "遊びの仕様と物語の記述の差は意図付き確認候補にする。ゲーム機能の未実装を執筆未完了と混同しない。",
+          "callback_line": 85,
+          "result": "not_run"
+        }
+      ],
+      "result": "not_run"
+    }
+  ],
+  "supporting_sources": [
+    {
+      "source": "tests/e2e/ap04-original-e-f37-50-helpers.ts",
+      "source_sha256": "59e9c9605fa1d72ee504c2287e093fc40b3429cb81cb0bfc84ea4f1eb57595f0",
+      "execution": "not_run"
+    }
+  ]
+}

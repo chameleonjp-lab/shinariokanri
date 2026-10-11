@@ -51,11 +51,11 @@ export async function reconcileDeliverables(before: ProjectData, candidate: Proj
  const liveReference=(entity:Entity,path:string)=>{let value:unknown=entity;for(const part of path.split(/[.\[\]]+/).filter(Boolean)){if(value&&typeof value==='object'){const object=value as Record<string,unknown>,version=object.sourceVersionId??object.targetSnapshotId??((entity.kind==='trace'||entity.kind==='checkpoint')?object.contentVersionId:undefined);if(typeof version==='string'&&version!==candidate.projectId)return false;value=object[part];}else return true;}return true;};
  // Follow typed production dependencies once. Historical ancestry does not change copied content.
  const reverse=new Map<ID,ID[]>();for(const entity of entities)if(!entity.deletedAt&&!['rejected','alternate'].includes(entity.status))for(const reference of collectReferences(entity))if(!reference.path.startsWith('data.lineage')&&!reference.path.startsWith('data.originLineIds')&&liveReference(entity,reference.path)){const uses=reverse.get(reference.id);if(uses)uses.push(entity.id);else reverse.set(reference.id,[entity.id]);}
- const affected=new Set(changedData),queue=[...affected];for(let at=0;at<queue.length;at++)for(const id of reverse.get(queue[at])??[])if(!affected.has(id)){affected.add(id);queue.push(id);}
+ const affected=new Set(changedData),sourceAffected=new Set<ID>(),queue=[...affected];for(let at=0;at<queue.length;at++)for(const id of reverse.get(queue[at])??[]){sourceAffected.add(id);if(!affected.has(id)){affected.add(id);queue.push(id);}}
  const next={...candidate,entities:entities.map(entity=>{if(!affected.has(entity.id)||entity.deletedAt||['rejected','alternate'].includes(entity.status))return entity;
   if(entity.kind==='storyboard_frame'&&previous.has(entity.id))return {...entity,status:'needs_review' as const};
   if(entity.kind==='media_variant'&&previous.has(entity.id))return {...entity,data:{...entity.data,needsReview:true}};
-  if(entity.kind==='production_task'&&previous.has(entity.id)&&entity.data.progress==='done')return {...entity,data:{...entity.data,progress:'needs_review' as const}};
+  if(entity.kind==='production_task'&&previous.has(entity.id)&&sourceAffected.has(entity.id)&&entity.data.progress==='done')return {...entity,data:{...entity.data,progress:'needs_review' as const}};
   return entity;
  })};
  return next;

@@ -1,0 +1,3401 @@
+{
+  "schemaVersion": "1.0.0",
+  "status": "authored_not_run",
+  "acceptance_pass_inferred": false,
+  "source_plan": "docs/quality/ap04-2026-10-11/local_acceptance_plan.json",
+  "source_plan_sha256": "bbbbd0397c084a61a8616379a0dd9e051e76eaf2181238f4daae67ec4e1c6160",
+  "source_candidates": "tests/e2e/ap04-original-n-candidates.json",
+  "source_candidates_sha256": "7abdc608a13f8041662d6b13e1dee91c0bfaee17b7ca297c38d6fb4a8ad5f41b",
+  "candidate_commit": null,
+  "candidate_tree": null,
+  "candidate_build": null,
+  "browser_executed": false,
+  "heavy_build_or_test_executed": false,
+  "case_count": 15,
+  "original_clause_count": 60,
+  "all_original_clause_results": "not_run",
+  "cases": [
+    {
+      "id": "AT-N01",
+      "original_case": {
+        "id": "AT-N01",
+        "requirement_ids": [
+          "REQ-N01"
+        ],
+        "package_id": "WP02",
+        "given": "幅320・390 CSS pxの縦画面",
+        "when": "入力と一覧による線編集と復元を行う",
+        "then": "確定ボタンとエラーへ到達でき横図にも一覧代替がある",
+        "negative_or_edge": "PC専用操作やページ全体の不要な横スクロールを残さない"
+      },
+      "result_on_new_target": "not_run",
+      "clauses": [
+        {
+          "name": "given",
+          "original": "幅320・390 CSS pxの縦画面",
+          "execution_route": "local_ui_candidate",
+          "result_on_new_target": "not_run",
+          "candidate_file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+          "candidate_test_titles": [
+            "AT-N01 幅${width} CSS pxの縦画面で一覧から線を編集し、エラー・確定・復元へ到達し横図の表代替を開く"
+          ],
+          "normal_ui_operation": "320/390 CSS px・縦820pxの独立touch browser contextで実アプリを開く。",
+          "assertions_authored_not_run": [
+            "viewport幅320/390、isMobile/hasTouch fixture。",
+            "各操作で可視controlのbboxがviewport内に収まる。"
+          ],
+          "test_callbacks": [
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "title": "AT-N01 幅${width} CSS pxの縦画面で一覧から線を編集し、エラー・確定・復元へ到達し横図の表代替を開く",
+              "line": 27,
+              "parameter_values": {
+                "width": [
+                  320,
+                  390
+                ]
+              },
+              "binding_status": "authored_working_tree_location; refresh at final proof freeze"
+            }
+          ],
+          "authored_file_sha256": "b1a8044d70b14cf8fc7705f2a12df7699dc9b335dfcb4da110481161cf8e8f6e",
+          "missing_conditions": [
+            {
+              "condition": "実対象端末・実touch環境",
+              "result": "not_run",
+              "reason": "Browser touch/viewport emulation only; AT-N02 actual-device proof remains separate."
+            }
+          ]
+        },
+        {
+          "name": "when",
+          "original": "入力と一覧による線編集と復元を行う",
+          "execution_route": "local_ui_candidate",
+          "result_on_new_target": "not_run",
+          "candidate_file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+          "candidate_test_titles": [
+            "AT-N01 幅${width} CSS pxの縦画面で一覧から線を編集し、エラー・確定・復元へ到達し横図の表代替を開く"
+          ],
+          "normal_ui_operation": "分岐一覧から未完了の線を開き、条件入力を訂正して保存し、実保存ファイルを空contextへ読み戻す。",
+          "assertions_authored_not_run": [
+            "線の行き先UUID・条件ASTが保存ファイルへ一致。",
+            "空contextの復元project全体が実ダウンロードと一致し、通常編集保存できる。"
+          ],
+          "test_callbacks": [
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "title": "AT-N01 幅${width} CSS pxの縦画面で一覧から線を編集し、エラー・確定・復元へ到達し横図の表代替を開く",
+              "line": 27,
+              "parameter_values": {
+                "width": [
+                  320,
+                  390
+                ]
+              },
+              "binding_status": "authored_working_tree_location; refresh at final proof freeze"
+            }
+          ],
+          "authored_file_sha256": "b1a8044d70b14cf8fc7705f2a12df7699dc9b335dfcb4da110481161cf8e8f6e",
+          "missing_conditions": [
+            {
+              "condition": "実対象端末・実touch環境",
+              "result": "not_run",
+              "reason": "Browser touch/viewport emulation only; AT-N02 actual-device proof remains separate."
+            }
+          ]
+        },
+        {
+          "name": "then",
+          "original": "確定ボタンとエラーへ到達でき横図にも一覧代替がある",
+          "execution_route": "local_ui_candidate",
+          "result_on_new_target": "not_run",
+          "candidate_file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+          "candidate_test_titles": [
+            "AT-N01 幅${width} CSS pxの縦画面で一覧から線を編集し、エラー・確定・復元へ到達し横図の表代替を開く"
+          ],
+          "normal_ui_operation": "不正な大小比較で実エラーを表示し、確定ボタンへscroll/tapし、関係横図を表へ切り替える。",
+          "assertions_authored_not_run": [
+            "実condition alertとSaveのbboxが到達可能、invalid時Save disabled。",
+            "関係表に両人物名が出る。"
+          ],
+          "test_callbacks": [
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "title": "AT-N01 幅${width} CSS pxの縦画面で一覧から線を編集し、エラー・確定・復元へ到達し横図の表代替を開く",
+              "line": 27,
+              "parameter_values": {
+                "width": [
+                  320,
+                  390
+                ]
+              },
+              "binding_status": "authored_working_tree_location; refresh at final proof freeze"
+            }
+          ],
+          "authored_file_sha256": "b1a8044d70b14cf8fc7705f2a12df7699dc9b335dfcb4da110481161cf8e8f6e",
+          "missing_conditions": [
+            {
+              "condition": "実対象端末・実touch環境",
+              "result": "not_run",
+              "reason": "Browser touch/viewport emulation only; AT-N02 actual-device proof remains separate."
+            }
+          ]
+        },
+        {
+          "name": "negative_or_edge",
+          "original": "PC専用操作やページ全体の不要な横スクロールを残さない",
+          "execution_route": "local_ui_candidate",
+          "result_on_new_target": "not_run",
+          "candidate_file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+          "candidate_test_titles": [
+            "AT-N01 幅${width} CSS pxの縦画面で一覧から線を編集し、エラー・確定・復元へ到達し横図の表代替を開く"
+          ],
+          "normal_ui_operation": "tapと一覧入口だけで入力・保存・復元を行い、画面ごとのdocument幅を測る。",
+          "assertions_authored_not_run": [
+            "documentElement.scrollWidth <= clientWidth。",
+            "不正保存ファイルの実alertが到達可能で、author tablesは変更されない。"
+          ],
+          "test_callbacks": [
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "title": "AT-N01 幅${width} CSS pxの縦画面で一覧から線を編集し、エラー・確定・復元へ到達し横図の表代替を開く",
+              "line": 27,
+              "parameter_values": {
+                "width": [
+                  320,
+                  390
+                ]
+              },
+              "binding_status": "authored_working_tree_location; refresh at final proof freeze"
+            }
+          ],
+          "authored_file_sha256": "b1a8044d70b14cf8fc7705f2a12df7699dc9b335dfcb4da110481161cf8e8f6e",
+          "missing_conditions": [
+            {
+              "condition": "実対象端末・実touch環境",
+              "result": "not_run",
+              "reason": "Browser touch/viewport emulation only; AT-N02 actual-device proof remains separate."
+            }
+          ]
+        }
+      ],
+      "candidate_scope": "authored_not_run",
+      "new_test_file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+      "next_action": "Freeze candidate commit/tree/build, run the exact normal UI test, retain full trace/screenshots/download hashes, and classify each original clause only from its actual observation.",
+      "procedure": "320 and 390 CSS px portrait/touch-emulated browser contexts; use the branch list to edit a line, reach the real condition alert and Save button, export and restore an actual file in independent storage, and switch the horizontal relationship graph to its table alternative.",
+      "known_scope_limit": "Touch and portrait viewport are browser emulation. Actual target physical devices remain separate AT-N02 evidence.",
+      "clause_mapping_result": "authored_not_run",
+      "unobserved_required_conditions": [
+        {
+          "condition": "実対象端末・実touch環境",
+          "result": "not_run",
+          "reason": "Browser touch/viewport emulation only; AT-N02 actual-device proof remains separate."
+        }
+      ]
+    },
+    {
+      "id": "AT-N06",
+      "original_case": {
+        "id": "AT-N06",
+        "requirement_ids": [
+          "REQ-N06"
+        ],
+        "package_id": "WP03",
+        "given": "保存中の容量不足と移行失敗を注入",
+        "when": "複数対象の変更を試す",
+        "then": "全変更が確定するか全変更が未確定となり再試行できる",
+        "negative_or_edge": "一部更新・未検証のマイグレーション・偽の保存表示を残さない"
+      },
+      "result_on_new_target": "not_run",
+      "clauses": [
+        {
+          "name": "given",
+          "original": "保存中の容量不足と移行失敗を注入",
+          "execution_route": "local_ui_candidate",
+          "result_on_new_target": "not_run",
+          "candidate_file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
+          "candidate_test_titles": [
+            "AT-N06 同じ旧作品の移行失敗と台詞の複数対象保存の容量不足を原子拒否し、通常再試行後だけ全変更を確定する"
+          ],
+          "normal_ui_operation": "既存rb07-production.scenarioを旧native v10へ置き、実versionchangeと複数対象保存へ一回のquota例外を注入する。",
+          "assertions_authored_not_run": [
+            "既存台詞にlocalization/recordingの複数関連対象がある。",
+            "失敗前native版10とcanonical全tables imageを取得する。"
+          ],
+          "test_callbacks": [
+            {
+              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
+              "title": "AT-N06 同じ旧作品の移行失敗と台詞の複数対象保存の容量不足を原子拒否し、通常再試行後だけ全変更を確定する",
+              "line": 77,
+              "parameter_values": {},
+              "binding_status": "authored_working_tree_location; refresh at final proof freeze"
+            }
+          ],
+          "authored_file_sha256": "d387aafee5fc6693e0b5e242ad2701dcc289dca7df9b4d2f9587aa2396fe62ad",
+          "missing_conditions": []
+        },
+        {
+          "name": "when",
+          "original": "複数対象の変更を試す",
+          "execution_route": "local_ui_candidate",
+          "result_on_new_target": "not_run",
+          "candidate_file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
+          "candidate_test_titles": [
+            "AT-N06 同じ旧作品の移行失敗と台詞の複数対象保存の容量不足を原子拒否し、通常再試行後だけ全変更を確定する"
+          ],
+          "normal_ui_operation": "実起動移行を再試行し、通常台詞制作ツールから分割位置・理由・影響を確認して保存する。",
+          "assertions_authored_not_run": [
+            "起動失敗にquota alert、読み込みを再試行後に同じprojectが取得できる。",
+            "新台詞2件のpreview・入力を保って、通常保存を再試行できる。"
+          ],
+          "test_callbacks": [
+            {
+              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
+              "title": "AT-N06 同じ旧作品の移行失敗と台詞の複数対象保存の容量不足を原子拒否し、通常再試行後だけ全変更を確定する",
+              "line": 77,
+              "parameter_values": {},
+              "binding_status": "authored_working_tree_location; refresh at final proof freeze"
+            }
+          ],
+          "authored_file_sha256": "d387aafee5fc6693e0b5e242ad2701dcc289dca7df9b4d2f9587aa2396fe62ad",
+          "missing_conditions": []
+        },
+        {
+          "name": "then",
+          "original": "全変更が確定するか全変更が未確定となり再試行できる",
+          "execution_route": "local_ui_candidate",
+          "result_on_new_target": "not_run",
+          "candidate_file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
+          "candidate_test_titles": [
+            "AT-N06 同じ旧作品の移行失敗と台詞の複数対象保存の容量不足を原子拒否し、通常再試行後だけ全変更を確定する"
+          ],
+          "normal_ui_operation": "失敗時imageと成功後cold実保存ファイルを照合する。",
+          "assertions_authored_not_run": [
+            "移行失敗は版10/image全体不変、保存失敗はcanonical image全体不変。",
+            "成功後に旧台詞rejected・新2台詞・場面順・関連needs_review・history+1・revision+1が全て確定。"
+          ],
+          "test_callbacks": [
+            {
+              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
+              "title": "AT-N06 同じ旧作品の移行失敗と台詞の複数対象保存の容量不足を原子拒否し、通常再試行後だけ全変更を確定する",
+              "line": 77,
+              "parameter_values": {},
+              "binding_status": "authored_working_tree_location; refresh at final proof freeze"
+            }
+          ],
+          "authored_file_sha256": "d387aafee5fc6693e0b5e242ad2701dcc289dca7df9b4d2f9587aa2396fe62ad",
+          "missing_conditions": []
+        },
+        {
+          "name": "negative_or_edge",
+          "original": "一部更新・未検証のマイグレーション・偽の保存表示を残さない",
+          "execution_route": "local_ui_candidate",
+          "result_on_new_target": "not_run",
+          "candidate_file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
+          "candidate_test_titles": [
+            "AT-N06 同じ旧作品の移行失敗と台詞の複数対象保存の容量不足を原子拒否し、通常再試行後だけ全変更を確定する"
+          ],
+          "normal_ui_operation": "失敗通知・保存通知・旧固定版を通常画面と実ファイルで比較する。",
+          "assertions_authored_not_run": [
+            "失敗中に成功statusなし、アプリの半起動なし。",
+            "新台詞連結が原文へ一致し、旧snapshot全体は不変。"
+          ],
+          "test_callbacks": [
+            {
+              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
+              "title": "AT-N06 同じ旧作品の移行失敗と台詞の複数対象保存の容量不足を原子拒否し、通常再試行後だけ全変更を確定する",
+              "line": 77,
+              "parameter_values": {},
+              "binding_status": "authored_working_tree_location; refresh at final proof freeze"
+            }
+          ],
+          "authored_file_sha256": "d387aafee5fc6693e0b5e242ad2701dcc289dca7df9b4d2f9587aa2396fe62ad",
+          "missing_conditions": []
+        }
+      ],
+      "candidate_scope": "authored_original_clause_candidate",
+      "new_test_file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
+      "next_action": "Freeze commit/tree/build/base and fixture inputs, execute the mapped normal UI browser test, retain actual artifacts and only then assess each original clause.",
+      "procedure": "Same existing rb07-production scenario in a native-v1 migration rollback, then normal multi-target dialogue split quota rollback/retry.",
+      "clause_mapping_result": "authored_not_run"
+    },
+    {
+      "id": "AT-N10",
+      "original_case": {
+        "id": "AT-N10",
+        "requirement_ids": [
+          "REQ-N10"
+        ],
+        "package_id": "WP20",
+        "given": "scriptやjavascript URLを含む文章",
+        "when": "編集・試読・公開資料で表示する",
+        "then": "内容を安全なテキストまたは検査済み表示として扱う",
+        "negative_or_edge": "ファイル名だけの種類判定や任意コードの条件実行を許さない"
+      },
+      "result_on_new_target": "not_run",
+      "clauses": [
+        {
+          "name": "given",
+          "original": "scriptやjavascript URLを含む文章",
+          "execution_route": "local_ui_candidate",
+          "result_on_new_target": "not_run",
+          "candidate_file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+          "candidate_test_titles": [
+            "AT-N10 script と javascript URL の同じ本文を編集・試読・公開 HTML で表示し、偽画像とコード条件を拒否する"
+          ],
+          "normal_ui_operation": "scriptタグとjavascript URLの同じ本文を通常本文欄へ入力する。",
+          "assertions_authored_not_run": [
+            "同じ編集本文を保存し、cold fileに同じblock ID/textを保持する。"
+          ],
+          "test_callbacks": [
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "title": "AT-N10 script と javascript URL の同じ本文を編集・試読・公開 HTML で表示し、偽画像とコード条件を拒否する",
+              "line": 46,
+              "parameter_values": {},
+              "binding_status": "authored_working_tree_location; refresh at final proof freeze"
+            }
+          ],
+          "authored_file_sha256": "9947b57a05afecc5ce71c2b0f92ccfcec0cd33f8abc5aa25d07c55a8a6fbfbba",
+          "missing_conditions": []
+        },
+        {
+          "name": "when",
+          "original": "編集・試読・公開資料で表示する",
+          "execution_route": "local_ui_candidate",
+          "result_on_new_target": "not_run",
+          "candidate_file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+          "candidate_test_titles": [
+            "AT-N10 script と javascript URL の同じ本文を編集・試読・公開 HTML で表示し、偽画像とコード条件を拒否する"
+          ],
+          "normal_ui_operation": "通常編集preview・試読と公開資料profileから実HTMLをダウンロードし、未改変HTMLを別pageで開く。",
+          "assertions_authored_not_run": [
+            "編集/試読/公開HTMLそれぞれで同じ危険文字列の本文が見える。"
+          ],
+          "test_callbacks": [
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "title": "AT-N10 script と javascript URL の同じ本文を編集・試読・公開 HTML で表示し、偽画像とコード条件を拒否する",
+              "line": 46,
+              "parameter_values": {},
+              "binding_status": "authored_working_tree_location; refresh at final proof freeze"
+            }
+          ],
+          "authored_file_sha256": "9947b57a05afecc5ce71c2b0f92ccfcec0cd33f8abc5aa25d07c55a8a6fbfbba",
+          "missing_conditions": []
+        },
+        {
+          "name": "then",
+          "original": "内容を安全なテキストまたは検査済み表示として扱う",
+          "execution_route": "local_ui_candidate",
+          "result_on_new_target": "not_run",
+          "candidate_file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+          "candidate_test_titles": [
+            "AT-N10 script と javascript URL の同じ本文を編集・試読・公開 HTML で表示し、偽画像とコード条件を拒否する"
+          ],
+          "normal_ui_operation": "各実表示DOMを検査し、実HTML pageのexecution markerを確認する。",
+          "assertions_authored_not_run": [
+            "script DOM数0、on*属性なし、javascript URL属性なし。",
+            "実HTML/globalThisに__ap04*Executed markerなし。"
+          ],
+          "test_callbacks": [
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "title": "AT-N10 script と javascript URL の同じ本文を編集・試読・公開 HTML で表示し、偽画像とコード条件を拒否する",
+              "line": 46,
+              "parameter_values": {},
+              "binding_status": "authored_working_tree_location; refresh at final proof freeze"
+            }
+          ],
+          "authored_file_sha256": "9947b57a05afecc5ce71c2b0f92ccfcec0cd33f8abc5aa25d07c55a8a6fbfbba",
+          "missing_conditions": []
+        },
+        {
+          "name": "negative_or_edge",
+          "original": "ファイル名だけの種類判定や任意コードの条件実行を許さない",
+          "execution_route": "local_ui_candidate",
+          "result_on_new_target": "not_run",
+          "candidate_file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+          "candidate_test_titles": [
+            "AT-N10 script と javascript URL の同じ本文を編集・試読・公開 HTML で表示し、偽画像とコード条件を拒否する"
+          ],
+          "normal_ui_operation": "HTML bytesを.png名/image MIMEとして通常添付し、javascript未知opを詳細データへ入力する。",
+          "assertions_authored_not_run": [
+            "偽画像は安全対象外alertでauthor rows不変。",
+            "未知opは実エラー・Save disabled・raw入力保持・author rows不変、正常ASTへ戻して保存後もコード未実行。"
+          ],
+          "test_callbacks": [
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "title": "AT-N10 script と javascript URL の同じ本文を編集・試読・公開 HTML で表示し、偽画像とコード条件を拒否する",
+              "line": 46,
+              "parameter_values": {},
+              "binding_status": "authored_working_tree_location; refresh at final proof freeze"
+            }
+          ],
+          "authored_file_sha256": "9947b57a05afecc5ce71c2b0f92ccfcec0cd33f8abc5aa25d07c55a8a6fbfbba",
+          "missing_conditions": []
+        }
+      ],
+      "candidate_scope": "authored_original_clause_candidate",
+      "new_test_file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+      "next_action": "Freeze commit/tree/build/base and fixture inputs, execute the mapped normal UI browser test, retain actual artifacts and only then assess each original clause.",
+      "procedure": "Same script/javascript manuscript in author preview, trial, actual downloaded public HTML; false image and code AST rejected.",
+      "clause_mapping_result": "authored_not_run"
+    },
+    {
+      "id": "AT-N11",
+      "original_case": {
+        "id": "AT-N11",
+        "requirement_ids": [
+          "REQ-N11"
+        ],
+        "package_id": "WP03",
+        "given": "取得済み作品で機内モードにする",
+        "when": "編集して閉じ再度開き専用ファイルを出す",
+        "then": "端末内保存済みと未送信が区別され作品内容が残る",
+        "negative_or_edge": "初回取得や未キャッシュ添付を利用済みと偽表示しない"
+      },
+      "result_on_new_target": "not_run",
+      "clauses": [
+        {
+          "name": "given",
+          "original": "取得済み作品で機内モードにする",
+          "execution_route": "local_ui_candidate",
+          "result_on_new_target": "not_run",
+          "candidate_file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+          "candidate_test_titles": [
+            "AT-N11 補助: 取得済みPWAの作品をbrowser offlineで編集し、閉じて再開し実保存ファイルと未送信・素材bytes不足を区別する"
+          ],
+          "normal_ui_operation": "取得済みproduction PWAをservice worker controller/precache確認後、browser context offlineへ切り替える補助手順。",
+          "assertions_authored_not_run": [
+            "実controllerとindex-*.jsのCache URLを観測する。",
+            "browser navigator.onLine false。実機機内モードはこの候補で未観測。"
+          ],
+          "candidate_observation_scope": "supplemental_browser_offline_only; original physical-device condition not observed",
+          "test_callbacks": [
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "title": "AT-N11 補助: 取得済みPWAの作品をbrowser offlineで編集し、閉じて再開し実保存ファイルと未送信・素材bytes不足を区別する",
+              "line": 113,
+              "parameter_values": {},
+              "binding_status": "authored_working_tree_location; refresh at final proof freeze"
+            }
+          ],
+          "authored_file_sha256": "b1a8044d70b14cf8fc7705f2a12df7699dc9b335dfcb4da110481161cf8e8f6e",
+          "missing_conditions": [
+            {
+              "condition": "実機の機内モードで同じ編集・閉じる・再開・OS Files出力",
+              "result": "blocked_external_condition",
+              "reason": "Browser offline is supplemental; preserve actual target-device/network/file evidence."
+            },
+            {
+              "condition": "実際に未キャッシュのremote添付と実機初回取得",
+              "result": "blocked_external_condition",
+              "reason": "Deliberate native asset-byte loss and fresh offline browser context are supplemental."
+            }
+          ]
+        },
+        {
+          "name": "when",
+          "original": "編集して閉じ再度開き専用ファイルを出す",
+          "execution_route": "local_ui_candidate",
+          "result_on_new_target": "not_run",
+          "candidate_file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+          "candidate_test_titles": [
+            "AT-N11 補助: 取得済みPWAの作品をbrowser offlineで編集し、閉じて再開し実保存ファイルと未送信・素材bytes不足を区別する"
+          ],
+          "normal_ui_operation": "通常本文編集保存後にpageを閉じ、同じoffline contextの新pageから再開し、完全保存を実ダウンロードする。",
+          "assertions_authored_not_run": [
+            "再開したapp shellと同じ編集本文が見える。",
+            "実ファイルに同じblock ID/textとWAV bytesがある。"
+          ],
+          "candidate_observation_scope": "supplemental_browser_offline_only; original physical-device condition not observed",
+          "test_callbacks": [
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "title": "AT-N11 補助: 取得済みPWAの作品をbrowser offlineで編集し、閉じて再開し実保存ファイルと未送信・素材bytes不足を区別する",
+              "line": 113,
+              "parameter_values": {},
+              "binding_status": "authored_working_tree_location; refresh at final proof freeze"
+            }
+          ],
+          "authored_file_sha256": "b1a8044d70b14cf8fc7705f2a12df7699dc9b335dfcb4da110481161cf8e8f6e",
+          "missing_conditions": [
+            {
+              "condition": "実機の機内モードで同じ編集・閉じる・再開・OS Files出力",
+              "result": "blocked_external_condition",
+              "reason": "Browser offline is supplemental; preserve actual target-device/network/file evidence."
+            },
+            {
+              "condition": "実際に未キャッシュのremote添付と実機初回取得",
+              "result": "blocked_external_condition",
+              "reason": "Deliberate native asset-byte loss and fresh offline browser context are supplemental."
+            }
+          ]
+        },
+        {
+          "name": "then",
+          "original": "端末内保存済みと未送信が区別され作品内容が残る",
+          "execution_route": "local_ui_candidate",
+          "result_on_new_target": "not_run",
+          "candidate_file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+          "candidate_test_titles": [
+            "AT-N11 補助: 取得済みPWAの作品をbrowser offlineで編集し、閉じて再開し実保存ファイルと未送信・素材bytes不足を区別する"
+          ],
+          "normal_ui_operation": "通常保存statusと実保存ファイルのrecovery、同ファイルのreplace previewを確認する。",
+          "assertions_authored_not_run": [
+            "端末内保存済みとOFFLINEが見え、recovery.pending > 0。",
+            "replace previewに未送信の変更が見え、復元確定disabled。"
+          ],
+          "candidate_observation_scope": "supplemental_browser_offline_only; original physical-device condition not observed",
+          "test_callbacks": [
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "title": "AT-N11 補助: 取得済みPWAの作品をbrowser offlineで編集し、閉じて再開し実保存ファイルと未送信・素材bytes不足を区別する",
+              "line": 113,
+              "parameter_values": {},
+              "binding_status": "authored_working_tree_location; refresh at final proof freeze"
+            }
+          ],
+          "authored_file_sha256": "b1a8044d70b14cf8fc7705f2a12df7699dc9b335dfcb4da110481161cf8e8f6e",
+          "missing_conditions": [
+            {
+              "condition": "実機の機内モードで同じ編集・閉じる・再開・OS Files出力",
+              "result": "blocked_external_condition",
+              "reason": "Browser offline is supplemental; preserve actual target-device/network/file evidence."
+            },
+            {
+              "condition": "実際に未キャッシュのremote添付と実機初回取得",
+              "result": "blocked_external_condition",
+              "reason": "Deliberate native asset-byte loss and fresh offline browser context are supplemental."
+            }
+          ]
+        },
+        {
+          "name": "negative_or_edge",
+          "original": "初回取得や未キャッシュ添付を利用済みと偽表示しない",
+          "execution_route": "local_ui_candidate",
+          "result_on_new_target": "not_run",
+          "candidate_file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+          "candidate_test_titles": [
+            "AT-N11 補助: 取得済みPWAの作品をbrowser offlineで編集し、閉じて再開し実保存ファイルと未送信・素材bytes不足を区別する"
+          ],
+          "normal_ui_operation": "未取得offline contextの初回URLと、補助的native asset bytes削除後の通常素材preview/完全保存を試す。",
+          "assertions_authored_not_run": [
+            "初回offline取得は失敗しapp shellなし。",
+            "素材bytes不足status・audio/素材保存buttonなし、完全保存にalertでdownload数0、本文とauthor rows保持。"
+          ],
+          "candidate_observation_scope": "supplemental_browser_offline_only; original physical-device condition not observed",
+          "test_callbacks": [
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "title": "AT-N11 補助: 取得済みPWAの作品をbrowser offlineで編集し、閉じて再開し実保存ファイルと未送信・素材bytes不足を区別する",
+              "line": 113,
+              "parameter_values": {},
+              "binding_status": "authored_working_tree_location; refresh at final proof freeze"
+            }
+          ],
+          "authored_file_sha256": "b1a8044d70b14cf8fc7705f2a12df7699dc9b335dfcb4da110481161cf8e8f6e",
+          "missing_conditions": [
+            {
+              "condition": "実機の機内モードで同じ編集・閉じる・再開・OS Files出力",
+              "result": "blocked_external_condition",
+              "reason": "Browser offline is supplemental; preserve actual target-device/network/file evidence."
+            },
+            {
+              "condition": "実際に未キャッシュのremote添付と実機初回取得",
+              "result": "blocked_external_condition",
+              "reason": "Deliberate native asset-byte loss and fresh offline browser context are supplemental."
+            }
+          ]
+        }
+      ],
+      "candidate_scope": "authored_not_run",
+      "new_test_file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+      "next_action": "Freeze candidate commit/tree/build, run the exact normal UI test, retain full trace/screenshots/download hashes, and classify each original clause only from its actual observation.",
+      "procedure": "Supplemental cached production PWA procedure using browser offline: edit and save, close/reopen the page, export the actual complete file, observe unsent edits in normal replacement preview, reject first offline acquisition and show actual missing native asset bytes without a successful complete export.",
+      "external_clause_result": "blocked_external_condition",
+      "external_limit": "Browser offline and deliberate native-cache loss are supplemental. No actual physical airplane mode or genuine uncached remote attachment was exercised.",
+      "external_next_action": "Run acquired production PWA on the actual target device in real airplane mode, edit/close/reopen/export into its Files storage, and try an actual uncached attachment and first acquisition; preserve device/network/file evidence.",
+      "clause_mapping_result": "authored_not_run",
+      "unobserved_required_conditions": [
+        {
+          "condition": "実機の機内モードで同じ編集・閉じる・再開・OS Files出力",
+          "result": "blocked_external_condition",
+          "reason": "Browser offline is supplemental; preserve actual target-device/network/file evidence."
+        },
+        {
+          "condition": "実際に未キャッシュのremote添付と実機初回取得",
+          "result": "blocked_external_condition",
+          "reason": "Deliberate native asset-byte loss and fresh offline browser context are supplemental."
+        }
+      ]
+    },
+    {
+      "id": "AT-N12",
+      "original_case": {
+        "id": "AT-N12",
+        "requirement_ids": [
+          "REQ-N12"
+        ],
+        "package_id": "WP14",
+        "given": "同じ版の抽選を含む経路",
+        "when": "確認記録から再実行する",
+        "then": "同じ条件の結果が再現され版変更時は要再確認となる",
+        "negative_or_edge": "新しい版の結果を古い版の合格証跡として扱わない"
+      },
+      "result_on_new_target": "not_run",
+      "clauses": [
+        {
+          "name": "given",
+          "original": "同じ版の抽選を含む経路",
+          "execution_route": "local_ui_candidate",
+          "result_on_new_target": "not_run",
+          "candidate_file": "tests/e2e/ap04-original-n-random-replay.spec.ts",
+          "candidate_test_titles": [
+            "AT-N12 通常 UI の抽選経路を記録して同じ固定版で再現し、版変更の再確認結果を旧版の証跡へ混ぜない"
+          ],
+          "normal_ui_operation": "同じ固定seedと二つの真条件・異なる加算効果を持つ実作品を通常保存ファイルから開く。",
+          "assertions_authored_not_run": [
+            "実recordにseed不変・rngPosition +1・両conditionResults trueと選択効果の値が記録される。"
+          ],
+          "test_callbacks": [
+            {
+              "file": "tests/e2e/ap04-original-n-random-replay.spec.ts",
+              "title": "AT-N12 通常 UI の抽選経路を記録して同じ固定版で再現し、版変更の再確認結果を旧版の証跡へ混ぜない",
+              "line": 14,
+              "parameter_values": {},
+              "binding_status": "authored_working_tree_location; refresh at final proof freeze"
+            }
+          ],
+          "authored_file_sha256": "5c6138ffa58b8582dc2e02100cf3581c30209e52680a9c7865589feb132b6da6",
+          "missing_conditions": []
+        },
+        {
+          "name": "when",
+          "original": "確認記録から再実行する",
+          "execution_route": "local_ui_candidate",
+          "result_on_new_target": "not_run",
+          "candidate_file": "tests/e2e/ap04-original-n-random-replay.spec.ts",
+          "candidate_test_titles": [
+            "AT-N12 通常 UI の抽選経路を記録して同じ固定版で再現し、版変更の再確認結果を旧版の証跡へ混ぜない"
+          ],
+          "normal_ui_operation": "通常抽選・確認記録保存後、保存版での再実行buttonを二回使う。",
+          "assertions_authored_not_run": [
+            "選択版はrecord.contentVersionIdへ一致。",
+            "再実行の最終変数/RNG cursorは実recordと一致。"
+          ],
+          "test_callbacks": [
+            {
+              "file": "tests/e2e/ap04-original-n-random-replay.spec.ts",
+              "title": "AT-N12 通常 UI の抽選経路を記録して同じ固定版で再現し、版変更の再確認結果を旧版の証跡へ混ぜない",
+              "line": 14,
+              "parameter_values": {},
+              "binding_status": "authored_working_tree_location; refresh at final proof freeze"
+            }
+          ],
+          "authored_file_sha256": "5c6138ffa58b8582dc2e02100cf3581c30209e52680a9c7865589feb132b6da6",
+          "missing_conditions": []
+        },
+        {
+          "name": "then",
+          "original": "同じ条件の結果が再現され版変更時は要再確認となる",
+          "execution_route": "local_ui_candidate",
+          "result_on_new_target": "not_run",
+          "candidate_file": "tests/e2e/ap04-original-n-random-replay.spec.ts",
+          "candidate_test_titles": [
+            "AT-N12 通常 UI の抽選経路を記録して同じ固定版で再現し、版変更の再確認結果を旧版の証跡へ混ぜない"
+          ],
+          "normal_ui_operation": "選択効果を通常詳細データで7へ編集し、再確認待ちと明示再確認後の新結果を開く。",
+          "assertions_authored_not_run": [
+            "内容変更後は再確認待ちで、未実行中にtrace数は増えない。",
+            "明示再確認後の別traceは7で、sourceTraceId/sourceVersionId/baseRevisionが一致。"
+          ],
+          "test_callbacks": [
+            {
+              "file": "tests/e2e/ap04-original-n-random-replay.spec.ts",
+              "title": "AT-N12 通常 UI の抽選経路を記録して同じ固定版で再現し、版変更の再確認結果を旧版の証跡へ混ぜない",
+              "line": 14,
+              "parameter_values": {},
+              "binding_status": "authored_working_tree_location; refresh at final proof freeze"
+            }
+          ],
+          "authored_file_sha256": "5c6138ffa58b8582dc2e02100cf3581c30209e52680a9c7865589feb132b6da6",
+          "missing_conditions": []
+        },
+        {
+          "name": "negative_or_edge",
+          "original": "新しい版の結果を古い版の合格証跡として扱わない",
+          "execution_route": "local_ui_candidate",
+          "result_on_new_target": "not_run",
+          "candidate_file": "tests/e2e/ap04-original-n-random-replay.spec.ts",
+          "candidate_test_titles": [
+            "AT-N12 通常 UI の抽選経路を記録して同じ固定版で再現し、版変更の再確認結果を旧版の証跡へ混ぜない"
+          ],
+          "normal_ui_operation": "cold実保存ファイルと旧/新記録の通常再実行を比較する。",
+          "assertions_authored_not_run": [
+            "新trace IDとcontentVersionIdは旧記録と別。",
+            "旧trace・旧pin全体が不変で、旧再生1/2・新再生7が分かれる。"
+          ],
+          "test_callbacks": [
+            {
+              "file": "tests/e2e/ap04-original-n-random-replay.spec.ts",
+              "title": "AT-N12 通常 UI の抽選経路を記録して同じ固定版で再現し、版変更の再確認結果を旧版の証跡へ混ぜない",
+              "line": 14,
+              "parameter_values": {},
+              "binding_status": "authored_working_tree_location; refresh at final proof freeze"
+            }
+          ],
+          "authored_file_sha256": "5c6138ffa58b8582dc2e02100cf3581c30209e52680a9c7865589feb132b6da6",
+          "missing_conditions": []
+        }
+      ],
+      "candidate_scope": "authored_original_clause_candidate",
+      "new_test_file": "tests/e2e/ap04-original-n-random-replay.spec.ts",
+      "next_action": "Freeze commit/tree/build/base and fixture inputs, execute the mapped normal UI browser test, retain actual artifacts and only then assess each original clause.",
+      "procedure": "Normal UI random choice, recorded immutable edition, repeated saved replay, changed effect and separate reconfirmation.",
+      "clause_mapping_result": "authored_not_run"
+    },
+    {
+      "id": "AT-N14",
+      "original_case": {
+        "id": "AT-N14",
+        "requirement_ids": [
+          "REQ-N14"
+        ],
+        "package_id": "WP16",
+        "given": "端末内データを失った空環境",
+        "when": "完全保存ファイルを読み込む",
+        "then": "本文・ID・条件・素材を保って編集を再開できる",
+        "negative_or_edge": "端末内履歴だけを外部バックアップの代わりとして保証しない"
+      },
+      "result_on_new_target": "not_run",
+      "clauses": [
+        {
+          "name": "given",
+          "original": "端末内データを失った空環境",
+          "execution_route": "local_ui_candidate",
+          "result_on_new_target": "not_run",
+          "candidate_file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+          "candidate_test_titles": [
+            "AT-N14 実完全保存を端末内正本も履歴もない空 context に持ち込み、本文・ID・条件・素材を保って編集を再開する"
+          ],
+          "normal_ui_operation": "実完全保存ファイルを作成後、独立新browser contextの空durable author tablesを観測する。",
+          "assertions_authored_not_run": [
+            "新contextの6 author tablesが全て空。",
+            "別contextへ持ち込む実ファイルにhistoryと実WAV bytesが含まれる。"
+          ],
+          "candidate_observation_scope": "independent_empty_browser_storage_and_actual_download; physical loss/off-device retention not observed",
+          "test_callbacks": [
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "title": "AT-N14 実完全保存を端末内正本も履歴もない空 context に持ち込み、本文・ID・条件・素材を保って編集を再開する",
+              "line": 140,
+              "parameter_values": {},
+              "binding_status": "authored_working_tree_location; refresh at final proof freeze"
+            }
+          ],
+          "authored_file_sha256": "9947b57a05afecc5ce71c2b0f92ccfcec0cd33f8abc5aa25d07c55a8a6fbfbba",
+          "missing_conditions": [
+            {
+              "condition": "実端末データ消失と別端末/独立OS Filesへの保存ファイル退避",
+              "result": "blocked_external_condition",
+              "reason": "An empty independent browser context observes storage isolation, not physical data loss or off-device retention."
+            }
+          ],
+          "sources": [
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 140,
+              "end_line": 182,
+              "excerpt_sha256": "c3b201c5a7c27b49315aae28cd05be641067bfd1d23bff3e543b1fcb5313825f",
+              "source_excerpt": "test('AT-N14 実完全保存を端末内正本も履歴もない空 context に持ち込み、本文・ID・条件・素材を保って編集を再開する', async ({ page, browser, baseURL }, info) => {\n  const p = createProject('AT-N14 外部完全保存から復帰');\n  const scene = createEntity(p.projectId, 'scene', '復旧する本文', { body: textToRichText('失う前の本文😀') });\n  const variable = createEntity(p.projectId, 'variable', '復旧する状態', { key: 'recovered', valueType: 'boolean', scope: 'run', initial: { type: 'boolean', value: true } });\n  const entry = createEntity(p.projectId, 'flow_node', '復旧する入口', { nodeType: 'entry', sceneId: scene.id });\n  const end = createEntity(p.projectId, 'flow_node', '復旧する終端', { nodeType: 'terminal', terminalReason: '条件も復旧した' });\n  const edge = createEntity(p.projectId, 'flow_edge', '復旧する条件', { fromId: entry.id, toId: end.id, label: '復旧条件で進む', condition: { op: 'compare', variableId: variable.id, comparator: 'eq', value: { type: 'boolean', value: true } } });\n  const prepared = await prepareAsset(new Uint8Array(await readFile('tests/fixtures/media/fixture-tone.wav')), '復旧する実音声.wav');\n  const { bytes: assetBytes, preview: _preview, ...metadata } = prepared;\n  const asset = createEntity(p.projectId, 'attachment', '復旧する実音声', metadata);\n  p.entities.push(scene, variable, entry, end, edge, asset);\n  const fixture = await exportScenario(p, { loadAsset: hash => hash === prepared.contentHash ? assetBytes : undefined });\n  await attachGiven(info, 'AT-N14', fixture, { projectId: p.projectId, entityIds: p.entities.map(entity => entity.id), blockId: scene.data.body[0].id, condition: edge.data.condition, assetHash: prepared.contentHash, realAssetFixture: 'tests/fixtures/media/fixture-tone.wav' });\n  await seed(page, fixture);\n  await openEntity(page, 'scene', scene.name);\n  await editBody(page, '外部ファイルへ保存した本文😀');\n  const external = await backup(page);\n  const givenIds = new Set(p.entities.map(entity => entity.id));\n  expect(external.project.entities.filter(entity => givenIds.has(entity.id))\n    .map(({ id, kind }) => ({ id, kind })).sort((a, b) => a.id.localeCompare(b.id)))\n    .toEqual(p.entities.map(({ id, kind }) => ({ id, kind })).sort((a, b) => a.id.localeCompare(b.id)));\n  const firstReviews = external.project.entities.filter(entity => !givenIds.has(entity.id));\n  expect(firstReviews).toHaveLength(1);\n  const firstReview = firstReviews[0];\n  if (!firstReview || firstReview.kind !== 'review') throw new Error('最初の本文保存が変更確認以外の情報を追加しました');\n  expect(firstReview).toMatchObject({ status: 'needs_review', visibility: 'private',\n    data: { target: entry.id, targetVersionId: p.projectId, stage: 'open' } });\n  expect(JSON.parse(String(firstReview.customValues['changeReview.sourceRevisions']))).toEqual({ [scene.id]: '1' });\n  expect(firstReview.data.body.map(block => block.text).join('\\n')).toContain(`(${scene.id})。改訂 0 → 1。`);\n  expect(external.project.history.length).toBeGreaterThan(0);\n  expect(external.assets).toHaveLength(1);\n  expect(external.assets[0].bytes).toEqual(assetBytes);\n  await info.attach('AT-N14-external-backup.scenario', { body: Buffer.from(external.bytes), contentType: 'application/zip' });\n  await expect(page.locator('.backup-page')).toContainText('端末のダウンロードを確認してください');\n\n  // given: no source database, local history, cookie or localStorage is copied.\n  // This is declared browser storage-loss isolation, not physical-device loss.\n  const emptyContext = await browser.newContext({ baseURL });\n  try {\n    const restoredPage = await emptyContext.newPage();\n    await restoredPage.goto('./');\n    await expect(restoredPage.getByRole('button', { name: '保存ファイルを読み込む', exact: true })).toBeVisible();\n    expect(JSON.parse(await authorFingerprint(restoredPage))).toEqual([[], [], [], [], [], []]);\n",
+              "binding_status": "authored_not_run; exact source span only"
+            }
+          ],
+          "normal_operation_source_lines": [
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 152,
+              "source": "await attachGiven(info, 'AT-N14', fixture, { projectId: p.projectId, entityIds: p.entities.map(entity => entity.id), blockId: scene.data.body[0].id, condition: edge.data.condition, assetHash: prepared.contentHash, realAssetFixture: 'tests/fixtures/media/fixture-tone.wav' });"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 153,
+              "source": "await seed(page, fixture);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 154,
+              "source": "await openEntity(page, 'scene', scene.name);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 155,
+              "source": "await editBody(page, '外部ファイルへ保存した本文😀');"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 172,
+              "source": "await info.attach('AT-N14-external-backup.scenario', { body: Buffer.from(external.bytes), contentType: 'application/zip' });"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 180,
+              "source": "await restoredPage.goto('./');"
+            }
+          ],
+          "assertion_source_lines": [
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 158,
+              "source": "expect(external.project.entities.filter(entity => givenIds.has(entity.id))"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 162,
+              "source": "expect(firstReviews).toHaveLength(1);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 164,
+              "source": "if (!firstReview || firstReview.kind !== 'review') throw new Error('最初の本文保存が変更確認以外の情報を追加しました');"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 165,
+              "source": "expect(firstReview).toMatchObject({ status: 'needs_review', visibility: 'private',"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 167,
+              "source": "expect(JSON.parse(String(firstReview.customValues['changeReview.sourceRevisions']))).toEqual({ [scene.id]: '1' });"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 168,
+              "source": "expect(firstReview.data.body.map(block => block.text).join('\\n')).toContain(`(${scene.id})。改訂 0 → 1。`);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 169,
+              "source": "expect(external.project.history.length).toBeGreaterThan(0);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 170,
+              "source": "expect(external.assets).toHaveLength(1);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 171,
+              "source": "expect(external.assets[0].bytes).toEqual(assetBytes);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 173,
+              "source": "await expect(page.locator('.backup-page')).toContainText('端末のダウンロードを確認してください');"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 181,
+              "source": "await expect(restoredPage.getByRole('button', { name: '保存ファイルを読み込む', exact: true })).toBeVisible();"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 182,
+              "source": "expect(JSON.parse(await authorFingerprint(restoredPage))).toEqual([[], [], [], [], [], []]);"
+            }
+          ]
+        },
+        {
+          "name": "when",
+          "original": "完全保存ファイルを読み込む",
+          "execution_route": "local_ui_candidate",
+          "result_on_new_target": "not_run",
+          "candidate_file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+          "candidate_test_titles": [
+            "AT-N14 実完全保存を端末内正本も履歴もない空 context に持ち込み、本文・ID・条件・素材を保って編集を再開する"
+          ],
+          "normal_ui_operation": "新contextで通常保存ファイル読込buttonから実ダウンロードbytesを読み込む。",
+          "assertions_authored_not_run": [
+            "import後projectId/entities/history/snapshots/assetsが元の実ファイルへ全一致。"
+          ],
+          "candidate_observation_scope": "independent_empty_browser_storage_and_actual_download; physical loss/off-device retention not observed",
+          "test_callbacks": [
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "title": "AT-N14 実完全保存を端末内正本も履歴もない空 context に持ち込み、本文・ID・条件・素材を保って編集を再開する",
+              "line": 140,
+              "parameter_values": {},
+              "binding_status": "authored_working_tree_location; refresh at final proof freeze"
+            }
+          ],
+          "authored_file_sha256": "9947b57a05afecc5ce71c2b0f92ccfcec0cd33f8abc5aa25d07c55a8a6fbfbba",
+          "missing_conditions": [
+            {
+              "condition": "実端末データ消失と別端末/独立OS Filesへの保存ファイル退避",
+              "result": "blocked_external_condition",
+              "reason": "An empty independent browser context observes storage isolation, not physical data loss or off-device retention."
+            }
+          ],
+          "sources": [
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 177,
+              "end_line": 190,
+              "excerpt_sha256": "093d1e22cd48aaf386ff331dbd89b466f9a912ecfec41c95d78faac9939f326e",
+              "source_excerpt": "  const emptyContext = await browser.newContext({ baseURL });\n  try {\n    const restoredPage = await emptyContext.newPage();\n    await restoredPage.goto('./');\n    await expect(restoredPage.getByRole('button', { name: '保存ファイルを読み込む', exact: true })).toBeVisible();\n    expect(JSON.parse(await authorFingerprint(restoredPage))).toEqual([[], [], [], [], [], []]);\n    // when: only the actual downloaded .scenario is imported via normal UI.\n    await seed(restoredPage, external.bytes);\n    const imported = await backup(restoredPage);\n    expect(imported.project.projectId).toBe(external.project.projectId);\n    expect(imported.project.entities).toEqual(external.project.entities);\n    expect(imported.project.history).toEqual(external.project.history);\n    expect(imported.project.snapshots).toEqual(external.project.snapshots);\n    expect(imported.assets).toEqual(external.assets);\n",
+              "binding_status": "authored_not_run; exact source span only"
+            }
+          ],
+          "normal_operation_source_lines": [
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 180,
+              "source": "await restoredPage.goto('./');"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 184,
+              "source": "await seed(restoredPage, external.bytes);"
+            }
+          ],
+          "assertion_source_lines": [
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 181,
+              "source": "await expect(restoredPage.getByRole('button', { name: '保存ファイルを読み込む', exact: true })).toBeVisible();"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 182,
+              "source": "expect(JSON.parse(await authorFingerprint(restoredPage))).toEqual([[], [], [], [], [], []]);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 186,
+              "source": "expect(imported.project.projectId).toBe(external.project.projectId);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 187,
+              "source": "expect(imported.project.entities).toEqual(external.project.entities);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 188,
+              "source": "expect(imported.project.history).toEqual(external.project.history);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 189,
+              "source": "expect(imported.project.snapshots).toEqual(external.project.snapshots);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 190,
+              "source": "expect(imported.assets).toEqual(external.assets);"
+            }
+          ]
+        },
+        {
+          "name": "then",
+          "original": "本文・ID・条件・素材を保って編集を再開できる",
+          "execution_route": "local_ui_candidate",
+          "result_on_new_target": "not_run",
+          "candidate_file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+          "candidate_test_titles": [
+            "AT-N14 実完全保存を端末内正本も履歴もない空 context に持ち込み、本文・ID・条件・素材を保って編集を再開する"
+          ],
+          "normal_ui_operation": "復元後の通常本文欄で編集保存し、正規生成review1件を含む実完全backupを一度追加してからcold reload・再backupする（原30秒不変）。",
+          "assertions_authored_not_run": [
+            "元6ID/kindと初回本文保存review1件、import全7件は元外部fileと全一致。再編集後もその7ID/kindを全保持し、編集scene以外の元6件は全data完全不変。",
+            "再編集sceneの同じblock ID・全dataと改訂2を確認。追加exact1reviewはtarget=entry/sourceVersion=project、同じscene IDの1→2・data.sceneIdを記録し、needs_review/private/open。",
+            "通常再編集後の実backup全8ID/全entity・review dataをcold fileへ完全一致。cold history/snapshots/assets、cold前後native fingerprintも完全一致。",
+            "再編集は元historyへ正確1commandを追加し元列を保持。素材bytes/metadataと元snapshotsを変更しない。"
+          ],
+          "candidate_observation_scope": "independent_empty_browser_storage_and_actual_download; physical loss/off-device retention not observed",
+          "test_callbacks": [
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "title": "AT-N14 実完全保存を端末内正本も履歴もない空 context に持ち込み、本文・ID・条件・素材を保って編集を再開する",
+              "line": 140,
+              "parameter_values": {},
+              "binding_status": "authored_working_tree_location; refresh at final proof freeze"
+            }
+          ],
+          "authored_file_sha256": "9947b57a05afecc5ce71c2b0f92ccfcec0cd33f8abc5aa25d07c55a8a6fbfbba",
+          "missing_conditions": [
+            {
+              "condition": "実端末データ消失と別端末/独立OS Filesへの保存ファイル退避",
+              "result": "blocked_external_condition",
+              "reason": "An empty independent browser context observes storage isolation, not physical data loss or off-device retention."
+            }
+          ],
+          "sources": [
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 193,
+              "end_line": 244,
+              "excerpt_sha256": "c6544739fdda68c2a9713bbc135fe06d2dca2274111764fe350ba52d36a1afea",
+              "source_excerpt": "    await openEntity(restoredPage, 'scene', scene.name);\n    const bodyTab = restoredPage.locator('.detail-panel').getByRole('tab', { name: '本文', exact: true });\n    if (await bodyTab.isVisible()) await bodyTab.click();\n    await expect(restoredPage.locator('.detail-panel').getByRole('textbox', { name: '本文', exact: true })).toHaveValue('外部ファイルへ保存した本文😀');\n    await editBody(restoredPage, '空環境で編集を再開した本文😀');\n    // The first scene save already created one dependency review. Resuming\n    // author editing creates exactly one more, before the cold reread.\n    const resumed = await backup(restoredPage);\n    const externalIds = new Set(external.project.entities.map(entity => entity.id));\n    expect(external.project.entities).toHaveLength(7);\n    expect(resumed.project.entities.filter(entity => externalIds.has(entity.id))\n      .map(({ id, kind }) => ({ id, kind })).sort((a, b) => a.id.localeCompare(b.id)))\n      .toEqual(external.project.entities.map(({ id, kind }) => ({ id, kind })).sort((a, b) => a.id.localeCompare(b.id)));\n    expect(resumed.project.entities.filter(entity => externalIds.has(entity.id) && entity.id !== scene.id))\n      .toEqual(external.project.entities.filter(entity => entity.id !== scene.id));\n    const resumedScene = resumed.project.entities.find(entity => entity.id === scene.id);\n    if (!resumedScene || resumedScene.kind !== 'scene') throw new Error('再編集した本文がありません');\n    expect(resumedScene.revision).toBe('2');\n    expect(resumedScene.data).toEqual({ ...scene.data, body: [{ ...scene.data.body[0], text: '空環境で編集を再開した本文😀' }] });\n    const resumedReviews = resumed.project.entities.filter(entity => !externalIds.has(entity.id));\n    expect(resumedReviews).toHaveLength(1);\n    const review = resumedReviews[0];\n    if (!review || review.kind !== 'review') throw new Error('本文の再編集が変更確認以外の情報を追加しました');\n    expect(review).toMatchObject({ projectId: p.projectId, status: 'needs_review', visibility: 'private',\n      data: { target: entry.id, targetVersionId: p.projectId, stage: 'open', quotedText: null, resolution: [] },\n      customValues: { 'changeReview.generatedBy': 'semantic-change-review/v1', 'changeReview.projectRevision': '2' } });\n    expect(JSON.parse(String(review.customValues['changeReview.sourceIds']))).toEqual([scene.id]);\n    expect(JSON.parse(String(review.customValues['changeReview.sourceRevisions']))).toEqual({ [scene.id]: '2' });\n    expect(JSON.parse(String(review.customValues['changeReview.paths'])))\n      .toEqual({ [scene.id]: { directPaths: ['data.sceneId'], relationLabels: [] } });\n    expect(JSON.parse(String(review.customValues['changeReview.key'])))\n      .toEqual({ targetId: entry.id, sources: [{ id: scene.id, revision: '2', directPaths: ['data.sceneId'], relationLabels: [] }] });\n    expect(review.data.body.map(block => block.text).join('\\n')).toContain(`(${scene.id})。改訂 1 → 2。`);\n    expect(resumed.project.entities).toHaveLength(8);\n    expect(resumed.assets).toEqual(external.assets);\n    expect(resumed.project.history.slice(0, imported.project.history.length)).toEqual(imported.project.history);\n    expect(resumed.project.history).toHaveLength(imported.project.history.length + 1);\n    expect(resumed.project.snapshots).toEqual(imported.project.snapshots);\n    const resumedFingerprint = await authorFingerprint(restoredPage);\n    await restoredPage.reload();\n    expect(await authorFingerprint(restoredPage)).toBe(resumedFingerprint);\n    const cold = await backup(restoredPage), actual = cold.project.entities.find(entity => entity.id === scene.id);\n    if (!actual || actual.kind !== 'scene') throw new Error('復旧後の本文がありません');\n    expect(actual.data.body[0]).toEqual({ ...scene.data.body[0], text: '空環境で編集を再開した本文😀' });\n    expect(cold.project.entities.map(entity => entity.id).sort()).toEqual(resumed.project.entities.map(entity => entity.id).sort());\n    expect(cold.project.entities).toEqual(resumed.project.entities);\n    expect(cold.project.history).toEqual(resumed.project.history);\n    expect(cold.project.snapshots).toEqual(resumed.project.snapshots);\n    expect(cold.project.entities.find(entity => entity.id === edge.id)?.data).toEqual(edge.data);\n    expect(cold.project.entities.find(entity => entity.id === variable.id)?.data).toEqual(variable.data);\n    expect(cold.project.entities.find(entity => entity.id === asset.id)?.data).toEqual(asset.data);\n    expect(cold.assets).toEqual(resumed.assets);\n",
+              "binding_status": "authored_not_run; exact source span only"
+            }
+          ],
+          "normal_operation_source_lines": [
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 193,
+              "source": "await openEntity(restoredPage, 'scene', scene.name);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 197,
+              "source": "await editBody(restoredPage, '空環境で編集を再開した本文😀');"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 232,
+              "source": "await restoredPage.reload();"
+            }
+          ],
+          "assertion_source_lines": [
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 195,
+              "source": "if (await bodyTab.isVisible()) await bodyTab.click();"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 196,
+              "source": "await expect(restoredPage.locator('.detail-panel').getByRole('textbox', { name: '本文', exact: true })).toHaveValue('外部ファイルへ保存した本文😀');"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 202,
+              "source": "expect(external.project.entities).toHaveLength(7);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 203,
+              "source": "expect(resumed.project.entities.filter(entity => externalIds.has(entity.id))"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 206,
+              "source": "expect(resumed.project.entities.filter(entity => externalIds.has(entity.id) && entity.id !== scene.id))"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 209,
+              "source": "if (!resumedScene || resumedScene.kind !== 'scene') throw new Error('再編集した本文がありません');"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 210,
+              "source": "expect(resumedScene.revision).toBe('2');"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 211,
+              "source": "expect(resumedScene.data).toEqual({ ...scene.data, body: [{ ...scene.data.body[0], text: '空環境で編集を再開した本文😀' }] });"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 213,
+              "source": "expect(resumedReviews).toHaveLength(1);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 215,
+              "source": "if (!review || review.kind !== 'review') throw new Error('本文の再編集が変更確認以外の情報を追加しました');"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 216,
+              "source": "expect(review).toMatchObject({ projectId: p.projectId, status: 'needs_review', visibility: 'private',"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 219,
+              "source": "expect(JSON.parse(String(review.customValues['changeReview.sourceIds']))).toEqual([scene.id]);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 220,
+              "source": "expect(JSON.parse(String(review.customValues['changeReview.sourceRevisions']))).toEqual({ [scene.id]: '2' });"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 221,
+              "source": "expect(JSON.parse(String(review.customValues['changeReview.paths'])))"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 223,
+              "source": "expect(JSON.parse(String(review.customValues['changeReview.key'])))"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 225,
+              "source": "expect(review.data.body.map(block => block.text).join('\\n')).toContain(`(${scene.id})。改訂 1 → 2。`);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 226,
+              "source": "expect(resumed.project.entities).toHaveLength(8);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 227,
+              "source": "expect(resumed.assets).toEqual(external.assets);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 228,
+              "source": "expect(resumed.project.history.slice(0, imported.project.history.length)).toEqual(imported.project.history);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 229,
+              "source": "expect(resumed.project.history).toHaveLength(imported.project.history.length + 1);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 230,
+              "source": "expect(resumed.project.snapshots).toEqual(imported.project.snapshots);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 233,
+              "source": "expect(await authorFingerprint(restoredPage)).toBe(resumedFingerprint);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 235,
+              "source": "if (!actual || actual.kind !== 'scene') throw new Error('復旧後の本文がありません');"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 236,
+              "source": "expect(actual.data.body[0]).toEqual({ ...scene.data.body[0], text: '空環境で編集を再開した本文😀' });"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 237,
+              "source": "expect(cold.project.entities.map(entity => entity.id).sort()).toEqual(resumed.project.entities.map(entity => entity.id).sort());"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 238,
+              "source": "expect(cold.project.entities).toEqual(resumed.project.entities);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 239,
+              "source": "expect(cold.project.history).toEqual(resumed.project.history);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 240,
+              "source": "expect(cold.project.snapshots).toEqual(resumed.project.snapshots);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 241,
+              "source": "expect(cold.project.entities.find(entity => entity.id === edge.id)?.data).toEqual(edge.data);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 242,
+              "source": "expect(cold.project.entities.find(entity => entity.id === variable.id)?.data).toEqual(variable.data);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 243,
+              "source": "expect(cold.project.entities.find(entity => entity.id === asset.id)?.data).toEqual(asset.data);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 244,
+              "source": "expect(cold.assets).toEqual(resumed.assets);"
+            }
+          ]
+        },
+        {
+          "name": "negative_or_edge",
+          "original": "端末内履歴だけを外部バックアップの代わりとして保証しない",
+          "execution_route": "local_ui_candidate",
+          "result_on_new_target": "not_run",
+          "candidate_file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+          "candidate_test_titles": [
+            "AT-N14 実完全保存を端末内正本も履歴もない空 context に持ち込み、本文・ID・条件・素材を保って編集を再開する"
+          ],
+          "normal_ui_operation": "通常backup画面の注意と空contextへの外部ファイル引渡しを確認する。",
+          "assertions_authored_not_run": [
+            "端末のダウンロードを確認してくださいが見える。",
+            "端末内履歴のない新contextで実ファイルから復元する。実端末データ消失/独立OS Files退避は未観測。"
+          ],
+          "candidate_observation_scope": "independent_empty_browser_storage_and_actual_download; physical loss/off-device retention not observed",
+          "test_callbacks": [
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "title": "AT-N14 実完全保存を端末内正本も履歴もない空 context に持ち込み、本文・ID・条件・素材を保って編集を再開する",
+              "line": 140,
+              "parameter_values": {},
+              "binding_status": "authored_working_tree_location; refresh at final proof freeze"
+            }
+          ],
+          "authored_file_sha256": "9947b57a05afecc5ce71c2b0f92ccfcec0cd33f8abc5aa25d07c55a8a6fbfbba",
+          "missing_conditions": [
+            {
+              "condition": "実端末データ消失と別端末/独立OS Filesへの保存ファイル退避",
+              "result": "blocked_external_condition",
+              "reason": "An empty independent browser context observes storage isolation, not physical data loss or off-device retention."
+            }
+          ],
+          "sources": [
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 169,
+              "end_line": 190,
+              "excerpt_sha256": "873f1c7ae43f47a2b7367ca2b186b23d7d970373800e25b1369aa9e922fdcfff",
+              "source_excerpt": "  expect(external.project.history.length).toBeGreaterThan(0);\n  expect(external.assets).toHaveLength(1);\n  expect(external.assets[0].bytes).toEqual(assetBytes);\n  await info.attach('AT-N14-external-backup.scenario', { body: Buffer.from(external.bytes), contentType: 'application/zip' });\n  await expect(page.locator('.backup-page')).toContainText('端末のダウンロードを確認してください');\n\n  // given: no source database, local history, cookie or localStorage is copied.\n  // This is declared browser storage-loss isolation, not physical-device loss.\n  const emptyContext = await browser.newContext({ baseURL });\n  try {\n    const restoredPage = await emptyContext.newPage();\n    await restoredPage.goto('./');\n    await expect(restoredPage.getByRole('button', { name: '保存ファイルを読み込む', exact: true })).toBeVisible();\n    expect(JSON.parse(await authorFingerprint(restoredPage))).toEqual([[], [], [], [], [], []]);\n    // when: only the actual downloaded .scenario is imported via normal UI.\n    await seed(restoredPage, external.bytes);\n    const imported = await backup(restoredPage);\n    expect(imported.project.projectId).toBe(external.project.projectId);\n    expect(imported.project.entities).toEqual(external.project.entities);\n    expect(imported.project.history).toEqual(external.project.history);\n    expect(imported.project.snapshots).toEqual(external.project.snapshots);\n    expect(imported.assets).toEqual(external.assets);\n",
+              "binding_status": "authored_not_run; exact source span only"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 245,
+              "end_line": 247,
+              "excerpt_sha256": "af4f2f73972fa60df0aaa344b49eb4fa9236e59cefbbd2d3cfc0d491a76726d1",
+              "source_excerpt": "    // negative_or_edge: the recovery source is a downloaded file, not history\n    // in the lost context. Separate-device/off-device retention remains blocked.\n    await attachObservation(info, 'AT-N14-observation', { initialDurableRows: [[], [], [], [], [], []], externalFileSha256: sha256(external.bytes), resumedFileSha256: sha256(resumed.bytes), coldFileSha256: sha256(cold.bytes), coldRevision: cold.project.revision, originalGivenIds: p.entities.map(entity => entity.id).sort(), importedExternalIds: [...externalIds].sort(), resumedBaselineIds: resumed.project.entities.map(entity => entity.id).sort(), resumedReview: review, fullResumedBaselineEntities: resumed.project.entities, canonicalColdUnchanged: true, preservedEntityIds: cold.project.entities.map(entity => entity.id), preservedBlockId: actual.data.body[0].id, preservedAssetSha256: sha256(cold.assets[0].bytes), sourceWasDownloadedFile: true, physicalDeviceLossObserved: false, separateDeviceFileRetention: 'blocked_external_condition' });\n",
+              "binding_status": "authored_not_run; exact source span only"
+            }
+          ],
+          "normal_operation_source_lines": [
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 172,
+              "source": "await info.attach('AT-N14-external-backup.scenario', { body: Buffer.from(external.bytes), contentType: 'application/zip' });"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 180,
+              "source": "await restoredPage.goto('./');"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 184,
+              "source": "await seed(restoredPage, external.bytes);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 247,
+              "source": "await attachObservation(info, 'AT-N14-observation', { initialDurableRows: [[], [], [], [], [], []], externalFileSha256: sha256(external.bytes), resumedFileSha256: sha256(resumed.bytes), coldFileSha256: sha256(cold.bytes), coldRevision: cold.project.revision, originalGivenIds: p.entities.map(entity => entity.id).sort(), importedExternalIds: [...externalIds].sort(), resumedBaselineIds: resumed.project.entities.map(entity => entity.id).sort(), resumedReview: review, fullResumedBaselineEntities: resumed.project.entities, canonicalColdUnchanged: true, preservedEntityIds: cold.project.entities.map(entity => entity.id), preservedBlockId: actual.data.body[0].id, preservedAssetSha256: sha256(cold.assets[0].bytes), sourceWasDownloadedFile: true, physicalDeviceLossObserved: false, separateDeviceFileRetention: 'blocked_external_condition' });"
+            }
+          ],
+          "assertion_source_lines": [
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 169,
+              "source": "expect(external.project.history.length).toBeGreaterThan(0);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 170,
+              "source": "expect(external.assets).toHaveLength(1);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 171,
+              "source": "expect(external.assets[0].bytes).toEqual(assetBytes);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 173,
+              "source": "await expect(page.locator('.backup-page')).toContainText('端末のダウンロードを確認してください');"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 181,
+              "source": "await expect(restoredPage.getByRole('button', { name: '保存ファイルを読み込む', exact: true })).toBeVisible();"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 182,
+              "source": "expect(JSON.parse(await authorFingerprint(restoredPage))).toEqual([[], [], [], [], [], []]);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 186,
+              "source": "expect(imported.project.projectId).toBe(external.project.projectId);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 187,
+              "source": "expect(imported.project.entities).toEqual(external.project.entities);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 188,
+              "source": "expect(imported.project.history).toEqual(external.project.history);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 189,
+              "source": "expect(imported.project.snapshots).toEqual(external.project.snapshots);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "line": 190,
+              "source": "expect(imported.assets).toEqual(external.assets);"
+            }
+          ]
+        }
+      ],
+      "candidate_scope": "authored_original_clause_candidate",
+      "new_test_file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+      "next_action": "Freeze commit/tree/build/base and fixture inputs, execute the mapped normal UI browser test, retain actual artifacts and only then assess each original clause.",
+      "procedure": "Actual normal-UI download moved to a new browser context with no durable author rows; body/block/entity IDs, condition and real WAV bytes checked.",
+      "additional_external_constraints": [
+        {
+          "condition": "Physical device data loss and separate-device/off-device file retention",
+          "result": "blocked_external_condition",
+          "next_action": "Retain the real downloaded backup on an independent device or storage destination and perform the original external recovery conditions; isolated browser storage alone does not observe that retention."
+        }
+      ],
+      "clause_mapping_result": "authored_not_run",
+      "unobserved_required_conditions": [
+        {
+          "condition": "実端末データ消失と別端末/独立OS Filesへの保存ファイル退避",
+          "result": "blocked_external_condition",
+          "reason": "An empty independent browser context observes storage isolation, not physical data loss or off-device retention."
+        }
+      ],
+      "normal_author_save_baseline": {
+        "given_entity_count": 6,
+        "first_normal_scene_save_review_count": 1,
+        "exact_import_entity_count": 7,
+        "resumed_scene_save_new_review_count": 1,
+        "resumed_complete_file_entity_count": 8,
+        "expected_new_review_transition": "scene revision1→2 / entry.data.sceneId",
+        "source_file_whole_equality_preserved_at_import": true,
+        "resumed_body_is_only_edit_to_existing_entities": true,
+        "full_cold_entities_history_snapshots_assets_equals_resumed_backup": true,
+        "additional_actual_ui_backup_count": 1,
+        "original_default_timeout_ms": 30000,
+        "result": "not_run",
+        "physical_external_conditions_not_observed": true
+      }
+    },
+    {
+      "id": "AT-N15",
+      "original_case": {
+        "id": "AT-N15",
+        "requirement_ids": [
+          "REQ-N15"
+        ],
+        "package_id": "WP24",
+        "given": "認証エラーと本文を含む失敗",
+        "when": "診断を生成して内容を確認する",
+        "then": "必要な識別情報だけが出力され送信前に利用者が選べる",
+        "negative_or_edge": "ログや分析サービスへ作品本文を自動送信しない"
+      },
+      "result_on_new_target": "not_run",
+      "clauses": [
+        {
+          "name": "given",
+          "original": "認証エラーと本文を含む失敗",
+          "execution_route": "local_ui_candidate",
+          "result_on_new_target": "not_run",
+          "candidate_file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+          "candidate_test_titles": [
+            "AT-N15 本文を含む保存失敗と認証失敗から診断を確認し、任意持出し前後とも本文を自動送信しない"
+          ],
+          "normal_ui_operation": "秘密本文を含むnative quota失敗と、秘密本文/tokenを含むlocal専用HTTP Auth401を通常操作で起こす。",
+          "assertions_authored_not_run": [
+            "容量alertとAUTH_REQUIRED alertが出る。",
+            "保存失敗時のauthor canonical tables不変・編集入力保持。"
+          ],
+          "candidate_observation_scope": "local_HTTP_contract_and_native_browser_storage_only; real_Auth_RLS_server_sync_not_observed",
+          "test_callbacks": [
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "title": "AT-N15 本文を含む保存失敗と認証失敗から診断を確認し、任意持出し前後とも本文を自動送信しない",
+              "line": 251,
+              "parameter_values": {},
+              "binding_status": "authored_working_tree_location; refresh at final proof freeze"
+            }
+          ],
+          "authored_file_sha256": "9947b57a05afecc5ce71c2b0f92ccfcec0cd33f8abc5aa25d07c55a8a6fbfbba",
+          "missing_conditions": [
+            {
+              "condition": "実Auth/RLS/外部同期環境での診断・本文無送信",
+              "result": "not_run",
+              "reason": "Dedicated local HTTP401 only; no real Auth/RLS/server-sync acceptance credit."
+            }
+          ]
+        },
+        {
+          "name": "when",
+          "original": "診断を生成して内容を確認する",
+          "execution_route": "local_ui_candidate",
+          "result_on_new_target": "not_run",
+          "candidate_file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+          "candidate_test_titles": [
+            "AT-N15 本文を含む保存失敗と認証失敗から診断を確認し、任意持出し前後とも本文を自動送信しない"
+          ],
+          "normal_ui_operation": "通常診断panelを開いて内容を確認後、利用者操作で診断JSONを一回持ち出す。",
+          "assertions_authored_not_run": [
+            "preview前後に秘密本文・token・remote raw messageなし。",
+            "選択前download0、明示操作後download1。"
+          ],
+          "candidate_observation_scope": "local_HTTP_contract_and_native_browser_storage_only; real_Auth_RLS_server_sync_not_observed",
+          "test_callbacks": [
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "title": "AT-N15 本文を含む保存失敗と認証失敗から診断を確認し、任意持出し前後とも本文を自動送信しない",
+              "line": 251,
+              "parameter_values": {},
+              "binding_status": "authored_working_tree_location; refresh at final proof freeze"
+            }
+          ],
+          "authored_file_sha256": "9947b57a05afecc5ce71c2b0f92ccfcec0cd33f8abc5aa25d07c55a8a6fbfbba",
+          "missing_conditions": [
+            {
+              "condition": "実Auth/RLS/外部同期環境での診断・本文無送信",
+              "result": "not_run",
+              "reason": "Dedicated local HTTP401 only; no real Auth/RLS/server-sync acceptance credit."
+            }
+          ]
+        },
+        {
+          "name": "then",
+          "original": "必要な識別情報だけが出力され送信前に利用者が選べる",
+          "execution_route": "local_ui_candidate",
+          "result_on_new_target": "not_run",
+          "candidate_file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+          "candidate_test_titles": [
+            "AT-N15 本文を含む保存失敗と認証失敗から診断を確認し、任意持出し前後とも本文を自動送信しない"
+          ],
+          "normal_ui_operation": "実診断JSONをparseして識別項目を照合する。",
+          "assertions_authored_not_run": [
+            "recordsはQUOTA_EXCEEDED/AUTH_REQUIREDを含み、限定キーのみ。",
+            "operationId UUID・revision文字列・metadata whitelistに一致し秘密本文/tokenなし。"
+          ],
+          "candidate_observation_scope": "local_HTTP_contract_and_native_browser_storage_only; real_Auth_RLS_server_sync_not_observed",
+          "test_callbacks": [
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "title": "AT-N15 本文を含む保存失敗と認証失敗から診断を確認し、任意持出し前後とも本文を自動送信しない",
+              "line": 251,
+              "parameter_values": {},
+              "binding_status": "authored_working_tree_location; refresh at final proof freeze"
+            }
+          ],
+          "authored_file_sha256": "9947b57a05afecc5ce71c2b0f92ccfcec0cd33f8abc5aa25d07c55a8a6fbfbba",
+          "missing_conditions": [
+            {
+              "condition": "実Auth/RLS/外部同期環境での診断・本文無送信",
+              "result": "not_run",
+              "reason": "Dedicated local HTTP401 only; no real Auth/RLS/server-sync acceptance credit."
+            }
+          ]
+        },
+        {
+          "name": "negative_or_edge",
+          "original": "ログや分析サービスへ作品本文を自動送信しない",
+          "execution_route": "local_ui_candidate",
+          "result_on_new_target": "not_run",
+          "candidate_file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+          "candidate_test_titles": [
+            "AT-N15 本文を含む保存失敗と認証失敗から診断を確認し、任意持出し前後とも本文を自動送信しない"
+          ],
+          "normal_ui_operation": "失敗から診断download完了まで実requestとconsoleを捕捉する。",
+          "assertions_authored_not_run": [
+            "request body/URLとconsoleに作品本文なし。",
+            "診断downloadで追加network requestなし、許可したapp/local contract以外への送信なし。"
+          ],
+          "candidate_observation_scope": "local_HTTP_contract_and_native_browser_storage_only; real_Auth_RLS_server_sync_not_observed",
+          "test_callbacks": [
+            {
+              "file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+              "title": "AT-N15 本文を含む保存失敗と認証失敗から診断を確認し、任意持出し前後とも本文を自動送信しない",
+              "line": 251,
+              "parameter_values": {},
+              "binding_status": "authored_working_tree_location; refresh at final proof freeze"
+            }
+          ],
+          "authored_file_sha256": "9947b57a05afecc5ce71c2b0f92ccfcec0cd33f8abc5aa25d07c55a8a6fbfbba",
+          "missing_conditions": [
+            {
+              "condition": "実Auth/RLS/外部同期環境での診断・本文無送信",
+              "result": "not_run",
+              "reason": "Dedicated local HTTP401 only; no real Auth/RLS/server-sync acceptance credit."
+            }
+          ]
+        }
+      ],
+      "candidate_scope": "authored_original_clause_candidate",
+      "new_test_file": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+      "next_action": "Freeze commit/tree/build/base and fixture inputs, execute the mapped normal UI browser test, retain actual artifacts and only then assess each original clause.",
+      "procedure": "Native quota failure includes manuscript in message; local HTTP auth 401 includes manuscript; optional diagnostic preview/download and browser/worker requests observed.",
+      "remote_evidence_limit": "Local dedicated HTTP contract only; no real Auth/RLS/server-sync acceptance credit.",
+      "clause_mapping_result": "authored_not_run",
+      "unobserved_required_conditions": [
+        {
+          "condition": "実Auth/RLS/外部同期環境での診断・本文無送信",
+          "result": "not_run",
+          "reason": "Dedicated local HTTP401 only; no real Auth/RLS/server-sync acceptance credit."
+        }
+      ]
+    },
+    {
+      "id": "AT-N16",
+      "original_case": {
+        "id": "AT-N16",
+        "requirement_ids": [
+          "REQ-N16"
+        ],
+        "package_id": "WP01",
+        "given": "同じ条件を異なる表示から編集する",
+        "when": "純粋な評価処理とUI統合を実行する",
+        "then": "同じ規則とエラーコードが得られる",
+        "negative_or_edge": "画面ごとに別の条件評価や独自のID管理を作らない"
+      },
+      "result_on_new_target": "not_run",
+      "clauses": [
+        {
+          "name": "given",
+          "original": "同じ条件を異なる表示から編集する",
+          "execution_route": "local_ui_candidate",
+          "result_on_new_target": "not_run",
+          "candidate_file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+          "candidate_test_titles": [
+            "AT-N16 同じ条件 ID を構造化画面と JSON で編集し、純粋評価の真偽不明・実エラーコードと試読表示を比較する"
+          ],
+          "normal_ui_operation": "同じvariable/edge UUIDに対し構造化条件欄と通常詳細データ欄を切り替えて編集保存する。",
+          "assertions_authored_not_run": [
+            "structured ge3とJSON ge2を同じedge IDへ保存。元givenの6ID/kindは全保持し、通常の変数initial変更2回だけが生成したreview2件を厳密検査する。"
+          ],
+          "test_callbacks": [
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "title": "AT-N16 同じ条件 ID を構造化画面と JSON で編集し、純粋評価の真偽不明・実エラーコードと試読表示を比較する",
+              "line": 28,
+              "parameter_values": {},
+              "binding_status": "authored_working_tree_location; refresh at final proof freeze"
+            }
+          ],
+          "authored_file_sha256": "fb4531c77e656e42cf4715af423e967857fc029fe38b8320c2905fc221735740",
+          "missing_conditions": [],
+          "sources": [
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 28,
+              "end_line": 65,
+              "excerpt_sha256": "9fcd37c4b911b921a2b2b349f99d3e1c74c5b207b62c42643497cd9a3291adfb",
+              "source_excerpt": "test('AT-N16 同じ条件 ID を構造化画面と JSON で編集し、純粋評価の真偽不明・実エラーコードと試読表示を比較する', async ({ page }, info) => {\n  const p = createProject('AT-N16 条件の共通規則');\n  const variable = createEntity(p.projectId, 'variable', '共通の整数', { key: 'common_count', valueType: 'integer', scope: 'run', initial: { type: 'integer', value: 2 }, allowed: {} });\n  const contract = createEntity(p.projectId, 'external_contract', '宣言した整数の外部値', { key: 'external_count', owner: 'game', inputType: 'integer', outputType: 'integer', missingPolicy: 'unknown' });\n  const scene = createEntity(p.projectId, 'scene', '共通規則の本文', { body: textToRichText('構造化表示と JSON 表示は同じ条件を編集する。') });\n  const entry = createEntity(p.projectId, 'flow_node', '共通規則の入口', { nodeType: 'entry', sceneId: scene.id });\n  const end = createEntity(p.projectId, 'flow_node', '共通規則の終端', { nodeType: 'terminal', terminalReason: '条件を確認した' });\n  const initial: Condition = { op: 'compare', variableId: variable.id, comparator: 'eq', value: { type: 'integer', value: 0 } };\n  const edge = createEntity(p.projectId, 'flow_edge', '同じ条件を編集する線', { fromId: entry.id, toId: end.id, label: '共通規則で進む', condition: initial });\n  p.entities.push(variable, contract, scene, entry, end, edge);\n  p.entities.forEach(entity => { entity.status = 'confirmed'; });\n  const bytes = await exportScenario(p);\n  await attachGiven(info, 'AT-N16', bytes, { projectId: p.projectId, entityIds: p.entities.map(entity => entity.id), edgeId: edge.id, variableId: variable.id, contractId: contract.id, initialCondition: initial, evaluator: 'src/domain/conditions.ts:evaluateCondition', displays: ['structured condition editor', 'full data JSON editor', 'trial reader'] });\n  await seed(page, bytes);\n\n  // given/when: the first edit uses the real structured condition controls.\n  await openEntity(page, 'flow_edge', edge.name);\n  const field = page.locator('.detail-panel [data-field=\"condition\"]');\n  await field.getByLabel('比較演算', { exact: true }).selectOption('ge');\n  await field.getByLabel('値', { exact: true }).fill('3');\n  await page.locator('.editor-footer').getByRole('button', { name: '保存する', exact: true }).click();\n  await expect(page.locator('.editor-save-state')).toContainText('端末内保存済み');\n  const structured = await backup(page), structuredEdge = structured.project.entities.find(entity => entity.id === edge.id);\n  if (!structuredEdge || structuredEdge.kind !== 'flow_edge') throw new Error('構造化画面で保存した条件がありません');\n  expect(structuredEdge.data.condition).toEqual({ op: 'compare', variableId: variable.id, comparator: 'ge', value: { type: 'integer', value: 3 } });\n  const falseResult = evaluate(structured.project, structuredEdge.data.condition!);\n  expect(falseResult.value).toBe('false');\n  await reader(page, entry.id);\n  const choice = page.locator('.reader-choice').filter({ hasText: '共通規則で進む' });\n  await expect(choice).toBeDisabled();\n  await expect(choice).toContainText('条件を満たしていません');\n\n  // The same durable record/reference IDs are then edited through JSON.\n  const trueCondition: Condition = { ...structuredEdge.data.condition!, op: 'compare', variableId: variable.id, comparator: 'ge', value: { type: 'integer', value: 2 } };\n  await openEntity(page, 'flow_edge', edge.name);\n  await editData(page, { ...structuredEdge.data, condition: trueCondition });\n  const json = await backup(page), jsonEdge = json.project.entities.find(entity => entity.id === edge.id);\n  if (!jsonEdge || jsonEdge.kind !== 'flow_edge') throw new Error('JSON 画面で保存した条件がありません');\n",
+              "binding_status": "authored_not_run; exact source span only"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 113,
+              "end_line": 144,
+              "excerpt_sha256": "dfee62c521c24f8aae442138f6bb89ce4a7392bff7b128da59568217bc652ab8",
+              "source_excerpt": "  // Normal author saves of initial=unknown and its restoration create exactly\n  // two dependency reviews. They precede the stub and retain all six given IDs.\n  const givenIds = new Set(p.entities.map(entity => entity.id));\n  const retainedGiven = external.project.entities.filter(entity => givenIds.has(entity.id));\n  expect(retainedGiven.map(({ id, kind }) => ({ id, kind })).sort((a, b) => a.id.localeCompare(b.id)))\n    .toEqual(p.entities.map(({ id, kind }) => ({ id, kind })).sort((a, b) => a.id.localeCompare(b.id)));\n  const generatedReviews = external.project.entities.filter(entity => !givenIds.has(entity.id));\n  expect(generatedReviews).toHaveLength(2);\n  const transitions = generatedReviews.map(review => {\n    if (review.kind !== 'review') throw new Error('通常保存が変更確認以外の情報を追加しました');\n    const sourceRevisions = JSON.parse(String(review.customValues['changeReview.sourceRevisions'])) as Record<string, string>;\n    const next = sourceRevisions[variable.id];\n    expect(['1', '2']).toContain(next);\n    expect(review).toMatchObject({ projectId: p.projectId, status: 'needs_review', visibility: 'private',\n      data: { target: edge.id, targetVersionId: p.projectId, stage: 'open', quotedText: null, resolution: [] },\n      customValues: { 'changeReview.generatedBy': 'semantic-change-review/v1',\n        'changeReview.projectRevision': next === '1' ? '3' : '4' } });\n    expect(JSON.parse(String(review.customValues['changeReview.sourceIds']))).toEqual([variable.id]);\n    expect(sourceRevisions).toEqual({ [variable.id]: next });\n    expect(JSON.parse(String(review.customValues['changeReview.paths'])))\n      .toEqual({ [variable.id]: { directPaths: ['data.condition.variableId'], relationLabels: [] } });\n    expect(JSON.parse(String(review.customValues['changeReview.key'])))\n      .toEqual({ targetId: edge.id, sources: [{ id: variable.id, revision: next,\n        directPaths: ['data.condition.variableId'], relationLabels: [] }] });\n    expect(review.data.body.map(block => block.text).join('\\n'))\n      .toContain(`(${variable.id})。改訂 ${next === '1' ? '0' : '1'} → ${next}。`);\n    return next;\n  });\n  expect(transitions.sort()).toEqual(['1', '2']);\n  const baselineEntities = external.project.entities;\n  const baselineIds = baselineEntities.map(entity => entity.id).sort();\n  expect(baselineIds).toHaveLength(8);\n",
+              "binding_status": "authored_not_run; exact source span only"
+            }
+          ],
+          "normal_operation_source_lines": [
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 40,
+              "source": "await attachGiven(info, 'AT-N16', bytes, { projectId: p.projectId, entityIds: p.entities.map(entity => entity.id), edgeId: edge.id, variableId: variable.id, contractId: contract.id, initialCondition: initial, evaluator: 'src/domain/conditions.ts:evaluateCondition', displays: ['structured condition editor', 'full data JSON editor', 'trial reader'] });"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 41,
+              "source": "await seed(page, bytes);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 44,
+              "source": "await openEntity(page, 'flow_edge', edge.name);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 46,
+              "source": "await field.getByLabel('比較演算', { exact: true }).selectOption('ge');"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 47,
+              "source": "await field.getByLabel('値', { exact: true }).fill('3');"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 48,
+              "source": "await page.locator('.editor-footer').getByRole('button', { name: '保存する', exact: true }).click();"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 55,
+              "source": "await reader(page, entry.id);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 62,
+              "source": "await openEntity(page, 'flow_edge', edge.name);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 63,
+              "source": "await editData(page, { ...structuredEdge.data, condition: trueCondition });"
+            }
+          ],
+          "assertion_source_lines": [
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 49,
+              "source": "await expect(page.locator('.editor-save-state')).toContainText('端末内保存済み');"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 51,
+              "source": "if (!structuredEdge || structuredEdge.kind !== 'flow_edge') throw new Error('構造化画面で保存した条件がありません');"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 52,
+              "source": "expect(structuredEdge.data.condition).toEqual({ op: 'compare', variableId: variable.id, comparator: 'ge', value: { type: 'integer', value: 3 } });"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 54,
+              "source": "expect(falseResult.value).toBe('false');"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 57,
+              "source": "await expect(choice).toBeDisabled();"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 58,
+              "source": "await expect(choice).toContainText('条件を満たしていません');"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 65,
+              "source": "if (!jsonEdge || jsonEdge.kind !== 'flow_edge') throw new Error('JSON 画面で保存した条件がありません');"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 117,
+              "source": "expect(retainedGiven.map(({ id, kind }) => ({ id, kind })).sort((a, b) => a.id.localeCompare(b.id)))"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 120,
+              "source": "expect(generatedReviews).toHaveLength(2);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 122,
+              "source": "if (review.kind !== 'review') throw new Error('通常保存が変更確認以外の情報を追加しました');"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 125,
+              "source": "expect(['1', '2']).toContain(next);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 126,
+              "source": "expect(review).toMatchObject({ projectId: p.projectId, status: 'needs_review', visibility: 'private',"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 130,
+              "source": "expect(JSON.parse(String(review.customValues['changeReview.sourceIds']))).toEqual([variable.id]);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 131,
+              "source": "expect(sourceRevisions).toEqual({ [variable.id]: next });"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 132,
+              "source": "expect(JSON.parse(String(review.customValues['changeReview.paths'])))"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 134,
+              "source": "expect(JSON.parse(String(review.customValues['changeReview.key'])))"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 137,
+              "source": "expect(review.data.body.map(block => block.text).join('\\n'))"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 141,
+              "source": "expect(transitions.sort()).toEqual(['1', '2']);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 144,
+              "source": "expect(baselineIds).toHaveLength(8);"
+            }
+          ]
+        },
+        {
+          "name": "when",
+          "original": "純粋な評価処理とUI統合を実行する",
+          "execution_route": "local_ui_candidate",
+          "result_on_new_target": "not_run",
+          "candidate_file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+          "candidate_test_titles": [
+            "AT-N16 同じ条件 ID を構造化画面と JSON で編集し、純粋評価の真偽不明・実エラーコードと試読表示を比較する"
+          ],
+          "normal_ui_operation": "保存した同じASTへ共有initializeRuntimeState/evaluateConditionを実行し、通常試読でchoice状態を観測する。",
+          "assertions_authored_not_run": [
+            "pure false/trueに対しUI disabled/enabledが一致。",
+            "pure unknownの理由に対しUI未確認・disabled・同じ理由が一致。"
+          ],
+          "test_callbacks": [
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "title": "AT-N16 同じ条件 ID を構造化画面と JSON で編集し、純粋評価の真偽不明・実エラーコードと試読表示を比較する",
+              "line": 28,
+              "parameter_values": {},
+              "binding_status": "authored_working_tree_location; refresh at final proof freeze"
+            }
+          ],
+          "authored_file_sha256": "fb4531c77e656e42cf4715af423e967857fc029fe38b8320c2905fc221735740",
+          "missing_conditions": [],
+          "sources": [
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 71,
+              "end_line": 85,
+              "excerpt_sha256": "feb80264b91d7f21d167506edb676691f7411e57de36bdfc9ed8e9f75a7693fa",
+              "source_excerpt": "\n  // An unknown declared value remains unknown in both the oracle and UI.\n  await openEntity(page, 'variable', variable.name);\n  await editData(page, { ...variable.data, initial: { type: 'unknown', value: null, reason: 'AT-N16 未調査' } });\n  const unknown = await backup(page);\n  const unknownResult = evaluate(unknown.project, trueCondition);\n  expect(unknownResult).toEqual({ value: 'unknown', reasons: ['AT-N16 未調査'] });\n  await reader(page, entry.id);\n  await expect(choice).toBeDisabled();\n  await expect(choice).toContainText('未確認');\n  for (const reason of unknownResult.reasons) await expect(choice).toContainText(reason);\n  await openEntity(page, 'variable', variable.name);\n  await editData(page, variable.data);\n\n  // A valid AST with a mismatched typed comparison has the evaluator's code.\n",
+              "binding_status": "authored_not_run; exact source span only"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 145,
+              "end_line": 161,
+              "excerpt_sha256": "ba2356a04e527b8b64ae3bbf618aea4733b1f989eaaa204b2b9018735fc07e96",
+              "source_excerpt": "  await openEntity(page, 'flow_edge', edge.name);\n  await editData(page, { ...externalEdge.data, condition: externalCondition });\n  const input: Record<string, TypedValue> = { [contract.id]: { type: 'integer', value: 1 } };\n  const externalIssue = failure(external.project, externalCondition, input);\n  await reader(page, entry.id);\n  await expect(choice).toContainText('未確認');\n  const beforeStub = await authorFingerprint(page);\n  const nativeStoredRecords = (JSON.parse(beforeStub)[1] as { projectId: string; record: { id: string; kind: string } }[])\n    .filter(row => row.projectId === p.projectId).map(row => row.record);\n  // Native rich text is stored as block-ID markers, not hydrated Entity data.\n  expect(nativeStoredRecords.map(({ id, kind }) => ({ id, kind })).sort((a, b) => a.id.localeCompare(b.id)))\n    .toEqual(baselineEntities.map(({ id, kind }) => ({ id, kind })).sort((a, b) => a.id.localeCompare(b.id)));\n  await page.locator('.runtime-external .runtime-variable').filter({ hasText: contract.name }).getByRole('button', { name: '仮値', exact: true }).click();\n  const dialog = page.getByRole('dialog', { name: '作者の仮値を設定', exact: true });\n  await dialog.getByLabel('値の型', { exact: true }).selectOption('integer');\n  await dialog.getByLabel('値', { exact: true }).fill('1');\n  await dialog.getByRole('button', { name: '仮値を適用', exact: true }).click();\n",
+              "binding_status": "authored_not_run; exact source span only"
+            }
+          ],
+          "normal_operation_source_lines": [
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 73,
+              "source": "await openEntity(page, 'variable', variable.name);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 74,
+              "source": "await editData(page, { ...variable.data, initial: { type: 'unknown', value: null, reason: 'AT-N16 未調査' } });"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 78,
+              "source": "await reader(page, entry.id);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 82,
+              "source": "await openEntity(page, 'variable', variable.name);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 83,
+              "source": "await editData(page, variable.data);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 145,
+              "source": "await openEntity(page, 'flow_edge', edge.name);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 146,
+              "source": "await editData(page, { ...externalEdge.data, condition: externalCondition });"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 149,
+              "source": "await reader(page, entry.id);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 157,
+              "source": "await page.locator('.runtime-external .runtime-variable').filter({ hasText: contract.name }).getByRole('button', { name: '仮値', exact: true }).click();"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 159,
+              "source": "await dialog.getByLabel('値の型', { exact: true }).selectOption('integer');"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 160,
+              "source": "await dialog.getByLabel('値', { exact: true }).fill('1');"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 161,
+              "source": "await dialog.getByRole('button', { name: '仮値を適用', exact: true }).click();"
+            }
+          ],
+          "assertion_source_lines": [
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 77,
+              "source": "expect(unknownResult).toEqual({ value: 'unknown', reasons: ['AT-N16 未調査'] });"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 79,
+              "source": "await expect(choice).toBeDisabled();"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 80,
+              "source": "await expect(choice).toContainText('未確認');"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 150,
+              "source": "await expect(choice).toContainText('未確認');"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 155,
+              "source": "expect(nativeStoredRecords.map(({ id, kind }) => ({ id, kind })).sort((a, b) => a.id.localeCompare(b.id)))"
+            }
+          ]
+        },
+        {
+          "name": "then",
+          "original": "同じ規則とエラーコードが得られる",
+          "execution_route": "local_ui_candidate",
+          "result_on_new_target": "not_run",
+          "candidate_file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+          "candidate_test_titles": [
+            "AT-N16 同じ条件 ID を構造化画面と JSON で編集し、純粋評価の真偽不明・実エラーコードと試読表示を比較する"
+          ],
+          "normal_ui_operation": "型不一致ASTとexternal stub型不一致の共有DomainValidationErrorをoracleとして実alertを比較する。",
+          "assertions_authored_not_run": [
+            "condition alert codeがpure issue.codeと完全一致し従来の日本語案内を維持。",
+            "Reader issue code/messageが同じpure issueへ一致し確認が必要の表示。"
+          ],
+          "test_callbacks": [
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "title": "AT-N16 同じ条件 ID を構造化画面と JSON で編集し、純粋評価の真偽不明・実エラーコードと試読表示を比較する",
+              "line": 28,
+              "parameter_values": {},
+              "binding_status": "authored_working_tree_location; refresh at final proof freeze"
+            }
+          ],
+          "authored_file_sha256": "fb4531c77e656e42cf4715af423e967857fc029fe38b8320c2905fc221735740",
+          "missing_conditions": [],
+          "sources": [
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 47,
+              "end_line": 85,
+              "excerpt_sha256": "47290e878c585df8ba5ca4df685e055c3688f4bf1bda353a9d055475b113bee0",
+              "source_excerpt": "  await field.getByLabel('値', { exact: true }).fill('3');\n  await page.locator('.editor-footer').getByRole('button', { name: '保存する', exact: true }).click();\n  await expect(page.locator('.editor-save-state')).toContainText('端末内保存済み');\n  const structured = await backup(page), structuredEdge = structured.project.entities.find(entity => entity.id === edge.id);\n  if (!structuredEdge || structuredEdge.kind !== 'flow_edge') throw new Error('構造化画面で保存した条件がありません');\n  expect(structuredEdge.data.condition).toEqual({ op: 'compare', variableId: variable.id, comparator: 'ge', value: { type: 'integer', value: 3 } });\n  const falseResult = evaluate(structured.project, structuredEdge.data.condition!);\n  expect(falseResult.value).toBe('false');\n  await reader(page, entry.id);\n  const choice = page.locator('.reader-choice').filter({ hasText: '共通規則で進む' });\n  await expect(choice).toBeDisabled();\n  await expect(choice).toContainText('条件を満たしていません');\n\n  // The same durable record/reference IDs are then edited through JSON.\n  const trueCondition: Condition = { ...structuredEdge.data.condition!, op: 'compare', variableId: variable.id, comparator: 'ge', value: { type: 'integer', value: 2 } };\n  await openEntity(page, 'flow_edge', edge.name);\n  await editData(page, { ...structuredEdge.data, condition: trueCondition });\n  const json = await backup(page), jsonEdge = json.project.entities.find(entity => entity.id === edge.id);\n  if (!jsonEdge || jsonEdge.kind !== 'flow_edge') throw new Error('JSON 画面で保存した条件がありません');\n  expect(jsonEdge.data.condition).toEqual(trueCondition);\n  const trueResult = evaluate(json.project, jsonEdge.data.condition!);\n  expect(trueResult.value).toBe('true');\n  await reader(page, entry.id);\n  await expect(choice).toBeEnabled();\n\n  // An unknown declared value remains unknown in both the oracle and UI.\n  await openEntity(page, 'variable', variable.name);\n  await editData(page, { ...variable.data, initial: { type: 'unknown', value: null, reason: 'AT-N16 未調査' } });\n  const unknown = await backup(page);\n  const unknownResult = evaluate(unknown.project, trueCondition);\n  expect(unknownResult).toEqual({ value: 'unknown', reasons: ['AT-N16 未調査'] });\n  await reader(page, entry.id);\n  await expect(choice).toBeDisabled();\n  await expect(choice).toContainText('未確認');\n  for (const reason of unknownResult.reasons) await expect(choice).toContainText(reason);\n  await openEntity(page, 'variable', variable.name);\n  await editData(page, variable.data);\n\n  // A valid AST with a mismatched typed comparison has the evaluator's code.\n",
+              "binding_status": "authored_not_run; exact source span only"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 86,
+              "end_line": 101,
+              "excerpt_sha256": "f002caed6775d579c8a6c16afd12ef7fd9d5519a33f6d05a6693b5e62d8f6184",
+              "source_excerpt": "  await openEntity(page, 'flow_edge', edge.name);\n  const details = page.locator('.detail-panel details.advanced-details').filter({ has: page.locator('summary').filter({ hasText: '詳細データ・ルビ・本文リンクを編集' }) });\n  await details.locator('summary').click();\n  const raw = details.getByRole('textbox', { name: '詳細データ', exact: true });\n  const beforeInvalid = await authorFingerprint(page);\n  const mismatch: Condition = { op: 'compare', variableId: variable.id, comparator: 'eq', value: { type: 'boolean', value: true } };\n  const mismatchIssue = failure(json.project, mismatch);\n  await raw.fill(JSON.stringify({ ...jsonEdge.data, condition: mismatch }, null, 2));\n  const error = page.locator('.detail-panel [data-field=\"condition\"]').getByRole('alert');\n  await expect(error.locator('code')).toHaveText(mismatchIssue.code);\n  await expect(error).toContainText('値の型が比較する状態と一致しません');\n  await expect(page.locator('.editor-footer').getByRole('button', { name: /保存する|保存を再試行/ })).toBeDisabled();\n  expect(await authorFingerprint(page)).toBe(beforeInvalid);\n  await raw.fill(JSON.stringify(jsonEdge.data, null, 2));\n  await page.locator('.editor-footer').getByRole('button', { name: /保存する|保存を再試行/ }).click();\n  await expect(page.locator('.editor-save-state')).toContainText('端末内保存済み');\n",
+              "binding_status": "authored_not_run; exact source span only"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 147,
+              "end_line": 164,
+              "excerpt_sha256": "c4df2a9e21c074b6575d6fa1847a63d4770f254bc9c1d829b890bec00d04b498",
+              "source_excerpt": "  const input: Record<string, TypedValue> = { [contract.id]: { type: 'integer', value: 1 } };\n  const externalIssue = failure(external.project, externalCondition, input);\n  await reader(page, entry.id);\n  await expect(choice).toContainText('未確認');\n  const beforeStub = await authorFingerprint(page);\n  const nativeStoredRecords = (JSON.parse(beforeStub)[1] as { projectId: string; record: { id: string; kind: string } }[])\n    .filter(row => row.projectId === p.projectId).map(row => row.record);\n  // Native rich text is stored as block-ID markers, not hydrated Entity data.\n  expect(nativeStoredRecords.map(({ id, kind }) => ({ id, kind })).sort((a, b) => a.id.localeCompare(b.id)))\n    .toEqual(baselineEntities.map(({ id, kind }) => ({ id, kind })).sort((a, b) => a.id.localeCompare(b.id)));\n  await page.locator('.runtime-external .runtime-variable').filter({ hasText: contract.name }).getByRole('button', { name: '仮値', exact: true }).click();\n  const dialog = page.getByRole('dialog', { name: '作者の仮値を設定', exact: true });\n  await dialog.getByLabel('値の型', { exact: true }).selectOption('integer');\n  await dialog.getByLabel('値', { exact: true }).fill('1');\n  await dialog.getByRole('button', { name: '仮値を適用', exact: true }).click();\n  await expect(page.locator('.reader-issue code')).toHaveText(externalIssue.code);\n  await expect(page.locator('.reader-issue')).toContainText(externalIssue.message);\n  await expect(page.locator('.reader-trial-heading')).toContainText('確認が必要');\n",
+              "binding_status": "authored_not_run; exact source span only"
+            }
+          ],
+          "normal_operation_source_lines": [
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 47,
+              "source": "await field.getByLabel('値', { exact: true }).fill('3');"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 48,
+              "source": "await page.locator('.editor-footer').getByRole('button', { name: '保存する', exact: true }).click();"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 55,
+              "source": "await reader(page, entry.id);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 62,
+              "source": "await openEntity(page, 'flow_edge', edge.name);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 63,
+              "source": "await editData(page, { ...structuredEdge.data, condition: trueCondition });"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 69,
+              "source": "await reader(page, entry.id);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 73,
+              "source": "await openEntity(page, 'variable', variable.name);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 74,
+              "source": "await editData(page, { ...variable.data, initial: { type: 'unknown', value: null, reason: 'AT-N16 未調査' } });"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 78,
+              "source": "await reader(page, entry.id);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 82,
+              "source": "await openEntity(page, 'variable', variable.name);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 83,
+              "source": "await editData(page, variable.data);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 86,
+              "source": "await openEntity(page, 'flow_edge', edge.name);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 88,
+              "source": "await details.locator('summary').click();"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 93,
+              "source": "await raw.fill(JSON.stringify({ ...jsonEdge.data, condition: mismatch }, null, 2));"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 99,
+              "source": "await raw.fill(JSON.stringify(jsonEdge.data, null, 2));"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 100,
+              "source": "await page.locator('.editor-footer').getByRole('button', { name: /保存する|保存を再試行/ }).click();"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 149,
+              "source": "await reader(page, entry.id);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 157,
+              "source": "await page.locator('.runtime-external .runtime-variable').filter({ hasText: contract.name }).getByRole('button', { name: '仮値', exact: true }).click();"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 159,
+              "source": "await dialog.getByLabel('値の型', { exact: true }).selectOption('integer');"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 160,
+              "source": "await dialog.getByLabel('値', { exact: true }).fill('1');"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 161,
+              "source": "await dialog.getByRole('button', { name: '仮値を適用', exact: true }).click();"
+            }
+          ],
+          "assertion_source_lines": [
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 49,
+              "source": "await expect(page.locator('.editor-save-state')).toContainText('端末内保存済み');"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 51,
+              "source": "if (!structuredEdge || structuredEdge.kind !== 'flow_edge') throw new Error('構造化画面で保存した条件がありません');"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 52,
+              "source": "expect(structuredEdge.data.condition).toEqual({ op: 'compare', variableId: variable.id, comparator: 'ge', value: { type: 'integer', value: 3 } });"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 54,
+              "source": "expect(falseResult.value).toBe('false');"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 57,
+              "source": "await expect(choice).toBeDisabled();"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 58,
+              "source": "await expect(choice).toContainText('条件を満たしていません');"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 65,
+              "source": "if (!jsonEdge || jsonEdge.kind !== 'flow_edge') throw new Error('JSON 画面で保存した条件がありません');"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 66,
+              "source": "expect(jsonEdge.data.condition).toEqual(trueCondition);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 68,
+              "source": "expect(trueResult.value).toBe('true');"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 70,
+              "source": "await expect(choice).toBeEnabled();"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 77,
+              "source": "expect(unknownResult).toEqual({ value: 'unknown', reasons: ['AT-N16 未調査'] });"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 79,
+              "source": "await expect(choice).toBeDisabled();"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 80,
+              "source": "await expect(choice).toContainText('未確認');"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 95,
+              "source": "await expect(error.locator('code')).toHaveText(mismatchIssue.code);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 96,
+              "source": "await expect(error).toContainText('値の型が比較する状態と一致しません');"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 97,
+              "source": "await expect(page.locator('.editor-footer').getByRole('button', { name: /保存する|保存を再試行/ })).toBeDisabled();"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 98,
+              "source": "expect(await authorFingerprint(page)).toBe(beforeInvalid);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 101,
+              "source": "await expect(page.locator('.editor-save-state')).toContainText('端末内保存済み');"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 150,
+              "source": "await expect(choice).toContainText('未確認');"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 155,
+              "source": "expect(nativeStoredRecords.map(({ id, kind }) => ({ id, kind })).sort((a, b) => a.id.localeCompare(b.id)))"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 162,
+              "source": "await expect(page.locator('.reader-issue code')).toHaveText(externalIssue.code);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 163,
+              "source": "await expect(page.locator('.reader-issue')).toContainText(externalIssue.message);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 164,
+              "source": "await expect(page.locator('.reader-trial-heading')).toContainText('確認が必要');"
+            }
+          ]
+        },
+        {
+          "name": "negative_or_edge",
+          "original": "画面ごとに別の条件評価や独自のID管理を作らない",
+          "execution_route": "local_ui_candidate",
+          "result_on_new_target": "not_run",
+          "candidate_file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+          "candidate_test_titles": [
+            "AT-N16 同じ条件 ID を構造化画面と JSON で編集し、純粋評価の真偽不明・実エラーコードと試読表示を比較する"
+          ],
+          "normal_ui_operation": "invalid編集の拒否と通常保存の影響review2件を検査し、stub直前のnative全8ID/kind・生author fingerprintを入力後/coldで完全照合し、cold全8Entity dataを実external backupへ完全照合する。",
+          "assertions_authored_not_run": [
+            "invalid Save disabled・author rows不変、trial仮値でもauthor rows不変。",
+            "元6ID/kindを全保持。追加はtarget=edge、targetVersionId=project、needs_review/private/open、同じvariable IDの0→1/1→2とdata.condition.variableIdを記録する通常保存review2件だけ。",
+            "仮値前native全8ID/kindを実backupへ完全一致、stub直後/coldの生6-table author fingerprint完全一致。native richtext markerをhydrated Entityとして比較しない。",
+            "cold全8ID/全entity・review dataは元実external backupと完全一致。共有評価関数を直接oracleに使い、画面専用評価/置換UUID/DOM注入は使わない。"
+          ],
+          "test_callbacks": [
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "title": "AT-N16 同じ条件 ID を構造化画面と JSON で編集し、純粋評価の真偽不明・実エラーコードと試読表示を比較する",
+              "line": 28,
+              "parameter_values": {},
+              "binding_status": "authored_working_tree_location; refresh at final proof freeze"
+            }
+          ],
+          "authored_file_sha256": "fb4531c77e656e42cf4715af423e967857fc029fe38b8320c2905fc221735740",
+          "missing_conditions": [],
+          "sources": [
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 86,
+              "end_line": 101,
+              "excerpt_sha256": "f002caed6775d579c8a6c16afd12ef7fd9d5519a33f6d05a6693b5e62d8f6184",
+              "source_excerpt": "  await openEntity(page, 'flow_edge', edge.name);\n  const details = page.locator('.detail-panel details.advanced-details').filter({ has: page.locator('summary').filter({ hasText: '詳細データ・ルビ・本文リンクを編集' }) });\n  await details.locator('summary').click();\n  const raw = details.getByRole('textbox', { name: '詳細データ', exact: true });\n  const beforeInvalid = await authorFingerprint(page);\n  const mismatch: Condition = { op: 'compare', variableId: variable.id, comparator: 'eq', value: { type: 'boolean', value: true } };\n  const mismatchIssue = failure(json.project, mismatch);\n  await raw.fill(JSON.stringify({ ...jsonEdge.data, condition: mismatch }, null, 2));\n  const error = page.locator('.detail-panel [data-field=\"condition\"]').getByRole('alert');\n  await expect(error.locator('code')).toHaveText(mismatchIssue.code);\n  await expect(error).toContainText('値の型が比較する状態と一致しません');\n  await expect(page.locator('.editor-footer').getByRole('button', { name: /保存する|保存を再試行/ })).toBeDisabled();\n  expect(await authorFingerprint(page)).toBe(beforeInvalid);\n  await raw.fill(JSON.stringify(jsonEdge.data, null, 2));\n  await page.locator('.editor-footer').getByRole('button', { name: /保存する|保存を再試行/ }).click();\n  await expect(page.locator('.editor-save-state')).toContainText('端末内保存済み');\n",
+              "binding_status": "authored_not_run; exact source span only"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 113,
+              "end_line": 144,
+              "excerpt_sha256": "dfee62c521c24f8aae442138f6bb89ce4a7392bff7b128da59568217bc652ab8",
+              "source_excerpt": "  // Normal author saves of initial=unknown and its restoration create exactly\n  // two dependency reviews. They precede the stub and retain all six given IDs.\n  const givenIds = new Set(p.entities.map(entity => entity.id));\n  const retainedGiven = external.project.entities.filter(entity => givenIds.has(entity.id));\n  expect(retainedGiven.map(({ id, kind }) => ({ id, kind })).sort((a, b) => a.id.localeCompare(b.id)))\n    .toEqual(p.entities.map(({ id, kind }) => ({ id, kind })).sort((a, b) => a.id.localeCompare(b.id)));\n  const generatedReviews = external.project.entities.filter(entity => !givenIds.has(entity.id));\n  expect(generatedReviews).toHaveLength(2);\n  const transitions = generatedReviews.map(review => {\n    if (review.kind !== 'review') throw new Error('通常保存が変更確認以外の情報を追加しました');\n    const sourceRevisions = JSON.parse(String(review.customValues['changeReview.sourceRevisions'])) as Record<string, string>;\n    const next = sourceRevisions[variable.id];\n    expect(['1', '2']).toContain(next);\n    expect(review).toMatchObject({ projectId: p.projectId, status: 'needs_review', visibility: 'private',\n      data: { target: edge.id, targetVersionId: p.projectId, stage: 'open', quotedText: null, resolution: [] },\n      customValues: { 'changeReview.generatedBy': 'semantic-change-review/v1',\n        'changeReview.projectRevision': next === '1' ? '3' : '4' } });\n    expect(JSON.parse(String(review.customValues['changeReview.sourceIds']))).toEqual([variable.id]);\n    expect(sourceRevisions).toEqual({ [variable.id]: next });\n    expect(JSON.parse(String(review.customValues['changeReview.paths'])))\n      .toEqual({ [variable.id]: { directPaths: ['data.condition.variableId'], relationLabels: [] } });\n    expect(JSON.parse(String(review.customValues['changeReview.key'])))\n      .toEqual({ targetId: edge.id, sources: [{ id: variable.id, revision: next,\n        directPaths: ['data.condition.variableId'], relationLabels: [] }] });\n    expect(review.data.body.map(block => block.text).join('\\n'))\n      .toContain(`(${variable.id})。改訂 ${next === '1' ? '0' : '1'} → ${next}。`);\n    return next;\n  });\n  expect(transitions.sort()).toEqual(['1', '2']);\n  const baselineEntities = external.project.entities;\n  const baselineIds = baselineEntities.map(entity => entity.id).sort();\n  expect(baselineIds).toHaveLength(8);\n",
+              "binding_status": "authored_not_run; exact source span only"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 151,
+              "end_line": 175,
+              "excerpt_sha256": "0c378a49a5325f9329dbb575ef9a1d313966d027351f1a6c26f806414a09063c",
+              "source_excerpt": "  const beforeStub = await authorFingerprint(page);\n  const nativeStoredRecords = (JSON.parse(beforeStub)[1] as { projectId: string; record: { id: string; kind: string } }[])\n    .filter(row => row.projectId === p.projectId).map(row => row.record);\n  // Native rich text is stored as block-ID markers, not hydrated Entity data.\n  expect(nativeStoredRecords.map(({ id, kind }) => ({ id, kind })).sort((a, b) => a.id.localeCompare(b.id)))\n    .toEqual(baselineEntities.map(({ id, kind }) => ({ id, kind })).sort((a, b) => a.id.localeCompare(b.id)));\n  await page.locator('.runtime-external .runtime-variable').filter({ hasText: contract.name }).getByRole('button', { name: '仮値', exact: true }).click();\n  const dialog = page.getByRole('dialog', { name: '作者の仮値を設定', exact: true });\n  await dialog.getByLabel('値の型', { exact: true }).selectOption('integer');\n  await dialog.getByLabel('値', { exact: true }).fill('1');\n  await dialog.getByRole('button', { name: '仮値を適用', exact: true }).click();\n  await expect(page.locator('.reader-issue code')).toHaveText(externalIssue.code);\n  await expect(page.locator('.reader-issue')).toContainText(externalIssue.message);\n  await expect(page.locator('.reader-trial-heading')).toContainText('確認が必要');\n  expect(await authorFingerprint(page)).toBe(beforeStub);\n  await page.reload();\n  expect(await authorFingerprint(page)).toBe(beforeStub);\n  const cold = await backup(page);\n  // negative_or_edge: every display retains the same shared UUID references;\n  // trial input never creates replacement author IDs or commits runtime values.\n  expect(cold.project.entities.map(entity => entity.id).sort()).toEqual(baselineIds);\n  expect([...cold.project.entities].sort((a, b) => a.id.localeCompare(b.id)))\n    .toEqual([...baselineEntities].sort((a, b) => a.id.localeCompare(b.id)));\n  expect(cold.project.entities.find(entity => entity.id === edge.id)?.data).toMatchObject({ condition: externalCondition });\n  expect(cold.project.entities.find(entity => entity.id === variable.id)?.data).toEqual(variable.data);\n",
+              "binding_status": "authored_not_run; exact source span only"
+            }
+          ],
+          "normal_operation_source_lines": [
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 86,
+              "source": "await openEntity(page, 'flow_edge', edge.name);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 88,
+              "source": "await details.locator('summary').click();"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 93,
+              "source": "await raw.fill(JSON.stringify({ ...jsonEdge.data, condition: mismatch }, null, 2));"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 99,
+              "source": "await raw.fill(JSON.stringify(jsonEdge.data, null, 2));"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 100,
+              "source": "await page.locator('.editor-footer').getByRole('button', { name: /保存する|保存を再試行/ }).click();"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 157,
+              "source": "await page.locator('.runtime-external .runtime-variable').filter({ hasText: contract.name }).getByRole('button', { name: '仮値', exact: true }).click();"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 159,
+              "source": "await dialog.getByLabel('値の型', { exact: true }).selectOption('integer');"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 160,
+              "source": "await dialog.getByLabel('値', { exact: true }).fill('1');"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 161,
+              "source": "await dialog.getByRole('button', { name: '仮値を適用', exact: true }).click();"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 166,
+              "source": "await page.reload();"
+            }
+          ],
+          "assertion_source_lines": [
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 95,
+              "source": "await expect(error.locator('code')).toHaveText(mismatchIssue.code);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 96,
+              "source": "await expect(error).toContainText('値の型が比較する状態と一致しません');"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 97,
+              "source": "await expect(page.locator('.editor-footer').getByRole('button', { name: /保存する|保存を再試行/ })).toBeDisabled();"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 98,
+              "source": "expect(await authorFingerprint(page)).toBe(beforeInvalid);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 101,
+              "source": "await expect(page.locator('.editor-save-state')).toContainText('端末内保存済み');"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 117,
+              "source": "expect(retainedGiven.map(({ id, kind }) => ({ id, kind })).sort((a, b) => a.id.localeCompare(b.id)))"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 120,
+              "source": "expect(generatedReviews).toHaveLength(2);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 122,
+              "source": "if (review.kind !== 'review') throw new Error('通常保存が変更確認以外の情報を追加しました');"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 125,
+              "source": "expect(['1', '2']).toContain(next);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 126,
+              "source": "expect(review).toMatchObject({ projectId: p.projectId, status: 'needs_review', visibility: 'private',"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 130,
+              "source": "expect(JSON.parse(String(review.customValues['changeReview.sourceIds']))).toEqual([variable.id]);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 131,
+              "source": "expect(sourceRevisions).toEqual({ [variable.id]: next });"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 132,
+              "source": "expect(JSON.parse(String(review.customValues['changeReview.paths'])))"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 134,
+              "source": "expect(JSON.parse(String(review.customValues['changeReview.key'])))"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 137,
+              "source": "expect(review.data.body.map(block => block.text).join('\\n'))"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 141,
+              "source": "expect(transitions.sort()).toEqual(['1', '2']);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 144,
+              "source": "expect(baselineIds).toHaveLength(8);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 155,
+              "source": "expect(nativeStoredRecords.map(({ id, kind }) => ({ id, kind })).sort((a, b) => a.id.localeCompare(b.id)))"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 162,
+              "source": "await expect(page.locator('.reader-issue code')).toHaveText(externalIssue.code);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 163,
+              "source": "await expect(page.locator('.reader-issue')).toContainText(externalIssue.message);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 164,
+              "source": "await expect(page.locator('.reader-trial-heading')).toContainText('確認が必要');"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 165,
+              "source": "expect(await authorFingerprint(page)).toBe(beforeStub);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 167,
+              "source": "expect(await authorFingerprint(page)).toBe(beforeStub);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 171,
+              "source": "expect(cold.project.entities.map(entity => entity.id).sort()).toEqual(baselineIds);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 172,
+              "source": "expect([...cold.project.entities].sort((a, b) => a.id.localeCompare(b.id)))"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 174,
+              "source": "expect(cold.project.entities.find(entity => entity.id === edge.id)?.data).toMatchObject({ condition: externalCondition });"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+              "line": 175,
+              "source": "expect(cold.project.entities.find(entity => entity.id === variable.id)?.data).toEqual(variable.data);"
+            }
+          ]
+        }
+      ],
+      "candidate_scope": "authored_original_clause_candidate",
+      "new_test_file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+      "next_action": "Freeze commit/tree/build/base and fixture inputs, execute the mapped normal UI browser test, retain actual artifacts and only then assess each original clause.",
+      "procedure": "Structured and full-data JSON editing compare identical UUID-bound ASTs with the shared pure evaluator and reader for false, true, unknown and actual domain error codes.",
+      "known_scope_limit": "Existing missing-selection/blank-enum input guidance can differ from valid pure unknown/false evaluation. The UI preserves this guidance and displays a code only when the actual shared domain returns an issue; no evaluator code is invented.",
+      "clause_mapping_result": "authored_not_run",
+      "normal_author_save_baseline": {
+        "given_entity_count": 6,
+        "expected_generated_review_count": 2,
+        "canonical_pre_stub_entity_count": 8,
+        "review_source": "src/domain/changeReviews.ts:addChangeReviews via normal author saves; not trial runtime input",
+        "expected_review_transitions": [
+          "0→1",
+          "1→2"
+        ],
+        "exact_same_original_ids_and_kinds": true,
+        "full_entity_and_review_data_preserved_after_stub_and_cold": true,
+        "result": "not_run",
+        "no_extra_backup_download_added": true,
+        "native_projection": "IDs/kinds only; raw record rich text is a block-ID marker and is retained in nativeStoredRecords observation, not treated as hydrated Entity",
+        "full_entity_comparison": "cold actual file vs existing pre-stub external actual file; no added backup"
+      },
+      "shared_evaluator_helper_source": {
+        "file": "tests/e2e/ap04-original-n-condition-parity.spec.ts",
+        "line": 18,
+        "end_line": 25,
+        "excerpt_sha256": "d668c63ca0425f74869acb67d21380c1a98c38472c42fc52448698347983738f",
+        "source_excerpt": "function evaluate(p: ProjectData, condition: Condition, externalValues: Record<string, TypedValue> = {}) {\n  return evaluateCondition(condition, { state: initializeRuntimeState(p), entities: p.entities, externalValues });\n}\n\nfunction failure(p: ProjectData, condition: Condition, externalValues: Record<string, TypedValue> = {}) {\n  try { evaluate(p, condition, externalValues); }\n  catch (error) { if (error instanceof DomainValidationError) return error.issues[0]; throw error; }\n  throw new Error('共有評価処理がこの入力を拒否しませんでした');\n",
+        "binding_status": "authored_not_run; exact source span only"
+      }
+    },
+    {
+      "id": "AT-N18",
+      "original_case": {
+        "id": "AT-N18",
+        "requirement_ids": [
+          "REQ-N18"
+        ],
+        "package_id": "WP02",
+        "given": "保存・参照・同期の失敗",
+        "when": "修正または再試行を行う",
+        "then": "同じ入力から復帰し成功時だけ完了と表示する",
+        "negative_or_edge": "白画面・無言の失敗・黙ったデータ削除を残さない"
+      },
+      "result_on_new_target": "not_run",
+      "clauses": [
+        {
+          "name": "given",
+          "original": "保存・参照・同期の失敗",
+          "execution_route": "local_ui_candidate",
+          "result_on_new_target": "not_run",
+          "candidate_file": "tests/e2e/ap04-original-n-failure-retry.spec.ts",
+          "candidate_test_titles": [
+            "AT-N18 同じ作品の保存・参照・同期失敗を通常 UI で修正または再試行し、成功後だけ完了を表示する"
+          ],
+          "normal_ui_operation": "通常ログイン/実保存ファイルimport後、native quota・不正参照・localHTTP bootstrap503を指定する。",
+          "assertions_authored_not_run": [
+            "保存・参照・同期それぞれで実alertが見える。",
+            "sync用localHTTP contractでactual nativeDocuments/valueHashを照合する。"
+          ],
+          "candidate_observation_scope": "local_HTTP_contract_and_native_browser_storage_only; real_Auth_RLS_server_sync_not_observed",
+          "test_callbacks": [
+            {
+              "file": "tests/e2e/ap04-original-n-failure-retry.spec.ts",
+              "title": "AT-N18 同じ作品の保存・参照・同期失敗を通常 UI で修正または再試行し、成功後だけ完了を表示する",
+              "line": 32,
+              "parameter_values": {},
+              "binding_status": "authored_working_tree_location; refresh at final proof freeze"
+            }
+          ],
+          "authored_file_sha256": "6aea8a327fc49e68039ef1a90d0f92be91bc88b4c016622a4f5d1184416f1749",
+          "missing_conditions": [
+            {
+              "condition": "実Auth/RLS/外部同期サービスの失敗・復帰",
+              "result": "not_run",
+              "reason": "Dedicated local HTTP bootstrap503 and exact payload retry only; no real remote synchronization credit."
+            }
+          ]
+        },
+        {
+          "name": "when",
+          "original": "修正または再試行を行う",
+          "execution_route": "local_ui_candidate",
+          "result_on_new_target": "not_run",
+          "candidate_file": "tests/e2e/ap04-original-n-failure-retry.spec.ts",
+          "candidate_test_titles": [
+            "AT-N18 同じ作品の保存・参照・同期失敗を通常 UI で修正または再試行し、成功後だけ完了を表示する"
+          ],
+          "normal_ui_operation": "同じname/raw JSONを保持したまま通常保存再試行・参照修正・同期再試行を順に行う。",
+          "assertions_authored_not_run": [
+            "quota中name入力保持・canonical未確定、明示再試行で同じname保存。",
+            "不正参照のraw入力保持、元dataへ修正して保存できる。"
+          ],
+          "candidate_observation_scope": "local_HTTP_contract_and_native_browser_storage_only; real_Auth_RLS_server_sync_not_observed",
+          "test_callbacks": [
+            {
+              "file": "tests/e2e/ap04-original-n-failure-retry.spec.ts",
+              "title": "AT-N18 同じ作品の保存・参照・同期失敗を通常 UI で修正または再試行し、成功後だけ完了を表示する",
+              "line": 32,
+              "parameter_values": {},
+              "binding_status": "authored_working_tree_location; refresh at final proof freeze"
+            }
+          ],
+          "authored_file_sha256": "6aea8a327fc49e68039ef1a90d0f92be91bc88b4c016622a4f5d1184416f1749",
+          "missing_conditions": [
+            {
+              "condition": "実Auth/RLS/外部同期サービスの失敗・復帰",
+              "result": "not_run",
+              "reason": "Dedicated local HTTP bootstrap503 and exact payload retry only; no real remote synchronization credit."
+            }
+          ]
+        },
+        {
+          "name": "then",
+          "original": "同じ入力から復帰し成功時だけ完了と表示する",
+          "execution_route": "local_ui_candidate",
+          "result_on_new_target": "not_run",
+          "candidate_file": "tests/e2e/ap04-original-n-failure-retry.spec.ts",
+          "candidate_test_titles": [
+            "AT-N18 同じ作品の保存・参照・同期失敗を通常 UI で修正または再試行し、成功後だけ完了を表示する"
+          ],
+          "normal_ui_operation": "同期失敗/再試行の実payloadとUI statusを比較する。",
+          "assertions_authored_not_run": [
+            "bootstrap503中は完了表示なし・canonical不変。",
+            "再試行は同じ送信payloadで成功後だけalertが消えて完了へ進む。"
+          ],
+          "candidate_observation_scope": "local_HTTP_contract_and_native_browser_storage_only; real_Auth_RLS_server_sync_not_observed",
+          "test_callbacks": [
+            {
+              "file": "tests/e2e/ap04-original-n-failure-retry.spec.ts",
+              "title": "AT-N18 同じ作品の保存・参照・同期失敗を通常 UI で修正または再試行し、成功後だけ完了を表示する",
+              "line": 32,
+              "parameter_values": {},
+              "binding_status": "authored_working_tree_location; refresh at final proof freeze"
+            }
+          ],
+          "authored_file_sha256": "6aea8a327fc49e68039ef1a90d0f92be91bc88b4c016622a4f5d1184416f1749",
+          "missing_conditions": [
+            {
+              "condition": "実Auth/RLS/外部同期サービスの失敗・復帰",
+              "result": "not_run",
+              "reason": "Dedicated local HTTP bootstrap503 and exact payload retry only; no real remote synchronization credit."
+            }
+          ]
+        },
+        {
+          "name": "negative_or_edge",
+          "original": "白画面・無言の失敗・黙ったデータ削除を残さない",
+          "execution_route": "local_ui_candidate",
+          "result_on_new_target": "not_run",
+          "candidate_file": "tests/e2e/ap04-original-n-failure-retry.spec.ts",
+          "candidate_test_titles": [
+            "AT-N18 同じ作品の保存・参照・同期失敗を通常 UI で修正または再試行し、成功後だけ完了を表示する"
+          ],
+          "normal_ui_operation": "最後の実完全保存ファイルとapp shellを検査する。",
+          "assertions_authored_not_run": [
+            "全UUID集合・本文data・正常参照data保持、保存したnameとhistoryが存在。",
+            "app shell可視、画面を表示できませんでしたなし。実remote Auth/RLS/同期は未観測。"
+          ],
+          "candidate_observation_scope": "local_HTTP_contract_and_native_browser_storage_only; real_Auth_RLS_server_sync_not_observed",
+          "test_callbacks": [
+            {
+              "file": "tests/e2e/ap04-original-n-failure-retry.spec.ts",
+              "title": "AT-N18 同じ作品の保存・参照・同期失敗を通常 UI で修正または再試行し、成功後だけ完了を表示する",
+              "line": 32,
+              "parameter_values": {},
+              "binding_status": "authored_working_tree_location; refresh at final proof freeze"
+            }
+          ],
+          "authored_file_sha256": "6aea8a327fc49e68039ef1a90d0f92be91bc88b4c016622a4f5d1184416f1749",
+          "missing_conditions": [
+            {
+              "condition": "実Auth/RLS/外部同期サービスの失敗・復帰",
+              "result": "not_run",
+              "reason": "Dedicated local HTTP bootstrap503 and exact payload retry only; no real remote synchronization credit."
+            }
+          ]
+        }
+      ],
+      "candidate_scope": "authored_original_clause_candidate",
+      "new_test_file": "tests/e2e/ap04-original-n-failure-retry.spec.ts",
+      "next_action": "Freeze commit/tree/build/base and fixture inputs, execute the mapped normal UI browser test, retain actual artifacts and only then assess each original clause.",
+      "procedure": "Normal UI save quota retry, missing-reference correction, dedicated local HTTP sync registration 503/retry of the same project image.",
+      "remote_evidence_limit": "Local dedicated HTTP contract only; no real Auth/RLS/server-sync acceptance credit.",
+      "clause_mapping_result": "authored_not_run",
+      "unobserved_required_conditions": [
+        {
+          "condition": "実Auth/RLS/外部同期サービスの失敗・復帰",
+          "result": "not_run",
+          "reason": "Dedicated local HTTP bootstrap503 and exact payload retry only; no real remote synchronization credit."
+        }
+      ]
+    },
+    {
+      "id": "AT-F14",
+      "original_case": {
+        "id": "AT-F14",
+        "requirement_ids": [
+          "REQ-F14"
+        ],
+        "package_id": "WP12",
+        "given": "gateは鍵あり、triggerは入室、once=runの出来事",
+        "when": "鍵を得るだけの状態更新、入室、同じoccurrenceIdの再送、再入室を順に行う",
+        "then": "前提が成り立つだけで出来事が勝手に起こらず、きっかけが必要か選べる。",
+        "negative_or_edge": "条件評価だけでは効果を実行しない。自動発火は明示設定とし、重複した同一トリガーでは一度だけ規則を守る。"
+      },
+      "result_on_new_target": "not_run",
+      "clauses": [
+        {
+          "name": "given",
+          "original": "gateは鍵あり、triggerは入室、once=runの出来事",
+          "execution_route": "local_ui_candidate",
+          "result_on_new_target": "not_run",
+          "candidate_file": "tests/e2e/ap04-original-n-f14-trigger.spec.ts",
+          "candidate_test_titles": [
+            "AT-F14 鍵ありgate・入室trigger・once=runで、鍵状態だけの更新と入室・同じoccurrence再送・再入室を区別する"
+          ],
+          "normal_ui_operation": "鍵ありboolean gate、入室trigger UUID、once=run、自動first_matchと加算1効果の実作品を通常読込して試読開始する。",
+          "assertions_authored_not_run": [
+            "初期鍵false/効果回数0で進行不可、author初期値はcold fileにも保持。"
+          ],
+          "test_callbacks": [
+            {
+              "file": "tests/e2e/ap04-original-n-f14-trigger.spec.ts",
+              "title": "AT-F14 鍵ありgate・入室trigger・once=runで、鍵状態だけの更新と入室・同じoccurrence再送・再入室を区別する",
+              "line": 31,
+              "parameter_values": {},
+              "binding_status": "authored_working_tree_location; refresh at final proof freeze"
+            }
+          ],
+          "authored_file_sha256": "d0cc69cc57c671d9ad006d3e27f1e54d152af9d47c8472129b18c6e0742f8644",
+          "missing_conditions": []
+        },
+        {
+          "name": "when",
+          "original": "鍵を得るだけの状態更新、入室、同じoccurrenceIdの再送、再入室を順に行う",
+          "execution_route": "local_ui_candidate",
+          "result_on_new_target": "not_run",
+          "candidate_file": "tests/e2e/ap04-original-n-f14-trigger.spec.ts",
+          "candidate_test_titles": [
+            "AT-F14 鍵ありgate・入室trigger・once=runで、鍵状態だけの更新と入室・同じoccurrence再送・再入室を区別する"
+          ],
+          "normal_ui_operation": "通常仮値で鍵だけtrue→明示入室→直前のきっかけを再送二回→帰還と新入室→次周回の入室を順に行う。",
+          "assertions_authored_not_run": [
+            "最初のeventはactual occurrenceId UUIDとonceTriggers run0を記録する。",
+            "同じ再送後step数/occurrenceId/全状態が不変、次周回はrun1で一回だけ実行。"
+          ],
+          "test_callbacks": [
+            {
+              "file": "tests/e2e/ap04-original-n-f14-trigger.spec.ts",
+              "title": "AT-F14 鍵ありgate・入室trigger・once=runで、鍵状態だけの更新と入室・同じoccurrence再送・再入室を区別する",
+              "line": 31,
+              "parameter_values": {},
+              "binding_status": "authored_working_tree_location; refresh at final proof freeze"
+            }
+          ],
+          "authored_file_sha256": "d0cc69cc57c671d9ad006d3e27f1e54d152af9d47c8472129b18c6e0742f8644",
+          "missing_conditions": []
+        },
+        {
+          "name": "then",
+          "original": "前提が成り立つだけで出来事が勝手に起こらず、きっかけが必要か選べる。",
+          "execution_route": "local_ui_candidate",
+          "result_on_new_target": "not_run",
+          "candidate_file": "tests/e2e/ap04-original-n-f14-trigger.spec.ts",
+          "candidate_test_titles": [
+            "AT-F14 鍵ありgate・入室trigger・once=runで、鍵状態だけの更新と入室・同じoccurrence再送・再入室を区別する"
+          ],
+          "normal_ui_operation": "鍵trueだけの状態と入室選択後の状態を通常UIで比べる。",
+          "assertions_authored_not_run": [
+            "鍵状態更新だけではentryのまま・効果0・advance disabled。",
+            "入室checkboxを明示選択後にinsideへ進み効果1。"
+          ],
+          "test_callbacks": [
+            {
+              "file": "tests/e2e/ap04-original-n-f14-trigger.spec.ts",
+              "title": "AT-F14 鍵ありgate・入室trigger・once=runで、鍵状態だけの更新と入室・同じoccurrence再送・再入室を区別する",
+              "line": 31,
+              "parameter_values": {},
+              "binding_status": "authored_working_tree_location; refresh at final proof freeze"
+            }
+          ],
+          "authored_file_sha256": "d0cc69cc57c671d9ad006d3e27f1e54d152af9d47c8472129b18c6e0742f8644",
+          "missing_conditions": []
+        },
+        {
+          "name": "negative_or_edge",
+          "original": "条件評価だけでは効果を実行しない。自動発火は明示設定とし、重複した同一トリガーでは一度だけ規則を守る。",
+          "execution_route": "local_ui_candidate",
+          "result_on_new_target": "not_run",
+          "candidate_file": "tests/e2e/ap04-original-n-f14-trigger.spec.ts",
+          "candidate_test_titles": [
+            "AT-F14 鍵ありgate・入室trigger・once=runで、鍵状態だけの更新と入室・同じoccurrence再送・再入室を区別する"
+          ],
+          "normal_ui_operation": "通常保存記録をactual完全ファイルで照合し、同一再送・同run再入室・次run入室を区別する。",
+          "assertions_authored_not_run": [
+            "再送二回は全serialized steps同一（各record固有contentVersionIdのみ正規化）。",
+            "同run再入室は実行済issueで効果1/enter edge一回、次runはonce key run1で一回、cold author初期値不変。"
+          ],
+          "test_callbacks": [
+            {
+              "file": "tests/e2e/ap04-original-n-f14-trigger.spec.ts",
+              "title": "AT-F14 鍵ありgate・入室trigger・once=runで、鍵状態だけの更新と入室・同じoccurrence再送・再入室を区別する",
+              "line": 31,
+              "parameter_values": {},
+              "binding_status": "authored_working_tree_location; refresh at final proof freeze"
+            }
+          ],
+          "authored_file_sha256": "d0cc69cc57c671d9ad006d3e27f1e54d152af9d47c8472129b18c6e0742f8644",
+          "missing_conditions": []
+        }
+      ],
+      "candidate_scope": "authored_not_run",
+      "new_test_file": "tests/e2e/ap04-original-n-f14-trigger.spec.ts",
+      "procedure": "A declared boolean key gate plus enter trigger once per run: ordinary stub only updates key state, explicit entrance creates an actual event, the new normal resend button sends that exact previous request/occurrenceId, saved records prove no new state/step, same-run reentry is rejected, next-run first entrance is accepted and actual files survive cold reload.",
+      "next_action": "Freeze candidate commit/tree/build, typecheck and run focused semantics tests in the authorized execution window, then run the normal browser procedure and attach actual observations for all four original clauses.",
+      "clause_mapping_result": "authored_not_run"
+    },
+    {
+      "id": "AT-F16",
+      "original_case": {
+        "id": "AT-F16",
+        "requirement_ids": [
+          "REQ-F16"
+        ],
+        "package_id": "WP13",
+        "given": "鍵取得/未取得の二経路が合流し、初期好感度0",
+        "when": "二経路を同じ版から進め、合流先の差分と変更元を比べ、明示resetの有無で再実行する",
+        "then": "合流後に差が残る場合、差を消すのか、会話などへ反映するのか確認できる。",
+        "negative_or_edge": "合流時は自動初期化しない。差を解消するには明示効果を登録し、差分から変更元へ戻れるようにする。"
+      },
+      "result_on_new_target": "not_run",
+      "clauses": [
+        {
+          "name": "given",
+          "original": "鍵取得/未取得の二経路が合流し、初期好感度0",
+          "execution_route": "local_ui_candidate",
+          "result_on_new_target": "not_run",
+          "candidate_file": "tests/e2e/ap04-original-n-f16-20.spec.ts",
+          "candidate_test_titles": [
+            "AT-F16 同じ固定版の鍵取得未取得が合流しても好感度差を残し、差分の実変更元と明示resetの有無を比較する"
+          ],
+          "normal_ui_operation": "鍵item取得/未取得が同じmerge sceneへ合流し、初期好感度0の共通immutable source版を選ぶ。",
+          "assertions_authored_not_run": [
+            "両runは同じ元snapshot選択、実保存recordのsource hash/revision同一。",
+            "合流時好感度2/0、鍵個数1/0。"
+          ],
+          "test_callbacks": [
+            {
+              "file": "tests/e2e/ap04-original-n-f16-20.spec.ts",
+              "title": "AT-F16 同じ固定版の鍵取得未取得が合流しても好感度差を残し、差分の実変更元と明示resetの有無を比較する",
+              "line": 28,
+              "parameter_values": {},
+              "binding_status": "authored_working_tree_location; refresh at final proof freeze"
+            }
+          ],
+          "authored_file_sha256": "1266859c6c841cbfe2879f68359f14eaa1034528375684a8eae3c9c16fb31701",
+          "missing_conditions": []
+        },
+        {
+          "name": "when",
+          "original": "二経路を同じ版から進め、合流先の差分と変更元を比べ、明示resetの有無で再実行する",
+          "execution_route": "local_ui_candidate",
+          "result_on_new_target": "not_run",
+          "candidate_file": "tests/e2e/ap04-original-n-f16-20.spec.ts",
+          "candidate_test_titles": [
+            "AT-F16 同じ固定版の鍵取得未取得が合流しても好感度差を残し、差分の実変更元と明示resetの有無を比較する"
+          ],
+          "normal_ui_operation": "両経路を通常記録し比較点を再生、好感度差分の実変更元buttonを開き、明示resetあり/なしのchoiceを再生する。",
+          "assertions_authored_not_run": [
+            "比較に2→0、左actual effect edgeの変更元button、右の推測buttonなし。",
+            "変更元dialogは観測recordの固定版・元edge名を示す。"
+          ],
+          "test_callbacks": [
+            {
+              "file": "tests/e2e/ap04-original-n-f16-20.spec.ts",
+              "title": "AT-F16 同じ固定版の鍵取得未取得が合流しても好感度差を残し、差分の実変更元と明示resetの有無を比較する",
+              "line": 28,
+              "parameter_values": {},
+              "binding_status": "authored_working_tree_location; refresh at final proof freeze"
+            }
+          ],
+          "authored_file_sha256": "1266859c6c841cbfe2879f68359f14eaa1034528375684a8eae3c9c16fb31701",
+          "missing_conditions": []
+        },
+        {
+          "name": "then",
+          "original": "合流後に差が残る場合、差を消すのか、会話などへ反映するのか確認できる。",
+          "execution_route": "local_ui_candidate",
+          "result_on_new_target": "not_run",
+          "candidate_file": "tests/e2e/ap04-original-n-f16-20.spec.ts",
+          "candidate_test_titles": [
+            "AT-F16 同じ固定版の鍵取得未取得が合流しても好感度差を残し、差分の実変更元と明示resetの有無を比較する"
+          ],
+          "normal_ui_operation": "合流の本文・状態と差を維持する会話経路/明示reset経路を比較する。",
+          "assertions_authored_not_run": [
+            "合流本文で残る差を示し、resetなし経路は好感度2/0を保持。",
+            "明示reset後だけ好感度0となり、鍵差は意図どおり保持。"
+          ],
+          "test_callbacks": [
+            {
+              "file": "tests/e2e/ap04-original-n-f16-20.spec.ts",
+              "title": "AT-F16 同じ固定版の鍵取得未取得が合流しても好感度差を残し、差分の実変更元と明示resetの有無を比較する",
+              "line": 28,
+              "parameter_values": {},
+              "binding_status": "authored_working_tree_location; refresh at final proof freeze"
+            }
+          ],
+          "authored_file_sha256": "1266859c6c841cbfe2879f68359f14eaa1034528375684a8eae3c9c16fb31701",
+          "missing_conditions": []
+        },
+        {
+          "name": "negative_or_edge",
+          "original": "合流時は自動初期化しない。差を解消するには明示効果を登録し、差分から変更元へ戻れるようにする。",
+          "execution_route": "local_ui_candidate",
+          "result_on_new_target": "not_run",
+          "candidate_file": "tests/e2e/ap04-original-n-f16-20.spec.ts",
+          "candidate_test_titles": [
+            "AT-F16 同じ固定版の鍵取得未取得が合流しても好感度差を残し、差分の実変更元と明示resetの有無を比較する"
+          ],
+          "normal_ui_operation": "保存trace/pinと変更元・cold author初期値を照合する。",
+          "assertions_authored_not_run": [
+            "合流で自動resetなし、登録済reset効果のみ値を戻す。",
+            "originはactual trace change.edgeIdsに由来し各固定版を開く、旧記録とauthor初期値/effect不変。"
+          ],
+          "test_callbacks": [
+            {
+              "file": "tests/e2e/ap04-original-n-f16-20.spec.ts",
+              "title": "AT-F16 同じ固定版の鍵取得未取得が合流しても好感度差を残し、差分の実変更元と明示resetの有無を比較する",
+              "line": 28,
+              "parameter_values": {},
+              "binding_status": "authored_working_tree_location; refresh at final proof freeze"
+            }
+          ],
+          "authored_file_sha256": "1266859c6c841cbfe2879f68359f14eaa1034528375684a8eae3c9c16fb31701",
+          "missing_conditions": []
+        }
+      ],
+      "candidate_scope": "authored_not_run",
+      "new_test_file": "tests/e2e/ap04-original-n-f16-20.spec.ts",
+      "procedure": "Run acquired/unacquired-key paths from one immutable source edition; save both merge records with identical source content hash/revision, compare affinity and item differences, use recorded transition provenance to open the observed fixed change origin, replay with explicit difference-retaining and reset choices, preserve old records and author initial values.",
+      "next_action": "Freeze candidate commit/tree/build, typecheck and run focused semantics tests in the authorized execution window, then run the normal browser procedure and attach actual observations for all four original clauses.",
+      "edition_binding": "Both procedures select the same original fixed source snapshot. Saving creates separate record snapshot IDs; source content hashes/revisions remain equal and origin navigation stays with each observed record pin.",
+      "clause_mapping_result": "authored_not_run"
+    },
+    {
+      "id": "AT-F17",
+      "original_case": {
+        "id": "AT-F17",
+        "requirement_ids": [
+          "REQ-F17"
+        ],
+        "package_id": "WP14",
+        "given": "場面4、選択肢3、条件真偽4項目の母数を持つ版",
+        "when": "二選択肢だけの経路記録を保存して再実行し、内容変更後の確認待ちを調べる",
+        "then": "確認できた割合は対象を明記する。場面を見ただけで全条件を確認済みにしない。",
+        "negative_or_edge": "台詞到達率・選択肢到達率・条件結果の網羅率を別々に算出する。版変更後の経路は再確認待ちとする。"
+      },
+      "result_on_new_target": "not_run",
+      "clauses": [
+        {
+          "name": "given",
+          "original": "場面4、選択肢3、条件真偽4項目の母数を持つ版",
+          "execution_route": "local_ui_candidate",
+          "result_on_new_target": "not_run",
+          "candidate_file": "tests/e2e/ap04-original-n-f16-20.spec.ts",
+          "candidate_test_titles": [
+            "AT-F17 4場面・3選択肢・4条件真偽項目の元母数から二選択肢だけ記録し、別々の到達率と版変更後の再確認待ちを観測する"
+          ],
+          "normal_ui_operation": "4scene/3choice/2明示condition（真偽4項目）・3dialogueを持つ版を通常読込する。",
+          "assertions_authored_not_run": [
+            "fixture実数scene4/edge3/明示条件2。",
+            "UI版labelが当該revisionを示す。"
+          ],
+          "test_callbacks": [
+            {
+              "file": "tests/e2e/ap04-original-n-f16-20.spec.ts",
+              "title": "AT-F17 4場面・3選択肢・4条件真偽項目の元母数から二選択肢だけ記録し、別々の到達率と版変更後の再確認待ちを観測する",
+              "line": 295,
+              "parameter_values": {},
+              "binding_status": "authored_working_tree_location; refresh at final proof freeze"
+            }
+          ],
+          "authored_file_sha256": "1266859c6c841cbfe2879f68359f14eaa1034528375684a8eae3c9c16fb31701",
+          "missing_conditions": []
+        },
+        {
+          "name": "when",
+          "original": "二選択肢だけの経路記録を保存して再実行し、内容変更後の確認待ちを調べる",
+          "execution_route": "local_ui_candidate",
+          "result_on_new_target": "not_run",
+          "candidate_file": "tests/e2e/ap04-original-n-f16-20.spec.ts",
+          "candidate_test_titles": [
+            "AT-F17 4場面・3選択肢・4条件真偽項目の元母数から二選択肢だけ記録し、別々の到達率と版変更後の再確認待ちを観測する"
+          ],
+          "normal_ui_operation": "二choiceだけ選び通常記録保存・保存版再生後、未訪問scene本文を編集して再確認panelを開く。",
+          "assertions_authored_not_run": [
+            "recordの実行edgeIdsは最初の二choiceだけ。",
+            "再実行の選択版はrecord pin、内容変更後再確認待ち。"
+          ],
+          "test_callbacks": [
+            {
+              "file": "tests/e2e/ap04-original-n-f16-20.spec.ts",
+              "title": "AT-F17 4場面・3選択肢・4条件真偽項目の元母数から二選択肢だけ記録し、別々の到達率と版変更後の再確認待ちを観測する",
+              "line": 295,
+              "parameter_values": {},
+              "binding_status": "authored_working_tree_location; refresh at final proof freeze"
+            }
+          ],
+          "authored_file_sha256": "1266859c6c841cbfe2879f68359f14eaa1034528375684a8eae3c9c16fb31701",
+          "missing_conditions": []
+        },
+        {
+          "name": "then",
+          "original": "確認できた割合は対象を明記する。場面を見ただけで全条件を確認済みにしない。",
+          "execution_route": "local_ui_candidate",
+          "result_on_new_target": "not_run",
+          "candidate_file": "tests/e2e/ap04-original-n-f16-20.spec.ts",
+          "candidate_test_titles": [
+            "AT-F17 4場面・3選択肢・4条件真偽項目の元母数から二選択肢だけ記録し、別々の到達率と版変更後の再確認待ちを観測する"
+          ],
+          "normal_ui_operation": "通常coverageの対象label・分子分母を実保存recordと比較する。",
+          "assertions_authored_not_run": [
+            "場面3/4、台詞2/3、選択肢2/3、条件2/4を別々に表示。",
+            "record conditionTrue2/2、conditionFalse0/2で未観測結果を確認済みとしない。"
+          ],
+          "test_callbacks": [
+            {
+              "file": "tests/e2e/ap04-original-n-f16-20.spec.ts",
+              "title": "AT-F17 4場面・3選択肢・4条件真偽項目の元母数から二選択肢だけ記録し、別々の到達率と版変更後の再確認待ちを観測する",
+              "line": 295,
+              "parameter_values": {},
+              "binding_status": "authored_working_tree_location; refresh at final proof freeze"
+            }
+          ],
+          "authored_file_sha256": "1266859c6c841cbfe2879f68359f14eaa1034528375684a8eae3c9c16fb31701",
+          "missing_conditions": []
+        },
+        {
+          "name": "negative_or_edge",
+          "original": "台詞到達率・選択肢到達率・条件結果の網羅率を別々に算出する。版変更後の経路は再確認待ちとする。",
+          "execution_route": "local_ui_candidate",
+          "result_on_new_target": "not_run",
+          "candidate_file": "tests/e2e/ap04-original-n-f16-20.spec.ts",
+          "candidate_test_titles": [
+            "AT-F17 4場面・3選択肢・4条件真偽項目の元母数から二選択肢だけ記録し、別々の到達率と版変更後の再確認待ちを観測する"
+          ],
+          "normal_ui_operation": "編集後cold保存ファイルに旧recordと固定版の保持を確認する。",
+          "assertions_authored_not_run": [
+            "旧traceと旧snapshot全体不変、trace数1で自動再確認recordなし。",
+            "台詞/choice/conditionの別母数を保持し、旧版の再生にも条件2/4表示。"
+          ],
+          "test_callbacks": [
+            {
+              "file": "tests/e2e/ap04-original-n-f16-20.spec.ts",
+              "title": "AT-F17 4場面・3選択肢・4条件真偽項目の元母数から二選択肢だけ記録し、別々の到達率と版変更後の再確認待ちを観測する",
+              "line": 295,
+              "parameter_values": {},
+              "binding_status": "authored_working_tree_location; refresh at final proof freeze"
+            }
+          ],
+          "authored_file_sha256": "1266859c6c841cbfe2879f68359f14eaa1034528375684a8eae3c9c16fb31701",
+          "missing_conditions": []
+        }
+      ],
+      "candidate_scope": "authored_not_run",
+      "new_test_file": "tests/e2e/ap04-original-n-f16-20.spec.ts",
+      "procedure": "Declare four scenes, three choices and two explicit condition targets (four true/false items); select exactly two choices, observe scene/dialogue/choice/condition fractions separately, save and replay actual records, edit one scene and observe reconfirmation pending without rewriting old evidence.",
+      "next_action": "Freeze candidate commit/tree/build, typecheck and run focused semantics tests in the authorized execution window, then run the normal browser procedure and attach actual observations for all four original clauses.",
+      "clause_mapping_result": "authored_not_run"
+    },
+    {
+      "id": "AT-F18",
+      "original_case": {
+        "id": "AT-F18",
+        "requirement_ids": [
+          "REQ-F18"
+        ],
+        "package_id": "WP14",
+        "given": "到達可能終端、意図した終端、選択肢ゼロ、無制限ループ、外部条件を含むgraph",
+        "when": "参照検査と有限探索を実行し、各結果区分、証人経路、上限超過を開く",
+        "then": "外部の処理など分からない条件は未確認にする。意図した終わりと進めない不具合を区別する。",
+        "negative_or_edge": "外部値・無制限ループ・探索打切りは未確認とする。不具合候補には再現経路または不成立の根拠を添える。"
+      },
+      "result_on_new_target": "not_run",
+      "clauses": [
+        {
+          "name": "given",
+          "original": "到達可能終端、意図した終端、選択肢ゼロ、無制限ループ、外部条件を含むgraph",
+          "execution_route": "local_ui_candidate",
+          "result_on_new_target": "not_run",
+          "candidate_file": "tests/e2e/ap04-original-n-f16-20.spec.ts",
+          "candidate_test_titles": [
+            "AT-F18 終端・選択肢ゼロ・無制限反復・外部条件の同じgraphを原上限で探索し、区分と根拠経路を開く"
+          ],
+          "normal_ui_operation": "到達可能意図終端・zero-choice・same-state loop・未解決external gate・増分loopの小さなvalid graphを通常読込する。",
+          "assertions_authored_not_run": [
+            "ref-invalid findingなし。",
+            "実分析resultのsource edition/revisionは作品へ一致。"
+          ],
+          "test_callbacks": [
+            {
+              "file": "tests/e2e/ap04-original-n-f16-20.spec.ts",
+              "title": "AT-F18 終端・選択肢ゼロ・無制限反復・外部条件の同じgraphを原上限で探索し、区分と根拠経路を開く",
+              "line": 126,
+              "parameter_values": {},
+              "binding_status": "authored_working_tree_location; refresh at final proof freeze"
+            }
+          ],
+          "authored_file_sha256": "1266859c6c841cbfe2879f68359f14eaa1034528375684a8eae3c9c16fb31701",
+          "missing_conditions": []
+        },
+        {
+          "name": "when",
+          "original": "参照検査と有限探索を実行し、各結果区分、証人経路、上限超過を開く",
+          "execution_route": "local_ui_candidate",
+          "result_on_new_target": "not_run",
+          "candidate_file": "tests/e2e/ap04-original-n-f16-20.spec.ts",
+          "candidate_test_titles": [
+            "AT-F18 終端・選択肢ゼロ・無制限反復・外部条件の同じgraphを原上限で探索し、区分と根拠経路を開く"
+          ],
+          "normal_ui_operation": "通常参照/有限探索を起動し、実resultをdownloadして結果cardのwitness/targetを開く。",
+          "assertions_authored_not_run": [
+            "意図終端witness edge path、zero-choice path、loop repeat pathとexternal pathを実JSONで照合。",
+            "zero-choice/loop target buttonが実元nodeを開く。"
+          ],
+          "test_callbacks": [
+            {
+              "file": "tests/e2e/ap04-original-n-f16-20.spec.ts",
+              "title": "AT-F18 終端・選択肢ゼロ・無制限反復・外部条件の同じgraphを原上限で探索し、区分と根拠経路を開く",
+              "line": 126,
+              "parameter_values": {},
+              "binding_status": "authored_working_tree_location; refresh at final proof freeze"
+            }
+          ],
+          "authored_file_sha256": "1266859c6c841cbfe2879f68359f14eaa1034528375684a8eae3c9c16fb31701",
+          "missing_conditions": []
+        },
+        {
+          "name": "then",
+          "original": "外部の処理など分からない条件は未確認にする。意図した終わりと進めない不具合を区別する。",
+          "execution_route": "local_ui_candidate",
+          "result_on_new_target": "not_run",
+          "candidate_file": "tests/e2e/ap04-original-n-f16-20.spec.ts",
+          "candidate_test_titles": [
+            "AT-F18 終端・選択肢ゼロ・無制限反復・外部条件の同じgraphを原上限で探索し、区分と根拠経路を開く"
+          ],
+          "normal_ui_operation": "結果分類とUIの前提・区分・打切り表示を確認する。",
+          "assertions_authored_not_run": [
+            "意図終端とzero-choice不具合候補を区別。",
+            "external・UNBOUNDED_LOOP・ANALYSIS_LIMITはunknownとして表示。"
+          ],
+          "test_callbacks": [
+            {
+              "file": "tests/e2e/ap04-original-n-f16-20.spec.ts",
+              "title": "AT-F18 終端・選択肢ゼロ・無制限反復・外部条件の同じgraphを原上限で探索し、区分と根拠経路を開く",
+              "line": 126,
+              "parameter_values": {},
+              "binding_status": "authored_working_tree_location; refresh at final proof freeze"
+            }
+          ],
+          "authored_file_sha256": "1266859c6c841cbfe2879f68359f14eaa1034528375684a8eae3c9c16fb31701",
+          "missing_conditions": []
+        },
+        {
+          "name": "negative_or_edge",
+          "original": "外部値・無制限ループ・探索打切りは未確認とする。不具合候補には再現経路または不成立の根拠を添える。",
+          "execution_route": "local_ui_candidate",
+          "result_on_new_target": "not_run",
+          "candidate_file": "tests/e2e/ap04-original-n-f16-20.spec.ts",
+          "candidate_test_titles": [
+            "AT-F18 終端・選択肢ゼロ・無制限反復・外部条件の同じgraphを原上限で探索し、区分と根拠経路を開く"
+          ],
+          "normal_ui_operation": "実production境界の探索打切りと再現pathを比較する。",
+          "assertions_authored_not_run": [
+            "boundsは100000states/10000transitions/30000msのまま、checked>0かつ上限内。",
+            "truncated/unknown、全candidateに実pathまたは不成立根拠、解析前後author fingerprint不変。"
+          ],
+          "test_callbacks": [
+            {
+              "file": "tests/e2e/ap04-original-n-f16-20.spec.ts",
+              "title": "AT-F18 終端・選択肢ゼロ・無制限反復・外部条件の同じgraphを原上限で探索し、区分と根拠経路を開く",
+              "line": 126,
+              "parameter_values": {},
+              "binding_status": "authored_working_tree_location; refresh at final proof freeze"
+            }
+          ],
+          "authored_file_sha256": "1266859c6c841cbfe2879f68359f14eaa1034528375684a8eae3c9c16fb31701",
+          "missing_conditions": []
+        }
+      ],
+      "candidate_scope": "authored_not_run",
+      "new_test_file": "tests/e2e/ap04-original-n-f16-20.spec.ts",
+      "procedure": "One small valid graph contains an intended reachable terminal, zero-choice dead end, same-state unbounded loop, unresolved external gate and an increasing-value loop. Run the actual normal analysis at unchanged 100000-state/10000-transition/30000-ms production bounds; download classifications and witness paths, open their actual targets and retain cutoff as unknown.",
+      "next_action": "Freeze candidate commit/tree/build, typecheck and run focused semantics tests in the authorized execution window, then run the normal browser procedure and attach actual observations for all four original clauses.",
+      "budget_binding": "Uses real normal UI production defaults. No lowered analysis bound, synthetic clock or forced cancellation is used as upper-limit evidence.",
+      "clause_mapping_result": "authored_not_run"
+    },
+    {
+      "id": "AT-F19",
+      "original_case": {
+        "id": "AT-F19",
+        "requirement_ids": [
+          "REQ-F19"
+        ],
+        "package_id": "WP12",
+        "given": "共通会話Cを参照するS、独立複製T、台詞のみoverrideするU",
+        "when": "Cの台詞を改訂し、影響一覧と適用版を確認してS/T/Uの文章を比較する",
+        "then": "元を変更するとどこが変わるか分かり、意図しない分岐へ反映されない。",
+        "negative_or_edge": "参照・複製・差分上書きの方式を保存する。元を削除する前に全参照先を示し、更新の適用範囲を固定する。"
+      },
+      "result_on_new_target": "not_run",
+      "clauses": [
+        {
+          "name": "given",
+          "original": "共通会話Cを参照するS、独立複製T、台詞のみoverrideするU",
+          "execution_route": "local_ui_candidate",
+          "result_on_new_target": "not_run",
+          "candidate_file": "tests/e2e/ap04-original-n-f16-20.spec.ts",
+          "candidate_test_titles": [
+            "AT-F19 共通台詞Cを固定参照S・独立複製T・台詞のみ上書きUとして保存し、C改訂の影響と適用先を固定する"
+          ],
+          "normal_ui_operation": "通常ReuseManagerで共通台詞Cを固定参照S・独立clone T・dialogueLineIdsだけoverride Uとして保存する。",
+          "assertions_authored_not_run": [
+            "実ファイルのmode/sourceId/pin/overrideFields一致、T台詞は別UUIDで存在。",
+            "ReaderでS/T旧台詞・U上書き台詞と共通舞台指示を表示。"
+          ],
+          "test_callbacks": [
+            {
+              "file": "tests/e2e/ap04-original-n-f16-20.spec.ts",
+              "title": "AT-F19 共通台詞Cを固定参照S・独立複製T・台詞のみ上書きUとして保存し、C改訂の影響と適用先を固定する",
+              "line": 202,
+              "parameter_values": {},
+              "binding_status": "authored_working_tree_location; refresh at final proof freeze"
+            }
+          ],
+          "authored_file_sha256": "1266859c6c841cbfe2879f68359f14eaa1034528375684a8eae3c9c16fb31701",
+          "missing_conditions": []
+        },
+        {
+          "name": "when",
+          "original": "Cの台詞を改訂し、影響一覧と適用版を確認してS/T/Uの文章を比較する",
+          "execution_route": "local_ui_candidate",
+          "result_on_new_target": "not_run",
+          "candidate_file": "tests/e2e/ap04-original-n-f16-20.spec.ts",
+          "candidate_test_titles": [
+            "AT-F19 共通台詞Cを固定参照S・独立複製T・台詞のみ上書きUとして保存し、C改訂の影響と適用先を固定する"
+          ],
+          "normal_ui_operation": "通常詳細データでC台詞を改訂し、Sの依存diff・全使用先・適用版previewを開いてSだけへ保存する。",
+          "assertions_authored_not_run": [
+            "依存情報変更1件・再利用先3件S/T/Uと旧/新本文が見える。",
+            "選択使用先のみ更新の案内、新pinが旧pinと別。"
+          ],
+          "test_callbacks": [
+            {
+              "file": "tests/e2e/ap04-original-n-f16-20.spec.ts",
+              "title": "AT-F19 共通台詞Cを固定参照S・独立複製T・台詞のみ上書きUとして保存し、C改訂の影響と適用先を固定する",
+              "line": 202,
+              "parameter_values": {},
+              "binding_status": "authored_working_tree_location; refresh at final proof freeze"
+            }
+          ],
+          "authored_file_sha256": "1266859c6c841cbfe2879f68359f14eaa1034528375684a8eae3c9c16fb31701",
+          "missing_conditions": []
+        },
+        {
+          "name": "then",
+          "original": "元を変更するとどこが変わるか分かり、意図しない分岐へ反映されない。",
+          "execution_route": "local_ui_candidate",
+          "result_on_new_target": "not_run",
+          "candidate_file": "tests/e2e/ap04-original-n-f16-20.spec.ts",
+          "candidate_test_titles": [
+            "AT-F19 共通台詞Cを固定参照S・独立複製T・台詞のみ上書きUとして保存し、C改訂の影響と適用先を固定する"
+          ],
+          "normal_ui_operation": "適用後S/T/Uを通常Readerで比較し、cold実ファイルを照合する。",
+          "assertions_authored_not_run": [
+            "Sは新本文、Tは旧本文、Uは上書き本文、共通舞台指示不変。",
+            "T/U recordとT独立台詞・旧snapshotは全体不変。"
+          ],
+          "test_callbacks": [
+            {
+              "file": "tests/e2e/ap04-original-n-f16-20.spec.ts",
+              "title": "AT-F19 共通台詞Cを固定参照S・独立複製T・台詞のみ上書きUとして保存し、C改訂の影響と適用先を固定する",
+              "line": 202,
+              "parameter_values": {},
+              "binding_status": "authored_working_tree_location; refresh at final proof freeze"
+            }
+          ],
+          "authored_file_sha256": "1266859c6c841cbfe2879f68359f14eaa1034528375684a8eae3c9c16fb31701",
+          "missing_conditions": []
+        },
+        {
+          "name": "negative_or_edge",
+          "original": "参照・複製・差分上書きの方式を保存する。元を削除する前に全参照先を示し、更新の適用範囲を固定する。",
+          "execution_route": "local_ui_candidate",
+          "result_on_new_target": "not_run",
+          "candidate_file": "tests/e2e/ap04-original-n-f16-20.spec.ts",
+          "candidate_test_titles": [
+            "AT-F19 共通台詞Cを固定参照S・独立複製T・台詞のみ上書きUとして保存し、C改訂の影響と適用先を固定する"
+          ],
+          "normal_ui_operation": "元Cの通常アーカイブimpact dialogを開き、参照先と固定版を見てcancelする。",
+          "assertions_authored_not_run": [
+            "全ownerが各一件、旧/新pinを表示し使用中archive button disabled。",
+            "保存方式reference/clone/overrideと適用範囲Sのみ保持、cancel後author rows不変。"
+          ],
+          "test_callbacks": [
+            {
+              "file": "tests/e2e/ap04-original-n-f16-20.spec.ts",
+              "title": "AT-F19 共通台詞Cを固定参照S・独立複製T・台詞のみ上書きUとして保存し、C改訂の影響と適用先を固定する",
+              "line": 202,
+              "parameter_values": {},
+              "binding_status": "authored_working_tree_location; refresh at final proof freeze"
+            }
+          ],
+          "authored_file_sha256": "1266859c6c841cbfe2879f68359f14eaa1034528375684a8eae3c9c16fb31701",
+          "missing_conditions": []
+        }
+      ],
+      "candidate_scope": "authored_not_run",
+      "new_test_file": "tests/e2e/ap04-original-n-f16-20.spec.ts",
+      "procedure": "Save common dialogue C as fixed-reference S, independent cloned T and dialogueLineIds-only override U through ReuseManager; revise the actual common dialogue line, inspect dependency diff/all three owners/fixed editions, apply only S and compare real Reader dialogue for S/T/U, then open the source archive-impact dialog and show all owners before cancelling.",
+      "next_action": "Freeze candidate commit/tree/build, typecheck and run focused semantics tests in the authorized execution window, then run the normal browser procedure and attach actual observations for all four original clauses.",
+      "clause_mapping_result": "authored_not_run"
+    },
+    {
+      "id": "AT-F20",
+      "original_case": {
+        "id": "AT-F20",
+        "requirement_ids": [
+          "REQ-F20"
+        ],
+        "package_id": "WP13",
+        "given": "初回/再訪反応と抽選3候補、run所持金、across_runs記憶",
+        "when": "seed固定で初回/再訪/戻るを行い、周回と全リセット後の記憶/所持金を比べる",
+        "then": "繰り返しでも重要な情報が失われず、抽選の結果を記録して再現できる。",
+        "negative_or_edge": "乱数種・抽選位置・既読・周回持越しを保存する。抽選候補ゼロを無言で進行せず不成立時の処理に従う。"
+      },
+      "result_on_new_target": "not_run",
+      "clauses": [
+        {
+          "name": "given",
+          "original": "初回/再訪反応と抽選3候補、run所持金、across_runs記憶",
+          "execution_route": "local_ui_candidate",
+          "result_on_new_target": "not_run",
+          "candidate_file": "tests/e2e/ap04-original-n-f16-20.spec.ts",
+          "candidate_test_titles": [
+            "AT-F20 初回再訪と抽選3候補を固定 seed で戻り・再生し、run所持金とacross_runs記憶の周回・全resetと候補ゼロを比較する"
+          ],
+          "normal_ui_operation": "初回/再訪分岐・抽選3候補・run所持金0・across_runs記憶falseと明示fallbackを持つ作品を固定seedで開始する。",
+          "assertions_authored_not_run": [
+            "初回文と重要情報を表示、候補button正確に3件enabled。"
+          ],
+          "test_callbacks": [
+            {
+              "file": "tests/e2e/ap04-original-n-f16-20.spec.ts",
+              "title": "AT-F20 初回再訪と抽選3候補を固定 seed で戻り・再生し、run所持金とacross_runs記憶の周回・全resetと候補ゼロを比較する",
+              "line": 357,
+              "parameter_values": {},
+              "binding_status": "authored_working_tree_location; refresh at final proof freeze"
+            }
+          ],
+          "authored_file_sha256": "1266859c6c841cbfe2879f68359f14eaa1034528375684a8eae3c9c16fb31701",
+          "missing_conditions": []
+        },
+        {
+          "name": "when",
+          "original": "seed固定で初回/再訪/戻るを行い、周回と全リセット後の記憶/所持金を比べる",
+          "execution_route": "local_ui_candidate",
+          "result_on_new_target": "not_run",
+          "candidate_file": "tests/e2e/ap04-original-n-f16-20.spec.ts",
+          "candidate_test_titles": [
+            "AT-F20 初回再訪と抽選3候補を固定 seed で戻り・再生し、run所持金とacross_runs記憶の周回・全resetと候補ゼロを比較する"
+          ],
+          "normal_ui_operation": "抽選→戻る→再抽選→通常記録/再生→帰還再訪→次周回→全resetを操作する。",
+          "assertions_authored_not_run": [
+            "戻るでmoney0/memoryfalse/cursor0、同seed再抽選は同じ選択。",
+            "次周回money0/memorytrue、全reset money0/memoryfalse/cursor0。"
+          ],
+          "test_callbacks": [
+            {
+              "file": "tests/e2e/ap04-original-n-f16-20.spec.ts",
+              "title": "AT-F20 初回再訪と抽選3候補を固定 seed で戻り・再生し、run所持金とacross_runs記憶の周回・全resetと候補ゼロを比較する",
+              "line": 357,
+              "parameter_values": {},
+              "binding_status": "authored_working_tree_location; refresh at final proof freeze"
+            }
+          ],
+          "authored_file_sha256": "1266859c6c841cbfe2879f68359f14eaa1034528375684a8eae3c9c16fb31701",
+          "missing_conditions": []
+        },
+        {
+          "name": "then",
+          "original": "繰り返しでも重要な情報が失われず、抽選の結果を記録して再現できる。",
+          "execution_route": "local_ui_candidate",
+          "result_on_new_target": "not_run",
+          "candidate_file": "tests/e2e/ap04-original-n-f16-20.spec.ts",
+          "candidate_test_titles": [
+            "AT-F20 初回再訪と抽選3候補を固定 seed で戻り・再生し、run所持金とacross_runs記憶の周回・全resetと候補ゼロを比較する"
+          ],
+          "normal_ui_operation": "初回/再訪本文と保存記録再生を比べる。",
+          "assertions_authored_not_run": [
+            "初回/また会いましたねの両方で同じ重要情報。",
+            "再生は同じresult heading・money9・memorytrue・RNG cursor1。"
+          ],
+          "test_callbacks": [
+            {
+              "file": "tests/e2e/ap04-original-n-f16-20.spec.ts",
+              "title": "AT-F20 初回再訪と抽選3候補を固定 seed で戻り・再生し、run所持金とacross_runs記憶の周回・全resetと候補ゼロを比較する",
+              "line": 357,
+              "parameter_values": {},
+              "binding_status": "authored_working_tree_location; refresh at final proof freeze"
+            }
+          ],
+          "authored_file_sha256": "1266859c6c841cbfe2879f68359f14eaa1034528375684a8eae3c9c16fb31701",
+          "missing_conditions": []
+        },
+        {
+          "name": "negative_or_edge",
+          "original": "乱数種・抽選位置・既読・周回持越しを保存する。抽選候補ゼロを無言で進行せず不成立時の処理に従う。",
+          "execution_route": "local_ui_candidate",
+          "result_on_new_target": "not_run",
+          "candidate_file": "tests/e2e/ap04-original-n-f16-20.spec.ts",
+          "candidate_test_titles": [
+            "AT-F20 初回再訪と抽選3候補を固定 seed で戻り・再生し、run所持金とacross_runs記憶の周回・全resetと候補ゼロを比較する"
+          ],
+          "normal_ui_operation": "実保存fileのseed/cursor/seen/visitsを確認し、候補条件を全部falseへ通常編集してfallbackを選ぶ。",
+          "assertions_authored_not_run": [
+            "seed/cursor1・firstScene seen・visitCountsとscope値が実recordに残る。",
+            "全候補disabled/cursor0、明示fallbackの理由付き意図終端、旧recordとauthor初期値cold不変。"
+          ],
+          "test_callbacks": [
+            {
+              "file": "tests/e2e/ap04-original-n-f16-20.spec.ts",
+              "title": "AT-F20 初回再訪と抽選3候補を固定 seed で戻り・再生し、run所持金とacross_runs記憶の周回・全resetと候補ゼロを比較する",
+              "line": 357,
+              "parameter_values": {},
+              "binding_status": "authored_working_tree_location; refresh at final proof freeze"
+            }
+          ],
+          "authored_file_sha256": "1266859c6c841cbfe2879f68359f14eaa1034528375684a8eae3c9c16fb31701",
+          "missing_conditions": []
+        }
+      ],
+      "candidate_scope": "authored_not_run",
+      "new_test_file": "tests/e2e/ap04-original-n-f16-20.spec.ts",
+      "procedure": "First/revisit scenes retain the same important information; fixed seed selects from exactly three candidates, back/redraw and saved replay preserve random outcome, seed/cursor/seen/visits and scoped values; next loop resets run money and carries across_runs memory, all reset clears it, false candidates require the declared explicit fallback.",
+      "next_action": "Freeze candidate commit/tree/build, typecheck and run focused semantics tests in the authorized execution window, then run the normal browser procedure and attach actual observations for all four original clauses.",
+      "clause_mapping_result": "authored_not_run"
+    }
+  ],
+  "focused_units": [
+    {
+      "path": "tests/conditionInputIssue.test.ts",
+      "authored_cases": 4,
+      "result": "not_run"
+    },
+    {
+      "path": "tests/runtimeChangeOrigins.test.ts",
+      "authored_cases": 5,
+      "result": "not_run"
+    }
+  ],
+  "authorized_source_changes": [
+    "src/domain/conditionDraft.ts",
+    "src/ui/Fields.tsx",
+    "src/ui/Reader.tsx",
+    "src/domain/runtimeChangeOrigins.ts"
+  ],
+  "authored_file_sha256": {
+    "src/domain/conditionDraft.ts": "10868dccfad94ef7c9c291e8516a989ffee6017be76484a9e94c4a2a75152cbc",
+    "src/domain/runtimeChangeOrigins.ts": "bfe5134b0ebfa8add2abcd2f6603ecc899e035e42650a10d13cb676a79ac26bc",
+    "src/ui/Fields.tsx": "1b61e659a73b6d20068e4e380306ef1893e1584103fb904deb83eae57898fda1",
+    "src/ui/Reader.tsx": "25e51addb64d60f19ef51199940b03849f38df6ee77cf08437b2507ddf606406",
+    "tests/conditionInputIssue.test.ts": "303f1e04531d05adb67e0bee4c04fc063154eaa5477374c4db1893c9c434283d",
+    "tests/e2e/ap04-original-n-atomic-migration.spec.ts": "d387aafee5fc6693e0b5e242ad2701dcc289dca7df9b4d2f9587aa2396fe62ad",
+    "tests/e2e/ap04-original-n-condition-parity.spec.ts": "fb4531c77e656e42cf4715af423e967857fc029fe38b8320c2905fc221735740",
+    "tests/e2e/ap04-original-n-f14-trigger.spec.ts": "d0cc69cc57c671d9ad006d3e27f1e54d152af9d47c8472129b18c6e0742f8644",
+    "tests/e2e/ap04-original-n-f16-20.spec.ts": "1266859c6c841cbfe2879f68359f14eaa1034528375684a8eae3c9c16fb31701",
+    "tests/e2e/ap04-original-n-failure-retry.spec.ts": "6aea8a327fc49e68039ef1a90d0f92be91bc88b4c016622a4f5d1184416f1749",
+    "tests/e2e/ap04-original-n-mobile-offline.spec.ts": "b1a8044d70b14cf8fc7705f2a12df7699dc9b335dfcb4da110481161cf8e8f6e",
+    "tests/e2e/ap04-original-n-random-replay.spec.ts": "5c6138ffa58b8582dc2e02100cf3581c30209e52680a9c7865589feb132b6da6",
+    "tests/e2e/ap04-original-n-safety-recovery.spec.ts": "9947b57a05afecc5ce71c2b0f92ccfcec0cd33f8abc5aa25d07c55a8a6fbfbba",
+    "tests/runtimeChangeOrigins.test.ts": "550d9e4d1c7e514ed777883331c224b55cacd61a317a8880580330779eceeca4"
+  },
+  "file_hash_binding": "Working-tree authorship snapshot only. Parent integration must refresh all file hashes with the final fixed proof commit/tree/build before execution; no pass is implied.",
+  "execution_limits": [
+    "No TSC, build, focused-unit or browser run was performed in this authoring batch because the parent exclusive AP03/PR44 run is active.",
+    "All operation/assertion descriptions are executable candidates, not observed results.",
+    "Physical device, OS Files retention, genuine uncached remote attachments, and actual Auth/RLS/server synchronization conditions remain separately unobserved.",
+    "Root integration must refresh callback locations/hashes and bind commit/tree/build after type/flow fixes before running or assessing acceptance."
+  ]
+}

@@ -12,16 +12,18 @@ export interface NarrativeOccurrence {
   state: RuntimeState; observationState?: RuntimeState; conditions: PresentationConditionResult[];
   target: PresentationTarget; edgeIds?: ID[]; worldTick?: string; externalValues: Record<ID, TypedValue>;
 }
-const activeKind = <K extends Entity['kind']>(project: ProjectData, kind: K): Entity<K>[] => project.entities.filter((entity): entity is Entity<K> => entity.kind === kind && adoptedRecord(entity));
-const getEntity = (project: ProjectData, id: ID) => project.entities.find(entity => entity.id === id);
-const variables = (project: ProjectData) => activeKind(project, 'variable');
+const activeKind = <K extends Entity['kind']>(project: ProjectData, kind: K, references: Entity[] = []): Entity<K>[] => [...project.entities, ...references].filter((entity): entity is Entity<K> => entity.kind === kind && adoptedRecord(entity));
+const getEntity = (project: ProjectData, id: ID, references: Entity[] = []) => [...project.entities, ...references].find(entity => entity.id === id && adoptedRecord(entity));
+const variables = (project: ProjectData, references: Entity[] = []) => activeKind(project, 'variable', references);
 const runtimeEntities = (project: ProjectData) => project.entities.filter(adoptedRecord);
 const clone = structuredClone;
+const withReferences = (occurrences: NarrativeOccurrence[], references: Entity[]) => occurrences.map(occurrence => occurrence.target.referenceEntities ? occurrence : {...occurrence, target: {...occurrence.target, referenceEntities: references}});
 
 /** The same pre-effect presentation evidence is used by chapters, branching paths and finite analysis. */
 export function checkPresentationForeshadows(project: ProjectData, states: NarrativeOccurrence[], startState: RuntimeState, terminal: boolean, referenceEntities: Entity[] = [], issues: ValidationIssue[] = []): AnalysisFinding[] {
+  states = withReferences(states, referenceEntities);
   const findings: AnalysisFinding[] = [];
-  const disclosures = activeKind(project, 'disclosure');
+  const disclosures = activeKind(project, 'disclosure', referenceEntities);
   const seen = new Set<ID>();
   const uncertain = new Set<ID>();
   const found = new Set<ID>();
@@ -62,7 +64,7 @@ export function checkPresentationForeshadows(project: ProjectData, states: Narra
       const observedCondition = presentationCondition(payoff.id);
       const condition = observedCondition.value === 'false' ? { ...observedCondition, value: 'true' as const } : observedCondition;
       if (condition.value === 'false') continue;
-      const foreshadow = getEntity(project, payoff.data.foreshadowId);
+      const foreshadow = getEntity(project, payoff.data.foreshadowId, referenceEntities);
       if (!foreshadow || foreshadow.kind !== 'foreshadow' || !adoptedRecord(foreshadow)) continue;
       let uncertainOrder = false;
       const presentedBefore = (id: ID) => {
@@ -76,7 +78,7 @@ export function checkPresentationForeshadows(project: ProjectData, states: Narra
       const missing = (foreshadow.data.requiredInfo ?? []).filter(id => ![id, ...(foreshadow.data.alternativeInfo?.[id] ?? [])].some(presentedBefore));
       const ruleContext = presentationRuleContext(project, { ...target, worldTick });
       const contexts = reuseRuleContexts(project, ruleContext);
-      const context = { state: observationState ?? state, variables: [...variables(project), ...referenceEntities.filter((entity): entity is Entity<'variable'> => entity.kind === 'variable')], entities: runtimeEntities(project), referenceEntities, externalValues, ruleContext: contexts[foreshadow.id] ?? ruleContext, ruleContexts: contexts };
+      const context = { state: observationState ?? state, variables: variables(project, referenceEntities), entities: runtimeEntities(project), referenceEntities, externalValues, ruleContext: contexts[foreshadow.id] ?? ruleContext, ruleContexts: contexts };
       const scope = foreshadow.data.deadline ? !observationState && foreshadow.data.deadline.routeCondition ? { value: 'unknown' } : evaluateTargetScope(foreshadow.data.deadline, context) : { value: 'true' };
       if (scope.value === 'false') continue;
       found.add(payoff.id);
@@ -107,13 +109,13 @@ export function checkPresentationForeshadows(project: ProjectData, states: Narra
 function occurrenceContext(project: ProjectData, occurrence: NarrativeOccurrence, referenceEntities: Entity[], declarationId?: ID) {
   const ruleContext = presentationRuleContext(project, { ...occurrence.target, worldTick: occurrence.worldTick });
   const ruleContexts = reuseRuleContexts(project, ruleContext);
-  return { state: occurrence.observationState ?? occurrence.state, variables: [...variables(project), ...referenceEntities.filter((entity): entity is Entity<'variable'> => entity.kind === 'variable')], entities: runtimeEntities(project), referenceEntities, externalValues: occurrence.externalValues, ruleContext: declarationId ? ruleContexts[declarationId] ?? ruleContext : ruleContext, ruleContexts };
+  return { state: occurrence.observationState ?? occurrence.state, variables: variables(project, referenceEntities), entities: runtimeEntities(project), referenceEntities, externalValues: occurrence.externalValues, ruleContext: declarationId ? ruleContexts[declarationId] ?? ruleContext : ruleContext, ruleContexts };
 }
 
 function unresolvedForeshadows(project: ProjectData, supplied: NarrativeOccurrence[], startState: RuntimeState, terminal: boolean, referenceEntities: Entity[]): AnalysisFinding[] {
   const states = supplied.filter(occurrence => { const id = occurrence.target.nodeId ?? occurrence.target.sceneId; return !!id && occurrence.state.seenIds.includes(id); });
-  const findings: AnalysisFinding[] = [], disclosures = activeKind(project, 'disclosure');
-  for (const foreshadow of activeKind(project, 'foreshadow')) {
+  const findings: AnalysisFinding[] = [], disclosures = activeKind(project, 'disclosure', referenceEntities);
+  for (const foreshadow of activeKind(project, 'foreshadow', referenceEntities)) {
     const reported = new Set<string>();
     for (let index = 0; index < states.length; index++) {
       const occurrence = states[index], context = occurrenceContext(project, occurrence, referenceEntities, foreshadow.id), scope = foreshadow.data.deadline;
@@ -123,7 +125,7 @@ function unresolvedForeshadows(project: ProjectData, supplied: NarrativeOccurren
       const explicit = foreshadow.data.presentationDeadline ? reuseExecutionAnchor(project, foreshadow.data.presentationDeadline, foreshadow.id) : undefined;
       const reached = !!explicit && presentationAnchorApplies(project, occurrence.state, explicit, occurrence.target, foreshadow.id);
       const chapterEnd = !!scope?.chapterId && context.ruleContext.chapterId === scope.chapterId && (nextRule ? nextRule.chapterId !== scope.chapterId : terminal && index === states.length - 1);
-      const exit = occurrence.target.nodeId ? activeKind(project, 'flow_node').find(node => node.id === occurrence.target.nodeId)?.data.nodeType === 'exit' : false;
+      const exit = occurrence.target.nodeId ? activeKind(project, 'flow_node', referenceEntities).find(node => node.id === occurrence.target.nodeId)?.data.nodeType === 'exit' : false;
       const graphEnd = !!scope?.graphId && context.ruleContext.graphId === scope.graphId && exit;
       const ending = terminal && index === states.length - 1;
       if (!reached && !chapterEnd && !graphEnd && !ending) continue;
@@ -167,7 +169,7 @@ export interface NarrativeClaimAssessment {
 
 function stateAtLine(project: ProjectData, occurrence: NarrativeOccurrence, line: Entity<'dialogue_line'>, referenceEntities: Entity[]) {
   let state = clone(occurrence.observationState ?? occurrence.state), uncertain = !occurrence.observationState;
-  const declarations = activeKind(project, 'disclosure').filter(disclosure => occurrence.conditions.some(result => result.targetId === disclosure.id && result.value === 'true') && !!disclosure.data.knowledgeEffects?.length);
+  const declarations = activeKind(project, 'disclosure', referenceEntities).filter(disclosure => occurrence.conditions.some(result => result.targetId === disclosure.id && result.value === 'true') && !!disclosure.data.knowledgeEffects?.length);
   const target: ContentAnchor = { entityId: line.id, lineId: line.id, ...(line.data.text[0] ? { blockId: line.data.text[0].id, start: 0, end: 0 } : {}) };
   const earlier: Entity<'disclosure'>[] = [];
   for (const disclosure of declarations) {
@@ -177,7 +179,7 @@ function stateAtLine(project: ProjectData, occurrence: NarrativeOccurrence, line
   }
   earlier.sort((a, b) => presentationAnchorOrder(project, reuseExecutionAnchor(project, a.data.anchor, a.id), reuseExecutionAnchor(project, b.data.anchor, b.id), occurrence.target) ? -1 : 1);
   if (earlier.length && occurrence.observationState) {
-    const context = occurrenceContext(project, occurrence, referenceEntities, line.id), entities = [...runtimeEntities(project), ...referenceEntities];
+    const context = occurrenceContext(project, occurrence, referenceEntities, line.id), entities = [...runtimeEntities(project), ...referenceEntities.filter(adoptedRecord)];
     const effects = earlier.flatMap(disclosure => (disclosure.data.knowledgeEffects ?? []).map(id => entities.find((entity): entity is Entity<'effect'> => entity.kind === 'effect' && entity.id === id))).filter((entity): entity is Entity<'effect'> => !!entity);
     const effectPresentations = earlier.flatMap(disclosure => (disclosure.data.knowledgeEffects ?? []).map(() => ({ project, target: occurrence.target, anchor: reuseExecutionAnchor(project, disclosure.data.anchor, disclosure.id) })));
     const applied = applyEffectsAtomic(state, effects, { ...context, state, effectPresentations });
@@ -188,6 +190,7 @@ function stateAtLine(project: ProjectData, occurrence: NarrativeOccurrence, line
 
 /** A true authored fact never propagates to a character. Claims use the state at their actual presentation. */
 export function assessPresentationClaims(project: ProjectData, occurrences: NarrativeOccurrence[], referenceEntities: Entity[] = []): NarrativeClaimAssessment[] {
+  occurrences = withReferences(occurrences, referenceEntities);
   const entities = [...new Map([...runtimeEntities(project), ...referenceEntities.filter(adoptedRecord)].map(entity => [entity.id, entity])).values()], assertions = entities.filter((entity): entity is Entity<'assertion'> => entity.kind === 'assertion');
   const assessments: NarrativeClaimAssessment[] = [];
   for (const [index, occurrence] of occurrences.entries()) {

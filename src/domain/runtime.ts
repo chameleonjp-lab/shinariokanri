@@ -2,7 +2,7 @@ import type { CheckpointData, Condition, DomainErrorCode, Entity, EntityKind, Ex
 import { emptyRuntimeState, getEntitiesByKind, getEntity as getAuthorEntity, validateInitialPresentationResults, validateProject, validateRuntimeState, validateVariableValue } from './model';
 import { applyEffectsAtomic, evaluateCondition, initializeRuntimeState, resetRuntimeLifecycle, runtimeExclusionIssues } from './conditions';
 import { isTick, resolveTime } from './time';
-import { presentContent, presentationAnchorApplies, presentationAnchorOrder, presentationRuleContext } from './presentation';
+import { capturePresentationReferences, presentContent, presentationAnchorApplies, presentationAnchorOrder, presentationRuleContext } from './presentation';
 import { declaredRegressionPaths, regressionPathCoverage } from './regressionPaths';
 import { resolveReuseContent, reuseAuthorContent, reuseRuleContexts, reuseExecutionAnchor } from './reuse';
 import { adoptedRecord } from './adoption';
@@ -147,7 +147,7 @@ function captureContent(project: ProjectData, references: Entity[] = []): Projec
   const raw = { ...clone({ ...branchFree, history: [], snapshots: [] }), snapshots: project.snapshots };
   const captured = resolveReuseContent(raw, project.snapshots);
   const index: ContentIndex = { byId: new Map(), activeByKind: new Map(), edgesFrom: new Map() };
-  capturedReferences.set(captured, clone(references));
+  capturedReferences.set(captured, capturePresentationReferences(references));
   for (const entity of [...captured.entities, ...(capturedReferences.get(captured) ?? [])]) {
     if (entity.deletedAt) continue;
     index.byId.set(entity.id, entity);
@@ -304,14 +304,14 @@ function startTrialInternal(project: ProjectData, options: TrialStartOptions = {
         : state.provenance === 'imported' || checkpoint.data.origin === 'imported' ? 'imported'
         : state.provenance === 'partial' || checkpoint.data.origin !== 'full_play' ? 'partial' : 'full_play';
       checkpointId = checkpoint.id;
-      if (checkpoint.data.presentationResults != null) failure = validateInitialPresentationResults(state, checkpoint.data.presentationResults, project.entities, `${checkpoint.id}.presentationResults`)[0];
+      if (checkpoint.data.presentationResults != null) failure = validateInitialPresentationResults(state, checkpoint.data.presentationResults, runtimeEntities(project), `${checkpoint.id}.presentationResults`)[0];
     }
   } else if (options.state) {
     if (options.state.contentVersionId !== version) {
       failure = issue('VALIDATION_FAILED', '指定した開始状態と作品版が違います。', 'state.contentVersionId');
     } else {
       state = clone(options.state);
-      if (options.presentationResults != null) failure = validateInitialPresentationResults(state, options.presentationResults, project.entities)[0];
+      if (options.presentationResults != null) failure = validateInitialPresentationResults(state, options.presentationResults, runtimeEntities(project))[0];
       if (state.provenance === 'full_play') state.provenance = 'partial';
     }
   }
@@ -325,7 +325,7 @@ function startTrialInternal(project: ProjectData, options: TrialStartOptions = {
       const errors = variable ? validateVariableValue(variable, value, `${id}.value`) : [issue('REFERENCE_INVALID', '開始状態に対象版の宣言がない状態値があります。', id)];
       if (errors.length) { failure = errors[0]; break; }
     }
-    const ruleContext = presentationRuleContext(project, { nodeId: entry ?? undefined, worldTick: options.worldTick });
+    const ruleContext = presentationRuleContext(project, { referenceEntities: capturedReferences.get(project), nodeId: entry ?? undefined, worldTick: options.worldTick });
     if (!failure) failure = runtimeExclusionIssues({ state, variables: variables(project), entities: runtimeEntities(project), externalValues:options.externalValues,ruleContext, ruleContexts: reuseRuleContexts(project, ruleContext) })[0];
   }
   if (checkpointId && state.provenance === 'full_play') {
@@ -350,7 +350,7 @@ function startTrialInternal(project: ProjectData, options: TrialStartOptions = {
         state = arrival.state; startConditionResults = arrival.conditions; startPresentationState = arrival.observationState;
         const target = findNode(project, entry);
         if (target?.data.nodeType === 'terminal') {
-          const ended = resetRuntimeLifecycle(state, [...(target.data.sceneId ? ['scene_end' as const] : []), ...(presentationRuleContext(project, { nodeId: entry }).chapterId ? ['chapter_end' as const] : []), 'run_end'], { state, variables: variables(project), entities: runtimeEntities(project), ruleContext: presentationRuleContext(project, { nodeId: entry, worldTick: options.worldTick }), ruleContexts: reuseRuleContexts(project, presentationRuleContext(project, { nodeId: entry, worldTick: options.worldTick })) });
+          const ended = resetRuntimeLifecycle(state, [...(target.data.sceneId ? ['scene_end' as const] : []), ...(presentationRuleContext(project, { referenceEntities: capturedReferences.get(project), nodeId: entry }).chapterId ? ['chapter_end' as const] : []), 'run_end'], { state, variables: variables(project), entities: runtimeEntities(project), ruleContext: presentationRuleContext(project, { referenceEntities: capturedReferences.get(project), nodeId: entry, worldTick: options.worldTick }), ruleContexts: reuseRuleContexts(project, presentationRuleContext(project, { referenceEntities: capturedReferences.get(project), nodeId: entry, worldTick: options.worldTick })) });
           if (ended.ok) state = ended.state; else presentationIssues = ended.issues;
         }
       }
@@ -360,7 +360,7 @@ function startTrialInternal(project: ProjectData, options: TrialStartOptions = {
   }
   if (startPresentationState) startPresentationState.provenance = state.provenance;
   const session: TrialSession = {
-    content: project, referenceEntities: clone(capturedReferences.get(project) ?? []), initialWorldTick: options.worldTick,
+    content: project, referenceEntities: capturePresentationReferences(capturedReferences.get(project) ?? []), initialWorldTick: options.worldTick,
     declarationProject: clone({ ...source, history: [], snapshots: [], authorAlternatives: undefined, entities: source.entities.filter(entity => ['collection', 'trace', 'checkpoint'].includes(entity.kind)) }),
     state, nodeId: state.presentationPosition, contentRevision: project.revision,
     startState: clone(state), startConditionResults, startPresentationState, startCheckpointId: checkpointId,
@@ -453,11 +453,11 @@ function observations(project: ProjectData, session: TrialSession, node: Entity<
 
 function commitStep(project: ProjectData, session: TrialSession, next: RuntimeState, toId: ID, selected: ID[], request: TrialRequest, conditions: ConditionObservation[]): TrialSession {
   const from = findNode(project, session.nodeId), to = findNode(project, toId);
-  const fromScope = presentationRuleContext(project, { nodeId: from?.id }), toScope = presentationRuleContext(project, { nodeId: toId });
+  const fromScope = presentationRuleContext(project, { referenceEntities: capturedReferences.get(project), nodeId: from?.id }), toScope = presentationRuleContext(project, { referenceEntities: capturedReferences.get(project), nodeId: toId });
   const events: ('scene_end' | 'chapter_end')[] = [];
   if (from?.data.sceneId && from.data.sceneId !== to?.data.sceneId) events.push('scene_end');
   if (fromScope.chapterId && fromScope.chapterId !== toScope.chapterId) events.push('chapter_end');
-  const reset = resetRuntimeLifecycle({ ...next, ...(next.resetCauses ? { resetCauses: [] } : {}) }, events, { state: next, variables: variables(project), entities: runtimeEntities(project), externalValues: session.externalValues, ruleContext: presentationRuleContext(project, { nodeId: from?.id, worldTick: request.worldTick }), ruleContexts: reuseRuleContexts(project, presentationRuleContext(project, { nodeId: from?.id, worldTick: request.worldTick })) });
+  const reset = resetRuntimeLifecycle({ ...next, ...(next.resetCauses ? { resetCauses: [] } : {}) }, events, { state: next, variables: variables(project), entities: runtimeEntities(project), externalValues: session.externalValues, ruleContext: presentationRuleContext(project, { referenceEntities: capturedReferences.get(project), nodeId: from?.id, worldTick: request.worldTick }), ruleContexts: reuseRuleContexts(project, presentationRuleContext(project, { referenceEntities: capturedReferences.get(project), nodeId: from?.id, worldTick: request.worldTick })) });
   if (!reset.ok) return resultSession(session, 'error', reset.issues);
   const arrival = present(project, reset.state, toId, session.externalValues, request.worldTick);
   if (!arrival.ok) return resultSession(session, arrival.issues.some(value => value.code === 'CONDITION_UNKNOWN') ? 'unknown' : 'error', arrival.issues);
@@ -467,7 +467,7 @@ function commitStep(project: ProjectData, session: TrialSession, next: RuntimeSt
     if (toScope.chapterId) ending.push('chapter_end');
     ending.push('run_end');
   }
-  const endReset = resetRuntimeLifecycle(arrival.state, ending, { state: arrival.state, variables: variables(project), entities: runtimeEntities(project), externalValues: session.externalValues, ruleContext: presentationRuleContext(project, { nodeId: toId, worldTick: request.worldTick }), ruleContexts: reuseRuleContexts(project, presentationRuleContext(project, { nodeId: toId, worldTick: request.worldTick })) });
+  const endReset = resetRuntimeLifecycle(arrival.state, ending, { state: arrival.state, variables: variables(project), entities: runtimeEntities(project), externalValues: session.externalValues, ruleContext: presentationRuleContext(project, { referenceEntities: capturedReferences.get(project), nodeId: toId, worldTick: request.worldTick }), ruleContexts: reuseRuleContexts(project, presentationRuleContext(project, { referenceEntities: capturedReferences.get(project), nodeId: toId, worldTick: request.worldTick })) });
   if (!endReset.ok) return resultSession(session, 'error', endReset.issues);
   const state = endReset.state;
   if (to?.data.nodeType === 'terminal' && (reset.state.resetCauses || endReset.state.resetCauses)) state.resetCauses = [...(reset.state.resetCauses ?? []), ...(endReset.state.resetCauses ?? [])];
@@ -579,7 +579,7 @@ function stepTrialInternal(project: ProjectData, session: TrialSession, request:
     if (!effect || effect.kind !== 'effect' || effect.deletedAt || effect.status === 'rejected') return resultSession(session, 'error', [issue('REFERENCE_INVALID', effect?.status === 'rejected' ? '分岐に不採用の効果が指定されています。' : '分岐に指定した効果が存在しないか、削除済みです。', `${edge.id}.effectIds`)]);
     effects.push(effect);
   }
-  const applied = applyEffectsAtomic(next, effects, { state: next, variables: variables(project), entities: runtimeEntities(project), externalValues: session.externalValues, ruleContext: presentationRuleContext(project, { nodeId: node.id, worldTick: request.worldTick }), ruleContexts: reuseRuleContexts(project, presentationRuleContext(project, { nodeId: node.id, worldTick: request.worldTick })) });
+  const applied = applyEffectsAtomic(next, effects, { state: next, variables: variables(project), entities: runtimeEntities(project), externalValues: session.externalValues, ruleContext: presentationRuleContext(project, { referenceEntities: capturedReferences.get(project), nodeId: node.id, worldTick: request.worldTick }), ruleContexts: reuseRuleContexts(project, presentationRuleContext(project, { referenceEntities: capturedReferences.get(project), nodeId: node.id, worldTick: request.worldTick })) });
   if (!applied.ok) return resultSession(session, applied.issues.some(value => value.code === 'CONDITION_UNKNOWN') ? 'unknown' : 'error', applied.issues);
   next = applied.state;
   const keys = triggerKeys(node, session.state, request);
@@ -643,10 +643,11 @@ function setTrialStubValuesInternal(project: ProjectData, session: TrialSession,
 /** New run and total reset are separate explicit operations. */
 export function restartTrial(project: ProjectData, session: TrialSession, mode: 'next_run' | 'all', entryId?: ID, contextOptions?: { worldTick?: string }): TrialSession {
   const content = getTrialContent(project, session);
-  const context = { state: session.state, variables: variables(content), entities: runtimeEntities(content), externalValues: session.externalValues, ruleContext: presentationRuleContext(content, { nodeId: session.nodeId ?? undefined, worldTick: contextOptions ? contextOptions.worldTick : session.initialWorldTick }), ruleContexts: reuseRuleContexts(content, presentationRuleContext(content, { nodeId: session.nodeId ?? undefined, worldTick: contextOptions ? contextOptions.worldTick : session.initialWorldTick })) };
+  const referenceEntities = capturedReferences.get(content) ?? session.referenceEntities;
+  const context = { state: session.state, variables: variables(content), entities: runtimeEntities(content), externalValues: session.externalValues, ruleContext: presentationRuleContext(content, { referenceEntities: capturedReferences.get(content), nodeId: session.nodeId ?? undefined, worldTick: contextOptions ? contextOptions.worldTick : session.initialWorldTick }), ruleContexts: reuseRuleContexts(content, presentationRuleContext(content, { referenceEntities: capturedReferences.get(content), nodeId: session.nodeId ?? undefined, worldTick: contextOptions ? contextOptions.worldTick : session.initialWorldTick })) };
   const reset = resetRuntimeLifecycle(session.state, mode === 'next_run' ? ['run_end', 'new_loop'] : ['full_reset'], context);
   if (!reset.ok) return resultSession(session, reset.issues.some(value => value.code === 'CONDITION_UNKNOWN') ? 'unknown' : 'error', reset.issues);
-  const initial = initializeRuntimeState(content, session.state.contentVersionId, session.referenceEntities,session.startExternalValues);
+  const initial = initializeRuntimeState(content, session.state.contentVersionId, referenceEntities,session.startExternalValues);
   initial.variableValues = reset.state.variableValues;
   if (reset.state.resetCauses) initial.resetCauses = reset.state.resetCauses;
   if (mode === 'next_run') {
@@ -655,7 +656,7 @@ export function restartTrial(project: ProjectData, session: TrialSession, mode: 
   }
   initial.rngSeed = session.state.rngSeed;
   initial.provenance = session.state.provenance;
-  const restarted = startTrial(project, { state: initial, contentVersionId: initial.contentVersionId, entryId, externalValues:session.startExternalValues, referenceEntities: session.referenceEntities, worldTick: contextOptions ? contextOptions.worldTick : session.initialWorldTick });
+  const restarted = startTrial(project, { state: initial, contentVersionId: initial.contentVersionId, entryId, externalValues:session.startExternalValues, referenceEntities, worldTick: contextOptions ? contextOptions.worldTick : session.initialWorldTick });
   restarted.state.provenance = initial.provenance;
   restarted.startState.provenance = initial.provenance;
   return restarted;
@@ -727,7 +728,7 @@ function coverageFromEvidence(project: ProjectData, seen: Set<ID>, traversed: Se
 export function replayTrial(project: ProjectData, recorded: TrialSession): TrialSession {
   const content = versionContent(project, recorded.state.contentVersionId);
   if (!content || recorded.contentRevision !== content.revision) return resultSession(recorded, 'error', [issue('VALIDATION_FAILED', '記録後に作品が変更されました。再確認が必要です。', 'contentRevision')]);
-  let replay = startTrial(project, { state: recorded.startState, contentVersionId: recorded.startState.contentVersionId, referenceEntities: recorded.referenceEntities, worldTick: recorded.initialWorldTick, presentationState: recorded.startPresentationState, ...(recorded.startConditionResults.length ? { presentationResults: recorded.startConditionResults } : {}) });
+  let replay = startTrial(project, { state: recorded.startState, contentVersionId: recorded.startState.contentVersionId, referenceEntities: capturedReferences.get(recorded.content) ?? recorded.referenceEntities, worldTick: recorded.initialWorldTick, presentationState: recorded.startPresentationState, ...(recorded.startConditionResults.length ? { presentationResults: recorded.startConditionResults } : {}) });
   replay.state.provenance = recorded.startState.provenance;
   replay.startState.provenance = recorded.startState.provenance;
   replay.externalValues = clone(recorded.startExternalValues);
@@ -853,11 +854,11 @@ export interface AnalysisFinding {
 }
 
 function anchorIsPresented(project: ProjectData, state: RuntimeState, anchor: import('./types').ContentAnchor, declarationId?: ID): boolean {
-  return presentationAnchorApplies(project, state, anchor, { nodeId: state.presentationPosition ?? undefined }, declarationId);
+  return presentationAnchorApplies(project, state, anchor, { referenceEntities: capturedReferences.get(project), nodeId: state.presentationPosition ?? undefined }, declarationId);
 }
 
 function anchorPrecedes(project: ProjectData, state: RuntimeState, left: import('./types').ContentAnchor, right: import('./types').ContentAnchor): boolean | undefined {
-  return presentationAnchorOrder(project, left, right, { nodeId: state.presentationPosition ?? undefined });
+  return presentationAnchorOrder(project, left, right, { referenceEntities: capturedReferences.get(project), nodeId: state.presentationPosition ?? undefined });
 }
 
 
@@ -870,12 +871,13 @@ export function checkTrialForeshadows(project: ProjectData, session: TrialSessio
 }
 export function trialNarrativeOccurrences(session: TrialSession): import('./narrative').NarrativeOccurrence[] {
   return [
-    { state: session.startState, observationState: session.startPresentationState, conditions: session.startConditionResults, target: { nodeId: session.startState.presentationPosition ?? undefined }, worldTick: session.initialWorldTick, externalValues: session.startExternalValues },
-    ...session.trace.filter(step => !step.request.stub || !sameRuntimeValue(step.before.visitCounts, step.after.visitCounts)).map(step => ({ state: step.after, observationState: step.presentationState, conditions: step.conditionResults, edgeIds: step.request.stub ? undefined : step.edgeIds, target: { nodeId: step.after.presentationPosition ?? undefined }, worldTick: step.request.worldTick, externalValues: step.externalValuesAfter })),
+    { state: session.startState, observationState: session.startPresentationState, conditions: session.startConditionResults, target: { nodeId: session.startState.presentationPosition ?? undefined, referenceEntities: capturedReferences.get(session.content) }, worldTick: session.initialWorldTick, externalValues: session.startExternalValues },
+    ...session.trace.filter(step => !step.request.stub || !sameRuntimeValue(step.before.visitCounts, step.after.visitCounts)).map(step => ({ state: step.after, observationState: step.presentationState, conditions: step.conditionResults, edgeIds: step.request.stub ? undefined : step.edgeIds, target: { nodeId: step.after.presentationPosition ?? undefined, referenceEntities: capturedReferences.get(session.content) }, worldTick: step.request.worldTick, externalValues: step.externalValuesAfter })),
   ];
 }
 function checkTrialForeshadowsInternal(project: ProjectData, session: TrialSession): AnalysisFinding[] {
-  return checkPresentationForeshadows(getTrialContent(project, session), trialNarrativeOccurrences(session), session.startState, session.status === 'terminal', session.referenceEntities, session.issues as import('./types').ValidationIssue[]);
+  const content = getTrialContent(project, session);
+  return checkPresentationForeshadows(content, trialNarrativeOccurrences(session), session.startState, session.status === 'terminal', capturedReferences.get(content) ?? session.referenceEntities, session.issues as import('./types').ValidationIssue[]);
 }
 
 export interface AnalysisProgress { checkedStates: number; pendingStates: number; elapsedMs: number; limits: AnalysisLimits }
@@ -1065,8 +1067,8 @@ function* analysisIterator(project: ProjectData, options: AnalysisOptions): Gene
     activeStart = session.startState;
     // Inspect the witnessed presentation order before state deduplication. Two
     // paths may join at the same values after presenting information in a different order.
-    const lastStep = session.trace.at(-1), oldChapter = lastStep ? presentationRuleContext(project, { nodeId: lastStep.before.presentationPosition ?? undefined }).chapterId : undefined;
-    const currentChapter = presentationRuleContext(project, { nodeId: session.nodeId ?? undefined }).chapterId;
+    const lastStep = session.trace.at(-1), oldChapter = lastStep ? presentationRuleContext(project, { referenceEntities: capturedReferences.get(project), nodeId: lastStep.before.presentationPosition ?? undefined }).chapterId : undefined;
+    const currentChapter = presentationRuleContext(project, { referenceEntities: capturedReferences.get(project), nodeId: session.nodeId ?? undefined }).chapterId;
     if (session.status === 'terminal' || getTrialNode(project, session)?.data.nodeType === 'exit' || oldChapter && oldChapter !== currentChapter || activeKind(project, 'foreshadow').some(foreshadow => foreshadow.data.presentationDeadline && anchorIsPresented(project, session.state, reuseExecutionAnchor(project, foreshadow.data.presentationDeadline, foreshadow.id), foreshadow.id)) || activeKind(project, 'disclosure').some(disclosure => disclosure.data.role === 'payoff' && anchorIsPresented(project, session.state, reuseExecutionAnchor(project, disclosure.data.anchor, disclosure.id), disclosure.id))) {
       for (const finding of checkTrialForeshadows(project, pathSession(recordIndex))) {
         const key = `${finding.status}:${finding.code}:${finding.targetId}:${finding.payoffId}:${finding.missingInfoIds?.join(',')}`;

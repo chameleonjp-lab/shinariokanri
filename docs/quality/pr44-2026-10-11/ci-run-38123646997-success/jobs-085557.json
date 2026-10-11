@@ -1,0 +1,151 @@
+{
+  "observedAtUtc": "2026-10-11 08:55:57 UTC",
+  "tool": "github_fetch_workflow_run_jobs",
+  "request": {
+    "repo_full_name": "chameleonjp-lab/shinariokanri",
+    "run_id": 38123646997
+  },
+  "result": {
+    "content": [
+      {
+        "type": "text",
+        "text": "Action completed."
+      }
+    ],
+    "structuredContent": {
+      "jobs": [
+        {
+          "id": 114423361268,
+          "name": "verify",
+          "status": "in_progress",
+          "conclusion": null,
+          "run_id": 38123646997,
+          "logs_url": null,
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 1
+            },
+            {
+              "name": "Run actions/checkout@v4",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 2
+            },
+            {
+              "name": "Run actions/setup-node@v4",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 3
+            },
+            {
+              "name": "Run npm ci",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 4
+            },
+            {
+              "name": "Run python3 scripts/check_docs.py",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 5
+            },
+            {
+              "name": "Run python3 scripts/check_completion_plan.py",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 6
+            },
+            {
+              "name": "Run python3 -m unittest discover -s scripts -p 'test_check_*.py' -v",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 7
+            },
+            {
+              "name": "Run npx playwright install --with-deps chromium firefox webkit",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 8
+            },
+            {
+              "name": "Run node -e 'require(\"fs\").appendFileSync(process.env.GITHUB_ENV, \"CHROMIUM_PATH=\" + require(\"playwright\").chromium.executablePath() + \"\\n\")'",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 9
+            },
+            {
+              "name": "Run npm test -- --maxWorkers=1 --fileParallelism=false",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 10
+            },
+            {
+              "name": "Run npm run build",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 11
+            },
+            {
+              "name": "Run BROWSER_ENGINES=all npm run test:e2e",
+              "status": "in_progress",
+              "conclusion": null,
+              "number": 12
+            },
+            {
+              "name": "Run npx playwright test -c tests/rb10/playwright.config.ts --project=chromium --output=test-results/rb10-large-analysis-chromium",
+              "status": "pending",
+              "conclusion": null,
+              "number": 13
+            },
+            {
+              "name": "Run RB03_ENGINES=chromium,firefox,webkit node tests/browser/run-rb03-components.mjs",
+              "status": "pending",
+              "conclusion": null,
+              "number": 14
+            },
+            {
+              "name": "Run for engine in chromium firefox webkit; do",
+              "status": "pending",
+              "conclusion": null,
+              "number": 15
+            },
+            {
+              "name": "Run npx playwright test -c tests/rb04/playwright.config.ts --project=chromium --output=test-results/rb04-writing-chromium",
+              "status": "pending",
+              "conclusion": null,
+              "number": 16
+            },
+            {
+              "name": "Run npx playwright test -c tests/rb04/playwright.config.ts --project=webkit --output=test-results/rb04-writing-webkit",
+              "status": "pending",
+              "conclusion": null,
+              "number": 17
+            },
+            {
+              "name": "Run actions/upload-artifact@v4",
+              "status": "pending",
+              "conclusion": null,
+              "number": 18
+            },
+            {
+              "name": "Post Run actions/setup-node@v4",
+              "status": "pending",
+              "conclusion": null,
+              "number": 35
+            },
+            {
+              "name": "Post Run actions/checkout@v4",
+              "status": "pending",
+              "conclusion": null,
+              "number": 36
+            }
+          ]
+        }
+      ]
+    },
+    "isError": false
+  }
+}

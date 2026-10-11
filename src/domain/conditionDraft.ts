@@ -1,5 +1,7 @@
-import type { Comparator, Condition, Entity, ProjectData, TypedValue } from './types';
-import { validateCondition } from './model';
+import type { Comparator, Condition, Entity, ProjectData, TypedValue, ValidationIssue } from './types';
+import { emptyRuntimeState, validateCondition } from './model';
+import { DomainValidationError, evaluateCondition } from './conditions';
+import { adoptedRecord } from './adoption';
 
 export type ComparisonCondition = Extract<Condition, { op: 'compare' }>;
 
@@ -18,7 +20,7 @@ export function defaultComparisonValue(variable?: Entity<'variable'>): TypedValu
   return { type: 'boolean', value: true };
 }
 
-export function conditionInputError(value: unknown, project: ProjectData): string | undefined {
+function conditionInputMessage(value: unknown, project: ProjectData): string | undefined {
   const checked = validateCondition(value);
   if (!checked.ok) return checked.issues[0]?.message;
   const inspect = (condition: Condition): string | undefined => {
@@ -36,4 +38,35 @@ export function conditionInputError(value: unknown, project: ProjectData): strin
     return undefined;
   };
   return inspect(checked.value);
+}
+
+/** Retain the existing input guidance for callers that need only its text. */
+export function conditionInputError(value: unknown, project: ProjectData): string | undefined {
+  return conditionInputMessage(value, project);
+}
+
+/** Expose an actual shared-domain issue, never invent a code for UI guidance. */
+export function conditionInputIssue(value: unknown, project: ProjectData): ValidationIssue | undefined {
+  const checked = validateCondition(value);
+  if (!checked.ok) return checked.issues[0];
+  const message = conditionInputMessage(value, project);
+  if (!message) return;
+  const firstInputCondition = (condition: Condition): Condition | undefined => {
+    if (condition.op === 'all' || condition.op === 'any') return condition.children.map(firstInputCondition).find(Boolean);
+    if (condition.op === 'not') return firstInputCondition(condition.child);
+    return conditionInputMessage(condition, project) ? condition : undefined;
+  };
+  const target = firstInputCondition(checked.value);
+  if (!target) return;
+  // The shared evaluator resolves the target's derived/external declarations.
+  // Eagerly evaluating unrelated variables would hide this input's own issue.
+  const state = emptyRuntimeState(project.projectId);
+  for (const entity of project.entities) if (entity.kind === 'variable' && adoptedRecord(entity)) state.variableValues[entity.id] = structuredClone(entity.data.initial);
+  try {
+    evaluateCondition(target, { state, entities: project.entities });
+  } catch (error) {
+    if (error instanceof DomainValidationError && error.issues[0]) return { ...error.issues[0], message };
+  }
+  // Incomplete selection/blank-input guidance can coexist with a valid unknown
+  // or false evaluation. Such guidance has no evaluator error code to display.
 }

@@ -1,0 +1,1651 @@
+{
+  "version": "1.0.0",
+  "scope": "AP04 original B02-B22 except existing B10",
+  "created_at": "2026-10-11",
+  "original_audit": {
+    "file": "docs/review-2026-10-11/original_acceptance_audit.json",
+    "sha256": "c3f843c573007c407266c75114cdb8f8fce5f6dd9020417599f05e60755d7e00",
+    "untouched": true
+  },
+  "planning_source": {
+    "head": "ea0f4946679601a32571ee0ce3efafe5cf211fdf",
+    "working_tree_not_frozen": true,
+    "files": [
+      {
+        "file": "tests/e2e/ap04-original-bm-helpers.ts",
+        "sha256": "961d64d82641027a45dca792bdb5400a4f239691c872cd0760fc4fae08be79cb"
+      },
+      {
+        "file": "tests/e2e/ap04-original-bm-archive.spec.ts",
+        "sha256": "124a6de5eb8760a5d95a54c3fc4cc757cfdeb4ee545394151ae256654c10fe0f"
+      },
+      {
+        "file": "tests/e2e/ap04-original-bm-author.spec.ts",
+        "sha256": "c9f347da02eba5f01413cb54d0a1fa377f5a46aa13f5c225e30324687b5d1042"
+      },
+      {
+        "file": "tests/e2e/ap04-original-bm-runtime.spec.ts",
+        "sha256": "33b4c6fae1ce35c7af2d9d17422409783a441f83ab2e447c5c060dd148e45c31"
+      },
+      {
+        "file": "tests/e2e/ap04-original-bm-timeline.spec.ts",
+        "sha256": "9c874b3ed5dbb4c1cbd3db368e28b7c3e36d0de3d069263d928dfa582c316fc5"
+      },
+      {
+        "file": "tests/e2e/ap04-original-bm-world-narrative.spec.ts",
+        "sha256": "4a654ca014fd68b54542c96750f055fa2387a21698f9c3ebf2fe14da92ad0ebe"
+      },
+      {
+        "file": "src/ui/Relationships.tsx",
+        "sha256": "f81e923a662604e2bd42efb5f1dfbe85ddabad3ecfd3b1667db358db0287b3bf"
+      },
+      {
+        "file": "src/ui/EntityReferenceSection.tsx",
+        "sha256": "a24ab27951205cc4964e128ea869c179947d13f9ed69f1f306fb7537b7a48c25"
+      }
+    ]
+  },
+  "policy": {
+    "existing_results_not_transferred": true,
+    "test_registration_not_acceptance_proof": true,
+    "normal_ui_mutations_only": true,
+    "durable_idb_reads_only": true,
+    "fixtures_exported_by_normal_contract": true,
+    "given_archive_and_hash_attached_at_execution": true,
+    "four_clauses_must_pass_same_run": true,
+    "browser_build_unit_tsc_run": false,
+    "source_hashes_need_refresh_at_root_freeze": true
+  },
+  "totals": {
+    "cases": 20,
+    "clauses": 80,
+    "passed": 0,
+    "not_run": 80
+  },
+  "authorized_product_fixes": [
+    {
+      "requirement": "AT-B07 negative_or_edge",
+      "file": "src/ui/Relationships.tsx",
+      "change": "既存関係定義から端点種別/自己参照/対称指定の不適合理由を画面表示。保存型・guard・storage/schemaは変更なし。",
+      "runtime_result": "not_run"
+    },
+    {
+      "requirement": "AT-B09 then",
+      "file": "src/ui/EntityReferenceSection.tsx",
+      "change": "既存Relationの意味名、半開世界内期間、経路条件を元詳細に表示。保存値は変更なし。",
+      "runtime_result": "not_run"
+    }
+  ],
+  "excluded_from_new_specs": [
+    {
+      "id": "AT-B10",
+      "reason": "既存の通常UIリンクライフサイクル担当と重複しない。合格結果はここへ移植しない。"
+    },
+    {
+      "id": "AT-B24",
+      "reason": "元givenの実タッチ端末/外部成立条件を保持。マウス代替で実機合格としない。"
+    }
+  ],
+  "cases": [
+    {
+      "id": "AT-B02",
+      "original_case": {
+        "id": "AT-B02",
+        "requirement_ids": [
+          "REQ-B02"
+        ],
+        "package_id": "WP07",
+        "given": "共通出来事と二人が関わる出来事がある",
+        "when": "年表を開き出来事を編集する",
+        "then": "共通レーンと人物レーンから同一IDの情報を開ける",
+        "negative_or_edge": "共通レーンへの表示だけでは全員を関係者や知識の保有者に登録しない"
+      },
+      "test": {
+        "file": "tests/e2e/ap04-original-bm-timeline.spec.ts",
+        "line": 6,
+        "title": "AT-B02 共通と二人の人物レーンから同じ出来事を編集し、共通表示だけでは人物や知識を増やさない"
+      },
+      "result": "not_run",
+      "clauses": [
+        {
+          "name": "given",
+          "original": "共通出来事と二人が関わる出来事がある",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-timeline.spec.ts",
+            "line": 8,
+            "end_line": 8,
+            "callback_sha256": "a4258812c4244bcac1763e72dfa27bc094b8fccae942573064a406b7c5253b32",
+            "callback_source": "await given(page, info, 'AT-B02', f.p); await timeline(page); await page.getByRole('button', { name: '全体へ戻る', exact: true }).click();"
+          },
+          "planned_direct_check": "二人の人物と共通/両レーンの出来事を一つの作品として完全保存・UI復元。",
+          "observations": []
+        },
+        {
+          "name": "when",
+          "original": "年表を開き出来事を編集する",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-timeline.spec.ts",
+            "line": 9,
+            "end_line": 14,
+            "callback_sha256": "46d922290be38d802b5f463ddaa8ad9fbc731dc45074bb6ab0068bf89c2e528e",
+            "callback_source": "await page.locator('.common-lane').locator(`button[data-event-id=\"${f.shared.id}\"]`).click();\n    await expect(page.locator('#entity-name')).toHaveValue(f.shared.name);\n    await editData(page, { ...f.shared.data, summary: textToRichText('共通レーンで編集した同一出来事') });\n    await page.getByRole('button', { name: '詳細を閉じる', exact: true }).click();"
+          },
+          "planned_direct_check": "共通レーンの同一IDを開いて本文を保存。",
+          "observations": []
+        },
+        {
+          "name": "then",
+          "original": "共通レーンと人物レーンから同一IDの情報を開ける",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-timeline.spec.ts",
+            "line": 15,
+            "end_line": 22,
+            "callback_sha256": "76949936d11714d6d4e59104e0b9272370587ad26ca1b59658e4a77f6efbb5ce",
+            "callback_source": "for (const name of [f.a.name, f.b.name]) {\n      const lane = page.locator('.timeline-lane').filter({ has: page.getByRole('button', { name, exact: true }) });\n      await lane.locator(`button[data-event-id=\"${f.shared.id}\"]`).click();\n      await expect(page.locator('.detail-panel [data-field=\"summary\"] textarea[data-rich-text-editor]')).toHaveValue('共通レーンで編集した同一出来事');\n      await page.getByRole('button', { name: '詳細を閉じる', exact: true }).click();\n    }"
+          },
+          "planned_direct_check": "各人物レーンから同IDを再度開き、保存した本文を直接読む。",
+          "observations": []
+        },
+        {
+          "name": "negative_or_edge",
+          "original": "共通レーンへの表示だけでは全員を関係者や知識の保有者に登録しない",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-timeline.spec.ts",
+            "line": 23,
+            "end_line": 30,
+            "callback_sha256": "2846f2423986fa4a6cc008d1a55cfdf6852addea423445287d6e50c61a99707c",
+            "callback_source": "await page.reload(); const saved = await backup(page);\n    expect(findEntity(saved.project, f.common.id, 'event').data.participants).toEqual([]);\n    expect(findEntity(saved.project, f.shared.id, 'event').data.participants).toEqual(f.shared.data.participants);\n    expect(saved.project.entities.filter(e => e.kind === 'assertion')).toEqual([]);\n    expect(saved.project.entities.filter(e => e.kind === 'character').map(e => e.id)).toEqual([f.a.id, f.b.id]);\n    await attachObservation(info, 'AT-B02-observed', { eventId: f.shared.id, commonParticipants: [], unchangedRoles: f.shared.data.participants, assertionIds: [] });"
+          },
+          "planned_direct_check": "冷復元で人物・参加者役割の集合と知識未作成を比較。",
+          "observations": []
+        }
+      ]
+    },
+    {
+      "id": "AT-B03",
+      "original_case": {
+        "id": "AT-B03",
+        "requirement_ids": [
+          "REQ-B03"
+        ],
+        "package_id": "WP07",
+        "given": "人物が二つのグループに属する",
+        "when": "片方を折りたたみ並べ替える",
+        "then": "人物の本体・所属・出来事のIDは変わらない",
+        "negative_or_edge": "グループ削除では人物を連鎖削除せず、表示への影響を確認する"
+      },
+      "test": {
+        "file": "tests/e2e/ap04-original-bm-timeline.spec.ts",
+        "line": 33,
+        "title": "AT-B03 二重所属の同じ人物を折りたたみ・並替えし、削除影響を確認して人物と出来事を残す"
+      },
+      "result": "not_run",
+      "clauses": [
+        {
+          "name": "given",
+          "original": "人物が二つのグループに属する",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-timeline.spec.ts",
+            "line": 35,
+            "end_line": 35,
+            "callback_sha256": "713e48ea63a3e5a56b659998694092f1fce5f7e8a55ba243df64e808e96e3386",
+            "callback_source": "expect(g1.data.members).toContain(f.a.id); expect(g2.data.members).toContain(f.a.id); await given(page, info, 'AT-B03', f.p); await timeline(page);"
+          },
+          "planned_direct_check": "二群に属する一人と共有出来事をUI復元。",
+          "observations": []
+        },
+        {
+          "name": "when",
+          "original": "片方を折りたたみ並べ替える",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-timeline.spec.ts",
+            "line": 36,
+            "end_line": 43,
+            "callback_sha256": "7f4cc0942ca5ae5b31d2220ac549901a8265c9bc09d3672ece700a9b8e243911",
+            "callback_source": "await page.getByRole('button', { name: 'グループ・人物レーン', exact: true }).click();\n    const dialog = page.getByRole('dialog', { name: 'グループ・人物レーンを編集' });\n    await dialog.locator('.timeline-group-editor-row').filter({ hasText: g1.name }).getByRole('button', { name: '折りたたむ', exact: true }).click();\n    await dialog.getByRole('button', { name: `${g1.name}を後へ`, exact: true }).click();\n    await expect(dialog.locator('.timeline-group-editor-row').first()).toContainText(g2.name);\n    await dialog.getByRole('button', { name: '閉じる', exact: true }).click();"
+          },
+          "planned_direct_check": "群の折畳み、並替え、削除影響確認を通常UIで操作。",
+          "observations": []
+        },
+        {
+          "name": "then",
+          "original": "人物の本体・所属・出来事のIDは変わらない",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-timeline.spec.ts",
+            "line": 44,
+            "end_line": 48,
+            "callback_sha256": "c8626f251a2c300a6fca813d64327ac0e1ee4e77066d277fccf5411c7c13e521",
+            "callback_source": "const reordered = await backup(page);\n    expect(reordered.project.entities.filter(e => e.kind === 'group').map(e => e.id)).toEqual([g2.id, g1.id]);\n    for (const record of [f.a, f.b, f.common, f.shared, g1, g2]) expect(findEntity(reordered.project, record.id, record.kind).data).toEqual(record.data);"
+          },
+          "planned_direct_check": "群並替え後の原情報dataと削除前の正本fingerprintを比較。",
+          "observations": []
+        },
+        {
+          "name": "negative_or_edge",
+          "original": "グループ削除では人物を連鎖削除せず、表示への影響を確認する",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-timeline.spec.ts",
+            "line": 49,
+            "end_line": 65,
+            "callback_sha256": "a170a47fac92223f8edda3c6c3d8b14f6fb034bb49f52e0026e7382783557f49",
+            "callback_source": "await timeline(page); await page.getByRole('button', { name: 'グループ・人物レーン', exact: true }).click();\n    const dialog = page.getByRole('dialog', { name: 'グループ・人物レーンを編集' });\n    await dialog.locator('.timeline-group-editor-row').filter({ hasText: g1.name }).getByRole('button', { name: '改名・階層・人物を編集', exact: true }).click();\n    const before = await authorFingerprint(page);\n    await dialog.getByRole('button', { name: 'グループを外す前に確認', exact: true }).click();\n    await expect(dialog.getByRole('status')).toContainText('人物・出来事の本体・IDは保持');\n    expect(await authorFingerprint(page)).toBe(before);\n    await dialog.getByRole('button', { name: '影響を確認してグループを外す', exact: true }).click();\n    await expect(dialog.locator('.timeline-group-editor-row')).toHaveCount(1);\n    await dialog.getByRole('button', { name: '閉じる', exact: true }).click();\n    await page.reload(); const saved = await backup(page);\n    expect(findEntity(saved.project, g1.id, 'group').deletedAt).toBeTruthy();\n    expect(findEntity(saved.project, g2.id, 'group').data.members).toContain(f.a.id);\n    for (const record of [f.a, f.b, f.common, f.shared]) { expect(findEntity(saved.project, record.id, record.kind).deletedAt).toBeFalsy(); expect(findEntity(saved.project, record.id, record.kind).data).toEqual(record.data); }\n    await attachObservation(info, 'AT-B03-observed', { orderedGroupIds: [g2.id, g1.id], archivedGroupId: g1.id, retainedPersonIds: [f.a.id, f.b.id], retainedEventIds: [f.common.id, f.shared.id] });"
+          },
+          "planned_direct_check": "アーカイブ後も人物/出来事本体の同ID・dataと別群所属を保持。",
+          "observations": []
+        }
+      ]
+    },
+    {
+      "id": "AT-B04",
+      "original_case": {
+        "id": "AT-B04",
+        "requirement_ids": [
+          "REQ-B04"
+        ],
+        "package_id": "WP07",
+        "given": "横に長い年表",
+        "when": "指またはスクロール操作で過去と未来へ移動する",
+        "then": "人物名と共通レーンの識別を保ち対象の出来事を編集できる",
+        "negative_or_edge": "ページ全体の横ずれや、編集欄のスクロールとの取り違えが起きない"
+      },
+      "test": {
+        "file": "tests/e2e/ap04-original-bm-timeline.spec.ts",
+        "line": 68,
+        "title": "AT-B04 横に長い年表を実スクロールし、固定レーン名と編集欄のスクロールを区別する"
+      },
+      "result": "not_run",
+      "clauses": [
+        {
+          "name": "given",
+          "original": "横に長い年表",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-timeline.spec.ts",
+            "line": 73,
+            "end_line": 73,
+            "callback_sha256": "b3bbb4430c2d769a9e9544f557346c0d78407cc193b7c157a1e5d3b17620849e",
+            "callback_source": "await given(page, info, 'AT-B04', f.p); await timeline(page); await page.getByRole('button', { name: '全体へ戻る', exact: true }).click(); expect(await page.locator('.timeline-canvas').evaluate(n => n.scrollWidth > n.clientWidth)).toBe(true);"
+          },
+          "planned_direct_check": "長い過去/未来のイベントと390px表示幅。",
+          "observations": []
+        },
+        {
+          "name": "when",
+          "original": "指またはスクロール操作で過去と未来へ移動する",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-timeline.spec.ts",
+            "line": 75,
+            "end_line": 81,
+            "callback_sha256": "bf144aaf75a6d9349fbd2381873757e280af83a6a19eee2319529569e39abf61",
+            "callback_source": "await canvas.hover(); await page.mouse.wheel(1800, 0);\n    await expect.poll(() => canvas.evaluate(n => n.scrollLeft)).toBeGreaterThan(0);\n    const future = await canvas.evaluate(n => n.scrollLeft);\n    await page.mouse.wheel(-1800, 0); await expect.poll(() => canvas.evaluate(n => n.scrollLeft)).toBeLessThan(future);\n    await attachObservation(info, 'AT-B04-scroll', { futureScrollLeft: future, pastScrollLeft: await canvas.evaluate(n => n.scrollLeft) });"
+          },
+          "planned_direct_check": "実wheelで両方向へ水平移動し、未来イベントを開いて本文保存。",
+          "observations": []
+        },
+        {
+          "name": "then",
+          "original": "人物名と共通レーンの識別を保ち対象の出来事を編集できる",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-timeline.spec.ts",
+            "line": 82,
+            "end_line": 90,
+            "callback_sha256": "3398757d2a8ede6217cd8d2037b9642f4fef99b59cd7456c5fff3fc4a75d3d2a",
+            "callback_source": "await canvas.hover(); await page.mouse.wheel(1800, 0); await expect.poll(() => canvas.evaluate(n => n.scrollLeft)).toBeGreaterThan(0);\n    const bounds = (await canvas.boundingBox())!;\n    for (const label of [page.locator('.timeline-axis .lane-label'), page.locator('.common-lane .lane-label'), page.locator('.timeline-lane').filter({ has: page.getByRole('button', { name: f.a.name, exact: true }) }).locator('.lane-label')]) {\n      const box = (await label.boundingBox())!; expect(Math.abs(box.x - bounds.x)).toBeLessThan(4);\n    }\n    await page.locator('.common-lane').locator(`button[data-event-id=\"${f.shared.id}\"]`).click();\n    await editData(page, { ...f.shared.data, summary: textToRichText('未来の対象をスクロール後に編集') });"
+          },
+          "planned_direct_check": "可視ラベル座標をcanvas左端と比較し、ページ横overflowと保存本文を読む。",
+          "observations": []
+        },
+        {
+          "name": "negative_or_edge",
+          "original": "ページ全体の横ずれや、編集欄のスクロールとの取り違えが起きない",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-timeline.spec.ts",
+            "line": 91,
+            "end_line": 98,
+            "callback_sha256": "904137943c0740bb0844a5787dc5e13e5d5ff785fbf4178575b009fb5c009551",
+            "callback_source": "expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(1);\n    const before = await canvas.evaluate(n => n.scrollLeft);\n    await page.locator('.editor-content').hover(); await page.mouse.wheel(0, 240);\n    expect(await canvas.evaluate(n => n.scrollLeft)).toBe(before);\n    expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(1);\n    await page.reload(); const saved = await backup(page); expect(findEntity(saved.project, f.shared.id, 'event').data.summary[0].text).toBe('未来の対象をスクロール後に編集');"
+          },
+          "planned_direct_check": "編集欄への縦wheel中のcanvas水平位置を比較。",
+          "observations": []
+        }
+      ]
+    },
+    {
+      "id": "AT-B05",
+      "original_case": {
+        "id": "AT-B05",
+        "requirement_ids": [
+          "REQ-B05"
+        ],
+        "package_id": "WP06",
+        "given": "確定日時と不確定日時の出来事がある",
+        "when": "表示単位と拡大率を切り替える",
+        "then": "保存された日時・条件・関係線を変更しない",
+        "negative_or_edge": "現在の暦に存在しない単位は理由付きで選択不可とし、暗黙の換算をしない"
+      },
+      "test": {
+        "file": "tests/e2e/ap04-original-bm-timeline.spec.ts",
+        "line": 101,
+        "title": "AT-B05 確定・不確定日時で表示単位と倍率だけを切替え、存在しない時単位は理由付き無効にする"
+      },
+      "result": "not_run",
+      "clauses": [
+        {
+          "name": "given",
+          "original": "確定日時と不確定日時の出来事がある",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-timeline.spec.ts",
+            "line": 108,
+            "end_line": 108,
+            "callback_sha256": "060aab874d5f3b94711b9919a31090548774ec52464a2c1b8d3b57a0d9319e23",
+            "callback_source": "await given(page, info, 'AT-B05', f.p); await timeline(page);"
+          },
+          "planned_direct_check": "世界暦を持つ瞬間・不確かな範囲・関係を復元。",
+          "observations": []
+        },
+        {
+          "name": "when",
+          "original": "表示単位と拡大率を切り替える",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-timeline.spec.ts",
+            "line": 110,
+            "end_line": 112,
+            "callback_sha256": "86a779d68f34d39de2d81ec178cf71fcf3e9f846d2a7c1b214226e1ea2576a00",
+            "callback_source": "for (const unit of ['day', 'month', 'year', 'tick']) { await page.getByLabel('年表の表示単位', { exact: true }).selectOption(unit); await page.getByRole('button', { name: '年表を拡大', exact: true }).click(); await page.getByRole('button', { name: '年表を縮小', exact: true }).click(); }"
+          },
+          "planned_direct_check": "日/月/年/tick単位とzoomを通常UIで切替。",
+          "observations": []
+        },
+        {
+          "name": "then",
+          "original": "保存された日時・条件・関係線を変更しない",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-timeline.spec.ts",
+            "line": 113,
+            "end_line": 113,
+            "callback_sha256": "b470f4f40611b3d7942e5394e90c1a02e537813ae3c5a93084b15ec8dacac793",
+            "callback_source": "expect(await authorFingerprint(page)).toBe(before); const saved = await backup(page); expect(saved.project.entities.filter(e => e.kind === 'event').map(e => e.data)).toEqual([f.common.data, f.shared.data]); expect(saved.project.relations[0]).toMatchObject({ ...line });"
+          },
+          "planned_direct_check": "表示切替前後の正本fingerprint、絶対日時、関係を比較。",
+          "observations": []
+        },
+        {
+          "name": "negative_or_edge",
+          "original": "現在の暦に存在しない単位は理由付きで選択不可とし、暗黙の換算をしない",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-timeline.spec.ts",
+            "line": 114,
+            "end_line": 118,
+            "callback_sha256": "b1a396d5699ee1ca3b454613acf3b771f0fad5a896d503348fa3abfcc7853db4",
+            "callback_source": "await timeline(page); const hour = page.getByLabel('年表の表示単位', { exact: true }).locator('option[value=\"hour\"]');\n    await expect(hour).toBeDisabled(); await expect(hour).toContainText('時'); expect((await hour.textContent())?.length).toBeGreaterThan(3);\n    expect(await authorFingerprint(page)).toBe(before);"
+          },
+          "planned_direct_check": "その暦で扱えない時間単位がdisabledで理由を持つことを読む。",
+          "observations": []
+        }
+      ]
+    },
+    {
+      "id": "AT-B06",
+      "original_case": {
+        "id": "AT-B06",
+        "requirement_ids": [
+          "REQ-B06"
+        ],
+        "package_id": "WP06",
+        "given": "本編開始より前後に出来事がある",
+        "when": "本編開始の基準点だけ変更する",
+        "then": "出来事の絶対位置を保ち、相対表示だけ更新する",
+        "negative_or_edge": "本編開始を動かしただけで全出来事を移動しない"
+      },
+      "test": {
+        "file": "tests/e2e/ap04-original-bm-timeline.spec.ts",
+        "line": 121,
+        "title": "AT-B06 本編基準だけを変更し、前後出来事の絶対tickと内容を保持して相対表示を変える"
+      },
+      "result": "not_run",
+      "clauses": [
+        {
+          "name": "given",
+          "original": "本編開始より前後に出来事がある",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-timeline.spec.ts",
+            "line": 123,
+            "end_line": 123,
+            "callback_sha256": "7a2d22e4aaa3f1414647bb5692dff3228857818983d8258d98164fe09666c39b",
+            "callback_source": "await given(page, info, 'AT-B06', f.p); await timeline(page);"
+          },
+          "planned_direct_check": "絶対tickを持つ複数出来事と本編開始tickを復元。",
+          "observations": []
+        },
+        {
+          "name": "when",
+          "original": "本編開始の基準点だけ変更する",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-timeline.spec.ts",
+            "line": 125,
+            "end_line": 128,
+            "callback_sha256": "80388353b435051ba3eb3f470b9ef7a4238232afeeed527ee1b5185ce366c879",
+            "callback_source": "await page.getByRole('button', { name: '本編開始の基準を変更', exact: true }).click(); const dialog = page.getByRole('dialog', { name: '本編開始の基準を変更' });\n    await dialog.getByLabel('本編開始の世界内tick', { exact: true }).fill('10'); await dialog.getByRole('button', { name: '本編の基準を保存', exact: true }).click(); await expect(dialog).toHaveCount(0);"
+          },
+          "planned_direct_check": "基準日時モーダルで本編開始tickを0から10へ保存。",
+          "observations": []
+        },
+        {
+          "name": "then",
+          "original": "出来事の絶対位置を保ち、相対表示だけ更新する",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-timeline.spec.ts",
+            "line": 129,
+            "end_line": 129,
+            "callback_sha256": "168f5faa28413be3b2aba84ee2c5e871f3bccbdc71d4a60ad39d16bad423abae",
+            "callback_source": "await expect(page.locator('.timeline-context')).toContainText('本編開始 10 tick'); expect(await page.locator('.timeline-context').textContent()).not.toBe(beforeContext);"
+          },
+          "planned_direct_check": "本編文脈の表示更新を直接読む。",
+          "observations": []
+        },
+        {
+          "name": "negative_or_edge",
+          "original": "本編開始を動かしただけで全出来事を移動しない",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-timeline.spec.ts",
+            "line": 130,
+            "end_line": 130,
+            "callback_sha256": "e9c276828a82a588a82d2560afe6940eb4232c3c08c62a39d955f7f3c28c1e8c",
+            "callback_source": "await page.reload(); const saved = await backup(page); expect(saved.project.mainStart).toBe('10'); for (const e of [f.common, f.shared]) expect(findEntity(saved.project, e.id, 'event').data).toEqual(e.data); await attachObservation(info, 'AT-B06-observed', { mainStart: saved.project.mainStart, retainedTimes: saved.project.entities.filter(e => e.kind === 'event').map(e => e.data.time) });"
+          },
+          "planned_direct_check": "冷復元で全出来事の絶対日時/dataが不変なことを比較。",
+          "observations": []
+        }
+      ]
+    },
+    {
+      "id": "AT-B07",
+      "original_case": {
+        "id": "AT-B07",
+        "requirement_ids": [
+          "REQ-B07"
+        ],
+        "package_id": "WP08",
+        "given": "二つの出来事がある",
+        "when": "始点と終点をタップで指定して線の種類を選ぶ",
+        "then": "年表と関係一覧から同じ関係IDを編集できる",
+        "negative_or_edge": "存在しない終点や型の異なる関係を保存せず理由を示す"
+      },
+      "test": {
+        "file": "tests/e2e/ap04-original-bm-timeline.spec.ts",
+        "line": 133,
+        "title": "AT-B07 二つの出来事をタップで結び、同じ関係IDを一覧で再編集し型に合わない対象を選べない"
+      },
+      "result": "not_run",
+      "clauses": [
+        {
+          "name": "given",
+          "original": "二つの出来事がある",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-timeline.spec.ts",
+            "line": 135,
+            "end_line": 135,
+            "callback_sha256": "7e26804ea5f06d60e209d766734970c266238005ac9bad77871903ad678285c0",
+            "callback_source": "await given(page, info, 'AT-B07', f.p); await timeline(page); await page.getByRole('button', { name: '全体へ戻る', exact: true }).click();"
+          },
+          "planned_direct_check": "二つの出来事を同一作品として復元。",
+          "observations": []
+        },
+        {
+          "name": "when",
+          "original": "始点と終点をタップで指定して線の種類を選ぶ",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-timeline.spec.ts",
+            "line": 136,
+            "end_line": 143,
+            "callback_sha256": "c04e7bac3094144b13864d58e98916968ef44c75cff8833bfc8b743bea7ded74",
+            "callback_source": "await page.getByRole('button', { name: '始点 → 終点をタップで結ぶ', exact: true }).click();\n    await page.locator('.common-lane').locator(`button[data-event-id=\"${f.common.id}\"]`).click();\n    await expect(page.getByRole('status').filter({ hasText: '始点' }).first()).toBeVisible();\n    await page.locator('.common-lane').locator(`button[data-event-id=\"${f.shared.id}\"]`).click();\n    const dialog = page.getByRole('dialog', { name: '年表の関係を編集' });\n    await dialog.getByLabel('年表の関係の種類', { exact: true }).selectOption('causes'); await dialog.getByRole('button', { name: '関係を保存', exact: true }).click(); await expect(dialog).toHaveCount(0);"
+          },
+          "planned_direct_check": "年表の始点/終点タップで因果関係を保存し、同じ関係を前提へ編集。",
+          "observations": []
+        },
+        {
+          "name": "then",
+          "original": "年表と関係一覧から同じ関係IDを編集できる",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-timeline.spec.ts",
+            "line": 145,
+            "end_line": 152,
+            "callback_sha256": "672abfee7336f03ae3056421af8d714202f8ec3f01dedb38e498beb47d064add",
+            "callback_source": "const saved = await backup(page); expect(saved.project.relations).toHaveLength(1); id = saved.project.relations[0].id; expect(saved.project.relations[0]).toMatchObject({ fromId: f.common.id, toId: f.shared.id, relationType: 'causes' });\n    await timeline(page); await page.locator(`button[data-relation-id=\"${id}\"]`).click();\n    const dialog = page.getByRole('dialog', { name: '意味付きの関係を編集' });\n    await expect(dialog.getByLabel('関係の始点', { exact: true })).toHaveValue(f.common.id);\n    await dialog.getByLabel('関係の種類', { exact: true }).selectOption('requires'); await dialog.getByLabel('関係の始点', { exact: true }).selectOption(f.common.id); await dialog.getByLabel('関係の終点', { exact: true }).selectOption(f.shared.id); await dialog.getByRole('button', { name: '関係を保存', exact: true }).click(); await expect(dialog).toHaveCount(0);\n    const updated = await backup(page); expect(updated.project.relations).toHaveLength(1); expect(updated.project.relations[0]).toMatchObject({ id, relationType: 'requires' });"
+          },
+          "planned_direct_check": "保存関係IDが一つで意味だけ変更されたことを実完全保存で確認。",
+          "observations": []
+        },
+        {
+          "name": "negative_or_edge",
+          "original": "存在しない終点や型の異なる関係を保存せず理由を示す",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-timeline.spec.ts",
+            "line": 153,
+            "end_line": 163,
+            "callback_sha256": "f4b5c5e4bdd9ed0077317d23b22f4aec6e2549acf0ffeaffcb108fa9bbbe7300",
+            "callback_source": "await timeline(page); await page.locator(`button[data-relation-id=\"${id}\"]`).click(); const dialog = page.getByRole('dialog', { name: '意味付きの関係を編集' }); const before = await authorFingerprint(page);\n    await dialog.getByLabel('関係の種類', { exact: true }).selectOption('trust');\n    await expect(dialog.getByLabel('関係の始点', { exact: true }).locator(`option[value=\"${f.common.id}\"]`)).toHaveCount(0);\n    await expect(dialog.getByLabel('関係の終点', { exact: true }).locator('option[value=\"ffffffff-ffff-4fff-8fff-ffffffffffff\"]')).toHaveCount(0);\n    await expect(dialog.getByRole('button', { name: '関係を保存', exact: true })).toBeDisabled();\n    expect(await authorFingerprint(page)).toBe(before);\n    // A disabled selector proves prevention, but this original clause also\n    // Requires the computed rejection reason as well as the disabled action.\n    await expect(dialog).toContainText(/人物.*人物|人物同士|人物間/);"
+          },
+          "planned_direct_check": "人物間専用の意味では出来事/存在しないIDが候補に無く、disabled・理由・正本不変を確認。",
+          "observations": []
+        }
+      ]
+    },
+    {
+      "id": "AT-B08",
+      "original_case": {
+        "id": "AT-B08",
+        "requirement_ids": [
+          "REQ-B08"
+        ],
+        "package_id": "WP04",
+        "given": "参加者が未設定の出来事",
+        "when": "二人を異なる役割で登録してメモを書く",
+        "then": "人物側の参照元にも同じ出来事が現れる",
+        "negative_or_edge": "登場、目撃、伝聞、知識取得を同じ関係として扱わない"
+      },
+      "test": {
+        "file": "tests/e2e/ap04-original-bm-author.spec.ts",
+        "line": 5,
+        "title": "AT-B08 参加者未設定から二人の異なる役割とメモを登録し、両人物の参照元へ同じ出来事を出す"
+      },
+      "result": "not_run",
+      "clauses": [
+        {
+          "name": "given",
+          "original": "参加者が未設定の出来事",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-author.spec.ts",
+            "line": 7,
+            "end_line": 7,
+            "callback_sha256": "b81f0e63eee0fc2483004eb459ea9a74f484cf70d7628b4db07cc3b147df6cf1",
+            "callback_source": "expect(event.data.participants).toEqual([]); await given(page, info, 'AT-B08', p); await openEntity(page, 'event', event.name); await page.getByRole('tab', { name: '詳細', exact: true }).click();"
+          },
+          "planned_direct_check": "参加者未指定の出来事と二人の人物。",
+          "observations": []
+        },
+        {
+          "name": "when",
+          "original": "二人を異なる役割で登録してメモを書く",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-author.spec.ts",
+            "line": 8,
+            "end_line": 13,
+            "callback_sha256": "78d5c0867830b079fc606542f0f93570162c43deea0fbc4429321778d523afd3",
+            "callback_source": "await page.getByRole('button', { name: '参加者を追加', exact: true }).click(); await page.getByLabel('参加者1', { exact: true }).selectOption(a.id); await page.getByLabel('参加者1の役割', { exact: true }).selectOption('actor');\n    await page.getByRole('button', { name: '参加者を追加', exact: true }).click(); await page.getByLabel('参加者2', { exact: true }).selectOption(b.id); await page.getByLabel('参加者2の役割', { exact: true }).selectOption('witness');\n    await page.locator('.editor-footer').getByRole('button', { name: '保存する', exact: true }).click(); await expect(page.locator('.editor-save-state')).toContainText('端末内保存済み');\n    const saved = await backup(page); await openEntity(page, 'event', event.name); await editData(page, { ...findEntity(saved.project, event.id, 'event').data, authorNotes: textToRichText('目撃だけで真相を知ったとはしない。') });"
+          },
+          "planned_direct_check": "通常の参加者追加/役割入力を保存しauthorNotesを別保存。",
+          "observations": []
+        },
+        {
+          "name": "then",
+          "original": "人物側の参照元にも同じ出来事が現れる",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-author.spec.ts",
+            "line": 14,
+            "end_line": 19,
+            "callback_sha256": "2213bec280d136cccbdccb4a3ab26d12268500ca8c7582351d4f71ea03ce7819",
+            "callback_source": "for (const person of [a, b]) {\n      await openEntity(page, 'character', person.name); await page.locator('.references-section').getByRole('button', { name: new RegExp(event.name) }).click(); await expect(page.locator('#entity-name')).toHaveValue(event.name); await page.getByRole('tab', { name: '詳細', exact: true }).click();\n      await expect(page.getByLabel('参加者1', { exact: true })).toHaveValue(a.id); await expect(page.getByLabel('参加者2', { exact: true })).toHaveValue(b.id);\n    }"
+          },
+          "planned_direct_check": "各人物の逆参照から同じ出来事を開き、参加者IDを読む。",
+          "observations": []
+        },
+        {
+          "name": "negative_or_edge",
+          "original": "登場、目撃、伝聞、知識取得を同じ関係として扱わない",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-author.spec.ts",
+            "line": 20,
+            "end_line": 24,
+            "callback_sha256": "ce81eac469964e4cd4e8f55c9a76a31c64531f3ccb38f506f55d51ba82b593b6",
+            "callback_source": "await expect(page.getByLabel('参加者1の役割', { exact: true })).toHaveValue('actor'); await expect(page.getByLabel('参加者2の役割', { exact: true })).toHaveValue('witness');\n    await expect(page.getByLabel('参加者1の役割', { exact: true }).locator('option')).toContainText(['当事者', '目撃者', '言及される', '情報を得る', '独自の役割']);\n    await page.reload(); const saved = await backup(page), registered = findEntity(saved.project, event.id, 'event'); expect(registered.data.participants).toEqual([{ characterId: a.id, role: 'actor' }, { characterId: b.id, role: 'witness' }]); expect(registered.data.authorNotes?.[0].text).toBe('目撃だけで真相を知ったとはしない。'); expect(saved.project.entities.filter(e => e.kind === 'assertion')).toHaveLength(0); await attachObservation(info, 'AT-B08-observed', { eventId: event.id, participants: registered.data.participants, inferredKnowledgeIds: [] });"
+          },
+          "planned_direct_check": "二役割と独自役割を含む選択肢、authorNotes、知識未作成を冷復元で比較。",
+          "observations": []
+        }
+      ]
+    },
+    {
+      "id": "AT-B09",
+      "original_case": {
+        "id": "AT-B09",
+        "requirement_ids": [
+          "REQ-B09"
+        ],
+        "package_id": "WP08",
+        "given": "年表に登場する二人がいる",
+        "when": "関係図で関係を更新して年表から詳細を開く",
+        "then": "同じ関係の意味と時期が表示される",
+        "negative_or_edge": "図上の配置変更は人物の所属・時期・関係を変更しない"
+      },
+      "test": {
+        "file": "tests/e2e/ap04-original-bm-timeline.spec.ts",
+        "line": 166,
+        "title": "AT-B09 年表の二人の関係を図で更新し、配置だけは所属・時期・関係を変えず詳細の同IDへ戻る"
+      },
+      "result": "not_run",
+      "clauses": [
+        {
+          "name": "given",
+          "original": "年表に登場する二人がいる",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-timeline.spec.ts",
+            "line": 168,
+            "end_line": 168,
+            "callback_sha256": "884ae3debe97d9311ac20ab844307f9277c75acb41923f8ef23f5f337cdbb02f",
+            "callback_source": "await given(page, info, 'AT-B09', await createWorldSnapshot(f.p, '元の関係')); await graph(page);"
+          },
+          "planned_direct_check": "人物二人、所属、期間付き信頼関係の固定版をUI復元。",
+          "observations": []
+        },
+        {
+          "name": "when",
+          "original": "関係図で関係を更新して年表から詳細を開く",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-timeline.spec.ts",
+            "line": 171,
+            "end_line": 175,
+            "callback_sha256": "198fe38eaaedef313926ed9f09dd157c96ad0311ff14e7c90c67d8fea189b72c",
+            "callback_source": "await page.getByRole('button', { name: `${f.a.name}から${f.b.name}へ、信頼、関係を編集`, exact: true }).click(); const dialog = page.getByRole('dialog', { name: '意味付きの関係を編集' });\n    await dialog.getByLabel('関係の種類', { exact: true }).selectOption('related'); await dialog.getByLabel('関係の始点', { exact: true }).selectOption(f.a.id); await dialog.getByLabel('関係の終点', { exact: true }).selectOption(f.b.id); await dialog.getByRole('button', { name: '関係を保存', exact: true }).click(); await expect(dialog).toHaveCount(0);\n    await timeline(page); await page.getByRole('button', { name: '全体へ戻る', exact: true }).click(); await page.getByRole('button', { name: f.a.name, exact: true }).click();"
+          },
+          "planned_direct_check": "図の関係を関連へ保存し、人物レーンから元人物の詳細を開く。",
+          "observations": []
+        },
+        {
+          "name": "then",
+          "original": "同じ関係の意味と時期が表示される",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-timeline.spec.ts",
+            "line": 176,
+            "end_line": 183,
+            "callback_sha256": "73f0ba980d07e238fb2442975e38177ebb504399e152349fd0a03a5731552b68",
+            "callback_source": "await expect(page.locator('#entity-name')).toHaveValue(f.a.name); await expect(page.locator('.detail-panel')).toContainText('関連');\n    // The original then requires the relation's period at the opened detail.\n    // A relation type alone does not establish that observation.\n    await expect(page.locator('.detail-panel')).toContainText(/0\\s*(?:tick|〜|～|→).*100/);\n    const saved = await backup(page); expect(saved.project.relations[0]).toMatchObject({ id: row.id, relationType: 'related', validity: row.validity }); expect(findEntity(saved.project, group.id, 'group').data).toEqual(group.data); for (const e of [f.a, f.b, f.shared]) expect(findEntity(saved.project, e.id, e.kind).data).toEqual(e.data);\n    await attachObservation(info, 'AT-B09-observed', { relationId: row.id, validity: saved.project.relations[0].validity, sourceIds: [f.a.id, f.b.id], placementOnlyPreservedDurableRecords: true });"
+          },
+          "planned_direct_check": "意味名/有効期間を画面で読み、保存された同ID関係を比較。",
+          "observations": []
+        },
+        {
+          "name": "negative_or_edge",
+          "original": "図上の配置変更は人物の所属・時期・関係を変更しない",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-timeline.spec.ts",
+            "line": 170,
+            "end_line": 170,
+            "callback_sha256": "9820d97d395132b6dfa3bfac0f570ad325ea45a2766ad5ed42c661aa9cd92d6d",
+            "callback_source": "await page.getByRole('button', { name: `${f.a.name}を選択。矢印キーで配置を移動、Enterで詳細`, exact: true }).press('ArrowRight'); expect(await authorFingerprint(page)).toBe(before);"
+          },
+          "planned_direct_check": "図の配置キー操作直後の正本fingerprint、所属/時期/人物/event data不変を比較。",
+          "observations": []
+        }
+      ]
+    },
+    {
+      "id": "AT-B11",
+      "original_case": {
+        "id": "AT-B11",
+        "requirement_ids": [
+          "REQ-B11"
+        ],
+        "package_id": "WP04",
+        "given": "場所と物品がある",
+        "when": "出来事に関連付けて各一覧を開く",
+        "then": "関係する人物・出来事へ相互移動できる",
+        "negative_or_edge": "物品の種類と個体を区別し、一つの個体の複製で所有を二重化しない"
+      },
+      "test": {
+        "file": "tests/e2e/ap04-original-bm-author.spec.ts",
+        "line": 27,
+        "title": "AT-B11 場所・物品型・個体を出来事へ関連付けて相互移動し、同じ個体の再取得は二重所有にしない"
+      },
+      "result": "not_run",
+      "clauses": [
+        {
+          "name": "given",
+          "original": "場所と物品がある",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-author.spec.ts",
+            "line": 32,
+            "end_line": 32,
+            "callback_sha256": "b47e74ae63af567ae99ac6b8f1fcbc5b178f2d12c1d676b7756e24867e89372d",
+            "callback_source": "await given(page, info, 'AT-B11', p); await openEntity(page, 'event', event.name);"
+          },
+          "planned_direct_check": "場所/人物/種類/個体と未関連の出来事、個体取得二効果経路。",
+          "observations": []
+        },
+        {
+          "name": "when",
+          "original": "出来事に関連付けて各一覧を開く",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-author.spec.ts",
+            "line": 34,
+            "end_line": 34,
+            "callback_sha256": "85a7392d0fff38e0d0c6cc8c38c46530c816ccd6c1982e5951ddba8bc0a73105",
+            "callback_source": "await editData(page, { ...event.data, locationId: place.id, itemIds: [individual.id], participants: [{ characterId: person.id, role: 'actor' }], summary: [linked] });"
+          },
+          "planned_direct_check": "本文リンク・参加者・locationId・itemIdsを通常詳細UIで登録。",
+          "observations": []
+        },
+        {
+          "name": "then",
+          "original": "関係する人物・出来事へ相互移動できる",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-author.spec.ts",
+            "line": 35,
+            "end_line": 40,
+            "callback_sha256": "288836b9ab0687cff6ad519ba9edfcae916a801107fd5e87828801e82d9c0449",
+            "callback_source": "for (const record of [place, individual, person]) {\n      await openEntity(page, record.kind, record.name); await page.locator('.references-section').getByRole('button', { name: new RegExp(event.name) }).click(); await expect(page.locator('#entity-name')).toHaveValue(event.name);\n      await page.getByRole('tab', { name: '確認表示', exact: true }).click(); const label = record === person ? '人物' : record === place ? '場所' : '個体'; await page.locator('.detail-panel').getByRole('button', { name: label, exact: true }).click(); await expect(page.locator('#entity-name')).toHaveValue(record.name);\n    }"
+          },
+          "planned_direct_check": "逆参照と本文リンクの往復で対象の同じ名前/IDを確認。",
+          "observations": []
+        },
+        {
+          "name": "negative_or_edge",
+          "original": "物品の種類と個体を区別し、一つの個体の複製で所有を二重化しない",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-author.spec.ts",
+            "line": 41,
+            "end_line": 45,
+            "callback_sha256": "e49ca6eb4597ba6455d47b9711b70acd0e1fee95458e2dc4edf6975144c0cafb",
+            "callback_source": "await openEntity(page, 'item', type.name); await page.getByRole('tab', { name: '詳細', exact: true }).click(); await expect(page.getByLabel('物品の扱い', { exact: true })).toHaveValue('type'); await openEntity(page, 'item', individual.name); await page.getByRole('tab', { name: '詳細', exact: true }).click(); await expect(page.getByLabel('物品の扱い', { exact: true })).toHaveValue('instance');\n    await reader(page); await page.getByLabel('試読の開始点', { exact: true }).selectOption(start.id); await page.getByRole('button', { name: '試読を始める', exact: true }).click(); await page.getByRole('button', { name: '個体を一度取得', exact: true }).click(); await expect(page.locator('.reader-state-counts')).toContainText('1個'); await page.getByRole('button', { name: '同じ個体を再取得', exact: true }).click(); await expect(page.locator('.reader-page')).toContainText('二重取得'); await expect(page.locator('.reader-state-counts')).toContainText('1個');\n    const saved = await backup(page); expect(saved.project.entities.filter(e => e.kind === 'item').map(e => e.id)).toEqual([type.id, individual.id]); expect(findEntity(saved.project, event.id, 'event').data.itemIds).toEqual([individual.id]); expect(saved.project.entities.filter(e => e.kind === 'assertion')).toEqual([]); await attachObservation(info, 'AT-B11-observed', { typeId: type.id, individualId: individual.id, eventId: event.id, duplicateAcquisitionRejected: true });"
+          },
+          "planned_direct_check": "種類と個体の表示を読み、同個体の二重取得を拒否し実保存に新個体/知識が無いことを確認。",
+          "observations": []
+        }
+      ]
+    },
+    {
+      "id": "AT-B12",
+      "original_case": {
+        "id": "AT-B12",
+        "requirement_ids": [
+          "REQ-B12"
+        ],
+        "package_id": "WP16",
+        "given": "条件・本文・関係線・素材を含む作品",
+        "when": "完全保存ファイルを新規作品へ読み戻す",
+        "then": "安定IDと情報内容と素材の対応が一致する",
+        "negative_or_edge": "破損・未対応版・危険なパス・参照不整合は既存作品を変更せず拒否する"
+      },
+      "test": {
+        "file": "tests/e2e/ap04-original-bm-archive.spec.ts",
+        "line": 20,
+        "title": "AT-B12 同じ条件・本文・関係・実素材を新規端末作品へ読み戻し四種の不正入力を原作品から拒否する"
+      },
+      "result": "not_run",
+      "clauses": [
+        {
+          "name": "given",
+          "original": "条件・本文・関係線・素材を含む作品",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-archive.spec.ts",
+            "line": 26,
+            "end_line": 26,
+            "callback_sha256": "040ebc6408ceea045c3962eaa7f1cf8560e79d2136c5ef666bd6084d968f8159",
+            "callback_source": "const valid = validateProject(p); if (!valid.ok) throw new Error(JSON.stringify(valid.issues)); const input = await exportScenario(p, { loadAsset: hash => hash === prepared.contentHash ? mediaBytes : undefined }); await attachGiven(info, 'AT-B12', input, { condition: entry.data.gate, bodySceneId: scene.id, bodyLinkId: a.id, relationIds: p.relations.map(r => r.id), attachmentId: attachment.id, cueId: cue.id, assetHash: prepared.contentHash }); await seed(page, input); downloaded = (await backup(page)).bytes;"
+          },
+          "planned_direct_check": "boolean条件・本文リンク・信頼線・実WAV素材・cueを一作品として完全保存。",
+          "observations": []
+        },
+        {
+          "name": "when",
+          "original": "完全保存ファイルを新規作品へ読み戻す",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-archive.spec.ts",
+            "line": 30,
+            "end_line": 30,
+            "callback_sha256": "fdf985c105b1f5f9dec046f29b04db249b8f7e67e297ed2467f5776be93d5985",
+            "callback_source": "await seed(restoredPage, downloaded);"
+          },
+          "planned_direct_check": "UIが作った同じ完全保存bytesを別の空browser contextへ通常UI復元。",
+          "observations": []
+        },
+        {
+          "name": "then",
+          "original": "安定IDと情報内容と素材の対応が一致する",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-archive.spec.ts",
+            "line": 31,
+            "end_line": 33,
+            "callback_sha256": "621e8c9926411933a55ec815515f7b2e622f81f30d3ab2b5837768dd52cedd52",
+            "callback_source": "const restored = await backup(restoredPage); expect(restored.project.projectId).toBe(p.projectId); expect(restored.project.entities.map(e => e.id)).toEqual(p.entities.map(e => e.id)); for (const record of p.entities) expect(findEntity(restored.project, record.id, record.kind).data).toEqual(record.data); expect(restored.project.relations).toEqual(p.relations); expect(restored.assets).toHaveLength(1); expect(restored.assets[0].contentHash).toBe(prepared.contentHash); expect(Array.from(restored.assets[0].bytes)).toEqual(Array.from(mediaBytes)); expect(findEntity(restored.project, cue.id, 'cue').data.attachmentId).toBe(attachment.id); expect(findEntity(restored.project, attachment.id, 'attachment').data.assetPath).toBe(restored.assets[0].path); await attachObservation(info, 'AT-B12-restored', { projectId: restored.project.projectId, entityIds: restored.project.entities.map(e => e.id), relations: restored.project.relations, assetHash: restored.assets[0].contentHash, bytes: restored.assets[0].bytes.length });"
+          },
+          "planned_direct_check": "ID集合/各data/関係/実WAVbytesとcue→attachment→assetPathを比較。",
+          "observations": []
+        },
+        {
+          "name": "negative_or_edge",
+          "original": "破損・未対応版・危険なパス・参照不整合は既存作品を変更せず拒否する",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-archive.spec.ts",
+            "line": 35,
+            "end_line": 46,
+            "callback_sha256": "fa5580e330d082a7c7e7ca930930b1779d2d7881bd63ffeac3f544f8a919b752",
+            "callback_source": "await navigate(page, /^作品・保存/); await page.getByRole('tab', { name: '完全保存・復元', exact: true }).click(); const before = await authorFingerprint(page), assetsBefore = await durableAssets(page), original = await backup(page);\n    const rewrite = (mutate: (files: Record<string, Uint8Array>) => void) => { const files = unzipSync(downloaded); mutate(files); return zipSync(files, { level: 0 }); };\n    const bad: { name: string; bytes: Uint8Array; reason: RegExp }[] = [\n      { name: 'payload-hash.scenario', bytes: rewrite(files => { files['data/project.json'][4] ^= 1; }), reason: /HASH_MISMATCH|SHA-256|ハッシュ/ },\n      { name: 'unsupported-reader.scenario', bytes: rewrite(files => { const manifest = JSON.parse(new TextDecoder().decode(files['manifest.json'])); manifest.minimumReaderVersion = '99.0.0'; files['manifest.json'] = strToU8(JSON.stringify(manifest)); }), reason: /新しいアプリ|FORMAT_UNSUPPORTED/ },\n      { name: 'unsafe-path.scenario', bytes: rewrite(files => { files['../outside.json'] = strToU8('{}'); }), reason: /パス|ARCHIVE_INVALID/ },\n      { name: 'broken-reference.scenario', bytes: rewrite(files => { const source = JSON.parse(new TextDecoder().decode(files['data/project.json'])); source.entities.find((e: { id: string }) => e.id === event.id).data.locationId = newId(); files['data/project.json'] = strToU8(JSON.stringify(source)); const manifest = JSON.parse(new TextDecoder().decode(files['manifest.json'])); const row = manifest.files.find((f: { path: string }) => f.path === 'data/project.json'); row.byteSize = files['data/project.json'].length; row.sha256 = createHash('sha256').update(files['data/project.json']).digest('hex'); files['manifest.json'] = strToU8(JSON.stringify(manifest)); }), reason: /参照|VALIDATION_FAILED/ },\n    ];\n    for (const input of bad) { await page.getByLabel('保存ファイルを選ぶ', { exact: true }).setInputFiles({ name: input.name, mimeType: 'application/zip', buffer: Buffer.from(input.bytes) }); await expect(page.locator('.backup-page').getByRole('alert')).toContainText(input.reason); expect(await authorFingerprint(page)).toBe(before); expect(await durableAssets(page)).toBe(assetsBefore); await attachObservation(info, `AT-B12-rejected-${input.name}`, { archiveSha256: createHash('sha256').update(input.bytes).digest('hex'), visibleReason: await page.locator('.backup-page').getByRole('alert').textContent(), unchangedAuthorRecords: true, unchangedAssetBytes: true }); }\n    await page.reload(); const after = await backup(page); expect(after.project).toEqual(original.project); expect(after.assets.map(asset => ({ path: asset.path, hash: asset.contentHash, bytes: Array.from(asset.bytes) }))).toEqual(original.assets.map(asset => ({ path: asset.path, hash: asset.contentHash, bytes: Array.from(asset.bytes) })));"
+          },
+          "planned_direct_check": "同じbytes由来のhash破損/未対応reader/危険パス/欠落参照を通常入力で拒否し正本と素材bytesを比較。",
+          "observations": []
+        }
+      ]
+    },
+    {
+      "id": "AT-B13",
+      "original_case": {
+        "id": "AT-B13",
+        "requirement_ids": [
+          "REQ-B13"
+        ],
+        "package_id": "WP10",
+        "given": "古い出来事を後の回想で示す構成",
+        "when": "回想の提示位置を変更する",
+        "then": "世界時間を変えず読者の開示順だけ変わる",
+        "negative_or_edge": "場面の並べ替えを出来事の日付変更として保存しない"
+      },
+      "test": {
+        "file": "tests/e2e/ap04-original-bm-author.spec.ts",
+        "line": 48,
+        "title": "AT-B13 古い出来事の回想を章内で並替え、読者の提示順だけを変え世界日時は保持する"
+      },
+      "result": "not_run",
+      "clauses": [
+        {
+          "name": "given",
+          "original": "古い出来事を後の回想で示す構成",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-author.spec.ts",
+            "line": 50,
+            "end_line": 50,
+            "callback_sha256": "1dc46d220bb19ef709994ab8277dcb4a029d33f004719782ba712392db25fe30",
+            "callback_source": "await given(page, info, 'AT-B13', p); await sceneStructure(page); await page.getByLabel('物語の並べ方', { exact: true }).selectOption('chapter'); await expect(page.locator(`.story-lane[data-lane-id=\"${chapter.id}\"] [data-scene-id]`).first()).toHaveAttribute('data-scene-id', first.id);"
+          },
+          "planned_direct_check": "古い出来事を後の回想として提示する二場面の章。",
+          "observations": []
+        },
+        {
+          "name": "when",
+          "original": "回想の提示位置を変更する",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-author.spec.ts",
+            "line": 51,
+            "end_line": 51,
+            "callback_sha256": "aca3e72c198e5964e0ef8e35f11c869b6e0297f5f9fd544ceaccb37b66aadd46",
+            "callback_source": "await page.locator(`[data-scene-id=\"${flashback.id}\"]`).getByRole('button', { name: '前へ', exact: true }).click();"
+          },
+          "planned_direct_check": "章内の前へ操作で提示順のみ保存。",
+          "observations": []
+        },
+        {
+          "name": "then",
+          "original": "世界時間を変えず読者の開示順だけ変わる",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-author.spec.ts",
+            "line": 52,
+            "end_line": 52,
+            "callback_sha256": "ad83e70d381054a07f214cb3fef893b5bc28c6cff01c085360f765ba01714130",
+            "callback_source": "await expect(page.locator(`.story-lane[data-lane-id=\"${chapter.id}\"] [data-scene-id]`).first()).toHaveAttribute('data-scene-id', flashback.id); await page.getByRole('tab', { name: '章の試読', exact: true }).click(); await page.getByRole('button', { name: '記録付き読書を始める', exact: true }).click(); await page.getByRole('button', { name: '次の場面を提示', exact: true }).click(); await expect(page.locator('.chapter-reading-presented')).toContainText('古い出来事を後から読む。');"
+          },
+          "planned_direct_check": "一覧のscene ID順と実記録付き読書の本文を読む。",
+          "observations": []
+        },
+        {
+          "name": "negative_or_edge",
+          "original": "場面の並べ替えを出来事の日付変更として保存しない",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-author.spec.ts",
+            "line": 53,
+            "end_line": 53,
+            "callback_sha256": "1311744d9f304ae13f0e00c75b9bc25e9bdfc50fe939f634d0a2dfd3de72f820",
+            "callback_source": "await page.reload(); const saved = await backup(page); expect(findEntity(saved.project, chapter.id, 'chapter').data.sceneIds).toEqual([flashback.id, first.id]); expect(findEntity(saved.project, oldEvent.id, 'event').data.time).toEqual(oldEvent.data.time); expect(findEntity(saved.project, currentEvent.id, 'event').data.time).toEqual(currentEvent.data.time); for (const s of [first, flashback]) expect(findEntity(saved.project, s.id, 'scene').data.eventIds).toEqual(s.data.eventIds); await attachObservation(info, 'AT-B13-observed', { chapterId: chapter.id, sceneOrder: [flashback.id, first.id], retainedWorldTimes: [oldEvent.data.time, currentEvent.data.time] });"
+          },
+          "planned_direct_check": "冷復元で章順は変更、二出来事の世界日時/eventIdsは原値であることを比較。",
+          "observations": []
+        }
+      ]
+    },
+    {
+      "id": "AT-B14",
+      "original_case": {
+        "id": "AT-B14",
+        "requirement_ids": [
+          "REQ-B14"
+        ],
+        "package_id": "WP12",
+        "given": "鍵を得る道と得ない道が合流する",
+        "when": "二経路で同じ合流先へ進む",
+        "then": "所持状態の違いを保ったまま到着する",
+        "negative_or_edge": "選択肢ゼロや不正な効果は終端と区別し、途中までの更新を残さない"
+      },
+      "test": {
+        "file": "tests/e2e/ap04-original-bm-runtime.spec.ts",
+        "line": 6,
+        "title": "AT-B14 鍵取得と未取得の二経路で同じ合流先へ進み、選択肢ゼロと不正効果を終端と区別する"
+      },
+      "result": "not_run",
+      "clauses": [
+        {
+          "name": "given",
+          "original": "鍵を得る道と得ない道が合流する",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-runtime.spec.ts",
+            "line": 9,
+            "end_line": 9,
+            "callback_sha256": "f16499f7870b983d62c97c41a57ed5032c8bf84c9a1fa15767bdfc0f40b14cf8",
+            "callback_source": "await given(page, info, 'AT-B14', p); await reader(page); await page.getByLabel('試読の開始点', { exact: true }).selectOption(entry.id); await page.getByRole('button', { name: '試読を始める', exact: true }).click();"
+          },
+          "planned_direct_check": "鍵取得/未取得で同じ合流先へ至る二択、選択肢ゼロ、不正な更新効果群。",
+          "observations": []
+        },
+        {
+          "name": "when",
+          "original": "二経路で同じ合流先へ進む",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-runtime.spec.ts",
+            "line": 10,
+            "end_line": 12,
+            "callback_sha256": "1555ccde2f90a72b43959ff81d66394883273d517b51e01b477607da7391bb46",
+            "callback_source": "await page.getByRole('button', { name: '鍵を得る道', exact: true }).click(); await expect(page.locator('.reader-sheet h2')).toHaveText(merge.name); await expect(page.locator('.reader-state-counts')).toContainText('1個'); await page.getByRole('button', { name: '一手戻る', exact: true }).click(); await page.getByRole('button', { name: '鍵を得ない道', exact: true }).click();"
+          },
+          "planned_direct_check": "二経路を通常試読で選んで巻戻す。",
+          "observations": []
+        },
+        {
+          "name": "then",
+          "original": "所持状態の違いを保ったまま到着する",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-runtime.spec.ts",
+            "line": 13,
+            "end_line": 13,
+            "callback_sha256": "8ec963f1bda2c9c1c0afb55f523a9df2c8f8be73fc78001b5f819054ac3b8f8a",
+            "callback_source": "await expect(page.locator('.reader-sheet h2')).toHaveText(merge.name); await expect(page.locator('.reader-state-counts')).toContainText('0個'); await attachObservation(info, 'AT-B14-merge', { mergeId: merge.id, acquiredPathItems: 1, unacquiredPathItems: 0 });"
+          },
+          "planned_direct_check": "同じ合流先の名称と0/1所持数を直接読む。",
+          "observations": []
+        },
+        {
+          "name": "negative_or_edge",
+          "original": "選択肢ゼロや不正な効果は終端と区別し、途中までの更新を残さない",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-runtime.spec.ts",
+            "line": 14,
+            "end_line": 18,
+            "callback_sha256": "742cf111acca900a1127bd4cfb78f6729cf3a01af43905574f8199e350b6a35a",
+            "callback_source": "await page.getByRole('button', { name: '一手戻る', exact: true }).click(); await page.getByRole('button', { name: '選択肢ゼロへ', exact: true }).click(); await expect(page.locator('.reader-trial-heading')).toContainText('進行不可'); await expect(page.locator('.reader-trial-heading')).not.toContainText('意図した終端'); await page.getByRole('button', { name: '一手戻る', exact: true }).click();\n    const stateBefore = await page.locator('.reader-state-counts').textContent(); await page.getByRole('button', { name: '不正効果を試す', exact: true }).click(); await expect(page.locator('.reader-page')).toContainText('物品が不足'); await expect(page.locator('.reader-trial-heading')).not.toContainText('意図した終端'); await expect(page.locator('.runtime-variable').filter({ hasText: counter.name })).toContainText('0'); expect(await page.locator('.reader-state-counts').textContent()).toBe(stateBefore);\n    const saved = await backup(page); expect(findEntity(saved.project, counter.id, 'variable').data.initial).toEqual({ type: 'integer', value: 0 }); expect(saved.project.entities.filter(e => e.kind === 'trace')).toEqual([]);"
+          },
+          "planned_direct_check": "選択肢ゼロを進行不可として読み、不正効果群を拒否し値/状態/作者初期値不変を比較。",
+          "observations": []
+        }
+      ]
+    },
+    {
+      "id": "AT-B15",
+      "original_case": {
+        "id": "AT-B15",
+        "requirement_ids": [
+          "REQ-B15"
+        ],
+        "package_id": "WP11",
+        "given": "型の異なる状態がある",
+        "when": "条件を組み立て更新する",
+        "then": "値と更新元を確認できる",
+        "negative_or_edge": "未定義の値を暗黙に偽またはゼロにせず未確認と表示する"
+      },
+      "test": {
+        "file": "tests/e2e/ap04-original-bm-runtime.spec.ts",
+        "line": 21,
+        "title": "AT-B15 異なる型の状態で条件と更新をUI組立し、値・更新元と未定義値の未確認を区別する"
+      },
+      "result": "not_run",
+      "clauses": [
+        {
+          "name": "given",
+          "original": "型の異なる状態がある",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-runtime.spec.ts",
+            "line": 24,
+            "end_line": 24,
+            "callback_sha256": "a73ba6024d013c59c0ff9053d577a000e57e96e03b365e5ff39e58aa6617c0cf",
+            "callback_source": "expect(new Set([flag.data.valueType, amount.data.valueType, stage.data.valueType]).size).toBe(3); await given(page, info, 'AT-B15', p);"
+          },
+          "planned_direct_check": "boolean/integer/enumと理由付きunknownの状態辞書・更新効果。",
+          "observations": []
+        },
+        {
+          "name": "when",
+          "original": "条件を組み立て更新する",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-runtime.spec.ts",
+            "line": 25,
+            "end_line": 25,
+            "callback_sha256": "ad66a84eb5b36e3f2407431ecaf64ecf41c0c92f748b5792860b30dbd99e9d8a",
+            "callback_source": "await openEntity(page, 'flow_edge', edge.name); await editData(page, { ...edge.data, condition: { op: 'all', children: [{ op: 'compare', variableId: flag.id, comparator: 'eq', value: { type: 'boolean', value: true } }, { op: 'compare', variableId: amount.id, comparator: 'ge', value: { type: 'integer', value: 2 } }, { op: 'compare', variableId: stage.id, comparator: 'eq', value: { type: 'enum', value: 'active' } }] } }); await reader(page); await page.getByLabel('試読の開始点', { exact: true }).selectOption(entry.id); await page.getByRole('button', { name: '試読を始める', exact: true }).click();"
+          },
+          "planned_direct_check": "詳細データUIで三型比較条件を組立て、通常試読を開始。",
+          "observations": []
+        },
+        {
+          "name": "then",
+          "original": "値と更新元を確認できる",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-runtime.spec.ts",
+            "line": 27,
+            "end_line": 30,
+            "callback_sha256": "6582ae79a19c21a04b62714e7c91cf6c1de8c70089aed7efddeb4ea2c21260a6",
+            "callback_source": "await page.getByRole('button', { name: '三つの型を確認して更新', exact: true }).click(); await expect(page.locator('.runtime-variable').filter({ hasText: amount.name })).toContainText('3'); await expect(page.locator('.runtime-variable').filter({ hasText: flag.name })).toContainText('true'); await expect(page.locator('.runtime-variable').filter({ hasText: stage.name })).toContainText('active'); await page.getByRole('button', { name: '経路を記録', exact: true }).click(); await expect(page.getByRole('button', { name: '一手戻る', exact: true })).toBeEnabled();\n    const saved = await backup(page), trace = saved.project.entities.find(e => e.kind === 'trace'); if (!trace || trace.kind !== 'trace') throw new Error('更新元付き経路がありません'); const step = trace.data.steps[0]; expect(step.edgeIds).toContain(edge.id); expect(step.before.variableValues[amount.id]).toEqual({ type: 'integer', value: 2 }); expect(step.after.variableValues[amount.id]).toEqual({ type: 'integer', value: 3 }); expect(findEntity(saved.project, edge.id, 'flow_edge').data.effectIds).toEqual([effect.id]); await openEntity(page, 'variable', amount.name); await page.locator('.references-section').getByRole('button', { name: new RegExp(effect.name) }).click(); await expect(page.locator('#entity-name')).toHaveValue(effect.name); await attachObservation(info, 'AT-B15-observed', { traceId: trace.id, updateEdgeId: edge.id, updateEffectId: effect.id, valuesBefore: step.before.variableValues, valuesAfter: step.after.variableValues });"
+          },
+          "planned_direct_check": "三型の試読値、記録before/after、edge/effect IDと状態の逆参照を確認。",
+          "observations": []
+        },
+        {
+          "name": "negative_or_edge",
+          "original": "未定義の値を暗黙に偽またはゼロにせず未確認と表示する",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-runtime.spec.ts",
+            "line": 26,
+            "end_line": 26,
+            "callback_sha256": "ed4ddf090e779ded9a3ac3982a3da43cd91491bde6064bbaaa051f11d0a2112c",
+            "callback_source": "const choice = page.locator('.reader-choice').filter({ hasText: '未定義を比較する道' }); await expect(choice).toContainText('未確認'); await expect(choice).toBeDisabled(); await expect(page.locator('.runtime-variable').filter({ hasText: unknown.name })).toContainText('不明（初期値を未定義）');"
+          },
+          "planned_direct_check": "unknown比較の選択肢が未確認disabledで理由付き不明値として表示される。",
+          "observations": []
+        }
+      ]
+    },
+    {
+      "id": "AT-B16",
+      "original_case": {
+        "id": "AT-B16",
+        "requirement_ids": [
+          "REQ-B16"
+        ],
+        "package_id": "WP13",
+        "given": "二つの選択肢と効果がある",
+        "when": "片方へ進み戻って他方へ進む",
+        "then": "所持品・知識・既読・抽選状態を巻き戻した結果で進行する",
+        "negative_or_edge": "試し読みの操作で作者の正本や公開版を上書きしない"
+      },
+      "test": {
+        "file": "tests/e2e/ap04-original-bm-runtime.spec.ts",
+        "line": 33,
+        "title": "AT-B16 抽選した一方から戻り他方へ進み、所持品・知識・既読・抽選を巻戻して正本と公開版を保つ"
+      },
+      "result": "not_run",
+      "clauses": [
+        {
+          "name": "given",
+          "original": "二つの選択肢と効果がある",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-runtime.spec.ts",
+            "line": 37,
+            "end_line": 37,
+            "callback_sha256": "e528de3c34c6930b1a9b22d0ed5a1aa39b090a6ecfe52ba9a16ab5c6f16048f6",
+            "callback_source": "await given(page, info, 'AT-B16', p); await reader(page); await page.getByLabel('試読の開始点', { exact: true }).selectOption(entry.id); await page.getByRole('button', { name: '試読を始める', exact: true }).click();"
+          },
+          "planned_direct_check": "二択、所持品効果、保有者/出所/根拠付き知識、原公開版。",
+          "observations": []
+        },
+        {
+          "name": "when",
+          "original": "片方へ進み戻って他方へ進む",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-runtime.spec.ts",
+            "line": 39,
+            "end_line": 39,
+            "callback_sha256": "e23c7f58055f212f7e643849b4fa655ad162b0a03120d18c458dda05d8910ff1",
+            "callback_source": "await page.getByRole('button', { name: '真の選択肢から抽選', exact: true }).click(); firstLeft = (await page.locator('.reader-sheet h2').textContent()) === leftScene.name; await expect(page.locator('.reader-state-counts')).toContainText('1個'); await expect(page.locator('.reader-state-counts')).toContainText('1件'); await page.getByRole('button', { name: '一手戻る', exact: true }).click(); expect(await page.locator('.reader-state-counts').textContent()).toBe(stateBefore); await page.getByRole('button', { name: firstLeft ? '右へ進む' : '左へ進む', exact: true }).click();"
+          },
+          "planned_direct_check": "真の選択肢から抽選、巻戻し、反対の選択肢へ進む。",
+          "observations": []
+        },
+        {
+          "name": "then",
+          "original": "所持品・知識・既読・抽選状態を巻き戻した結果で進行する",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-runtime.spec.ts",
+            "line": 41,
+            "end_line": 44,
+            "callback_sha256": "aa7389fbf8970a76606332c148e63c9c9ab5decd43da59a674a16e8adc4c6149",
+            "callback_source": "await expect(page.locator('.reader-sheet')).toContainText(firstLeft ? '右側だけを読む。' : '左側だけを読む。'); await page.getByRole('button', { name: '経路を記録', exact: true }).click(); await expect(page.getByRole('button', { name: '一手戻る', exact: true })).toBeEnabled();\n    const saved = await backup(page), trace = saved.project.entities.find(e => e.kind === 'trace'); if (!trace || trace.kind !== 'trace') throw new Error('巻戻後の経路がありません'); expect(trace.data.steps).toHaveLength(1); const step = trace.data.steps[0]; expect(step.edgeIds).toEqual([firstLeft ? rightEdge.id : leftEdge.id]); expect(step.before.itemInstances).toEqual([]); expect(step.before.assertions).toEqual([]); expect(step.before.rngPosition).toBe(0); expect(step.after.rngPosition).toBe(0); expect(step.after.assertions).toMatchObject([{ assertionId: fact.id, holderId: holder.id, sourceEffectId: learn.id }]); expect(step.after.itemInstances).toHaveLength(1); expect(step.after.seenIds).not.toContain(firstLeft ? leftScene.id : rightScene.id); expect(saved.project.snapshots.slice(0, p.snapshots.length)).toEqual(p.snapshots); for (const e of p.entities) expect(findEntity(saved.project, e.id, e.kind).data).toEqual(e.data); await attachObservation(info, 'AT-B16-observed', { firstLeft, secondEdgeId: step.edgeIds[0], before: step.before, after: step.after, publicHashes: p.snapshots.map(s => s.contentHash) });"
+          },
+          "planned_direct_check": "反対本文と保存traceの一手だけを確認し品/知識/既読/rngのbefore/afterを比較。",
+          "observations": []
+        },
+        {
+          "name": "negative_or_edge",
+          "original": "試し読みの操作で作者の正本や公開版を上書きしない",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-runtime.spec.ts",
+            "line": 40,
+            "end_line": 40,
+            "callback_sha256": "dc7d96fde6d2e7ed5d6d6c853529279d79f19e664b32c382a4f1eae5daed237d",
+            "callback_source": "expect(await authorFingerprint(page)).toBe(nativeBefore);"
+          },
+          "planned_direct_check": "試読前後の作者正本fingerprint、全元data、公開snapshotのhash/contentが不変。",
+          "observations": []
+        }
+      ]
+    },
+    {
+      "id": "AT-B17",
+      "original_case": {
+        "id": "AT-B17",
+        "requirement_ids": [
+          "REQ-B17"
+        ],
+        "package_id": "WP15",
+        "given": "嘘の証言と真相がある",
+        "when": "誰がどの経路で聞いたか登録する",
+        "then": "真偽・出所・知っている範囲を別々に確認できる",
+        "negative_or_edge": "同じ場面に居るだけで真相を全員へ伝播しない"
+      },
+      "test": {
+        "file": "tests/e2e/ap04-original-bm-world-narrative.spec.ts",
+        "line": 6,
+        "title": "AT-B17 嘘の証言を聞く経路だけで一人に信念を取得させ、真相・出所と同席者の未取得を分ける"
+      },
+      "result": "not_run",
+      "clauses": [
+        {
+          "name": "given",
+          "original": "嘘の証言と真相がある",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-world-narrative.spec.ts",
+            "line": 9,
+            "end_line": 9,
+            "callback_sha256": "9a6a292790971c9529c52d626e0f14aa6890aae48e8478fc4e2f2fee8a93e7dd",
+            "callback_source": "expect(truth.data.value).not.toEqual(testimony.data.value); await given(page, info, 'AT-B17', p);"
+          },
+          "planned_direct_check": "真値trueと嘘証言false、話者/取得者/同席者を同じ場面に置く。",
+          "observations": []
+        },
+        {
+          "name": "when",
+          "original": "誰がどの経路で聞いたか登録する",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-world-narrative.spec.ts",
+            "line": 10,
+            "end_line": 10,
+            "callback_sha256": "2c820d642fd3f88eee648f2193b2e6fb29b770d7bd5f97db958e3f79b743bd9c",
+            "callback_source": "await openEntity(page, 'assertion', belief.name); await editData(page, { ...belief.data, holderId: listener.id, sourceIds: [source.id, testimony.id], evidenceLocation: { entityId: entry.id }, reason: '証言を聞く経路の取得効果でこの人物だけに登録する' }); await reader(page); await page.getByLabel('試読の開始点', { exact: true }).selectOption(entry.id); await page.getByRole('button', { name: '試読を始める', exact: true }).click();"
+          },
+          "planned_direct_check": "詳細UIで取得者、出所、入口根拠を登録し、その人物だけの取得効果を持つ経路を試読。",
+          "observations": []
+        },
+        {
+          "name": "then",
+          "original": "真偽・出所・知っている範囲を別々に確認できる",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-world-narrative.spec.ts",
+            "line": 12,
+            "end_line": 15,
+            "callback_sha256": "d38895f2f7fdb346975a0b0288455ced62c6f728f2b52915cc80ca980c3342b5",
+            "callback_source": "const claims = page.getByRole('region', { name: '発言と提示時点の認識', exact: true }); await claims.locator('details').filter({ hasText: line.name }).locator('summary').first().click(); await expect(claims).toContainText('意図した嘘'); await expect(claims.getByRole('button', { name: new RegExp(`作者の真実.*${truth.name}.*true`) })).toBeVisible(); await expect(claims.getByRole('button', { name: new RegExp(`証言.*${testimony.name}.*false`) })).toBeVisible(); await expect(claims.getByRole('button', { name: new RegExp(`人物の信念.*${belief.name}.*false`) })).toBeVisible(); await expect(claims.getByRole('button', { name: `出所 · ${source.name}`, exact: true }).first()).toBeVisible();\n    await page.getByRole('button', { name: '証言を聞く経路', exact: true }).click(); await expect(page.locator('.reader-state-counts dd').nth(1)).toHaveText('1件'); await page.getByRole('button', { name: '経路を記録', exact: true }).click(); await expect(page.getByRole('button', { name: '一手戻る', exact: true })).toBeEnabled(); const saved = await backup(page), trace = saved.project.entities.find(e => e.kind === 'trace'); if (!trace || trace.kind !== 'trace') throw new Error('聞いた経路の記録がありません'); const step = trace.data.steps[0]; expect(step.edgeIds).toEqual([hearing.id]); expect(step.after.assertions).toMatchObject([{ assertionId: belief.id, holderId: listener.id, sourceEffectId: learn.id, truth: 'true' }]); expect(step.after.assertions).toHaveLength(1); expect(step.after.assertions.some(a => a.assertionId === truth.id || a.holderId === bystander.id || a.holderId === liar.id)).toBe(false); expect(findEntity(saved.project, truth.id, 'assertion').data.value).toEqual({ type: 'boolean', value: true }); expect(findEntity(saved.project, testimony.id, 'assertion').data.value).toEqual({ type: 'boolean', value: false }); expect(findEntity(saved.project, belief.id, 'assertion').data.sourceIds).toEqual([source.id, testimony.id]); expect(findEntity(saved.project, event.id, 'event').data.participants).toEqual(event.data.participants); await attachObservation(info, 'AT-B17-truth-provenance-scope', { traceId: trace.id, hearingEdgeId: hearing.id, sourceIds: [source.id, testimony.id], acquired: step.after.assertions, unchangedTruth: truth.data.value, unchangedTestimony: testimony.data.value, bystanderId: bystander.id });"
+          },
+          "planned_direct_check": "真実/証言/信念の値、出所ボタン、記録edge・holder・sourceEffect・sourceIDsを別々に確認。",
+          "observations": []
+        },
+        {
+          "name": "negative_or_edge",
+          "original": "同じ場面に居るだけで真相を全員へ伝播しない",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-world-narrative.spec.ts",
+            "line": 11,
+            "end_line": 11,
+            "callback_sha256": "2add0e7c6545ee8968dff7fbb6b391bb365f30ffe68f951e1ae0da73944a94d7",
+            "callback_source": "await expect(page.locator('.reader-state-counts dd').nth(1)).toHaveText('0件'); await page.getByRole('button', { name: '証言を聞かない経路', exact: true }).click(); await expect(page.locator('.reader-state-counts dd').nth(1)).toHaveText('0件'); await page.getByRole('button', { name: '一手戻る', exact: true }).click(); await expect(page.locator('.reader-state-counts dd').nth(1)).toHaveText('0件');"
+          },
+          "planned_direct_check": "聞かない経路の知識0、聞く経路の取得者一人のみ、作者真実/同席参加者data不変を確認。",
+          "observations": []
+        }
+      ]
+    },
+    {
+      "id": "AT-B18",
+      "original_case": {
+        "id": "AT-B18",
+        "requirement_ids": [
+          "REQ-B18"
+        ],
+        "package_id": "WP09",
+        "given": "人物が途中で移動し所属を変える",
+        "when": "変化前後と別経路を選ぶ",
+        "then": "指定した時点と経路の状態が表示される",
+        "negative_or_edge": "順序や経路が不明な場合は複数候補または不明とし唯一の状態を作らない"
+      },
+      "test": {
+        "file": "tests/e2e/ap04-original-bm-world-narrative.spec.ts",
+        "line": 18,
+        "title": "AT-B18 移動と所属変更の前後を二つの経路記録で表示し、経路なしと時点なしでは複数候補を保持する"
+      },
+      "result": "not_run",
+      "clauses": [
+        {
+          "name": "given",
+          "original": "人物が途中で移動し所属を変える",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-world-narrative.spec.ts",
+            "line": 24,
+            "end_line": 24,
+            "callback_sha256": "2fc6ebe85f7f08835ac947d0b22780f1b60584fe2646e8a1bba0f07d693cbaa1",
+            "callback_source": "await given(page, info, 'AT-B18', p); await worldHistory(page); await page.getByLabel('状態を確認する対象', { exact: true }).selectOption(person.id);"
+          },
+          "planned_direct_check": "tick10で現在地/所属が変わり、二経路で異なる変更後状態を持つ作品。",
+          "observations": []
+        },
+        {
+          "name": "when",
+          "original": "変化前後と別経路を選ぶ",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-world-narrative.spec.ts",
+            "line": 26,
+            "end_line": 26,
+            "callback_sha256": "22fcf7f832446c306c514f84e9cf83a0fb02aa56094108ec2b5b420e028826d2",
+            "callback_source": "await select('5', preparedLeft.checkpoint.id); await expect(values()).toContainText(oldPlace.name); await expect(values()).toContainText(oldGroup.name); await expect(values()).not.toContainText(leftPlace.name); await select('15', preparedLeft.checkpoint.id); await expect(values()).toContainText(leftPlace.name); await expect(values()).toContainText(leftGroup.name); await expect(values()).not.toContainText(oldPlace.name);"
+          },
+          "planned_direct_check": "世界履歴UIで5→15tickと経路Aの記録を選ぶ。",
+          "observations": []
+        },
+        {
+          "name": "then",
+          "original": "指定した時点と経路の状態が表示される",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-world-narrative.spec.ts",
+            "line": 27,
+            "end_line": 27,
+            "callback_sha256": "a90bace836fe8ce45214ef0d0de921d60fd258797ea9c13af66cc3e8e346fa25",
+            "callback_source": "await select('15', preparedRight.checkpoint.id); await expect(values()).toContainText(rightPlace.name); await expect(values()).toContainText(rightGroup.name); await expect(values()).not.toContainText(leftPlace.name); await expect(values()).not.toContainText(oldGroup.name); expect(await authorFingerprint(page)).toBe(native); await attachObservation(info, 'AT-B18-selected-states', { before: { tick: '5', placeId: oldPlace.id, groupId: oldGroup.id }, afterA: { tick: '15', checkpointId: preparedLeft.checkpoint.id, placeId: leftPlace.id, groupId: leftGroup.id }, afterB: { tick: '15', checkpointId: preparedRight.checkpoint.id, placeId: rightPlace.id, groupId: rightGroup.id } });"
+          },
+          "planned_direct_check": "同tick15で経路Bの記録を選び別の現在地/所属を読む。",
+          "observations": []
+        },
+        {
+          "name": "negative_or_edge",
+          "original": "順序や経路が不明な場合は複数候補または不明とし唯一の状態を作らない",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-world-narrative.spec.ts",
+            "line": 28,
+            "end_line": 28,
+            "callback_sha256": "04316abec0fb61c57cbd72ca70d6c7646598ced2787cfc42d22504b689902b5c",
+            "callback_source": "await select('15', ''); await expect(values()).toContainText(/複数|不明|未確認/); await expect(values()).toContainText(leftPlace.name); await expect(values()).toContainText(rightPlace.name); await expect(values()).toContainText(leftGroup.name); await expect(values()).toContainText(rightGroup.name); await select('', ''); await expect(values()).toContainText(oldPlace.name); await expect(values()).toContainText(leftPlace.name); await expect(values()).toContainText(rightPlace.name); await expect(values()).toContainText(/複数|不明|未確認/); expect(await authorFingerprint(page)).toBe(native);"
+          },
+          "planned_direct_check": "経路なし/時点なしで両経路と変更前を候補に保持し、未確認表示/正本不変を確認。",
+          "observations": []
+        }
+      ]
+    },
+    {
+      "id": "AT-B19",
+      "original_case": {
+        "id": "AT-B19",
+        "requirement_ids": [
+          "REQ-B19"
+        ],
+        "package_id": "WP15",
+        "given": "任意の手掛かりと続編用の謎がある",
+        "when": "今作の回収状況を表示する",
+        "then": "必須の未回収と意図した持ち越しを分ける",
+        "negative_or_edge": "プレイヤーに提示しただけで理解・推理済みと判定しない"
+      },
+      "test": {
+        "file": "tests/e2e/ap04-original-bm-world-narrative.spec.ts",
+        "line": 31,
+        "title": "AT-B19 任意手掛かりの提示と今作必須未回収・続編持越しを区別し、理解や人物知識を認定しない"
+      },
+      "result": "not_run",
+      "clauses": [
+        {
+          "name": "given",
+          "original": "任意の手掛かりと続編用の謎がある",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-world-narrative.spec.ts",
+            "line": 33,
+            "end_line": 33,
+            "callback_sha256": "aed988668984fdcd96b96746177b60dbb87f4bf29c4565de3c0d0dfda1984029",
+            "callback_source": "await given(page, info, 'AT-B19', p); await reader(page); await page.getByLabel('試読の開始点', { exact: true }).selectOption(entry.id); await page.getByRole('button', { name: '試読を始める', exact: true }).click();"
+          },
+          "planned_direct_check": "必須にしていない任意clue、今作必須の未提示情報、続編policyの謎。",
+          "observations": []
+        },
+        {
+          "name": "when",
+          "original": "今作の回収状況を表示する",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-world-narrative.spec.ts",
+            "line": 34,
+            "end_line": 34,
+            "callback_sha256": "dcd1f65ee20b9c7f5d5c550c42f94dac7965493d4cf0feee2592c7d5508a718b",
+            "callback_source": "await expect(page.locator('.reader-sheet')).toContainText('壁に小さな印がある'); await page.getByRole('button', { name: '今作の終わりへ進む', exact: true }).click();"
+          },
+          "planned_direct_check": "宣言入口の任意clue本文を提示して終端へ進む。",
+          "observations": []
+        },
+        {
+          "name": "then",
+          "original": "必須の未回収と意図した持ち越しを分ける",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-world-narrative.spec.ts",
+            "line": 35,
+            "end_line": 37,
+            "callback_sha256": "ca7c2ccde7f7c8d0e313c0db6fd13ba863a07574182afd8d83bf92df43a4fbbb",
+            "callback_source": "const findings = page.locator('.foreshadow-check .analysis-finding'), mandatory = findings.filter({ hasText: '今作必須だが未提示の情報' }); await expect(mandatory).toContainText('確認候補'); await expect(mandatory).toContainText('今作で予定した回収が提示されていません'); await expect(mandatory).not.toContainText(clue.name); const sequelFinding = findings.filter({ hasText: '回収方針「sequel」' }); await expect(sequelFinding).toContainText('意図した終端'); await sequelFinding.getByRole('button', { name: '伏線を開く', exact: true }).click(); await expect(page.locator('#entity-name')).toHaveValue(sequel.name); await page.getByRole('button', { name: '詳細を閉じる', exact: true }).click();"
+          },
+          "planned_direct_check": "今作必須の確認候補とsequelの意図した持越しを別findingとして読み元謎へ戻る。",
+          "observations": []
+        },
+        {
+          "name": "negative_or_edge",
+          "original": "プレイヤーに提示しただけで理解・推理済みと判定しない",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-world-narrative.spec.ts",
+            "line": 38,
+            "end_line": 40,
+            "callback_sha256": "5158be4008ed9f04c065dfd7194bc0c11f6139613d9950295171fddcf80f59dc",
+            "callback_source": "await expect(page.locator('.foreshadow-check')).toContainText('読者の理解は判定しません'); await expect(page.locator('.reader-state-counts dd').nth(1)).toHaveText('0件'); await page.getByRole('button', { name: '経路を記録', exact: true }).click(); await expect(page.getByRole('button', { name: '一手戻る', exact: true })).toBeEnabled(); const saved = await backup(page), trace = saved.project.entities.find(e => e.kind === 'trace'); if (!trace || trace.kind !== 'trace') throw new Error('回収の提示記録がありません'); expect(trace.data.steps[0].before.seenIds).toContain(clue.id); expect(trace.data.steps[0].after.assertions).toEqual([]); expect(trace.data.steps[0].after.seenIds).not.toContain(missing.id); expect(findEntity(saved.project, optional.id, 'foreshadow').data.requiredInfo).toEqual([]); expect(findEntity(saved.project, required.id, 'foreshadow').data.resolutionPolicy).toBe('this_work'); expect(findEntity(saved.project, sequel.id, 'foreshadow').data.resolutionPolicy).toBe('sequel'); await attachObservation(info, 'AT-B19-presentation-only', { traceId: trace.id, presentedOptionalClueId: clue.id, missingRequiredId: missing.id, acquiredAssertions: trace.data.steps[0].after.assertions, requiredPolicy: 'this_work', carryPolicy: 'sequel' });"
+          },
+          "planned_direct_check": "理解は判定しない表示と知識0を読み、traceが任意clue既読・未提示必須未読・assertions空を保持。",
+          "observations": []
+        }
+      ]
+    },
+    {
+      "id": "AT-B20",
+      "original_case": {
+        "id": "AT-B20",
+        "requirement_ids": [
+          "REQ-B20"
+        ],
+        "package_id": "WP10",
+        "given": "目的が変化する人物",
+        "when": "変化の根拠となる場面を登録する",
+        "then": "変化前後と根拠へ移動できる",
+        "negative_or_edge": "役割を未入力の場面を作成不能にしない"
+      },
+      "test": {
+        "file": "tests/e2e/ap04-original-bm-author.spec.ts",
+        "line": 56,
+        "title": "AT-B20 目的が変わる人物へ根拠場面を登録し、変化前後と根拠へ移動し未入力役割の場面も保存する"
+      },
+      "result": "not_run",
+      "clauses": [
+        {
+          "name": "given",
+          "original": "目的が変化する人物",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-author.spec.ts",
+            "line": 59,
+            "end_line": 59,
+            "callback_sha256": "503d136e2cd8411fa48ef60ac2b4cd167f4dd2b8dcb80299172940d28016693f",
+            "callback_source": "await given(page, info, 'AT-B20', p); await openEntity(page, 'goal', goal.name);"
+          },
+          "planned_direct_check": "目的変更の前後内容と根拠場面、未入力roleの別場面。",
+          "observations": []
+        },
+        {
+          "name": "when",
+          "original": "変化の根拠となる場面を登録する",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-author.spec.ts",
+            "line": 60,
+            "end_line": 60,
+            "callback_sha256": "9168537f8c5ec6b870baf1dc053a46e5a3f13610e024d5adf1f3e4de99f434f6",
+            "callback_source": "await editData(page, { ...goal.data, evidenceSceneIds: [scene.id] });"
+          },
+          "planned_direct_check": "目的のevidenceSceneIdsを通常詳細UIで保存。",
+          "observations": []
+        },
+        {
+          "name": "then",
+          "original": "変化前後と根拠へ移動できる",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-author.spec.ts",
+            "line": 61,
+            "end_line": 64,
+            "callback_sha256": "949a7b64a4df4d16e76416df1b647205ab3365b669d45743a88ac2fd1f05aa2f",
+            "callback_source": "await sceneStructure(page); await page.getByLabel('物語の並べ方', { exact: true }).selectOption('character'); const lane = page.locator(`.story-lane[data-lane-id=\"${person.id}\"]`);\n    await expect(lane.getByRole('region', { name: `${scene.name}の人物変化` })).toContainText('友を救出する'); await expect(lane.getByRole('region', { name: `${scene.name}の人物変化` })).toContainText('友の死を知り復讐を選ぶ'); await lane.getByRole('button', { name: `${goal.name}の根拠場面 ${scene.name}を開く`, exact: true }).click(); await expect(page.locator('#entity-name')).toHaveValue(scene.name);"
+          },
+          "planned_direct_check": "人物構成の変化前後と根拠場面ボタンの元詳細を読む。",
+          "observations": []
+        },
+        {
+          "name": "negative_or_edge",
+          "original": "役割を未入力の場面を作成不能にしない",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-author.spec.ts",
+            "line": 65,
+            "end_line": 65,
+            "callback_sha256": "506eaac90ba7d4aa82df5d2319fa7cc804e0706d493d7eb0d2aee76cd106cf72",
+            "callback_source": "await openEntity(page, 'scene', unspecified.name); await editData(page, { ...unspecified.data, body: textToRichText('目的や役割を決める前でも書ける。') }); await page.reload(); const saved = await backup(page); expect(findEntity(saved.project, goal.id, 'goal').data.evidenceSceneIds).toEqual([scene.id]); expect(findEntity(saved.project, unspecified.id, 'scene').data.goals).toBeNull(); expect(findEntity(saved.project, unspecified.id, 'scene').data.body[0].text).toBe('目的や役割を決める前でも書ける。');"
+          },
+          "planned_direct_check": "役割未入力の本文を保存して冷復元し、目的根拠とnull未入力が保持される。",
+          "observations": []
+        }
+      ]
+    },
+    {
+      "id": "AT-B21",
+      "original_case": {
+        "id": "AT-B21",
+        "requirement_ids": [
+          "REQ-B21"
+        ],
+        "package_id": "WP06",
+        "given": "日付未定と相対日時の出来事がある",
+        "when": "先行出来事との日数制約を設定する",
+        "then": "確定していない範囲を表現し前後関係を確認できる",
+        "negative_or_edge": "循環する相対制約や存在しない日付は拒否または未解決とし、日時を捏造しない"
+      },
+      "test": {
+        "file": "tests/e2e/ap04-original-bm-timeline.spec.ts",
+        "line": 185,
+        "title": "AT-B21 未定日時からの日数範囲を保存し、相対循環と存在しない暦日で正本を変更しない"
+      },
+      "result": "not_run",
+      "clauses": [
+        {
+          "name": "given",
+          "original": "日付未定と相対日時の出来事がある",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-timeline.spec.ts",
+            "line": 189,
+            "end_line": 189,
+            "callback_sha256": "f999b7db2bdd5de12eeec66259aaaa7aa0a5c35c0d8369bc687034479d33e1f5",
+            "callback_source": "await given(page, info, 'AT-B21', p); expect(pending.data.time.mode).toBe('unknown'); expect(relative.data.time.mode).toBe('relative');"
+          },
+          "planned_direct_check": "日付unknownの先行eventとそこから2..4日のrelative event。",
+          "observations": []
+        },
+        {
+          "name": "when",
+          "original": "先行出来事との日数制約を設定する",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-timeline.spec.ts",
+            "line": 190,
+            "end_line": 192,
+            "callback_sha256": "d43ded3a3df4382b033d84a561e3287f8cdb6aaf70908989a88a5253fa3b04da",
+            "callback_source": "const modal = await openTime(pending.name, pending.id); await modal.getByRole('button', { name: '日時制約を追加', exact: true }).click(); await modal.getByLabel('日時制約1の種類', { exact: true }).selectOption('end_gap'); await modal.getByLabel('日時制約1の対象', { exact: true }).selectOption(relative.id); await modal.getByLabel('日時制約1の時間差の入力単位', { exact: true }).selectOption('day'); await modal.getByLabel('日時制約1の時間差の最小', { exact: true }).fill('2'); await modal.getByLabel('日時制約1の時間差の最大', { exact: true }).fill('4'); await modal.getByRole('button', { name: '変更前の影響を確認', exact: true }).click(); await modal.getByRole('button', { name: '差分を一括確定', exact: true }).click(); await expect(modal).toBeHidden();"
+          },
+          "planned_direct_check": "先行eventから後続eventへ2..4日end_gap制約を通常日時UI保存。",
+          "observations": []
+        },
+        {
+          "name": "then",
+          "original": "確定していない範囲を表現し前後関係を確認できる",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-timeline.spec.ts",
+            "line": 193,
+            "end_line": 196,
+            "callback_sha256": "9b5275c544983e201a08c22bcfcb15c2e7df6dd95df2abcee7b922579852f59e",
+            "callback_source": "const saved = await backup(page); expect(findEntity(saved.project, pending.id, 'event').data.time).toEqual(pending.data.time); expect(findEntity(saved.project, relative.id, 'event').data.time).toEqual(relative.data.time); expect(findEntity(saved.project, pending.id, 'event').data.constraints).toEqual([{ type: 'end_gap', targetEventId: relative.id, minimumTicks: '2', maximumTicks: '4' }]);\n    let modal = await openTime(relative.name, relative.id); await expect(modal.getByLabel('相対日時の基準', { exact: true })).toHaveValue(pending.id); await expect(modal.getByLabel('相対日時の差の最小', { exact: true })).toHaveValue('2'); await expect(modal.getByLabel('相対日時の差の最大', { exact: true })).toHaveValue('4'); await modal.getByRole('button', { name: '変更を中止', exact: true }).click(); modal = await openTime(pending.name, pending.id); await expect(modal.getByLabel('日時未定の理由', { exact: true })).toHaveValue('先行日付はまだ決めていない'); await modal.getByRole('button', { name: '変更を中止', exact: true }).click(); await attachObservation(info, 'AT-B21-range', { pending: findEntity(saved.project, pending.id, 'event').data, relative: findEntity(saved.project, relative.id, 'event').data });"
+          },
+          "planned_direct_check": "完全保存と再度開いたUIで未定理由/基準ID/2..4範囲を読み絶対日時を新設しない。",
+          "observations": []
+        },
+        {
+          "name": "negative_or_edge",
+          "original": "循環する相対制約や存在しない日付は拒否または未解決とし、日時を捏造しない",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-timeline.spec.ts",
+            "line": 197,
+            "end_line": 200,
+            "callback_sha256": "94d7db2b106ccb4fb780554d11733ae01eb0c619aafbd834bd0b3897f15998d9",
+            "callback_source": "const original = await authorFingerprint(page); let modal = await openTime(pending.name, pending.id); await modal.getByLabel('日時の種類', { exact: true }).selectOption('relative'); await modal.getByLabel('相対日時の基準', { exact: true }).selectOption(relative.id); await modal.getByRole('button', { name: '変更前の影響を確認', exact: true }).click(); await expect(modal).toContainText('循環'); await expect(modal.getByRole('button', { name: '差分を一括確定', exact: true })).toBeDisabled(); expect(await authorFingerprint(page)).toBe(original); await modal.getByRole('button', { name: '変更を中止', exact: true }).click();\n    modal = await openTime(pending.name, pending.id); await modal.getByLabel('日時の種類', { exact: true }).selectOption('instant'); await modal.getByRole('button', { name: '暦の年月日', exact: true }).click(); await modal.getByLabel('出来事の世界内tickの年', { exact: true }).fill('2025'); await modal.getByLabel('出来事の世界内tickの月', { exact: true }).fill('2'); await modal.getByLabel('出来事の世界内tickの日', { exact: true }).fill('30'); await expect(modal.getByRole('alert')).toContainText('暦に存在しない日付'); await expect(modal.getByRole('button', { name: '変更前の影響を確認', exact: true })).toBeDisabled(); expect(await authorFingerprint(page)).toBe(original); await modal.getByRole('button', { name: '変更を中止', exact: true }).click();"
+          },
+          "planned_direct_check": "相対循環の影響確認と2025-02-30の入力を拒否し、確定disabledと正本不変を確認。",
+          "observations": []
+        }
+      ]
+    },
+    {
+      "id": "AT-B22",
+      "original_case": {
+        "id": "AT-B22",
+        "requirement_ids": [
+          "REQ-B22"
+        ],
+        "package_id": "WP12",
+        "given": "会話とクエストと設定がある",
+        "when": "場面の前提と台詞へ関連付ける",
+        "then": "双方から根拠を追える",
+        "negative_or_edge": "クエストの完了と本文・実装の完成を一つの状態に統合しない"
+      },
+      "test": {
+        "file": "tests/e2e/ap04-original-bm-author.spec.ts",
+        "line": 68,
+        "title": "AT-B22 会話・クエスト・設定を前提と本文リンクへ関連付け、根拠を双方から追い完了状態を分ける"
+      },
+      "result": "not_run",
+      "clauses": [
+        {
+          "name": "given",
+          "original": "会話とクエストと設定がある",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-author.spec.ts",
+            "line": 70,
+            "end_line": 70,
+            "callback_sha256": "6b7a728fcf3d7a29664034f4f5f1fd6c230fe1adae88a7da6e555ad7dfb36a39",
+            "callback_source": "await given(page, info, 'AT-B22', p);"
+          },
+          "planned_direct_check": "台詞、クエスト状態、設定、前提のある場面、未完成実装task。",
+          "observations": []
+        },
+        {
+          "name": "when",
+          "original": "場面の前提と台詞へ関連付ける",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-author.spec.ts",
+            "line": 71,
+            "end_line": 74,
+            "callback_sha256": "357c10b2a02e212d4e73b631472dfdeea540db921642a7848d66568e85f3f5c1",
+            "callback_source": "await openEntity(page, 'flow_node', node.name); await editData(page, { ...node.data, gate: { op: 'compare', variableId: state.id, comparator: 'eq', value: { type: 'enum', value: 'active' } } });\n    await openEntity(page, 'dialogue_line', line.name); await editData(page, { ...line.data, text: [{ ...line.data.text[0], links: [{ start: 0, end: 2, target: { entityId: quest.id } }, { start: 3, end: 5, target: { entityId: lore.id } }] }] });"
+          },
+          "planned_direct_check": "前提条件と台詞→quest/loreの本文リンクを通常詳細UI保存。",
+          "observations": []
+        },
+        {
+          "name": "then",
+          "original": "双方から根拠を追える",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-author.spec.ts",
+            "line": 75,
+            "end_line": 80,
+            "callback_sha256": "00d03511d1bf706c3b8f1c66f7c9b67dc4f35dea796ac52c5d2e84cd4d322a96",
+            "callback_source": "for (const [target, label] of [[quest, '任務'], [lore, '伝承']] as const) {\n      await openEntity(page, 'dialogue_line', line.name); await page.getByRole('tab', { name: '確認表示', exact: true }).click(); await page.locator('.detail-panel').getByRole('button', { name: label, exact: true }).click(); await expect(page.locator('#entity-name')).toHaveValue(target.name); await page.locator('.references-section').getByRole('button', { name: new RegExp(line.name) }).click(); await expect(page.locator('#entity-name')).toHaveValue(line.name);\n    }\n    await openEntity(page, 'variable', state.name); await page.locator('.references-section').getByRole('button', { name: new RegExp(node.name) }).click(); await expect(page.locator('#entity-name')).toHaveValue(node.name);"
+          },
+          "planned_direct_check": "本文リンク/逆参照と状態→node逆参照で根拠を往復。",
+          "observations": []
+        },
+        {
+          "name": "negative_or_edge",
+          "original": "クエストの完了と本文・実装の完成を一つの状態に統合しない",
+          "result": "not_run",
+          "source": {
+            "file": "tests/e2e/ap04-original-bm-author.spec.ts",
+            "line": 81,
+            "end_line": 81,
+            "callback_sha256": "3ce57bf230391be3c10fc49734232c1f7bae460ca19ec418138a288bc2a745f8",
+            "callback_source": "await openEntity(page, 'variable', state.name); await editData(page, { ...state.data, initial: { type: 'enum', value: 'complete' } }); const saved = await backup(page); expect(findEntity(saved.project, state.id, 'variable').data.initial).toEqual({ type: 'enum', value: 'complete' }); expect(findEntity(saved.project, task.id, 'production_task').data.progress).toBe('todo'); expect(findEntity(saved.project, line.id, 'dialogue_line').status).toBe('confirmed'); expect(findEntity(saved.project, scene.id, 'scene').data.body).toEqual(scene.data.body); expect(findEntity(saved.project, task.id, 'production_task').data.stage).toBe('implementation'); await attachObservation(info, 'AT-B22-observed', { questId: quest.id, questState: 'complete', independentImplementationProgress: 'todo', preservedTextIds: [scene.id, line.id] });"
+          },
+          "planned_direct_check": "quest初期完了でも台詞採用/場面本文/task todoを別々に保持する実保存を確認。",
+          "observations": []
+        }
+      ]
+    }
+  ]
+}
