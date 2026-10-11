@@ -28,8 +28,8 @@
     "files": [
       {
         "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-        "bytes": 20866,
-        "sha256": "d48051ca1c56dce13e6ee878c944096f3a2c5f750af2683f87c6555054ed1e97"
+        "bytes": 24362,
+        "sha256": "9fd52ed9179c8bc43aaa271d0444f8239c49f9f3033485c19c1e244641045261"
       },
       {
         "file": "tests/e2e/ap04-original-helpers.ts",
@@ -47,7 +47,7 @@
         "sha256": "5b8f8f434c4f62cba658dd12473ea3e035c7a796693ebb218c95f7cefee26d74"
       }
     ],
-    "source_hashes_need_root_freeze_refresh": true
+    "source_hashes_need_root_freeze_refresh": false
   },
   "original_case": {
     "id": "AT-E12",
@@ -80,41 +80,41 @@
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 163,
+          "line": 174,
           "end_line": 174,
-          "excerpt_sha256": "aecdb9bf23f0d31134d6dff3c8b659648e42db42128a459ed78e55a6267d81c3",
-          "source_excerpt": "    await importComplete(page, url, bytes);\n    await page.evaluate(async () => { await navigator.serviceWorker.ready; });\n    await page.reload(); await expect.poll(() => page.evaluate(() => Boolean(navigator.serviceWorker.controller))).toBe(true);\n    await openEntity(page, 'scene', scene.name);\n    const initialName = `${scene.name}・未送信の編集😀`;\n    await page.locator('.detail-panel').getByLabel('名前', { exact: true }).fill(initialName);\n    await page.locator('.editor-footer').getByRole('button', { name: '保存する', exact: true }).click();\n    await expect(page.locator('.editor-save-state')).toContainText('端末内保存済み');\n    const pendingImage = await nativeImage(page);\n    expect(pendingImage.tables.outbox.length).toBeGreaterThan(0);\n    await attachGiven(info, 'AT-E12', bytes, { originalGiven: 'キャッシュ済みアプリと未送信作品', cachedController: true,\n      initialFixtureIsGenuineLegacy: true, pendingOperationIds: pendingImage.tables.outbox.map(row => (row as { operationId: string }).operationId), build });\n",
+          "excerpt_sha256": "6de975e4e5c178f5a671407c1705de3d21635448edc718b4fac2c8dc2434ff3a",
+          "source_excerpt": "    await importComplete(page, url, bytes);\n",
           "purpose": "Normal import, cached controller after cold reload, normal scene edit/save, real nonempty outbox, runtime given attachment."
         }
       ],
       "normal_operations": [
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 163,
+          "line": 174,
           "source": "await importComplete(page, url, bytes);",
           "kind": "normal_ui_or_reload"
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 165,
+          "line": 176,
           "source": "await page.reload(); await expect.poll(() => page.evaluate(() => Boolean(navigator.serviceWorker.controller))).toBe(true);",
           "kind": "normal_ui_or_reload"
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 166,
+          "line": 177,
           "source": "await openEntity(page, 'scene', scene.name);",
           "kind": "normal_ui_or_reload"
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 168,
+          "line": 179,
           "source": "await page.locator('.detail-panel').getByLabel('名前', { exact: true }).fill(initialName);",
           "kind": "normal_ui_or_reload"
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 169,
+          "line": 180,
           "source": "await page.locator('.editor-footer').getByRole('button', { name: '保存する', exact: true }).click();",
           "kind": "normal_ui_or_reload"
         }
@@ -128,19 +128,19 @@
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 165,
+          "line": 176,
           "source": "await page.reload(); await expect.poll(() => page.evaluate(() => Boolean(navigator.serviceWorker.controller))).toBe(true);",
           "kind": "planned_given_assertion"
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 170,
+          "line": 181,
           "source": "await expect(page.locator('.editor-save-state')).toContainText('端末内保存済み');",
           "kind": "planned_given_assertion"
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 172,
+          "line": 183,
           "source": "expect(pendingImage.tables.outbox.length).toBeGreaterThan(0);",
           "kind": "planned_given_assertion"
         }
@@ -168,32 +168,32 @@
       "sources": [
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 175,
-          "end_line": 191,
-          "excerpt_sha256": "92465429dad9311dc292f3de1590322a81824dde18812a2177edc99b1df5e322",
-          "source_excerpt": "    const otherTab = await page.context().newPage(); await otherTab.goto(url); await expect(otherTab.locator('.app-shell')).toBeVisible();\n    updateAvailable = true;\n    await page.evaluate(async () => { const registration = await navigator.serviceWorker.getRegistration(); if (!registration) throw new Error('No cached registration'); await registration.update(); });\n    await expect.poll(() => page.evaluate(async () => (await navigator.serviceWorker.getRegistration())?.waiting?.state)).toBe('installed');\n    await page.context().setOffline(true);\n    await page.reload(); await expect(page.locator('.project-switch')).toContainText(given.project.name);\n    await expect.poll(() => page.evaluate(() => navigator.onLine)).toBe(false);\n    await openEntity(page, 'scene', initialName);\n    const beforeRefusal = await nativeImage(page), failedName = `${initialName}・容量不足でも残す入力`;\n    await page.evaluate(() => {\n      const put = IDBObjectStore.prototype.put; let armed = true;\n      IDBObjectStore.prototype.put = function (...args: Parameters<IDBObjectStore['put']>) {\n        if (armed && this.name === 'projects') { armed = false; throw new DOMException('E12 native quota fixture', 'QuotaExceededError'); }\n        return put.apply(this, args);\n      };\n    });\n    await page.locator('.detail-panel').getByLabel('名前', { exact: true }).fill(failedName);\n",
+          "line": 198,
+          "end_line": 230,
+          "excerpt_sha256": "166422df788e2a7a79b5629202a08b6ea4c2da950a21fde9cf5e319707af13a4",
+          "source_excerpt": "    const otherTab = await page.context().newPage(); await otherTab.goto(url); await expect(otherTab.locator('.app-shell')).toBeVisible();\n    updateAvailable = true;\n    await page.evaluate(async () => { const registration = await navigator.serviceWorker.getRegistration(); if (!registration) throw new Error('No cached registration'); await registration.update(); });\n    await expect.poll(() => page.evaluate(async () => (await navigator.serviceWorker.getRegistration())?.waiting?.state)).toBe('installed');\n    const beforeCold = await nativeImage(page);\n    expect(durableImage(beforeCold)).toEqual(durableImage(pendingImage));\n    const beforeDocumentNonce = await page.evaluate(() => (window as Window & { __ap04E12DocumentNonce: string }).__ap04E12DocumentNonce);\n    expect(beforeDocumentNonce).toEqual(expect.any(String));\n    await page.context().setOffline(true);\n    await expect.poll(() => page.evaluate(() => navigator.onLine)).toBe(false);\n    // A distinct scoped navigation must create a new document while offline.\n    // It exercises cached startup without WebKit's Page.reload protocol path.\n    const coldURL = new URL(url); coldURL.searchParams.set('e12-cold-document', beforeDocumentNonce);\n    await page.goto(coldURL.href); await expect(page.locator('.project-switch')).toContainText(given.project.name);\n    const offlineDocumentNonce = await page.evaluate(() => (window as Window & { __ap04E12DocumentNonce: string }).__ap04E12DocumentNonce);\n    expect(offlineDocumentNonce).toEqual(expect.any(String)); expect(offlineDocumentNonce).not.toBe(beforeDocumentNonce);\n    await expect.poll(() => page.evaluate(() => navigator.onLine)).toBe(false);\n    await expect.poll(() => page.evaluate(() => {\n      const controller = navigator.serviceWorker.controller;\n      return controller && { scriptURL: controller.scriptURL, state: controller.state };\n    })).toEqual({ scriptURL: new URL('sw.js', url).href, state: 'activated' });\n    expect(await page.evaluate(async () => (await navigator.serviceWorker.getRegistration())?.waiting?.state)).toBe('installed');\n    expect(durableImage(await nativeImage(page))).toEqual(durableImage(beforeCold));\n    await openEntity(page, 'scene', initialName);\n    const beforeRefusal = await nativeImage(page), failedName = `${initialName}・容量不足でも残す入力`;\n    await page.evaluate(() => {\n      const put = IDBObjectStore.prototype.put; let armed = true;\n      IDBObjectStore.prototype.put = function (...args: Parameters<IDBObjectStore['put']>) {\n        if (armed && this.name === 'projects') { armed = false; throw new DOMException('E12 native quota fixture', 'QuotaExceededError'); }\n        return put.apply(this, args);\n      };\n    });\n    await page.locator('.detail-panel').getByLabel('名前', { exact: true }).fill(failedName);\n",
           "purpose": "Actual registration.update creates a waiting worker; context offline and one-shot native quota fixture then normal editor input."
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 197,
-          "end_line": 204,
+          "line": 236,
+          "end_line": 243,
           "excerpt_sha256": "2fc087fded91fc32bfaa6f674a31a79d514d5731a1349d58bf4f91097f1bbb1c",
           "source_excerpt": "    await page.locator('.editor-footer').getByRole('button', { name: '保存を再試行', exact: true }).click();\n    await expect(page.locator('.editor-save-state')).toContainText('端末内保存済み');\n    const saved = await backup(page), savedImage = await nativeImage(page);\n    expect(saved.project.entities.find(e => e.id === scene.id)?.name).toBe(failedName);\n    expect(saved.project.history.length).toBe(given.project.history.length + 2);\n    expect(saved.recovery?.pending.length).toBeGreaterThanOrEqual(2);\n    expect(await page.evaluate(async () => (await navigator.serviceWorker.getRegistration())?.waiting?.state)).toBe('installed');\n    await info.attach('AT-E12-offline-complete.scenario', { body: Buffer.from(saved.bytes), contentType: 'application/zip' });\n",
           "purpose": "Ordinary save retry followed by real complete download."
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 207,
-          "end_line": 215,
+          "line": 246,
+          "end_line": 254,
           "excerpt_sha256": "dd7cc1629de2c54928777289c0f737abb71cead3bd914461dfd4500c01632814",
           "source_excerpt": "    await otherTab.close(); await page.context().setOffline(false);\n    await page.goto(new URL('/e12-safe-point', url).href);\n    await expect.poll(() => page.evaluate(async scope => Boolean((await navigator.serviceWorker.getRegistration(scope))?.waiting), url)).toBe(false);\n    await page.goto(url);\n    await expect(page.locator('.project-switch')).toContainText(given.project.name);\n    await expect.poll(() => page.evaluate(async expected => (await caches.keys()).includes(expected), newCache)).toBe(true);\n    await expect.poll(() => page.evaluate(async () => Boolean((await navigator.serviceWorker.getRegistration())?.waiting))).toBe(false);\n    const afterUpdate = await backup(page); expect(afterUpdate.project).toEqual(saved.project);\n    expect((await nativeImage(page)).tables.outbox).toEqual(savedImage.tables.outbox);\n",
           "purpose": "Close the other controlled tab, leave scope, return, and inspect waiting/cache/project/outbox state."
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 222,
-          "end_line": 242,
+          "line": 261,
+          "end_line": 281,
           "excerpt_sha256": "d19e4ab95dff0967621925cdca417465a2cd8cf22458b4c94fe0ce12dc6e782b",
           "source_excerpt": "    const recovery = await fullNewClone(browser, url, saved.bytes, saved.project);\n\n    const migrationContext = await browser.newContext();\n    try {\n      const migratedPage = await migrationContext.newPage(); await seedVersionOne(migratedPage, url, saved.project, savedImage.tables.outbox);\n      const oldImage = await nativeImage(migratedPage); expect(oldImage.version).toBe(10);\n      await migratedPage.addInitScript(name => {\n        const create = IDBDatabase.prototype.createObjectStore; let armed = true;\n        IDBDatabase.prototype.createObjectStore = function (...args: Parameters<IDBDatabase['createObjectStore']>) {\n          if (armed && this.name === name && args[0] === 'importDrafts') { armed = false; throw new DOMException('E12 copied native migration quota fixture', 'QuotaExceededError'); }\n          return create.apply(this, args);\n        };\n      }, databaseName);\n      await migratedPage.goto(url); await expect(migratedPage.getByRole('alert').filter({ hasText: /quota|Quota/ })).toBeVisible();\n      expect(await nativeImage(migratedPage)).toEqual(oldImage);\n      await migratedPage.getByRole('button', { name: '読み込みを再試行', exact: true }).click();\n      await migratedPage.locator('.project-card').filter({ hasText: saved.project.name }).click();\n      await migratedPage.reload(); await expect(migratedPage.locator('.project-switch')).toContainText(saved.project.name);\n      const migrated = await backup(migratedPage); expect(migrated.project).toEqual(saved.project);\n      expect((await nativeImage(migratedPage)).tables.outbox).toEqual(savedImage.tables.outbox);\n      await info.attach('AT-E12-migration-retry-complete.scenario', { body: Buffer.from(migrated.bytes), contentType: 'application/zip' });\n",
           "purpose": "Separate new/clone full-file restart plus copied old native layout migration refusal and ordinary UI retry."
@@ -202,91 +202,91 @@
       "normal_operations": [
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 175,
+          "line": 198,
           "source": "const otherTab = await page.context().newPage(); await otherTab.goto(url); await expect(otherTab.locator('.app-shell')).toBeVisible();",
           "kind": "planned_ui_or_document_lifecycle"
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 180,
-          "source": "await page.reload(); await expect(page.locator('.project-switch')).toContainText(given.project.name);",
+          "line": 211,
+          "source": "await page.goto(coldURL.href); await expect(page.locator('.project-switch')).toContainText(given.project.name);",
           "kind": "planned_ui_or_document_lifecycle"
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 182,
+          "line": 221,
           "source": "await openEntity(page, 'scene', initialName);",
           "kind": "planned_ui_or_document_lifecycle"
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 191,
+          "line": 230,
           "source": "await page.locator('.detail-panel').getByLabel('名前', { exact: true }).fill(failedName);",
           "kind": "planned_ui_or_document_lifecycle"
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 197,
+          "line": 236,
           "source": "await page.locator('.editor-footer').getByRole('button', { name: '保存を再試行', exact: true }).click();",
           "kind": "planned_ui_or_document_lifecycle"
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 199,
+          "line": 238,
           "source": "const saved = await backup(page), savedImage = await nativeImage(page);",
           "kind": "planned_ui_or_document_lifecycle"
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 207,
+          "line": 246,
           "source": "await otherTab.close(); await page.context().setOffline(false);",
           "kind": "planned_ui_or_document_lifecycle"
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 208,
+          "line": 247,
           "source": "await page.goto(new URL('/e12-safe-point', url).href);",
           "kind": "planned_ui_or_document_lifecycle"
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 210,
+          "line": 249,
           "source": "await page.goto(url);",
           "kind": "planned_ui_or_document_lifecycle"
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 222,
+          "line": 261,
           "source": "const recovery = await fullNewClone(browser, url, saved.bytes, saved.project);",
           "kind": "planned_ui_or_document_lifecycle"
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 235,
+          "line": 274,
           "source": "await migratedPage.goto(url); await expect(migratedPage.getByRole('alert').filter({ hasText: /quota|Quota/ })).toBeVisible();",
           "kind": "planned_ui_or_document_lifecycle"
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 237,
+          "line": 276,
           "source": "await migratedPage.getByRole('button', { name: '読み込みを再試行', exact: true }).click();",
           "kind": "planned_ui_or_document_lifecycle"
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 238,
+          "line": 277,
           "source": "await migratedPage.locator('.project-card').filter({ hasText: saved.project.name }).click();",
           "kind": "planned_ui_or_document_lifecycle"
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 239,
+          "line": 278,
           "source": "await migratedPage.reload(); await expect(migratedPage.locator('.project-switch')).toContainText(saved.project.name);",
           "kind": "planned_ui_or_document_lifecycle"
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 240,
+          "line": 279,
           "source": "const migrated = await backup(migratedPage); expect(migrated.project).toEqual(saved.project);",
           "kind": "planned_ui_or_document_lifecycle"
         }
@@ -294,37 +294,37 @@
       "boundary_fixture_operations": [
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 176,
+          "line": 199,
           "source": "updateAvailable = true;",
           "kind": "fixture_transport_worker_or_native_fault_setup"
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 177,
+          "line": 200,
           "source": "await page.evaluate(async () => { const registration = await navigator.serviceWorker.getRegistration(); if (!registration) throw new Error('No cached registration'); await registration.update(); });",
           "kind": "fixture_transport_worker_or_native_fault_setup"
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 179,
+          "line": 206,
           "source": "await page.context().setOffline(true);",
           "kind": "fixture_transport_worker_or_native_fault_setup"
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 187,
+          "line": 226,
           "source": "if (armed && this.name === 'projects') { armed = false; throw new DOMException('E12 native quota fixture', 'QuotaExceededError'); }",
           "kind": "fixture_transport_worker_or_native_fault_setup"
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 226,
+          "line": 265,
           "source": "const migratedPage = await migrationContext.newPage(); await seedVersionOne(migratedPage, url, saved.project, savedImage.tables.outbox);",
           "kind": "fixture_transport_worker_or_native_fault_setup"
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 231,
+          "line": 270,
           "source": "if (armed && this.name === name && args[0] === 'importDrafts') { armed = false; throw new DOMException('E12 copied native migration quota fixture', 'QuotaExceededError'); }",
           "kind": "fixture_transport_worker_or_native_fault_setup"
         }
@@ -332,121 +332,121 @@
       "assertions": [
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 178,
+          "line": 201,
           "source": "await expect.poll(() => page.evaluate(async () => (await navigator.serviceWorker.getRegistration())?.waiting?.state)).toBe('installed');",
           "kind": "planned_when_guard_or_recovery_assertion"
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 180,
-          "source": "await page.reload(); await expect(page.locator('.project-switch')).toContainText(given.project.name);",
+          "line": 211,
+          "source": "await page.goto(coldURL.href); await expect(page.locator('.project-switch')).toContainText(given.project.name);",
           "kind": "planned_when_guard_or_recovery_assertion"
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 181,
+          "line": 207,
           "source": "await expect.poll(() => page.evaluate(() => navigator.onLine)).toBe(false);",
           "kind": "planned_when_guard_or_recovery_assertion"
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 198,
+          "line": 237,
           "source": "await expect(page.locator('.editor-save-state')).toContainText('端末内保存済み');",
           "kind": "planned_when_guard_or_recovery_assertion"
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 200,
+          "line": 239,
           "source": "expect(saved.project.entities.find(e => e.id === scene.id)?.name).toBe(failedName);",
           "kind": "planned_when_guard_or_recovery_assertion"
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 201,
+          "line": 240,
           "source": "expect(saved.project.history.length).toBe(given.project.history.length + 2);",
           "kind": "planned_when_guard_or_recovery_assertion"
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 202,
+          "line": 241,
           "source": "expect(saved.recovery?.pending.length).toBeGreaterThanOrEqual(2);",
           "kind": "planned_when_guard_or_recovery_assertion"
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 203,
+          "line": 242,
           "source": "expect(await page.evaluate(async () => (await navigator.serviceWorker.getRegistration())?.waiting?.state)).toBe('installed');",
           "kind": "planned_when_guard_or_recovery_assertion"
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 209,
+          "line": 248,
           "source": "await expect.poll(() => page.evaluate(async scope => Boolean((await navigator.serviceWorker.getRegistration(scope))?.waiting), url)).toBe(false);",
           "kind": "planned_when_guard_or_recovery_assertion"
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 211,
+          "line": 250,
           "source": "await expect(page.locator('.project-switch')).toContainText(given.project.name);",
           "kind": "planned_when_guard_or_recovery_assertion"
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 212,
+          "line": 251,
           "source": "await expect.poll(() => page.evaluate(async expected => (await caches.keys()).includes(expected), newCache)).toBe(true);",
           "kind": "planned_when_guard_or_recovery_assertion"
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 213,
+          "line": 252,
           "source": "await expect.poll(() => page.evaluate(async () => Boolean((await navigator.serviceWorker.getRegistration())?.waiting))).toBe(false);",
           "kind": "planned_when_guard_or_recovery_assertion"
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 214,
+          "line": 253,
           "source": "const afterUpdate = await backup(page); expect(afterUpdate.project).toEqual(saved.project);",
           "kind": "planned_when_guard_or_recovery_assertion"
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 215,
+          "line": 254,
           "source": "expect((await nativeImage(page)).tables.outbox).toEqual(savedImage.tables.outbox);",
           "kind": "planned_when_guard_or_recovery_assertion"
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 227,
+          "line": 266,
           "source": "const oldImage = await nativeImage(migratedPage); expect(oldImage.version).toBe(10);",
           "kind": "planned_when_guard_or_recovery_assertion"
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 235,
+          "line": 274,
           "source": "await migratedPage.goto(url); await expect(migratedPage.getByRole('alert').filter({ hasText: /quota|Quota/ })).toBeVisible();",
           "kind": "planned_when_guard_or_recovery_assertion"
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 236,
+          "line": 275,
           "source": "expect(await nativeImage(migratedPage)).toEqual(oldImage);",
           "kind": "planned_when_guard_or_recovery_assertion"
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 239,
+          "line": 278,
           "source": "await migratedPage.reload(); await expect(migratedPage.locator('.project-switch')).toContainText(saved.project.name);",
           "kind": "planned_when_guard_or_recovery_assertion"
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 240,
+          "line": 279,
           "source": "const migrated = await backup(migratedPage); expect(migrated.project).toEqual(saved.project);",
           "kind": "planned_when_guard_or_recovery_assertion"
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 241,
+          "line": 280,
           "source": "expect((await nativeImage(migratedPage)).tables.outbox).toEqual(savedImage.tables.outbox);",
           "kind": "planned_when_guard_or_recovery_assertion"
         }
@@ -473,81 +473,81 @@
       "sources": [
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 192,
-          "end_line": 204,
+          "line": 231,
+          "end_line": 243,
           "excerpt_sha256": "c5b048b06e6d0b9de7b03b5c16924b539edb7419d300c7ad8a47e77107baa246",
           "source_excerpt": "    await expect(page.locator('.detail-panel').getByRole('alert')).toContainText('容量');\n    await expect(page.locator('.editor-save-state')).toContainText('未保存');\n    await expect(page.locator('.detail-panel').getByLabel('名前', { exact: true })).toHaveValue(failedName);\n    expect(durableImage(await nativeImage(page))).toEqual(durableImage(beforeRefusal));\n    expect(await page.evaluate(async () => (await navigator.serviceWorker.getRegistration())?.waiting?.state)).toBe('installed');\n    await page.locator('.editor-footer').getByRole('button', { name: '保存を再試行', exact: true }).click();\n    await expect(page.locator('.editor-save-state')).toContainText('端末内保存済み');\n    const saved = await backup(page), savedImage = await nativeImage(page);\n    expect(saved.project.entities.find(e => e.id === scene.id)?.name).toBe(failedName);\n    expect(saved.project.history.length).toBe(given.project.history.length + 2);\n    expect(saved.recovery?.pending.length).toBeGreaterThanOrEqual(2);\n    expect(await page.evaluate(async () => (await navigator.serviceWorker.getRegistration())?.waiting?.state)).toBe('installed');\n    await info.attach('AT-E12-offline-complete.scenario', { body: Buffer.from(saved.bytes), contentType: 'application/zip' });\n",
           "purpose": "Failure/unsaved/input guidance, selected durable tables unchanged, ordinary save retry, history/pending checks and real complete bytes."
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 205,
-          "end_line": 215,
+          "line": 244,
+          "end_line": 254,
           "excerpt_sha256": "b1c8bd43c07a893dd8b473f5c0fa1bcac4bc24c4e960f4709bddd7ce081a7dca",
           "source_excerpt": "    // The real waiting worker can activate only after both controlled documents\n    // leave the scope. No skipWaiting or privileged product API is called.\n    await otherTab.close(); await page.context().setOffline(false);\n    await page.goto(new URL('/e12-safe-point', url).href);\n    await expect.poll(() => page.evaluate(async scope => Boolean((await navigator.serviceWorker.getRegistration(scope))?.waiting), url)).toBe(false);\n    await page.goto(url);\n    await expect(page.locator('.project-switch')).toContainText(given.project.name);\n    await expect.poll(() => page.evaluate(async expected => (await caches.keys()).includes(expected), newCache)).toBe(true);\n    await expect.poll(() => page.evaluate(async () => Boolean((await navigator.serviceWorker.getRegistration())?.waiting))).toBe(false);\n    const afterUpdate = await backup(page); expect(afterUpdate.project).toEqual(saved.project);\n    expect((await nativeImage(page)).tables.outbox).toEqual(savedImage.tables.outbox);\n",
           "purpose": "Waiting remains until controlled pages leave; actual cache lifecycle and saved project/outbox preservation checks."
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 235,
-          "end_line": 250,
-          "excerpt_sha256": "e6624ac5ca98c86589fd307b98bb0ac4ebd8c56b3630d6fa207a977448a5f06b",
-          "source_excerpt": "      await migratedPage.goto(url); await expect(migratedPage.getByRole('alert').filter({ hasText: /quota|Quota/ })).toBeVisible();\n      expect(await nativeImage(migratedPage)).toEqual(oldImage);\n      await migratedPage.getByRole('button', { name: '読み込みを再試行', exact: true }).click();\n      await migratedPage.locator('.project-card').filter({ hasText: saved.project.name }).click();\n      await migratedPage.reload(); await expect(migratedPage.locator('.project-switch')).toContainText(saved.project.name);\n      const migrated = await backup(migratedPage); expect(migrated.project).toEqual(saved.project);\n      expect((await nativeImage(migratedPage)).tables.outbox).toEqual(savedImage.tables.outbox);\n      await info.attach('AT-E12-migration-retry-complete.scenario', { body: Buffer.from(migrated.bytes), contentType: 'application/zip' });\n    } finally { await migrationContext.close(); }\n    await attachObservation(info, 'AT-E12-local-observed', { build, browserVersion: browser.version(), completeSHA256: sha256(saved.bytes), recovery,\n      cachedOfflineCold: true, realPendingOutbox: true, quotaRejectedDurableEditionUnchanged: true, unsavedInputAndFailureVisible: true,\n      normalSaveRetry: true, actualWaitingWorkerStayedInstalledUntilAllTabsLeft: true, copiedNativeMigrationRefusalAtomicAndNormalRetry: true,\n      firstUncachedOfflineNavigationRejected: true,\n      workerFixture: { originalSHA256: sha256(originalWorker), updatedSHA256: sha256(updatedWorker), changedOnlyCacheIdentity: true, applicationBytesChanged: false },\n      blockedConditions: ['real old-application-build upgrade', 'physical-device flight mode', 'real OS Files save-location cancellation', 'unfetched material via its actual product control'],\n      physicalDevice: false, realOSFilesVerified: false, originalWholeAcceptancePromotion: false });\n",
+          "line": 274,
+          "end_line": 290,
+          "excerpt_sha256": "95b109da6618f93c3ae018d8036f4e6f7a936da563bf1522f9761a1c956c5cdc",
+          "source_excerpt": "      await migratedPage.goto(url); await expect(migratedPage.getByRole('alert').filter({ hasText: /quota|Quota/ })).toBeVisible();\n      expect(await nativeImage(migratedPage)).toEqual(oldImage);\n      await migratedPage.getByRole('button', { name: '読み込みを再試行', exact: true }).click();\n      await migratedPage.locator('.project-card').filter({ hasText: saved.project.name }).click();\n      await migratedPage.reload(); await expect(migratedPage.locator('.project-switch')).toContainText(saved.project.name);\n      const migrated = await backup(migratedPage); expect(migrated.project).toEqual(saved.project);\n      expect((await nativeImage(migratedPage)).tables.outbox).toEqual(savedImage.tables.outbox);\n      await info.attach('AT-E12-migration-retry-complete.scenario', { body: Buffer.from(migrated.bytes), contentType: 'application/zip' });\n    } finally { await migrationContext.close(); }\n    await attachObservation(info, 'AT-E12-local-observed', { build, browserVersion: browser.version(), completeSHA256: sha256(saved.bytes), recovery,\n      cachedOfflineCold: true, realPendingOutbox: true, quotaRejectedDurableEditionUnchanged: true, unsavedInputAndFailureVisible: true,\n      offlineColdNavigation: { url: coldURL.href, beforeDocumentNonce, offlineDocumentNonce, originalCache, cachedEntries, entireDurableImageUnchanged: true },\n      normalSaveRetry: true, actualWaitingWorkerStayedInstalledUntilAllTabsLeft: true, copiedNativeMigrationRefusalAtomicAndNormalRetry: true,\n      firstUncachedOfflineNavigationRejected: true,\n      workerFixture: { originalSHA256: sha256(originalWorker), updatedSHA256: sha256(updatedWorker), changedOnlyCacheIdentity: true, applicationBytesChanged: false },\n      blockedConditions: ['real old-application-build upgrade', 'physical-device flight mode', 'real OS Files save-location cancellation', 'unfetched material via its actual product control'],\n      physicalDevice: false, realOSFilesVerified: false, originalWholeAcceptancePromotion: false });\n",
           "purpose": "Migration refusal atomicity and ordinary UI retry, complete bytes and planned runtime observations with blocked conditions."
         }
       ],
       "normal_operations": [
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 197,
+          "line": 236,
           "source": "await page.locator('.editor-footer').getByRole('button', { name: '保存を再試行', exact: true }).click();",
           "kind": "planned_normal_retry_export_or_document_leave"
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 199,
+          "line": 238,
           "source": "const saved = await backup(page), savedImage = await nativeImage(page);",
           "kind": "planned_normal_retry_export_or_document_leave"
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 207,
+          "line": 246,
           "source": "await otherTab.close(); await page.context().setOffline(false);",
           "kind": "planned_normal_retry_export_or_document_leave"
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 208,
+          "line": 247,
           "source": "await page.goto(new URL('/e12-safe-point', url).href);",
           "kind": "planned_normal_retry_export_or_document_leave"
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 210,
+          "line": 249,
           "source": "await page.goto(url);",
           "kind": "planned_normal_retry_export_or_document_leave"
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 237,
+          "line": 276,
           "source": "await migratedPage.getByRole('button', { name: '読み込みを再試行', exact: true }).click();",
           "kind": "planned_normal_retry_export_or_document_leave"
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 238,
+          "line": 277,
           "source": "await migratedPage.locator('.project-card').filter({ hasText: saved.project.name }).click();",
           "kind": "planned_normal_retry_export_or_document_leave"
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 239,
+          "line": 278,
           "source": "await migratedPage.reload(); await expect(migratedPage.locator('.project-switch')).toContainText(saved.project.name);",
           "kind": "planned_normal_retry_export_or_document_leave"
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 240,
+          "line": 279,
           "source": "const migrated = await backup(migratedPage); expect(migrated.project).toEqual(saved.project);",
           "kind": "planned_normal_retry_export_or_document_leave"
         }
@@ -555,127 +555,127 @@
       "assertions": [
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 192,
+          "line": 231,
           "source": "await expect(page.locator('.detail-panel').getByRole('alert')).toContainText('容量');",
           "kind": "planned_then_assertion"
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 193,
+          "line": 232,
           "source": "await expect(page.locator('.editor-save-state')).toContainText('未保存');",
           "kind": "planned_then_assertion"
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 194,
+          "line": 233,
           "source": "await expect(page.locator('.detail-panel').getByLabel('名前', { exact: true })).toHaveValue(failedName);",
           "kind": "planned_then_assertion"
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 195,
+          "line": 234,
           "source": "expect(durableImage(await nativeImage(page))).toEqual(durableImage(beforeRefusal));",
           "kind": "planned_then_assertion"
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 196,
+          "line": 235,
           "source": "expect(await page.evaluate(async () => (await navigator.serviceWorker.getRegistration())?.waiting?.state)).toBe('installed');",
           "kind": "planned_then_assertion"
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 198,
+          "line": 237,
           "source": "await expect(page.locator('.editor-save-state')).toContainText('端末内保存済み');",
           "kind": "planned_then_assertion"
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 200,
+          "line": 239,
           "source": "expect(saved.project.entities.find(e => e.id === scene.id)?.name).toBe(failedName);",
           "kind": "planned_then_assertion"
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 201,
+          "line": 240,
           "source": "expect(saved.project.history.length).toBe(given.project.history.length + 2);",
           "kind": "planned_then_assertion"
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 202,
+          "line": 241,
           "source": "expect(saved.recovery?.pending.length).toBeGreaterThanOrEqual(2);",
           "kind": "planned_then_assertion"
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 203,
+          "line": 242,
           "source": "expect(await page.evaluate(async () => (await navigator.serviceWorker.getRegistration())?.waiting?.state)).toBe('installed');",
           "kind": "planned_then_assertion"
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 209,
+          "line": 248,
           "source": "await expect.poll(() => page.evaluate(async scope => Boolean((await navigator.serviceWorker.getRegistration(scope))?.waiting), url)).toBe(false);",
           "kind": "planned_then_assertion"
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 211,
+          "line": 250,
           "source": "await expect(page.locator('.project-switch')).toContainText(given.project.name);",
           "kind": "planned_then_assertion"
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 212,
+          "line": 251,
           "source": "await expect.poll(() => page.evaluate(async expected => (await caches.keys()).includes(expected), newCache)).toBe(true);",
           "kind": "planned_then_assertion"
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 213,
+          "line": 252,
           "source": "await expect.poll(() => page.evaluate(async () => Boolean((await navigator.serviceWorker.getRegistration())?.waiting))).toBe(false);",
           "kind": "planned_then_assertion"
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 214,
+          "line": 253,
           "source": "const afterUpdate = await backup(page); expect(afterUpdate.project).toEqual(saved.project);",
           "kind": "planned_then_assertion"
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 215,
+          "line": 254,
           "source": "expect((await nativeImage(page)).tables.outbox).toEqual(savedImage.tables.outbox);",
           "kind": "planned_then_assertion"
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 235,
+          "line": 274,
           "source": "await migratedPage.goto(url); await expect(migratedPage.getByRole('alert').filter({ hasText: /quota|Quota/ })).toBeVisible();",
           "kind": "planned_then_assertion"
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 236,
+          "line": 275,
           "source": "expect(await nativeImage(migratedPage)).toEqual(oldImage);",
           "kind": "planned_then_assertion"
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 239,
+          "line": 278,
           "source": "await migratedPage.reload(); await expect(migratedPage.locator('.project-switch')).toContainText(saved.project.name);",
           "kind": "planned_then_assertion"
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 240,
+          "line": 279,
           "source": "const migrated = await backup(migratedPage); expect(migrated.project).toEqual(saved.project);",
           "kind": "planned_then_assertion"
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 241,
+          "line": 280,
           "source": "expect((await nativeImage(migratedPage)).tables.outbox).toEqual(savedImage.tables.outbox);",
           "kind": "planned_then_assertion"
         }
@@ -707,37 +707,37 @@
       "sources": [
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 216,
-          "end_line": 221,
+          "line": 255,
+          "end_line": 260,
           "excerpt_sha256": "436538860d1c289abc82cf7a83b98ef2ebf33b1607898f473151d5cf13a220b3",
           "source_excerpt": "    const uncachedContext = await browser.newContext({ offline: true });\n    try {\n      const uncachedPage = await uncachedContext.newPage();\n      const rejected = await uncachedPage.goto(url).then(() => false, () => true);\n      expect(rejected).toBe(true);\n    } finally { await uncachedContext.close(); }\n",
           "purpose": "Fresh uncached offline context only: first goto must reject."
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 244,
-          "end_line": 250,
-          "excerpt_sha256": "d0f2085d1f8efedd94c221e1b810aee321ea6afcbf35840683eba7885af3be47",
-          "source_excerpt": "    await attachObservation(info, 'AT-E12-local-observed', { build, browserVersion: browser.version(), completeSHA256: sha256(saved.bytes), recovery,\n      cachedOfflineCold: true, realPendingOutbox: true, quotaRejectedDurableEditionUnchanged: true, unsavedInputAndFailureVisible: true,\n      normalSaveRetry: true, actualWaitingWorkerStayedInstalledUntilAllTabsLeft: true, copiedNativeMigrationRefusalAtomicAndNormalRetry: true,\n      firstUncachedOfflineNavigationRejected: true,\n      workerFixture: { originalSHA256: sha256(originalWorker), updatedSHA256: sha256(updatedWorker), changedOnlyCacheIdentity: true, applicationBytesChanged: false },\n      blockedConditions: ['real old-application-build upgrade', 'physical-device flight mode', 'real OS Files save-location cancellation', 'unfetched material via its actual product control'],\n      physicalDevice: false, realOSFilesVerified: false, originalWholeAcceptancePromotion: false });\n",
+          "line": 283,
+          "end_line": 290,
+          "excerpt_sha256": "55be47e7312dcaa9573e46d98bd18d0a8dd98ba680fef8f29d4af6febbbb1761",
+          "source_excerpt": "    await attachObservation(info, 'AT-E12-local-observed', { build, browserVersion: browser.version(), completeSHA256: sha256(saved.bytes), recovery,\n      cachedOfflineCold: true, realPendingOutbox: true, quotaRejectedDurableEditionUnchanged: true, unsavedInputAndFailureVisible: true,\n      offlineColdNavigation: { url: coldURL.href, beforeDocumentNonce, offlineDocumentNonce, originalCache, cachedEntries, entireDurableImageUnchanged: true },\n      normalSaveRetry: true, actualWaitingWorkerStayedInstalledUntilAllTabsLeft: true, copiedNativeMigrationRefusalAtomicAndNormalRetry: true,\n      firstUncachedOfflineNavigationRejected: true,\n      workerFixture: { originalSHA256: sha256(originalWorker), updatedSHA256: sha256(updatedWorker), changedOnlyCacheIdentity: true, applicationBytesChanged: false },\n      blockedConditions: ['real old-application-build upgrade', 'physical-device flight mode', 'real OS Files save-location cancellation', 'unfetched material via its actual product control'],\n      physicalDevice: false, realOSFilesVerified: false, originalWholeAcceptancePromotion: false });\n",
           "purpose": "Planned attachment explicitly lists blocked physical/OS/unfetched/old-app conditions; this is disclosure rather than execution of missing controls."
         }
       ],
       "normal_operations": [
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 216,
+          "line": 255,
           "source": "const uncachedContext = await browser.newContext({ offline: true });",
           "kind": "planned_fresh_context_navigation_control"
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 218,
+          "line": 257,
           "source": "const uncachedPage = await uncachedContext.newPage();",
           "kind": "planned_fresh_context_navigation_control"
         },
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 219,
+          "line": 258,
           "source": "const rejected = await uncachedPage.goto(url).then(() => false, () => true);",
           "kind": "planned_fresh_context_navigation_control"
         }
@@ -745,7 +745,7 @@
       "assertions": [
         {
           "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
-          "line": 220,
+          "line": 259,
           "source": "expect(rejected).toBe(true);",
           "kind": "planned_browser_navigation_refusal_assertion"
         }
@@ -767,9 +767,9 @@
   "source_entry": {
     "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
     "line": 133,
-    "end_line": 252,
+    "end_line": 292,
     "title": "AT-E12 キャッシュ済み未送信作品をoffline・容量拒否・実waiting-worker・移行retry・完全new/cloneで継続する（実OS条件は別記）",
-    "command": "npx playwright test tests/e2e/ap04-original-e12-continuity.spec.ts --project chromium",
+    "command": "npx playwright test tests/e2e/ap04-original-e12-continuity.spec.ts --project chromium --project firefox --project webkit --workers 1 --retries 0 --max-failures 0 --trace on",
     "result": "not_run"
   },
   "supporting_helper_spans": [
@@ -980,5 +980,13 @@
     "original_clauses": 4,
     "passed": 0,
     "not_run": 4
+  },
+  "offline_cold_navigation_source_correction": {
+    "status": "planned_not_run",
+    "prior_head": "0b42e7c5c9e88bff1e7eab459c204603d9de63b5",
+    "source_sha256": "9fd52ed9179c8bc43aaa271d0444f8239c49f9f3033485c19c1e244641045261",
+    "observation_scope": "Distinct scoped query navigation while context remains offline, new-document nonce, exact cached base/index/assets bytes, active controller, genuine waiting worker, and all durable native tables unchanged. Actual three-engine behavior has not yet been observed. Engine error cause remains unknown.",
+    "original_clauses_changed": false,
+    "acceptance_pass_inferred": false
   }
 }
