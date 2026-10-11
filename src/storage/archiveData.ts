@@ -1,13 +1,13 @@
 import {validateSyncRecovery,syncRecoveryImages,type NativeSyncRecovery} from './syncRecovery';
-import {captureImmutablePlainData,isImmutablePlainData} from '../domain/immutablePlainData';
+import {captureImmutablePlainData,freezeCapturedPlainData,isImmutablePlainData} from '../domain/immutablePlainData';
 import {RECORD_DICTIONARY_FEATURE,RecordDictionaryWriter,RecordDictionaryReader} from './recordDictionary';
 import { Inflate, zipSync } from 'fflate';
-import { validateRecovery, recoveryImages, type PortableRecovery } from './recovery';
+import { createRecoveryValidationSession, validateRecovery, recoveryImages, type PortableRecovery } from './recovery';
 import { projectWithRecoveryHistory } from './recovery';
 import { collectImportIds } from './importMapping';
 import type { Entity,Relation,ProjectContent, ProjectData, WorldReference } from '../domain/types';
 import { newId, validateProject,collectReferences,collectRelationReferences,ENTITY_KINDS } from '../domain/model';
-import { validateProjectIntegrity } from '../domain/projectRecordValidation';
+import { createProjectValidationSession, validateProjectIntegrity } from '../domain/projectRecordValidation';
 import { checkCancelled, StorageError } from './errors';
 import { ARCHIVE_LIMITS, FORMAT_VERSION, equalJson, exceedsJsonBytes, jsonBytes, parseStrictJson, resolveLimits, safeArchivePath, sha256,
   type ArchiveLimits, type LimitOverrides } from './json';
@@ -236,9 +236,10 @@ function parseManifest(value: unknown): ScenarioManifest {
   return data as unknown as ScenarioManifest;
 }
 
-function checkedProject(value: unknown, path: string, limits: ArchiveLimits, worldSnapshots: Record<string, ProjectContent> = {}): ProjectData {
+type ArchiveValidationSession = ReturnType<typeof createProjectValidationSession>;
+function checkedProject(value: unknown, path: string, limits: ArchiveLimits, worldSnapshots: Record<string, ProjectContent> = {}, session?: ArchiveValidationSession): ProjectData {
   let validation: ReturnType<typeof validateProject>;
-  try { validation = validateProject(value, { worldSnapshots }); }
+  try { validation = session ? session.validate(value) : validateProject(value, { worldSnapshots }); }
   catch (error) { throw new StorageError('VALIDATION_FAILED', '共通世界または作品の構造が不正です。', path, { cause: error }); }
   if (!validation.ok) throw new StorageError('VALIDATION_FAILED', validation.issues.map(issue => `${issue.path}: ${issue.message}`).join('\n'), path);
   const project = validation.value;
@@ -246,8 +247,8 @@ function checkedProject(value: unknown, path: string, limits: ArchiveLimits, wor
   enforceFieldLimits(project, path, limits);
   return project;
 }
-async function checkedProjectIntegrity(project: ProjectData, path: string, worldSnapshots: Record<string, ProjectContent> = {}): Promise<void> {
-  const issues = await validateProjectIntegrity(project, { worldSnapshots }, true);
+async function checkedProjectIntegrity(project: ProjectData, path: string, worldSnapshots: Record<string, ProjectContent> = {}, session?: ArchiveValidationSession): Promise<void> {
+  const issues = session ? await session.integrity(project, true) : await validateProjectIntegrity(project, { worldSnapshots }, true);
   if (issues.length) throw new StorageError('VALIDATION_FAILED', issues.map(issue => `${issue.path}: ${issue.message}`).join('\n'), path);
 }
 
@@ -263,8 +264,12 @@ function enforceFieldLimits(value: unknown, path: string, limits: ArchiveLimits,
 
 interface AttachmentMetadata { contentHash: string; mediaType: string; byteSize: number; assetPath: string }
 export function attachmentMetadata(project: ProjectData): AttachmentMetadata[] {
+  return attachmentMetadataValues([project]);
+}
+function attachmentMetadataValues(projects: ProjectData[]): AttachmentMetadata[] {
   const result = new Map<string, AttachmentMetadata>();
-  const visited=new WeakSet<object>();
+  const sharedVisited = new WeakSet<object>();
+  let visited = sharedVisited;
   function walk(value: unknown): void {
     if(value&&typeof value==='object'){if(visited.has(value))return;visited.add(value);}
     if (Array.isArray(value)) { value.forEach(walk); return; }
@@ -285,18 +290,16 @@ export function attachmentMetadata(project: ProjectData): AttachmentMetadata[] {
     }
   }
   // Historical attachments remain available for single-record restoration.
-  walk(project);
+  for (const project of projects) {
+    // Unsupported/live graphs retain the old per-project observation scope.
+    visited = isImmutablePlainData(project) ? sharedVisited : new WeakSet<object>();
+    walk(project);
+  }
   return [...result.values()];
 }
 
 export function allAttachmentMetadata(projects: ProjectData[]): AttachmentMetadata[] {
-  const byHash = new Map<string, AttachmentMetadata>();
-  for (const project of projects) for (const metadata of attachmentMetadata(project)) {
-    const old = byHash.get(metadata.contentHash);
-    if (old && (old.assetPath !== metadata.assetPath || old.mediaType !== metadata.mediaType || old.byteSize !== metadata.byteSize)) throw new StorageError('ASSET_INVALID', '作品間の素材メタデータが一致しません。', metadata.assetPath);
-    byHash.set(metadata.contentHash, metadata);
-  }
-  return [...byHash.values()];
+  return attachmentMetadataValues(projects);
 }
 
 /** Includes only pinned, transitive world dependencies; current world drafts cannot substitute. */
@@ -367,7 +370,12 @@ export function verifyWorlds(projects: ProjectData[], worlds: Record<string, Pro
 
 export async function verifySnapshotHashes(projects: ProjectData[]): Promise<void> {
   const snapshots = new Map<string, ProjectData['snapshots'][number]>();
+  const visited = new WeakSet<object>();
   function walk(value: unknown): void {
+    if (value && typeof value === 'object' && isImmutablePlainData(value)) {
+      if (visited.has(value)) return;
+      visited.add(value);
+    }
     if (Array.isArray(value)) { value.forEach(walk); return; }
     if (!value || typeof value !== 'object') return;
     const data = value as Record<string, unknown>;
@@ -464,7 +472,10 @@ export async function exportScenarioData(input: ProjectData, options: ExportOpti
   options.onProgress?.({stage:'validating',completed:0,total:1});
   const worlds = captured.value.worlds;
   const worldContents = worldSnapshotContents(worlds);
-  const project = checkedProject(input, 'data/project.json', ARCHIVE_LIMITS, worldContents);
+  // The archive owns the captured dependency session. Successful structural
+  // proofs may be shared, while integrity still performs every durable check.
+  const validation = createRecoveryValidationSession(worldContents);
+  const project = checkedProject(input, 'data/project.json', ARCHIVE_LIMITS, worldContents, validation);
   const selected = options.snapshotId ? project.snapshots.find(item => item.id === options.snapshotId) : undefined;
   if (selected) {
     const { history: _history, snapshots: _snapshots, authorAlternatives: _authorAlternatives, ...content } = project;
@@ -472,13 +483,16 @@ export async function exportScenarioData(input: ProjectData, options: ExportOpti
   }
   verifyWorlds([project, ...Object.values(worlds)], worlds);
   await verifySnapshotHashes([project, ...Object.values(worlds)]);
-  await checkedProjectIntegrity(project, 'data/project.json', worldContents);
-  for (const [id, world] of Object.entries(worlds)) await checkedProjectIntegrity(world, `worlds/${id}.json`, worldContents);
+  await checkedProjectIntegrity(project, 'data/project.json', worldContents, validation);
+  for (const [id, world] of Object.entries(worlds)) await checkedProjectIntegrity(world, `worlds/${id}.json`, worldContents, validation);
   const recordCount = [project, ...Object.values(worlds)].reduce((sum, source) => sum + source.entities.length + source.relations.length, 0);
   if (recordCount > ARCHIVE_LIMITS.records) throw new StorageError('LIMIT_EXCEEDED', '参照世界を含むentityとrelationの件数が上限を超えています。');
-  const recovery = captured.value.recovery ? await validateRecovery(captured.value.recovery, project, worldContents, options.signal) : undefined;
+  const recovery = captured.value.recovery ? await validation.recovery(captured.value.recovery, project, options.signal) : undefined;
   const syncRecovery=captured.value.syncRecovery?.length?await validateSyncRecovery(captured.value.syncRecovery,worldContents,options.signal):undefined;
   const operationalImages = [...recoveryImages(recovery),...syncRecoveryImages(syncRecovery)];
+  // These returned validation images belong only to this export invocation.
+  // Their public editable counterparts are never frozen by archive metadata.
+  freezeCapturedPlainData(operationalImages);
   verifyWorlds(operationalImages, worlds); await verifySnapshotHashes(operationalImages);
   const mode = options.assetMode ?? 'embedded';
   const attachments = allAttachmentMetadata([project, ...operationalImages, ...Object.values(worlds)]);
@@ -492,7 +506,7 @@ export async function exportScenarioData(input: ProjectData, options: ExportOpti
   const files: Record<string, Uint8Array> = { 'data/project.json': encode(project), ...(recovery ? { 'data/recovery.json': encode(recovery) } : {}),...(syncRecovery?{'data/sync-recovery.json':encode(syncRecovery)}:{}) };
   for (const [id, world] of Object.entries(worlds)) {
     if (!uuid.test(id)) throw new StorageError('VALIDATION_FAILED', '共通世界snapshot IDが不正です。', id);
-    files[`worlds/${id}.json`] = encode(checkedProject(world, `worlds/${id}.json`, ARCHIVE_LIMITS, worldContents));
+    files[`worlds/${id}.json`] = encode(checkedProject(world, `worlds/${id}.json`, ARCHIVE_LIMITS, worldContents, validation));
   }
   if(dictionary)files['data/records.json']=jsonBytes({records:dictionary.records,arrays:dictionary.arrays});
   if (mode === 'embedded') {

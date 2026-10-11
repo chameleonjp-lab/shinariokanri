@@ -1,5 +1,5 @@
 import {mergeImportConflicts} from './importWork';
-import {freezeCapturedPlainData} from '../domain/immutablePlainData';
+import {freezeCapturedPlainDataAsync} from '../domain/immutablePlainData';
 import {createSharedArrayJsonEncoder} from './sharedArrayJson';
 import {cloneProject as clonePrivateProject} from './clone';
 import {recordDiagnostic} from '../diagnostics';
@@ -1200,7 +1200,7 @@ export class ScenarioStore {
     const pending = options.snapshotId ? [] : capturedPending, retained = options.snapshotId ? [] : captured.retained;
     // These graphs came from the single private read transaction above. Freeze
     // only plain own-data captures; unusual legacy language retains its old path.
-    freezeCapturedPlainData({ project, pending, retained });
+    await freezeCapturedPlainDataAsync({ project, pending, retained }, options.signal);
     const commandBytes = createSharedArrayJsonEncoder();
     const operations = new Map(retained.map(row => [row.operation.operationId, row.operation]));
     for (const row of pending) {
