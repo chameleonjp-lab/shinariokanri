@@ -1,6 +1,7 @@
 import type {ProjectContent, ProjectData} from '../domain/types';
 import {validateProject} from '../domain/model';
-import {validateProjectIntegrity} from '../domain/projectRecordValidation';
+import {createProjectValidationSession, validateProjectIntegrity} from '../domain/projectRecordValidation';
+import {captureImmutablePlainData} from '../domain/immutablePlainData';
 import {verifySnapshotHashes, verifyWorlds, type PreparedScenario} from './archiveData';
 import {cloneProject} from './clone';
 import {collectImportIds, planCrossProjectImport, type CrossProjectImportPlan, type ImportId} from './importMapping';
@@ -10,7 +11,7 @@ import {validateSyncRecovery, type NativeSyncRecovery} from './syncRecovery';
 import {equalJson, jsonBytes, sha256, validateJsonValue} from './json';
 import {checkCancelled, StorageError} from './errors';
 
-export type ImportWorkStep = 'structure' | 'worlds' | 'hashes' | 'integrity' | 'recovery' | 'sync_recovery' | 'ids' | 'clone' | 'map_recovery' | 'rehash_recovery' | 'mapped_plan' | 'merge_conflicts' | 'merge' | 'combine_history';
+export type ImportWorkStep = 'full_read' | 'structure' | 'worlds' | 'hashes' | 'integrity' | 'recovery' | 'sync_recovery' | 'ids' | 'clone' | 'map_recovery' | 'rehash_recovery' | 'mapped_plan' | 'merge_conflicts' | 'merge' | 'combine_history';
 export interface ImportWork {
   step: ImportWorkStep; project: ProjectData; worlds: Record<string, ProjectContent>;
   recovery?: PortableRecovery; syncRecovery?: NativeSyncRecovery[]; idMap?: Record<string, string>;
@@ -31,6 +32,26 @@ export async function runImportWork(work: ImportWork, signal?: AbortSignal, load
   const {project, worlds, recovery} = work;
   let result: ImportWorkResult = {};
   switch (work.step) {
+    case 'full_read': {
+      // One read owns the complete manuscript and exact fixed dependencies.
+      // Only successful proofs over this private immutable capture can share
+      // structural work; unsupported graphs retain the uncached checks.
+      const owned = captureImmutablePlainData({project, worlds, knownWorlds: work.knownWorlds ?? {}}).value;
+      const validation = createProjectValidationSession({worldSnapshots: owned.worlds});
+      const structural = validation.validate(owned.project);
+      if (!structural.ok) throw Object.assign(new StorageError('VALIDATION_FAILED', structural.issues.map(issue => `${issue.path}: ${issue.message}`).join('\n')), {issues: structural.issues});
+      validateJsonValue(structural.value);
+      checkCancelled(signal);
+      verifyWorlds([owned.project], owned.knownWorlds);
+      checkCancelled(signal);
+      await verifySnapshotHashes([owned.project]);
+      checkCancelled(signal);
+      const issues = await validation.integrity(owned.project, owned.project.history.length > 0);
+      if (issues.length) throw Object.assign(new StorageError('VALIDATION_FAILED', issues.map(issue => `${issue.path}: ${issue.message}`).join('\n')), {issues});
+      // The caller retains its private database image. Sending the entire
+      // history back would add a discarded transfer without a new proof.
+      break;
+    }
     case 'structure': {
       const validation = validateProject(project, {worldSnapshots: worlds});
       if (!validation.ok) throw Object.assign(new StorageError('VALIDATION_FAILED', validation.issues.map(issue => `${issue.path}: ${issue.message}`).join('\n')), {issues: validation.issues});

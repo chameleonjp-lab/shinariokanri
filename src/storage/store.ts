@@ -592,7 +592,7 @@ export class ScenarioStore {
         const knownWorlds = await this.validationWorlds(), worlds = worldSnapshotContents(knownWorlds);
         // Unlike the current-only editing validator, these checks retain every
         // historical command and require its original full integrity contract.
-        for (const step of ['structure', 'worlds', 'hashes', 'integrity'] as const) await performImportWork({step, project, worlds, knownWorlds}, {signal});
+        await performImportWork({step: 'full_read', project, worlds, knownWorlds}, {signal});
         checkCancelled(signal);
         project = this.rememberProject(project, read.contentHeadOperationId, read.historyIds, readEpoch);
       }
