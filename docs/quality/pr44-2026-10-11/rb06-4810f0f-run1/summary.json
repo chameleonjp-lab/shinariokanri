@@ -1,0 +1,222 @@
+{
+  "testedCommit": "4810f0f55dacd1ae9fc252f114854b0c53ab8033",
+  "testedTree": "90fc546084417b34c0965c573405f0e734a9af2f",
+  "build": {
+    "commit": "4810f0f55dacd1ae9fc252f114854b0c53ab8033",
+    "tree": "90fc546084417b34c0965c573405f0e734a9af2f",
+    "dirty": false,
+    "base": "/shinariokanri/",
+    "builtAt": "2026-10-11T07:54:27.429Z",
+    "versionHashScope": "sorted paths and bytes plus build info before version",
+    "version": "ac70e61536847e511bdc"
+  },
+  "stats": {
+    "startTime": "2026-10-11T07:55:13.306Z",
+    "duration": 200744.537,
+    "expected": 9,
+    "skipped": 0,
+    "unexpected": 3,
+    "flaky": 0
+  },
+  "exitCode": 1,
+  "cases": [
+    {
+      "title": "50件より古い版を通常検索し、単体復元と作品全体復元を区別して保存失敗・再入・cold再生する",
+      "project": "chromium",
+      "status": "unexpected",
+      "results": [
+        {
+          "status": "timedOut",
+          "duration": 30979,
+          "errors": [
+            "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+          ],
+          "attachments": [
+            {
+              "name": "error-context",
+              "contentType": "text/markdown",
+              "path": "/tmp/shinariokanri-pr44-4810f0f-rb06/test-results/rb06-recovery-50件より古い版を通常検-d6e19-作品全体復元を区別して保存失敗・再入・cold再生する-chromium/error-context.md"
+            },
+            {
+              "name": "trace",
+              "contentType": "application/zip",
+              "path": "/tmp/shinariokanri-pr44-4810f0f-rb06/test-results/rb06-recovery-50件より古い版を通常検-d6e19-作品全体復元を区別して保存失敗・再入・cold再生する-chromium/trace.zip"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "別作品の全ID対応を画面移動・cold再起動から再開し、失敗後に原子統合して元履歴・段落を完全保存する",
+      "project": "chromium",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "duration": 9464,
+          "errors": [],
+          "attachments": []
+        }
+      ]
+    },
+    {
+      "title": "復元保存待ちの後に選んだ資料と作品を保持し、新規復元だけを一覧へ追加する",
+      "project": "chromium",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "duration": 3436,
+          "errors": [],
+          "attachments": []
+        }
+      ]
+    },
+    {
+      "title": "native保存ack待ちに届いた後続ファイルを保持し、先の新規復元が確認画面を開き直さない",
+      "project": "chromium",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "duration": 5599,
+          "errors": [],
+          "attachments": []
+        }
+      ]
+    },
+    {
+      "title": "50件より古い版を通常検索し、単体復元と作品全体復元を区別して保存失敗・再入・cold再生する",
+      "project": "firefox",
+      "status": "unexpected",
+      "results": [
+        {
+          "status": "timedOut",
+          "duration": 31130,
+          "errors": [
+            "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+            "Error: page.waitForEvent: Test timeout of 30000ms exceeded.\n=========================== logs ===========================\nwaiting for event \"download\"\n============================================================\n\n  15 |   await expect(page.locator('.sidebar')).toBeVisible();\n  16 | }\n> 17 | async function backup(page: Page) { await work(page, '完全保存・復元'); const pending = page.waitForEvent('download'); await page.getByRole('button', { name: '完全保存ファイルを作成', exact: true }).click(); const download = await pending; return inspectScenario(new Uint8Array(await readFile((await download.path())!)), { worker: false }); }\n     |                                                                                       ^\n  18 | async function oldHistory() { const bytes = new Uint8Array(await readFile('tests/fixtures/rb06-history.scenario')), prepared = await inspectScenario(bytes, { worker: false }), p = prepared.project, first = p.history[0], scene = first.after.entities[0]; return { bytes, p, operation: first.operationId, scene }; }\n  19 |\n  20 | test('50件より古い版を通常検索し、単体復元と作品全体復元を区別して保存失敗・再入・cold再生する', async ({ page }) => {\n    at backup (/workspace/ap01-verification/tests/e2e/rb06-recovery.spec.ts:17:87)\n    at /workspace/ap01-verification/tests/e2e/rb06-recovery.spec.ts:25:287"
+          ],
+          "attachments": [
+            {
+              "name": "error-context",
+              "contentType": "text/markdown",
+              "path": "/tmp/shinariokanri-pr44-4810f0f-rb06/test-results/rb06-recovery-50件より古い版を通常検-d6e19-作品全体復元を区別して保存失敗・再入・cold再生する-firefox/error-context.md"
+            },
+            {
+              "name": "trace",
+              "contentType": "application/zip",
+              "path": "/tmp/shinariokanri-pr44-4810f0f-rb06/test-results/rb06-recovery-50件より古い版を通常検-d6e19-作品全体復元を区別して保存失敗・再入・cold再生する-firefox/trace.zip"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "別作品の全ID対応を画面移動・cold再起動から再開し、失敗後に原子統合して元履歴・段落を完全保存する",
+      "project": "firefox",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "duration": 14949,
+          "errors": [],
+          "attachments": []
+        }
+      ]
+    },
+    {
+      "title": "復元保存待ちの後に選んだ資料と作品を保持し、新規復元だけを一覧へ追加する",
+      "project": "firefox",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "duration": 5932,
+          "errors": [],
+          "attachments": []
+        }
+      ]
+    },
+    {
+      "title": "native保存ack待ちに届いた後続ファイルを保持し、先の新規復元が確認画面を開き直さない",
+      "project": "firefox",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "duration": 7068,
+          "errors": [],
+          "attachments": []
+        }
+      ]
+    },
+    {
+      "title": "50件より古い版を通常検索し、単体復元と作品全体復元を区別して保存失敗・再入・cold再生する",
+      "project": "webkit",
+      "status": "unexpected",
+      "results": [
+        {
+          "status": "timedOut",
+          "duration": 33408,
+          "errors": [
+            "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+            "Error: locator.click: Test timeout of 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.history-page').getByRole('button', { name: '作品全体の復元差分を確認', exact: true })\u001b[22m\n\u001b[2m    - locator resolved to <button class=\"button secondary\">作品全体の復元差分を確認</button>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    - waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m    - element is visible, enabled and stable\u001b[22m\n\u001b[2m    - scrolling into view if needed\u001b[22m\n\n\n  23 |   await panel.getByRole('button', { name: 'この内容へ復元する', exact: true }).click(); await expect(panel.getByRole('alert')).toContainText('容量'); await expect(panel.getByRole('region', { name: '確認した復元差分' })).toContainText('原場面'); await navigate(page, /^資料/); await work(page, '変更履歴'); await expect(panel.getByRole('region', { name: '確認した復元差分' })).toBeVisible(); await panel.getByRole('button', { name: 'この内容へ復元する', exact: true }).click(); await expect(panel.getByRole('status').filter({ hasText: '保存した版を確認' })).toBeVisible();\n  24 |   await page.reload(); await work(page, '変更履歴'); await expect(panel.getByLabel('履歴を検索', { exact: true })).toHaveValue(f.operation); await expect(panel.getByLabel('単体復元する対象', { exact: true })).toHaveValue(f.scene.id); let inspected = await backup(page); expect(inspected.project.name).toBe(f.p.name); expect(inspected.project.entities.find(e => e.id === f.scene.id)!.name).toBe('原場面'); expect(inspected.project.snapshots).toEqual(f.p.snapshots);\n> 25 |   await work(page, '変更履歴'); await panel.getByRole('button', { name: '作品全体の復元差分を確認', exact: true }).click(); await panel.getByRole('button', { name: '確認した作品全体へ復元', exact: true }).click(); await expect(panel.getByRole('status').filter({ hasText: '保存した版を確認' })).toBeVisible(); inspected = await backup(page); expect(inspected.project.name).toBe('復元元'); expect(inspected.project.history.length).toBe(f.p.history.length + 2); expect(inspected.project.snapshots).toEqual(f.p.snapshots); expect(inspected.recovery!.pending.length).toBeGreaterThanOrEqual(f.p.history.length);\n     |                                                                                                    ^\n  26 | });\n  27 |\n  28 | test('別作品の全ID対応を画面移動・cold再起動から再開し、失敗後に原子統合して元履歴・段落を完全保存する', async ({ page }) => {\n    at /workspace/ap01-verification/tests/e2e/rb06-recovery.spec.ts:25:100"
+          ],
+          "attachments": [
+            {
+              "name": "error-context",
+              "contentType": "text/markdown",
+              "path": "/tmp/shinariokanri-pr44-4810f0f-rb06/test-results/rb06-recovery-50件より古い版を通常検-d6e19-作品全体復元を区別して保存失敗・再入・cold再生する-webkit/error-context.md"
+            },
+            {
+              "name": "trace",
+              "contentType": "application/zip",
+              "path": "/tmp/shinariokanri-pr44-4810f0f-rb06/test-results/rb06-recovery-50件より古い版を通常検-d6e19-作品全体復元を区別して保存失敗・再入・cold再生する-webkit/trace.zip"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "別作品の全ID対応を画面移動・cold再起動から再開し、失敗後に原子統合して元履歴・段落を完全保存する",
+      "project": "webkit",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "duration": 24222,
+          "errors": [],
+          "attachments": []
+        }
+      ]
+    },
+    {
+      "title": "復元保存待ちの後に選んだ資料と作品を保持し、新規復元だけを一覧へ追加する",
+      "project": "webkit",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "duration": 10303,
+          "errors": [],
+          "attachments": []
+        }
+      ]
+    },
+    {
+      "title": "native保存ack待ちに届いた後続ファイルを保持し、先の新規復元が確認画面を開き直さない",
+      "project": "webkit",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "duration": 11335,
+          "errors": [],
+          "attachments": []
+        }
+      ]
+    }
+  ],
+  "interpretation": "The seed restoration boundary passed in all three engines. The first full RB06 case exceeded the original 30000ms test budget later in each engine. No timeout, fixture, retry or acceptance assertion was changed. This run remains a failure."
+}
