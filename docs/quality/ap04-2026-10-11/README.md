@@ -58,3 +58,7 @@ native `.scenario` 1.0.0、serialized fields/kind/schema、runtime形式1.0.0/pr
 F担当の[24ケース・96条項proof](ap04-original-f-proof.json)と[操作計画](ap04-original-f-plan.md)は全節の原文、実ソース行、操作/assert、依存hashを持つ。F33はこの96条項外の独立補助で、元F33全体の合格は付けない。[B/M proof](ap04-original-bm-proof.json)、[F07–12 proof](ap04-original-bm-f07-12-proof.json)、[N proof](ap04-original-n-proof.json)、[N20 proof](ap04-original-n20-target-proof.json)、[E proof](ap04-original-e-proof.json)、[根復元・出力proof](ap04-original-root-proof.json)、[安全境界proof](ap04-original-e07-safety-bounds-proof.json)も同じ最終候補へ結ぶ。最終安定後に各ソースhash・callback行を更新し、実行結果と未測定条件を分けて保存する。
 
 通常の使い方は[利用者ガイド](../../implementation/USER_GUIDE.md)、出力形式と拒否条件は[出力互換性](../../implementation/EXPORT_COMPATIBILITY.md)を参照する。
+
+## main からの工程ブランチ
+
+[AP04 独立工程候補](../ap04-phase-2026-10-11/README.md)に前提 PR47、actual source commit/tree、最新統合 source との全非 docs byte 一致と限定保持資料を記録した。工程候補の build/UI/unit/性能/CI と原464条項は未実行である。

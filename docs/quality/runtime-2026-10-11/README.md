@@ -10,4 +10,3 @@
 | [b56e8b9 smoke失敗](../ap04-2026-10-11/smoke-b56e8b9-n16-fixture-failure-1/README.md) | 最初のN16 given exportがinteger型と既定boolean allowed集合の不整合で457msに失敗。元12件中残11件は未実行、実upload/download各0。 | traceと0イベントを照合したaudit completeはgiven成立・download観測の成功を意味しない。元候補・guard・assertion・timeoutを保持。 |
 
 `c758fd68377059f7e2e7389fac80124818710da8` の新buildも、3fixtureの`allowed.min/max:null`がnumber型と不整合なTS2322で失敗した。[実build失敗と元source](../ap04-2026-10-11/build-c758fd6-typescript-fixture-failure-1/README.md)を別保存した。このsourceではbrowserを実行しておらず、残存するb56e8b9のdistを成功へ結び付けない。`allowed:{}`へ修正した後のclean候補 `c2077620ca6b72a1994aec6e29efdd7325cea6ab` / tree `5cf766ed8f66d91bbd5bb55212fd7ec109eebc0d` はbuild `0b38e4b6bb3ffb808f1f`、base `/shinariokanri/`で成功した。通常UI検査と原4節の受入判定はbuild成功から推定しない。
-
