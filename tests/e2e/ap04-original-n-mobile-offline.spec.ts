@@ -84,7 +84,9 @@ for (const width of [320, 390]) test(`AT-N01 幅${width} CSS pxの縦画面で�
     await save.tap();
     await expect(editor.locator('.editor-save-state')).toContainText('端末内保存済み');
     const afterEditDimensions = await noPageWideScroll(page);
-    await editor.getByRole('button', { name: '詳細を閉じる', exact: true }).tap();
+    const backToList = editor.getByRole('button', { name: '一覧に戻る', exact: true });
+    await reachable(page, backToList);
+    await backToList.tap();
     await expect(line).toContainText(end.name);
     await navigate(page, /^年表/);
     await page.getByRole('tab', { name: '関係表・図', exact: true }).tap();
@@ -101,7 +103,7 @@ for (const width of [320, 390]) test(`AT-N01 幅${width} CSS pxの縦画面で�
     expect(saved.project.entities.find(entity => entity.id === unfinished.id)?.data).toMatchObject({ fromId: entry.id, toId: end.id, condition: unfinished.data.condition });
     const beforeRestore = await authorFingerprint(page);
     await page.locator('input[type=file][accept*=".scenario"]').setInputFiles({ name: 'N01-invalid.scenario', mimeType: 'application/zip', buffer: Buffer.from('invalid archive bytes') });
-    const restorationIssue = page.locator('.backup-panel').getByRole('alert');
+    const restorationIssue = page.locator('.backup-page').getByRole('alert');
     await expect(restorationIssue).toBeVisible();
     await reachable(page, restorationIssue);
     expect(await authorFingerprint(page)).toBe(beforeRestore);
@@ -215,8 +217,10 @@ test('AT-N11 補助: 取得済みPWAの作品をbrowser offlineで編集し、�
     await navigate(reopened, /^作品・保存/);
     await reopened.getByRole('tab', { name: '完全保存・復元', exact: true }).click();
     await reopened.getByRole('button', { name: '完全保存ファイルを作成', exact: true }).click();
-    await expect(reopened.locator('.backup-panel').getByRole('alert')).toContainText(/添付|素材|bytes/);
+    const missingExportIssue = reopened.locator('.backup-page').getByRole('alert');
+    await expect(missingExportIssue).toContainText(`${preparedAsset.assetPath}: 完全保存に必要な添付bytesが取得されていません。`);
     expect(missingDownloads).toBe(0);
+    expect(await authorFingerprint(reopened)).toBe(authorBeforeMissing);
     await openEntity(reopened, 'scene', scene.name);
     await reopened.locator('.detail-panel').getByRole('tab', { name: '本文', exact: true }).click();
     await expect(reopened.locator('.detail-panel').getByRole('textbox', { name: '本文', exact: true })).toHaveValue(changedBody);

@@ -133,7 +133,7 @@ test('AT-F40 括弧付きall/any条件の真・偽・不明を通常試読し、
     const beforeRejectedUnknown = await state.innerText();
     await stub(page, key.name, 'unknown', '鍵の取得は未設定');
     const rejectedUnknown = page.locator('.reader-issue').filter({ hasText: '未定の値はこの操作で使えません。' });
-    await expect(rejectedUnknown.locator('code')).toHaveText('CONDITION_UNKNOWN'); await expect(rejectedUnknown).toContainText('未定の値はこの操作で使えません。'); await expect(state).toHaveText(beforeRejectedUnknown); await expect(choice).toHaveClass('reader-choice choice-false');
+    await expect(rejectedUnknown.locator('code')).toHaveText('CONDITION_UNKNOWN'); await expect(rejectedUnknown).toContainText('未定の値はこの操作で使えません。'); await expect.poll(() => state.innerText()).toBe(beforeRejectedUnknown); await expect(choice).toHaveClass('reader-choice choice-false');
     rejectedUnknownStubObservation = { code: await rejectedUnknown.locator('code').innerText(), issueText: await rejectedUnknown.innerText(), stateBefore: beforeRejectedUnknown, stateAfter: await state.innerText(), choiceClass: await choice.getAttribute('class') };
     // Unknown assignment is rejected. Re-evaluate the same declarations from an
     // explicitly authored unknown initial state, rather than assuming it applied.

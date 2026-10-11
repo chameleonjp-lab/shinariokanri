@@ -19,8 +19,8 @@
     "files": [
       {
         "file": "src/App.tsx",
-        "bytes": 60579,
-        "sha256": "421829817464985fb5f92b232723efcbfefb79e8315383003bb2eb50125dc50c"
+        "bytes": 61059,
+        "sha256": "487059e4c0af1788cad5bb6ad4ae90967969ca14b93f52530d46c4eeb0aa87eb"
       },
       {
         "file": "src/domain/conditionDraft.ts",
@@ -51,6 +51,16 @@
         "file": "src/testing/sharedReviewFixture.ts",
         "bytes": 2002,
         "sha256": "5e3551e5caff977249187a0fce11c2da10f976a02269fd2186efce651bf6cbf7"
+      },
+      {
+        "file": "src/ui/BackupPanel.tsx",
+        "bytes": 23979,
+        "sha256": "dbf4bb0ae4779f6295c5d445ab12e9e1666b3c362ef681f8652b3cbae15ed163"
+      },
+      {
+        "file": "src/ui/BackupPanelImportedVersions.test.ts",
+        "bytes": 4259,
+        "sha256": "628f0ae5d64bee1961f7a62984c7f751646c800c25439736a256ef3957363357"
       },
       {
         "file": "src/ui/CatalogPanel.tsx",
@@ -109,8 +119,8 @@
       },
       {
         "file": "tests/e2e/ap04-original-f-dialogue.spec.ts",
-        "bytes": 14562,
-        "sha256": "035ee536bf5985efaf1d83139670e2e187cdedbfe3cc404b0d73ed8db792451c"
+        "bytes": 14944,
+        "sha256": "142a0937b21bd4df72730289c6dd97aa30a0aad0873859287cdca929497887db"
       },
       {
         "file": "tests/e2e/ap04-original-f-graph.spec.ts",
@@ -129,8 +139,8 @@
       },
       {
         "file": "tests/e2e/ap04-original-f-material-output.spec.ts",
-        "bytes": 36329,
-        "sha256": "14c3ce02c60f83a324cd2c4ca6e3c4cc644e76cb825281fb8c5075abd42b1323"
+        "bytes": 37285,
+        "sha256": "93185616c57548630f287cca5af9b4a46f8445037381dc1b1df2e6803bfd85f6"
       },
       {
         "file": "tests/e2e/ap04-original-f-production.spec.ts",
@@ -159,8 +169,8 @@
       },
       {
         "file": "tests/e2e/ap04-original-f-writing.spec.ts",
-        "bytes": 22177,
-        "sha256": "14385b84e5ced5b698f6581c1d3c06f8c3ddfe8f0177b88c2af23525d0674a66"
+        "bytes": 22754,
+        "sha256": "01cb3efa2b1ab895cec30df7500e64c7973030e7d880f1dcf75287e8758f5093"
       },
       {
         "file": "tests/e2e/ap04-original-helpers.ts",
@@ -1063,128 +1073,128 @@
       "authored_entries": [
         {
           "file": "tests/e2e/ap04-original-f-writing.spec.ts",
-          "line": 194,
-          "end_line": 245,
+          "line": 204,
+          "end_line": 255,
           "title_source": "test('AT-F05 緊張度2/8/未入力の元三場面へ構成雛形を別案で適用し、算出母数と空欄を保ち正本を採点しない', async ({ page }, info) => {",
           "excerpt_sha256": "9691ddc928d779d6826fa9d83a53d8363f337b672c4be45abd1e540fab565f9c",
           "source_excerpt": "test('AT-F05 緊張度2/8/未入力の元三場面へ構成雛形を別案で適用し、算出母数と空欄を保ち正本を採点しない', async ({ page }, info) => {\n  const p = createProject('AT-F05 作者値の構成雛形');\n  const chapter = createEntity(p.projectId, 'chapter', '構成を試す章');\n  const two = createEntity(p.projectId, 'scene', '緊張度2の場面', { chapterId: chapter.id, body: textToRichText('作者が付けた低い緊張度。'), tension: 2 });\n  const eight = createEntity(p.projectId, 'scene', '緊張度8の場面', { chapterId: chapter.id, body: textToRichText('作者が付けた高い緊張度。'), tension: 8 });\n  const missing = createEntity(p.projectId, 'scene', '緊張度未入力の場面', { chapterId: chapter.id, body: textToRichText('緊張度をまだ決めていない。'), tension: null });\n  chapter.data.sceneIds = [two.id, eight.id, missing.id];\n  p.entities.push(chapter, two, eight, missing);\n  const bytes = await exportScenario(p);\n  await attachGiven(info, 'AT-F05', bytes, { chapterId: chapter.id, canonicalOrder: chapter.data.sceneIds, tensionValues: [2, 8, null], structureTemplate: { id: 'three-part', beats: ['導入', '展開', '結末'] } });\n  await seed(page, bytes); await writing(page, '作者別案');\n  await page.getByLabel('新しい別案の名前', { exact: true }).fill('三場面の構成を逆に試す案');\n  await page.getByRole('button', { name: '分岐して別案を作る', exact: true }).click();\n  const alternativeId = await page.getByLabel('編集する作者別案', { exact: true }).inputValue();\n  expect(alternativeId).toBeTruthy();\n  const structure = page.getByRole('region', { name: '構成雛形と盛り上がり', exact: true });\n  await structure.getByLabel('構成を試す章', { exact: true }).selectOption(chapter.id);\n  await structure.getByLabel('構成雛形', { exact: true }).selectOption('three-part');\n  for (const [beat, id] of [['導入', missing.id], ['展開', eight.id], ['結末', two.id]] as const) await structure.getByLabel(`${beat}に置く場面`, { exact: true }).selectOption(id);\n  await expect(structure).toContainText('緊張度 2/3件を集計。未入力 1件は空欄のまま');\n  await expect(structure.locator('.tension-values')).toContainText('緊張度 2');\n  await expect(structure.locator('.tension-values')).toContainText('緊張度 8');\n  await expect(structure.locator('.tension-values')).toContainText('緊張度 未入力');\n  const beforePreview = await authorFingerprint(page);\n  await structure.getByRole('button', { name: '順序の差分を確認', exact: true }).click();\n  const preview = structure.getByRole('region', { name: '構成順の差分', exact: true });\n  await expect(preview).toContainText('変更前：緊張度2の場面 → 緊張度8の場面 → 緊張度未入力の場面');\n  await expect(preview).toContainText('変更後：緊張度未入力の場面 → 緊張度8の場面 → 緊張度2の場面');\n  expect(await authorFingerprint(page)).toBe(beforePreview);\n  await preview.getByRole('button', { name: '取消', exact: true }).click();\n  expect(await authorFingerprint(page)).toBe(beforePreview);\n  await structure.getByRole('button', { name: '順序の差分を確認', exact: true }).click();\n  await preview.getByRole('button', { name: '別案の下書きへ適用', exact: true }).click();\n  expect(await authorFingerprint(page)).toBe(beforePreview);\n  await expect(structure).toContainText('緊張度 2/3件を集計。未入力 1件は空欄のまま');\n  await page.getByRole('button', { name: '別案を新しい版として保存', exact: true }).click();\n  await expect(page.getByText('保存済み 2版', { exact: true })).toBeVisible();\n  await page.reload();\n  const saved = await backup(page);\n  expect(saved.project.entities.find(e => e.id === chapter.id)?.data).toEqual(chapter.data);\n  for (const scene of [two, eight, missing]) expect(saved.project.entities.find(e => e.id === scene.id)?.data).toEqual(scene.data);\n  const alternative = saved.project.authorAlternatives!.find(a => a.id === alternativeId)!;\n  expect(alternative.versions).toHaveLength(2);\n  const head = alternative.versions.find(v => v.id === alternative.headVersionId)!;\n  expect(head.content.entities.find(e => e.id === chapter.id)).toMatchObject({ data: { sceneIds: [missing.id, eight.id, two.id] } });\n  expect(head.content.entities.find(e => e.id === missing.id)).toMatchObject({ data: { tension: null } });\n  expect(head.structurePlan).toMatchObject({ templateId: 'three-part', chapterId: chapter.id, assignments: { '導入': missing.id, '展開': eight.id, '結末': two.id } });\n  await writing(page, '作者別案');\n  await page.getByLabel('編集する作者別案', { exact: true }).selectOption(alternativeId);\n  await expect(structure).toContainText('緊張度 2/3件を集計。未入力 1件は空欄のまま');\n  await attachObservation(info, 'AT-F05-observed', { alternativeId, savedVersionId: head.id, canonicalOrder: chapter.data.sceneIds, alternativeOrder: [missing.id, eight.id, two.id], measuredCount: 2, totalCount: 3, missingCount: 1, valuesRetained: [2, 8, null], previewAndDraftDidNotCommitCanonical: true, revision: saved.project.revision });\n});\n",
           "normal_operations": [
             {
-              "line": 204,
+              "line": 214,
               "source": "await seed(page, bytes); await writing(page, '作者別案');"
             },
             {
-              "line": 205,
+              "line": 215,
               "source": "await page.getByLabel('新しい別案の名前', { exact: true }).fill('三場面の構成を逆に試す案');"
             },
             {
-              "line": 206,
+              "line": 216,
               "source": "await page.getByRole('button', { name: '分岐して別案を作る', exact: true }).click();"
             },
             {
-              "line": 207,
+              "line": 217,
               "source": "const alternativeId = await page.getByLabel('編集する作者別案', { exact: true }).inputValue();"
             },
             {
-              "line": 229,
+              "line": 239,
               "source": "await page.getByRole('button', { name: '別案を新しい版として保存', exact: true }).click();"
             },
             {
-              "line": 230,
+              "line": 240,
               "source": "await expect(page.getByText('保存済み 2版', { exact: true })).toBeVisible();"
             },
             {
-              "line": 231,
+              "line": 241,
               "source": "await page.reload();"
             },
             {
-              "line": 232,
+              "line": 242,
               "source": "const saved = await backup(page);"
             },
             {
-              "line": 241,
+              "line": 251,
               "source": "await writing(page, '作者別案');"
             },
             {
-              "line": 242,
+              "line": 252,
               "source": "await page.getByLabel('編集する作者別案', { exact: true }).selectOption(alternativeId);"
             }
           ],
           "assertions": [
             {
-              "line": 208,
+              "line": 218,
               "source": "expect(alternativeId).toBeTruthy();"
             },
             {
-              "line": 213,
+              "line": 223,
               "source": "await expect(structure).toContainText('緊張度 2/3件を集計。未入力 1件は空欄のまま');"
-            },
-            {
-              "line": 214,
-              "source": "await expect(structure.locator('.tension-values')).toContainText('緊張度 2');"
-            },
-            {
-              "line": 215,
-              "source": "await expect(structure.locator('.tension-values')).toContainText('緊張度 8');"
-            },
-            {
-              "line": 216,
-              "source": "await expect(structure.locator('.tension-values')).toContainText('緊張度 未入力');"
-            },
-            {
-              "line": 220,
-              "source": "await expect(preview).toContainText('変更前：緊張度2の場面 → 緊張度8の場面 → 緊張度未入力の場面');"
-            },
-            {
-              "line": 221,
-              "source": "await expect(preview).toContainText('変更後：緊張度未入力の場面 → 緊張度8の場面 → 緊張度2の場面');"
-            },
-            {
-              "line": 222,
-              "source": "expect(await authorFingerprint(page)).toBe(beforePreview);"
             },
             {
               "line": 224,
-              "source": "expect(await authorFingerprint(page)).toBe(beforePreview);"
+              "source": "await expect(structure.locator('.tension-values')).toContainText('緊張度 2');"
             },
             {
-              "line": 227,
-              "source": "expect(await authorFingerprint(page)).toBe(beforePreview);"
+              "line": 225,
+              "source": "await expect(structure.locator('.tension-values')).toContainText('緊張度 8');"
             },
             {
-              "line": 228,
-              "source": "await expect(structure).toContainText('緊張度 2/3件を集計。未入力 1件は空欄のまま');"
+              "line": 226,
+              "source": "await expect(structure.locator('.tension-values')).toContainText('緊張度 未入力');"
             },
             {
               "line": 230,
-              "source": "await expect(page.getByText('保存済み 2版', { exact: true })).toBeVisible();"
+              "source": "await expect(preview).toContainText('変更前：緊張度2の場面 → 緊張度8の場面 → 緊張度未入力の場面');"
             },
             {
-              "line": 233,
-              "source": "expect(saved.project.entities.find(e => e.id === chapter.id)?.data).toEqual(chapter.data);"
+              "line": 231,
+              "source": "await expect(preview).toContainText('変更後：緊張度未入力の場面 → 緊張度8の場面 → 緊張度2の場面');"
+            },
+            {
+              "line": 232,
+              "source": "expect(await authorFingerprint(page)).toBe(beforePreview);"
             },
             {
               "line": 234,
-              "source": "for (const scene of [two, eight, missing]) expect(saved.project.entities.find(e => e.id === scene.id)?.data).toEqual(scene.data);"
+              "source": "expect(await authorFingerprint(page)).toBe(beforePreview);"
             },
             {
-              "line": 236,
-              "source": "expect(alternative.versions).toHaveLength(2);"
+              "line": 237,
+              "source": "expect(await authorFingerprint(page)).toBe(beforePreview);"
             },
             {
               "line": 238,
-              "source": "expect(head.content.entities.find(e => e.id === chapter.id)).toMatchObject({ data: { sceneIds: [missing.id, eight.id, two.id] } });"
-            },
-            {
-              "line": 239,
-              "source": "expect(head.content.entities.find(e => e.id === missing.id)).toMatchObject({ data: { tension: null } });"
+              "source": "await expect(structure).toContainText('緊張度 2/3件を集計。未入力 1件は空欄のまま');"
             },
             {
               "line": 240,
-              "source": "expect(head.structurePlan).toMatchObject({ templateId: 'three-part', chapterId: chapter.id, assignments: { '導入': missing.id, '展開': eight.id, '結末': two.id } });"
+              "source": "await expect(page.getByText('保存済み 2版', { exact: true })).toBeVisible();"
             },
             {
               "line": 243,
+              "source": "expect(saved.project.entities.find(e => e.id === chapter.id)?.data).toEqual(chapter.data);"
+            },
+            {
+              "line": 244,
+              "source": "for (const scene of [two, eight, missing]) expect(saved.project.entities.find(e => e.id === scene.id)?.data).toEqual(scene.data);"
+            },
+            {
+              "line": 246,
+              "source": "expect(alternative.versions).toHaveLength(2);"
+            },
+            {
+              "line": 248,
+              "source": "expect(head.content.entities.find(e => e.id === chapter.id)).toMatchObject({ data: { sceneIds: [missing.id, eight.id, two.id] } });"
+            },
+            {
+              "line": 249,
+              "source": "expect(head.content.entities.find(e => e.id === missing.id)).toMatchObject({ data: { tension: null } });"
+            },
+            {
+              "line": 250,
+              "source": "expect(head.structurePlan).toMatchObject({ templateId: 'three-part', chapterId: chapter.id, assignments: { '導入': missing.id, '展開': eight.id, '結末': two.id } });"
+            },
+            {
+              "line": 253,
               "source": "await expect(structure).toContainText('緊張度 2/3件を集計。未入力 1件は空欄のまま');"
             }
           ]
@@ -1203,8 +1213,8 @@
           "source_entry_refs": [
             {
               "file": "tests/e2e/ap04-original-f-writing.spec.ts",
-              "line": 194,
-              "end_line": 245,
+              "line": 204,
+              "end_line": 255,
               "excerpt_sha256": "9691ddc928d779d6826fa9d83a53d8363f337b672c4be45abd1e540fab565f9c"
             }
           ],
@@ -1221,8 +1231,8 @@
           "source_entry_refs": [
             {
               "file": "tests/e2e/ap04-original-f-writing.spec.ts",
-              "line": 194,
-              "end_line": 245,
+              "line": 204,
+              "end_line": 255,
               "excerpt_sha256": "9691ddc928d779d6826fa9d83a53d8363f337b672c4be45abd1e540fab565f9c"
             }
           ],
@@ -1239,8 +1249,8 @@
           "source_entry_refs": [
             {
               "file": "tests/e2e/ap04-original-f-writing.spec.ts",
-              "line": 194,
-              "end_line": 245,
+              "line": 204,
+              "end_line": 255,
               "excerpt_sha256": "9691ddc928d779d6826fa9d83a53d8363f337b672c4be45abd1e540fab565f9c"
             }
           ],
@@ -1257,8 +1267,8 @@
           "source_entry_refs": [
             {
               "file": "tests/e2e/ap04-original-f-writing.spec.ts",
-              "line": 194,
-              "end_line": 245,
+              "line": 204,
+              "end_line": 255,
               "excerpt_sha256": "9691ddc928d779d6826fa9d83a53d8363f337b672c4be45abd1e540fab565f9c"
             }
           ],
@@ -1287,10 +1297,10 @@
         {
           "file": "tests/e2e/ap04-original-f-writing.spec.ts",
           "line": 118,
-          "end_line": 193,
+          "end_line": 203,
           "title_source": "test('AT-F06 要約・本文・秘密メモを分けた場面をカードから編集し、選択章の横書き・縦書きと実公開HTMLでルビを確認する', async ({ page }, info) => {",
-          "excerpt_sha256": "7440c09041b61f4c13f0829fd040672a610b32094f8129b99eff6f8223964e4e",
-          "source_excerpt": "test('AT-F06 要約・本文・秘密メモを分けた場面をカードから編集し、選択章の横書き・縦書きと実公開HTMLでルビを確認する', async ({ page }, info) => {\n  const p = createProject('AT-F06 本文と秘密メモ');\n  const chapter = createEntity(p.projectId, 'chapter', '選んだ章');\n  const otherChapter = createEntity(p.projectId, 'chapter', '選ばない章');\n  const scene = createEntity(p.projectId, 'scene', '門の場面', { chapterId: chapter.id, summary: textToRichText('門が開く'), body: [{ ...textToRichText('門番は去った')[0], ruby: [{ start: 0, end: 2, text: 'もんばん' }] }], authorNotes: textToRichText('秘密の作者メモ: 鳥は黒幕') });\n  const otherScene = createEntity(p.projectId, 'scene', '他章の場面', { chapterId: otherChapter.id, body: textToRichText('選ばない章だけにある文章') });\n  chapter.data.sceneIds = [scene.id]; otherChapter.data.sceneIds = [otherScene.id];\n  p.entities.push(chapter, otherChapter, scene, otherScene);\n  p.entities.forEach(e => { e.status = 'confirmed'; });\n  const bytes = await exportScenario(p);\n  await attachGiven(info, 'AT-F06', bytes, { selectedChapterId: chapter.id, unselectedChapterId: otherChapter.id, sceneId: scene.id, originalBodyBlockId: scene.data.body[0].id, ruby: scene.data.body[0].ruby, authorNotesBlockIds: scene.data.authorNotes.map(b => b.id) });\n  await seed(page, bytes); await writing(page, '章・本文');\n  const workspace = page.getByRole('region', { name: '物語の構成', exact: true });\n  await workspace.getByLabel('物語の並べ方', { exact: true }).selectOption('chapter');\n  await workspace.locator(`[data-lane-id=\"${chapter.id}\"] [data-scene-id=\"${scene.id}\"] .story-scene-link`).click();\n  const editor = page.locator('.detail-panel');\n  await editor.getByRole('tab', { name: '本文', exact: true }).click();\n  const body = editor.getByRole('textbox', { name: '本文', exact: true });\n  await body.focus();\n  await body.press('ControlOrMeta+End');\n  await body.pressSequentially('。門は開かない。');\n  await expect(body).toHaveValue('門番は去った。門は開かない。');\n  await saveEditor(page);\n  await editor.getByRole('tab', { name: '要約', exact: true }).click();\n  await editor.getByRole('textbox', { name: '要約', exact: true }).fill('門が閉じる');\n  await saveEditor(page);\n  await editor.getByRole('tab', { name: '本文', exact: true }).click();\n  await expect(editor.getByRole('textbox', { name: '本文', exact: true })).toHaveValue('門番は去った。門は開かない。');\n  await page.getByRole('button', { name: '詳細を閉じる', exact: true }).click();\n  await writing(page, '章の試読');\n  const reading = page.getByRole('region', { name: '章順・選択経路の通読', exact: true });\n  await reading.getByLabel(chapter.name, { exact: true }).check();\n  await reading.getByLabel(otherChapter.name, { exact: true }).uncheck();\n  await expect(reading.locator('.reading-body')).toContainText('門番は去った。門は開かない。');\n  await expect(reading).not.toContainText('選ばない章だけにある文章');\n  for (const orientation of ['横書き', '縦書き']) {\n    await reading.getByRole('button', { name: orientation, exact: true }).click();\n    await expect(reading.locator('.reading-body .rich-text')).toHaveClass(orientation === '縦書き' ? /vertical-text/ : /^rich-text\\s*$/);\n    await expect(reading.locator('.reading-body ruby rt')).toHaveText('もんばん');\n    await expect(reading).not.toContainText('秘密の作者メモ: 鳥は黒幕');\n  }\n  await reading.getByRole('button', { name: '記録付き読書を始める', exact: true }).click();\n  await reading.getByRole('button', { name: '次の場面を提示', exact: true }).click();\n  await expect(reading.locator('.chapter-reading-presented')).toHaveAttribute('data-presented-scene-id', scene.id);\n  await expect(reading.locator('.chapter-reading-presented')).not.toContainText('秘密の作者メモ: 鳥は黒幕');\n\n  // Create the current public text through the ordinary scope authoring form.\n  await navigate(page, /^作品・保存/);\n  await page.getByRole('tab', { name: '目的別出力', exact: true }).click();\n  await page.getByRole('button', { name: '公開範囲を作成', exact: true }).click();\n  const modal = page.getByRole('dialog', { name: '公開する範囲を作成', exact: true });\n  await modal.getByLabel('公開用の作品名', { exact: true }).fill('門の章を読む');\n  for (const id of [chapter.id, scene.id]) await modal.getByLabel('追加する対象', { exact: true }).selectOption(id);\n  await modal.getByLabel('選んだ対象の本文・表記を公開文へコピーする', { exact: true }).check();\n  await modal.getByRole('button', { name: '範囲を作成して内容を確認', exact: true }).click();\n  await expect(modal).toBeHidden();\n  await editor.getByLabel('情報の状態', { exact: true }).selectOption('confirmed');\n  await saveEditor(page);\n  await page.getByRole('button', { name: '詳細を閉じる', exact: true }).click();\n  await page.getByLabel('出力目的', { exact: true }).selectOption('reader');\n  await page.getByLabel('本文の出力形式', { exact: true }).selectOption('html');\n  await page.getByRole('button', { name: '内容を検査・プレビュー', exact: true }).click();\n  await expect(page.locator('.export-artifact')).toHaveCount(1);\n  const pending = page.waitForEvent('download');\n  await page.locator('.export-artifact').getByRole('button', { name: 'この内容を保存', exact: true }).click();\n  const html = await readFile((await (await pending).path())!, 'utf8');\n  expect(html).toContain('門番'); expect(html).toContain('<rt>もんばん</rt>'); expect(html).toContain('門は開かない。');\n  expect(html).not.toContain('秘密の作者メモ: 鳥は黒幕');\n  for (const block of scene.data.authorNotes) expect(html).not.toContain(block.id);\n  expect(html).not.toContain('選ばない章だけにある文章');\n  await page.reload();\n  const saved = await backup(page);\n  expect(saved.project.entities.find(e => e.id === scene.id)).toMatchObject({ data: { summary: [{ text: '門が閉じる' }], body: [{ id: scene.data.body[0].id, text: '門番は去った。門は開かない。', ruby: scene.data.body[0].ruby }], authorNotes: scene.data.authorNotes } });\n  await attachObservation(info, 'AT-F06-observed', { selectedChapterId: chapter.id, originalBodyBlockId: scene.data.body[0].id, revision: saved.project.revision, publicHtmlBytes: Buffer.byteLength(html), secretAbsentFromActualHtml: true, rubyRetained: true });\n});\n\n",
+          "excerpt_sha256": "0b18437c21e232fcdf164f8056aa5fe2b0cff3d38239018c8c5f0e1b7dac35ba",
+          "source_excerpt": "test('AT-F06 要約・本文・秘密メモを分けた場面をカードから編集し、選択章の横書き・縦書きと実公開HTMLでルビを確認する', async ({ page }, info) => {\n  const p = createProject('AT-F06 本文と秘密メモ');\n  const chapter = createEntity(p.projectId, 'chapter', '選んだ章');\n  const otherChapter = createEntity(p.projectId, 'chapter', '選ばない章');\n  const scene = createEntity(p.projectId, 'scene', '門の場面', { chapterId: chapter.id, summary: textToRichText('門が開く'), body: [{ ...textToRichText('門番は去った')[0], ruby: [{ start: 0, end: 2, text: 'もんばん' }] }], authorNotes: textToRichText('秘密の作者メモ: 鳥は黒幕') });\n  const otherScene = createEntity(p.projectId, 'scene', '他章の場面', { chapterId: otherChapter.id, body: textToRichText('選ばない章だけにある文章') });\n  chapter.data.sceneIds = [scene.id]; otherChapter.data.sceneIds = [otherScene.id];\n  p.entities.push(chapter, otherChapter, scene, otherScene);\n  p.entities.forEach(e => { e.status = 'confirmed'; });\n  const bytes = await exportScenario(p);\n  await attachGiven(info, 'AT-F06', bytes, { selectedChapterId: chapter.id, unselectedChapterId: otherChapter.id, sceneId: scene.id, originalBodyBlockId: scene.data.body[0].id, ruby: scene.data.body[0].ruby, authorNotesBlockIds: scene.data.authorNotes.map(b => b.id) });\n  await seed(page, bytes); await writing(page, '章・本文');\n  const workspace = page.getByRole('region', { name: '物語の構成', exact: true });\n  await workspace.getByLabel('物語の並べ方', { exact: true }).selectOption('chapter');\n  await workspace.locator(`[data-lane-id=\"${chapter.id}\"] [data-scene-id=\"${scene.id}\"] .story-scene-link`).click();\n  const editor = page.locator('.detail-panel');\n  await editor.getByRole('tab', { name: '本文', exact: true }).click();\n  const body = editor.getByRole('textbox', { name: '本文', exact: true });\n  await body.focus();\n  await body.press('ControlOrMeta+End');\n  await body.pressSequentially('。門は開かない。');\n  await expect(body).toHaveValue('門番は去った。門は開かない。');\n  await saveEditor(page);\n  await editor.getByRole('tab', { name: '要約', exact: true }).click();\n  await editor.getByRole('textbox', { name: '要約', exact: true }).fill('門が閉じる');\n  await saveEditor(page);\n  await editor.getByRole('tab', { name: '本文', exact: true }).click();\n  await expect(editor.getByRole('textbox', { name: '本文', exact: true })).toHaveValue('門番は去った。門は開かない。');\n  await page.getByRole('button', { name: '詳細を閉じる', exact: true }).click();\n  await writing(page, '章の試読');\n  const reading = page.getByRole('region', { name: '章順・選択経路の通読', exact: true });\n  await reading.getByLabel(chapter.name, { exact: true }).check();\n  await reading.getByLabel(otherChapter.name, { exact: true }).uncheck();\n  const readingBody = reading.locator('.reading-body .rich-text');\n  const renderedBaseText = () => readingBody.evaluate(element => {\n    // Ruby readings annotate the base text; inspect only a detached copy.\n    const copy = element.cloneNode(true) as HTMLElement;\n    copy.querySelectorAll('rt, rp').forEach(annotation => annotation.remove());\n    return copy.textContent;\n  });\n  await expect(readingBody).toHaveCount(1);\n  await expect.poll(renderedBaseText).toBe('門番は去った。門は開かない。');\n  await expect(reading).not.toContainText('選ばない章だけにある文章');\n  for (const orientation of ['横書き', '縦書き']) {\n    await reading.getByRole('button', { name: orientation, exact: true }).click();\n    await expect(reading.locator('.reading-body .rich-text')).toHaveClass(orientation === '縦書き' ? /vertical-text/ : /^rich-text\\s*$/);\n    await expect.poll(renderedBaseText).toBe('門番は去った。門は開かない。');\n    await expect(readingBody.locator('ruby')).toHaveText('門番もんばん');\n    await expect(reading.locator('.reading-body ruby rt')).toHaveText('もんばん');\n    await expect(reading).not.toContainText('秘密の作者メモ: 鳥は黒幕');\n  }\n  await reading.getByRole('button', { name: '記録付き読書を始める', exact: true }).click();\n  await reading.getByRole('button', { name: '次の場面を提示', exact: true }).click();\n  await expect(reading.locator('.chapter-reading-presented')).toHaveAttribute('data-presented-scene-id', scene.id);\n  await expect(reading.locator('.chapter-reading-presented')).not.toContainText('秘密の作者メモ: 鳥は黒幕');\n\n  // Create the current public text through the ordinary scope authoring form.\n  await navigate(page, /^作品・保存/);\n  await page.getByRole('tab', { name: '目的別出力', exact: true }).click();\n  await page.getByRole('button', { name: '公開範囲を作成', exact: true }).click();\n  const modal = page.getByRole('dialog', { name: '公開する範囲を作成', exact: true });\n  await modal.getByLabel('公開用の作品名', { exact: true }).fill('門の章を読む');\n  for (const id of [chapter.id, scene.id]) await modal.getByLabel('追加する対象', { exact: true }).selectOption(id);\n  await modal.getByLabel('選んだ対象の本文・表記を公開文へコピーする', { exact: true }).check();\n  await modal.getByRole('button', { name: '範囲を作成して内容を確認', exact: true }).click();\n  await expect(modal).toBeHidden();\n  await editor.getByLabel('情報の状態', { exact: true }).selectOption('confirmed');\n  await saveEditor(page);\n  await page.getByRole('button', { name: '詳細を閉じる', exact: true }).click();\n  await page.getByLabel('出力目的', { exact: true }).selectOption('reader');\n  await page.getByLabel('本文の出力形式', { exact: true }).selectOption('html');\n  await page.getByRole('button', { name: '内容を検査・プレビュー', exact: true }).click();\n  await expect(page.locator('.export-artifact')).toHaveCount(1);\n  const pending = page.waitForEvent('download');\n  await page.locator('.export-artifact').getByRole('button', { name: 'この内容を保存', exact: true }).click();\n  const html = await readFile((await (await pending).path())!, 'utf8');\n  expect(html).toContain('門番'); expect(html).toContain('<rt>もんばん</rt>'); expect(html).toContain('門は開かない。');\n  expect(html).not.toContain('秘密の作者メモ: 鳥は黒幕');\n  for (const block of scene.data.authorNotes) expect(html).not.toContain(block.id);\n  expect(html).not.toContain('選ばない章だけにある文章');\n  await page.reload();\n  const saved = await backup(page);\n  expect(saved.project.entities.find(e => e.id === scene.id)).toMatchObject({ data: { summary: [{ text: '門が閉じる' }], body: [{ id: scene.data.body[0].id, text: '門番は去った。門は開かない。', ruby: scene.data.body[0].ruby }], authorNotes: scene.data.authorNotes } });\n  await attachObservation(info, 'AT-F06-observed', { selectedChapterId: chapter.id, originalBodyBlockId: scene.data.body[0].id, revision: saved.project.revision, publicHtmlBytes: Buffer.byteLength(html), secretAbsentFromActualHtml: true, rubyRetained: true });\n});\n\n",
           "normal_operations": [
             {
               "line": 129,
@@ -1305,47 +1315,47 @@
               "source": "await writing(page, '章の試読');"
             },
             {
-              "line": 165,
+              "line": 175,
               "source": "await navigate(page, /^作品・保存/);"
             },
             {
-              "line": 166,
+              "line": 176,
               "source": "await page.getByRole('tab', { name: '目的別出力', exact: true }).click();"
             },
             {
-              "line": 167,
+              "line": 177,
               "source": "await page.getByRole('button', { name: '公開範囲を作成', exact: true }).click();"
             },
             {
-              "line": 176,
+              "line": 186,
               "source": "await page.getByRole('button', { name: '詳細を閉じる', exact: true }).click();"
             },
             {
-              "line": 177,
+              "line": 187,
               "source": "await page.getByLabel('出力目的', { exact: true }).selectOption('reader');"
             },
             {
-              "line": 178,
+              "line": 188,
               "source": "await page.getByLabel('本文の出力形式', { exact: true }).selectOption('html');"
             },
             {
-              "line": 179,
+              "line": 189,
               "source": "await page.getByRole('button', { name: '内容を検査・プレビュー', exact: true }).click();"
             },
             {
-              "line": 180,
+              "line": 190,
               "source": "await expect(page.locator('.export-artifact')).toHaveCount(1);"
             },
             {
-              "line": 182,
+              "line": 192,
               "source": "await page.locator('.export-artifact').getByRole('button', { name: 'この内容を保存', exact: true }).click();"
             },
             {
-              "line": 188,
+              "line": 198,
               "source": "await page.reload();"
             },
             {
-              "line": 189,
+              "line": 199,
               "source": "const saved = await backup(page);"
             }
           ],
@@ -1359,59 +1369,71 @@
               "source": "await expect(editor.getByRole('textbox', { name: '本文', exact: true })).toHaveValue('門番は去った。門は開かない。');"
             },
             {
-              "line": 151,
-              "source": "await expect(reading.locator('.reading-body')).toContainText('門番は去った。門は開かない。');"
+              "line": 158,
+              "source": "await expect(readingBody).toHaveCount(1);"
             },
             {
-              "line": 152,
+              "line": 159,
+              "source": "await expect.poll(renderedBaseText).toBe('門番は去った。門は開かない。');"
+            },
+            {
+              "line": 160,
               "source": "await expect(reading).not.toContainText('選ばない章だけにある文章');"
             },
             {
-              "line": 155,
+              "line": 163,
               "source": "await expect(reading.locator('.reading-body .rich-text')).toHaveClass(orientation === '縦書き' ? /vertical-text/ : /^rich-text\\s*$/);"
             },
             {
-              "line": 156,
+              "line": 164,
+              "source": "await expect.poll(renderedBaseText).toBe('門番は去った。門は開かない。');"
+            },
+            {
+              "line": 165,
+              "source": "await expect(readingBody.locator('ruby')).toHaveText('門番もんばん');"
+            },
+            {
+              "line": 166,
               "source": "await expect(reading.locator('.reading-body ruby rt')).toHaveText('もんばん');"
             },
             {
-              "line": 157,
+              "line": 167,
               "source": "await expect(reading).not.toContainText('秘密の作者メモ: 鳥は黒幕');"
             },
             {
-              "line": 161,
+              "line": 171,
               "source": "await expect(reading.locator('.chapter-reading-presented')).toHaveAttribute('data-presented-scene-id', scene.id);"
             },
             {
-              "line": 162,
+              "line": 172,
               "source": "await expect(reading.locator('.chapter-reading-presented')).not.toContainText('秘密の作者メモ: 鳥は黒幕');"
             },
             {
-              "line": 173,
+              "line": 183,
               "source": "await expect(modal).toBeHidden();"
             },
             {
-              "line": 180,
+              "line": 190,
               "source": "await expect(page.locator('.export-artifact')).toHaveCount(1);"
             },
             {
-              "line": 184,
+              "line": 194,
               "source": "expect(html).toContain('門番'); expect(html).toContain('<rt>もんばん</rt>'); expect(html).toContain('門は開かない。');"
             },
             {
-              "line": 185,
+              "line": 195,
               "source": "expect(html).not.toContain('秘密の作者メモ: 鳥は黒幕');"
             },
             {
-              "line": 186,
+              "line": 196,
               "source": "for (const block of scene.data.authorNotes) expect(html).not.toContain(block.id);"
             },
             {
-              "line": 187,
+              "line": 197,
               "source": "expect(html).not.toContain('選ばない章だけにある文章');"
             },
             {
-              "line": 190,
+              "line": 200,
               "source": "expect(saved.project.entities.find(e => e.id === scene.id)).toMatchObject({ data: { summary: [{ text: '門が閉じる' }], body: [{ id: scene.data.body[0].id, text: '門番は去った。門は開かない。', ruby: scene.data.body[0].ruby }], authorNotes: scene.data.authorNotes } });"
             }
           ]
@@ -1431,8 +1453,8 @@
             {
               "file": "tests/e2e/ap04-original-f-writing.spec.ts",
               "line": 118,
-              "end_line": 193,
-              "excerpt_sha256": "7440c09041b61f4c13f0829fd040672a610b32094f8129b99eff6f8223964e4e"
+              "end_line": 203,
+              "excerpt_sha256": "0b18437c21e232fcdf164f8056aa5fe2b0cff3d38239018c8c5f0e1b7dac35ba"
             }
           ],
           "operation_and_assertion_details": "同一caseの authored_entries.normal_operations/assertions の実ソースを直接参照する。これは実行結果ではない。",
@@ -1449,8 +1471,8 @@
             {
               "file": "tests/e2e/ap04-original-f-writing.spec.ts",
               "line": 118,
-              "end_line": 193,
-              "excerpt_sha256": "7440c09041b61f4c13f0829fd040672a610b32094f8129b99eff6f8223964e4e"
+              "end_line": 203,
+              "excerpt_sha256": "0b18437c21e232fcdf164f8056aa5fe2b0cff3d38239018c8c5f0e1b7dac35ba"
             }
           ],
           "operation_and_assertion_details": "同一caseの authored_entries.normal_operations/assertions の実ソースを直接参照する。これは実行結果ではない。",
@@ -1467,8 +1489,8 @@
             {
               "file": "tests/e2e/ap04-original-f-writing.spec.ts",
               "line": 118,
-              "end_line": 193,
-              "excerpt_sha256": "7440c09041b61f4c13f0829fd040672a610b32094f8129b99eff6f8223964e4e"
+              "end_line": 203,
+              "excerpt_sha256": "0b18437c21e232fcdf164f8056aa5fe2b0cff3d38239018c8c5f0e1b7dac35ba"
             }
           ],
           "operation_and_assertion_details": "同一caseの authored_entries.normal_operations/assertions の実ソースを直接参照する。これは実行結果ではない。",
@@ -1485,8 +1507,8 @@
             {
               "file": "tests/e2e/ap04-original-f-writing.spec.ts",
               "line": 118,
-              "end_line": 193,
-              "excerpt_sha256": "7440c09041b61f4c13f0829fd040672a610b32094f8129b99eff6f8223964e4e"
+              "end_line": 203,
+              "excerpt_sha256": "0b18437c21e232fcdf164f8056aa5fe2b0cff3d38239018c8c5f0e1b7dac35ba"
             }
           ],
           "operation_and_assertion_details": "同一caseの authored_entries.normal_operations/assertions の実ソースを直接参照する。これは実行結果ではない。",
@@ -1919,272 +1941,272 @@
       "authored_entries": [
         {
           "file": "tests/e2e/ap04-original-f-dialogue.spec.ts",
-          "line": 49,
-          "end_line": 172,
+          "line": 55,
+          "end_line": 178,
           "title_source": "test('AT-F21 L1/L2と実音声・翻訳・外部参照を保ち、話者改名/並替え/編集/複製/分割後の旧新IDを通常保存する', async ({ page }, info) => {",
-          "excerpt_sha256": "f962bcc34aba67dde6343c1dead093c4744f51caac02a38310b4a38d24b9dec3",
-          "source_excerpt": "test('AT-F21 L1/L2と実音声・翻訳・外部参照を保ち、話者改名/並替え/編集/複製/分割後の旧新IDを通常保存する', async ({ page }, info) => {\n  const p = createProject('AT-F21 台詞IDと制作対応');\n  const speaker = createEntity(p.projectId, 'character', '元の話者');\n  const l1 = createEntity(p.projectId, 'dialogue_line', 'L1', { speakerId: speaker.id, text: textToRichText('第一台詞。前半と後半。') });\n  const l2 = createEntity(p.projectId, 'dialogue_line', 'L2', { speakerId: speaker.id, text: textToRichText('第二台詞はそのまま。') });\n  const scene = createEntity(p.projectId, 'scene', 'L1とL2の場面', { dialogueLineIds: [l1.id, l2.id] });\n  const wav = await prepareAsset(new Uint8Array(await readFile('tests/fixtures/media/fixture-tone.wav')), '台詞の実音声.wav');\n  const { bytes: wavBytes, preview: _preview, ...metadata } = wav;\n  const audio1 = createEntity(p.projectId, 'attachment', 'L1の音声', { ...metadata, stage: 'final' });\n  const audio2 = createEntity(p.projectId, 'attachment', 'L2の音声', { ...metadata, stage: 'final' });\n  p.entities.push(speaker, l1, l2, scene, audio1, audio2);\n  const sourceHash1 = await dialogueContentHash(p, l1), sourceHash2 = await dialogueContentHash(p, l2);\n  const translation1 = createEntity(p.projectId, 'localization', 'L1の翻訳', { sourceLineId: l1.id, language: 'en', sourceHash: sourceHash1, text: textToRichText('First line, both halves.'), stage: 'reviewed' });\n  const translation2 = createEntity(p.projectId, 'localization', 'L2の翻訳', { sourceLineId: l2.id, language: 'en', sourceHash: sourceHash2, text: textToRichText('Second line remains.'), stage: 'reviewed' });\n  const recording1 = createEntity(p.projectId, 'recording', 'L1の収録', { sourceLineId: l1.id, language: 'ja', sourceHash: sourceHash1, translationId: translation1.id, attachmentId: audio1.id, stage: 'reviewed' });\n  const recording2 = createEntity(p.projectId, 'recording', 'L2の収録', { sourceLineId: l2.id, language: 'ja', sourceHash: sourceHash2, translationId: translation2.id, attachmentId: audio2.id, stage: 'reviewed' });\n  const external1 = createEntity(p.projectId, 'note', 'ゲーム側L1対応', { body: textToRichText('ゲームの会話表 row-L1 に対応する。') });\n  const external2 = createEntity(p.projectId, 'note', 'ゲーム側L2対応', { body: textToRichText('ゲームの会話表 row-L2 に対応する。') });\n  external1.customValues.gameLineReference = { type: 'ref', value: l1.id };\n  external2.customValues.gameLineReference = { type: 'ref', value: l2.id };\n  p.entities.push(translation1, translation2, recording1, recording2, external1, external2);\n  p.entities.forEach(e => { e.status = 'confirmed'; });\n  const bytes = await exportScenario(p, { loadAsset: hash => hash === wav.contentHash ? wavBytes : undefined });\n  await attachGiven(info, 'AT-F21', bytes, { speakerId: speaker.id, lineIds: [l1.id, l2.id], translationIds: [translation1.id, translation2.id], recordingIds: [recording1.id, recording2.id], audioIds: [audio1.id, audio2.id], sourceHashes: [sourceHash1, sourceHash2], externalReferenceIds: [external1.id, external2.id], wavSha256: wav.contentHash });\n  await seed(page, bytes);\n  await openEntity(page, 'character', speaker.name);\n  await page.locator('#entity-name').fill('改名した同じ話者'); await saveEditor(page);\n  await openEntity(page, 'scene', scene.name);\n  const editor = page.locator('.detail-panel');\n  await editor.getByRole('tab', { name: '詳細', exact: true }).click();\n  await editor.locator('[data-field=\"dialogueLineIds\"]').getByRole('button', { name: '2番を前へ移動', exact: true }).click();\n  await saveEditor(page);\n  const reordered = await backup(page);\n  expect(reordered.project.entities.find(e => e.id === scene.id)).toMatchObject({ data: { dialogueLineIds: [l2.id, l1.id] } });\n  for (const given of [translation1, translation2, recording1, recording2, external1, external2]) {\n    const actual = reordered.project.entities.find(e => e.id === given.id)!;\n    expect(actual.data).toEqual(given.data); expect(actual.customValues).toEqual(given.customValues);\n  }\n  for (const [line, hash] of [[l1, sourceHash1], [l2, sourceHash2]] as const) {\n    const actual = reordered.project.entities.find(e => e.id === line.id)!;\n    if (actual.kind !== 'dialogue_line') throw new Error('元台詞がありません');\n    expect(await dialogueContentHash(reordered.project, actual)).toBe(hash);\n    await openEntity(page, 'dialogue_line', line.name);\n    await expect(editor).toContainText('改名した同じ話者');\n  }\n  await openEntity(page, 'dialogue_line', l1.name);\n  await editor.getByRole('textbox', { name: '台詞', exact: true }).fill('第一台詞を編集した。後半も保持する。');\n  await saveEditor(page);\n  const edited = await backup(page);\n  const editedL1 = edited.project.entities.find(e => e.id === l1.id);\n  if (!editedL1 || editedL1.kind !== 'dialogue_line') throw new Error('編集後の元L1がありません');\n  const editedText = '第一台詞を編集した。後半も保持する。';\n  expect(editedL1).toMatchObject({ id: l1.id, projectId: p.projectId, name: l1.name, data: { speakerId: speaker.id } });\n  expect(editedL1.data.text).toHaveLength(1);\n  const editedBlock = editedL1.data.text[0];\n  expect(editedBlock.id).toMatch(ID_PATTERN);\n  expect(editedL1.data.text).toEqual([{ id: editedBlock.id, kind: 'paragraph', text: editedText }]);\n  expect({ ...editedL1.data, text: l1.data.text }).toEqual(l1.data);\n  const editCommand = edited.project.history.find(command => command.targetIds.includes(l1.id)\n    && command.before.entities.some(entity => entity.id === l1.id && entity.kind === 'dialogue_line' && JSON.stringify(entity.data.text) === JSON.stringify(l1.data.text))\n    && command.after.entities.some(entity => entity.id === l1.id && entity.kind === 'dialogue_line' && JSON.stringify(entity.data.text) === JSON.stringify(editedL1.data.text)));\n  if (!editCommand) throw new Error('L1の本文変更を保持する保存操作がありません');\n  const oldL1 = editCommand.before.entities.find(entity => entity.id === l1.id);\n  if (!oldL1 || oldL1.kind !== 'dialogue_line') throw new Error('初期L1の本文を保持する編集前履歴がありません');\n  expect(oldL1.data.text).toEqual(l1.data.text);\n  expect(edited.project.entities.find(e => e.id === l2.id)?.data).toEqual(l2.data);\n  for (const deliverable of [translation1, recording1]) expect(edited.project.entities.find(e => e.id === deliverable.id)).toMatchObject({ data: { sourceLineId: l1.id, sourceHash: sourceHash1, stage: 'needs_review' } });\n  for (const deliverable of [translation2, recording2]) expect(edited.project.entities.find(e => e.id === deliverable.id)?.data).toEqual(deliverable.data);\n\n  await openEntity(page, 'dialogue_line', l1.name);\n  await lineChange(page, 'copy', '独立した読み上げ案を比較する');\n  const copied = await backup(page);\n  const copy = copied.project.entities.find(e => e.kind === 'dialogue_line' && e.data.lineage?.mode === 'copy' && e.data.originLineIds?.includes(l1.id));\n  expect(copy?.kind).toBe('dialogue_line');\n  if (!copy || copy.kind !== 'dialogue_line') throw new Error('新IDの独立複製がありません');\n  expect(copy.id).not.toBe(l1.id); expect(copy.id).not.toBe(l2.id);\n  expect(copy.data.text.map(block => block.text).join('\\n')).toBe(editedText);\n  expect(copy.data.text[0].id).toMatch(ID_PATTERN);\n  expect(copy.data.text[0].id).not.toBe(editedBlock.id);\n  expect(copy.data.text[0].id).not.toBe(l1.data.text[0].id);\n  expect(copy.data.lineage?.segments[0].source).toMatchObject({ entityId: l1.id, lineId: l1.id, blockId: editedBlock.id, start: 0, end: Array.from(editedText).length });\n  expect(copy.data.lineage?.segments[0].target.entityId).toBe(copy.id);\n  expect(copied.project.entities.find(e => e.id === scene.id)).toMatchObject({ data: { dialogueLineIds: [l2.id, l1.id] } });\n  await openEntity(page, 'dialogue_line', l1.name);\n  await lineChange(page, 'split', '収録単位を前半と後半へ分ける', '6');\n  await page.reload();\n  const saved = await backup(page);\n  const old = saved.project.entities.find(e => e.id === l1.id);\n  expect(old?.kind).toBe('dialogue_line');\n  if (!old || old.kind !== 'dialogue_line') throw new Error('分割元の台詞がありません');\n  const splitIds = old.data.replacedByLineIds!;\n  expect(old.status).toBe('rejected'); expect(splitIds).toHaveLength(2);\n  expect(new Set([l1.id, l2.id, copy.id, ...splitIds]).size).toBe(5);\n  const parts = splitIds.map(id => saved.project.entities.find(e => e.id === id)!);\n  const originalText = '第一台詞を編集した。後半も保持する。';\n  expect(parts.map(line => line.kind === 'dialogue_line' ? line.data.text.map(b => b.text).join('\\n') : '').join('')).toBe(originalText);\n  for (const line of parts) {\n    if (line.kind !== 'dialogue_line') throw new Error('分割先の台詞がありません');\n    expect(line.data.originLineIds).toContain(l1.id);\n    expect(line.data.lineage).toMatchObject({ mode: 'split', reason: '収録単位を前半と後半へ分ける' });\n    expect(line.data.lineage!.segments.every(segment => segment.source.entityId === l1.id && segment.target.entityId === line.id)).toBe(true);\n  }\n  expect(saved.project.entities.find(e => e.id === scene.id)).toMatchObject({ data: { dialogueLineIds: [l2.id, ...splitIds] } });\n  for (const given of [external1, external2]) expect(saved.project.entities.find(e => e.id === given.id)?.customValues).toEqual(given.customValues);\n  expect(saved.project.entities.find(e => e.id === recording1.id)).toMatchObject({ data: { sourceLineId: l1.id, attachmentId: audio1.id, stage: 'needs_review' } });\n  expect(saved.project.entities.find(e => e.id === recording2.id)?.data).toEqual(recording2.data);\n  expect(saved.assets).toHaveLength(1); expect(saved.assets[0].bytes).toEqual(wavBytes);\n\n  const invalid = await duplicateLineIdArchive(saved.bytes, l2.id, copy.id);\n  const nativeBefore = await authorFingerprint(page);\n  await page.locator('.project-switch').click();\n  await page.getByRole('button', { name: '保存ファイルを読み込む', exact: true }).click();\n  const importDialog = page.getByRole('dialog', { name: '作品ファイルを読み込む', exact: true });\n  await importDialog.locator('input[type=file]').setInputFiles({ name: '台詞ID再利用.scenario', mimeType: 'application/zip', buffer: Buffer.from(invalid) });\n  await expect(importDialog.getByRole('alert')).toContainText(/重複|一意/);\n  await expect(importDialog.getByRole('button', { name: 'この内容で復元する', exact: true })).toHaveCount(0);\n  expect(await authorFingerprint(page)).toBe(nativeBefore);\n  await importDialog.getByRole('button', { name: '閉じる', exact: true }).click();\n  await page.locator('.project-card').filter({ hasText: p.name }).click();\n  await page.reload();\n  const afterReject = await backup(page);\n  expect(afterReject.project).toEqual(saved.project);\n  await attachObservation(info, 'AT-F21-observed', { originalLineIds: [l1.id, l2.id], initialBlockId: l1.data.text[0].id, editedBlockId: editedBlock.id, editedHistoryOperationId: editCommand.operationId, copiedLineId: copy.id, copiedBlockId: copy.data.text[0].id, splitLineIds: splitIds, finalSceneOrder: [l2.id, ...splitIds], audioIds: [audio1.id, audio2.id], wavSha256: wav.contentHash, duplicateArchiveHadValidManifestHash: true, duplicateImportPreservedNativeRecords: true, revision: saved.project.revision });\n});\n",
+          "excerpt_sha256": "3212ab37f1c29527eab356e458e7d88a83c6a3470955a9824b9c4d0f2ca5daac",
+          "source_excerpt": "test('AT-F21 L1/L2と実音声・翻訳・外部参照を保ち、話者改名/並替え/編集/複製/分割後の旧新IDを通常保存する', async ({ page }, info) => {\n  const p = createProject('AT-F21 台詞IDと制作対応');\n  const speaker = createEntity(p.projectId, 'character', '元の話者');\n  const l1 = createEntity(p.projectId, 'dialogue_line', 'L1', { speakerId: speaker.id, text: textToRichText('第一台詞。前半と後半。') });\n  const l2 = createEntity(p.projectId, 'dialogue_line', 'L2', { speakerId: speaker.id, text: textToRichText('第二台詞はそのまま。') });\n  const scene = createEntity(p.projectId, 'scene', 'L1とL2の場面', { dialogueLineIds: [l1.id, l2.id] });\n  const wav = await prepareAsset(new Uint8Array(await readFile('tests/fixtures/media/fixture-tone.wav')), '台詞の実音声.wav');\n  const { bytes: wavBytes, preview: _preview, ...metadata } = wav;\n  const audio1 = createEntity(p.projectId, 'attachment', 'L1の音声', { ...metadata, stage: 'final' });\n  const audio2 = createEntity(p.projectId, 'attachment', 'L2の音声', { ...metadata, stage: 'final' });\n  p.entities.push(speaker, l1, l2, scene, audio1, audio2);\n  const sourceHash1 = await dialogueContentHash(p, l1), sourceHash2 = await dialogueContentHash(p, l2);\n  const translation1 = createEntity(p.projectId, 'localization', 'L1の翻訳', { sourceLineId: l1.id, language: 'en', sourceHash: sourceHash1, text: textToRichText('First line, both halves.'), stage: 'reviewed' });\n  const translation2 = createEntity(p.projectId, 'localization', 'L2の翻訳', { sourceLineId: l2.id, language: 'en', sourceHash: sourceHash2, text: textToRichText('Second line remains.'), stage: 'reviewed' });\n  const recording1 = createEntity(p.projectId, 'recording', 'L1の収録', { sourceLineId: l1.id, language: 'ja', sourceHash: sourceHash1, translationId: translation1.id, attachmentId: audio1.id, stage: 'reviewed' });\n  const recording2 = createEntity(p.projectId, 'recording', 'L2の収録', { sourceLineId: l2.id, language: 'ja', sourceHash: sourceHash2, translationId: translation2.id, attachmentId: audio2.id, stage: 'reviewed' });\n  const external1 = createEntity(p.projectId, 'note', 'ゲーム側L1対応', { body: textToRichText('ゲームの会話表 row-L1 に対応する。') });\n  const external2 = createEntity(p.projectId, 'note', 'ゲーム側L2対応', { body: textToRichText('ゲームの会話表 row-L2 に対応する。') });\n  external1.customValues.gameLineReference = { type: 'ref', value: l1.id };\n  external2.customValues.gameLineReference = { type: 'ref', value: l2.id };\n  p.entities.push(translation1, translation2, recording1, recording2, external1, external2);\n  p.entities.forEach(e => { e.status = 'confirmed'; });\n  const bytes = await exportScenario(p, { loadAsset: hash => hash === wav.contentHash ? wavBytes : undefined });\n  await attachGiven(info, 'AT-F21', bytes, { speakerId: speaker.id, lineIds: [l1.id, l2.id], translationIds: [translation1.id, translation2.id], recordingIds: [recording1.id, recording2.id], audioIds: [audio1.id, audio2.id], sourceHashes: [sourceHash1, sourceHash2], externalReferenceIds: [external1.id, external2.id], wavSha256: wav.contentHash });\n  await seed(page, bytes);\n  await openEntity(page, 'character', speaker.name);\n  await page.locator('#entity-name').fill('改名した同じ話者'); await saveEditor(page);\n  await openEntity(page, 'scene', scene.name);\n  const editor = page.locator('.detail-panel');\n  await editor.getByRole('tab', { name: '詳細', exact: true }).click();\n  await editor.locator('[data-field=\"dialogueLineIds\"]').getByRole('button', { name: '2番を前へ移動', exact: true }).click();\n  await saveEditor(page);\n  const reordered = await backup(page);\n  expect(reordered.project.entities.find(e => e.id === scene.id)).toMatchObject({ data: { dialogueLineIds: [l2.id, l1.id] } });\n  for (const given of [translation1, translation2, recording1, recording2, external1, external2]) {\n    const actual = reordered.project.entities.find(e => e.id === given.id)!;\n    expect(actual.data).toEqual(given.data); expect(actual.customValues).toEqual(given.customValues);\n  }\n  for (const [line, hash] of [[l1, sourceHash1], [l2, sourceHash2]] as const) {\n    const actual = reordered.project.entities.find(e => e.id === line.id)!;\n    if (actual.kind !== 'dialogue_line') throw new Error('元台詞がありません');\n    expect(await dialogueContentHash(reordered.project, actual)).toBe(hash);\n    await openEntity(page, 'dialogue_line', line.name);\n    await expect(editor).toContainText('改名した同じ話者');\n  }\n  await openEntity(page, 'dialogue_line', l1.name);\n  await editor.getByRole('textbox', { name: '台詞', exact: true }).fill('第一台詞を編集した。後半も保持する。');\n  await saveEditor(page);\n  const edited = await backup(page);\n  const editedL1 = edited.project.entities.find(e => e.id === l1.id);\n  if (!editedL1 || editedL1.kind !== 'dialogue_line') throw new Error('編集後の元L1がありません');\n  const editedText = '第一台詞を編集した。後半も保持する。';\n  expect(editedL1).toMatchObject({ id: l1.id, projectId: p.projectId, name: l1.name, data: { speakerId: speaker.id } });\n  expect(editedL1.data.text).toHaveLength(1);\n  const editedBlock = editedL1.data.text[0];\n  expect(editedBlock.id).toMatch(ID_PATTERN);\n  expect(editedL1.data.text).toEqual([{ id: editedBlock.id, kind: 'paragraph', text: editedText }]);\n  expect({ ...editedL1.data, text: l1.data.text }).toEqual(l1.data);\n  const editCommand = edited.project.history.find(command => command.targetIds.includes(l1.id)\n    && command.before.entities.some(entity => entity.id === l1.id && entity.kind === 'dialogue_line' && JSON.stringify(entity.data.text) === JSON.stringify(l1.data.text))\n    && command.after.entities.some(entity => entity.id === l1.id && entity.kind === 'dialogue_line' && JSON.stringify(entity.data.text) === JSON.stringify(editedL1.data.text)));\n  if (!editCommand) throw new Error('L1の本文変更を保持する保存操作がありません');\n  const oldL1 = editCommand.before.entities.find(entity => entity.id === l1.id);\n  if (!oldL1 || oldL1.kind !== 'dialogue_line') throw new Error('初期L1の本文を保持する編集前履歴がありません');\n  expect(oldL1.data.text).toEqual(l1.data.text);\n  expect(edited.project.entities.find(e => e.id === l2.id)?.data).toEqual(l2.data);\n  for (const deliverable of [translation1, recording1]) expect(edited.project.entities.find(e => e.id === deliverable.id)).toMatchObject({ data: { sourceLineId: l1.id, sourceHash: sourceHash1, stage: 'needs_review' } });\n  for (const deliverable of [translation2, recording2]) expect(edited.project.entities.find(e => e.id === deliverable.id)?.data).toEqual(deliverable.data);\n\n  await openEntity(page, 'dialogue_line', l1.name);\n  await lineChange(page, 'copy', '独立した読み上げ案を比較する');\n  const copied = await backup(page);\n  const copy = copied.project.entities.find(e => e.kind === 'dialogue_line' && e.data.lineage?.mode === 'copy' && e.data.originLineIds?.includes(l1.id));\n  expect(copy?.kind).toBe('dialogue_line');\n  if (!copy || copy.kind !== 'dialogue_line') throw new Error('新IDの独立複製がありません');\n  expect(copy.id).not.toBe(l1.id); expect(copy.id).not.toBe(l2.id);\n  expect(copy.data.text.map(block => block.text).join('\\n')).toBe(editedText);\n  expect(copy.data.text[0].id).toMatch(ID_PATTERN);\n  expect(copy.data.text[0].id).not.toBe(editedBlock.id);\n  expect(copy.data.text[0].id).not.toBe(l1.data.text[0].id);\n  expect(copy.data.lineage?.segments[0].source).toMatchObject({ entityId: l1.id, lineId: l1.id, blockId: editedBlock.id, start: 0, end: Array.from(editedText).length });\n  expect(copy.data.lineage?.segments[0].target.entityId).toBe(copy.id);\n  expect(copied.project.entities.find(e => e.id === scene.id)).toMatchObject({ data: { dialogueLineIds: [l2.id, l1.id] } });\n  await openEntity(page, 'dialogue_line', l1.name);\n  await lineChange(page, 'split', '収録単位を前半と後半へ分ける', '6', editedBlock.id);\n  await page.reload();\n  const saved = await backup(page);\n  const old = saved.project.entities.find(e => e.id === l1.id);\n  expect(old?.kind).toBe('dialogue_line');\n  if (!old || old.kind !== 'dialogue_line') throw new Error('分割元の台詞がありません');\n  const splitIds = old.data.replacedByLineIds!;\n  expect(old.status).toBe('rejected'); expect(splitIds).toHaveLength(2);\n  expect(new Set([l1.id, l2.id, copy.id, ...splitIds]).size).toBe(5);\n  const parts = splitIds.map(id => saved.project.entities.find(e => e.id === id)!);\n  const originalText = '第一台詞を編集した。後半も保持する。';\n  expect(parts.map(line => line.kind === 'dialogue_line' ? line.data.text.map(b => b.text).join('\\n') : '').join('')).toBe(originalText);\n  for (const line of parts) {\n    if (line.kind !== 'dialogue_line') throw new Error('分割先の台詞がありません');\n    expect(line.data.originLineIds).toContain(l1.id);\n    expect(line.data.lineage).toMatchObject({ mode: 'split', reason: '収録単位を前半と後半へ分ける' });\n    expect(line.data.lineage!.segments.every(segment => segment.source.entityId === l1.id && segment.target.entityId === line.id)).toBe(true);\n  }\n  expect(saved.project.entities.find(e => e.id === scene.id)).toMatchObject({ data: { dialogueLineIds: [l2.id, ...splitIds] } });\n  for (const given of [external1, external2]) expect(saved.project.entities.find(e => e.id === given.id)?.customValues).toEqual(given.customValues);\n  expect(saved.project.entities.find(e => e.id === recording1.id)).toMatchObject({ data: { sourceLineId: l1.id, attachmentId: audio1.id, stage: 'needs_review' } });\n  expect(saved.project.entities.find(e => e.id === recording2.id)?.data).toEqual(recording2.data);\n  expect(saved.assets).toHaveLength(1); expect(saved.assets[0].bytes).toEqual(wavBytes);\n\n  const invalid = await duplicateLineIdArchive(saved.bytes, l2.id, copy.id);\n  const nativeBefore = await authorFingerprint(page);\n  await page.locator('.project-switch').click();\n  await page.getByRole('button', { name: '保存ファイルを読み込む', exact: true }).click();\n  const importDialog = page.getByRole('dialog', { name: '作品ファイルを読み込む', exact: true });\n  await importDialog.locator('input[type=file]').setInputFiles({ name: '台詞ID再利用.scenario', mimeType: 'application/zip', buffer: Buffer.from(invalid) });\n  await expect(importDialog.getByRole('alert')).toContainText(/重複|一意/);\n  await expect(importDialog.getByRole('button', { name: 'この内容で復元する', exact: true })).toHaveCount(0);\n  expect(await authorFingerprint(page)).toBe(nativeBefore);\n  await importDialog.getByRole('button', { name: '閉じる', exact: true }).click();\n  await page.locator('.project-card').filter({ hasText: p.name }).click();\n  await page.reload();\n  const afterReject = await backup(page);\n  expect(afterReject.project).toEqual(saved.project);\n  await attachObservation(info, 'AT-F21-observed', { originalLineIds: [l1.id, l2.id], initialBlockId: l1.data.text[0].id, editedBlockId: editedBlock.id, editedHistoryOperationId: editCommand.operationId, copiedLineId: copy.id, copiedBlockId: copy.data.text[0].id, splitLineIds: splitIds, finalSceneOrder: [l2.id, ...splitIds], audioIds: [audio1.id, audio2.id], wavSha256: wav.contentHash, duplicateArchiveHadValidManifestHash: true, duplicateImportPreservedNativeRecords: true, revision: saved.project.revision });\n});\n",
           "normal_operations": [
             {
-              "line": 73,
+              "line": 79,
               "source": "await seed(page, bytes);"
             },
             {
-              "line": 74,
+              "line": 80,
               "source": "await openEntity(page, 'character', speaker.name);"
             },
             {
-              "line": 75,
+              "line": 81,
               "source": "await page.locator('#entity-name').fill('改名した同じ話者'); await saveEditor(page);"
             },
             {
-              "line": 76,
+              "line": 82,
               "source": "await openEntity(page, 'scene', scene.name);"
             },
             {
-              "line": 81,
+              "line": 87,
               "source": "const reordered = await backup(page);"
             },
             {
-              "line": 91,
+              "line": 97,
               "source": "await openEntity(page, 'dialogue_line', line.name);"
             },
             {
-              "line": 94,
+              "line": 100,
               "source": "await openEntity(page, 'dialogue_line', l1.name);"
             },
             {
-              "line": 97,
+              "line": 103,
               "source": "const edited = await backup(page);"
             },
             {
-              "line": 118,
+              "line": 124,
               "source": "await openEntity(page, 'dialogue_line', l1.name);"
             },
             {
-              "line": 119,
+              "line": 125,
               "source": "await lineChange(page, 'copy', '独立した読み上げ案を比較する');"
             },
             {
-              "line": 120,
+              "line": 126,
               "source": "const copied = await backup(page);"
             },
             {
-              "line": 132,
+              "line": 138,
               "source": "await openEntity(page, 'dialogue_line', l1.name);"
             },
             {
-              "line": 133,
-              "source": "await lineChange(page, 'split', '収録単位を前半と後半へ分ける', '6');"
+              "line": 139,
+              "source": "await lineChange(page, 'split', '収録単位を前半と後半へ分ける', '6', editedBlock.id);"
             },
             {
-              "line": 134,
+              "line": 140,
               "source": "await page.reload();"
             },
             {
-              "line": 135,
+              "line": 141,
               "source": "const saved = await backup(page);"
             },
             {
-              "line": 159,
+              "line": 165,
               "source": "await page.locator('.project-switch').click();"
             },
             {
-              "line": 160,
+              "line": 166,
               "source": "await page.getByRole('button', { name: '保存ファイルを読み込む', exact: true }).click();"
             },
             {
-              "line": 167,
+              "line": 173,
               "source": "await page.locator('.project-card').filter({ hasText: p.name }).click();"
             },
             {
-              "line": 168,
+              "line": 174,
               "source": "await page.reload();"
             },
             {
-              "line": 169,
+              "line": 175,
               "source": "const afterReject = await backup(page);"
             }
           ],
           "assertions": [
             {
-              "line": 82,
+              "line": 88,
               "source": "expect(reordered.project.entities.find(e => e.id === scene.id)).toMatchObject({ data: { dialogueLineIds: [l2.id, l1.id] } });"
             },
             {
-              "line": 85,
+              "line": 91,
               "source": "expect(actual.data).toEqual(given.data); expect(actual.customValues).toEqual(given.customValues);"
             },
             {
-              "line": 89,
+              "line": 95,
               "source": "if (actual.kind !== 'dialogue_line') throw new Error('元台詞がありません');"
             },
             {
-              "line": 90,
+              "line": 96,
               "source": "expect(await dialogueContentHash(reordered.project, actual)).toBe(hash);"
             },
             {
-              "line": 92,
+              "line": 98,
               "source": "await expect(editor).toContainText('改名した同じ話者');"
             },
             {
-              "line": 99,
+              "line": 105,
               "source": "if (!editedL1 || editedL1.kind !== 'dialogue_line') throw new Error('編集後の元L1がありません');"
             },
             {
-              "line": 101,
+              "line": 107,
               "source": "expect(editedL1).toMatchObject({ id: l1.id, projectId: p.projectId, name: l1.name, data: { speakerId: speaker.id } });"
             },
             {
-              "line": 102,
+              "line": 108,
               "source": "expect(editedL1.data.text).toHaveLength(1);"
             },
             {
-              "line": 104,
+              "line": 110,
               "source": "expect(editedBlock.id).toMatch(ID_PATTERN);"
             },
             {
-              "line": 105,
+              "line": 111,
               "source": "expect(editedL1.data.text).toEqual([{ id: editedBlock.id, kind: 'paragraph', text: editedText }]);"
             },
             {
-              "line": 106,
+              "line": 112,
               "source": "expect({ ...editedL1.data, text: l1.data.text }).toEqual(l1.data);"
             },
             {
-              "line": 110,
+              "line": 116,
               "source": "if (!editCommand) throw new Error('L1の本文変更を保持する保存操作がありません');"
             },
             {
-              "line": 112,
+              "line": 118,
               "source": "if (!oldL1 || oldL1.kind !== 'dialogue_line') throw new Error('初期L1の本文を保持する編集前履歴がありません');"
             },
             {
-              "line": 113,
+              "line": 119,
               "source": "expect(oldL1.data.text).toEqual(l1.data.text);"
             },
             {
-              "line": 114,
+              "line": 120,
               "source": "expect(edited.project.entities.find(e => e.id === l2.id)?.data).toEqual(l2.data);"
             },
             {
-              "line": 115,
+              "line": 121,
               "source": "for (const deliverable of [translation1, recording1]) expect(edited.project.entities.find(e => e.id === deliverable.id)).toMatchObject({ data: { sourceLineId: l1.id, sourceHash: sourceHash1, stage: 'needs_review' } });"
             },
             {
-              "line": 116,
+              "line": 122,
               "source": "for (const deliverable of [translation2, recording2]) expect(edited.project.entities.find(e => e.id === deliverable.id)?.data).toEqual(deliverable.data);"
             },
             {
-              "line": 122,
+              "line": 128,
               "source": "expect(copy?.kind).toBe('dialogue_line');"
             },
             {
-              "line": 123,
+              "line": 129,
               "source": "if (!copy || copy.kind !== 'dialogue_line') throw new Error('新IDの独立複製がありません');"
             },
             {
-              "line": 124,
+              "line": 130,
               "source": "expect(copy.id).not.toBe(l1.id); expect(copy.id).not.toBe(l2.id);"
             },
             {
-              "line": 125,
+              "line": 131,
               "source": "expect(copy.data.text.map(block => block.text).join('\\n')).toBe(editedText);"
             },
             {
-              "line": 126,
+              "line": 132,
               "source": "expect(copy.data.text[0].id).toMatch(ID_PATTERN);"
             },
             {
-              "line": 127,
+              "line": 133,
               "source": "expect(copy.data.text[0].id).not.toBe(editedBlock.id);"
             },
             {
-              "line": 128,
+              "line": 134,
               "source": "expect(copy.data.text[0].id).not.toBe(l1.data.text[0].id);"
             },
             {
-              "line": 129,
+              "line": 135,
               "source": "expect(copy.data.lineage?.segments[0].source).toMatchObject({ entityId: l1.id, lineId: l1.id, blockId: editedBlock.id, start: 0, end: Array.from(editedText).length });"
             },
             {
-              "line": 130,
+              "line": 136,
               "source": "expect(copy.data.lineage?.segments[0].target.entityId).toBe(copy.id);"
             },
             {
-              "line": 131,
+              "line": 137,
               "source": "expect(copied.project.entities.find(e => e.id === scene.id)).toMatchObject({ data: { dialogueLineIds: [l2.id, l1.id] } });"
             },
             {
-              "line": 137,
+              "line": 143,
               "source": "expect(old?.kind).toBe('dialogue_line');"
             },
             {
-              "line": 138,
+              "line": 144,
               "source": "if (!old || old.kind !== 'dialogue_line') throw new Error('分割元の台詞がありません');"
             },
             {
-              "line": 140,
+              "line": 146,
               "source": "expect(old.status).toBe('rejected'); expect(splitIds).toHaveLength(2);"
             },
             {
-              "line": 141,
+              "line": 147,
               "source": "expect(new Set([l1.id, l2.id, copy.id, ...splitIds]).size).toBe(5);"
             },
             {
-              "line": 144,
+              "line": 150,
               "source": "expect(parts.map(line => line.kind === 'dialogue_line' ? line.data.text.map(b => b.text).join('\\n') : '').join('')).toBe(originalText);"
             },
             {
-              "line": 146,
+              "line": 152,
               "source": "if (line.kind !== 'dialogue_line') throw new Error('分割先の台詞がありません');"
             },
             {
-              "line": 147,
+              "line": 153,
               "source": "expect(line.data.originLineIds).toContain(l1.id);"
             },
             {
-              "line": 148,
+              "line": 154,
               "source": "expect(line.data.lineage).toMatchObject({ mode: 'split', reason: '収録単位を前半と後半へ分ける' });"
             },
             {
-              "line": 149,
+              "line": 155,
               "source": "expect(line.data.lineage!.segments.every(segment => segment.source.entityId === l1.id && segment.target.entityId === line.id)).toBe(true);"
             },
             {
-              "line": 151,
+              "line": 157,
               "source": "expect(saved.project.entities.find(e => e.id === scene.id)).toMatchObject({ data: { dialogueLineIds: [l2.id, ...splitIds] } });"
             },
             {
-              "line": 152,
+              "line": 158,
               "source": "for (const given of [external1, external2]) expect(saved.project.entities.find(e => e.id === given.id)?.customValues).toEqual(given.customValues);"
             },
             {
-              "line": 153,
+              "line": 159,
               "source": "expect(saved.project.entities.find(e => e.id === recording1.id)).toMatchObject({ data: { sourceLineId: l1.id, attachmentId: audio1.id, stage: 'needs_review' } });"
             },
             {
-              "line": 154,
+              "line": 160,
               "source": "expect(saved.project.entities.find(e => e.id === recording2.id)?.data).toEqual(recording2.data);"
             },
             {
-              "line": 155,
+              "line": 161,
               "source": "expect(saved.assets).toHaveLength(1); expect(saved.assets[0].bytes).toEqual(wavBytes);"
             },
             {
-              "line": 163,
+              "line": 169,
               "source": "await expect(importDialog.getByRole('alert')).toContainText(/重複|一意/);"
             },
             {
-              "line": 164,
+              "line": 170,
               "source": "await expect(importDialog.getByRole('button', { name: 'この内容で復元する', exact: true })).toHaveCount(0);"
             },
             {
-              "line": 165,
+              "line": 171,
               "source": "expect(await authorFingerprint(page)).toBe(nativeBefore);"
             },
             {
-              "line": 170,
+              "line": 176,
               "source": "expect(afterReject.project).toEqual(saved.project);"
             }
           ]
@@ -2203,9 +2225,9 @@
           "source_entry_refs": [
             {
               "file": "tests/e2e/ap04-original-f-dialogue.spec.ts",
-              "line": 49,
-              "end_line": 172,
-              "excerpt_sha256": "f962bcc34aba67dde6343c1dead093c4744f51caac02a38310b4a38d24b9dec3"
+              "line": 55,
+              "end_line": 178,
+              "excerpt_sha256": "3212ab37f1c29527eab356e458e7d88a83c6a3470955a9824b9c4d0f2ca5daac"
             }
           ],
           "operation_and_assertion_details": "同一caseの authored_entries.normal_operations/assertions の実ソースを直接参照する。これは実行結果ではない。",
@@ -2221,9 +2243,9 @@
           "source_entry_refs": [
             {
               "file": "tests/e2e/ap04-original-f-dialogue.spec.ts",
-              "line": 49,
-              "end_line": 172,
-              "excerpt_sha256": "f962bcc34aba67dde6343c1dead093c4744f51caac02a38310b4a38d24b9dec3"
+              "line": 55,
+              "end_line": 178,
+              "excerpt_sha256": "3212ab37f1c29527eab356e458e7d88a83c6a3470955a9824b9c4d0f2ca5daac"
             }
           ],
           "operation_and_assertion_details": "同一caseの authored_entries.normal_operations/assertions の実ソースを直接参照する。これは実行結果ではない。",
@@ -2239,9 +2261,9 @@
           "source_entry_refs": [
             {
               "file": "tests/e2e/ap04-original-f-dialogue.spec.ts",
-              "line": 49,
-              "end_line": 172,
-              "excerpt_sha256": "f962bcc34aba67dde6343c1dead093c4744f51caac02a38310b4a38d24b9dec3"
+              "line": 55,
+              "end_line": 178,
+              "excerpt_sha256": "3212ab37f1c29527eab356e458e7d88a83c6a3470955a9824b9c4d0f2ca5daac"
             }
           ],
           "operation_and_assertion_details": "同一caseの authored_entries.normal_operations/assertions の実ソースを直接参照する。これは実行結果ではない。",
@@ -2257,9 +2279,9 @@
           "source_entry_refs": [
             {
               "file": "tests/e2e/ap04-original-f-dialogue.spec.ts",
-              "line": 49,
-              "end_line": 172,
-              "excerpt_sha256": "f962bcc34aba67dde6343c1dead093c4744f51caac02a38310b4a38d24b9dec3"
+              "line": 55,
+              "end_line": 178,
+              "excerpt_sha256": "3212ab37f1c29527eab356e458e7d88a83c6a3470955a9824b9c4d0f2ca5daac"
             }
           ],
           "operation_and_assertion_details": "同一caseの authored_entries.normal_operations/assertions の実ソースを直接参照する。これは実行結果ではない。",
@@ -2286,132 +2308,132 @@
       "authored_entries": [
         {
           "file": "tests/e2e/ap04-original-f-material-output.spec.ts",
-          "line": 41,
-          "end_line": 132,
+          "line": 45,
+          "end_line": 136,
           "title_source": "test('AT-F22 本文だけ/演出込みを切り替え、仮背景と欠落音楽を別表示し、素材差替えでも台詞IDを維持する', async ({ page }, info) => {",
-          "excerpt_sha256": "97b9dc76df078bcaa3e681d42d03dff063dc1294074e78b4698a1fb2039649c6",
-          "source_excerpt": "test('AT-F22 本文だけ/演出込みを切り替え、仮背景と欠落音楽を別表示し、素材差替えでも台詞IDを維持する', async ({ page }, info) => {\n  const p = createProject('AT-F22 仮背景と欠落音楽');\n  const speaker = createEntity(p.projectId, 'character', '演出の話者');\n  const line = createEntity(p.projectId, 'dialogue_line', '素材がなくても読む台詞', { text: textToRichText('背景と音楽がなくてもこの本文を読める。'), speakerId: speaker.id });\n  const scene = createEntity(p.projectId, 'scene', '演出を切り替える場面', { body: textToRichText('門の前で話す。'), dialogueLineIds: [line.id] });\n  const chapter = createEntity(p.projectId, 'chapter', '演出の章', { sceneIds: [scene.id] }); scene.data.chapterId = chapter.id;\n  const image = await prepareAsset(pngBytes(), '仮背景.png');\n  const music = await prepareAsset(new Uint8Array(await readFile('tests/fixtures/media/fixture-tone.wav')), '未取得の音楽.wav');\n  const { bytes: _imageBytes, preview: _imagePreview, ...imageMetadata } = image;\n  const { bytes: _musicBytes, preview: _musicPreview, ...musicMetadata } = music;\n  const background = createEntity(p.projectId, 'attachment', '仮背景', { ...imageMetadata, stage: 'temporary' });\n  const missingMusic = createEntity(p.projectId, 'attachment', '欠落している音楽', { ...musicMetadata, stage: 'final' });\n  const backgroundCue = createEntity(p.projectId, 'cue', '背景と話者の演出', { anchor: { entityId: scene.id, lineId: line.id }, cueType: 'background', speakerId: speaker.id, attachmentId: background.id, waitMs: 500 });\n  const musicCue = createEntity(p.projectId, 'cue', '取得前の音楽演出', { anchor: { entityId: scene.id, lineId: line.id }, cueType: 'music', attachmentId: missingMusic.id, waitMs: 250 });\n  line.data.cueIds = [backgroundCue.id, musicCue.id];\n  p.entities.push(speaker, line, scene, chapter, background, missingMusic, backgroundCue, musicCue);\n  p.entities.forEach(e => { e.status = 'confirmed'; });\n  // Missing bytes are an explicit original input condition. The normal import\n  // warns that this metadata-only file cannot serve as a complete backup.\n  const bytes = await exportScenario(p, { assetMode: 'metadata_only' });\n  await attachGiven(info, 'AT-F22', bytes, { lineId: line.id, speakerId: speaker.id, backgroundId: background.id, backgroundStage: 'temporary', musicId: missingMusic.id, missingMusicHash: music.contentHash, waitMs: [500, 250], assetMode: 'metadata_only' });\n  await seed(page, bytes);\n\n  // Acquire only the background through the author's ordinary replacement\n  // form. The music remains genuinely absent from the local asset store.\n  await openEntity(page, 'attachment', background.name);\n  const tools = page.locator('.production-tools');\n  await tools.locator('summary').click();\n  await tools.getByLabel('素材ファイルを選ぶ', { exact: true }).setInputFiles({ name: '仮背景.png', mimeType: 'image/png', buffer: Buffer.from(image.bytes) });\n  await tools.getByRole('checkbox', { name: backgroundCue.name, exact: true }).check();\n  await tools.getByRole('button', { name: '変更の影響を確認', exact: true }).click();\n  await tools.getByRole('button', { name: '確認した変更を保存', exact: true }).click();\n  await expect(tools.getByRole('status').filter({ hasText: '表示版を確認' })).toBeVisible();\n  await navigate(page, /^構成/); await page.getByRole('tab', { name: '章の試読', exact: true }).click();\n  const reading = page.getByRole('region', { name: '章順・選択経路の通読', exact: true });\n  await reading.getByRole('button', { name: '記録付き読書を始める', exact: true }).click();\n  await reading.getByRole('button', { name: '次の場面を提示', exact: true }).click();\n  await expect(reading.getByRole('region', { name: '場面の台詞', exact: true })).toContainText('背景と音楽がなくてもこの本文を読める。');\n  const cues = reading.locator('.presentation-cues');\n  await cues.getByLabel('演出・絵コンテを表示', { exact: true }).uncheck();\n  await expect(cues.locator('article')).toHaveCount(0);\n  await cues.getByLabel('演出・絵コンテを表示', { exact: true }).check();\n  await expect(cues).toContainText('演出 2件');\n  await expect(cues).toContainText('演出の話者'); await expect(cues).toContainText('間 500 ms');\n  await expect(cues).toContainText('仮素材');\n  await expect(cues).toContainText('完成素材');\n  await expect(cues).toContainText('この端末には素材bytesがありません。');\n  await expect(cues.locator('img')).toBeVisible();\n  await expect.poll(() => cues.locator('img').evaluate((img: HTMLImageElement) => img.naturalWidth)).toBe(1);\n  await cues.getByLabel('演出・絵コンテを表示', { exact: true }).uncheck();\n  await expect(reading.getByRole('region', { name: '場面の台詞', exact: true })).toContainText('背景と音楽がなくてもこの本文を読める。');\n  await page.getByRole('tab', { name: '制作', exact: true }).click();\n  const materials = page.locator('.production-review');\n  await expect(materials).toContainText('bytes不足 1件');\n  await expect(materials.locator('p').filter({ has: page.getByRole('button', { name: missingMusic.name, exact: true }) })).toContainText('完成素材 · bytes不足');\n  await expect(materials.locator('p').filter({ has: page.getByRole('button', { name: background.name, exact: true }) })).toContainText('仮素材 · bytesあり');\n  await page.reload();\n  const saved = await lightBackup(page);\n  expect(saved.manifest.assetMode).toBe('metadata_only');\n  expect(saved.project.entities.find(e => e.id === line.id)?.data).toEqual(line.data);\n  const replacement = saved.project.entities.find(e => e.kind === 'attachment' && e.data.revisionHistory?.includes(background.id));\n  expect(replacement?.id).not.toBe(background.id);\n  expect(saved.project.entities.find(e => e.id === backgroundCue.id)).toMatchObject({ data: { attachmentId: replacement!.id, speakerId: speaker.id, waitMs: 500 } });\n  expect(saved.project.entities.find(e => e.id === musicCue.id)?.data).toEqual(musicCue.data);\n  const nativeBefore = await authorFingerprint(page);\n  let unexpectedDownloads = 0;\n  const onDownload = () => { unexpectedDownloads++; };\n  page.on('download', onDownload);\n  await page.getByRole('button', { name: '完全保存ファイルを作成', exact: true }).click();\n  await expect(page.locator('.backup-page').getByRole('alert')).toContainText(/素材|添付/);\n  page.off('download', onDownload);\n  expect(unexpectedDownloads).toBe(0); expect(await authorFingerprint(page)).toBe(nativeBefore);\n  await attachObservation(info, 'AT-F22-observed', { lineId: line.id, oldBackgroundId: background.id, replacementBackgroundId: replacement!.id, missingMusicId: missingMusic.id, musicBytesStillAbsent: true, metadataOnlyNotClaimedComplete: true, fullExportRefusedWithoutDownload: true, revision: saved.project.revision });\n});\n\nfunction fixturePublicPolicy(p: ProjectData, selected: Entity[]) {\n  const publicTexts: Record<string, Record<string, unknown>> = {};\n  const blockSources: Record<string, string> = {};\n  for (const entity of selected) {\n    const output: Record<string, unknown> = {};\n    for (const [field, value] of Object.entries(entity.data)) {\n      if (value == null || !['summary', 'body', 'text', 'key', 'label', 'terminalReason', 'description', 'displayName', 'locator', 'excerptLocation', 'interpretation'].includes(field)) continue;\n      const copy = structuredClone(value);\n      if (Array.isArray(copy)) for (const block of copy) if (block && typeof block.id === 'string' && typeof block.text === 'string') { const origin = block.id; block.id = newId(); blockSources[block.id] = origin; }\n      output[field] = copy;\n    }\n    publicTexts[entity.id] = output;\n  }\n  const profile = createEntity(p.projectId, 'projection_profile', '公開名で読む資料', { audience: 'reader', publicTitle: '公開名の物語', includedIds: selected.map(e => e.id), allowedKinds: [...new Set(selected.map(e => e.kind))], idPolicy: 'preserve', namePolicy: { defaultPolicy: { mode: 'replace', replacement: '確認済みの公開名' } }, publicTexts, blockSources, approvedAttachmentIds: selected.filter(e => e.kind === 'attachment').map(e => e.id) });\n  profile.status = 'confirmed'; p.entities.push(profile); return profile;\n}\n\n",
+          "excerpt_sha256": "313a62b88cffe5aec4a7c22b0a4cb4ad683abd399a2e28886e8ec639b6e139c6",
+          "source_excerpt": "test('AT-F22 本文だけ/演出込みを切り替え、仮背景と欠落音楽を別表示し、素材差替えでも台詞IDを維持する', async ({ page }, info) => {\n  const p = createProject('AT-F22 仮背景と欠落音楽');\n  const speaker = createEntity(p.projectId, 'character', '演出の話者');\n  const line = createEntity(p.projectId, 'dialogue_line', '素材がなくても読む台詞', { text: textToRichText('背景と音楽がなくてもこの本文を読める。'), speakerId: speaker.id });\n  const scene = createEntity(p.projectId, 'scene', '演出を切り替える場面', { body: textToRichText('門の前で話す。'), dialogueLineIds: [line.id] });\n  const chapter = createEntity(p.projectId, 'chapter', '演出の章', { sceneIds: [scene.id] }); scene.data.chapterId = chapter.id;\n  const image = await prepareAsset(pngBytes(), '仮背景.png');\n  const music = await prepareAsset(new Uint8Array(await readFile('tests/fixtures/media/fixture-tone.wav')), '未取得の音楽.wav');\n  const { bytes: _imageBytes, preview: _imagePreview, ...imageMetadata } = image;\n  const { bytes: _musicBytes, preview: _musicPreview, ...musicMetadata } = music;\n  const background = createEntity(p.projectId, 'attachment', '仮背景', { ...imageMetadata, stage: 'temporary' });\n  const missingMusic = createEntity(p.projectId, 'attachment', '欠落している音楽', { ...musicMetadata, stage: 'final' });\n  const backgroundCue = createEntity(p.projectId, 'cue', '背景と話者の演出', { anchor: { entityId: scene.id, lineId: line.id }, cueType: 'background', speakerId: speaker.id, attachmentId: background.id, waitMs: 500 });\n  const musicCue = createEntity(p.projectId, 'cue', '取得前の音楽演出', { anchor: { entityId: scene.id, lineId: line.id }, cueType: 'music', attachmentId: missingMusic.id, waitMs: 250 });\n  line.data.cueIds = [backgroundCue.id, musicCue.id];\n  p.entities.push(speaker, line, scene, chapter, background, missingMusic, backgroundCue, musicCue);\n  p.entities.forEach(e => { e.status = 'confirmed'; });\n  // Missing bytes are an explicit original input condition. The normal import\n  // warns that this metadata-only file cannot serve as a complete backup.\n  const bytes = await exportScenario(p, { assetMode: 'metadata_only' });\n  await attachGiven(info, 'AT-F22', bytes, { lineId: line.id, speakerId: speaker.id, backgroundId: background.id, backgroundStage: 'temporary', musicId: missingMusic.id, missingMusicHash: music.contentHash, waitMs: [500, 250], assetMode: 'metadata_only' });\n  await seed(page, bytes);\n\n  // Acquire only the background through the author's ordinary replacement\n  // form. The music remains genuinely absent from the local asset store.\n  await openEntity(page, 'attachment', background.name);\n  const tools = page.locator('.production-tools');\n  await tools.locator('summary').click();\n  await tools.getByLabel('素材ファイルを選ぶ', { exact: true }).setInputFiles({ name: '仮背景.png', mimeType: 'image/png', buffer: Buffer.from(image.bytes) });\n  await tools.getByRole('checkbox', { name: backgroundCue.name, exact: true }).check();\n  await tools.getByRole('button', { name: '変更の影響を確認', exact: true }).click();\n  await tools.getByRole('button', { name: '確認した変更を保存', exact: true }).click();\n  await expect(tools.getByRole('status').filter({ hasText: '表示版を確認' })).toBeVisible();\n  await navigate(page, /^構成/); await page.getByRole('tab', { name: '章の試読', exact: true }).click();\n  const reading = page.getByRole('region', { name: '章順・選択経路の通読', exact: true });\n  await reading.getByRole('button', { name: '記録付き読書を始める', exact: true }).click();\n  await reading.getByRole('button', { name: '次の場面を提示', exact: true }).click();\n  await expect(reading.getByRole('region', { name: '場面の台詞', exact: true })).toContainText('背景と音楽がなくてもこの本文を読める。');\n  const cues = reading.locator('.presentation-cues');\n  await cues.getByLabel('演出・絵コンテを表示', { exact: true }).uncheck();\n  await expect(cues.locator('article')).toHaveCount(0);\n  await cues.getByLabel('演出・絵コンテを表示', { exact: true }).check();\n  await expect(cues).toContainText('演出 2件');\n  await expect(cues).toContainText('演出の話者'); await expect(cues).toContainText('間 500 ms');\n  await expect(cues).toContainText('仮素材');\n  await expect(cues).toContainText('完成素材');\n  await expect(cues).toContainText('この端末には素材bytesがありません。');\n  await expect(cues.locator('img')).toBeVisible();\n  await expect.poll(() => cues.locator('img').evaluate((img: HTMLImageElement) => img.naturalWidth)).toBe(1);\n  await cues.getByLabel('演出・絵コンテを表示', { exact: true }).uncheck();\n  await expect(reading.getByRole('region', { name: '場面の台詞', exact: true })).toContainText('背景と音楽がなくてもこの本文を読める。');\n  await page.getByRole('tab', { name: '制作', exact: true }).click();\n  const materials = page.locator('.production-review');\n  await expect(materials).toContainText('bytes不足 1件');\n  await expect(materials.locator('p').filter({ has: page.getByRole('button', { name: missingMusic.name, exact: true }) })).toContainText('完成素材 · bytes不足');\n  await expect(materials.locator('p').filter({ has: page.getByRole('button', { name: background.name, exact: true }) })).toContainText('仮素材 · bytesあり');\n  await page.reload();\n  const saved = await lightBackup(page);\n  expect(saved.manifest.assetMode).toBe('metadata_only');\n  expect(saved.project.entities.find(e => e.id === line.id)?.data).toEqual(line.data);\n  const replacement = saved.project.entities.find(e => e.kind === 'attachment' && e.data.revisionHistory?.includes(background.id));\n  expect(replacement?.id).not.toBe(background.id);\n  expect(saved.project.entities.find(e => e.id === backgroundCue.id)).toMatchObject({ data: { attachmentId: replacement!.id, speakerId: speaker.id, waitMs: 500 } });\n  expect(saved.project.entities.find(e => e.id === musicCue.id)?.data).toEqual(musicCue.data);\n  const nativeBefore = await authorFingerprint(page);\n  let unexpectedDownloads = 0;\n  const onDownload = () => { unexpectedDownloads++; };\n  page.on('download', onDownload);\n  await page.getByRole('button', { name: '完全保存ファイルを作成', exact: true }).click();\n  await expect(page.locator('.backup-page').getByRole('alert')).toContainText(/素材|添付/);\n  page.off('download', onDownload);\n  expect(unexpectedDownloads).toBe(0); expect(await authorFingerprint(page)).toBe(nativeBefore);\n  await attachObservation(info, 'AT-F22-observed', { lineId: line.id, oldBackgroundId: background.id, replacementBackgroundId: replacement!.id, missingMusicId: missingMusic.id, musicBytesStillAbsent: true, metadataOnlyNotClaimedComplete: true, fullExportRefusedWithoutDownload: true, revision: saved.project.revision });\n});\n\nfunction fixturePublicPolicy(p: ProjectData, selected: Entity[]) {\n  const publicTexts: Record<string, Record<string, unknown>> = {};\n  const blockSources: Record<string, string> = {};\n  for (const entity of selected) {\n    const output: Record<string, unknown> = {};\n    for (const [field, value] of Object.entries(entity.data)) {\n      if (value == null || !['summary', 'body', 'text', 'key', 'label', 'terminalReason', 'description', 'displayName', 'locator', 'excerptLocation', 'interpretation'].includes(field)) continue;\n      const copy = structuredClone(value);\n      if (Array.isArray(copy)) for (const block of copy) if (block && typeof block.id === 'string' && typeof block.text === 'string') { const origin = block.id; block.id = newId(); if (entity.status === 'confirmed' && !entity.deletedAt) blockSources[block.id] = origin; }\n      output[field] = copy;\n    }\n    publicTexts[entity.id] = output;\n  }\n  const profile = createEntity(p.projectId, 'projection_profile', '公開名で読む資料', { audience: 'reader', publicTitle: '公開名の物語', includedIds: selected.map(e => e.id), allowedKinds: [...new Set(selected.map(e => e.kind))], idPolicy: 'preserve', namePolicy: { defaultPolicy: { mode: 'replace', replacement: '確認済みの公開名' } }, publicTexts, blockSources, approvedAttachmentIds: selected.filter(e => e.kind === 'attachment').map(e => e.id) });\n  profile.status = 'confirmed'; p.entities.push(profile); return profile;\n}\n\n",
           "normal_operations": [
             {
-              "line": 62,
+              "line": 66,
               "source": "await seed(page, bytes);"
             },
             {
-              "line": 66,
+              "line": 70,
               "source": "await openEntity(page, 'attachment', background.name);"
             },
             {
-              "line": 74,
+              "line": 78,
               "source": "await navigate(page, /^構成/); await page.getByRole('tab', { name: '章の試読', exact: true }).click();"
             },
             {
-              "line": 92,
+              "line": 96,
               "source": "await page.getByRole('tab', { name: '制作', exact: true }).click();"
             },
             {
-              "line": 95,
+              "line": 99,
               "source": "await expect(materials.locator('p').filter({ has: page.getByRole('button', { name: missingMusic.name, exact: true }) })).toContainText('完成素材 · bytes不足');"
             },
             {
-              "line": 96,
+              "line": 100,
               "source": "await expect(materials.locator('p').filter({ has: page.getByRole('button', { name: background.name, exact: true }) })).toContainText('仮素材 · bytesあり');"
             },
             {
-              "line": 97,
+              "line": 101,
               "source": "await page.reload();"
             },
             {
-              "line": 109,
+              "line": 113,
               "source": "await page.getByRole('button', { name: '完全保存ファイルを作成', exact: true }).click();"
             },
             {
-              "line": 110,
+              "line": 114,
               "source": "await expect(page.locator('.backup-page').getByRole('alert')).toContainText(/素材|添付/);"
             }
           ],
           "assertions": [
             {
-              "line": 73,
+              "line": 77,
               "source": "await expect(tools.getByRole('status').filter({ hasText: '表示版を確認' })).toBeVisible();"
             },
             {
-              "line": 78,
+              "line": 82,
               "source": "await expect(reading.getByRole('region', { name: '場面の台詞', exact: true })).toContainText('背景と音楽がなくてもこの本文を読める。');"
-            },
-            {
-              "line": 81,
-              "source": "await expect(cues.locator('article')).toHaveCount(0);"
-            },
-            {
-              "line": 83,
-              "source": "await expect(cues).toContainText('演出 2件');"
-            },
-            {
-              "line": 84,
-              "source": "await expect(cues).toContainText('演出の話者'); await expect(cues).toContainText('間 500 ms');"
             },
             {
               "line": 85,
-              "source": "await expect(cues).toContainText('仮素材');"
-            },
-            {
-              "line": 86,
-              "source": "await expect(cues).toContainText('完成素材');"
+              "source": "await expect(cues.locator('article')).toHaveCount(0);"
             },
             {
               "line": 87,
-              "source": "await expect(cues).toContainText('この端末には素材bytesがありません。');"
+              "source": "await expect(cues).toContainText('演出 2件');"
             },
             {
               "line": 88,
-              "source": "await expect(cues.locator('img')).toBeVisible();"
+              "source": "await expect(cues).toContainText('演出の話者'); await expect(cues).toContainText('間 500 ms');"
             },
             {
               "line": 89,
-              "source": "await expect.poll(() => cues.locator('img').evaluate((img: HTMLImageElement) => img.naturalWidth)).toBe(1);"
+              "source": "await expect(cues).toContainText('仮素材');"
+            },
+            {
+              "line": 90,
+              "source": "await expect(cues).toContainText('完成素材');"
             },
             {
               "line": 91,
-              "source": "await expect(reading.getByRole('region', { name: '場面の台詞', exact: true })).toContainText('背景と音楽がなくてもこの本文を読める。');"
+              "source": "await expect(cues).toContainText('この端末には素材bytesがありません。');"
             },
             {
-              "line": 94,
-              "source": "await expect(materials).toContainText('bytes不足 1件');"
+              "line": 92,
+              "source": "await expect(cues.locator('img')).toBeVisible();"
+            },
+            {
+              "line": 93,
+              "source": "await expect.poll(() => cues.locator('img').evaluate((img: HTMLImageElement) => img.naturalWidth)).toBe(1);"
             },
             {
               "line": 95,
-              "source": "await expect(materials.locator('p').filter({ has: page.getByRole('button', { name: missingMusic.name, exact: true }) })).toContainText('完成素材 · bytes不足');"
+              "source": "await expect(reading.getByRole('region', { name: '場面の台詞', exact: true })).toContainText('背景と音楽がなくてもこの本文を読める。');"
             },
             {
-              "line": 96,
-              "source": "await expect(materials.locator('p').filter({ has: page.getByRole('button', { name: background.name, exact: true }) })).toContainText('仮素材 · bytesあり');"
+              "line": 98,
+              "source": "await expect(materials).toContainText('bytes不足 1件');"
             },
             {
               "line": 99,
-              "source": "expect(saved.manifest.assetMode).toBe('metadata_only');"
+              "source": "await expect(materials.locator('p').filter({ has: page.getByRole('button', { name: missingMusic.name, exact: true }) })).toContainText('完成素材 · bytes不足');"
             },
             {
               "line": 100,
-              "source": "expect(saved.project.entities.find(e => e.id === line.id)?.data).toEqual(line.data);"
-            },
-            {
-              "line": 102,
-              "source": "expect(replacement?.id).not.toBe(background.id);"
+              "source": "await expect(materials.locator('p').filter({ has: page.getByRole('button', { name: background.name, exact: true }) })).toContainText('仮素材 · bytesあり');"
             },
             {
               "line": 103,
-              "source": "expect(saved.project.entities.find(e => e.id === backgroundCue.id)).toMatchObject({ data: { attachmentId: replacement!.id, speakerId: speaker.id, waitMs: 500 } });"
+              "source": "expect(saved.manifest.assetMode).toBe('metadata_only');"
             },
             {
               "line": 104,
+              "source": "expect(saved.project.entities.find(e => e.id === line.id)?.data).toEqual(line.data);"
+            },
+            {
+              "line": 106,
+              "source": "expect(replacement?.id).not.toBe(background.id);"
+            },
+            {
+              "line": 107,
+              "source": "expect(saved.project.entities.find(e => e.id === backgroundCue.id)).toMatchObject({ data: { attachmentId: replacement!.id, speakerId: speaker.id, waitMs: 500 } });"
+            },
+            {
+              "line": 108,
               "source": "expect(saved.project.entities.find(e => e.id === musicCue.id)?.data).toEqual(musicCue.data);"
             },
             {
-              "line": 110,
+              "line": 114,
               "source": "await expect(page.locator('.backup-page').getByRole('alert')).toContainText(/素材|添付/);"
             },
             {
-              "line": 112,
+              "line": 116,
               "source": "expect(unexpectedDownloads).toBe(0); expect(await authorFingerprint(page)).toBe(nativeBefore);"
             }
           ]
@@ -2430,9 +2452,9 @@
           "source_entry_refs": [
             {
               "file": "tests/e2e/ap04-original-f-material-output.spec.ts",
-              "line": 41,
-              "end_line": 132,
-              "excerpt_sha256": "97b9dc76df078bcaa3e681d42d03dff063dc1294074e78b4698a1fb2039649c6"
+              "line": 45,
+              "end_line": 136,
+              "excerpt_sha256": "313a62b88cffe5aec4a7c22b0a4cb4ad683abd399a2e28886e8ec639b6e139c6"
             }
           ],
           "operation_and_assertion_details": "同一caseの authored_entries.normal_operations/assertions の実ソースを直接参照する。これは実行結果ではない。",
@@ -2448,9 +2470,9 @@
           "source_entry_refs": [
             {
               "file": "tests/e2e/ap04-original-f-material-output.spec.ts",
-              "line": 41,
-              "end_line": 132,
-              "excerpt_sha256": "97b9dc76df078bcaa3e681d42d03dff063dc1294074e78b4698a1fb2039649c6"
+              "line": 45,
+              "end_line": 136,
+              "excerpt_sha256": "313a62b88cffe5aec4a7c22b0a4cb4ad683abd399a2e28886e8ec639b6e139c6"
             }
           ],
           "operation_and_assertion_details": "同一caseの authored_entries.normal_operations/assertions の実ソースを直接参照する。これは実行結果ではない。",
@@ -2466,9 +2488,9 @@
           "source_entry_refs": [
             {
               "file": "tests/e2e/ap04-original-f-material-output.spec.ts",
-              "line": 41,
-              "end_line": 132,
-              "excerpt_sha256": "97b9dc76df078bcaa3e681d42d03dff063dc1294074e78b4698a1fb2039649c6"
+              "line": 45,
+              "end_line": 136,
+              "excerpt_sha256": "313a62b88cffe5aec4a7c22b0a4cb4ad683abd399a2e28886e8ec639b6e139c6"
             }
           ],
           "operation_and_assertion_details": "同一caseの authored_entries.normal_operations/assertions の実ソースを直接参照する。これは実行結果ではない。",
@@ -2484,9 +2506,9 @@
           "source_entry_refs": [
             {
               "file": "tests/e2e/ap04-original-f-material-output.spec.ts",
-              "line": 41,
-              "end_line": 132,
-              "excerpt_sha256": "97b9dc76df078bcaa3e681d42d03dff063dc1294074e78b4698a1fb2039649c6"
+              "line": 45,
+              "end_line": 136,
+              "excerpt_sha256": "313a62b88cffe5aec4a7c22b0a4cb4ad683abd399a2e28886e8ec639b6e139c6"
             }
           ],
           "operation_and_assertion_details": "同一caseの authored_entries.normal_operations/assertions の実ソースを直接参照する。これは実行結果ではない。",
@@ -2513,144 +2535,144 @@
       "authored_entries": [
         {
           "file": "tests/e2e/ap04-original-f-material-output.spec.ts",
-          "line": 133,
-          "end_line": 206,
+          "line": 137,
+          "end_line": 210,
           "title_source": "test('AT-F24 完全保存は作者メモ・没案・実添付を保ち、reader/playable/runtimeを選び秘密除外と未対応外部型の拒否を観測する', async ({ page, browser }, info) => {",
           "excerpt_sha256": "d3b139ed206897feac8a1e6f54aebac1fe0bedab26d470ba23d77899db9e4140",
           "source_excerpt": "test('AT-F24 完全保存は作者メモ・没案・実添付を保ち、reader/playable/runtimeを選び秘密除外と未対応外部型の拒否を観測する', async ({ page, browser }, info) => {\n  let p = createProject('AT-F24 保存と公開の各プロファイル');\n  const scene = createEntity(p.projectId, 'scene', '正本の公開名', { body: textToRichText('公開する正本本文。'), authorNotes: textToRichText('作者だけの秘密メモ: 隠れた黒幕') });\n  const rejected = createEntity(p.projectId, 'scene', '消さない没案', { body: textToRichText('没案にだけある別結末。') }); rejected.status = 'rejected';\n  const entry = createEntity(p.projectId, 'flow_node', '公開の選択入口', { nodeType: 'entry', sceneId: scene.id });\n  const end = createEntity(p.projectId, 'flow_node', '公開の終わり', { nodeType: 'terminal', terminalReason: '正本を読み終えた' });\n  const edge = createEntity(p.projectId, 'flow_edge', '選択して終わる', { fromId: entry.id, toId: end.id, edgeType: 'choice', label: '選択して終わる' });\n  const graph = createEntity(p.projectId, 'flow_graph', '公開の分岐', { nodeIds: [entry.id, end.id], edgeIds: [edge.id], entryIds: [entry.id], exitIds: [end.id] });\n  const contract = createEntity(p.projectId, 'external_contract', '未対応のゲーム外部値', { key: 'external_text_result', owner: 'game', inputType: 'text', outputType: 'text', missingPolicy: 'unknown', version: '1.0.0', stubValues: [{ type: 'text', value: '未知の結果' }], description: textToRichText('制作側ではこの文字列外部応答へ対応していない。') });\n  const png = await prepareAsset(pngBytes(), '公開画像.png');\n  const wav = await prepareAsset(new Uint8Array(await readFile('tests/fixtures/media/fixture-tone.wav')), '公開音声.wav');\n  const { bytes: imageBytes, preview: _imagePreview, ...imageMetadata } = png;\n  const { bytes: soundBytes, preview: _soundPreview, ...soundMetadata } = wav;\n  const image = createEntity(p.projectId, 'attachment', '公開画像', { ...imageMetadata, stage: 'final' });\n  const sound = createEntity(p.projectId, 'attachment', '公開音声', { ...soundMetadata, stage: 'final' });\n  p.entities.push(scene, rejected, entry, end, edge, graph, contract, image, sound);\n  p.entities.filter(e => e.id !== rejected.id).forEach(e => { e.status = 'confirmed'; });\n  const normalPolicy = fixturePublicPolicy(p, [scene, entry, end, edge, graph, image, sound]);\n  const unsupportedPolicy = fixturePublicPolicy(p, [scene, entry, end, edge, graph, contract, image, sound]);\n  unsupportedPolicy.name = '未対応外部型も含む制作範囲';\n  p = await createWorldSnapshot(p, '保存と公開を比べる固定版');\n  const assets: Record<string, Uint8Array> = { [png.contentHash]: imageBytes, [wav.contentHash]: soundBytes };\n  const bytes = await exportScenario(p, { loadAsset: hash => assets[hash] });\n  await attachGiven(info, 'AT-F24', bytes, { sceneId: scene.id, rejectedSceneId: rejected.id, branchIds: [entry.id, edge.id, end.id, graph.id], unsupportedContractId: contract.id, unsupportedType: 'text', profileIds: [normalPolicy.id, unsupportedPolicy.id], assetIds: [image.id, sound.id], assetHashes: [png.contentHash, wav.contentHash] });\n  await seed(page, bytes);\n  const full = await backup(page);\n  expect(full.project).toEqual(p);\n  expect(full.assets.map(a => a.contentHash).sort()).toEqual([png.contentHash, wav.contentHash].sort());\n  for (const asset of full.assets) expect(asset.bytes).toEqual(assets[asset.contentHash]);\n  const emptyContext = await browser.newContext({ baseURL: page.url() });\n  try {\n    const empty = await emptyContext.newPage();\n    await seed(empty, full.bytes); await empty.reload();\n    const restored = await backup(empty);\n    expect(restored.project).toEqual(full.project);\n    expect(restored.assets.map(a => ({ hash: a.contentHash, bytes: a.bytes }))).toEqual(full.assets.map(a => ({ hash: a.contentHash, bytes: a.bytes })));\n  } finally { await emptyContext.close(); }\n  const beforeOutputs = await authorFingerprint(page);\n  await output(page);\n  await page.getByLabel('出力する公開範囲', { exact: true }).selectOption(normalPolicy.id);\n  const reader = strFromU8(await outputBytes(page, 'reader'));\n  const playableFiles = unzipSync(await outputBytes(page, 'playable_preview'));\n  const runtime = JSON.parse(strFromU8(await outputBytes(page, 'runtime_json')));\n  for (const outputText of [reader, ...Object.values(playableFiles).filter((_value, index) => !Object.keys(playableFiles)[index].startsWith('assets/')).map(bytes => strFromU8(bytes)), JSON.stringify(runtime)]) {\n    expect(outputText).not.toContain('作者だけの秘密メモ: 隠れた黒幕');\n    expect(outputText).not.toContain('没案にだけある別結末。');\n    expect(outputText).not.toContain(rejected.id);\n  }\n  expect(reader).toContain('公開する正本本文。');\n  expect(reader).toContain('確認済みの公開名');\n  expect(strFromU8(playableFiles['index.html'])).toContain('公開する正本本文。');\n  expect(runtime.runtimeProject.entities.some((e: { kind: string }) => e.kind === 'flow_graph')).toBe(true);\n  expect(runtime.assets).toHaveLength(2);\n  expect(runtime.assetBytesIncluded).toBe(true);\n  expect(new Uint8Array(Buffer.from(runtime.assetData[image.id].base64, 'base64'))).toEqual(imageBytes);\n  expect(new Uint8Array(Buffer.from(runtime.assetData[sound.id].base64, 'base64'))).toEqual(soundBytes);\n  await page.getByLabel('出力する公開範囲', { exact: true }).selectOption(unsupportedPolicy.id);\n  let unexpectedDownloads = 0;\n  const onDownload = () => { unexpectedDownloads++; };\n  page.on('download', onDownload);\n  for (const purpose of ['playable_preview', 'runtime_json']) {\n    await page.getByLabel('出力目的', { exact: true }).selectOption(purpose);\n    await page.getByRole('button', { name: '内容を検査・プレビュー', exact: true }).click();\n    await expect(page.locator('.export-result').getByRole('alert')).toContainText('外部値の型を対応先で表せません');\n    await expect(page.locator('.export-artifact')).toHaveCount(0);\n  }\n  page.off('download', onDownload);\n  expect(unexpectedDownloads).toBe(0); expect(await authorFingerprint(page)).toBe(beforeOutputs);\n  await page.reload();\n  const afterOutputs = await backup(page);\n  expect(afterOutputs.project).toEqual(full.project);\n  await attachObservation(info, 'AT-F24-observed', { fixedSnapshotId: p.snapshots.at(-1)!.id, normalProfileId: normalPolicy.id, unsupportedProfileId: unsupportedPolicy.id, originalAssetHashes: [png.contentHash, wav.contentHash], fullNewColdMatched: true, readerPlayableRuntimeActuallyDownloaded: true, unsupportedTypeRefusedWithoutPartialDownload: true, nativeRecordsUnchanged: true });\n});\n\n",
           "normal_operations": [
             {
-              "line": 157,
+              "line": 161,
               "source": "await seed(page, bytes);"
             },
             {
-              "line": 158,
+              "line": 162,
               "source": "const full = await backup(page);"
             },
             {
-              "line": 162,
+              "line": 166,
               "source": "const emptyContext = await browser.newContext({ baseURL: page.url() });"
             },
             {
-              "line": 165,
+              "line": 169,
               "source": "await seed(empty, full.bytes); await empty.reload();"
             },
             {
-              "line": 166,
+              "line": 170,
               "source": "const restored = await backup(empty);"
             },
             {
-              "line": 172,
+              "line": 176,
               "source": "await page.getByLabel('出力する公開範囲', { exact: true }).selectOption(normalPolicy.id);"
             },
             {
-              "line": 189,
+              "line": 193,
               "source": "await page.getByLabel('出力する公開範囲', { exact: true }).selectOption(unsupportedPolicy.id);"
             },
             {
-              "line": 194,
+              "line": 198,
               "source": "await page.getByLabel('出力目的', { exact: true }).selectOption(purpose);"
             },
             {
-              "line": 195,
+              "line": 199,
               "source": "await page.getByRole('button', { name: '内容を検査・プレビュー', exact: true }).click();"
             },
             {
-              "line": 196,
+              "line": 200,
               "source": "await expect(page.locator('.export-result').getByRole('alert')).toContainText('外部値の型を対応先で表せません');"
             },
             {
-              "line": 197,
+              "line": 201,
               "source": "await expect(page.locator('.export-artifact')).toHaveCount(0);"
             },
             {
-              "line": 201,
+              "line": 205,
               "source": "await page.reload();"
             },
             {
-              "line": 202,
+              "line": 206,
               "source": "const afterOutputs = await backup(page);"
             }
           ],
           "assertions": [
             {
-              "line": 159,
+              "line": 163,
               "source": "expect(full.project).toEqual(p);"
             },
             {
-              "line": 160,
+              "line": 164,
               "source": "expect(full.assets.map(a => a.contentHash).sort()).toEqual([png.contentHash, wav.contentHash].sort());"
             },
             {
-              "line": 161,
+              "line": 165,
               "source": "for (const asset of full.assets) expect(asset.bytes).toEqual(assets[asset.contentHash]);"
             },
             {
-              "line": 167,
+              "line": 171,
               "source": "expect(restored.project).toEqual(full.project);"
             },
             {
-              "line": 168,
+              "line": 172,
               "source": "expect(restored.assets.map(a => ({ hash: a.contentHash, bytes: a.bytes }))).toEqual(full.assets.map(a => ({ hash: a.contentHash, bytes: a.bytes })));"
             },
             {
-              "line": 177,
+              "line": 181,
               "source": "expect(outputText).not.toContain('作者だけの秘密メモ: 隠れた黒幕');"
             },
             {
-              "line": 178,
+              "line": 182,
               "source": "expect(outputText).not.toContain('没案にだけある別結末。');"
             },
             {
-              "line": 179,
+              "line": 183,
               "source": "expect(outputText).not.toContain(rejected.id);"
             },
             {
-              "line": 181,
+              "line": 185,
               "source": "expect(reader).toContain('公開する正本本文。');"
             },
             {
-              "line": 182,
+              "line": 186,
               "source": "expect(reader).toContain('確認済みの公開名');"
             },
             {
-              "line": 183,
+              "line": 187,
               "source": "expect(strFromU8(playableFiles['index.html'])).toContain('公開する正本本文。');"
             },
             {
-              "line": 184,
+              "line": 188,
               "source": "expect(runtime.runtimeProject.entities.some((e: { kind: string }) => e.kind === 'flow_graph')).toBe(true);"
             },
             {
-              "line": 185,
+              "line": 189,
               "source": "expect(runtime.assets).toHaveLength(2);"
             },
             {
-              "line": 186,
+              "line": 190,
               "source": "expect(runtime.assetBytesIncluded).toBe(true);"
             },
             {
-              "line": 187,
+              "line": 191,
               "source": "expect(new Uint8Array(Buffer.from(runtime.assetData[image.id].base64, 'base64'))).toEqual(imageBytes);"
             },
             {
-              "line": 188,
+              "line": 192,
               "source": "expect(new Uint8Array(Buffer.from(runtime.assetData[sound.id].base64, 'base64'))).toEqual(soundBytes);"
             },
             {
-              "line": 196,
+              "line": 200,
               "source": "await expect(page.locator('.export-result').getByRole('alert')).toContainText('外部値の型を対応先で表せません');"
             },
             {
-              "line": 197,
+              "line": 201,
               "source": "await expect(page.locator('.export-artifact')).toHaveCount(0);"
             },
             {
-              "line": 200,
+              "line": 204,
               "source": "expect(unexpectedDownloads).toBe(0); expect(await authorFingerprint(page)).toBe(beforeOutputs);"
             },
             {
-              "line": 203,
+              "line": 207,
               "source": "expect(afterOutputs.project).toEqual(full.project);"
             }
           ]
@@ -2669,8 +2691,8 @@
           "source_entry_refs": [
             {
               "file": "tests/e2e/ap04-original-f-material-output.spec.ts",
-              "line": 133,
-              "end_line": 206,
+              "line": 137,
+              "end_line": 210,
               "excerpt_sha256": "d3b139ed206897feac8a1e6f54aebac1fe0bedab26d470ba23d77899db9e4140"
             }
           ],
@@ -2687,8 +2709,8 @@
           "source_entry_refs": [
             {
               "file": "tests/e2e/ap04-original-f-material-output.spec.ts",
-              "line": 133,
-              "end_line": 206,
+              "line": 137,
+              "end_line": 210,
               "excerpt_sha256": "d3b139ed206897feac8a1e6f54aebac1fe0bedab26d470ba23d77899db9e4140"
             }
           ],
@@ -2705,8 +2727,8 @@
           "source_entry_refs": [
             {
               "file": "tests/e2e/ap04-original-f-material-output.spec.ts",
-              "line": 133,
-              "end_line": 206,
+              "line": 137,
+              "end_line": 210,
               "excerpt_sha256": "d3b139ed206897feac8a1e6f54aebac1fe0bedab26d470ba23d77899db9e4140"
             }
           ],
@@ -2723,8 +2745,8 @@
           "source_entry_refs": [
             {
               "file": "tests/e2e/ap04-original-f-material-output.spec.ts",
-              "line": 133,
-              "end_line": 206,
+              "line": 137,
+              "end_line": 210,
               "excerpt_sha256": "d3b139ed206897feac8a1e6f54aebac1fe0bedab26d470ba23d77899db9e4140"
             }
           ],
@@ -2752,220 +2774,224 @@
       "authored_entries": [
         {
           "file": "tests/e2e/ap04-original-f-material-output.spec.ts",
-          "line": 311,
-          "end_line": 395,
+          "line": 315,
+          "end_line": 404,
           "title_source": "test('AT-F25 公開版1から作者別案の新場面を作って没にし、別IDのゲーム選択分岐だけを正本の制作出力へ含める', async ({ page }, info) => {",
-          "excerpt_sha256": "85e1aea076ecbf2bf0ed884a9469980fc35d49bdbec240f33fa0f0d86ab2708a",
-          "source_excerpt": "test('AT-F25 公開版1から作者別案の新場面を作って没にし、別IDのゲーム選択分岐だけを正本の制作出力へ含める', async ({ page }, info) => {\n  let p = createProject('AT-F25 作者別案とゲーム分岐');\n  const scene = createEntity(p.projectId, 'scene', '正本の場面', { body: textToRichText('正本だけの制作本文。') });\n  const provisional = createEntity(p.projectId, 'scene', '正本に残す仮の場面', { body: textToRichText('仮の場面だけにある未採用本文。') }); provisional.status = 'provisional';\n  const chapter = createEntity(p.projectId, 'chapter', '公開版の章', { sceneIds: [scene.id] }); scene.data.chapterId = chapter.id;\n  const entry = createEntity(p.projectId, 'flow_node', '正本の選択入口', { nodeType: 'entry', sceneId: scene.id });\n  const end = createEntity(p.projectId, 'flow_node', '正本の終わり', { nodeType: 'terminal', terminalReason: '正本を終える' });\n  const graph = createEntity(p.projectId, 'flow_graph', '正本のゲーム分岐', { nodeIds: [entry.id, end.id], entryIds: [entry.id], exitIds: [end.id], edgeIds: [] });\n  p.entities.push(scene, provisional, chapter, entry, end, graph);\n  p.entities.filter(e => e.id !== provisional.id).forEach(e => { e.status = 'confirmed'; });\n  const policy = fixturePublicPolicy(p, [scene, provisional, chapter, entry, end, graph]);\n  p = await createWorldSnapshot(p, '公開版1');\n  const published = p.snapshots.at(-1)!;\n  const bytes = await exportScenario(p);\n  await attachGiven(info, 'AT-F25', bytes, { canonicalSceneId: scene.id, provisionalSceneId: provisional.id, publishedSnapshotId: published.id, publishedContentHash: published.contentHash, gameGraphId: graph.id, profileId: policy.id });\n  await seed(page, bytes); await navigate(page, /^構成/);\n  await page.getByRole('tab', { name: '作者別案', exact: true }).click();\n  await page.getByLabel('新しい別案の名前', { exact: true }).fill('別の結末を比較して没にする');\n  await page.getByLabel('別案の分岐元', { exact: true }).selectOption(published.id);\n  await page.getByRole('button', { name: '分岐して別案を作る', exact: true }).click();\n  const alternativeId = await page.getByLabel('編集する作者別案', { exact: true }).inputValue();\n  await page.getByRole('button', { name: '別案の場面を作る', exact: true }).click();\n  const alternativeSceneId = await page.getByLabel('別案内の編集対象', { exact: true }).inputValue();\n  await page.getByLabel('別案内の情報名', { exact: true }).fill('没にする作者別案場面');\n  await page.getByLabel('別案内の場面本文', { exact: true }).fill('作者別案だけの没結末本文。');\n  await page.getByRole('button', { name: '別案を新しい版として保存', exact: true }).click();\n  await expect(page.getByText('保存済み 2版', { exact: true })).toBeVisible();\n  await page.getByLabel('別案の状態', { exact: true }).selectOption('rejected');\n  await expect(page.getByLabel('別案の状態', { exact: true })).toHaveValue('rejected');\n\n  // Add a real game edge through the ordinary typed entity form. The author's\n  // branch has its own ID, which is never used as a flow/route ID.\n  await navigate(page, /^資料/);\n  await page.getByLabel('情報の種類', { exact: true }).selectOption('flow_edge');\n  await page.getByRole('button', { name: '進行線を追加', exact: true }).first().click();\n  const add = page.getByRole('dialog', { name: '情報を追加', exact: true });\n  await add.getByLabel('名前', { exact: true }).fill('正本へ追加したゲーム内選択');\n  await add.getByRole('button', { name: '編集を始める', exact: true }).click();\n  const editor = page.locator('.detail-panel');\n  await editor.getByLabel('出発ノード', { exact: true }).selectOption(entry.id); await expect(editor.getByLabel('出発ノード', { exact: true })).toHaveValue(entry.id);\n  await editor.getByLabel('行き先未定の下書き', { exact: true }).uncheck();\n  await editor.getByLabel('行き先ノード', { exact: true }).selectOption(end.id);\n  await editor.getByLabel('選択肢の文言', { exact: true }).fill('正本のゲーム選択で進む');\n  await editor.getByLabel('情報の状態', { exact: true }).selectOption('confirmed');\n  await editor.locator('.editor-footer').getByRole('button', { name: /^(保存する|保存を再試行)$/ }).click();\n  await expect(editor.locator('.editor-save-state')).toContainText('端末内保存済み');\n  const withEdge = await backup(page);\n  const edge = withEdge.project.entities.find(e => e.kind === 'flow_edge' && e.name === '正本へ追加したゲーム内選択')!;\n  expect(edge).toMatchObject({ kind: 'flow_edge', status: 'confirmed', data: { fromId: entry.id, toId: end.id, label: '正本のゲーム選択で進む', edgeType: 'choice' } });\n  expect(new Set([alternativeId, alternativeSceneId, edge.id, graph.id]).size).toBe(4);\n  await openEntity(page, 'flow_graph', graph.name);\n  await editData(page, { ...graph.data, edgeIds: [edge.id] });\n  const withGraph = await backup(page);\n  const currentPolicy = withGraph.project.entities.find(e => e.id === policy.id)!;\n  if (currentPolicy.kind !== 'projection_profile' || edge.kind !== 'flow_edge') throw new Error('制作範囲または新選択がありません');\n  await openEntity(page, 'projection_profile', policy.name);\n  await editData(page, { ...currentPolicy.data, includedIds: [...currentPolicy.data.includedIds, edge.id], publicTexts: { ...currentPolicy.data.publicTexts, [edge.id]: { label: edge.data.label } } });\n  await page.reload();\n  const saved = await backup(page);\n  const alternative = saved.project.authorAlternatives!.find(a => a.id === alternativeId)!;\n  expect(alternative.status).toBe('rejected');\n  expect(alternative.sourceSnapshotId).toBe(published.id);\n  expect(alternative.versions.at(-1)!.content.entities.find(e => e.id === alternativeSceneId)).toMatchObject({ status: 'alternate', data: { body: [{ text: '作者別案だけの没結末本文。' }] } });\n  expect(saved.project.entities.some(e => e.id === alternativeSceneId)).toBe(false);\n  expect(saved.project.snapshots.find(s => s.id === published.id)).toEqual(published);\n  expect(saved.project.entities.find(e => e.id === scene.id)?.data).toEqual(scene.data);\n  const nativeBeforeOutputs = await authorFingerprint(page);\n  const production = JSON.parse(strFromU8(await outputBytes(page, 'production')));\n  const runtime = JSON.parse(strFromU8(await outputBytes(page, 'runtime_json')));\n  expect(production.format).toBe('scenario-production');\n  expect(JSON.stringify(production)).toContain('正本だけの制作本文。');\n  expect(runtime.flow.edges.some((e: { id: string }) => e.id === edge.id)).toBe(true);\n  for (const text of [JSON.stringify(production), JSON.stringify(runtime)]) {\n    expect(text).not.toContain('作者別案だけの没結末本文。');\n    expect(text).not.toContain('仮の場面だけにある未採用本文。');\n    expect(text).not.toContain(alternativeId); expect(text).not.toContain(alternativeSceneId);\n  }\n  expect(await authorFingerprint(page)).toBe(nativeBeforeOutputs);\n  await navigate(page, /^構成/); await page.getByRole('tab', { name: '作者別案', exact: true }).click();\n  await page.getByLabel('編集する作者別案', { exact: true }).selectOption(alternativeId);\n  await page.getByLabel('別案内の編集対象', { exact: true }).selectOption(alternativeSceneId);\n  await expect(page.getByLabel('別案内の場面本文', { exact: true })).toHaveValue('作者別案だけの没結末本文。');\n  await expect(page.locator('.alternative-diff-list')).toContainText('没にする作者別案場面');\n  await attachObservation(info, 'AT-F25-observed', { alternativeId, alternativeSceneId, branchStatus: alternative.status, publishedSnapshotId: published.id, gameEdgeId: edge.id, gameGraphId: graph.id, productionAndRuntimeActuallyDownloaded: true, rejectedAndProvisionalBodiesAbsent: true, nativeCanonicalAndPublishedPreserved: true, revision: saved.project.revision });\n});\n",
+          "excerpt_sha256": "43d0f5153d2d2ec54c437952a7b1cb262f1213972313bbcb2d31b88da43a25c0",
+          "source_excerpt": "test('AT-F25 公開版1から作者別案の新場面を作って没にし、別IDのゲーム選択分岐だけを正本の制作出力へ含める', async ({ page }, info) => {\n  let p = createProject('AT-F25 作者別案とゲーム分岐');\n  const scene = createEntity(p.projectId, 'scene', '正本の場面', { body: textToRichText('正本だけの制作本文。') });\n  const provisional = createEntity(p.projectId, 'scene', '正本に残す仮の場面', { body: textToRichText('仮の場面だけにある未採用本文。') }); provisional.status = 'provisional';\n  const chapter = createEntity(p.projectId, 'chapter', '公開版の章', { sceneIds: [scene.id] }); scene.data.chapterId = chapter.id;\n  const entry = createEntity(p.projectId, 'flow_node', '正本の選択入口', { nodeType: 'entry', sceneId: scene.id });\n  const end = createEntity(p.projectId, 'flow_node', '正本の終わり', { nodeType: 'terminal', terminalReason: '正本を終える' });\n  const graph = createEntity(p.projectId, 'flow_graph', '正本のゲーム分岐', { nodeIds: [entry.id, end.id], entryIds: [entry.id], exitIds: [end.id], edgeIds: [] });\n  p.entities.push(scene, provisional, chapter, entry, end, graph);\n  p.entities.filter(e => e.id !== provisional.id).forEach(e => { e.status = 'confirmed'; });\n  const policy = fixturePublicPolicy(p, [scene, provisional, chapter, entry, end, graph]);\n  p = await createWorldSnapshot(p, '公開版1');\n  const published = p.snapshots.at(-1)!;\n  const bytes = await exportScenario(p);\n  await attachGiven(info, 'AT-F25', bytes, { canonicalSceneId: scene.id, provisionalSceneId: provisional.id, publishedSnapshotId: published.id, publishedContentHash: published.contentHash, gameGraphId: graph.id, profileId: policy.id });\n  await seed(page, bytes); await navigate(page, /^構成/);\n  await page.getByRole('tab', { name: '作者別案', exact: true }).click();\n  await page.getByLabel('新しい別案の名前', { exact: true }).fill('別の結末を比較して没にする');\n  await page.getByLabel('別案の分岐元', { exact: true }).selectOption(published.id);\n  await page.getByRole('button', { name: '分岐して別案を作る', exact: true }).click();\n  const alternativeId = await page.getByLabel('編集する作者別案', { exact: true }).inputValue();\n  await page.getByRole('button', { name: '別案の場面を作る', exact: true }).click();\n  const alternativeSceneId = await page.getByLabel('別案内の編集対象', { exact: true }).inputValue();\n  await page.getByLabel('別案内の情報名', { exact: true }).fill('没にする作者別案場面');\n  await page.getByLabel('別案内の場面本文', { exact: true }).fill('作者別案だけの没結末本文。');\n  await page.getByRole('button', { name: '別案を新しい版として保存', exact: true }).click();\n  await expect(page.getByText('保存済み 2版', { exact: true })).toBeVisible();\n  await page.getByLabel('別案の状態', { exact: true }).selectOption('rejected');\n  await expect(page.getByLabel('別案の状態', { exact: true })).toHaveValue('rejected');\n\n  // Add a real game edge through the ordinary typed entity form. The author's\n  // branch has its own ID, which is never used as a flow/route ID.\n  await navigate(page, /^資料/);\n  await page.getByLabel('情報の種類', { exact: true }).selectOption('flow_edge');\n  await page.getByRole('button', { name: '進行線を追加', exact: true }).first().click();\n  const add = page.getByRole('dialog', { name: '情報を追加', exact: true });\n  await add.getByLabel('名前', { exact: true }).fill('正本へ追加したゲーム内選択');\n  await add.getByRole('button', { name: '編集を始める', exact: true }).click();\n  const editor = page.locator('.detail-panel');\n  await editor.getByLabel('出発ノード', { exact: true }).selectOption(entry.id); await expect(editor.getByLabel('出発ノード', { exact: true })).toHaveValue(entry.id);\n  await editor.getByLabel('行き先未定の下書き', { exact: true }).uncheck();\n  await editor.getByLabel('行き先ノード', { exact: true }).selectOption(end.id);\n  await editor.getByLabel('選択肢の文言', { exact: true }).fill('正本のゲーム選択で進む');\n  await editor.getByLabel('情報の状態', { exact: true }).selectOption('confirmed');\n  await editor.locator('.editor-footer').getByRole('button', { name: /^(保存する|保存を再試行)$/ }).click();\n  await expect(editor.locator('.editor-save-state')).toContainText('端末内保存済み');\n  const withEdge = await backup(page);\n  const edge = withEdge.project.entities.find(e => e.kind === 'flow_edge' && e.name === '正本へ追加したゲーム内選択')!;\n  expect(edge).toMatchObject({ kind: 'flow_edge', status: 'confirmed', data: { fromId: entry.id, toId: end.id, label: '正本のゲーム選択で進む', edgeType: 'choice' } });\n  expect(new Set([alternativeId, alternativeSceneId, edge.id, graph.id]).size).toBe(4);\n  await openEntity(page, 'flow_graph', graph.name);\n  await editData(page, { ...graph.data, edgeIds: [edge.id] });\n  const withGraph = await backup(page);\n  const currentPolicy = withGraph.project.entities.find(e => e.id === policy.id)!;\n  if (currentPolicy.kind !== 'projection_profile' || edge.kind !== 'flow_edge') throw new Error('制作範囲または新選択がありません');\n  await openEntity(page, 'projection_profile', policy.name);\n  await editData(page, { ...currentPolicy.data, includedIds: [...currentPolicy.data.includedIds, edge.id], allowedKinds: [...new Set([...(currentPolicy.data.allowedKinds ?? []), 'flow_edge' as const])], publicTexts: { ...currentPolicy.data.publicTexts, [edge.id]: { label: edge.data.label } } });\n  await page.reload();\n  const saved = await backup(page);\n  const alternative = saved.project.authorAlternatives!.find(a => a.id === alternativeId)!;\n  expect(alternative.status).toBe('rejected');\n  expect(alternative.sourceSnapshotId).toBe(published.id);\n  expect(alternative.versions.at(-1)!.content.entities.find(e => e.id === alternativeSceneId)).toMatchObject({ status: 'alternate', data: { body: [{ text: '作者別案だけの没結末本文。' }] } });\n  expect(saved.project.entities.some(e => e.id === alternativeSceneId)).toBe(false);\n  expect(saved.project.snapshots.find(s => s.id === published.id)).toEqual(published);\n  expect(saved.project.entities.find(e => e.id === scene.id)?.data).toEqual(scene.data);\n  const nativeBeforeOutputs = await authorFingerprint(page);\n  const production = JSON.parse(strFromU8(await outputBytes(page, 'production')));\n  const productionMarkdownArtifact = page.locator('.export-result .export-artifact').filter({ has: page.getByText('production.md', { exact: true }) });\n  await expect(productionMarkdownArtifact).toHaveCount(1);\n  const productionMarkdownDownload = page.waitForEvent('download');\n  await productionMarkdownArtifact.getByRole('button', { name: 'この内容を保存', exact: true }).click();\n  const productionMarkdown = strFromU8(new Uint8Array(await readFile((await (await productionMarkdownDownload).path())!)));\n  const runtime = JSON.parse(strFromU8(await outputBytes(page, 'runtime_json')));\n  expect(production.format).toBe('scenario-production');\n  expect(JSON.stringify(production)).toContain('正本だけの制作本文。');\n  expect(runtime.flow.edges.some((e: { id: string }) => e.id === edge.id)).toBe(true);\n  for (const text of [JSON.stringify(production), productionMarkdown, JSON.stringify(runtime)]) {\n    expect(text).not.toContain('作者別案だけの没結末本文。');\n    expect(text).not.toContain('仮の場面だけにある未採用本文。');\n    expect(text).not.toContain(alternativeId); expect(text).not.toContain(alternativeSceneId);\n  }\n  expect(await authorFingerprint(page)).toBe(nativeBeforeOutputs);\n  await navigate(page, /^構成/); await page.getByRole('tab', { name: '作者別案', exact: true }).click();\n  await page.getByLabel('編集する作者別案', { exact: true }).selectOption(alternativeId);\n  await page.getByLabel('別案内の編集対象', { exact: true }).selectOption(alternativeSceneId);\n  await expect(page.getByLabel('別案内の場面本文', { exact: true })).toHaveValue('作者別案だけの没結末本文。');\n  await expect(page.locator('.alternative-diff-list')).toContainText('没にする作者別案場面');\n  await attachObservation(info, 'AT-F25-observed', { alternativeId, alternativeSceneId, branchStatus: alternative.status, publishedSnapshotId: published.id, gameEdgeId: edge.id, gameGraphId: graph.id, productionAndRuntimeActuallyDownloaded: true, rejectedAndProvisionalBodiesAbsent: true, nativeCanonicalAndPublishedPreserved: true, revision: saved.project.revision });\n});\n",
           "normal_operations": [
             {
-              "line": 326,
+              "line": 330,
               "source": "await seed(page, bytes); await navigate(page, /^構成/);"
             },
             {
-              "line": 327,
+              "line": 331,
               "source": "await page.getByRole('tab', { name: '作者別案', exact: true }).click();"
             },
             {
-              "line": 328,
+              "line": 332,
               "source": "await page.getByLabel('新しい別案の名前', { exact: true }).fill('別の結末を比較して没にする');"
             },
             {
-              "line": 329,
+              "line": 333,
               "source": "await page.getByLabel('別案の分岐元', { exact: true }).selectOption(published.id);"
             },
             {
-              "line": 330,
+              "line": 334,
               "source": "await page.getByRole('button', { name: '分岐して別案を作る', exact: true }).click();"
             },
             {
-              "line": 331,
+              "line": 335,
               "source": "const alternativeId = await page.getByLabel('編集する作者別案', { exact: true }).inputValue();"
             },
             {
-              "line": 332,
+              "line": 336,
               "source": "await page.getByRole('button', { name: '別案の場面を作る', exact: true }).click();"
             },
             {
-              "line": 333,
+              "line": 337,
               "source": "const alternativeSceneId = await page.getByLabel('別案内の編集対象', { exact: true }).inputValue();"
             },
             {
-              "line": 334,
+              "line": 338,
               "source": "await page.getByLabel('別案内の情報名', { exact: true }).fill('没にする作者別案場面');"
             },
             {
-              "line": 335,
+              "line": 339,
               "source": "await page.getByLabel('別案内の場面本文', { exact: true }).fill('作者別案だけの没結末本文。');"
             },
             {
-              "line": 336,
+              "line": 340,
               "source": "await page.getByRole('button', { name: '別案を新しい版として保存', exact: true }).click();"
             },
             {
-              "line": 337,
+              "line": 341,
               "source": "await expect(page.getByText('保存済み 2版', { exact: true })).toBeVisible();"
             },
             {
-              "line": 338,
+              "line": 342,
               "source": "await page.getByLabel('別案の状態', { exact: true }).selectOption('rejected');"
             },
             {
-              "line": 339,
+              "line": 343,
               "source": "await expect(page.getByLabel('別案の状態', { exact: true })).toHaveValue('rejected');"
             },
             {
-              "line": 343,
+              "line": 347,
               "source": "await navigate(page, /^資料/);"
             },
             {
-              "line": 344,
+              "line": 348,
               "source": "await page.getByLabel('情報の種類', { exact: true }).selectOption('flow_edge');"
             },
             {
-              "line": 345,
+              "line": 349,
               "source": "await page.getByRole('button', { name: '進行線を追加', exact: true }).first().click();"
             },
             {
-              "line": 357,
+              "line": 361,
               "source": "const withEdge = await backup(page);"
             },
             {
-              "line": 361,
+              "line": 365,
               "source": "await openEntity(page, 'flow_graph', graph.name);"
             },
             {
-              "line": 362,
+              "line": 366,
               "source": "await editData(page, { ...graph.data, edgeIds: [edge.id] });"
             },
             {
-              "line": 363,
+              "line": 367,
               "source": "const withGraph = await backup(page);"
             },
             {
-              "line": 366,
+              "line": 370,
               "source": "await openEntity(page, 'projection_profile', policy.name);"
             },
             {
-              "line": 367,
-              "source": "await editData(page, { ...currentPolicy.data, includedIds: [...currentPolicy.data.includedIds, edge.id], publicTexts: { ...currentPolicy.data.publicTexts, [edge.id]: { label: edge.data.label } } });"
+              "line": 371,
+              "source": "await editData(page, { ...currentPolicy.data, includedIds: [...currentPolicy.data.includedIds, edge.id], allowedKinds: [...new Set([...(currentPolicy.data.allowedKinds ?? []), 'flow_edge' as const])], publicTexts: { ...currentPolicy.data.publicTexts, [edge.id]: { label: edge.data.label } } });"
             },
             {
-              "line": 368,
+              "line": 372,
               "source": "await page.reload();"
             },
             {
-              "line": 369,
+              "line": 373,
               "source": "const saved = await backup(page);"
             },
             {
-              "line": 389,
+              "line": 398,
               "source": "await navigate(page, /^構成/); await page.getByRole('tab', { name: '作者別案', exact: true }).click();"
             },
             {
-              "line": 390,
+              "line": 399,
               "source": "await page.getByLabel('編集する作者別案', { exact: true }).selectOption(alternativeId);"
             },
             {
-              "line": 391,
+              "line": 400,
               "source": "await page.getByLabel('別案内の編集対象', { exact: true }).selectOption(alternativeSceneId);"
             },
             {
-              "line": 392,
+              "line": 401,
               "source": "await expect(page.getByLabel('別案内の場面本文', { exact: true })).toHaveValue('作者別案だけの没結末本文。');"
             },
             {
-              "line": 393,
+              "line": 402,
               "source": "await expect(page.locator('.alternative-diff-list')).toContainText('没にする作者別案場面');"
             }
           ],
           "assertions": [
             {
-              "line": 337,
+              "line": 341,
               "source": "await expect(page.getByText('保存済み 2版', { exact: true })).toBeVisible();"
             },
             {
-              "line": 339,
+              "line": 343,
               "source": "await expect(page.getByLabel('別案の状態', { exact: true })).toHaveValue('rejected');"
             },
             {
-              "line": 350,
+              "line": 354,
               "source": "await editor.getByLabel('出発ノード', { exact: true }).selectOption(entry.id); await expect(editor.getByLabel('出発ノード', { exact: true })).toHaveValue(entry.id);"
             },
             {
-              "line": 356,
+              "line": 360,
               "source": "await expect(editor.locator('.editor-save-state')).toContainText('端末内保存済み');"
             },
             {
-              "line": 359,
+              "line": 363,
               "source": "expect(edge).toMatchObject({ kind: 'flow_edge', status: 'confirmed', data: { fromId: entry.id, toId: end.id, label: '正本のゲーム選択で進む', edgeType: 'choice' } });"
             },
             {
-              "line": 360,
+              "line": 364,
               "source": "expect(new Set([alternativeId, alternativeSceneId, edge.id, graph.id]).size).toBe(4);"
             },
             {
-              "line": 365,
+              "line": 369,
               "source": "if (currentPolicy.kind !== 'projection_profile' || edge.kind !== 'flow_edge') throw new Error('制作範囲または新選択がありません');"
             },
             {
-              "line": 371,
+              "line": 375,
               "source": "expect(alternative.status).toBe('rejected');"
             },
             {
-              "line": 372,
+              "line": 376,
               "source": "expect(alternative.sourceSnapshotId).toBe(published.id);"
             },
             {
-              "line": 373,
+              "line": 377,
               "source": "expect(alternative.versions.at(-1)!.content.entities.find(e => e.id === alternativeSceneId)).toMatchObject({ status: 'alternate', data: { body: [{ text: '作者別案だけの没結末本文。' }] } });"
             },
             {
-              "line": 374,
+              "line": 378,
               "source": "expect(saved.project.entities.some(e => e.id === alternativeSceneId)).toBe(false);"
             },
             {
-              "line": 375,
+              "line": 379,
               "source": "expect(saved.project.snapshots.find(s => s.id === published.id)).toEqual(published);"
             },
             {
-              "line": 376,
+              "line": 380,
               "source": "expect(saved.project.entities.find(e => e.id === scene.id)?.data).toEqual(scene.data);"
             },
             {
-              "line": 380,
+              "line": 384,
+              "source": "await expect(productionMarkdownArtifact).toHaveCount(1);"
+            },
+            {
+              "line": 389,
               "source": "expect(production.format).toBe('scenario-production');"
             },
             {
-              "line": 381,
+              "line": 390,
               "source": "expect(JSON.stringify(production)).toContain('正本だけの制作本文。');"
             },
             {
-              "line": 382,
+              "line": 391,
               "source": "expect(runtime.flow.edges.some((e: { id: string }) => e.id === edge.id)).toBe(true);"
             },
             {
-              "line": 384,
+              "line": 393,
               "source": "expect(text).not.toContain('作者別案だけの没結末本文。');"
             },
             {
-              "line": 385,
+              "line": 394,
               "source": "expect(text).not.toContain('仮の場面だけにある未採用本文。');"
             },
             {
-              "line": 386,
+              "line": 395,
               "source": "expect(text).not.toContain(alternativeId); expect(text).not.toContain(alternativeSceneId);"
             },
             {
-              "line": 388,
+              "line": 397,
               "source": "expect(await authorFingerprint(page)).toBe(nativeBeforeOutputs);"
             },
             {
-              "line": 392,
+              "line": 401,
               "source": "await expect(page.getByLabel('別案内の場面本文', { exact: true })).toHaveValue('作者別案だけの没結末本文。');"
             },
             {
-              "line": 393,
+              "line": 402,
               "source": "await expect(page.locator('.alternative-diff-list')).toContainText('没にする作者別案場面');"
             }
           ]
@@ -2984,9 +3010,9 @@
           "source_entry_refs": [
             {
               "file": "tests/e2e/ap04-original-f-material-output.spec.ts",
-              "line": 311,
-              "end_line": 395,
-              "excerpt_sha256": "85e1aea076ecbf2bf0ed884a9469980fc35d49bdbec240f33fa0f0d86ab2708a"
+              "line": 315,
+              "end_line": 404,
+              "excerpt_sha256": "43d0f5153d2d2ec54c437952a7b1cb262f1213972313bbcb2d31b88da43a25c0"
             }
           ],
           "operation_and_assertion_details": "同一caseの authored_entries.normal_operations/assertions の実ソースを直接参照する。これは実行結果ではない。",
@@ -3002,9 +3028,9 @@
           "source_entry_refs": [
             {
               "file": "tests/e2e/ap04-original-f-material-output.spec.ts",
-              "line": 311,
-              "end_line": 395,
-              "excerpt_sha256": "85e1aea076ecbf2bf0ed884a9469980fc35d49bdbec240f33fa0f0d86ab2708a"
+              "line": 315,
+              "end_line": 404,
+              "excerpt_sha256": "43d0f5153d2d2ec54c437952a7b1cb262f1213972313bbcb2d31b88da43a25c0"
             }
           ],
           "operation_and_assertion_details": "同一caseの authored_entries.normal_operations/assertions の実ソースを直接参照する。これは実行結果ではない。",
@@ -3020,9 +3046,9 @@
           "source_entry_refs": [
             {
               "file": "tests/e2e/ap04-original-f-material-output.spec.ts",
-              "line": 311,
-              "end_line": 395,
-              "excerpt_sha256": "85e1aea076ecbf2bf0ed884a9469980fc35d49bdbec240f33fa0f0d86ab2708a"
+              "line": 315,
+              "end_line": 404,
+              "excerpt_sha256": "43d0f5153d2d2ec54c437952a7b1cb262f1213972313bbcb2d31b88da43a25c0"
             }
           ],
           "operation_and_assertion_details": "同一caseの authored_entries.normal_operations/assertions の実ソースを直接参照する。これは実行結果ではない。",
@@ -3038,9 +3064,9 @@
           "source_entry_refs": [
             {
               "file": "tests/e2e/ap04-original-f-material-output.spec.ts",
-              "line": 311,
-              "end_line": 395,
-              "excerpt_sha256": "85e1aea076ecbf2bf0ed884a9469980fc35d49bdbec240f33fa0f0d86ab2708a"
+              "line": 315,
+              "end_line": 404,
+              "excerpt_sha256": "43d0f5153d2d2ec54c437952a7b1cb262f1213972313bbcb2d31b88da43a25c0"
             }
           ],
           "operation_and_assertion_details": "同一caseの authored_entries.normal_operations/assertions の実ソースを直接参照する。これは実行結果ではない。",
@@ -3067,200 +3093,200 @@
       "authored_entries": [
         {
           "file": "tests/e2e/ap04-original-f-material-output.spec.ts",
-          "line": 207,
-          "end_line": 310,
+          "line": 211,
+          "end_line": 314,
           "title_source": "test('AT-F28 Web URL・実PDF・画像と作者の解釈を分け、取得日/ページを通常保存し、無許可素材の公開を拒否して書誌だけ渡す', async ({ page }, info) => {",
           "excerpt_sha256": "d739c45577a43d3ba19d065de765baa8cb3bed1a78e12754aa7b83de74b1cf6b",
           "source_excerpt": "test('AT-F28 Web URL・実PDF・画像と作者の解釈を分け、取得日/ページを通常保存し、無許可素材の公開を拒否して書誌だけ渡す', async ({ page }, info) => {\n  const p = createProject('AT-F28 参考資料の出所と再配布');\n  const web = createEntity(p.projectId, 'source', '塔を調べたWeb資料', { sourceType: 'web', locator: 'https://example.invalid/tower-reference', interpretation: textToRichText('作者のWeb解釈: 鳥と塔の意味を独自に考える。'), redistributionAllowed: false });\n  const pdf = createEntity(p.projectId, 'source', '参考PDFの書誌', { sourceType: 'file', locator: '塔の参考書 / 作者作成PDF / 2026年版', interpretation: textToRichText('作者のPDF解釈: 参考書の文章と設定本文を分ける。'), redistributionAllowed: false });\n  const imageSource = createEntity(p.projectId, 'source', '参考画像の書誌', { sourceType: 'file', locator: '塔の参考画像 / 作者作成PNG', interpretation: textToRichText('作者の画像解釈: 配色だけを参考にする。'), redistributionAllowed: false });\n  const pdfBytes = new TextEncoder().encode('%PDF-1.4\\n1 0 obj\\n<< /Type /Catalog /Pages 2 0 R >>\\nendobj\\n2 0 obj\\n<< /Type /Pages /Count 0 /Kids [] >>\\nendobj\\ntrailer\\n<< /Root 1 0 R >>\\n%%EOF\\n');\n  const pdfAsset = await prepareAsset(pdfBytes, '再配布を許可していない参考PDF.pdf');\n  const imageAsset = await prepareAsset(pngBytes(), '再配布を許可していない参考画像.png');\n  const { bytes: pdfFile, preview: _pdfPreview, ...pdfMetadata } = pdfAsset;\n  const { bytes: imageFile, preview: _imagePreview, ...imageMetadata } = imageAsset;\n  const attachedPdf = createEntity(p.projectId, 'attachment', '参考PDF添付', { ...pdfMetadata, provenanceId: pdf.id, stage: 'reference' });\n  const attachedImage = createEntity(p.projectId, 'attachment', '参考画像添付', { ...imageMetadata, provenanceId: imageSource.id, stage: 'reference' });\n  pdf.data.attachmentId = attachedPdf.id; imageSource.data.attachmentId = attachedImage.id;\n  const lore = createEntity(p.projectId, 'lore', '作者が書いた塔の設定', { body: textToRichText('作者独自の設定説明: 塔の鍵は鳥が守る。'), sourceIds: [] });\n  const entry = createEntity(p.projectId, 'flow_node', '書誌出力の入口', { nodeType: 'entry' });\n  const end = createEntity(p.projectId, 'flow_node', '書誌出力の終端', { nodeType: 'terminal', terminalReason: '公開書誌の確認を完了' });\n  const edge = createEntity(p.projectId, 'flow_edge', '書誌出力の進行', { fromId: entry.id, toId: end.id, label: '確認を終える' });\n  const graph = createEntity(p.projectId, 'flow_graph', '書誌出力のgraph', { nodeIds: [entry.id, end.id], entryIds: [entry.id], exitIds: [end.id], edgeIds: [edge.id] });\n  p.entities.push(web, pdf, imageSource, attachedPdf, attachedImage, lore, entry, end, edge, graph);\n  p.entities.forEach(e => { e.status = 'confirmed'; });\n  const assets: Record<string, Uint8Array> = { [pdfAsset.contentHash]: pdfFile, [imageAsset.contentHash]: imageFile };\n  const bytes = await exportScenario(p, { loadAsset: hash => assets[hash] });\n  await attachGiven(info, 'AT-F28', bytes, { loreId: lore.id, sourceIds: [web.id, pdf.id, imageSource.id], attachmentIds: [attachedPdf.id, attachedImage.id], originalUrl: web.data.locator, redistributionAllowed: false, interpretationBlocks: [web.data.interpretation, pdf.data.interpretation, imageSource.data.interpretation] });\n  await seed(page, bytes);\n  const editor = page.locator('.detail-panel');\n  const accessedAt = '2026-10-11T08:00:00Z';\n  for (const [source, location] of [[web, 'Web第2節: 塔の鍵'], [pdf, 'PDF 3〜4ページ'], [imageSource, '図1: 塔の外観']] as const) {\n    await openEntity(page, 'source', source.name);\n    await editor.getByLabel('資料を取得した日時', { exact: true }).fill(accessedAt);\n    await editor.getByLabel('参照した箇所', { exact: true }).fill(location);\n    await editor.locator('.editor-footer').getByRole('button', { name: '保存する', exact: true }).click();\n    await expect(editor.locator('.editor-save-state')).toContainText('端末内保存済み');\n    await expect(editor.getByLabel('出力への再配布を許可する', { exact: true })).not.toBeChecked();\n  }\n  await openEntity(page, 'lore', lore.name);\n  const sourcePicker = editor.locator('[data-field=\"sourceIds\"]');\n  for (const id of [web.id, pdf.id, imageSource.id]) await sourcePicker.getByLabel('追加する対象', { exact: true }).selectOption(id);\n  await editor.locator('.editor-footer').getByRole('button', { name: '保存する', exact: true }).click();\n  await expect(editor.locator('.editor-save-state')).toContainText('端末内保存済み');\n  await page.reload();\n  const sourced = await backup(page);\n  expect(sourced.project.entities.find(e => e.id === lore.id)).toMatchObject({ data: { body: lore.data.body, sourceIds: [web.id, pdf.id, imageSource.id] } });\n  for (const source of [web, pdf, imageSource]) expect(sourced.project.entities.find(e => e.id === source.id)).toMatchObject({ data: { sourceType: source.data.sourceType, locator: source.data.locator, accessedAt, interpretation: source.data.interpretation, redistributionAllowed: false } });\n  for (const asset of sourced.assets) expect(asset.bytes).toEqual(assets[asset.contentHash]);\n  await openEntity(page, 'source', web.name);\n  await expect(editor.getByRole('link', { name: '資料のURLを開く', exact: true })).toHaveAttribute('href', web.data.locator);\n  await openEntity(page, 'source', pdf.name);\n  await expect(editor.getByLabel('参照した箇所', { exact: true })).toHaveValue('PDF 3〜4ページ');\n  await expect(editor.getByRole('textbox', { name: '作者の解釈', exact: true })).toHaveValue('作者のPDF解釈: 参考書の文章と設定本文を分ける。');\n\n  // Public scope authoring is also a normal author operation. First include\n  // the two files deliberately, which must fail their provenance permission.\n  await output(page);\n  await page.getByRole('button', { name: '公開範囲を作成', exact: true }).click();\n  const modal = page.getByRole('dialog', { name: '公開する範囲を作成', exact: true });\n  await modal.getByLabel('公開用の作品名', { exact: true }).fill('参考資料の公開書誌');\n  for (const id of [lore.id, web.id, pdf.id, imageSource.id, attachedPdf.id, attachedImage.id, entry.id, end.id, edge.id, graph.id]) await modal.getByLabel('追加する対象', { exact: true }).selectOption(id);\n  await modal.getByLabel('選んだ対象の本文・表記を公開文へコピーする', { exact: true }).check();\n  await modal.getByLabel('選択素材をこの公開範囲で再配布できることを確認した', { exact: true }).check();\n  await modal.getByRole('button', { name: '範囲を作成して内容を確認', exact: true }).click();\n  await expect(modal).toBeHidden();\n  await editor.getByLabel('情報の状態', { exact: true }).selectOption('confirmed');\n  await editor.locator('.editor-footer').getByRole('button', { name: '保存する', exact: true }).click();\n  await expect(editor.locator('.editor-save-state')).toContainText('端末内保存済み');\n  await page.getByRole('button', { name: '詳細を閉じる', exact: true }).click();\n  const policyId = await page.getByLabel('出力する公開範囲', { exact: true }).inputValue();\n  const beforeRefusal = await authorFingerprint(page);\n  await page.getByLabel('出力目的', { exact: true }).selectOption('runtime_json');\n  await page.getByRole('button', { name: '内容を検査・プレビュー', exact: true }).click();\n  await expect(page.locator('.export-result').getByRole('alert')).toContainText('添付の再配布許可を確認してください');\n  await expect(page.locator('.export-artifact')).toHaveCount(0);\n  expect(await authorFingerprint(page)).toBe(beforeRefusal);\n\n  // Keep the bibliography and permission declaration; exclude the two file\n  // IDs and their references from the selected public scope, preserving native\n  // attachment records and exact bytes in complete saves.\n  const withPolicy = await backup(page);\n  const policy = withPolicy.project.entities.find(e => e.id === policyId)!;\n  if (policy.kind !== 'projection_profile') throw new Error('公開範囲がありません');\n  const removed = new Set([attachedPdf.id, attachedImage.id]);\n  const data = { ...policy.data, includedIds: policy.data.includedIds.filter(id => !removed.has(id)), excludedFields: [...(policy.data.excludedFields ?? []), 'source.attachmentId'] };\n  await openEntity(page, 'projection_profile', policy.name);\n  await editData(page, data);\n  await page.getByRole('button', { name: '詳細を閉じる', exact: true }).click();\n  const nativeBeforeOutput = await authorFingerprint(page);\n  const runtime = JSON.parse(strFromU8(await outputBytes(page, 'runtime_json')));\n  expect(runtime.publicProjection.entities.filter((e: { kind: string }) => e.kind === 'attachment')).toHaveLength(0);\n  const sources = runtime.publicProjection.entities.filter((e: { kind: string }) => e.kind === 'source');\n  expect(sources).toHaveLength(3);\n  expect(sources.some((e: { data: { locator: string } }) => e.data.locator === web.data.locator)).toBe(true);\n  expect(sources.some((e: { data: { locator: string; excerptLocation: string } }) => e.data.locator === pdf.data.locator && e.data.excerptLocation === 'PDF 3〜4ページ')).toBe(true);\n  for (const source of sources) { expect(source.data.accessedAt).toBe(accessedAt); expect(source.data.attachmentId).toBeUndefined(); expect(source.data.redistributionAllowed).toBe(false); }\n  expect(runtime.assets).toHaveLength(0); expect(runtime.assetData).toEqual({});\n  expect(JSON.stringify(runtime)).not.toContain(pdfAsset.contentHash);\n  expect(JSON.stringify(runtime)).not.toContain(imageAsset.contentHash);\n  expect(await authorFingerprint(page)).toBe(nativeBeforeOutput);\n  await page.reload();\n  const final = await backup(page);\n  expect(final.assets.map(a => ({ hash: a.contentHash, bytes: a.bytes }))).toEqual(sourced.assets.map(a => ({ hash: a.contentHash, bytes: a.bytes })));\n  expect(final.project.entities.find(e => e.id === attachedPdf.id)?.data).toEqual(attachedPdf.data);\n  expect(final.project.entities.find(e => e.id === attachedImage.id)?.data).toEqual(attachedImage.data);\n  await attachObservation(info, 'AT-F28-observed', { sourceIds: [web.id, pdf.id, imageSource.id], publicPolicyId: policyId, accessedAt, excludedAttachmentIds: [...removed], actualFileHashes: [pdfAsset.contentHash, imageAsset.contentHash], permissionRefusalPreservedNative: true, bibliographyAndUrlActuallyExported: true, attachmentsRetainedInFullFile: true });\n});\n\n",
           "normal_operations": [
             {
-              "line": 230,
+              "line": 234,
               "source": "await seed(page, bytes);"
             },
             {
-              "line": 234,
+              "line": 238,
               "source": "await openEntity(page, 'source', source.name);"
             },
             {
-              "line": 241,
+              "line": 245,
               "source": "await openEntity(page, 'lore', lore.name);"
             },
             {
-              "line": 246,
+              "line": 250,
               "source": "await page.reload();"
-            },
-            {
-              "line": 247,
-              "source": "const sourced = await backup(page);"
             },
             {
               "line": 251,
+              "source": "const sourced = await backup(page);"
+            },
+            {
+              "line": 255,
               "source": "await openEntity(page, 'source', web.name);"
             },
             {
-              "line": 253,
+              "line": 257,
               "source": "await openEntity(page, 'source', pdf.name);"
             },
             {
-              "line": 260,
+              "line": 264,
               "source": "await page.getByRole('button', { name: '公開範囲を作成', exact: true }).click();"
             },
             {
-              "line": 271,
-              "source": "await page.getByRole('button', { name: '詳細を閉じる', exact: true }).click();"
-            },
-            {
-              "line": 272,
-              "source": "const policyId = await page.getByLabel('出力する公開範囲', { exact: true }).inputValue();"
-            },
-            {
-              "line": 274,
-              "source": "await page.getByLabel('出力目的', { exact: true }).selectOption('runtime_json');"
-            },
-            {
               "line": 275,
-              "source": "await page.getByRole('button', { name: '内容を検査・プレビュー', exact: true }).click();"
+              "source": "await page.getByRole('button', { name: '詳細を閉じる', exact: true }).click();"
             },
             {
               "line": 276,
+              "source": "const policyId = await page.getByLabel('出力する公開範囲', { exact: true }).inputValue();"
+            },
+            {
+              "line": 278,
+              "source": "await page.getByLabel('出力目的', { exact: true }).selectOption('runtime_json');"
+            },
+            {
+              "line": 279,
+              "source": "await page.getByRole('button', { name: '内容を検査・プレビュー', exact: true }).click();"
+            },
+            {
+              "line": 280,
               "source": "await expect(page.locator('.export-result').getByRole('alert')).toContainText('添付の再配布許可を確認してください');"
             },
             {
-              "line": 277,
+              "line": 281,
               "source": "await expect(page.locator('.export-artifact')).toHaveCount(0);"
             },
             {
-              "line": 283,
+              "line": 287,
               "source": "const withPolicy = await backup(page);"
             },
             {
-              "line": 288,
+              "line": 292,
               "source": "await openEntity(page, 'projection_profile', policy.name);"
             },
             {
-              "line": 289,
+              "line": 293,
               "source": "await editData(page, data);"
             },
             {
-              "line": 290,
+              "line": 294,
               "source": "await page.getByRole('button', { name: '詳細を閉じる', exact: true }).click();"
             },
             {
-              "line": 303,
+              "line": 307,
               "source": "await page.reload();"
             },
             {
-              "line": 304,
+              "line": 308,
               "source": "const final = await backup(page);"
             }
           ],
           "assertions": [
             {
-              "line": 238,
+              "line": 242,
               "source": "await expect(editor.locator('.editor-save-state')).toContainText('端末内保存済み');"
             },
             {
-              "line": 239,
+              "line": 243,
               "source": "await expect(editor.getByLabel('出力への再配布を許可する', { exact: true })).not.toBeChecked();"
             },
             {
-              "line": 245,
-              "source": "await expect(editor.locator('.editor-save-state')).toContainText('端末内保存済み');"
-            },
-            {
-              "line": 248,
-              "source": "expect(sourced.project.entities.find(e => e.id === lore.id)).toMatchObject({ data: { body: lore.data.body, sourceIds: [web.id, pdf.id, imageSource.id] } });"
-            },
-            {
               "line": 249,
-              "source": "for (const source of [web, pdf, imageSource]) expect(sourced.project.entities.find(e => e.id === source.id)).toMatchObject({ data: { sourceType: source.data.sourceType, locator: source.data.locator, accessedAt, interpretation: source.data.interpretation, redistributionAllowed: false } });"
-            },
-            {
-              "line": 250,
-              "source": "for (const asset of sourced.assets) expect(asset.bytes).toEqual(assets[asset.contentHash]);"
+              "source": "await expect(editor.locator('.editor-save-state')).toContainText('端末内保存済み');"
             },
             {
               "line": 252,
-              "source": "await expect(editor.getByRole('link', { name: '資料のURLを開く', exact: true })).toHaveAttribute('href', web.data.locator);"
+              "source": "expect(sourced.project.entities.find(e => e.id === lore.id)).toMatchObject({ data: { body: lore.data.body, sourceIds: [web.id, pdf.id, imageSource.id] } });"
+            },
+            {
+              "line": 253,
+              "source": "for (const source of [web, pdf, imageSource]) expect(sourced.project.entities.find(e => e.id === source.id)).toMatchObject({ data: { sourceType: source.data.sourceType, locator: source.data.locator, accessedAt, interpretation: source.data.interpretation, redistributionAllowed: false } });"
             },
             {
               "line": 254,
+              "source": "for (const asset of sourced.assets) expect(asset.bytes).toEqual(assets[asset.contentHash]);"
+            },
+            {
+              "line": 256,
+              "source": "await expect(editor.getByRole('link', { name: '資料のURLを開く', exact: true })).toHaveAttribute('href', web.data.locator);"
+            },
+            {
+              "line": 258,
               "source": "await expect(editor.getByLabel('参照した箇所', { exact: true })).toHaveValue('PDF 3〜4ページ');"
             },
             {
-              "line": 255,
+              "line": 259,
               "source": "await expect(editor.getByRole('textbox', { name: '作者の解釈', exact: true })).toHaveValue('作者のPDF解釈: 参考書の文章と設定本文を分ける。');"
             },
             {
-              "line": 267,
+              "line": 271,
               "source": "await expect(modal).toBeHidden();"
             },
             {
-              "line": 270,
+              "line": 274,
               "source": "await expect(editor.locator('.editor-save-state')).toContainText('端末内保存済み');"
             },
             {
-              "line": 276,
+              "line": 280,
               "source": "await expect(page.locator('.export-result').getByRole('alert')).toContainText('添付の再配布許可を確認してください');"
             },
             {
-              "line": 277,
+              "line": 281,
               "source": "await expect(page.locator('.export-artifact')).toHaveCount(0);"
             },
             {
-              "line": 278,
+              "line": 282,
               "source": "expect(await authorFingerprint(page)).toBe(beforeRefusal);"
             },
             {
-              "line": 285,
+              "line": 289,
               "source": "if (policy.kind !== 'projection_profile') throw new Error('公開範囲がありません');"
             },
             {
-              "line": 293,
+              "line": 297,
               "source": "expect(runtime.publicProjection.entities.filter((e: { kind: string }) => e.kind === 'attachment')).toHaveLength(0);"
             },
             {
-              "line": 295,
+              "line": 299,
               "source": "expect(sources).toHaveLength(3);"
             },
             {
-              "line": 296,
+              "line": 300,
               "source": "expect(sources.some((e: { data: { locator: string } }) => e.data.locator === web.data.locator)).toBe(true);"
             },
             {
-              "line": 297,
+              "line": 301,
               "source": "expect(sources.some((e: { data: { locator: string; excerptLocation: string } }) => e.data.locator === pdf.data.locator && e.data.excerptLocation === 'PDF 3〜4ページ')).toBe(true);"
             },
             {
-              "line": 298,
+              "line": 302,
               "source": "for (const source of sources) { expect(source.data.accessedAt).toBe(accessedAt); expect(source.data.attachmentId).toBeUndefined(); expect(source.data.redistributionAllowed).toBe(false); }"
             },
             {
-              "line": 299,
+              "line": 303,
               "source": "expect(runtime.assets).toHaveLength(0); expect(runtime.assetData).toEqual({});"
             },
             {
-              "line": 300,
+              "line": 304,
               "source": "expect(JSON.stringify(runtime)).not.toContain(pdfAsset.contentHash);"
             },
             {
-              "line": 301,
+              "line": 305,
               "source": "expect(JSON.stringify(runtime)).not.toContain(imageAsset.contentHash);"
             },
             {
-              "line": 302,
+              "line": 306,
               "source": "expect(await authorFingerprint(page)).toBe(nativeBeforeOutput);"
             },
             {
-              "line": 305,
+              "line": 309,
               "source": "expect(final.assets.map(a => ({ hash: a.contentHash, bytes: a.bytes }))).toEqual(sourced.assets.map(a => ({ hash: a.contentHash, bytes: a.bytes })));"
             },
             {
-              "line": 306,
+              "line": 310,
               "source": "expect(final.project.entities.find(e => e.id === attachedPdf.id)?.data).toEqual(attachedPdf.data);"
             },
             {
-              "line": 307,
+              "line": 311,
               "source": "expect(final.project.entities.find(e => e.id === attachedImage.id)?.data).toEqual(attachedImage.data);"
             }
           ]
@@ -3279,8 +3305,8 @@
           "source_entry_refs": [
             {
               "file": "tests/e2e/ap04-original-f-material-output.spec.ts",
-              "line": 207,
-              "end_line": 310,
+              "line": 211,
+              "end_line": 314,
               "excerpt_sha256": "d739c45577a43d3ba19d065de765baa8cb3bed1a78e12754aa7b83de74b1cf6b"
             }
           ],
@@ -3297,8 +3323,8 @@
           "source_entry_refs": [
             {
               "file": "tests/e2e/ap04-original-f-material-output.spec.ts",
-              "line": 207,
-              "end_line": 310,
+              "line": 211,
+              "end_line": 314,
               "excerpt_sha256": "d739c45577a43d3ba19d065de765baa8cb3bed1a78e12754aa7b83de74b1cf6b"
             }
           ],
@@ -3315,8 +3341,8 @@
           "source_entry_refs": [
             {
               "file": "tests/e2e/ap04-original-f-material-output.spec.ts",
-              "line": 207,
-              "end_line": 310,
+              "line": 211,
+              "end_line": 314,
               "excerpt_sha256": "d739c45577a43d3ba19d065de765baa8cb3bed1a78e12754aa7b83de74b1cf6b"
             }
           ],
@@ -3333,8 +3359,8 @@
           "source_entry_refs": [
             {
               "file": "tests/e2e/ap04-original-f-material-output.spec.ts",
-              "line": 207,
-              "end_line": 310,
+              "line": 211,
+              "end_line": 314,
               "excerpt_sha256": "d739c45577a43d3ba19d065de765baa8cb3bed1a78e12754aa7b83de74b1cf6b"
             }
           ],

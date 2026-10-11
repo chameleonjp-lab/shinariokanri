@@ -17,10 +17,16 @@ async function saveEditor(page: Page) {
   await expect(page.locator('.detail-panel .editor-save-state')).toContainText('端末内保存済み');
 }
 
-async function lineChange(page: Page, mode: 'copy' | 'split', reason: string, offset?: string) {
+async function lineChange(page: Page, mode: 'copy' | 'split', reason: string, offset?: string, splitBlockId?: string) {
   const tools = page.locator('.production-tools');
   if (await tools.getAttribute('open') === null) await tools.locator('summary').click();
   await tools.getByLabel('台詞の変更方法', { exact: true }).selectOption(mode);
+  if (mode === 'split') {
+    if (!splitBlockId || offset === undefined) throw new Error('分割対象の段落と文字位置を指定してください');
+    const paragraph = tools.getByLabel('分割する段落', { exact: true });
+    await paragraph.selectOption(splitBlockId);
+    await expect(paragraph).toHaveValue(splitBlockId);
+  }
   if (offset !== undefined) await tools.getByLabel('分割する文字位置', { exact: true }).fill(offset);
   await tools.getByLabel('台詞変更の理由', { exact: true }).fill(reason);
   await tools.getByRole('button', { name: '変更の影響を確認', exact: true }).click();
@@ -130,7 +136,7 @@ test('AT-F21 L1/L2と実音声・翻訳・外部参照を保ち、話者改名/�
   expect(copy.data.lineage?.segments[0].target.entityId).toBe(copy.id);
   expect(copied.project.entities.find(e => e.id === scene.id)).toMatchObject({ data: { dialogueLineIds: [l2.id, l1.id] } });
   await openEntity(page, 'dialogue_line', l1.name);
-  await lineChange(page, 'split', '収録単位を前半と後半へ分ける', '6');
+  await lineChange(page, 'split', '収録単位を前半と後半へ分ける', '6', editedBlock.id);
   await page.reload();
   const saved = await backup(page);
   const old = saved.project.entities.find(e => e.id === l1.id);

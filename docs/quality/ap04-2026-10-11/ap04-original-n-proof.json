@@ -5,7 +5,7 @@
   "source_plan": "docs/quality/ap04-2026-10-11/local_acceptance_plan.json",
   "source_plan_sha256": "bbbbd0397c084a61a8616379a0dd9e051e76eaf2181238f4daae67ec4e1c6160",
   "source_candidates": "tests/e2e/ap04-original-n-candidates.json",
-  "source_candidates_sha256": "831925c2650769b5733ad6df9258478eb36bd2a7f34429e3ddfe1045c0a37b80",
+  "source_candidates_sha256": "7070a52e539b8b02f17d7c03955fdadef84318db3aa222b8c949396b715b2b04",
   "candidate_commit": null,
   "candidate_tree": null,
   "candidate_build": null,
@@ -58,7 +58,7 @@
               "binding_status": "authored_working_tree_location; refresh at final proof freeze"
             }
           ],
-          "authored_file_sha256": "ca8cd7015cd1891e6cf72b8fe1149f8d7749d7213f089559dbd1de7d3524e2d4",
+          "authored_file_sha256": "3d46f9be9a1c08a199ee4c64bf5324b21e4ea2cef4473cb9e2e86022e2c5f9a3",
           "missing_conditions": [
             {
               "condition": "実対象端末・実touch環境",
@@ -70,8 +70,8 @@
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
               "line": 27,
-              "end_line": 128,
-              "excerpt_sha256": "c7ab7270d884538371c0f2ab0263d58d68025a14eee0f008fca035b7734b585d",
+              "end_line": 130,
+              "excerpt_sha256": "17b561d975a9f1b3e6da81501947195d1eb0c1efef6e8cf09acee0e704e39a60",
               "binding_status": "authored_not_run; exact whole test callback span; no individual clause execution inferred"
             }
           ],
@@ -183,117 +183,122 @@
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 87,
-              "source": "await editor.getByRole('button', { name: '詳細を閉じる', exact: true }).tap();"
+              "line": 88,
+              "source": "await reachable(page, backToList);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
               "line": 89,
-              "source": "await navigate(page, /^年表/);"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 90,
-              "source": "await page.getByRole('tab', { name: '関係表・図', exact: true }).tap();"
+              "source": "await backToList.tap();"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
               "line": 91,
+              "source": "await navigate(page, /^年表/);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 92,
+              "source": "await page.getByRole('tab', { name: '関係表・図', exact: true }).tap();"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 93,
               "source": "await page.getByRole('button', { name: '関係図', exact: true }).tap();"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 94,
+              "line": 96,
               "source": "await reachable(page, tableButton);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 95,
+              "line": 97,
               "source": "await tableButton.tap();"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 99,
+              "line": 101,
               "source": "const afterTableDimensions = await noPageWideScroll(page);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 100,
+              "line": 102,
               "source": "const saved = await backup(page);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 102,
+              "line": 104,
               "source": "const beforeRestore = await authorFingerprint(page);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 103,
+              "line": 105,
               "source": "await page.locator('input[type=file][accept*=\".scenario\"]').setInputFiles({ name: 'N01-invalid.scenario', mimeType: 'application/zip', buffer: Buffer.from('invalid archive bytes') });"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 106,
+              "line": 108,
               "source": "await reachable(page, restorationIssue);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 107,
+              "line": 109,
               "source": "expect(await authorFingerprint(page)).toBe(beforeRestore);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 111,
+              "line": 113,
               "source": "await seed(restored, saved.bytes);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 112,
+              "line": 114,
               "source": "const cold = await backup(restored);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 114,
+              "line": 116,
               "source": "await navigate(restored, /^構成/);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 115,
+              "line": 117,
               "source": "await restored.getByRole('tab', { name: '分岐', exact: true }).tap();"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 117,
+              "line": 119,
               "source": "await reachable(restored, recoveredLine);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 118,
+              "line": 120,
               "source": "await recoveredLine.tap();"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 121,
+              "line": 123,
               "source": "await reachable(restored, restoredSave);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 122,
+              "line": 124,
               "source": "await restoredSave.tap();"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 124,
+              "line": 126,
               "source": "const restoredDimensions = await noPageWideScroll(restored);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 126,
+              "line": 128,
               "source": "} finally { await restoredContext.close(); }"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 127,
+              "line": 129,
               "source": "} finally { await context.close(); }"
             }
           ],
@@ -355,52 +360,52 @@
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 88,
+              "line": 90,
               "source": "await expect(line).toContainText(end.name);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 92,
+              "line": 94,
               "source": "await expect(page.locator('.world-relation-canvas > svg')).toBeVisible();"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 97,
+              "line": 99,
               "source": "await expect(table).toContainText(a.name);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 98,
+              "line": 100,
               "source": "await expect(table).toContainText(b.name);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 101,
+              "line": 103,
               "source": "expect(saved.project.entities.find(entity => entity.id === unfinished.id)?.data).toMatchObject({ fromId: entry.id, toId: end.id, condition: unfinished.data.condition });"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 105,
+              "line": 107,
               "source": "await expect(restorationIssue).toBeVisible();"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 107,
+              "line": 109,
               "source": "expect(await authorFingerprint(page)).toBe(beforeRestore);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 113,
+              "line": 115,
               "source": "expect(cold.project).toEqual(saved.project);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 119,
+              "line": 121,
               "source": "await expect(restored.locator('.detail-panel').getByLabel('行き先ノード', { exact: true })).toHaveValue(end.id);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 123,
+              "line": 125,
               "source": "await expect(restored.locator('.editor-save-state')).toContainText('端末内保存済み');"
             }
           ],
@@ -434,7 +439,7 @@
               "binding_status": "authored_working_tree_location; refresh at final proof freeze"
             }
           ],
-          "authored_file_sha256": "ca8cd7015cd1891e6cf72b8fe1149f8d7749d7213f089559dbd1de7d3524e2d4",
+          "authored_file_sha256": "3d46f9be9a1c08a199ee4c64bf5324b21e4ea2cef4473cb9e2e86022e2c5f9a3",
           "missing_conditions": [
             {
               "condition": "実対象端末・実touch環境",
@@ -446,8 +451,8 @@
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
               "line": 27,
-              "end_line": 128,
-              "excerpt_sha256": "c7ab7270d884538371c0f2ab0263d58d68025a14eee0f008fca035b7734b585d",
+              "end_line": 130,
+              "excerpt_sha256": "17b561d975a9f1b3e6da81501947195d1eb0c1efef6e8cf09acee0e704e39a60",
               "binding_status": "authored_not_run; exact whole test callback span; no individual clause execution inferred"
             }
           ],
@@ -559,117 +564,122 @@
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 87,
-              "source": "await editor.getByRole('button', { name: '詳細を閉じる', exact: true }).tap();"
+              "line": 88,
+              "source": "await reachable(page, backToList);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
               "line": 89,
-              "source": "await navigate(page, /^年表/);"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 90,
-              "source": "await page.getByRole('tab', { name: '関係表・図', exact: true }).tap();"
+              "source": "await backToList.tap();"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
               "line": 91,
+              "source": "await navigate(page, /^年表/);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 92,
+              "source": "await page.getByRole('tab', { name: '関係表・図', exact: true }).tap();"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 93,
               "source": "await page.getByRole('button', { name: '関係図', exact: true }).tap();"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 94,
+              "line": 96,
               "source": "await reachable(page, tableButton);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 95,
+              "line": 97,
               "source": "await tableButton.tap();"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 99,
+              "line": 101,
               "source": "const afterTableDimensions = await noPageWideScroll(page);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 100,
+              "line": 102,
               "source": "const saved = await backup(page);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 102,
+              "line": 104,
               "source": "const beforeRestore = await authorFingerprint(page);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 103,
+              "line": 105,
               "source": "await page.locator('input[type=file][accept*=\".scenario\"]').setInputFiles({ name: 'N01-invalid.scenario', mimeType: 'application/zip', buffer: Buffer.from('invalid archive bytes') });"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 106,
+              "line": 108,
               "source": "await reachable(page, restorationIssue);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 107,
+              "line": 109,
               "source": "expect(await authorFingerprint(page)).toBe(beforeRestore);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 111,
+              "line": 113,
               "source": "await seed(restored, saved.bytes);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 112,
+              "line": 114,
               "source": "const cold = await backup(restored);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 114,
+              "line": 116,
               "source": "await navigate(restored, /^構成/);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 115,
+              "line": 117,
               "source": "await restored.getByRole('tab', { name: '分岐', exact: true }).tap();"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 117,
+              "line": 119,
               "source": "await reachable(restored, recoveredLine);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 118,
+              "line": 120,
               "source": "await recoveredLine.tap();"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 121,
+              "line": 123,
               "source": "await reachable(restored, restoredSave);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 122,
+              "line": 124,
               "source": "await restoredSave.tap();"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 124,
+              "line": 126,
               "source": "const restoredDimensions = await noPageWideScroll(restored);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 126,
+              "line": 128,
               "source": "} finally { await restoredContext.close(); }"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 127,
+              "line": 129,
               "source": "} finally { await context.close(); }"
             }
           ],
@@ -731,52 +741,52 @@
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 88,
+              "line": 90,
               "source": "await expect(line).toContainText(end.name);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 92,
+              "line": 94,
               "source": "await expect(page.locator('.world-relation-canvas > svg')).toBeVisible();"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 97,
+              "line": 99,
               "source": "await expect(table).toContainText(a.name);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 98,
+              "line": 100,
               "source": "await expect(table).toContainText(b.name);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 101,
+              "line": 103,
               "source": "expect(saved.project.entities.find(entity => entity.id === unfinished.id)?.data).toMatchObject({ fromId: entry.id, toId: end.id, condition: unfinished.data.condition });"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 105,
+              "line": 107,
               "source": "await expect(restorationIssue).toBeVisible();"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 107,
+              "line": 109,
               "source": "expect(await authorFingerprint(page)).toBe(beforeRestore);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 113,
+              "line": 115,
               "source": "expect(cold.project).toEqual(saved.project);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 119,
+              "line": 121,
               "source": "await expect(restored.locator('.detail-panel').getByLabel('行き先ノード', { exact: true })).toHaveValue(end.id);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 123,
+              "line": 125,
               "source": "await expect(restored.locator('.editor-save-state')).toContainText('端末内保存済み');"
             }
           ],
@@ -810,7 +820,7 @@
               "binding_status": "authored_working_tree_location; refresh at final proof freeze"
             }
           ],
-          "authored_file_sha256": "ca8cd7015cd1891e6cf72b8fe1149f8d7749d7213f089559dbd1de7d3524e2d4",
+          "authored_file_sha256": "3d46f9be9a1c08a199ee4c64bf5324b21e4ea2cef4473cb9e2e86022e2c5f9a3",
           "missing_conditions": [
             {
               "condition": "実対象端末・実touch環境",
@@ -822,8 +832,8 @@
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
               "line": 27,
-              "end_line": 128,
-              "excerpt_sha256": "c7ab7270d884538371c0f2ab0263d58d68025a14eee0f008fca035b7734b585d",
+              "end_line": 130,
+              "excerpt_sha256": "17b561d975a9f1b3e6da81501947195d1eb0c1efef6e8cf09acee0e704e39a60",
               "binding_status": "authored_not_run; exact whole test callback span; no individual clause execution inferred"
             }
           ],
@@ -935,117 +945,122 @@
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 87,
-              "source": "await editor.getByRole('button', { name: '詳細を閉じる', exact: true }).tap();"
+              "line": 88,
+              "source": "await reachable(page, backToList);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
               "line": 89,
-              "source": "await navigate(page, /^年表/);"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 90,
-              "source": "await page.getByRole('tab', { name: '関係表・図', exact: true }).tap();"
+              "source": "await backToList.tap();"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
               "line": 91,
+              "source": "await navigate(page, /^年表/);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 92,
+              "source": "await page.getByRole('tab', { name: '関係表・図', exact: true }).tap();"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 93,
               "source": "await page.getByRole('button', { name: '関係図', exact: true }).tap();"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 94,
+              "line": 96,
               "source": "await reachable(page, tableButton);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 95,
+              "line": 97,
               "source": "await tableButton.tap();"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 99,
+              "line": 101,
               "source": "const afterTableDimensions = await noPageWideScroll(page);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 100,
+              "line": 102,
               "source": "const saved = await backup(page);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 102,
+              "line": 104,
               "source": "const beforeRestore = await authorFingerprint(page);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 103,
+              "line": 105,
               "source": "await page.locator('input[type=file][accept*=\".scenario\"]').setInputFiles({ name: 'N01-invalid.scenario', mimeType: 'application/zip', buffer: Buffer.from('invalid archive bytes') });"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 106,
+              "line": 108,
               "source": "await reachable(page, restorationIssue);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 107,
+              "line": 109,
               "source": "expect(await authorFingerprint(page)).toBe(beforeRestore);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 111,
+              "line": 113,
               "source": "await seed(restored, saved.bytes);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 112,
+              "line": 114,
               "source": "const cold = await backup(restored);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 114,
+              "line": 116,
               "source": "await navigate(restored, /^構成/);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 115,
+              "line": 117,
               "source": "await restored.getByRole('tab', { name: '分岐', exact: true }).tap();"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 117,
+              "line": 119,
               "source": "await reachable(restored, recoveredLine);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 118,
+              "line": 120,
               "source": "await recoveredLine.tap();"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 121,
+              "line": 123,
               "source": "await reachable(restored, restoredSave);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 122,
+              "line": 124,
               "source": "await restoredSave.tap();"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 124,
+              "line": 126,
               "source": "const restoredDimensions = await noPageWideScroll(restored);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 126,
+              "line": 128,
               "source": "} finally { await restoredContext.close(); }"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 127,
+              "line": 129,
               "source": "} finally { await context.close(); }"
             }
           ],
@@ -1107,52 +1122,52 @@
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 88,
+              "line": 90,
               "source": "await expect(line).toContainText(end.name);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 92,
+              "line": 94,
               "source": "await expect(page.locator('.world-relation-canvas > svg')).toBeVisible();"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 97,
+              "line": 99,
               "source": "await expect(table).toContainText(a.name);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 98,
+              "line": 100,
               "source": "await expect(table).toContainText(b.name);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 101,
+              "line": 103,
               "source": "expect(saved.project.entities.find(entity => entity.id === unfinished.id)?.data).toMatchObject({ fromId: entry.id, toId: end.id, condition: unfinished.data.condition });"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 105,
+              "line": 107,
               "source": "await expect(restorationIssue).toBeVisible();"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 107,
+              "line": 109,
               "source": "expect(await authorFingerprint(page)).toBe(beforeRestore);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 113,
+              "line": 115,
               "source": "expect(cold.project).toEqual(saved.project);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 119,
+              "line": 121,
               "source": "await expect(restored.locator('.detail-panel').getByLabel('行き先ノード', { exact: true })).toHaveValue(end.id);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 123,
+              "line": 125,
               "source": "await expect(restored.locator('.editor-save-state')).toContainText('端末内保存済み');"
             }
           ],
@@ -1186,7 +1201,7 @@
               "binding_status": "authored_working_tree_location; refresh at final proof freeze"
             }
           ],
-          "authored_file_sha256": "ca8cd7015cd1891e6cf72b8fe1149f8d7749d7213f089559dbd1de7d3524e2d4",
+          "authored_file_sha256": "3d46f9be9a1c08a199ee4c64bf5324b21e4ea2cef4473cb9e2e86022e2c5f9a3",
           "missing_conditions": [
             {
               "condition": "実対象端末・実touch環境",
@@ -1198,8 +1213,8 @@
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
               "line": 27,
-              "end_line": 128,
-              "excerpt_sha256": "c7ab7270d884538371c0f2ab0263d58d68025a14eee0f008fca035b7734b585d",
+              "end_line": 130,
+              "excerpt_sha256": "17b561d975a9f1b3e6da81501947195d1eb0c1efef6e8cf09acee0e704e39a60",
               "binding_status": "authored_not_run; exact whole test callback span; no individual clause execution inferred"
             }
           ],
@@ -1311,117 +1326,122 @@
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 87,
-              "source": "await editor.getByRole('button', { name: '詳細を閉じる', exact: true }).tap();"
+              "line": 88,
+              "source": "await reachable(page, backToList);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
               "line": 89,
-              "source": "await navigate(page, /^年表/);"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 90,
-              "source": "await page.getByRole('tab', { name: '関係表・図', exact: true }).tap();"
+              "source": "await backToList.tap();"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
               "line": 91,
+              "source": "await navigate(page, /^年表/);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 92,
+              "source": "await page.getByRole('tab', { name: '関係表・図', exact: true }).tap();"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 93,
               "source": "await page.getByRole('button', { name: '関係図', exact: true }).tap();"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 94,
+              "line": 96,
               "source": "await reachable(page, tableButton);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 95,
+              "line": 97,
               "source": "await tableButton.tap();"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 99,
+              "line": 101,
               "source": "const afterTableDimensions = await noPageWideScroll(page);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 100,
+              "line": 102,
               "source": "const saved = await backup(page);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 102,
+              "line": 104,
               "source": "const beforeRestore = await authorFingerprint(page);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 103,
+              "line": 105,
               "source": "await page.locator('input[type=file][accept*=\".scenario\"]').setInputFiles({ name: 'N01-invalid.scenario', mimeType: 'application/zip', buffer: Buffer.from('invalid archive bytes') });"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 106,
+              "line": 108,
               "source": "await reachable(page, restorationIssue);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 107,
+              "line": 109,
               "source": "expect(await authorFingerprint(page)).toBe(beforeRestore);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 111,
+              "line": 113,
               "source": "await seed(restored, saved.bytes);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 112,
+              "line": 114,
               "source": "const cold = await backup(restored);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 114,
+              "line": 116,
               "source": "await navigate(restored, /^構成/);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 115,
+              "line": 117,
               "source": "await restored.getByRole('tab', { name: '分岐', exact: true }).tap();"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 117,
+              "line": 119,
               "source": "await reachable(restored, recoveredLine);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 118,
+              "line": 120,
               "source": "await recoveredLine.tap();"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 121,
+              "line": 123,
               "source": "await reachable(restored, restoredSave);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 122,
+              "line": 124,
               "source": "await restoredSave.tap();"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 124,
+              "line": 126,
               "source": "const restoredDimensions = await noPageWideScroll(restored);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 126,
+              "line": 128,
               "source": "} finally { await restoredContext.close(); }"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 127,
+              "line": 129,
               "source": "} finally { await context.close(); }"
             }
           ],
@@ -1483,52 +1503,52 @@
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 88,
+              "line": 90,
               "source": "await expect(line).toContainText(end.name);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 92,
+              "line": 94,
               "source": "await expect(page.locator('.world-relation-canvas > svg')).toBeVisible();"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 97,
+              "line": 99,
               "source": "await expect(table).toContainText(a.name);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 98,
+              "line": 100,
               "source": "await expect(table).toContainText(b.name);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 101,
+              "line": 103,
               "source": "expect(saved.project.entities.find(entity => entity.id === unfinished.id)?.data).toMatchObject({ fromId: entry.id, toId: end.id, condition: unfinished.data.condition });"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 105,
+              "line": 107,
               "source": "await expect(restorationIssue).toBeVisible();"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 107,
+              "line": 109,
               "source": "expect(await authorFingerprint(page)).toBe(beforeRestore);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 113,
+              "line": 115,
               "source": "expect(cold.project).toEqual(saved.project);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 119,
+              "line": 121,
               "source": "await expect(restored.locator('.detail-panel').getByLabel('行き先ノード', { exact: true })).toHaveValue(end.id);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 123,
+              "line": 125,
               "source": "await expect(restored.locator('.editor-save-state')).toContainText('端末内保存済み');"
             }
           ],
@@ -1551,9 +1571,9 @@
       "whole_test_source_entry": {
         "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
         "line": 27,
-        "end_line": 128,
-        "excerpt_sha256": "c7ab7270d884538371c0f2ab0263d58d68025a14eee0f008fca035b7734b585d",
-        "source_excerpt": "for (const width of [320, 390]) test(`AT-N01 幅${width} CSS pxの縦画面で一覧から線を編集し、エラー・確定・復元へ到達し横図の表代替を開く`, async ({ browser }, info) => {\n  test.setTimeout(90_000);\n  const context = await browser.newContext({ baseURL: info.project.use.baseURL as string, viewport: { width, height: 820 }, hasTouch: true, isMobile: true });\n  try {\n    const page = await context.newPage(), p = createProject(`AT-N01 幅${width}の線編集`);\n    const a = createEntity(p.projectId, 'character', '表から編集する人物A'), b = createEntity(p.projectId, 'character', '表から編集する人物B');\n    const flag = createEntity(p.projectId, 'variable', '線の真偽条件', { key: 'mobile_gate', valueType: 'boolean', initial: { type: 'boolean', value: true } });\n    const entry = createEntity(p.projectId, 'flow_node', '縦画面の入口', { nodeType: 'entry' });\n    const end = createEntity(p.projectId, 'flow_node', '縦画面の終端', { nodeType: 'terminal', terminalReason: '線を復元した' });\n    const unfinished = createEntity(p.projectId, 'flow_edge', '一覧から編集する未接続の線', { fromId: entry.id, toId: { unresolved: { label: '行き先未定', reason: '作者が一覧から接続する' } }, label: '一覧から編集する線', condition: { op: 'compare', variableId: flag.id, comparator: 'eq', value: { type: 'boolean', value: true } } });\n    const graph = createEntity(p.projectId, 'flow_graph', '一覧の線を含むgraph', { nodeIds: [entry.id, end.id], edgeIds: [unfinished.id], entryIds: [entry.id], exitIds: [end.id] });\n    p.entities.push(a, b, flag, entry, end, unfinished, graph);\n    p.entities.forEach(entity => { entity.status = 'confirmed'; });\n    const relationId = newId();\n    p.relations.push({ id: relationId, projectId: p.projectId, revision: '0', fromId: a.id, toId: b.id, relationType: 'trust', direction: 'forward', validity: emptyValidity(), evidenceIds: [], status: 'confirmed', visibility: 'private' });\n    const bytes = await exportScenario(p);\n    await attachGiven(info, 'AT-N01', bytes, { cssViewport: { width, height: 820 }, browserTouchEmulation: true, actualPhysicalDevice: 'not_run', entryId: entry.id, edgeId: unfinished.id, destinationId: end.id, relationId });\n    await seed(page, bytes);\n    await navigate(page, /^構成/);\n    await page.getByRole('tab', { name: '分岐', exact: true }).tap();\n    const line = page.locator('.branch-edge').filter({ hasText: unfinished.data.label! });\n    await reachable(page, line);\n    await line.tap();\n    const editor = page.locator('.detail-panel');\n    await expect(editor.locator('#entity-name')).toHaveValue(unfinished.name);\n    await editor.getByLabel('行き先未定の下書き', { exact: true }).uncheck();\n    const destination = editor.getByLabel('行き先ノード', { exact: true });\n    await reachable(page, destination);\n    await destination.selectOption(end.id);\n    const comparator = editor.locator('[data-field=\"condition\"]').getByLabel('比較演算', { exact: true });\n    // The structured Boolean selector correctly prevents an ordered operator.\n    // Exercise the same invalid AST through the ordinary advanced JSON input.\n    await expect(comparator.locator('option[value=\"lt\"]')).toBeDisabled();\n    const save = editor.locator('.editor-footer').getByRole('button', { name: /保存する|保存を再試行/ });\n    await reachable(page, save);\n    await save.tap();\n    await expect(editor.locator('.editor-save-state')).toContainText('端末内保存済み');\n    const details = editor.locator('details.advanced-details').filter({ has: page.locator('summary').filter({ hasText: '詳細データ・ルビ・本文リンクを編集' }) });\n    await details.locator('summary').tap();\n    const raw = details.getByRole('textbox', { name: '詳細データ', exact: true });\n    const validData = JSON.parse(await raw.inputValue());\n    expect(validData.toId).toBe(end.id);\n    expect(validData.condition).toEqual(unfinished.data.condition);\n    const invalidData = { ...validData, condition: { ...validData.condition, comparator: 'lt' } };\n    const beforeInvalid = await authorFingerprint(page);\n    await reachable(page, raw);\n    await raw.fill(JSON.stringify(invalidData, null, 2));\n    const issue = editor.locator('[data-field=\"condition\"]').getByRole('alert');\n    await expect(issue).toContainText('大小の比較には整数');\n    await reachable(page, issue);\n    await reachable(page, save);\n    await expect(save).toBeDisabled();\n    await expect(raw).toHaveValue(JSON.stringify(invalidData, null, 2));\n    expect(await authorFingerprint(page)).toBe(beforeInvalid);\n    await raw.fill(JSON.stringify(validData, null, 2));\n    await expect(issue).toHaveCount(0);\n    await reachable(page, save);\n    await save.tap();\n    await expect(editor.locator('.editor-save-state')).toContainText('端末内保存済み');\n    const afterEditDimensions = await noPageWideScroll(page);\n    await editor.getByRole('button', { name: '詳細を閉じる', exact: true }).tap();\n    await expect(line).toContainText(end.name);\n    await navigate(page, /^年表/);\n    await page.getByRole('tab', { name: '関係表・図', exact: true }).tap();\n    await page.getByRole('button', { name: '関係図', exact: true }).tap();\n    await expect(page.locator('.world-relation-canvas > svg')).toBeVisible();\n    const tableButton = page.getByRole('button', { name: '関係表', exact: true });\n    await reachable(page, tableButton);\n    await tableButton.tap();\n    const table = page.locator('.world-relation-table');\n    await expect(table).toContainText(a.name);\n    await expect(table).toContainText(b.name);\n    const afterTableDimensions = await noPageWideScroll(page);\n    const saved = await backup(page);\n    expect(saved.project.entities.find(entity => entity.id === unfinished.id)?.data).toMatchObject({ fromId: entry.id, toId: end.id, condition: unfinished.data.condition });\n    const beforeRestore = await authorFingerprint(page);\n    await page.locator('input[type=file][accept*=\".scenario\"]').setInputFiles({ name: 'N01-invalid.scenario', mimeType: 'application/zip', buffer: Buffer.from('invalid archive bytes') });\n    const restorationIssue = page.locator('.backup-panel').getByRole('alert');\n    await expect(restorationIssue).toBeVisible();\n    await reachable(page, restorationIssue);\n    expect(await authorFingerprint(page)).toBe(beforeRestore);\n    const restoredContext = await browser.newContext({ baseURL: info.project.use.baseURL as string, viewport: { width, height: 820 }, hasTouch: true, isMobile: true });\n    try {\n      const restored = await restoredContext.newPage();\n      await seed(restored, saved.bytes);\n      const cold = await backup(restored);\n      expect(cold.project).toEqual(saved.project);\n      await navigate(restored, /^構成/);\n      await restored.getByRole('tab', { name: '分岐', exact: true }).tap();\n      const recoveredLine = restored.locator('.branch-edge').filter({ hasText: unfinished.data.label! });\n      await reachable(restored, recoveredLine);\n      await recoveredLine.tap();\n      await expect(restored.locator('.detail-panel').getByLabel('行き先ノード', { exact: true })).toHaveValue(end.id);\n      const restoredSave = restored.locator('.editor-footer').getByRole('button', { name: '保存する', exact: true });\n      await reachable(restored, restoredSave);\n      await restoredSave.tap();\n      await expect(restored.locator('.editor-save-state')).toContainText('端末内保存済み');\n      const restoredDimensions = await noPageWideScroll(restored);\n      await attachObservation(info, 'AT-N01-observation', { width, edgeId: unfinished.id, destinationId: end.id, afterEditDimensions, afterTableDimensions, restoredDimensions, touchTargetsReached: true, dragOrHoverNeeded: false, currentAndRestoredProjectId: saved.project.projectId, actualPhysicalDevice: 'not_run' });\n    } finally { await restoredContext.close(); }\n  } finally { await context.close(); }\n});\n",
+        "end_line": 130,
+        "excerpt_sha256": "17b561d975a9f1b3e6da81501947195d1eb0c1efef6e8cf09acee0e704e39a60",
+        "source_excerpt": "for (const width of [320, 390]) test(`AT-N01 幅${width} CSS pxの縦画面で一覧から線を編集し、エラー・確定・復元へ到達し横図の表代替を開く`, async ({ browser }, info) => {\n  test.setTimeout(90_000);\n  const context = await browser.newContext({ baseURL: info.project.use.baseURL as string, viewport: { width, height: 820 }, hasTouch: true, isMobile: true });\n  try {\n    const page = await context.newPage(), p = createProject(`AT-N01 幅${width}の線編集`);\n    const a = createEntity(p.projectId, 'character', '表から編集する人物A'), b = createEntity(p.projectId, 'character', '表から編集する人物B');\n    const flag = createEntity(p.projectId, 'variable', '線の真偽条件', { key: 'mobile_gate', valueType: 'boolean', initial: { type: 'boolean', value: true } });\n    const entry = createEntity(p.projectId, 'flow_node', '縦画面の入口', { nodeType: 'entry' });\n    const end = createEntity(p.projectId, 'flow_node', '縦画面の終端', { nodeType: 'terminal', terminalReason: '線を復元した' });\n    const unfinished = createEntity(p.projectId, 'flow_edge', '一覧から編集する未接続の線', { fromId: entry.id, toId: { unresolved: { label: '行き先未定', reason: '作者が一覧から接続する' } }, label: '一覧から編集する線', condition: { op: 'compare', variableId: flag.id, comparator: 'eq', value: { type: 'boolean', value: true } } });\n    const graph = createEntity(p.projectId, 'flow_graph', '一覧の線を含むgraph', { nodeIds: [entry.id, end.id], edgeIds: [unfinished.id], entryIds: [entry.id], exitIds: [end.id] });\n    p.entities.push(a, b, flag, entry, end, unfinished, graph);\n    p.entities.forEach(entity => { entity.status = 'confirmed'; });\n    const relationId = newId();\n    p.relations.push({ id: relationId, projectId: p.projectId, revision: '0', fromId: a.id, toId: b.id, relationType: 'trust', direction: 'forward', validity: emptyValidity(), evidenceIds: [], status: 'confirmed', visibility: 'private' });\n    const bytes = await exportScenario(p);\n    await attachGiven(info, 'AT-N01', bytes, { cssViewport: { width, height: 820 }, browserTouchEmulation: true, actualPhysicalDevice: 'not_run', entryId: entry.id, edgeId: unfinished.id, destinationId: end.id, relationId });\n    await seed(page, bytes);\n    await navigate(page, /^構成/);\n    await page.getByRole('tab', { name: '分岐', exact: true }).tap();\n    const line = page.locator('.branch-edge').filter({ hasText: unfinished.data.label! });\n    await reachable(page, line);\n    await line.tap();\n    const editor = page.locator('.detail-panel');\n    await expect(editor.locator('#entity-name')).toHaveValue(unfinished.name);\n    await editor.getByLabel('行き先未定の下書き', { exact: true }).uncheck();\n    const destination = editor.getByLabel('行き先ノード', { exact: true });\n    await reachable(page, destination);\n    await destination.selectOption(end.id);\n    const comparator = editor.locator('[data-field=\"condition\"]').getByLabel('比較演算', { exact: true });\n    // The structured Boolean selector correctly prevents an ordered operator.\n    // Exercise the same invalid AST through the ordinary advanced JSON input.\n    await expect(comparator.locator('option[value=\"lt\"]')).toBeDisabled();\n    const save = editor.locator('.editor-footer').getByRole('button', { name: /保存する|保存を再試行/ });\n    await reachable(page, save);\n    await save.tap();\n    await expect(editor.locator('.editor-save-state')).toContainText('端末内保存済み');\n    const details = editor.locator('details.advanced-details').filter({ has: page.locator('summary').filter({ hasText: '詳細データ・ルビ・本文リンクを編集' }) });\n    await details.locator('summary').tap();\n    const raw = details.getByRole('textbox', { name: '詳細データ', exact: true });\n    const validData = JSON.parse(await raw.inputValue());\n    expect(validData.toId).toBe(end.id);\n    expect(validData.condition).toEqual(unfinished.data.condition);\n    const invalidData = { ...validData, condition: { ...validData.condition, comparator: 'lt' } };\n    const beforeInvalid = await authorFingerprint(page);\n    await reachable(page, raw);\n    await raw.fill(JSON.stringify(invalidData, null, 2));\n    const issue = editor.locator('[data-field=\"condition\"]').getByRole('alert');\n    await expect(issue).toContainText('大小の比較には整数');\n    await reachable(page, issue);\n    await reachable(page, save);\n    await expect(save).toBeDisabled();\n    await expect(raw).toHaveValue(JSON.stringify(invalidData, null, 2));\n    expect(await authorFingerprint(page)).toBe(beforeInvalid);\n    await raw.fill(JSON.stringify(validData, null, 2));\n    await expect(issue).toHaveCount(0);\n    await reachable(page, save);\n    await save.tap();\n    await expect(editor.locator('.editor-save-state')).toContainText('端末内保存済み');\n    const afterEditDimensions = await noPageWideScroll(page);\n    const backToList = editor.getByRole('button', { name: '一覧に戻る', exact: true });\n    await reachable(page, backToList);\n    await backToList.tap();\n    await expect(line).toContainText(end.name);\n    await navigate(page, /^年表/);\n    await page.getByRole('tab', { name: '関係表・図', exact: true }).tap();\n    await page.getByRole('button', { name: '関係図', exact: true }).tap();\n    await expect(page.locator('.world-relation-canvas > svg')).toBeVisible();\n    const tableButton = page.getByRole('button', { name: '関係表', exact: true });\n    await reachable(page, tableButton);\n    await tableButton.tap();\n    const table = page.locator('.world-relation-table');\n    await expect(table).toContainText(a.name);\n    await expect(table).toContainText(b.name);\n    const afterTableDimensions = await noPageWideScroll(page);\n    const saved = await backup(page);\n    expect(saved.project.entities.find(entity => entity.id === unfinished.id)?.data).toMatchObject({ fromId: entry.id, toId: end.id, condition: unfinished.data.condition });\n    const beforeRestore = await authorFingerprint(page);\n    await page.locator('input[type=file][accept*=\".scenario\"]').setInputFiles({ name: 'N01-invalid.scenario', mimeType: 'application/zip', buffer: Buffer.from('invalid archive bytes') });\n    const restorationIssue = page.locator('.backup-page').getByRole('alert');\n    await expect(restorationIssue).toBeVisible();\n    await reachable(page, restorationIssue);\n    expect(await authorFingerprint(page)).toBe(beforeRestore);\n    const restoredContext = await browser.newContext({ baseURL: info.project.use.baseURL as string, viewport: { width, height: 820 }, hasTouch: true, isMobile: true });\n    try {\n      const restored = await restoredContext.newPage();\n      await seed(restored, saved.bytes);\n      const cold = await backup(restored);\n      expect(cold.project).toEqual(saved.project);\n      await navigate(restored, /^構成/);\n      await restored.getByRole('tab', { name: '分岐', exact: true }).tap();\n      const recoveredLine = restored.locator('.branch-edge').filter({ hasText: unfinished.data.label! });\n      await reachable(restored, recoveredLine);\n      await recoveredLine.tap();\n      await expect(restored.locator('.detail-panel').getByLabel('行き先ノード', { exact: true })).toHaveValue(end.id);\n      const restoredSave = restored.locator('.editor-footer').getByRole('button', { name: '保存する', exact: true });\n      await reachable(restored, restoredSave);\n      await restoredSave.tap();\n      await expect(restored.locator('.editor-save-state')).toContainText('端末内保存済み');\n      const restoredDimensions = await noPageWideScroll(restored);\n      await attachObservation(info, 'AT-N01-observation', { width, edgeId: unfinished.id, destinationId: end.id, afterEditDimensions, afterTableDimensions, restoredDimensions, touchTargetsReached: true, dragOrHoverNeeded: false, currentAndRestoredProjectId: saved.project.projectId, actualPhysicalDevice: 'not_run' });\n    } finally { await restoredContext.close(); }\n  } finally { await context.close(); }\n});\n",
         "binding_status": "authored_not_run; exact whole test callback span; no individual clause execution inferred"
       },
       "source_mapping_scope": "The original four literal clauses share this ordinary-UI callback. Source spans and operation/assert rows bind authored source only; no clause-specific observation or isolated step is inferred."
@@ -4373,12 +4393,12 @@
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
               "title": "AT-N11 補助: 取得済みPWAの作品をbrowser offlineで編集し、閉じて再開し実保存ファイルと未送信・素材bytes不足を区別する",
-              "line": 130,
+              "line": 132,
               "parameter_values": {},
               "binding_status": "authored_working_tree_location; refresh at final proof freeze"
             }
           ],
-          "authored_file_sha256": "ca8cd7015cd1891e6cf72b8fe1149f8d7749d7213f089559dbd1de7d3524e2d4",
+          "authored_file_sha256": "3d46f9be9a1c08a199ee4c64bf5324b21e4ea2cef4473cb9e2e86022e2c5f9a3",
           "missing_conditions": [
             {
               "condition": "実機の機内モードで同じ編集・閉じる・再開・OS Files出力",
@@ -4394,348 +4414,358 @@
           "sources": [
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 130,
-              "end_line": 231,
-              "excerpt_sha256": "bd811a97e7d39f68846100f52ec3b065af9c5f581555b9b5afb5fcba3a346277",
+              "line": 132,
+              "end_line": 235,
+              "excerpt_sha256": "2d52a163cca3a3f6dfdff7e0625b2eb652965e75e586a842b5e1e01ff2257a16",
               "binding_status": "authored_not_run; exact whole test callback span; no individual clause execution inferred"
             }
           ],
           "normal_operation_source_lines": [
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 139,
+              "line": 141,
               "source": "await seed(page, bytes);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 142,
+              "line": 144,
               "source": "await page.reload();"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 148,
+              "line": 150,
               "source": "await context.setOffline(true);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 150,
+              "line": 152,
               "source": "await openEntity(page, 'scene', scene.name);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 151,
+              "line": 153,
               "source": "await page.locator('.detail-panel').getByRole('tab', { name: '本文', exact: true }).click();"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 153,
+              "line": 155,
               "source": "await page.locator('.detail-panel').getByRole('textbox', { name: '本文', exact: true }).fill(changedBody);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 154,
+              "line": 156,
               "source": "await page.locator('.editor-footer').getByRole('button', { name: '保存する', exact: true }).click();"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 158,
+              "line": 160,
               "source": "const beforeClose = await backup(page), beforeCloseScene = beforeClose.project.entities.find(entity => entity.id === scene.id);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 171,
+              "line": 173,
               "source": "const beforeCloseFingerprint = await authorFingerprint(page);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 173,
+              "line": 175,
               "source": "await page.close();"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 175,
+              "line": 177,
               "source": "await reopened.goto(url);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 178,
+              "line": 180,
               "source": "expect(await authorFingerprint(reopened)).toBe(beforeCloseFingerprint);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 179,
+              "line": 181,
               "source": "await openEntity(reopened, 'scene', scene.name);"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 180,
-              "source": "await reopened.locator('.detail-panel').getByRole('tab', { name: '本文', exact: true }).click();"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
               "line": 182,
-              "source": "const saved = await backup(reopened);"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 194,
-              "source": "await reopened.locator('input[type=file][accept*=\".scenario\"]').setInputFiles({ name: 'N11-complete.scenario', mimeType: 'application/zip', buffer: Buffer.from(saved.bytes) });"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 195,
-              "source": "await reopened.getByLabel('復元方法', { exact: true }).selectOption('replace');"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 196,
-              "source": "await reopened.getByRole('button', { name: '復元の影響を確認', exact: true }).click();"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 199,
-              "source": "await reopened.locator('.import-preview').getByRole('button', { name: '中止', exact: true }).click();"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 200,
-              "source": "const authorBeforeMissing = await authorFingerprint(reopened);"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 206,
-              "source": "finally { db.close(); }"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 208,
-              "source": "await openEntity(reopened, 'attachment', attachment.name);"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 212,
-              "source": "expect(await authorFingerprint(reopened)).toBe(authorBeforeMissing);"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 215,
-              "source": "await navigate(reopened, /^作品・保存/);"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 216,
-              "source": "await reopened.getByRole('tab', { name: '完全保存・復元', exact: true }).click();"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 217,
-              "source": "await reopened.getByRole('button', { name: '完全保存ファイルを作成', exact: true }).click();"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 220,
-              "source": "await openEntity(reopened, 'scene', scene.name);"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 221,
               "source": "await reopened.locator('.detail-panel').getByRole('tab', { name: '本文', exact: true }).click();"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 226,
-              "source": "expect(await firstPage.goto(url).then(() => false, () => true)).toBe(true);"
+              "line": 184,
+              "source": "const saved = await backup(reopened);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 228,
-              "source": "} finally { await firstAcquisition.close(); }"
+              "line": 196,
+              "source": "await reopened.locator('input[type=file][accept*=\".scenario\"]').setInputFiles({ name: 'N11-complete.scenario', mimeType: 'application/zip', buffer: Buffer.from(saved.bytes) });"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 197,
+              "source": "await reopened.getByLabel('復元方法', { exact: true }).selectOption('replace');"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 198,
+              "source": "await reopened.getByRole('button', { name: '復元の影響を確認', exact: true }).click();"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 201,
+              "source": "await reopened.locator('.import-preview').getByRole('button', { name: '中止', exact: true }).click();"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 202,
+              "source": "const authorBeforeMissing = await authorFingerprint(reopened);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 208,
+              "source": "finally { db.close(); }"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 210,
+              "source": "await openEntity(reopened, 'attachment', attachment.name);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 214,
+              "source": "expect(await authorFingerprint(reopened)).toBe(authorBeforeMissing);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 217,
+              "source": "await navigate(reopened, /^作品・保存/);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 218,
+              "source": "await reopened.getByRole('tab', { name: '完全保存・復元', exact: true }).click();"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 219,
+              "source": "await reopened.getByRole('button', { name: '完全保存ファイルを作成', exact: true }).click();"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 223,
+              "source": "expect(await authorFingerprint(reopened)).toBe(authorBeforeMissing);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 224,
+              "source": "await openEntity(reopened, 'scene', scene.name);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 225,
+              "source": "await reopened.locator('.detail-panel').getByRole('tab', { name: '本文', exact: true }).click();"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
               "line": 230,
+              "source": "expect(await firstPage.goto(url).then(() => false, () => true)).toBe(true);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 232,
+              "source": "} finally { await firstAcquisition.close(); }"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 234,
               "source": "} finally { await context.setOffline(false); }"
             }
           ],
           "assertion_source_lines": [
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 143,
+              "line": 145,
               "source": "await expect.poll(() => page.evaluate(() => Boolean(navigator.serviceWorker.controller))).toBe(true);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 145,
+              "line": 147,
               "source": "expect(cachesObserved.some(cache => cache.urls.some(url => /\\/assets\\/index-.*\\.js$/.test(url)))).toBe(true);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 149,
+              "line": 151,
               "source": "await expect.poll(() => page.evaluate(() => navigator.onLine)).toBe(false);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 155,
+              "line": 157,
               "source": "await expect(page.locator('.editor-save-state')).toContainText('端末内保存済み');"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 156,
+              "line": 158,
               "source": "await expect(page.locator('.topbar-status')).toContainText('端末内保存済み');"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 157,
+              "line": 159,
               "source": "await expect(page.locator('.topbar-status')).toContainText('OFFLINE');"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 160,
+              "line": 162,
               "source": "expect(beforeCloseScene.data.body).toHaveLength(1);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 162,
+              "line": 164,
               "source": "expect(editedBlockId).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 163,
+              "line": 165,
               "source": "expect(editedBlockId).not.toBe(scene.data.body[0].id);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 164,
+              "line": 166,
               "source": "expect(beforeCloseScene.data).toEqual({ ...scene.data, body: [{ ...scene.data.body[0], id: editedBlockId, text: changedBody }] });"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 165,
+              "line": 167,
               "source": "expect(beforeClose.project.entities.map(({ id, kind }) => ({ id, kind })).sort((a, b) => a.id.localeCompare(b.id)))"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 167,
+              "line": 169,
               "source": "expect(beforeClose.project.entities.find(entity => entity.id === attachment.id)?.data).toEqual(attachment.data);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 170,
+              "line": 172,
               "source": "expect(editOperation).toBeDefined();"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 176,
+              "line": 178,
               "source": "await expect(reopened.locator('.app-shell')).toBeVisible();"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 177,
+              "line": 179,
               "source": "await expect.poll(() => reopened.evaluate(() => navigator.onLine)).toBe(false);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 178,
+              "line": 180,
               "source": "expect(await authorFingerprint(reopened)).toBe(beforeCloseFingerprint);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 181,
-              "source": "await expect(reopened.locator('.detail-panel').getByRole('textbox', { name: '本文', exact: true })).toHaveValue(changedBody);"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
               "line": 183,
-              "source": "expect(saved.project.entities).toEqual(beforeClose.project.entities);"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 184,
-              "source": "expect(saved.project.history).toEqual(beforeClose.project.history);"
+              "source": "await expect(reopened.locator('.detail-panel').getByRole('textbox', { name: '本文', exact: true })).toHaveValue(changedBody);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
               "line": 185,
-              "source": "expect(saved.project.snapshots).toEqual(beforeClose.project.snapshots);"
+              "source": "expect(saved.project.entities).toEqual(beforeClose.project.entities);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
               "line": 186,
-              "source": "expect(saved.assets).toEqual(beforeClose.assets);"
+              "source": "expect(saved.project.history).toEqual(beforeClose.project.history);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
               "line": 187,
-              "source": "expect(saved.recovery?.pending).toEqual(beforeClose.recovery?.pending);"
+              "source": "expect(saved.project.snapshots).toEqual(beforeClose.project.snapshots);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
               "line": 188,
-              "source": "expect(saved.project.entities.find(entity => entity.id === scene.id)?.data).toEqual(beforeCloseScene.data);"
+              "source": "expect(saved.assets).toEqual(beforeClose.assets);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
               "line": 189,
-              "source": "expect(saved.assets[0].bytes).toEqual(preparedAsset.bytes);"
+              "source": "expect(saved.recovery?.pending).toEqual(beforeClose.recovery?.pending);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
               "line": 190,
+              "source": "expect(saved.project.entities.find(entity => entity.id === scene.id)?.data).toEqual(beforeCloseScene.data);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 191,
+              "source": "expect(saved.assets[0].bytes).toEqual(preparedAsset.bytes);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 192,
               "source": "expect(saved.recovery?.pending.length).toBeGreaterThan(0);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 197,
+              "line": 199,
               "source": "await expect(reopened.locator('.import-preview').getByRole('alert')).toContainText('未送信の変更');"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 198,
+              "line": 200,
               "source": "await expect(reopened.getByRole('button', { name: 'この内容で復元する', exact: true })).toBeDisabled();"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 209,
+              "line": 211,
               "source": "await expect(reopened.locator('.asset-preview').getByRole('status')).toContainText('この端末には素材bytesがありません');"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 210,
+              "line": 212,
               "source": "await expect(reopened.locator('.asset-preview').getByRole('button', { name: '素材を保存', exact: true })).toHaveCount(0);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 211,
+              "line": 213,
               "source": "await expect(reopened.locator('.asset-preview audio')).toHaveCount(0);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 212,
+              "line": 214,
               "source": "expect(await authorFingerprint(reopened)).toBe(authorBeforeMissing);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 218,
-              "source": "await expect(reopened.locator('.backup-panel').getByRole('alert')).toContainText(/添付|素材|bytes/);"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 219,
-              "source": "expect(missingDownloads).toBe(0);"
+              "line": 221,
+              "source": "await expect(missingExportIssue).toContainText(`${preparedAsset.assetPath}: 完全保存に必要な添付bytesが取得されていません。`);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
               "line": 222,
-              "source": "await expect(reopened.locator('.detail-panel').getByRole('textbox', { name: '本文', exact: true })).toHaveValue(changedBody);"
+              "source": "expect(missingDownloads).toBe(0);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 223,
+              "source": "expect(await authorFingerprint(reopened)).toBe(authorBeforeMissing);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
               "line": 226,
+              "source": "await expect(reopened.locator('.detail-panel').getByRole('textbox', { name: '本文', exact: true })).toHaveValue(changedBody);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 230,
               "source": "expect(await firstPage.goto(url).then(() => false, () => true)).toBe(true);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 227,
+              "line": 231,
               "source": "await expect(firstPage.locator('.app-shell')).toHaveCount(0);"
             }
           ],
@@ -4760,12 +4790,12 @@
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
               "title": "AT-N11 補助: 取得済みPWAの作品をbrowser offlineで編集し、閉じて再開し実保存ファイルと未送信・素材bytes不足を区別する",
-              "line": 130,
+              "line": 132,
               "parameter_values": {},
               "binding_status": "authored_working_tree_location; refresh at final proof freeze"
             }
           ],
-          "authored_file_sha256": "ca8cd7015cd1891e6cf72b8fe1149f8d7749d7213f089559dbd1de7d3524e2d4",
+          "authored_file_sha256": "3d46f9be9a1c08a199ee4c64bf5324b21e4ea2cef4473cb9e2e86022e2c5f9a3",
           "missing_conditions": [
             {
               "condition": "実機の機内モードで同じ編集・閉じる・再開・OS Files出力",
@@ -4781,348 +4811,358 @@
           "sources": [
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 130,
-              "end_line": 231,
-              "excerpt_sha256": "bd811a97e7d39f68846100f52ec3b065af9c5f581555b9b5afb5fcba3a346277",
+              "line": 132,
+              "end_line": 235,
+              "excerpt_sha256": "2d52a163cca3a3f6dfdff7e0625b2eb652965e75e586a842b5e1e01ff2257a16",
               "binding_status": "authored_not_run; exact whole test callback span; no individual clause execution inferred"
             }
           ],
           "normal_operation_source_lines": [
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 139,
+              "line": 141,
               "source": "await seed(page, bytes);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 142,
+              "line": 144,
               "source": "await page.reload();"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 148,
+              "line": 150,
               "source": "await context.setOffline(true);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 150,
+              "line": 152,
               "source": "await openEntity(page, 'scene', scene.name);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 151,
+              "line": 153,
               "source": "await page.locator('.detail-panel').getByRole('tab', { name: '本文', exact: true }).click();"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 153,
+              "line": 155,
               "source": "await page.locator('.detail-panel').getByRole('textbox', { name: '本文', exact: true }).fill(changedBody);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 154,
+              "line": 156,
               "source": "await page.locator('.editor-footer').getByRole('button', { name: '保存する', exact: true }).click();"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 158,
+              "line": 160,
               "source": "const beforeClose = await backup(page), beforeCloseScene = beforeClose.project.entities.find(entity => entity.id === scene.id);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 171,
+              "line": 173,
               "source": "const beforeCloseFingerprint = await authorFingerprint(page);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 173,
+              "line": 175,
               "source": "await page.close();"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 175,
+              "line": 177,
               "source": "await reopened.goto(url);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 178,
+              "line": 180,
               "source": "expect(await authorFingerprint(reopened)).toBe(beforeCloseFingerprint);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 179,
+              "line": 181,
               "source": "await openEntity(reopened, 'scene', scene.name);"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 180,
-              "source": "await reopened.locator('.detail-panel').getByRole('tab', { name: '本文', exact: true }).click();"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
               "line": 182,
-              "source": "const saved = await backup(reopened);"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 194,
-              "source": "await reopened.locator('input[type=file][accept*=\".scenario\"]').setInputFiles({ name: 'N11-complete.scenario', mimeType: 'application/zip', buffer: Buffer.from(saved.bytes) });"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 195,
-              "source": "await reopened.getByLabel('復元方法', { exact: true }).selectOption('replace');"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 196,
-              "source": "await reopened.getByRole('button', { name: '復元の影響を確認', exact: true }).click();"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 199,
-              "source": "await reopened.locator('.import-preview').getByRole('button', { name: '中止', exact: true }).click();"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 200,
-              "source": "const authorBeforeMissing = await authorFingerprint(reopened);"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 206,
-              "source": "finally { db.close(); }"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 208,
-              "source": "await openEntity(reopened, 'attachment', attachment.name);"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 212,
-              "source": "expect(await authorFingerprint(reopened)).toBe(authorBeforeMissing);"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 215,
-              "source": "await navigate(reopened, /^作品・保存/);"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 216,
-              "source": "await reopened.getByRole('tab', { name: '完全保存・復元', exact: true }).click();"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 217,
-              "source": "await reopened.getByRole('button', { name: '完全保存ファイルを作成', exact: true }).click();"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 220,
-              "source": "await openEntity(reopened, 'scene', scene.name);"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 221,
               "source": "await reopened.locator('.detail-panel').getByRole('tab', { name: '本文', exact: true }).click();"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 226,
-              "source": "expect(await firstPage.goto(url).then(() => false, () => true)).toBe(true);"
+              "line": 184,
+              "source": "const saved = await backup(reopened);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 228,
-              "source": "} finally { await firstAcquisition.close(); }"
+              "line": 196,
+              "source": "await reopened.locator('input[type=file][accept*=\".scenario\"]').setInputFiles({ name: 'N11-complete.scenario', mimeType: 'application/zip', buffer: Buffer.from(saved.bytes) });"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 197,
+              "source": "await reopened.getByLabel('復元方法', { exact: true }).selectOption('replace');"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 198,
+              "source": "await reopened.getByRole('button', { name: '復元の影響を確認', exact: true }).click();"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 201,
+              "source": "await reopened.locator('.import-preview').getByRole('button', { name: '中止', exact: true }).click();"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 202,
+              "source": "const authorBeforeMissing = await authorFingerprint(reopened);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 208,
+              "source": "finally { db.close(); }"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 210,
+              "source": "await openEntity(reopened, 'attachment', attachment.name);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 214,
+              "source": "expect(await authorFingerprint(reopened)).toBe(authorBeforeMissing);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 217,
+              "source": "await navigate(reopened, /^作品・保存/);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 218,
+              "source": "await reopened.getByRole('tab', { name: '完全保存・復元', exact: true }).click();"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 219,
+              "source": "await reopened.getByRole('button', { name: '完全保存ファイルを作成', exact: true }).click();"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 223,
+              "source": "expect(await authorFingerprint(reopened)).toBe(authorBeforeMissing);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 224,
+              "source": "await openEntity(reopened, 'scene', scene.name);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 225,
+              "source": "await reopened.locator('.detail-panel').getByRole('tab', { name: '本文', exact: true }).click();"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
               "line": 230,
+              "source": "expect(await firstPage.goto(url).then(() => false, () => true)).toBe(true);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 232,
+              "source": "} finally { await firstAcquisition.close(); }"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 234,
               "source": "} finally { await context.setOffline(false); }"
             }
           ],
           "assertion_source_lines": [
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 143,
+              "line": 145,
               "source": "await expect.poll(() => page.evaluate(() => Boolean(navigator.serviceWorker.controller))).toBe(true);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 145,
+              "line": 147,
               "source": "expect(cachesObserved.some(cache => cache.urls.some(url => /\\/assets\\/index-.*\\.js$/.test(url)))).toBe(true);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 149,
+              "line": 151,
               "source": "await expect.poll(() => page.evaluate(() => navigator.onLine)).toBe(false);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 155,
+              "line": 157,
               "source": "await expect(page.locator('.editor-save-state')).toContainText('端末内保存済み');"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 156,
+              "line": 158,
               "source": "await expect(page.locator('.topbar-status')).toContainText('端末内保存済み');"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 157,
+              "line": 159,
               "source": "await expect(page.locator('.topbar-status')).toContainText('OFFLINE');"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 160,
+              "line": 162,
               "source": "expect(beforeCloseScene.data.body).toHaveLength(1);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 162,
+              "line": 164,
               "source": "expect(editedBlockId).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 163,
+              "line": 165,
               "source": "expect(editedBlockId).not.toBe(scene.data.body[0].id);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 164,
+              "line": 166,
               "source": "expect(beforeCloseScene.data).toEqual({ ...scene.data, body: [{ ...scene.data.body[0], id: editedBlockId, text: changedBody }] });"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 165,
+              "line": 167,
               "source": "expect(beforeClose.project.entities.map(({ id, kind }) => ({ id, kind })).sort((a, b) => a.id.localeCompare(b.id)))"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 167,
+              "line": 169,
               "source": "expect(beforeClose.project.entities.find(entity => entity.id === attachment.id)?.data).toEqual(attachment.data);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 170,
+              "line": 172,
               "source": "expect(editOperation).toBeDefined();"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 176,
+              "line": 178,
               "source": "await expect(reopened.locator('.app-shell')).toBeVisible();"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 177,
+              "line": 179,
               "source": "await expect.poll(() => reopened.evaluate(() => navigator.onLine)).toBe(false);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 178,
+              "line": 180,
               "source": "expect(await authorFingerprint(reopened)).toBe(beforeCloseFingerprint);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 181,
-              "source": "await expect(reopened.locator('.detail-panel').getByRole('textbox', { name: '本文', exact: true })).toHaveValue(changedBody);"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
               "line": 183,
-              "source": "expect(saved.project.entities).toEqual(beforeClose.project.entities);"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 184,
-              "source": "expect(saved.project.history).toEqual(beforeClose.project.history);"
+              "source": "await expect(reopened.locator('.detail-panel').getByRole('textbox', { name: '本文', exact: true })).toHaveValue(changedBody);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
               "line": 185,
-              "source": "expect(saved.project.snapshots).toEqual(beforeClose.project.snapshots);"
+              "source": "expect(saved.project.entities).toEqual(beforeClose.project.entities);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
               "line": 186,
-              "source": "expect(saved.assets).toEqual(beforeClose.assets);"
+              "source": "expect(saved.project.history).toEqual(beforeClose.project.history);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
               "line": 187,
-              "source": "expect(saved.recovery?.pending).toEqual(beforeClose.recovery?.pending);"
+              "source": "expect(saved.project.snapshots).toEqual(beforeClose.project.snapshots);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
               "line": 188,
-              "source": "expect(saved.project.entities.find(entity => entity.id === scene.id)?.data).toEqual(beforeCloseScene.data);"
+              "source": "expect(saved.assets).toEqual(beforeClose.assets);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
               "line": 189,
-              "source": "expect(saved.assets[0].bytes).toEqual(preparedAsset.bytes);"
+              "source": "expect(saved.recovery?.pending).toEqual(beforeClose.recovery?.pending);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
               "line": 190,
+              "source": "expect(saved.project.entities.find(entity => entity.id === scene.id)?.data).toEqual(beforeCloseScene.data);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 191,
+              "source": "expect(saved.assets[0].bytes).toEqual(preparedAsset.bytes);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 192,
               "source": "expect(saved.recovery?.pending.length).toBeGreaterThan(0);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 197,
+              "line": 199,
               "source": "await expect(reopened.locator('.import-preview').getByRole('alert')).toContainText('未送信の変更');"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 198,
+              "line": 200,
               "source": "await expect(reopened.getByRole('button', { name: 'この内容で復元する', exact: true })).toBeDisabled();"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 209,
+              "line": 211,
               "source": "await expect(reopened.locator('.asset-preview').getByRole('status')).toContainText('この端末には素材bytesがありません');"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 210,
+              "line": 212,
               "source": "await expect(reopened.locator('.asset-preview').getByRole('button', { name: '素材を保存', exact: true })).toHaveCount(0);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 211,
+              "line": 213,
               "source": "await expect(reopened.locator('.asset-preview audio')).toHaveCount(0);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 212,
+              "line": 214,
               "source": "expect(await authorFingerprint(reopened)).toBe(authorBeforeMissing);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 218,
-              "source": "await expect(reopened.locator('.backup-panel').getByRole('alert')).toContainText(/添付|素材|bytes/);"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 219,
-              "source": "expect(missingDownloads).toBe(0);"
+              "line": 221,
+              "source": "await expect(missingExportIssue).toContainText(`${preparedAsset.assetPath}: 完全保存に必要な添付bytesが取得されていません。`);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
               "line": 222,
-              "source": "await expect(reopened.locator('.detail-panel').getByRole('textbox', { name: '本文', exact: true })).toHaveValue(changedBody);"
+              "source": "expect(missingDownloads).toBe(0);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 223,
+              "source": "expect(await authorFingerprint(reopened)).toBe(authorBeforeMissing);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
               "line": 226,
+              "source": "await expect(reopened.locator('.detail-panel').getByRole('textbox', { name: '本文', exact: true })).toHaveValue(changedBody);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 230,
               "source": "expect(await firstPage.goto(url).then(() => false, () => true)).toBe(true);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 227,
+              "line": 231,
               "source": "await expect(firstPage.locator('.app-shell')).toHaveCount(0);"
             }
           ],
@@ -5147,12 +5187,12 @@
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
               "title": "AT-N11 補助: 取得済みPWAの作品をbrowser offlineで編集し、閉じて再開し実保存ファイルと未送信・素材bytes不足を区別する",
-              "line": 130,
+              "line": 132,
               "parameter_values": {},
               "binding_status": "authored_working_tree_location; refresh at final proof freeze"
             }
           ],
-          "authored_file_sha256": "ca8cd7015cd1891e6cf72b8fe1149f8d7749d7213f089559dbd1de7d3524e2d4",
+          "authored_file_sha256": "3d46f9be9a1c08a199ee4c64bf5324b21e4ea2cef4473cb9e2e86022e2c5f9a3",
           "missing_conditions": [
             {
               "condition": "実機の機内モードで同じ編集・閉じる・再開・OS Files出力",
@@ -5168,348 +5208,358 @@
           "sources": [
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 130,
-              "end_line": 231,
-              "excerpt_sha256": "bd811a97e7d39f68846100f52ec3b065af9c5f581555b9b5afb5fcba3a346277",
+              "line": 132,
+              "end_line": 235,
+              "excerpt_sha256": "2d52a163cca3a3f6dfdff7e0625b2eb652965e75e586a842b5e1e01ff2257a16",
               "binding_status": "authored_not_run; exact whole test callback span; no individual clause execution inferred"
             }
           ],
           "normal_operation_source_lines": [
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 139,
+              "line": 141,
               "source": "await seed(page, bytes);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 142,
+              "line": 144,
               "source": "await page.reload();"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 148,
+              "line": 150,
               "source": "await context.setOffline(true);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 150,
+              "line": 152,
               "source": "await openEntity(page, 'scene', scene.name);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 151,
+              "line": 153,
               "source": "await page.locator('.detail-panel').getByRole('tab', { name: '本文', exact: true }).click();"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 153,
+              "line": 155,
               "source": "await page.locator('.detail-panel').getByRole('textbox', { name: '本文', exact: true }).fill(changedBody);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 154,
+              "line": 156,
               "source": "await page.locator('.editor-footer').getByRole('button', { name: '保存する', exact: true }).click();"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 158,
+              "line": 160,
               "source": "const beforeClose = await backup(page), beforeCloseScene = beforeClose.project.entities.find(entity => entity.id === scene.id);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 171,
+              "line": 173,
               "source": "const beforeCloseFingerprint = await authorFingerprint(page);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 173,
+              "line": 175,
               "source": "await page.close();"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 175,
+              "line": 177,
               "source": "await reopened.goto(url);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 178,
+              "line": 180,
               "source": "expect(await authorFingerprint(reopened)).toBe(beforeCloseFingerprint);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 179,
+              "line": 181,
               "source": "await openEntity(reopened, 'scene', scene.name);"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 180,
-              "source": "await reopened.locator('.detail-panel').getByRole('tab', { name: '本文', exact: true }).click();"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
               "line": 182,
-              "source": "const saved = await backup(reopened);"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 194,
-              "source": "await reopened.locator('input[type=file][accept*=\".scenario\"]').setInputFiles({ name: 'N11-complete.scenario', mimeType: 'application/zip', buffer: Buffer.from(saved.bytes) });"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 195,
-              "source": "await reopened.getByLabel('復元方法', { exact: true }).selectOption('replace');"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 196,
-              "source": "await reopened.getByRole('button', { name: '復元の影響を確認', exact: true }).click();"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 199,
-              "source": "await reopened.locator('.import-preview').getByRole('button', { name: '中止', exact: true }).click();"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 200,
-              "source": "const authorBeforeMissing = await authorFingerprint(reopened);"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 206,
-              "source": "finally { db.close(); }"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 208,
-              "source": "await openEntity(reopened, 'attachment', attachment.name);"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 212,
-              "source": "expect(await authorFingerprint(reopened)).toBe(authorBeforeMissing);"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 215,
-              "source": "await navigate(reopened, /^作品・保存/);"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 216,
-              "source": "await reopened.getByRole('tab', { name: '完全保存・復元', exact: true }).click();"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 217,
-              "source": "await reopened.getByRole('button', { name: '完全保存ファイルを作成', exact: true }).click();"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 220,
-              "source": "await openEntity(reopened, 'scene', scene.name);"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 221,
               "source": "await reopened.locator('.detail-panel').getByRole('tab', { name: '本文', exact: true }).click();"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 226,
-              "source": "expect(await firstPage.goto(url).then(() => false, () => true)).toBe(true);"
+              "line": 184,
+              "source": "const saved = await backup(reopened);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 228,
-              "source": "} finally { await firstAcquisition.close(); }"
+              "line": 196,
+              "source": "await reopened.locator('input[type=file][accept*=\".scenario\"]').setInputFiles({ name: 'N11-complete.scenario', mimeType: 'application/zip', buffer: Buffer.from(saved.bytes) });"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 197,
+              "source": "await reopened.getByLabel('復元方法', { exact: true }).selectOption('replace');"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 198,
+              "source": "await reopened.getByRole('button', { name: '復元の影響を確認', exact: true }).click();"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 201,
+              "source": "await reopened.locator('.import-preview').getByRole('button', { name: '中止', exact: true }).click();"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 202,
+              "source": "const authorBeforeMissing = await authorFingerprint(reopened);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 208,
+              "source": "finally { db.close(); }"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 210,
+              "source": "await openEntity(reopened, 'attachment', attachment.name);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 214,
+              "source": "expect(await authorFingerprint(reopened)).toBe(authorBeforeMissing);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 217,
+              "source": "await navigate(reopened, /^作品・保存/);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 218,
+              "source": "await reopened.getByRole('tab', { name: '完全保存・復元', exact: true }).click();"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 219,
+              "source": "await reopened.getByRole('button', { name: '完全保存ファイルを作成', exact: true }).click();"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 223,
+              "source": "expect(await authorFingerprint(reopened)).toBe(authorBeforeMissing);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 224,
+              "source": "await openEntity(reopened, 'scene', scene.name);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 225,
+              "source": "await reopened.locator('.detail-panel').getByRole('tab', { name: '本文', exact: true }).click();"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
               "line": 230,
+              "source": "expect(await firstPage.goto(url).then(() => false, () => true)).toBe(true);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 232,
+              "source": "} finally { await firstAcquisition.close(); }"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 234,
               "source": "} finally { await context.setOffline(false); }"
             }
           ],
           "assertion_source_lines": [
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 143,
+              "line": 145,
               "source": "await expect.poll(() => page.evaluate(() => Boolean(navigator.serviceWorker.controller))).toBe(true);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 145,
+              "line": 147,
               "source": "expect(cachesObserved.some(cache => cache.urls.some(url => /\\/assets\\/index-.*\\.js$/.test(url)))).toBe(true);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 149,
+              "line": 151,
               "source": "await expect.poll(() => page.evaluate(() => navigator.onLine)).toBe(false);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 155,
+              "line": 157,
               "source": "await expect(page.locator('.editor-save-state')).toContainText('端末内保存済み');"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 156,
+              "line": 158,
               "source": "await expect(page.locator('.topbar-status')).toContainText('端末内保存済み');"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 157,
+              "line": 159,
               "source": "await expect(page.locator('.topbar-status')).toContainText('OFFLINE');"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 160,
+              "line": 162,
               "source": "expect(beforeCloseScene.data.body).toHaveLength(1);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 162,
+              "line": 164,
               "source": "expect(editedBlockId).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 163,
+              "line": 165,
               "source": "expect(editedBlockId).not.toBe(scene.data.body[0].id);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 164,
+              "line": 166,
               "source": "expect(beforeCloseScene.data).toEqual({ ...scene.data, body: [{ ...scene.data.body[0], id: editedBlockId, text: changedBody }] });"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 165,
+              "line": 167,
               "source": "expect(beforeClose.project.entities.map(({ id, kind }) => ({ id, kind })).sort((a, b) => a.id.localeCompare(b.id)))"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 167,
+              "line": 169,
               "source": "expect(beforeClose.project.entities.find(entity => entity.id === attachment.id)?.data).toEqual(attachment.data);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 170,
+              "line": 172,
               "source": "expect(editOperation).toBeDefined();"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 176,
+              "line": 178,
               "source": "await expect(reopened.locator('.app-shell')).toBeVisible();"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 177,
+              "line": 179,
               "source": "await expect.poll(() => reopened.evaluate(() => navigator.onLine)).toBe(false);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 178,
+              "line": 180,
               "source": "expect(await authorFingerprint(reopened)).toBe(beforeCloseFingerprint);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 181,
-              "source": "await expect(reopened.locator('.detail-panel').getByRole('textbox', { name: '本文', exact: true })).toHaveValue(changedBody);"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
               "line": 183,
-              "source": "expect(saved.project.entities).toEqual(beforeClose.project.entities);"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 184,
-              "source": "expect(saved.project.history).toEqual(beforeClose.project.history);"
+              "source": "await expect(reopened.locator('.detail-panel').getByRole('textbox', { name: '本文', exact: true })).toHaveValue(changedBody);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
               "line": 185,
-              "source": "expect(saved.project.snapshots).toEqual(beforeClose.project.snapshots);"
+              "source": "expect(saved.project.entities).toEqual(beforeClose.project.entities);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
               "line": 186,
-              "source": "expect(saved.assets).toEqual(beforeClose.assets);"
+              "source": "expect(saved.project.history).toEqual(beforeClose.project.history);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
               "line": 187,
-              "source": "expect(saved.recovery?.pending).toEqual(beforeClose.recovery?.pending);"
+              "source": "expect(saved.project.snapshots).toEqual(beforeClose.project.snapshots);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
               "line": 188,
-              "source": "expect(saved.project.entities.find(entity => entity.id === scene.id)?.data).toEqual(beforeCloseScene.data);"
+              "source": "expect(saved.assets).toEqual(beforeClose.assets);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
               "line": 189,
-              "source": "expect(saved.assets[0].bytes).toEqual(preparedAsset.bytes);"
+              "source": "expect(saved.recovery?.pending).toEqual(beforeClose.recovery?.pending);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
               "line": 190,
+              "source": "expect(saved.project.entities.find(entity => entity.id === scene.id)?.data).toEqual(beforeCloseScene.data);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 191,
+              "source": "expect(saved.assets[0].bytes).toEqual(preparedAsset.bytes);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 192,
               "source": "expect(saved.recovery?.pending.length).toBeGreaterThan(0);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 197,
+              "line": 199,
               "source": "await expect(reopened.locator('.import-preview').getByRole('alert')).toContainText('未送信の変更');"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 198,
+              "line": 200,
               "source": "await expect(reopened.getByRole('button', { name: 'この内容で復元する', exact: true })).toBeDisabled();"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 209,
+              "line": 211,
               "source": "await expect(reopened.locator('.asset-preview').getByRole('status')).toContainText('この端末には素材bytesがありません');"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 210,
+              "line": 212,
               "source": "await expect(reopened.locator('.asset-preview').getByRole('button', { name: '素材を保存', exact: true })).toHaveCount(0);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 211,
+              "line": 213,
               "source": "await expect(reopened.locator('.asset-preview audio')).toHaveCount(0);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 212,
+              "line": 214,
               "source": "expect(await authorFingerprint(reopened)).toBe(authorBeforeMissing);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 218,
-              "source": "await expect(reopened.locator('.backup-panel').getByRole('alert')).toContainText(/添付|素材|bytes/);"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 219,
-              "source": "expect(missingDownloads).toBe(0);"
+              "line": 221,
+              "source": "await expect(missingExportIssue).toContainText(`${preparedAsset.assetPath}: 完全保存に必要な添付bytesが取得されていません。`);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
               "line": 222,
-              "source": "await expect(reopened.locator('.detail-panel').getByRole('textbox', { name: '本文', exact: true })).toHaveValue(changedBody);"
+              "source": "expect(missingDownloads).toBe(0);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 223,
+              "source": "expect(await authorFingerprint(reopened)).toBe(authorBeforeMissing);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
               "line": 226,
+              "source": "await expect(reopened.locator('.detail-panel').getByRole('textbox', { name: '本文', exact: true })).toHaveValue(changedBody);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 230,
               "source": "expect(await firstPage.goto(url).then(() => false, () => true)).toBe(true);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 227,
+              "line": 231,
               "source": "await expect(firstPage.locator('.app-shell')).toHaveCount(0);"
             }
           ],
@@ -5534,12 +5584,12 @@
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
               "title": "AT-N11 補助: 取得済みPWAの作品をbrowser offlineで編集し、閉じて再開し実保存ファイルと未送信・素材bytes不足を区別する",
-              "line": 130,
+              "line": 132,
               "parameter_values": {},
               "binding_status": "authored_working_tree_location; refresh at final proof freeze"
             }
           ],
-          "authored_file_sha256": "ca8cd7015cd1891e6cf72b8fe1149f8d7749d7213f089559dbd1de7d3524e2d4",
+          "authored_file_sha256": "3d46f9be9a1c08a199ee4c64bf5324b21e4ea2cef4473cb9e2e86022e2c5f9a3",
           "missing_conditions": [
             {
               "condition": "実機の機内モードで同じ編集・閉じる・再開・OS Files出力",
@@ -5555,348 +5605,358 @@
           "sources": [
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 130,
-              "end_line": 231,
-              "excerpt_sha256": "bd811a97e7d39f68846100f52ec3b065af9c5f581555b9b5afb5fcba3a346277",
+              "line": 132,
+              "end_line": 235,
+              "excerpt_sha256": "2d52a163cca3a3f6dfdff7e0625b2eb652965e75e586a842b5e1e01ff2257a16",
               "binding_status": "authored_not_run; exact whole test callback span; no individual clause execution inferred"
             }
           ],
           "normal_operation_source_lines": [
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 139,
+              "line": 141,
               "source": "await seed(page, bytes);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 142,
+              "line": 144,
               "source": "await page.reload();"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 148,
+              "line": 150,
               "source": "await context.setOffline(true);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 150,
+              "line": 152,
               "source": "await openEntity(page, 'scene', scene.name);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 151,
+              "line": 153,
               "source": "await page.locator('.detail-panel').getByRole('tab', { name: '本文', exact: true }).click();"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 153,
+              "line": 155,
               "source": "await page.locator('.detail-panel').getByRole('textbox', { name: '本文', exact: true }).fill(changedBody);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 154,
+              "line": 156,
               "source": "await page.locator('.editor-footer').getByRole('button', { name: '保存する', exact: true }).click();"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 158,
+              "line": 160,
               "source": "const beforeClose = await backup(page), beforeCloseScene = beforeClose.project.entities.find(entity => entity.id === scene.id);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 171,
+              "line": 173,
               "source": "const beforeCloseFingerprint = await authorFingerprint(page);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 173,
+              "line": 175,
               "source": "await page.close();"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 175,
+              "line": 177,
               "source": "await reopened.goto(url);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 178,
+              "line": 180,
               "source": "expect(await authorFingerprint(reopened)).toBe(beforeCloseFingerprint);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 179,
+              "line": 181,
               "source": "await openEntity(reopened, 'scene', scene.name);"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 180,
-              "source": "await reopened.locator('.detail-panel').getByRole('tab', { name: '本文', exact: true }).click();"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
               "line": 182,
-              "source": "const saved = await backup(reopened);"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 194,
-              "source": "await reopened.locator('input[type=file][accept*=\".scenario\"]').setInputFiles({ name: 'N11-complete.scenario', mimeType: 'application/zip', buffer: Buffer.from(saved.bytes) });"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 195,
-              "source": "await reopened.getByLabel('復元方法', { exact: true }).selectOption('replace');"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 196,
-              "source": "await reopened.getByRole('button', { name: '復元の影響を確認', exact: true }).click();"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 199,
-              "source": "await reopened.locator('.import-preview').getByRole('button', { name: '中止', exact: true }).click();"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 200,
-              "source": "const authorBeforeMissing = await authorFingerprint(reopened);"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 206,
-              "source": "finally { db.close(); }"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 208,
-              "source": "await openEntity(reopened, 'attachment', attachment.name);"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 212,
-              "source": "expect(await authorFingerprint(reopened)).toBe(authorBeforeMissing);"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 215,
-              "source": "await navigate(reopened, /^作品・保存/);"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 216,
-              "source": "await reopened.getByRole('tab', { name: '完全保存・復元', exact: true }).click();"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 217,
-              "source": "await reopened.getByRole('button', { name: '完全保存ファイルを作成', exact: true }).click();"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 220,
-              "source": "await openEntity(reopened, 'scene', scene.name);"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 221,
               "source": "await reopened.locator('.detail-panel').getByRole('tab', { name: '本文', exact: true }).click();"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 226,
-              "source": "expect(await firstPage.goto(url).then(() => false, () => true)).toBe(true);"
+              "line": 184,
+              "source": "const saved = await backup(reopened);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 228,
-              "source": "} finally { await firstAcquisition.close(); }"
+              "line": 196,
+              "source": "await reopened.locator('input[type=file][accept*=\".scenario\"]').setInputFiles({ name: 'N11-complete.scenario', mimeType: 'application/zip', buffer: Buffer.from(saved.bytes) });"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 197,
+              "source": "await reopened.getByLabel('復元方法', { exact: true }).selectOption('replace');"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 198,
+              "source": "await reopened.getByRole('button', { name: '復元の影響を確認', exact: true }).click();"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 201,
+              "source": "await reopened.locator('.import-preview').getByRole('button', { name: '中止', exact: true }).click();"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 202,
+              "source": "const authorBeforeMissing = await authorFingerprint(reopened);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 208,
+              "source": "finally { db.close(); }"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 210,
+              "source": "await openEntity(reopened, 'attachment', attachment.name);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 214,
+              "source": "expect(await authorFingerprint(reopened)).toBe(authorBeforeMissing);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 217,
+              "source": "await navigate(reopened, /^作品・保存/);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 218,
+              "source": "await reopened.getByRole('tab', { name: '完全保存・復元', exact: true }).click();"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 219,
+              "source": "await reopened.getByRole('button', { name: '完全保存ファイルを作成', exact: true }).click();"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 223,
+              "source": "expect(await authorFingerprint(reopened)).toBe(authorBeforeMissing);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 224,
+              "source": "await openEntity(reopened, 'scene', scene.name);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 225,
+              "source": "await reopened.locator('.detail-panel').getByRole('tab', { name: '本文', exact: true }).click();"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
               "line": 230,
+              "source": "expect(await firstPage.goto(url).then(() => false, () => true)).toBe(true);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 232,
+              "source": "} finally { await firstAcquisition.close(); }"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 234,
               "source": "} finally { await context.setOffline(false); }"
             }
           ],
           "assertion_source_lines": [
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 143,
+              "line": 145,
               "source": "await expect.poll(() => page.evaluate(() => Boolean(navigator.serviceWorker.controller))).toBe(true);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 145,
+              "line": 147,
               "source": "expect(cachesObserved.some(cache => cache.urls.some(url => /\\/assets\\/index-.*\\.js$/.test(url)))).toBe(true);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 149,
+              "line": 151,
               "source": "await expect.poll(() => page.evaluate(() => navigator.onLine)).toBe(false);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 155,
+              "line": 157,
               "source": "await expect(page.locator('.editor-save-state')).toContainText('端末内保存済み');"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 156,
+              "line": 158,
               "source": "await expect(page.locator('.topbar-status')).toContainText('端末内保存済み');"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 157,
+              "line": 159,
               "source": "await expect(page.locator('.topbar-status')).toContainText('OFFLINE');"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 160,
+              "line": 162,
               "source": "expect(beforeCloseScene.data.body).toHaveLength(1);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 162,
+              "line": 164,
               "source": "expect(editedBlockId).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 163,
+              "line": 165,
               "source": "expect(editedBlockId).not.toBe(scene.data.body[0].id);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 164,
+              "line": 166,
               "source": "expect(beforeCloseScene.data).toEqual({ ...scene.data, body: [{ ...scene.data.body[0], id: editedBlockId, text: changedBody }] });"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 165,
+              "line": 167,
               "source": "expect(beforeClose.project.entities.map(({ id, kind }) => ({ id, kind })).sort((a, b) => a.id.localeCompare(b.id)))"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 167,
+              "line": 169,
               "source": "expect(beforeClose.project.entities.find(entity => entity.id === attachment.id)?.data).toEqual(attachment.data);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 170,
+              "line": 172,
               "source": "expect(editOperation).toBeDefined();"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 176,
+              "line": 178,
               "source": "await expect(reopened.locator('.app-shell')).toBeVisible();"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 177,
+              "line": 179,
               "source": "await expect.poll(() => reopened.evaluate(() => navigator.onLine)).toBe(false);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 178,
+              "line": 180,
               "source": "expect(await authorFingerprint(reopened)).toBe(beforeCloseFingerprint);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 181,
-              "source": "await expect(reopened.locator('.detail-panel').getByRole('textbox', { name: '本文', exact: true })).toHaveValue(changedBody);"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
               "line": 183,
-              "source": "expect(saved.project.entities).toEqual(beforeClose.project.entities);"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 184,
-              "source": "expect(saved.project.history).toEqual(beforeClose.project.history);"
+              "source": "await expect(reopened.locator('.detail-panel').getByRole('textbox', { name: '本文', exact: true })).toHaveValue(changedBody);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
               "line": 185,
-              "source": "expect(saved.project.snapshots).toEqual(beforeClose.project.snapshots);"
+              "source": "expect(saved.project.entities).toEqual(beforeClose.project.entities);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
               "line": 186,
-              "source": "expect(saved.assets).toEqual(beforeClose.assets);"
+              "source": "expect(saved.project.history).toEqual(beforeClose.project.history);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
               "line": 187,
-              "source": "expect(saved.recovery?.pending).toEqual(beforeClose.recovery?.pending);"
+              "source": "expect(saved.project.snapshots).toEqual(beforeClose.project.snapshots);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
               "line": 188,
-              "source": "expect(saved.project.entities.find(entity => entity.id === scene.id)?.data).toEqual(beforeCloseScene.data);"
+              "source": "expect(saved.assets).toEqual(beforeClose.assets);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
               "line": 189,
-              "source": "expect(saved.assets[0].bytes).toEqual(preparedAsset.bytes);"
+              "source": "expect(saved.recovery?.pending).toEqual(beforeClose.recovery?.pending);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
               "line": 190,
+              "source": "expect(saved.project.entities.find(entity => entity.id === scene.id)?.data).toEqual(beforeCloseScene.data);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 191,
+              "source": "expect(saved.assets[0].bytes).toEqual(preparedAsset.bytes);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 192,
               "source": "expect(saved.recovery?.pending.length).toBeGreaterThan(0);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 197,
+              "line": 199,
               "source": "await expect(reopened.locator('.import-preview').getByRole('alert')).toContainText('未送信の変更');"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 198,
+              "line": 200,
               "source": "await expect(reopened.getByRole('button', { name: 'この内容で復元する', exact: true })).toBeDisabled();"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 209,
+              "line": 211,
               "source": "await expect(reopened.locator('.asset-preview').getByRole('status')).toContainText('この端末には素材bytesがありません');"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 210,
+              "line": 212,
               "source": "await expect(reopened.locator('.asset-preview').getByRole('button', { name: '素材を保存', exact: true })).toHaveCount(0);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 211,
+              "line": 213,
               "source": "await expect(reopened.locator('.asset-preview audio')).toHaveCount(0);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 212,
+              "line": 214,
               "source": "expect(await authorFingerprint(reopened)).toBe(authorBeforeMissing);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 218,
-              "source": "await expect(reopened.locator('.backup-panel').getByRole('alert')).toContainText(/添付|素材|bytes/);"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 219,
-              "source": "expect(missingDownloads).toBe(0);"
+              "line": 221,
+              "source": "await expect(missingExportIssue).toContainText(`${preparedAsset.assetPath}: 完全保存に必要な添付bytesが取得されていません。`);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
               "line": 222,
-              "source": "await expect(reopened.locator('.detail-panel').getByRole('textbox', { name: '本文', exact: true })).toHaveValue(changedBody);"
+              "source": "expect(missingDownloads).toBe(0);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 223,
+              "source": "expect(await authorFingerprint(reopened)).toBe(authorBeforeMissing);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
               "line": 226,
+              "source": "await expect(reopened.locator('.detail-panel').getByRole('textbox', { name: '本文', exact: true })).toHaveValue(changedBody);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
+              "line": 230,
               "source": "expect(await firstPage.goto(url).then(() => false, () => true)).toBe(true);"
             },
             {
               "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-              "line": 227,
+              "line": 231,
               "source": "await expect(firstPage.locator('.app-shell')).toHaveCount(0);"
             }
           ],
@@ -5925,10 +5985,10 @@
       ],
       "whole_test_source_entry": {
         "file": "tests/e2e/ap04-original-n-mobile-offline.spec.ts",
-        "line": 130,
-        "end_line": 231,
-        "excerpt_sha256": "bd811a97e7d39f68846100f52ec3b065af9c5f581555b9b5afb5fcba3a346277",
-        "source_excerpt": "test('AT-N11 補助: 取得済みPWAの作品をbrowser offlineで編集し、閉じて再開し実保存ファイルと未送信・素材bytes不足を区別する', async ({ page, context, browser }, info) => {\n  test.setTimeout(90_000);\n  const p = createProject('AT-N11 取得済み作品の継続');\n  const scene = createEntity(p.projectId, 'scene', 'オフラインで残す本文', { body: textToRichText('取得済みの本文😀は端末内に残る。') });\n  const preparedAsset = await prepareAsset(new Uint8Array(await readFile('tests/fixtures/media/fixture-tone.wav')), 'N11 取得済みの音.wav', 'audio/wav');\n  const { bytes: _assetBytes, preview: _assetPreview, ...assetMetadata } = preparedAsset;\n  const attachment = createEntity(p.projectId, 'attachment', 'N11 取得済みの音', assetMetadata);\n  p.entities.push(scene, attachment);\n  const bytes = await exportScenario(p, { loadAsset: async hash => hash === preparedAsset.contentHash ? preparedAsset.bytes : undefined });\n  await seed(page, bytes);\n  const url = page.url();\n  await page.evaluate(async () => { await navigator.serviceWorker.ready; });\n  await page.reload();\n  await expect.poll(() => page.evaluate(() => Boolean(navigator.serviceWorker.controller))).toBe(true);\n  const cachesObserved = await page.evaluate(async () => Promise.all((await caches.keys()).map(async key => ({ key, urls: (await (await caches.open(key)).keys()).map(request => request.url) }))));\n  expect(cachesObserved.some(cache => cache.urls.some(url => /\\/assets\\/index-.*\\.js$/.test(url)))).toBe(true);\n  await attachGiven(info, 'AT-N11', bytes, { cachedProductionWorker: true, cachesObserved, projectId: p.projectId, sceneId: scene.id, assetHash: preparedAsset.contentHash, networkCondition: 'Playwright browser offline', physicalAirplaneMode: 'blocked_external_condition', realUncachedRemoteAttachment: 'blocked_external_condition' });\n  try {\n    await context.setOffline(true);\n    await expect.poll(() => page.evaluate(() => navigator.onLine)).toBe(false);\n    await openEntity(page, 'scene', scene.name);\n    await page.locator('.detail-panel').getByRole('tab', { name: '本文', exact: true }).click();\n    const changedBody = '機内モードの補助試験で保存した本文😀。実機の機内モードとは区別する。';\n    await page.locator('.detail-panel').getByRole('textbox', { name: '本文', exact: true }).fill(changedBody);\n    await page.locator('.editor-footer').getByRole('button', { name: '保存する', exact: true }).click();\n    await expect(page.locator('.editor-save-state')).toContainText('端末内保存済み');\n    await expect(page.locator('.topbar-status')).toContainText('端末内保存済み');\n    await expect(page.locator('.topbar-status')).toContainText('OFFLINE');\n    const beforeClose = await backup(page), beforeCloseScene = beforeClose.project.entities.find(entity => entity.id === scene.id);\n    if (!beforeCloseScene || beforeCloseScene.kind !== 'scene') throw new Error('閉じる前に保存した本文がありません');\n    expect(beforeCloseScene.data.body).toHaveLength(1);\n    const editedBlockId = beforeCloseScene.data.body[0].id;\n    expect(editedBlockId).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);\n    expect(editedBlockId).not.toBe(scene.data.body[0].id);\n    expect(beforeCloseScene.data).toEqual({ ...scene.data, body: [{ ...scene.data.body[0], id: editedBlockId, text: changedBody }] });\n    expect(beforeClose.project.entities.map(({ id, kind }) => ({ id, kind })).sort((a, b) => a.id.localeCompare(b.id)))\n      .toEqual(p.entities.map(({ id, kind }) => ({ id, kind })).sort((a, b) => a.id.localeCompare(b.id)));\n    expect(beforeClose.project.entities.find(entity => entity.id === attachment.id)?.data).toEqual(attachment.data);\n    const editOperation = beforeClose.project.history.find(command => command.before.entities.some(entity => entity.id === scene.id && entity.kind === 'scene' && entity.data.body[0]?.id === scene.data.body[0].id)\n      && command.after.entities.some(entity => entity.id === scene.id && entity.kind === 'scene' && entity.data.body[0]?.id === editedBlockId && entity.data.body[0]?.text === changedBody));\n    expect(editOperation).toBeDefined();\n    const beforeCloseFingerprint = await authorFingerprint(page);\n    await info.attach('AT-N11-before-close.scenario', { body: Buffer.from(beforeClose.bytes), contentType: 'application/zip' });\n    await page.close();\n    const reopened = await context.newPage();\n    await reopened.goto(url);\n    await expect(reopened.locator('.app-shell')).toBeVisible();\n    await expect.poll(() => reopened.evaluate(() => navigator.onLine)).toBe(false);\n    expect(await authorFingerprint(reopened)).toBe(beforeCloseFingerprint);\n    await openEntity(reopened, 'scene', scene.name);\n    await reopened.locator('.detail-panel').getByRole('tab', { name: '本文', exact: true }).click();\n    await expect(reopened.locator('.detail-panel').getByRole('textbox', { name: '本文', exact: true })).toHaveValue(changedBody);\n    const saved = await backup(reopened);\n    expect(saved.project.entities).toEqual(beforeClose.project.entities);\n    expect(saved.project.history).toEqual(beforeClose.project.history);\n    expect(saved.project.snapshots).toEqual(beforeClose.project.snapshots);\n    expect(saved.assets).toEqual(beforeClose.assets);\n    expect(saved.recovery?.pending).toEqual(beforeClose.recovery?.pending);\n    expect(saved.project.entities.find(entity => entity.id === scene.id)?.data).toEqual(beforeCloseScene.data);\n    expect(saved.assets[0].bytes).toEqual(preparedAsset.bytes);\n    expect(saved.recovery?.pending.length).toBeGreaterThan(0);\n    await info.attach('AT-N11-offline-complete.scenario', { body: Buffer.from(saved.bytes), contentType: 'application/zip' });\n    // The normal replacement preview explicitly identifies unsent edits while\n    // the same app's topbar already identifies a completed local save.\n    await reopened.locator('input[type=file][accept*=\".scenario\"]').setInputFiles({ name: 'N11-complete.scenario', mimeType: 'application/zip', buffer: Buffer.from(saved.bytes) });\n    await reopened.getByLabel('復元方法', { exact: true }).selectOption('replace');\n    await reopened.getByRole('button', { name: '復元の影響を確認', exact: true }).click();\n    await expect(reopened.locator('.import-preview').getByRole('alert')).toContainText('未送信の変更');\n    await expect(reopened.getByRole('button', { name: 'この内容で復元する', exact: true })).toBeDisabled();\n    await reopened.locator('.import-preview').getByRole('button', { name: '中止', exact: true }).click();\n    const authorBeforeMissing = await authorFingerprint(reopened);\n    // Auxiliary native-cache loss fixture: remove actual stored bytes, leaving\n    // author metadata untouched. This is not a real uncached remote download.\n    await reopened.evaluate(async hash => {\n      const db = await new Promise<IDBDatabase>((resolve, reject) => { const request = indexedDB.open('scenario-manager-local-v1'); request.onsuccess = () => resolve(request.result); request.onerror = () => reject(request.error); });\n      try { await new Promise<void>((resolve, reject) => { const tx = db.transaction('assets', 'readwrite'); tx.objectStore('assets').delete(hash); tx.oncomplete = () => resolve(); tx.onabort = () => reject(tx.error); }); }\n      finally { db.close(); }\n    }, preparedAsset.contentHash);\n    await openEntity(reopened, 'attachment', attachment.name);\n    await expect(reopened.locator('.asset-preview').getByRole('status')).toContainText('この端末には素材bytesがありません');\n    await expect(reopened.locator('.asset-preview').getByRole('button', { name: '素材を保存', exact: true })).toHaveCount(0);\n    await expect(reopened.locator('.asset-preview audio')).toHaveCount(0);\n    expect(await authorFingerprint(reopened)).toBe(authorBeforeMissing);\n    let missingDownloads = 0;\n    reopened.on('download', () => { missingDownloads++; });\n    await navigate(reopened, /^作品・保存/);\n    await reopened.getByRole('tab', { name: '完全保存・復元', exact: true }).click();\n    await reopened.getByRole('button', { name: '完全保存ファイルを作成', exact: true }).click();\n    await expect(reopened.locator('.backup-panel').getByRole('alert')).toContainText(/添付|素材|bytes/);\n    expect(missingDownloads).toBe(0);\n    await openEntity(reopened, 'scene', scene.name);\n    await reopened.locator('.detail-panel').getByRole('tab', { name: '本文', exact: true }).click();\n    await expect(reopened.locator('.detail-panel').getByRole('textbox', { name: '本文', exact: true })).toHaveValue(changedBody);\n    const firstAcquisition = await browser.newContext({ offline: true });\n    try {\n      const firstPage = await firstAcquisition.newPage();\n      expect(await firstPage.goto(url).then(() => false, () => true)).toBe(true);\n      await expect(firstPage.locator('.app-shell')).toHaveCount(0);\n    } finally { await firstAcquisition.close(); }\n    await attachObservation(info, 'AT-N11-supporting-observation', { projectId: p.projectId, sceneId: scene.id, originalBodyBlockId: scene.data.body[0].id, bodyBlockId: editedBlockId, editOperationId: editOperation?.operationId, coldBody: changedBody, fullBeforeCloseEntities: beforeClose.project.entities, fullAfterReopenEntities: saved.project.entities, pendingOperations: saved.recovery?.pending.map(operation => operation.operationId), embeddedAssetBytesBeforeLoss: saved.assets[0].bytes.length, firstAcquisitionOfflineRejected: true, missingAssetNotPresentedAsAvailable: true, networkCondition: 'synthetic_browser_offline', materialCondition: 'synthetic_native_cache_loss', physicalAirplaneMode: 'blocked_external_condition', realUncachedRemoteAttachment: 'blocked_external_condition', fullOriginalAcceptanceResult: 'not_run' });\n  } finally { await context.setOffline(false); }\n});\n",
+        "line": 132,
+        "end_line": 235,
+        "excerpt_sha256": "2d52a163cca3a3f6dfdff7e0625b2eb652965e75e586a842b5e1e01ff2257a16",
+        "source_excerpt": "test('AT-N11 補助: 取得済みPWAの作品をbrowser offlineで編集し、閉じて再開し実保存ファイルと未送信・素材bytes不足を区別する', async ({ page, context, browser }, info) => {\n  test.setTimeout(90_000);\n  const p = createProject('AT-N11 取得済み作品の継続');\n  const scene = createEntity(p.projectId, 'scene', 'オフラインで残す本文', { body: textToRichText('取得済みの本文😀は端末内に残る。') });\n  const preparedAsset = await prepareAsset(new Uint8Array(await readFile('tests/fixtures/media/fixture-tone.wav')), 'N11 取得済みの音.wav', 'audio/wav');\n  const { bytes: _assetBytes, preview: _assetPreview, ...assetMetadata } = preparedAsset;\n  const attachment = createEntity(p.projectId, 'attachment', 'N11 取得済みの音', assetMetadata);\n  p.entities.push(scene, attachment);\n  const bytes = await exportScenario(p, { loadAsset: async hash => hash === preparedAsset.contentHash ? preparedAsset.bytes : undefined });\n  await seed(page, bytes);\n  const url = page.url();\n  await page.evaluate(async () => { await navigator.serviceWorker.ready; });\n  await page.reload();\n  await expect.poll(() => page.evaluate(() => Boolean(navigator.serviceWorker.controller))).toBe(true);\n  const cachesObserved = await page.evaluate(async () => Promise.all((await caches.keys()).map(async key => ({ key, urls: (await (await caches.open(key)).keys()).map(request => request.url) }))));\n  expect(cachesObserved.some(cache => cache.urls.some(url => /\\/assets\\/index-.*\\.js$/.test(url)))).toBe(true);\n  await attachGiven(info, 'AT-N11', bytes, { cachedProductionWorker: true, cachesObserved, projectId: p.projectId, sceneId: scene.id, assetHash: preparedAsset.contentHash, networkCondition: 'Playwright browser offline', physicalAirplaneMode: 'blocked_external_condition', realUncachedRemoteAttachment: 'blocked_external_condition' });\n  try {\n    await context.setOffline(true);\n    await expect.poll(() => page.evaluate(() => navigator.onLine)).toBe(false);\n    await openEntity(page, 'scene', scene.name);\n    await page.locator('.detail-panel').getByRole('tab', { name: '本文', exact: true }).click();\n    const changedBody = '機内モードの補助試験で保存した本文😀。実機の機内モードとは区別する。';\n    await page.locator('.detail-panel').getByRole('textbox', { name: '本文', exact: true }).fill(changedBody);\n    await page.locator('.editor-footer').getByRole('button', { name: '保存する', exact: true }).click();\n    await expect(page.locator('.editor-save-state')).toContainText('端末内保存済み');\n    await expect(page.locator('.topbar-status')).toContainText('端末内保存済み');\n    await expect(page.locator('.topbar-status')).toContainText('OFFLINE');\n    const beforeClose = await backup(page), beforeCloseScene = beforeClose.project.entities.find(entity => entity.id === scene.id);\n    if (!beforeCloseScene || beforeCloseScene.kind !== 'scene') throw new Error('閉じる前に保存した本文がありません');\n    expect(beforeCloseScene.data.body).toHaveLength(1);\n    const editedBlockId = beforeCloseScene.data.body[0].id;\n    expect(editedBlockId).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);\n    expect(editedBlockId).not.toBe(scene.data.body[0].id);\n    expect(beforeCloseScene.data).toEqual({ ...scene.data, body: [{ ...scene.data.body[0], id: editedBlockId, text: changedBody }] });\n    expect(beforeClose.project.entities.map(({ id, kind }) => ({ id, kind })).sort((a, b) => a.id.localeCompare(b.id)))\n      .toEqual(p.entities.map(({ id, kind }) => ({ id, kind })).sort((a, b) => a.id.localeCompare(b.id)));\n    expect(beforeClose.project.entities.find(entity => entity.id === attachment.id)?.data).toEqual(attachment.data);\n    const editOperation = beforeClose.project.history.find(command => command.before.entities.some(entity => entity.id === scene.id && entity.kind === 'scene' && entity.data.body[0]?.id === scene.data.body[0].id)\n      && command.after.entities.some(entity => entity.id === scene.id && entity.kind === 'scene' && entity.data.body[0]?.id === editedBlockId && entity.data.body[0]?.text === changedBody));\n    expect(editOperation).toBeDefined();\n    const beforeCloseFingerprint = await authorFingerprint(page);\n    await info.attach('AT-N11-before-close.scenario', { body: Buffer.from(beforeClose.bytes), contentType: 'application/zip' });\n    await page.close();\n    const reopened = await context.newPage();\n    await reopened.goto(url);\n    await expect(reopened.locator('.app-shell')).toBeVisible();\n    await expect.poll(() => reopened.evaluate(() => navigator.onLine)).toBe(false);\n    expect(await authorFingerprint(reopened)).toBe(beforeCloseFingerprint);\n    await openEntity(reopened, 'scene', scene.name);\n    await reopened.locator('.detail-panel').getByRole('tab', { name: '本文', exact: true }).click();\n    await expect(reopened.locator('.detail-panel').getByRole('textbox', { name: '本文', exact: true })).toHaveValue(changedBody);\n    const saved = await backup(reopened);\n    expect(saved.project.entities).toEqual(beforeClose.project.entities);\n    expect(saved.project.history).toEqual(beforeClose.project.history);\n    expect(saved.project.snapshots).toEqual(beforeClose.project.snapshots);\n    expect(saved.assets).toEqual(beforeClose.assets);\n    expect(saved.recovery?.pending).toEqual(beforeClose.recovery?.pending);\n    expect(saved.project.entities.find(entity => entity.id === scene.id)?.data).toEqual(beforeCloseScene.data);\n    expect(saved.assets[0].bytes).toEqual(preparedAsset.bytes);\n    expect(saved.recovery?.pending.length).toBeGreaterThan(0);\n    await info.attach('AT-N11-offline-complete.scenario', { body: Buffer.from(saved.bytes), contentType: 'application/zip' });\n    // The normal replacement preview explicitly identifies unsent edits while\n    // the same app's topbar already identifies a completed local save.\n    await reopened.locator('input[type=file][accept*=\".scenario\"]').setInputFiles({ name: 'N11-complete.scenario', mimeType: 'application/zip', buffer: Buffer.from(saved.bytes) });\n    await reopened.getByLabel('復元方法', { exact: true }).selectOption('replace');\n    await reopened.getByRole('button', { name: '復元の影響を確認', exact: true }).click();\n    await expect(reopened.locator('.import-preview').getByRole('alert')).toContainText('未送信の変更');\n    await expect(reopened.getByRole('button', { name: 'この内容で復元する', exact: true })).toBeDisabled();\n    await reopened.locator('.import-preview').getByRole('button', { name: '中止', exact: true }).click();\n    const authorBeforeMissing = await authorFingerprint(reopened);\n    // Auxiliary native-cache loss fixture: remove actual stored bytes, leaving\n    // author metadata untouched. This is not a real uncached remote download.\n    await reopened.evaluate(async hash => {\n      const db = await new Promise<IDBDatabase>((resolve, reject) => { const request = indexedDB.open('scenario-manager-local-v1'); request.onsuccess = () => resolve(request.result); request.onerror = () => reject(request.error); });\n      try { await new Promise<void>((resolve, reject) => { const tx = db.transaction('assets', 'readwrite'); tx.objectStore('assets').delete(hash); tx.oncomplete = () => resolve(); tx.onabort = () => reject(tx.error); }); }\n      finally { db.close(); }\n    }, preparedAsset.contentHash);\n    await openEntity(reopened, 'attachment', attachment.name);\n    await expect(reopened.locator('.asset-preview').getByRole('status')).toContainText('この端末には素材bytesがありません');\n    await expect(reopened.locator('.asset-preview').getByRole('button', { name: '素材を保存', exact: true })).toHaveCount(0);\n    await expect(reopened.locator('.asset-preview audio')).toHaveCount(0);\n    expect(await authorFingerprint(reopened)).toBe(authorBeforeMissing);\n    let missingDownloads = 0;\n    reopened.on('download', () => { missingDownloads++; });\n    await navigate(reopened, /^作品・保存/);\n    await reopened.getByRole('tab', { name: '完全保存・復元', exact: true }).click();\n    await reopened.getByRole('button', { name: '完全保存ファイルを作成', exact: true }).click();\n    const missingExportIssue = reopened.locator('.backup-page').getByRole('alert');\n    await expect(missingExportIssue).toContainText(`${preparedAsset.assetPath}: 完全保存に必要な添付bytesが取得されていません。`);\n    expect(missingDownloads).toBe(0);\n    expect(await authorFingerprint(reopened)).toBe(authorBeforeMissing);\n    await openEntity(reopened, 'scene', scene.name);\n    await reopened.locator('.detail-panel').getByRole('tab', { name: '本文', exact: true }).click();\n    await expect(reopened.locator('.detail-panel').getByRole('textbox', { name: '本文', exact: true })).toHaveValue(changedBody);\n    const firstAcquisition = await browser.newContext({ offline: true });\n    try {\n      const firstPage = await firstAcquisition.newPage();\n      expect(await firstPage.goto(url).then(() => false, () => true)).toBe(true);\n      await expect(firstPage.locator('.app-shell')).toHaveCount(0);\n    } finally { await firstAcquisition.close(); }\n    await attachObservation(info, 'AT-N11-supporting-observation', { projectId: p.projectId, sceneId: scene.id, originalBodyBlockId: scene.data.body[0].id, bodyBlockId: editedBlockId, editOperationId: editOperation?.operationId, coldBody: changedBody, fullBeforeCloseEntities: beforeClose.project.entities, fullAfterReopenEntities: saved.project.entities, pendingOperations: saved.recovery?.pending.map(operation => operation.operationId), embeddedAssetBytesBeforeLoss: saved.assets[0].bytes.length, firstAcquisitionOfflineRejected: true, missingAssetNotPresentedAsAvailable: true, networkCondition: 'synthetic_browser_offline', materialCondition: 'synthetic_native_cache_loss', physicalAirplaneMode: 'blocked_external_condition', realUncachedRemoteAttachment: 'blocked_external_condition', fullOriginalAcceptanceResult: 'not_run' });\n  } finally { await context.setOffline(false); }\n});\n",
         "binding_status": "authored_not_run; exact whole test callback span; no individual clause execution inferred"
       },
       "source_mapping_scope": "The original four literal clauses share this ordinary-UI callback. Source spans and operation/assert rows bind authored source only; no clause-specific observation or isolated step is inferred."
@@ -20517,7 +20577,7 @@
     "tests/e2e/ap04-original-n-f14-trigger.spec.ts": "d0cc69cc57c671d9ad006d3e27f1e54d152af9d47c8472129b18c6e0742f8644",
     "tests/e2e/ap04-original-n-f16-20.spec.ts": "57f915446494f7f39b8de1579be3d5f39e523fcf617b6780a42198e8a60fe792",
     "tests/e2e/ap04-original-n-failure-retry.spec.ts": "9a1d29b77392e58f6fce7a65c6997cf55440de71514cc65331f1bc1074dae76f",
-    "tests/e2e/ap04-original-n-mobile-offline.spec.ts": "ca8cd7015cd1891e6cf72b8fe1149f8d7749d7213f089559dbd1de7d3524e2d4",
+    "tests/e2e/ap04-original-n-mobile-offline.spec.ts": "3d46f9be9a1c08a199ee4c64bf5324b21e4ea2cef4473cb9e2e86022e2c5f9a3",
     "tests/e2e/ap04-original-n-random-replay.spec.ts": "5c6138ffa58b8582dc2e02100cf3581c30209e52680a9c7865589feb132b6da6",
     "tests/e2e/ap04-original-n-safety-recovery.spec.ts": "1e23c9f8b0ff56949dda0b86687d19d13162d23f462a545d8aee66fa8ff42586",
     "tests/runtimeChangeOrigins.test.ts": "550d9e4d1c7e514ed777883331c224b55cacd61a317a8880580330779eceeca4"

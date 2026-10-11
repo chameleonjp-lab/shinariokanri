@@ -211,8 +211,10 @@ export function assessPresentationClaims(project: ProjectData, occurrences: Narr
           return { assertion, value: assertion.status === 'confirmed' ? value.value : value.value === 'false' ? 'false' as const : 'unknown' as const };
         }).filter(item => item.value !== 'false');
         const normalized = (value: Entity<'assertion'>['data']['value']) => typeof value === 'string' ? { type: 'ref', value } : value;
-        const known = state.assertions.filter(value => value.holderId === line.data.speakerId && applicable.some(item => item.assertion.id === value.assertionId && claim && canonicalJson(normalized(item.assertion.data.value)) === canonicalJson(normalized(claim.data.value))));
-        const acquired = known.some(value => value.truth === 'true'), unknown = uncertain || !claim || !line.data.speakerId || applicable.some(item => item.value === 'unknown') || known.some(value => value.truth === 'unknown');
+        // Author proposals remain visible as counterparts without becoming acquired knowledge.
+        const knowledgeApplicable = applicable.filter(item => item.assertion.id === claimId || item.assertion.data.truthKind !== 'hypothesis' || item.assertion.status === 'confirmed');
+        const known = state.assertions.filter(value => value.holderId === line.data.speakerId && knowledgeApplicable.some(item => item.assertion.id === value.assertionId && claim && canonicalJson(normalized(item.assertion.data.value)) === canonicalJson(normalized(claim.data.value))));
+        const acquired = known.some(value => value.truth === 'true'), unknown = uncertain || !claim || !line.data.speakerId || knowledgeApplicable.some(item => item.value === 'unknown') || known.some(value => value.truth === 'unknown');
         const intent = line.data.assertionIntent ?? 'statement', intentional = intent !== 'statement' && !!line.data.assertionReason?.trim();
         const evidenceIds = [...new Set(applicable.flatMap(item => [item.assertion.id, ...(item.assertion.data.sourceIds ?? []), ...(item.assertion.data.evidenceLocation ? [item.assertion.data.evidenceLocation.entityId] : [])]))];
         assessments.push({ lineId: id, assertionId: claimId, occurrenceIndex: index, positionId: occurrence.target.nodeId ?? occurrence.target.sceneId!, speakerId: line.data.speakerId ?? undefined,

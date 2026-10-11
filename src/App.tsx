@@ -35,6 +35,7 @@ import { recordAlternativeApplication } from './domain/writingWorkspace';
 import { sealAuthorAlternative } from './domain/authorAlternativeIntegrity';
 import { Reader } from './ui/Reader';
 import { BackupPanel, ExportPanel, ProjectInfo, HistoryPanel } from './ui/WorkPage';
+import { acknowledgeImportedVersions } from './ui/BackupPanel';
 import { dataOf, labelOf } from './ui/Fields';
 
 type Page = 'timeline' | 'structure' | 'materials' | 'search' | 'work';
@@ -99,6 +100,12 @@ export default function App() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
+  useEffect(() => {
+    const prefix = `${scenarioStore.accountId ?? 'guest'}:`;
+    const confirmations = acknowledgeImportedVersions(projects, prefix);
+    const selected = confirmations.find(confirmation => confirmation.projectId === activeId && confirmation.sourceScope !== `${prefix}${confirmation.projectId}`);
+    if (selected) setNotice(selected.notice);
+  }, [projects, activeId, scenarioStore.accountId]);
   useWorkspaceDraftPersistence(scenarioStore,{drafts,jsonBuffers,settingsDrafts,alternativeDrafts},setError,workspaceReady);
   const [theme, setTheme] = useState(readPreference('scenario-theme', 'system'));
   const [online, setOnline] = useState(navigator.onLine);

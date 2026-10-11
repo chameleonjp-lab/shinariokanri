@@ -3621,7 +3621,7 @@
         "negative_or_edge": "同義語・反対語は同じ状態の値として表現する候補を示す。型違い、許容値外、未定義の使用は拒否または未確認とする。"
       },
       "source": "tests/e2e/ap04-original-e-f37-42-state.spec.ts",
-      "source_sha256": "f4d5abbb7f90ef291720f310b07aaef313ffb16e0c63c75ba72da74a26662b3d",
+      "source_sha256": "091a87664be2d067471b4b605745e36e9cc07332fdad083c0f9c5c42f05cbd85",
       "clauses": [
         {
           "name": "given",
@@ -3975,7 +3975,7 @@
         "negative_or_edge": "算出状態への直接代入と循環式を拒否する。周回初期化と全リセットを別コマンドとし、持ち越し対象を一覧化する。"
       },
       "source": "tests/e2e/ap04-original-e-f37-42-state.spec.ts",
-      "source_sha256": "f4d5abbb7f90ef291720f310b07aaef313ffb16e0c63c75ba72da74a26662b3d",
+      "source_sha256": "091a87664be2d067471b4b605745e36e9cc07332fdad083c0f9c5c42f05cbd85",
       "clauses": [
         {
           "name": "given",
@@ -4256,7 +4256,7 @@
         "negative_or_edge": "値の参照元と書込元を安定IDで追う。未使用状態は削除候補だけを示し、外部で使う宣言がある値を誤削除しない。"
       },
       "source": "tests/e2e/ap04-original-e-f37-42-state.spec.ts",
-      "source_sha256": "f4d5abbb7f90ef291720f310b07aaef313ffb16e0c63c75ba72da74a26662b3d",
+      "source_sha256": "091a87664be2d067471b4b605745e36e9cc07332fdad083c0f9c5c42f05cbd85",
       "clauses": [
         {
           "name": "given",
@@ -4618,7 +4618,7 @@
         "negative_or_edge": "括弧・優先順・不成立時処理を明示する。未知を偽にしない三値評価を行い、任意のコードを条件として実行しない。"
       },
       "source": "tests/e2e/ap04-original-e-f37-42-state.spec.ts",
-      "source_sha256": "f4d5abbb7f90ef291720f310b07aaef313ffb16e0c63c75ba72da74a26662b3d",
+      "source_sha256": "091a87664be2d067471b4b605745e36e9cc07332fdad083c0f9c5c42f05cbd85",
       "clauses": [
         {
           "name": "given",
@@ -4657,9 +4657,9 @@
               "file": "tests/e2e/ap04-original-e-f37-42-state.spec.ts",
               "line": 125,
               "end_line": 145,
-              "excerpt_sha256": "6a5cbde2bf630da24531fbf1e78f42d9ec6d63232ef65206d5aed783723a4a58",
-              "source_excerpt": "  await clause('AT-F40', 'when', async () => {\n    await openEntity(page, 'flow_edge', edge.name); edge.data.condition = c; await editData(page, edge.data);\n    await start(page, entry.id);\n    const choice = page.locator('.reader-choice').filter({ has: page.getByText(edge.name, { exact: true }) }), state = page.locator('.runtime-variable').filter({ hasText: key.name });\n    await expect(choice).toBeEnabled(); await expect(choice).toHaveClass('reader-choice choice-true'); await expect(state).toContainText('true');\n    evaluations.push({ result: 'true', keyId: key.id, edgeId: edge.id, entryId: entry.id, stateText: await state.innerText(), choiceText: await choice.innerText(), choiceClass: await choice.getAttribute('class') });\n    await stub(page, key.name, 'boolean', 'false'); await expect(choice).toBeDisabled(); await expect(choice).toHaveClass('reader-choice choice-false'); await expect(choice).toContainText('条件を満たしていません'); await expect(state).toContainText('false');\n    evaluations.push({ result: 'false', keyId: key.id, edgeId: edge.id, entryId: entry.id, stateText: await state.innerText(), choiceText: await choice.innerText(), choiceClass: await choice.getAttribute('class') });\n    const beforeRejectedUnknown = await state.innerText();\n    await stub(page, key.name, 'unknown', '鍵の取得は未設定');\n    const rejectedUnknown = page.locator('.reader-issue').filter({ hasText: '未定の値はこの操作で使えません。' });\n    await expect(rejectedUnknown.locator('code')).toHaveText('CONDITION_UNKNOWN'); await expect(rejectedUnknown).toContainText('未定の値はこの操作で使えません。'); await expect(state).toHaveText(beforeRejectedUnknown); await expect(choice).toHaveClass('reader-choice choice-false');\n    rejectedUnknownStubObservation = { code: await rejectedUnknown.locator('code').innerText(), issueText: await rejectedUnknown.innerText(), stateBefore: beforeRejectedUnknown, stateAfter: await state.innerText(), choiceClass: await choice.getAttribute('class') };\n    // Unknown assignment is rejected. Re-evaluate the same declarations from an\n    // explicitly authored unknown initial state, rather than assuming it applied.\n    await openEntity(page, 'variable', key.name); await editData(page, unknownKeyData); await start(page, entry.id);\n    await expect(choice).toBeDisabled(); await expect(choice).toHaveClass('reader-choice choice-unknown'); await expect(choice).toContainText('未確認'); await expect(state).toContainText('鍵の取得は未設定');\n    evaluations.push({ result: 'unknown', keyId: key.id, edgeId: edge.id, entryId: entry.id, stateText: await state.innerText(), choiceText: await choice.innerText(), choiceClass: await choice.getAttribute('class') });\n    await openEntity(page, 'flow_edge', autoB.name); await rejectData(page, { ...autoB.data, priority: autoA.data.priority }, /優先順位が重複/); await editData(page, autoB.data);\n    await start(page, blocked.id); await expect(page.locator('.reader-trial-heading')).toContainText('進行不可');\n  });\n",
-              "snippet": "{\n    await openEntity(page, 'flow_edge', edge.name); edge.data.condition = c; await editData(page, edge.data);\n    await start(page, entry.id);\n    const choice = page.locator('.reader-choice').filter({ has: page.getByText(edge.name, { exact: true }) }), state = page.locator('.runtime-variable').filter({ hasText: key.name });\n    await expect(choice).toBeEnabled(); await expect(choice).toHaveClass('reader-choice choice-true'); await expect(state).toContainText('true');\n    evaluations.push({ result: 'true', keyId: key.id, edgeId: edge.id, entryId: entry.id, stateText: await state.innerText(), choiceText: await choice.innerText(), choiceClass: await choice.getAttribute('class') });\n    await stub(page, key.name, 'boolean', 'false'); await expect(choice).toBeDisabled(); await expect(choice).toHaveClass('reader-choice choice-false'); await expect(choice).toContainText('条件を満たしていません'); await expect(state).toContainText('false');\n    evaluations.push({ result: 'false', keyId: key.id, edgeId: edge.id, entryId: entry.id, stateText: await state.innerText(), choiceText: await choice.innerText(), choiceClass: await choice.getAttribute('class') });\n    const beforeRejectedUnknown = await state.innerText();\n    await stub(page, key.name, 'unknown', '鍵の取得は未設定');\n    const rejectedUnknown = page.locator('.reader-issue').filter({ hasText: '未定の値はこの操作で使えません。' });\n    await expect(rejectedUnknown.locator('code')).toHaveText('CONDITION_UNKNOWN'); await expect(rejectedUnknown).toContainText('未定の値はこの操作で使えません。'); await expect(state).toHaveText(beforeRejectedUnknown); await expect(choice).toHaveClass('reader-choice choice-false');\n    rejectedUnknownStubObservation = { code: await rejectedUnknown.locator('code').innerText(), issueText: await rejectedUnknown.innerText(), stateBefore: beforeRejectedUnknown, stateAfter: await state.innerText(), choiceClass: await choice.getAttribute('class') };\n    // Unknown assignment is rejected. Re-evaluate the same declarations from an\n    // explicitly authored unknown initial state, rather than assuming it applied.\n    await openEntity(page, 'variable', key.name); await editData(page, unknownKeyData); await start(page, entry.id);\n    await expect(choice).toBeDisabled(); await expect(choice).toHaveClass('reader-choice choice-unknown'); await expect(choice).toContainText('未確認'); await expect(state).toContainText('鍵の取得は未設定');\n    evaluations.push({ result: 'unknown', keyId: key.id, edgeId: edge.id, entryId: entry.id, stateText: await state.innerText(), choiceText: await choice.innerText(), choiceClass: await choice.getAttribute('class') });\n    await openEntity(page, 'flow_edge', autoB.name); await rejectData(page, { ...autoB.data, priority: autoA.data.priority }, /優先順位が重複/); await editData(page, autoB.data);\n    await start(page, blocked.id); await expect(page.locator('.reader-trial-heading')).toContainText('進行不可');\n  }"
+              "excerpt_sha256": "b3ef83edc9faea7ad23de38a1988a17657c6306ed446bc177a245edc19e1e69b",
+              "source_excerpt": "  await clause('AT-F40', 'when', async () => {\n    await openEntity(page, 'flow_edge', edge.name); edge.data.condition = c; await editData(page, edge.data);\n    await start(page, entry.id);\n    const choice = page.locator('.reader-choice').filter({ has: page.getByText(edge.name, { exact: true }) }), state = page.locator('.runtime-variable').filter({ hasText: key.name });\n    await expect(choice).toBeEnabled(); await expect(choice).toHaveClass('reader-choice choice-true'); await expect(state).toContainText('true');\n    evaluations.push({ result: 'true', keyId: key.id, edgeId: edge.id, entryId: entry.id, stateText: await state.innerText(), choiceText: await choice.innerText(), choiceClass: await choice.getAttribute('class') });\n    await stub(page, key.name, 'boolean', 'false'); await expect(choice).toBeDisabled(); await expect(choice).toHaveClass('reader-choice choice-false'); await expect(choice).toContainText('条件を満たしていません'); await expect(state).toContainText('false');\n    evaluations.push({ result: 'false', keyId: key.id, edgeId: edge.id, entryId: entry.id, stateText: await state.innerText(), choiceText: await choice.innerText(), choiceClass: await choice.getAttribute('class') });\n    const beforeRejectedUnknown = await state.innerText();\n    await stub(page, key.name, 'unknown', '鍵の取得は未設定');\n    const rejectedUnknown = page.locator('.reader-issue').filter({ hasText: '未定の値はこの操作で使えません。' });\n    await expect(rejectedUnknown.locator('code')).toHaveText('CONDITION_UNKNOWN'); await expect(rejectedUnknown).toContainText('未定の値はこの操作で使えません。'); await expect.poll(() => state.innerText()).toBe(beforeRejectedUnknown); await expect(choice).toHaveClass('reader-choice choice-false');\n    rejectedUnknownStubObservation = { code: await rejectedUnknown.locator('code').innerText(), issueText: await rejectedUnknown.innerText(), stateBefore: beforeRejectedUnknown, stateAfter: await state.innerText(), choiceClass: await choice.getAttribute('class') };\n    // Unknown assignment is rejected. Re-evaluate the same declarations from an\n    // explicitly authored unknown initial state, rather than assuming it applied.\n    await openEntity(page, 'variable', key.name); await editData(page, unknownKeyData); await start(page, entry.id);\n    await expect(choice).toBeDisabled(); await expect(choice).toHaveClass('reader-choice choice-unknown'); await expect(choice).toContainText('未確認'); await expect(state).toContainText('鍵の取得は未設定');\n    evaluations.push({ result: 'unknown', keyId: key.id, edgeId: edge.id, entryId: entry.id, stateText: await state.innerText(), choiceText: await choice.innerText(), choiceClass: await choice.getAttribute('class') });\n    await openEntity(page, 'flow_edge', autoB.name); await rejectData(page, { ...autoB.data, priority: autoA.data.priority }, /優先順位が重複/); await editData(page, autoB.data);\n    await start(page, blocked.id); await expect(page.locator('.reader-trial-heading')).toContainText('進行不可');\n  });\n",
+              "snippet": "{\n    await openEntity(page, 'flow_edge', edge.name); edge.data.condition = c; await editData(page, edge.data);\n    await start(page, entry.id);\n    const choice = page.locator('.reader-choice').filter({ has: page.getByText(edge.name, { exact: true }) }), state = page.locator('.runtime-variable').filter({ hasText: key.name });\n    await expect(choice).toBeEnabled(); await expect(choice).toHaveClass('reader-choice choice-true'); await expect(state).toContainText('true');\n    evaluations.push({ result: 'true', keyId: key.id, edgeId: edge.id, entryId: entry.id, stateText: await state.innerText(), choiceText: await choice.innerText(), choiceClass: await choice.getAttribute('class') });\n    await stub(page, key.name, 'boolean', 'false'); await expect(choice).toBeDisabled(); await expect(choice).toHaveClass('reader-choice choice-false'); await expect(choice).toContainText('条件を満たしていません'); await expect(state).toContainText('false');\n    evaluations.push({ result: 'false', keyId: key.id, edgeId: edge.id, entryId: entry.id, stateText: await state.innerText(), choiceText: await choice.innerText(), choiceClass: await choice.getAttribute('class') });\n    const beforeRejectedUnknown = await state.innerText();\n    await stub(page, key.name, 'unknown', '鍵の取得は未設定');\n    const rejectedUnknown = page.locator('.reader-issue').filter({ hasText: '未定の値はこの操作で使えません。' });\n    await expect(rejectedUnknown.locator('code')).toHaveText('CONDITION_UNKNOWN'); await expect(rejectedUnknown).toContainText('未定の値はこの操作で使えません。'); await expect.poll(() => state.innerText()).toBe(beforeRejectedUnknown); await expect(choice).toHaveClass('reader-choice choice-false');\n    rejectedUnknownStubObservation = { code: await rejectedUnknown.locator('code').innerText(), issueText: await rejectedUnknown.innerText(), stateBefore: beforeRejectedUnknown, stateAfter: await state.innerText(), choiceClass: await choice.getAttribute('class') };\n    // Unknown assignment is rejected. Re-evaluate the same declarations from an\n    // explicitly authored unknown initial state, rather than assuming it applied.\n    await openEntity(page, 'variable', key.name); await editData(page, unknownKeyData); await start(page, entry.id);\n    await expect(choice).toBeDisabled(); await expect(choice).toHaveClass('reader-choice choice-unknown'); await expect(choice).toContainText('未確認'); await expect(state).toContainText('鍵の取得は未設定');\n    evaluations.push({ result: 'unknown', keyId: key.id, edgeId: edge.id, entryId: entry.id, stateText: await state.innerText(), choiceText: await choice.innerText(), choiceClass: await choice.getAttribute('class') });\n    await openEntity(page, 'flow_edge', autoB.name); await rejectData(page, { ...autoB.data, priority: autoA.data.priority }, /優先順位が重複/); await editData(page, autoB.data);\n    await start(page, blocked.id); await expect(page.locator('.reader-trial-heading')).toContainText('進行不可');\n  }"
             }
           ],
           "assertion_refs": [
@@ -4723,32 +4723,32 @@
               "file": "tests/e2e/ap04-original-e-f37-42-state.spec.ts",
               "line": 136,
               "end_line": 136,
-              "excerpt_sha256": "21581490650281975df2c5bf8e954e81edab5180ae2872ac9b7857e16081e712",
-              "source_excerpt": "    await expect(rejectedUnknown.locator('code')).toHaveText('CONDITION_UNKNOWN'); await expect(rejectedUnknown).toContainText('未定の値はこの操作で使えません。'); await expect(state).toHaveText(beforeRejectedUnknown); await expect(choice).toHaveClass('reader-choice choice-false');\n",
+              "excerpt_sha256": "b2f132def0e45128f5f35107c4b0cab8ecf7485d16c8792f06aa193830ee7d97",
+              "source_excerpt": "    await expect(rejectedUnknown.locator('code')).toHaveText('CONDITION_UNKNOWN'); await expect(rejectedUnknown).toContainText('未定の値はこの操作で使えません。'); await expect.poll(() => state.innerText()).toBe(beforeRejectedUnknown); await expect(choice).toHaveClass('reader-choice choice-false');\n",
               "snippet": "expect(rejectedUnknown.locator('code')).toHaveText('CONDITION_UNKNOWN')"
             },
             {
               "file": "tests/e2e/ap04-original-e-f37-42-state.spec.ts",
               "line": 136,
               "end_line": 136,
-              "excerpt_sha256": "21581490650281975df2c5bf8e954e81edab5180ae2872ac9b7857e16081e712",
-              "source_excerpt": "    await expect(rejectedUnknown.locator('code')).toHaveText('CONDITION_UNKNOWN'); await expect(rejectedUnknown).toContainText('未定の値はこの操作で使えません。'); await expect(state).toHaveText(beforeRejectedUnknown); await expect(choice).toHaveClass('reader-choice choice-false');\n",
+              "excerpt_sha256": "b2f132def0e45128f5f35107c4b0cab8ecf7485d16c8792f06aa193830ee7d97",
+              "source_excerpt": "    await expect(rejectedUnknown.locator('code')).toHaveText('CONDITION_UNKNOWN'); await expect(rejectedUnknown).toContainText('未定の値はこの操作で使えません。'); await expect.poll(() => state.innerText()).toBe(beforeRejectedUnknown); await expect(choice).toHaveClass('reader-choice choice-false');\n",
               "snippet": "expect(rejectedUnknown).toContainText('未定の値はこの操作で使えません。')"
             },
             {
               "file": "tests/e2e/ap04-original-e-f37-42-state.spec.ts",
               "line": 136,
               "end_line": 136,
-              "excerpt_sha256": "21581490650281975df2c5bf8e954e81edab5180ae2872ac9b7857e16081e712",
-              "source_excerpt": "    await expect(rejectedUnknown.locator('code')).toHaveText('CONDITION_UNKNOWN'); await expect(rejectedUnknown).toContainText('未定の値はこの操作で使えません。'); await expect(state).toHaveText(beforeRejectedUnknown); await expect(choice).toHaveClass('reader-choice choice-false');\n",
-              "snippet": "expect(state).toHaveText(beforeRejectedUnknown)"
+              "excerpt_sha256": "b2f132def0e45128f5f35107c4b0cab8ecf7485d16c8792f06aa193830ee7d97",
+              "source_excerpt": "    await expect(rejectedUnknown.locator('code')).toHaveText('CONDITION_UNKNOWN'); await expect(rejectedUnknown).toContainText('未定の値はこの操作で使えません。'); await expect.poll(() => state.innerText()).toBe(beforeRejectedUnknown); await expect(choice).toHaveClass('reader-choice choice-false');\n",
+              "snippet": "expect.poll(() => state.innerText()).toBe(beforeRejectedUnknown)"
             },
             {
               "file": "tests/e2e/ap04-original-e-f37-42-state.spec.ts",
               "line": 136,
               "end_line": 136,
-              "excerpt_sha256": "21581490650281975df2c5bf8e954e81edab5180ae2872ac9b7857e16081e712",
-              "source_excerpt": "    await expect(rejectedUnknown.locator('code')).toHaveText('CONDITION_UNKNOWN'); await expect(rejectedUnknown).toContainText('未定の値はこの操作で使えません。'); await expect(state).toHaveText(beforeRejectedUnknown); await expect(choice).toHaveClass('reader-choice choice-false');\n",
+              "excerpt_sha256": "b2f132def0e45128f5f35107c4b0cab8ecf7485d16c8792f06aa193830ee7d97",
+              "source_excerpt": "    await expect(rejectedUnknown.locator('code')).toHaveText('CONDITION_UNKNOWN'); await expect(rejectedUnknown).toContainText('未定の値はこの操作で使えません。'); await expect.poll(() => state.innerText()).toBe(beforeRejectedUnknown); await expect(choice).toHaveClass('reader-choice choice-false');\n",
               "snippet": "expect(choice).toHaveClass('reader-choice choice-false')"
             },
             {
@@ -5108,7 +5108,7 @@
         "negative_or_edge": "禁止遷移は一連の効果を原子的に拒否する。例外は理由・対象経路・期限付きで明示し、以前の状態を記録する。"
       },
       "source": "tests/e2e/ap04-original-e-f37-42-state.spec.ts",
-      "source_sha256": "f4d5abbb7f90ef291720f310b07aaef313ffb16e0c63c75ba72da74a26662b3d",
+      "source_sha256": "091a87664be2d067471b4b605745e36e9cc07332fdad083c0f9c5c42f05cbd85",
       "clauses": [
         {
           "name": "given",
@@ -5414,7 +5414,7 @@
         "negative_or_edge": "外部値の管理元・型・欠損時の扱いを固定する。仮の外部応答とゲーム実機の確認結果は別証跡とする。"
       },
       "source": "tests/e2e/ap04-original-e-f37-42-state.spec.ts",
-      "source_sha256": "f4d5abbb7f90ef291720f310b07aaef313ffb16e0c63c75ba72da74a26662b3d",
+      "source_sha256": "091a87664be2d067471b4b605745e36e9cc07332fdad083c0f9c5c42f05cbd85",
       "clauses": [
         {
           "name": "given",
@@ -7370,18 +7370,18 @@
         "negative_or_edge": "表記・口調の期間と例外を保持する。指摘は置換候補であり、本文や翻訳を自動修正しない。"
       },
       "source": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-      "source_sha256": "334bb8589ce4a6fb46baff3db86b266646c40994e0e4ebdf5811efe4e8f17f87",
+      "source_sha256": "60d2c5e27223bc9b41028a83c289f2efd6e2fea959ecc38b850809cfbdac6dfb",
       "clauses": [
         {
           "name": "given",
           "original": "時期で一人称が変わる人物と表記ゆれ用語、意図した例外",
-          "callback_line": 18,
+          "callback_line": 19,
           "result": "not_run",
           "source_entry_refs": [
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 18,
-              "end_line": 18,
+              "line": 19,
+              "end_line": 19,
               "excerpt_sha256": "3a22657cb5cefa8342cfca9a6475055ee5aa42712e72a7a07764890ddb202380",
               "source_excerpt": "  await clause('AT-F48', 'given', async () => { await given(page, info, 'AT-F48', p); });\n",
               "snippet": "{ await given(page, info, 'AT-F48', p); }"
@@ -7391,8 +7391,8 @@
           "normal_operation_refs": [
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 18,
-              "end_line": 18,
+              "line": 19,
+              "end_line": 19,
               "excerpt_sha256": "3a22657cb5cefa8342cfca9a6475055ee5aa42712e72a7a07764890ddb202380",
               "source_excerpt": "  await clause('AT-F48', 'given', async () => { await given(page, info, 'AT-F48', p); });\n",
               "snippet": "given(page, info, 'AT-F48', p)"
@@ -7402,13 +7402,13 @@
         {
           "name": "when",
           "original": "時期前後の台詞と字幕/翻訳へ候補検査を行い、本文が無断置換されないか確認する",
-          "callback_line": 20,
+          "callback_line": 21,
           "result": "not_run",
           "source_entry_refs": [
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 20,
-              "end_line": 30,
+              "line": 21,
+              "end_line": 31,
               "excerpt_sha256": "f8770c9c77a14d99df151e6aac2dbc8868f428903fbf0c93f11c1e5a6bf12be1",
               "source_excerpt": "  await clause('AT-F48', 'when', async () => {\n    for (const [entry, tick] of [[earlyEntry, '9'], [lateEntry, '10']] as const) {\n      await start(page, entry.id); await page.getByLabel('試読時点の世界内tick', { exact: true }).fill(tick); await page.getByRole('button', { name: 'この状態から開始し直す', exact: true }).click(); await page.getByRole('button', { name: `${entry.name}から終える`, exact: true }).click(); await record(page);\n      const saved = (await backup(page)).project, last = saved.entities.filter((row): row is Entity<'trace'> => row.kind === 'trace').at(-1)!;\n      if (tick === '9') earlyTraceId = last.id; else lateTraceId = last.id;\n    }\n    await production(page); const review = page.locator('.production-review'), before = await authorFingerprint(page);\n    await review.getByLabel('検査する経路の対象版', { exact: true }).selectOption(earlyTraceId); await review.getByLabel('検査時点の世界内tick', { exact: true }).fill('9'); await review.getByRole('button', { name: '口調・用語の候補を検査', exact: true }).click();\n    await expect(review).toContainText('一人称「僕」'); await expect(review).not.toContainText('一人称「私」'); await expect(review).toContainText(`作者が宣言した例外: ${exception.reason}`); expect(await authorFingerprint(page)).toBe(before);\n    await review.getByLabel('検査する経路の対象版', { exact: true }).selectOption(lateTraceId); await review.getByLabel('検査時点の世界内tick', { exact: true }).fill('10'); await review.getByRole('button', { name: '口調・用語の候補を検査', exact: true }).click();\n  });\n",
               "snippet": "{\n    for (const [entry, tick] of [[earlyEntry, '9'], [lateEntry, '10']] as const) {\n      await start(page, entry.id); await page.getByLabel('試読時点の世界内tick', { exact: true }).fill(tick); await page.getByRole('button', { name: 'この状態から開始し直す', exact: true }).click(); await page.getByRole('button', { name: `${entry.name}から終える`, exact: true }).click(); await record(page);\n      const saved = (await backup(page)).project, last = saved.entities.filter((row): row is Entity<'trace'> => row.kind === 'trace').at(-1)!;\n      if (tick === '9') earlyTraceId = last.id; else lateTraceId = last.id;\n    }\n    await production(page); const review = page.locator('.production-review'), before = await authorFingerprint(page);\n    await review.getByLabel('検査する経路の対象版', { exact: true }).selectOption(earlyTraceId); await review.getByLabel('検査時点の世界内tick', { exact: true }).fill('9'); await review.getByRole('button', { name: '口調・用語の候補を検査', exact: true }).click();\n    await expect(review).toContainText('一人称「僕」'); await expect(review).not.toContainText('一人称「私」'); await expect(review).toContainText(`作者が宣言した例外: ${exception.reason}`); expect(await authorFingerprint(page)).toBe(before);\n    await review.getByLabel('検査する経路の対象版', { exact: true }).selectOption(lateTraceId); await review.getByLabel('検査時点の世界内tick', { exact: true }).fill('10'); await review.getByRole('button', { name: '口調・用語の候補を検査', exact: true }).click();\n  }"
@@ -7417,32 +7417,32 @@
           "assertion_refs": [
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 28,
-              "end_line": 28,
+              "line": 29,
+              "end_line": 29,
               "excerpt_sha256": "54ab704e2ce81073dd0af102a86752f47ca3a2cce5412843ec689d4d659143e8",
               "source_excerpt": "    await expect(review).toContainText('一人称「僕」'); await expect(review).not.toContainText('一人称「私」'); await expect(review).toContainText(`作者が宣言した例外: ${exception.reason}`); expect(await authorFingerprint(page)).toBe(before);\n",
               "snippet": "expect(review).toContainText('一人称「僕」')"
             },
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 28,
-              "end_line": 28,
+              "line": 29,
+              "end_line": 29,
               "excerpt_sha256": "54ab704e2ce81073dd0af102a86752f47ca3a2cce5412843ec689d4d659143e8",
               "source_excerpt": "    await expect(review).toContainText('一人称「僕」'); await expect(review).not.toContainText('一人称「私」'); await expect(review).toContainText(`作者が宣言した例外: ${exception.reason}`); expect(await authorFingerprint(page)).toBe(before);\n",
               "snippet": "expect(review).not.toContainText('一人称「私」')"
             },
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 28,
-              "end_line": 28,
+              "line": 29,
+              "end_line": 29,
               "excerpt_sha256": "54ab704e2ce81073dd0af102a86752f47ca3a2cce5412843ec689d4d659143e8",
               "source_excerpt": "    await expect(review).toContainText('一人称「僕」'); await expect(review).not.toContainText('一人称「私」'); await expect(review).toContainText(`作者が宣言した例外: ${exception.reason}`); expect(await authorFingerprint(page)).toBe(before);\n",
               "snippet": "expect(review).toContainText(`作者が宣言した例外: ${exception.reason}`)"
             },
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 28,
-              "end_line": 28,
+              "line": 29,
+              "end_line": 29,
               "excerpt_sha256": "54ab704e2ce81073dd0af102a86752f47ca3a2cce5412843ec689d4d659143e8",
               "source_excerpt": "    await expect(review).toContainText('一人称「僕」'); await expect(review).not.toContainText('一人称「私」'); await expect(review).toContainText(`作者が宣言した例外: ${exception.reason}`); expect(await authorFingerprint(page)).toBe(before);\n",
               "snippet": "expect(await authorFingerprint(page)).toBe(before)"
@@ -7451,112 +7451,112 @@
           "normal_operation_refs": [
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 22,
-              "end_line": 22,
+              "line": 23,
+              "end_line": 23,
               "excerpt_sha256": "1ddec762b3ab8ba971a468eb1debf3faded71be4a1bc4fbaced191046f58fa50",
               "source_excerpt": "      await start(page, entry.id); await page.getByLabel('試読時点の世界内tick', { exact: true }).fill(tick); await page.getByRole('button', { name: 'この状態から開始し直す', exact: true }).click(); await page.getByRole('button', { name: `${entry.name}から終える`, exact: true }).click(); await record(page);\n",
               "snippet": "start(page, entry.id)"
             },
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 22,
-              "end_line": 22,
+              "line": 23,
+              "end_line": 23,
               "excerpt_sha256": "1ddec762b3ab8ba971a468eb1debf3faded71be4a1bc4fbaced191046f58fa50",
               "source_excerpt": "      await start(page, entry.id); await page.getByLabel('試読時点の世界内tick', { exact: true }).fill(tick); await page.getByRole('button', { name: 'この状態から開始し直す', exact: true }).click(); await page.getByRole('button', { name: `${entry.name}から終える`, exact: true }).click(); await record(page);\n",
               "snippet": "page.getByLabel('試読時点の世界内tick', { exact: true }).fill(tick)"
             },
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 22,
-              "end_line": 22,
+              "line": 23,
+              "end_line": 23,
               "excerpt_sha256": "1ddec762b3ab8ba971a468eb1debf3faded71be4a1bc4fbaced191046f58fa50",
               "source_excerpt": "      await start(page, entry.id); await page.getByLabel('試読時点の世界内tick', { exact: true }).fill(tick); await page.getByRole('button', { name: 'この状態から開始し直す', exact: true }).click(); await page.getByRole('button', { name: `${entry.name}から終える`, exact: true }).click(); await record(page);\n",
               "snippet": "page.getByRole('button', { name: 'この状態から開始し直す', exact: true }).click()"
             },
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 22,
-              "end_line": 22,
+              "line": 23,
+              "end_line": 23,
               "excerpt_sha256": "1ddec762b3ab8ba971a468eb1debf3faded71be4a1bc4fbaced191046f58fa50",
               "source_excerpt": "      await start(page, entry.id); await page.getByLabel('試読時点の世界内tick', { exact: true }).fill(tick); await page.getByRole('button', { name: 'この状態から開始し直す', exact: true }).click(); await page.getByRole('button', { name: `${entry.name}から終える`, exact: true }).click(); await record(page);\n",
               "snippet": "page.getByRole('button', { name: `${entry.name}から終える`, exact: true }).click()"
             },
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 23,
-              "end_line": 23,
+              "line": 24,
+              "end_line": 24,
               "excerpt_sha256": "2625771917864503d48882ad93fe1fadeb68238b300f988e8c402ea655ec6cfb",
               "source_excerpt": "      const saved = (await backup(page)).project, last = saved.entities.filter((row): row is Entity<'trace'> => row.kind === 'trace').at(-1)!;\n",
               "snippet": "backup(page)"
             },
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 26,
-              "end_line": 26,
+              "line": 27,
+              "end_line": 27,
               "excerpt_sha256": "664dc2493962be61e198890d363684842b3c1a1d0f7f3aa265e0a3b2e4a29f47",
               "source_excerpt": "    await production(page); const review = page.locator('.production-review'), before = await authorFingerprint(page);\n",
               "snippet": "production(page)"
             },
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 26,
-              "end_line": 26,
+              "line": 27,
+              "end_line": 27,
               "excerpt_sha256": "664dc2493962be61e198890d363684842b3c1a1d0f7f3aa265e0a3b2e4a29f47",
               "source_excerpt": "    await production(page); const review = page.locator('.production-review'), before = await authorFingerprint(page);\n",
               "snippet": "authorFingerprint(page)"
             },
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 27,
-              "end_line": 27,
+              "line": 28,
+              "end_line": 28,
               "excerpt_sha256": "e1100c44cffc3e58c9673b7dfd98f3ad9128133bd3c94946c40ca08ffb26248c",
               "source_excerpt": "    await review.getByLabel('検査する経路の対象版', { exact: true }).selectOption(earlyTraceId); await review.getByLabel('検査時点の世界内tick', { exact: true }).fill('9'); await review.getByRole('button', { name: '口調・用語の候補を検査', exact: true }).click();\n",
               "snippet": "review.getByLabel('検査する経路の対象版', { exact: true }).selectOption(earlyTraceId)"
             },
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 27,
-              "end_line": 27,
+              "line": 28,
+              "end_line": 28,
               "excerpt_sha256": "e1100c44cffc3e58c9673b7dfd98f3ad9128133bd3c94946c40ca08ffb26248c",
               "source_excerpt": "    await review.getByLabel('検査する経路の対象版', { exact: true }).selectOption(earlyTraceId); await review.getByLabel('検査時点の世界内tick', { exact: true }).fill('9'); await review.getByRole('button', { name: '口調・用語の候補を検査', exact: true }).click();\n",
               "snippet": "review.getByLabel('検査時点の世界内tick', { exact: true }).fill('9')"
             },
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 27,
-              "end_line": 27,
+              "line": 28,
+              "end_line": 28,
               "excerpt_sha256": "e1100c44cffc3e58c9673b7dfd98f3ad9128133bd3c94946c40ca08ffb26248c",
               "source_excerpt": "    await review.getByLabel('検査する経路の対象版', { exact: true }).selectOption(earlyTraceId); await review.getByLabel('検査時点の世界内tick', { exact: true }).fill('9'); await review.getByRole('button', { name: '口調・用語の候補を検査', exact: true }).click();\n",
               "snippet": "review.getByRole('button', { name: '口調・用語の候補を検査', exact: true }).click()"
             },
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 28,
-              "end_line": 28,
+              "line": 29,
+              "end_line": 29,
               "excerpt_sha256": "54ab704e2ce81073dd0af102a86752f47ca3a2cce5412843ec689d4d659143e8",
               "source_excerpt": "    await expect(review).toContainText('一人称「僕」'); await expect(review).not.toContainText('一人称「私」'); await expect(review).toContainText(`作者が宣言した例外: ${exception.reason}`); expect(await authorFingerprint(page)).toBe(before);\n",
               "snippet": "authorFingerprint(page)"
             },
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 29,
-              "end_line": 29,
+              "line": 30,
+              "end_line": 30,
               "excerpt_sha256": "8f386ec4b42b730ea25fe1471cd14abb760a4db0fb03e8ba0fe0e3023cd50657",
               "source_excerpt": "    await review.getByLabel('検査する経路の対象版', { exact: true }).selectOption(lateTraceId); await review.getByLabel('検査時点の世界内tick', { exact: true }).fill('10'); await review.getByRole('button', { name: '口調・用語の候補を検査', exact: true }).click();\n",
               "snippet": "review.getByLabel('検査する経路の対象版', { exact: true }).selectOption(lateTraceId)"
             },
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 29,
-              "end_line": 29,
+              "line": 30,
+              "end_line": 30,
               "excerpt_sha256": "8f386ec4b42b730ea25fe1471cd14abb760a4db0fb03e8ba0fe0e3023cd50657",
               "source_excerpt": "    await review.getByLabel('検査する経路の対象版', { exact: true }).selectOption(lateTraceId); await review.getByLabel('検査時点の世界内tick', { exact: true }).fill('10'); await review.getByRole('button', { name: '口調・用語の候補を検査', exact: true }).click();\n",
               "snippet": "review.getByLabel('検査時点の世界内tick', { exact: true }).fill('10')"
             },
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 29,
-              "end_line": 29,
+              "line": 30,
+              "end_line": 30,
               "excerpt_sha256": "8f386ec4b42b730ea25fe1471cd14abb760a4db0fb03e8ba0fe0e3023cd50657",
               "source_excerpt": "    await review.getByLabel('検査する経路の対象版', { exact: true }).selectOption(lateTraceId); await review.getByLabel('検査時点の世界内tick', { exact: true }).fill('10'); await review.getByRole('button', { name: '口調・用語の候補を検査', exact: true }).click();\n",
               "snippet": "review.getByRole('button', { name: '口調・用語の候補を検査', exact: true }).click()"
@@ -7566,13 +7566,13 @@
         {
           "name": "then",
           "original": "人物が成長して口調を変える場合は時期を指定する。指摘は候補として示し、本文を勝手に置換しない。",
-          "callback_line": 31,
+          "callback_line": 32,
           "result": "not_run",
           "source_entry_refs": [
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 31,
-              "end_line": 36,
+              "line": 32,
+              "end_line": 37,
               "excerpt_sha256": "23ca08213c06e646968031d60c50eacce9369cc6979c18fce777515d094e7548",
               "source_excerpt": "  await clause('AT-F48', 'then', async () => {\n    const review = page.locator('.production-review'); await expect(review).toContainText('一人称「私」'); await expect(review).not.toContainText('一人称「僕」'); await expect(review).toContainText('表記候補「赤き扉」・標準「赤い扉」'); await expect(review).not.toContainText(`作者が宣言した例外: ${exception.reason}`);\n    const candidateTargets: string[] = []; const buttons = review.getByRole('button', { name: '対象の本文位置を開く', exact: true });\n    for (let index = 0; index < await buttons.count(); index++) { await buttons.nth(index).click(); const fixed = page.getByRole('dialog', { name: '固定版の参照先', exact: true }); await expect(fixed).toBeVisible(); candidateTargets.push(await fixed.getByRole('region', { name: '固定版の参照先', exact: true }).getByRole('heading', { level: 2 }).innerText()); await fixed.getByRole('button', { name: '閉じる', exact: true }).click(); await expect(fixed).toBeHidden(); }\n    for (const row of [early, late, translation, subtitle]) expect(candidateTargets).toContain(row.name);\n  });\n",
               "snippet": "{\n    const review = page.locator('.production-review'); await expect(review).toContainText('一人称「私」'); await expect(review).not.toContainText('一人称「僕」'); await expect(review).toContainText('表記候補「赤き扉」・標準「赤い扉」'); await expect(review).not.toContainText(`作者が宣言した例外: ${exception.reason}`);\n    const candidateTargets: string[] = []; const buttons = review.getByRole('button', { name: '対象の本文位置を開く', exact: true });\n    for (let index = 0; index < await buttons.count(); index++) { await buttons.nth(index).click(); const fixed = page.getByRole('dialog', { name: '固定版の参照先', exact: true }); await expect(fixed).toBeVisible(); candidateTargets.push(await fixed.getByRole('region', { name: '固定版の参照先', exact: true }).getByRole('heading', { level: 2 }).innerText()); await fixed.getByRole('button', { name: '閉じる', exact: true }).click(); await expect(fixed).toBeHidden(); }\n    for (const row of [early, late, translation, subtitle]) expect(candidateTargets).toContain(row.name);\n  }"
@@ -7581,56 +7581,56 @@
           "assertion_refs": [
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 32,
-              "end_line": 32,
+              "line": 33,
+              "end_line": 33,
               "excerpt_sha256": "dfeb322b9b5ac577775db2f6a52cceface8f8f0827b6c1d2d94a1294d0ee2665",
               "source_excerpt": "    const review = page.locator('.production-review'); await expect(review).toContainText('一人称「私」'); await expect(review).not.toContainText('一人称「僕」'); await expect(review).toContainText('表記候補「赤き扉」・標準「赤い扉」'); await expect(review).not.toContainText(`作者が宣言した例外: ${exception.reason}`);\n",
               "snippet": "expect(review).toContainText('一人称「私」')"
             },
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 32,
-              "end_line": 32,
+              "line": 33,
+              "end_line": 33,
               "excerpt_sha256": "dfeb322b9b5ac577775db2f6a52cceface8f8f0827b6c1d2d94a1294d0ee2665",
               "source_excerpt": "    const review = page.locator('.production-review'); await expect(review).toContainText('一人称「私」'); await expect(review).not.toContainText('一人称「僕」'); await expect(review).toContainText('表記候補「赤き扉」・標準「赤い扉」'); await expect(review).not.toContainText(`作者が宣言した例外: ${exception.reason}`);\n",
               "snippet": "expect(review).not.toContainText('一人称「僕」')"
             },
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 32,
-              "end_line": 32,
+              "line": 33,
+              "end_line": 33,
               "excerpt_sha256": "dfeb322b9b5ac577775db2f6a52cceface8f8f0827b6c1d2d94a1294d0ee2665",
               "source_excerpt": "    const review = page.locator('.production-review'); await expect(review).toContainText('一人称「私」'); await expect(review).not.toContainText('一人称「僕」'); await expect(review).toContainText('表記候補「赤き扉」・標準「赤い扉」'); await expect(review).not.toContainText(`作者が宣言した例外: ${exception.reason}`);\n",
               "snippet": "expect(review).toContainText('表記候補「赤き扉」・標準「赤い扉」')"
             },
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 32,
-              "end_line": 32,
+              "line": 33,
+              "end_line": 33,
               "excerpt_sha256": "dfeb322b9b5ac577775db2f6a52cceface8f8f0827b6c1d2d94a1294d0ee2665",
               "source_excerpt": "    const review = page.locator('.production-review'); await expect(review).toContainText('一人称「私」'); await expect(review).not.toContainText('一人称「僕」'); await expect(review).toContainText('表記候補「赤き扉」・標準「赤い扉」'); await expect(review).not.toContainText(`作者が宣言した例外: ${exception.reason}`);\n",
               "snippet": "expect(review).not.toContainText(`作者が宣言した例外: ${exception.reason}`)"
             },
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 34,
-              "end_line": 34,
+              "line": 35,
+              "end_line": 35,
               "excerpt_sha256": "cf629173031f471cbe360c0747caea24720fcafb40c8b675324eef024fc08850",
               "source_excerpt": "    for (let index = 0; index < await buttons.count(); index++) { await buttons.nth(index).click(); const fixed = page.getByRole('dialog', { name: '固定版の参照先', exact: true }); await expect(fixed).toBeVisible(); candidateTargets.push(await fixed.getByRole('region', { name: '固定版の参照先', exact: true }).getByRole('heading', { level: 2 }).innerText()); await fixed.getByRole('button', { name: '閉じる', exact: true }).click(); await expect(fixed).toBeHidden(); }\n",
               "snippet": "expect(fixed).toBeVisible()"
             },
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 34,
-              "end_line": 34,
+              "line": 35,
+              "end_line": 35,
               "excerpt_sha256": "cf629173031f471cbe360c0747caea24720fcafb40c8b675324eef024fc08850",
               "source_excerpt": "    for (let index = 0; index < await buttons.count(); index++) { await buttons.nth(index).click(); const fixed = page.getByRole('dialog', { name: '固定版の参照先', exact: true }); await expect(fixed).toBeVisible(); candidateTargets.push(await fixed.getByRole('region', { name: '固定版の参照先', exact: true }).getByRole('heading', { level: 2 }).innerText()); await fixed.getByRole('button', { name: '閉じる', exact: true }).click(); await expect(fixed).toBeHidden(); }\n",
               "snippet": "expect(fixed).toBeHidden()"
             },
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 35,
-              "end_line": 35,
+              "line": 36,
+              "end_line": 36,
               "excerpt_sha256": "3875edee6046b98076fc4be033f221029af6e7334c717d4c0f921f1122b77e66",
               "source_excerpt": "    for (const row of [early, late, translation, subtitle]) expect(candidateTargets).toContain(row.name);\n",
               "snippet": "expect(candidateTargets).toContain(row.name)"
@@ -7639,16 +7639,16 @@
           "normal_operation_refs": [
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 34,
-              "end_line": 34,
+              "line": 35,
+              "end_line": 35,
               "excerpt_sha256": "cf629173031f471cbe360c0747caea24720fcafb40c8b675324eef024fc08850",
               "source_excerpt": "    for (let index = 0; index < await buttons.count(); index++) { await buttons.nth(index).click(); const fixed = page.getByRole('dialog', { name: '固定版の参照先', exact: true }); await expect(fixed).toBeVisible(); candidateTargets.push(await fixed.getByRole('region', { name: '固定版の参照先', exact: true }).getByRole('heading', { level: 2 }).innerText()); await fixed.getByRole('button', { name: '閉じる', exact: true }).click(); await expect(fixed).toBeHidden(); }\n",
               "snippet": "buttons.nth(index).click()"
             },
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 34,
-              "end_line": 34,
+              "line": 35,
+              "end_line": 35,
               "excerpt_sha256": "cf629173031f471cbe360c0747caea24720fcafb40c8b675324eef024fc08850",
               "source_excerpt": "    for (let index = 0; index < await buttons.count(); index++) { await buttons.nth(index).click(); const fixed = page.getByRole('dialog', { name: '固定版の参照先', exact: true }); await expect(fixed).toBeVisible(); candidateTargets.push(await fixed.getByRole('region', { name: '固定版の参照先', exact: true }).getByRole('heading', { level: 2 }).innerText()); await fixed.getByRole('button', { name: '閉じる', exact: true }).click(); await expect(fixed).toBeHidden(); }\n",
               "snippet": "fixed.getByRole('button', { name: '閉じる', exact: true }).click()"
@@ -7658,13 +7658,13 @@
         {
           "name": "negative_or_edge",
           "original": "表記・口調の期間と例外を保持する。指摘は置換候補であり、本文や翻訳を自動修正しない。",
-          "callback_line": 37,
+          "callback_line": 38,
           "result": "not_run",
           "source_entry_refs": [
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 37,
-              "end_line": 42,
+              "line": 38,
+              "end_line": 43,
               "excerpt_sha256": "50906e2d4467738ac3d4c182e02f16fab24f232a67816467c8ad8d49b6904396",
               "source_excerpt": "  await clause('AT-F48', 'negative_or_edge', async () => {\n    await page.reload(); const saved = (await backup(page)).project;\n    for (const row of [early, late, translation, subtitle]) expect(saved.entities.find(entity => entity.id === row.id)?.data).toEqual(row.data);\n    expect(findEntity(saved, beforeRule.id, 'voice_rule').data.validity).toEqual(beforeRule.data.validity); expect(findEntity(saved, afterRule.id, 'voice_rule').data.validity).toEqual(afterRule.data.validity); expect(findEntity(saved, term.id, 'terminology').data.exceptions).toEqual([exception]);\n    await attachObservation(info, 'AT-F48-observed', { inspectedTicks: ['9', '10'], onePersonBefore: '僕', onePersonAfter: '私', intentionalException: exception, inspectedTextIds: [early.id, late.id, translation.id, subtitle.id], autoReplacedTextIds: [] });\n  });\n",
               "snippet": "{\n    await page.reload(); const saved = (await backup(page)).project;\n    for (const row of [early, late, translation, subtitle]) expect(saved.entities.find(entity => entity.id === row.id)?.data).toEqual(row.data);\n    expect(findEntity(saved, beforeRule.id, 'voice_rule').data.validity).toEqual(beforeRule.data.validity); expect(findEntity(saved, afterRule.id, 'voice_rule').data.validity).toEqual(afterRule.data.validity); expect(findEntity(saved, term.id, 'terminology').data.exceptions).toEqual([exception]);\n    await attachObservation(info, 'AT-F48-observed', { inspectedTicks: ['9', '10'], onePersonBefore: '僕', onePersonAfter: '私', intentionalException: exception, inspectedTextIds: [early.id, late.id, translation.id, subtitle.id], autoReplacedTextIds: [] });\n  }"
@@ -7673,32 +7673,32 @@
           "assertion_refs": [
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 39,
-              "end_line": 39,
+              "line": 40,
+              "end_line": 40,
               "excerpt_sha256": "63f49c94870860ef88d1f63972d590cde77363be49cd60ca26ce0f514879f872",
               "source_excerpt": "    for (const row of [early, late, translation, subtitle]) expect(saved.entities.find(entity => entity.id === row.id)?.data).toEqual(row.data);\n",
               "snippet": "expect(saved.entities.find(entity => entity.id === row.id)?.data).toEqual(row.data)"
             },
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 40,
-              "end_line": 40,
+              "line": 41,
+              "end_line": 41,
               "excerpt_sha256": "1ecfd9b5a141ec91c7bf72f3fde5848b888fb09749360065c9040950e910e1e9",
               "source_excerpt": "    expect(findEntity(saved, beforeRule.id, 'voice_rule').data.validity).toEqual(beforeRule.data.validity); expect(findEntity(saved, afterRule.id, 'voice_rule').data.validity).toEqual(afterRule.data.validity); expect(findEntity(saved, term.id, 'terminology').data.exceptions).toEqual([exception]);\n",
               "snippet": "expect(findEntity(saved, beforeRule.id, 'voice_rule').data.validity).toEqual(beforeRule.data.validity)"
             },
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 40,
-              "end_line": 40,
+              "line": 41,
+              "end_line": 41,
               "excerpt_sha256": "1ecfd9b5a141ec91c7bf72f3fde5848b888fb09749360065c9040950e910e1e9",
               "source_excerpt": "    expect(findEntity(saved, beforeRule.id, 'voice_rule').data.validity).toEqual(beforeRule.data.validity); expect(findEntity(saved, afterRule.id, 'voice_rule').data.validity).toEqual(afterRule.data.validity); expect(findEntity(saved, term.id, 'terminology').data.exceptions).toEqual([exception]);\n",
               "snippet": "expect(findEntity(saved, afterRule.id, 'voice_rule').data.validity).toEqual(afterRule.data.validity)"
             },
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 40,
-              "end_line": 40,
+              "line": 41,
+              "end_line": 41,
               "excerpt_sha256": "1ecfd9b5a141ec91c7bf72f3fde5848b888fb09749360065c9040950e910e1e9",
               "source_excerpt": "    expect(findEntity(saved, beforeRule.id, 'voice_rule').data.validity).toEqual(beforeRule.data.validity); expect(findEntity(saved, afterRule.id, 'voice_rule').data.validity).toEqual(afterRule.data.validity); expect(findEntity(saved, term.id, 'terminology').data.exceptions).toEqual([exception]);\n",
               "snippet": "expect(findEntity(saved, term.id, 'terminology').data.exceptions).toEqual([exception])"
@@ -7707,16 +7707,16 @@
           "normal_operation_refs": [
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 38,
-              "end_line": 38,
+              "line": 39,
+              "end_line": 39,
               "excerpt_sha256": "98152b2fc86b41f54a7035f58aff5aa4a8a38d5e4b7e079467c5e5929be30d2e",
               "source_excerpt": "    await page.reload(); const saved = (await backup(page)).project;\n",
               "snippet": "page.reload()"
             },
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 38,
-              "end_line": 38,
+              "line": 39,
+              "end_line": 39,
               "excerpt_sha256": "98152b2fc86b41f54a7035f58aff5aa4a8a38d5e4b7e079467c5e5929be30d2e",
               "source_excerpt": "    await page.reload(); const saved = (await backup(page)).project;\n",
               "snippet": "backup(page)"
@@ -7740,18 +7740,18 @@
         "negative_or_edge": "企画・判断には対象版と根拠を保存する。却下・保留を削除せず、方針変更を公開済み版へ自動反映しない。"
       },
       "source": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-      "source_sha256": "334bb8589ce4a6fb46baff3db86b266646c40994e0e4ebdf5811efe4e8f17f87",
+      "source_sha256": "60d2c5e27223bc9b41028a83c289f2efd6e2fea959ecc38b850809cfbdac6dfb",
       "clauses": [
         {
           "name": "given",
           "original": "企画に対象/体験/主題と版1の採用判断がある",
-          "callback_line": 51,
+          "callback_line": 52,
           "result": "not_run",
           "source_entry_refs": [
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 51,
-              "end_line": 51,
+              "line": 52,
+              "end_line": 52,
               "excerpt_sha256": "41132aa7a8120d45edb5c91997bd85959a840bf3755f11b461e63424386f2aff",
               "source_excerpt": "  await clause('AT-F49', 'given', async () => { await given(page, info, 'AT-F49', p); await production(page); await expect(page.locator('.production-planning')).toContainText('手掛かりから真相を考える体験'); });\n",
               "snippet": "{ await given(page, info, 'AT-F49', p); await production(page); await expect(page.locator('.production-planning')).toContainText('手掛かりから真相を考える体験'); }"
@@ -7760,8 +7760,8 @@
           "assertion_refs": [
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 51,
-              "end_line": 51,
+              "line": 52,
+              "end_line": 52,
               "excerpt_sha256": "41132aa7a8120d45edb5c91997bd85959a840bf3755f11b461e63424386f2aff",
               "source_excerpt": "  await clause('AT-F49', 'given', async () => { await given(page, info, 'AT-F49', p); await production(page); await expect(page.locator('.production-planning')).toContainText('手掛かりから真相を考える体験'); });\n",
               "snippet": "expect(page.locator('.production-planning')).toContainText('手掛かりから真相を考える体験')"
@@ -7770,16 +7770,16 @@
           "normal_operation_refs": [
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 51,
-              "end_line": 51,
+              "line": 52,
+              "end_line": 52,
               "excerpt_sha256": "41132aa7a8120d45edb5c91997bd85959a840bf3755f11b461e63424386f2aff",
               "source_excerpt": "  await clause('AT-F49', 'given', async () => { await given(page, info, 'AT-F49', p); await production(page); await expect(page.locator('.production-planning')).toContainText('手掛かりから真相を考える体験'); });\n",
               "snippet": "given(page, info, 'AT-F49', p)"
             },
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 51,
-              "end_line": 51,
+              "line": 52,
+              "end_line": 52,
               "excerpt_sha256": "41132aa7a8120d45edb5c91997bd85959a840bf3755f11b461e63424386f2aff",
               "source_excerpt": "  await clause('AT-F49', 'given', async () => { await given(page, info, 'AT-F49', p); await production(page); await expect(page.locator('.production-planning')).toContainText('手掛かりから真相を考える体験'); });\n",
               "snippet": "production(page)"
@@ -7789,13 +7789,13 @@
         {
           "name": "when",
           "original": "修正指摘を企画目的へ結び付け、却下案の理由と版2の別判断を登録する",
-          "callback_line": 52,
+          "callback_line": 53,
           "result": "not_run",
           "source_entry_refs": [
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 52,
-              "end_line": 59,
+              "line": 53,
+              "end_line": 60,
               "excerpt_sha256": "88e26207f477bdedc213091b5a301ba9793661792b6299b35ce2f7eb700bcc5d",
               "source_excerpt": "  await clause('AT-F49', 'when', async () => {\n    review = await add(page, 'review', '主題を読者へ伝える修正指摘', { target: { entityId: brief.id }, targetVersionId: v1.id, body: textToRichText('企画の信頼と証言という主題に関わる修正依頼。'), stage: 'open' });\n    rejected = await add(page, 'decision', '却下した真相先出し案', { subject: '主題の見せ方', reason: textToRichText('推理体験を失うため真相を先に出す案は却下'), targetVersionId: v1.id, outcome: 'rejected', reviewIds: [review.id] });\n    deferred = await add(page, 'decision', '保留した語り手変更案', { subject: '語り手', reason: textToRichText('読者の試読を待って判断する'), targetVersionId: v1.id, outcome: 'deferred', reviewIds: [review.id] });\n    await navigate(page, /^年表/); await page.getByRole('tab', { name: '世界・地図・履歴', exact: true }).click(); await page.getByRole('tab', { name: '共通世界の固定版', exact: true }).click(); await page.getByLabel('新しい共通世界版の名称', { exact: true }).fill('通常画面で作成する企画版2'); await page.getByRole('button', { name: 'この内容を確定版として保存', exact: true }).click(); await expect(page.getByLabel('新しい共通世界版の名称', { exact: true })).toHaveValue(''); v2id = (await backup(page)).project.snapshots.at(-1)!.id;\n    const changed = await add(page, 'decision', '版2で変更した別判断', { subject: '主題の見せ方', reason: textToRichText('証言の出所を明示して推理体験を保つ'), targetVersionId: v2id, outcome: 'accepted', reviewIds: [review.id] });\n    await openEntity(page, 'creative_brief', brief.name); await editData(page, { ...brief.data, decisionIds: [adopted.id, rejected.id, deferred.id, changed.id] });\n  });\n",
               "snippet": "{\n    review = await add(page, 'review', '主題を読者へ伝える修正指摘', { target: { entityId: brief.id }, targetVersionId: v1.id, body: textToRichText('企画の信頼と証言という主題に関わる修正依頼。'), stage: 'open' });\n    rejected = await add(page, 'decision', '却下した真相先出し案', { subject: '主題の見せ方', reason: textToRichText('推理体験を失うため真相を先に出す案は却下'), targetVersionId: v1.id, outcome: 'rejected', reviewIds: [review.id] });\n    deferred = await add(page, 'decision', '保留した語り手変更案', { subject: '語り手', reason: textToRichText('読者の試読を待って判断する'), targetVersionId: v1.id, outcome: 'deferred', reviewIds: [review.id] });\n    await navigate(page, /^年表/); await page.getByRole('tab', { name: '世界・地図・履歴', exact: true }).click(); await page.getByRole('tab', { name: '共通世界の固定版', exact: true }).click(); await page.getByLabel('新しい共通世界版の名称', { exact: true }).fill('通常画面で作成する企画版2'); await page.getByRole('button', { name: 'この内容を確定版として保存', exact: true }).click(); await expect(page.getByLabel('新しい共通世界版の名称', { exact: true })).toHaveValue(''); v2id = (await backup(page)).project.snapshots.at(-1)!.id;\n    const changed = await add(page, 'decision', '版2で変更した別判断', { subject: '主題の見せ方', reason: textToRichText('証言の出所を明示して推理体験を保つ'), targetVersionId: v2id, outcome: 'accepted', reviewIds: [review.id] });\n    await openEntity(page, 'creative_brief', brief.name); await editData(page, { ...brief.data, decisionIds: [adopted.id, rejected.id, deferred.id, changed.id] });\n  }"
@@ -7804,8 +7804,8 @@
           "assertion_refs": [
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 56,
-              "end_line": 56,
+              "line": 57,
+              "end_line": 57,
               "excerpt_sha256": "76620d236552d66b04f457cff9fd5b8f9a3e480b09ea9f346a3e62118ae51aff",
               "source_excerpt": "    await navigate(page, /^年表/); await page.getByRole('tab', { name: '世界・地図・履歴', exact: true }).click(); await page.getByRole('tab', { name: '共通世界の固定版', exact: true }).click(); await page.getByLabel('新しい共通世界版の名称', { exact: true }).fill('通常画面で作成する企画版2'); await page.getByRole('button', { name: 'この内容を確定版として保存', exact: true }).click(); await expect(page.getByLabel('新しい共通世界版の名称', { exact: true })).toHaveValue(''); v2id = (await backup(page)).project.snapshots.at(-1)!.id;\n",
               "snippet": "expect(page.getByLabel('新しい共通世界版の名称', { exact: true })).toHaveValue('')"
@@ -7814,64 +7814,64 @@
           "normal_operation_refs": [
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 56,
-              "end_line": 56,
+              "line": 57,
+              "end_line": 57,
               "excerpt_sha256": "76620d236552d66b04f457cff9fd5b8f9a3e480b09ea9f346a3e62118ae51aff",
               "source_excerpt": "    await navigate(page, /^年表/); await page.getByRole('tab', { name: '世界・地図・履歴', exact: true }).click(); await page.getByRole('tab', { name: '共通世界の固定版', exact: true }).click(); await page.getByLabel('新しい共通世界版の名称', { exact: true }).fill('通常画面で作成する企画版2'); await page.getByRole('button', { name: 'この内容を確定版として保存', exact: true }).click(); await expect(page.getByLabel('新しい共通世界版の名称', { exact: true })).toHaveValue(''); v2id = (await backup(page)).project.snapshots.at(-1)!.id;\n",
               "snippet": "navigate(page, /^年表/)"
             },
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 56,
-              "end_line": 56,
+              "line": 57,
+              "end_line": 57,
               "excerpt_sha256": "76620d236552d66b04f457cff9fd5b8f9a3e480b09ea9f346a3e62118ae51aff",
               "source_excerpt": "    await navigate(page, /^年表/); await page.getByRole('tab', { name: '世界・地図・履歴', exact: true }).click(); await page.getByRole('tab', { name: '共通世界の固定版', exact: true }).click(); await page.getByLabel('新しい共通世界版の名称', { exact: true }).fill('通常画面で作成する企画版2'); await page.getByRole('button', { name: 'この内容を確定版として保存', exact: true }).click(); await expect(page.getByLabel('新しい共通世界版の名称', { exact: true })).toHaveValue(''); v2id = (await backup(page)).project.snapshots.at(-1)!.id;\n",
               "snippet": "page.getByRole('tab', { name: '世界・地図・履歴', exact: true }).click()"
             },
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 56,
-              "end_line": 56,
+              "line": 57,
+              "end_line": 57,
               "excerpt_sha256": "76620d236552d66b04f457cff9fd5b8f9a3e480b09ea9f346a3e62118ae51aff",
               "source_excerpt": "    await navigate(page, /^年表/); await page.getByRole('tab', { name: '世界・地図・履歴', exact: true }).click(); await page.getByRole('tab', { name: '共通世界の固定版', exact: true }).click(); await page.getByLabel('新しい共通世界版の名称', { exact: true }).fill('通常画面で作成する企画版2'); await page.getByRole('button', { name: 'この内容を確定版として保存', exact: true }).click(); await expect(page.getByLabel('新しい共通世界版の名称', { exact: true })).toHaveValue(''); v2id = (await backup(page)).project.snapshots.at(-1)!.id;\n",
               "snippet": "page.getByRole('tab', { name: '共通世界の固定版', exact: true }).click()"
             },
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 56,
-              "end_line": 56,
+              "line": 57,
+              "end_line": 57,
               "excerpt_sha256": "76620d236552d66b04f457cff9fd5b8f9a3e480b09ea9f346a3e62118ae51aff",
               "source_excerpt": "    await navigate(page, /^年表/); await page.getByRole('tab', { name: '世界・地図・履歴', exact: true }).click(); await page.getByRole('tab', { name: '共通世界の固定版', exact: true }).click(); await page.getByLabel('新しい共通世界版の名称', { exact: true }).fill('通常画面で作成する企画版2'); await page.getByRole('button', { name: 'この内容を確定版として保存', exact: true }).click(); await expect(page.getByLabel('新しい共通世界版の名称', { exact: true })).toHaveValue(''); v2id = (await backup(page)).project.snapshots.at(-1)!.id;\n",
               "snippet": "page.getByLabel('新しい共通世界版の名称', { exact: true }).fill('通常画面で作成する企画版2')"
             },
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 56,
-              "end_line": 56,
+              "line": 57,
+              "end_line": 57,
               "excerpt_sha256": "76620d236552d66b04f457cff9fd5b8f9a3e480b09ea9f346a3e62118ae51aff",
               "source_excerpt": "    await navigate(page, /^年表/); await page.getByRole('tab', { name: '世界・地図・履歴', exact: true }).click(); await page.getByRole('tab', { name: '共通世界の固定版', exact: true }).click(); await page.getByLabel('新しい共通世界版の名称', { exact: true }).fill('通常画面で作成する企画版2'); await page.getByRole('button', { name: 'この内容を確定版として保存', exact: true }).click(); await expect(page.getByLabel('新しい共通世界版の名称', { exact: true })).toHaveValue(''); v2id = (await backup(page)).project.snapshots.at(-1)!.id;\n",
               "snippet": "page.getByRole('button', { name: 'この内容を確定版として保存', exact: true }).click()"
             },
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 56,
-              "end_line": 56,
+              "line": 57,
+              "end_line": 57,
               "excerpt_sha256": "76620d236552d66b04f457cff9fd5b8f9a3e480b09ea9f346a3e62118ae51aff",
               "source_excerpt": "    await navigate(page, /^年表/); await page.getByRole('tab', { name: '世界・地図・履歴', exact: true }).click(); await page.getByRole('tab', { name: '共通世界の固定版', exact: true }).click(); await page.getByLabel('新しい共通世界版の名称', { exact: true }).fill('通常画面で作成する企画版2'); await page.getByRole('button', { name: 'この内容を確定版として保存', exact: true }).click(); await expect(page.getByLabel('新しい共通世界版の名称', { exact: true })).toHaveValue(''); v2id = (await backup(page)).project.snapshots.at(-1)!.id;\n",
               "snippet": "backup(page)"
             },
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 58,
-              "end_line": 58,
+              "line": 59,
+              "end_line": 59,
               "excerpt_sha256": "f96587c5a382a8dadeb48b6b065cd4a74455acb2f8b4409a4f0338a7212cd752",
               "source_excerpt": "    await openEntity(page, 'creative_brief', brief.name); await editData(page, { ...brief.data, decisionIds: [adopted.id, rejected.id, deferred.id, changed.id] });\n",
               "snippet": "openEntity(page, 'creative_brief', brief.name)"
             },
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 58,
-              "end_line": 58,
+              "line": 59,
+              "end_line": 59,
               "excerpt_sha256": "f96587c5a382a8dadeb48b6b065cd4a74455acb2f8b4409a4f0338a7212cd752",
               "source_excerpt": "    await openEntity(page, 'creative_brief', brief.name); await editData(page, { ...brief.data, decisionIds: [adopted.id, rejected.id, deferred.id, changed.id] });\n",
               "snippet": "editData(page, { ...brief.data, decisionIds: [adopted.id, rejected.id, deferred.id, changed.id] })"
@@ -7881,13 +7881,13 @@
         {
           "name": "then",
           "original": "修正依頼から企画のどの目的に関わるかを確認できる。却下した案の理由も後から分かる。",
-          "callback_line": 60,
+          "callback_line": 61,
           "result": "not_run",
           "source_entry_refs": [
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 60,
-              "end_line": 64,
+              "line": 61,
+              "end_line": 65,
               "excerpt_sha256": "845df7a9b5f4423cc9ea475ebd77edd588c50b6393ac3c2913bccbbe772db758",
               "source_excerpt": "  await clause('AT-F49', 'then', async () => {\n    await openEntity(page, 'review', review.name); await expect(page.locator('.detail-panel')).toContainText('信頼と証言');\n    await production(page); const panel = page.locator('.production-planning'); await expect(panel).toContainText('推理体験を失うため'); await expect(panel).toContainText('読者の試読を待って判断する'); await expect(panel).toContainText('rejected'); await expect(panel).toContainText('deferred');\n    const saved = (await backup(page)).project; expect(findEntity(saved, review.id, 'review').data).toMatchObject({ target: { entityId: brief.id }, targetVersionId: v1.id }); expect(findEntity(saved, rejected.id, 'decision').data.reviewIds).toEqual([review.id]); expect(saved.entities.some(row => row.kind === 'decision' && row.data.targetVersionId === v2id && row.data.outcome === 'accepted')).toBe(true);\n  });\n",
               "snippet": "{\n    await openEntity(page, 'review', review.name); await expect(page.locator('.detail-panel')).toContainText('信頼と証言');\n    await production(page); const panel = page.locator('.production-planning'); await expect(panel).toContainText('推理体験を失うため'); await expect(panel).toContainText('読者の試読を待って判断する'); await expect(panel).toContainText('rejected'); await expect(panel).toContainText('deferred');\n    const saved = (await backup(page)).project; expect(findEntity(saved, review.id, 'review').data).toMatchObject({ target: { entityId: brief.id }, targetVersionId: v1.id }); expect(findEntity(saved, rejected.id, 'decision').data.reviewIds).toEqual([review.id]); expect(saved.entities.some(row => row.kind === 'decision' && row.data.targetVersionId === v2id && row.data.outcome === 'accepted')).toBe(true);\n  }"
@@ -7896,64 +7896,64 @@
           "assertion_refs": [
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 61,
-              "end_line": 61,
+              "line": 62,
+              "end_line": 62,
               "excerpt_sha256": "9265ae428fdf7536860c438b1f07c2ba21f2491f0ba622fc06eb1bc5fcdfbdd9",
               "source_excerpt": "    await openEntity(page, 'review', review.name); await expect(page.locator('.detail-panel')).toContainText('信頼と証言');\n",
               "snippet": "expect(page.locator('.detail-panel')).toContainText('信頼と証言')"
             },
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 62,
-              "end_line": 62,
+              "line": 63,
+              "end_line": 63,
               "excerpt_sha256": "a51af1cb10046f36b2948d967c5ba18157a585a4d823db7d0c401540cf757244",
               "source_excerpt": "    await production(page); const panel = page.locator('.production-planning'); await expect(panel).toContainText('推理体験を失うため'); await expect(panel).toContainText('読者の試読を待って判断する'); await expect(panel).toContainText('rejected'); await expect(panel).toContainText('deferred');\n",
               "snippet": "expect(panel).toContainText('推理体験を失うため')"
             },
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 62,
-              "end_line": 62,
+              "line": 63,
+              "end_line": 63,
               "excerpt_sha256": "a51af1cb10046f36b2948d967c5ba18157a585a4d823db7d0c401540cf757244",
               "source_excerpt": "    await production(page); const panel = page.locator('.production-planning'); await expect(panel).toContainText('推理体験を失うため'); await expect(panel).toContainText('読者の試読を待って判断する'); await expect(panel).toContainText('rejected'); await expect(panel).toContainText('deferred');\n",
               "snippet": "expect(panel).toContainText('読者の試読を待って判断する')"
             },
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 62,
-              "end_line": 62,
+              "line": 63,
+              "end_line": 63,
               "excerpt_sha256": "a51af1cb10046f36b2948d967c5ba18157a585a4d823db7d0c401540cf757244",
               "source_excerpt": "    await production(page); const panel = page.locator('.production-planning'); await expect(panel).toContainText('推理体験を失うため'); await expect(panel).toContainText('読者の試読を待って判断する'); await expect(panel).toContainText('rejected'); await expect(panel).toContainText('deferred');\n",
               "snippet": "expect(panel).toContainText('rejected')"
             },
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 62,
-              "end_line": 62,
+              "line": 63,
+              "end_line": 63,
               "excerpt_sha256": "a51af1cb10046f36b2948d967c5ba18157a585a4d823db7d0c401540cf757244",
               "source_excerpt": "    await production(page); const panel = page.locator('.production-planning'); await expect(panel).toContainText('推理体験を失うため'); await expect(panel).toContainText('読者の試読を待って判断する'); await expect(panel).toContainText('rejected'); await expect(panel).toContainText('deferred');\n",
               "snippet": "expect(panel).toContainText('deferred')"
             },
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 63,
-              "end_line": 63,
+              "line": 64,
+              "end_line": 64,
               "excerpt_sha256": "b5e60ae4ef9a2c3f548495a7b9e09afafc2a5c26b31867ccdc2c053e06e723bb",
               "source_excerpt": "    const saved = (await backup(page)).project; expect(findEntity(saved, review.id, 'review').data).toMatchObject({ target: { entityId: brief.id }, targetVersionId: v1.id }); expect(findEntity(saved, rejected.id, 'decision').data.reviewIds).toEqual([review.id]); expect(saved.entities.some(row => row.kind === 'decision' && row.data.targetVersionId === v2id && row.data.outcome === 'accepted')).toBe(true);\n",
               "snippet": "expect(findEntity(saved, review.id, 'review').data).toMatchObject({ target: { entityId: brief.id }, targetVersionId: v1.id })"
             },
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 63,
-              "end_line": 63,
+              "line": 64,
+              "end_line": 64,
               "excerpt_sha256": "b5e60ae4ef9a2c3f548495a7b9e09afafc2a5c26b31867ccdc2c053e06e723bb",
               "source_excerpt": "    const saved = (await backup(page)).project; expect(findEntity(saved, review.id, 'review').data).toMatchObject({ target: { entityId: brief.id }, targetVersionId: v1.id }); expect(findEntity(saved, rejected.id, 'decision').data.reviewIds).toEqual([review.id]); expect(saved.entities.some(row => row.kind === 'decision' && row.data.targetVersionId === v2id && row.data.outcome === 'accepted')).toBe(true);\n",
               "snippet": "expect(findEntity(saved, rejected.id, 'decision').data.reviewIds).toEqual([review.id])"
             },
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 63,
-              "end_line": 63,
+              "line": 64,
+              "end_line": 64,
               "excerpt_sha256": "b5e60ae4ef9a2c3f548495a7b9e09afafc2a5c26b31867ccdc2c053e06e723bb",
               "source_excerpt": "    const saved = (await backup(page)).project; expect(findEntity(saved, review.id, 'review').data).toMatchObject({ target: { entityId: brief.id }, targetVersionId: v1.id }); expect(findEntity(saved, rejected.id, 'decision').data.reviewIds).toEqual([review.id]); expect(saved.entities.some(row => row.kind === 'decision' && row.data.targetVersionId === v2id && row.data.outcome === 'accepted')).toBe(true);\n",
               "snippet": "expect(saved.entities.some(row => row.kind === 'decision' && row.data.targetVersionId === v2id && row.data.outcome === 'accepted')).toBe(true)"
@@ -7962,24 +7962,24 @@
           "normal_operation_refs": [
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 61,
-              "end_line": 61,
+              "line": 62,
+              "end_line": 62,
               "excerpt_sha256": "9265ae428fdf7536860c438b1f07c2ba21f2491f0ba622fc06eb1bc5fcdfbdd9",
               "source_excerpt": "    await openEntity(page, 'review', review.name); await expect(page.locator('.detail-panel')).toContainText('信頼と証言');\n",
               "snippet": "openEntity(page, 'review', review.name)"
             },
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 62,
-              "end_line": 62,
+              "line": 63,
+              "end_line": 63,
               "excerpt_sha256": "a51af1cb10046f36b2948d967c5ba18157a585a4d823db7d0c401540cf757244",
               "source_excerpt": "    await production(page); const panel = page.locator('.production-planning'); await expect(panel).toContainText('推理体験を失うため'); await expect(panel).toContainText('読者の試読を待って判断する'); await expect(panel).toContainText('rejected'); await expect(panel).toContainText('deferred');\n",
               "snippet": "production(page)"
             },
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 63,
-              "end_line": 63,
+              "line": 64,
+              "end_line": 64,
               "excerpt_sha256": "b5e60ae4ef9a2c3f548495a7b9e09afafc2a5c26b31867ccdc2c053e06e723bb",
               "source_excerpt": "    const saved = (await backup(page)).project; expect(findEntity(saved, review.id, 'review').data).toMatchObject({ target: { entityId: brief.id }, targetVersionId: v1.id }); expect(findEntity(saved, rejected.id, 'decision').data.reviewIds).toEqual([review.id]); expect(saved.entities.some(row => row.kind === 'decision' && row.data.targetVersionId === v2id && row.data.outcome === 'accepted')).toBe(true);\n",
               "snippet": "backup(page)"
@@ -7989,13 +7989,13 @@
         {
           "name": "negative_or_edge",
           "original": "企画・判断には対象版と根拠を保存する。却下・保留を削除せず、方針変更を公開済み版へ自動反映しない。",
-          "callback_line": 65,
+          "callback_line": 66,
           "result": "not_run",
           "source_entry_refs": [
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 65,
-              "end_line": 69,
+              "line": 66,
+              "end_line": 70,
               "excerpt_sha256": "d01a0012f4a7e11bd8029d9792e0778a2c088b401115e68d69a3f3397f436cef",
               "source_excerpt": "  await clause('AT-F49', 'negative_or_edge', async () => {\n    await page.reload(); const saved = (await backup(page)).project; expect(saved.snapshots.find(pin => pin.id === v1.id)).toEqual(v1); expect(findEntity(saved, adopted.id, 'decision').data.targetVersionId).toBe(v1.id);\n    for (const row of [rejected, deferred]) expect(findEntity(saved, row.id, 'decision').deletedAt).toBeFalsy();\n    await attachObservation(info, 'AT-F49-observed', { briefId: brief.id, reviewId: review.id, originalPublishedVersion: v1.id, laterDecisionVersion: v2id, rejectedReason: rejected.data.reason, deferredReason: deferred.data.reason, oldPublishedContentUnchanged: true });\n  });\n",
               "snippet": "{\n    await page.reload(); const saved = (await backup(page)).project; expect(saved.snapshots.find(pin => pin.id === v1.id)).toEqual(v1); expect(findEntity(saved, adopted.id, 'decision').data.targetVersionId).toBe(v1.id);\n    for (const row of [rejected, deferred]) expect(findEntity(saved, row.id, 'decision').deletedAt).toBeFalsy();\n    await attachObservation(info, 'AT-F49-observed', { briefId: brief.id, reviewId: review.id, originalPublishedVersion: v1.id, laterDecisionVersion: v2id, rejectedReason: rejected.data.reason, deferredReason: deferred.data.reason, oldPublishedContentUnchanged: true });\n  }"
@@ -8004,24 +8004,24 @@
           "assertion_refs": [
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 66,
-              "end_line": 66,
+              "line": 67,
+              "end_line": 67,
               "excerpt_sha256": "07f6a022e4b910b46079c813026933d0a8ad134604c4a9d903e994f0a2eb227e",
               "source_excerpt": "    await page.reload(); const saved = (await backup(page)).project; expect(saved.snapshots.find(pin => pin.id === v1.id)).toEqual(v1); expect(findEntity(saved, adopted.id, 'decision').data.targetVersionId).toBe(v1.id);\n",
               "snippet": "expect(saved.snapshots.find(pin => pin.id === v1.id)).toEqual(v1)"
             },
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 66,
-              "end_line": 66,
+              "line": 67,
+              "end_line": 67,
               "excerpt_sha256": "07f6a022e4b910b46079c813026933d0a8ad134604c4a9d903e994f0a2eb227e",
               "source_excerpt": "    await page.reload(); const saved = (await backup(page)).project; expect(saved.snapshots.find(pin => pin.id === v1.id)).toEqual(v1); expect(findEntity(saved, adopted.id, 'decision').data.targetVersionId).toBe(v1.id);\n",
               "snippet": "expect(findEntity(saved, adopted.id, 'decision').data.targetVersionId).toBe(v1.id)"
             },
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 67,
-              "end_line": 67,
+              "line": 68,
+              "end_line": 68,
               "excerpt_sha256": "8461edb6d914986acf57eec846d7a8f990b10eaf2c9a3c5599ed68653325cc0b",
               "source_excerpt": "    for (const row of [rejected, deferred]) expect(findEntity(saved, row.id, 'decision').deletedAt).toBeFalsy();\n",
               "snippet": "expect(findEntity(saved, row.id, 'decision').deletedAt).toBeFalsy()"
@@ -8030,16 +8030,16 @@
           "normal_operation_refs": [
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 66,
-              "end_line": 66,
+              "line": 67,
+              "end_line": 67,
               "excerpt_sha256": "07f6a022e4b910b46079c813026933d0a8ad134604c4a9d903e994f0a2eb227e",
               "source_excerpt": "    await page.reload(); const saved = (await backup(page)).project; expect(saved.snapshots.find(pin => pin.id === v1.id)).toEqual(v1); expect(findEntity(saved, adopted.id, 'decision').data.targetVersionId).toBe(v1.id);\n",
               "snippet": "page.reload()"
             },
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 66,
-              "end_line": 66,
+              "line": 67,
+              "end_line": 67,
               "excerpt_sha256": "07f6a022e4b910b46079c813026933d0a8ad134604c4a9d903e994f0a2eb227e",
               "source_excerpt": "    await page.reload(); const saved = (await backup(page)).project; expect(saved.snapshots.find(pin => pin.id === v1.id)).toEqual(v1); expect(findEntity(saved, adopted.id, 'decision').data.targetVersionId).toBe(v1.id);\n",
               "snippet": "backup(page)"
@@ -8063,18 +8063,18 @@
         "negative_or_edge": "遊びの仕様と物語の記述の差は意図付き確認候補にする。ゲーム機能の未実装を執筆未完了と混同しない。"
       },
       "source": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-      "source_sha256": "334bb8589ce4a6fb46baff3db86b266646c40994e0e4ebdf5811efe4e8f17f87",
+      "source_sha256": "60d2c5e27223bc9b41028a83c289f2efd6e2fea959ecc38b850809cfbdac6dfb",
       "clauses": [
         {
           "name": "given",
           "original": "危険と説明する場面、実装仕様では無条件通過、意図は未入力",
-          "callback_line": 75,
+          "callback_line": 91,
           "result": "not_run",
           "source_entry_refs": [
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 75,
-              "end_line": 75,
+              "line": 91,
+              "end_line": 91,
               "excerpt_sha256": "0667c266e16b4f3f269ea8d512b886b186cbc37f58bd72c2e8887f8a45ae9600",
               "source_excerpt": "  await clause('AT-F50', 'given', async () => { await given(page, info, 'AT-F50', p); await production(page); const comparison = page.locator('.production-planning article.settings-card').filter({ has: page.getByRole('button', { name: spec.name, exact: true }) }); await expect(comparison).toContainText('危険な城門'); await expect(comparison).toContainText('無条件に城門を通過'); });\n",
               "snippet": "{ await given(page, info, 'AT-F50', p); await production(page); const comparison = page.locator('.production-planning article.settings-card').filter({ has: page.getByRole('button', { name: spec.name, exact: true }) }); await expect(comparison).toContainText('危険な城門'); await expect(comparison).toContainText('無条件に城門を通過'); }"
@@ -8083,16 +8083,16 @@
           "assertion_refs": [
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 75,
-              "end_line": 75,
+              "line": 91,
+              "end_line": 91,
               "excerpt_sha256": "0667c266e16b4f3f269ea8d512b886b186cbc37f58bd72c2e8887f8a45ae9600",
               "source_excerpt": "  await clause('AT-F50', 'given', async () => { await given(page, info, 'AT-F50', p); await production(page); const comparison = page.locator('.production-planning article.settings-card').filter({ has: page.getByRole('button', { name: spec.name, exact: true }) }); await expect(comparison).toContainText('危険な城門'); await expect(comparison).toContainText('無条件に城門を通過'); });\n",
               "snippet": "expect(comparison).toContainText('危険な城門')"
             },
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 75,
-              "end_line": 75,
+              "line": 91,
+              "end_line": 91,
               "excerpt_sha256": "0667c266e16b4f3f269ea8d512b886b186cbc37f58bd72c2e8887f8a45ae9600",
               "source_excerpt": "  await clause('AT-F50', 'given', async () => { await given(page, info, 'AT-F50', p); await production(page); const comparison = page.locator('.production-planning article.settings-card').filter({ has: page.getByRole('button', { name: spec.name, exact: true }) }); await expect(comparison).toContainText('危険な城門'); await expect(comparison).toContainText('無条件に城門を通過'); });\n",
               "snippet": "expect(comparison).toContainText('無条件に城門を通過')"
@@ -8101,16 +8101,16 @@
           "normal_operation_refs": [
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 75,
-              "end_line": 75,
+              "line": 91,
+              "end_line": 91,
               "excerpt_sha256": "0667c266e16b4f3f269ea8d512b886b186cbc37f58bd72c2e8887f8a45ae9600",
               "source_excerpt": "  await clause('AT-F50', 'given', async () => { await given(page, info, 'AT-F50', p); await production(page); const comparison = page.locator('.production-planning article.settings-card').filter({ has: page.getByRole('button', { name: spec.name, exact: true }) }); await expect(comparison).toContainText('危険な城門'); await expect(comparison).toContainText('無条件に城門を通過'); });\n",
               "snippet": "given(page, info, 'AT-F50', p)"
             },
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 75,
-              "end_line": 75,
+              "line": 91,
+              "end_line": 91,
               "excerpt_sha256": "0667c266e16b4f3f269ea8d512b886b186cbc37f58bd72c2e8887f8a45ae9600",
               "source_excerpt": "  await clause('AT-F50', 'given', async () => { await given(page, info, 'AT-F50', p); await production(page); const comparison = page.locator('.production-planning article.settings-card').filter({ has: page.getByRole('button', { name: spec.name, exact: true }) }); await expect(comparison).toContainText('危険な城門'); await expect(comparison).toContainText('無条件に城門を通過'); });\n",
               "snippet": "production(page)"
@@ -8120,83 +8120,107 @@
         {
           "name": "when",
           "original": "探索/戦闘/報酬/チュートリアルと作業を関連付け、食い違いに意図を追記する",
-          "callback_line": 76,
+          "callback_line": 92,
           "result": "not_run",
           "source_entry_refs": [
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 76,
-              "end_line": 79,
-              "excerpt_sha256": "2158e9615112885609fa5c7aa060d9623a48d5a690c74cd0346ede9eb200edec",
-              "source_excerpt": "  await clause('AT-F50', 'when', async () => {\n    await openEntity(page, 'gameplay_spec', spec.name); await editData(page, { ...spec.data, action: textToRichText('城門を探索し、守護者との戦闘を経て通過する。'), mechanic: '探索と戦闘の機能', reward: { type: 'integer', value: 5 }, tutorial: textToRichText('城門を調べ、戦闘の操作を確認してから進む。'), taskIds: [implementation.id], intentionalDifference: '導入区間では危険を演出しつつ、失敗による足止めを避けて通過を保証する意図' });\n    await production(page); const comparison = page.locator('.production-planning article.settings-card').filter({ has: page.getByRole('button', { name: spec.name, exact: true }) }); await expect(comparison).toContainText('探索と戦闘の機能'); await expect(comparison).toContainText('チュートリアル'); await expect(comparison).toContainText('\"value\":5'); await comparison.getByRole('button', { name: '遊びと物語の差を確認候補へ保存', exact: true }).click(); await expect(comparison.getByRole('button', { name: '遊びと物語の差を確認候補へ保存', exact: true })).toBeEnabled();\n  });\n",
-              "snippet": "{\n    await openEntity(page, 'gameplay_spec', spec.name); await editData(page, { ...spec.data, action: textToRichText('城門を探索し、守護者との戦闘を経て通過する。'), mechanic: '探索と戦闘の機能', reward: { type: 'integer', value: 5 }, tutorial: textToRichText('城門を調べ、戦闘の操作を確認してから進む。'), taskIds: [implementation.id], intentionalDifference: '導入区間では危険を演出しつつ、失敗による足止めを避けて通過を保証する意図' });\n    await production(page); const comparison = page.locator('.production-planning article.settings-card').filter({ has: page.getByRole('button', { name: spec.name, exact: true }) }); await expect(comparison).toContainText('探索と戦闘の機能'); await expect(comparison).toContainText('チュートリアル'); await expect(comparison).toContainText('\"value\":5'); await comparison.getByRole('button', { name: '遊びと物語の差を確認候補へ保存', exact: true }).click(); await expect(comparison.getByRole('button', { name: '遊びと物語の差を確認候補へ保存', exact: true })).toBeEnabled();\n  }"
+              "line": 92,
+              "end_line": 96,
+              "excerpt_sha256": "e3d6a2b890b2a3e2255e3e3c19a055e97f7fae04a2ceaac44f4518c8e7f36ccb",
+              "source_excerpt": "  await clause('AT-F50', 'when', async () => {\n    await openEntity(page, 'gameplay_spec', spec.name); await editData(page, { ...spec.data, action: textToRichText('城門を探索し、守護者との戦闘を経て通過する。'), mechanic: '探索と戦闘の機能', reward: { type: 'integer', value: 5 }, tutorial: textToRichText('城門を調べ、戦闘の操作を確認してから進む。'), taskIds: [implementation.id], intentionalDifference: '導入区間では危険を演出しつつ、失敗による足止めを避けて通過を保証する意図' });\n    beforeReview = await backup(page); nativeBefore = await nativeRecords(); expect(beforeReview.project.history).toHaveLength(1);\n    await production(page); const comparison = page.locator('.production-planning article.settings-card').filter({ has: page.getByRole('button', { name: spec.name, exact: true }) }); await expect(comparison).toContainText('探索と戦闘の機能'); await expect(comparison).toContainText('チュートリアル'); await expect(comparison).toContainText('\"value\":5'); await comparison.getByRole('button', { name: '遊びと物語の差を確認候補へ保存', exact: true }).click(); await expect(comparison.getByRole('button', { name: '遊びと物語の差を確認候補へ保存', exact: true })).toBeEnabled(); await expect(page.locator('.production-planning').getByRole('alert')).toHaveCount(0);\n  });\n",
+              "snippet": "{\n    await openEntity(page, 'gameplay_spec', spec.name); await editData(page, { ...spec.data, action: textToRichText('城門を探索し、守護者との戦闘を経て通過する。'), mechanic: '探索と戦闘の機能', reward: { type: 'integer', value: 5 }, tutorial: textToRichText('城門を調べ、戦闘の操作を確認してから進む。'), taskIds: [implementation.id], intentionalDifference: '導入区間では危険を演出しつつ、失敗による足止めを避けて通過を保証する意図' });\n    beforeReview = await backup(page); nativeBefore = await nativeRecords(); expect(beforeReview.project.history).toHaveLength(1);\n    await production(page); const comparison = page.locator('.production-planning article.settings-card').filter({ has: page.getByRole('button', { name: spec.name, exact: true }) }); await expect(comparison).toContainText('探索と戦闘の機能'); await expect(comparison).toContainText('チュートリアル'); await expect(comparison).toContainText('\"value\":5'); await comparison.getByRole('button', { name: '遊びと物語の差を確認候補へ保存', exact: true }).click(); await expect(comparison.getByRole('button', { name: '遊びと物語の差を確認候補へ保存', exact: true })).toBeEnabled(); await expect(page.locator('.production-planning').getByRole('alert')).toHaveCount(0);\n  }"
             }
           ],
           "assertion_refs": [
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 78,
-              "end_line": 78,
-              "excerpt_sha256": "3c593150d945a36380a6ef9eac73784dfe76dfb1c9817116fa196f421f1c3d1c",
-              "source_excerpt": "    await production(page); const comparison = page.locator('.production-planning article.settings-card').filter({ has: page.getByRole('button', { name: spec.name, exact: true }) }); await expect(comparison).toContainText('探索と戦闘の機能'); await expect(comparison).toContainText('チュートリアル'); await expect(comparison).toContainText('\"value\":5'); await comparison.getByRole('button', { name: '遊びと物語の差を確認候補へ保存', exact: true }).click(); await expect(comparison.getByRole('button', { name: '遊びと物語の差を確認候補へ保存', exact: true })).toBeEnabled();\n",
+              "line": 94,
+              "end_line": 94,
+              "excerpt_sha256": "02831b7d77ad3beb8d5787f4bb2786267eed0797b0369efa3415ffee1ea04d68",
+              "source_excerpt": "    beforeReview = await backup(page); nativeBefore = await nativeRecords(); expect(beforeReview.project.history).toHaveLength(1);\n",
+              "snippet": "expect(beforeReview.project.history).toHaveLength(1)"
+            },
+            {
+              "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
+              "line": 95,
+              "end_line": 95,
+              "excerpt_sha256": "5e42abe6b2ccc18a61246e3dbf4d765d93127047d65d4cd4d593f7adba114688",
+              "source_excerpt": "    await production(page); const comparison = page.locator('.production-planning article.settings-card').filter({ has: page.getByRole('button', { name: spec.name, exact: true }) }); await expect(comparison).toContainText('探索と戦闘の機能'); await expect(comparison).toContainText('チュートリアル'); await expect(comparison).toContainText('\"value\":5'); await comparison.getByRole('button', { name: '遊びと物語の差を確認候補へ保存', exact: true }).click(); await expect(comparison.getByRole('button', { name: '遊びと物語の差を確認候補へ保存', exact: true })).toBeEnabled(); await expect(page.locator('.production-planning').getByRole('alert')).toHaveCount(0);\n",
               "snippet": "expect(comparison).toContainText('探索と戦闘の機能')"
             },
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 78,
-              "end_line": 78,
-              "excerpt_sha256": "3c593150d945a36380a6ef9eac73784dfe76dfb1c9817116fa196f421f1c3d1c",
-              "source_excerpt": "    await production(page); const comparison = page.locator('.production-planning article.settings-card').filter({ has: page.getByRole('button', { name: spec.name, exact: true }) }); await expect(comparison).toContainText('探索と戦闘の機能'); await expect(comparison).toContainText('チュートリアル'); await expect(comparison).toContainText('\"value\":5'); await comparison.getByRole('button', { name: '遊びと物語の差を確認候補へ保存', exact: true }).click(); await expect(comparison.getByRole('button', { name: '遊びと物語の差を確認候補へ保存', exact: true })).toBeEnabled();\n",
+              "line": 95,
+              "end_line": 95,
+              "excerpt_sha256": "5e42abe6b2ccc18a61246e3dbf4d765d93127047d65d4cd4d593f7adba114688",
+              "source_excerpt": "    await production(page); const comparison = page.locator('.production-planning article.settings-card').filter({ has: page.getByRole('button', { name: spec.name, exact: true }) }); await expect(comparison).toContainText('探索と戦闘の機能'); await expect(comparison).toContainText('チュートリアル'); await expect(comparison).toContainText('\"value\":5'); await comparison.getByRole('button', { name: '遊びと物語の差を確認候補へ保存', exact: true }).click(); await expect(comparison.getByRole('button', { name: '遊びと物語の差を確認候補へ保存', exact: true })).toBeEnabled(); await expect(page.locator('.production-planning').getByRole('alert')).toHaveCount(0);\n",
               "snippet": "expect(comparison).toContainText('チュートリアル')"
             },
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 78,
-              "end_line": 78,
-              "excerpt_sha256": "3c593150d945a36380a6ef9eac73784dfe76dfb1c9817116fa196f421f1c3d1c",
-              "source_excerpt": "    await production(page); const comparison = page.locator('.production-planning article.settings-card').filter({ has: page.getByRole('button', { name: spec.name, exact: true }) }); await expect(comparison).toContainText('探索と戦闘の機能'); await expect(comparison).toContainText('チュートリアル'); await expect(comparison).toContainText('\"value\":5'); await comparison.getByRole('button', { name: '遊びと物語の差を確認候補へ保存', exact: true }).click(); await expect(comparison.getByRole('button', { name: '遊びと物語の差を確認候補へ保存', exact: true })).toBeEnabled();\n",
+              "line": 95,
+              "end_line": 95,
+              "excerpt_sha256": "5e42abe6b2ccc18a61246e3dbf4d765d93127047d65d4cd4d593f7adba114688",
+              "source_excerpt": "    await production(page); const comparison = page.locator('.production-planning article.settings-card').filter({ has: page.getByRole('button', { name: spec.name, exact: true }) }); await expect(comparison).toContainText('探索と戦闘の機能'); await expect(comparison).toContainText('チュートリアル'); await expect(comparison).toContainText('\"value\":5'); await comparison.getByRole('button', { name: '遊びと物語の差を確認候補へ保存', exact: true }).click(); await expect(comparison.getByRole('button', { name: '遊びと物語の差を確認候補へ保存', exact: true })).toBeEnabled(); await expect(page.locator('.production-planning').getByRole('alert')).toHaveCount(0);\n",
               "snippet": "expect(comparison).toContainText('\"value\":5')"
             },
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 78,
-              "end_line": 78,
-              "excerpt_sha256": "3c593150d945a36380a6ef9eac73784dfe76dfb1c9817116fa196f421f1c3d1c",
-              "source_excerpt": "    await production(page); const comparison = page.locator('.production-planning article.settings-card').filter({ has: page.getByRole('button', { name: spec.name, exact: true }) }); await expect(comparison).toContainText('探索と戦闘の機能'); await expect(comparison).toContainText('チュートリアル'); await expect(comparison).toContainText('\"value\":5'); await comparison.getByRole('button', { name: '遊びと物語の差を確認候補へ保存', exact: true }).click(); await expect(comparison.getByRole('button', { name: '遊びと物語の差を確認候補へ保存', exact: true })).toBeEnabled();\n",
+              "line": 95,
+              "end_line": 95,
+              "excerpt_sha256": "5e42abe6b2ccc18a61246e3dbf4d765d93127047d65d4cd4d593f7adba114688",
+              "source_excerpt": "    await production(page); const comparison = page.locator('.production-planning article.settings-card').filter({ has: page.getByRole('button', { name: spec.name, exact: true }) }); await expect(comparison).toContainText('探索と戦闘の機能'); await expect(comparison).toContainText('チュートリアル'); await expect(comparison).toContainText('\"value\":5'); await comparison.getByRole('button', { name: '遊びと物語の差を確認候補へ保存', exact: true }).click(); await expect(comparison.getByRole('button', { name: '遊びと物語の差を確認候補へ保存', exact: true })).toBeEnabled(); await expect(page.locator('.production-planning').getByRole('alert')).toHaveCount(0);\n",
               "snippet": "expect(comparison.getByRole('button', { name: '遊びと物語の差を確認候補へ保存', exact: true })).toBeEnabled()"
+            },
+            {
+              "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
+              "line": 95,
+              "end_line": 95,
+              "excerpt_sha256": "5e42abe6b2ccc18a61246e3dbf4d765d93127047d65d4cd4d593f7adba114688",
+              "source_excerpt": "    await production(page); const comparison = page.locator('.production-planning article.settings-card').filter({ has: page.getByRole('button', { name: spec.name, exact: true }) }); await expect(comparison).toContainText('探索と戦闘の機能'); await expect(comparison).toContainText('チュートリアル'); await expect(comparison).toContainText('\"value\":5'); await comparison.getByRole('button', { name: '遊びと物語の差を確認候補へ保存', exact: true }).click(); await expect(comparison.getByRole('button', { name: '遊びと物語の差を確認候補へ保存', exact: true })).toBeEnabled(); await expect(page.locator('.production-planning').getByRole('alert')).toHaveCount(0);\n",
+              "snippet": "expect(page.locator('.production-planning').getByRole('alert')).toHaveCount(0)"
             }
           ],
           "normal_operation_refs": [
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 77,
-              "end_line": 77,
+              "line": 93,
+              "end_line": 93,
               "excerpt_sha256": "d0e8491a6e859e34f55954194db3a36738d07fdbda495394e9f62fdfc26819b6",
               "source_excerpt": "    await openEntity(page, 'gameplay_spec', spec.name); await editData(page, { ...spec.data, action: textToRichText('城門を探索し、守護者との戦闘を経て通過する。'), mechanic: '探索と戦闘の機能', reward: { type: 'integer', value: 5 }, tutorial: textToRichText('城門を調べ、戦闘の操作を確認してから進む。'), taskIds: [implementation.id], intentionalDifference: '導入区間では危険を演出しつつ、失敗による足止めを避けて通過を保証する意図' });\n",
               "snippet": "openEntity(page, 'gameplay_spec', spec.name)"
             },
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 77,
-              "end_line": 77,
+              "line": 93,
+              "end_line": 93,
               "excerpt_sha256": "d0e8491a6e859e34f55954194db3a36738d07fdbda495394e9f62fdfc26819b6",
               "source_excerpt": "    await openEntity(page, 'gameplay_spec', spec.name); await editData(page, { ...spec.data, action: textToRichText('城門を探索し、守護者との戦闘を経て通過する。'), mechanic: '探索と戦闘の機能', reward: { type: 'integer', value: 5 }, tutorial: textToRichText('城門を調べ、戦闘の操作を確認してから進む。'), taskIds: [implementation.id], intentionalDifference: '導入区間では危険を演出しつつ、失敗による足止めを避けて通過を保証する意図' });\n",
               "snippet": "editData(page, { ...spec.data, action: textToRichText('城門を探索し、守護者との戦闘を経て通過する。'), mechanic: '探索と戦闘の機能', reward: { type: 'integer', value: 5 }, tutorial: textToRichText('城門を調べ、戦闘の操作を確認してから進む。'), taskIds: [implementation.id], intentionalDifference: '導入区間では危険を演出しつつ、失敗による足止めを避けて通過を保証する意図' })"
             },
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 78,
-              "end_line": 78,
-              "excerpt_sha256": "3c593150d945a36380a6ef9eac73784dfe76dfb1c9817116fa196f421f1c3d1c",
-              "source_excerpt": "    await production(page); const comparison = page.locator('.production-planning article.settings-card').filter({ has: page.getByRole('button', { name: spec.name, exact: true }) }); await expect(comparison).toContainText('探索と戦闘の機能'); await expect(comparison).toContainText('チュートリアル'); await expect(comparison).toContainText('\"value\":5'); await comparison.getByRole('button', { name: '遊びと物語の差を確認候補へ保存', exact: true }).click(); await expect(comparison.getByRole('button', { name: '遊びと物語の差を確認候補へ保存', exact: true })).toBeEnabled();\n",
+              "line": 94,
+              "end_line": 94,
+              "excerpt_sha256": "02831b7d77ad3beb8d5787f4bb2786267eed0797b0369efa3415ffee1ea04d68",
+              "source_excerpt": "    beforeReview = await backup(page); nativeBefore = await nativeRecords(); expect(beforeReview.project.history).toHaveLength(1);\n",
+              "snippet": "backup(page)"
+            },
+            {
+              "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
+              "line": 95,
+              "end_line": 95,
+              "excerpt_sha256": "5e42abe6b2ccc18a61246e3dbf4d765d93127047d65d4cd4d593f7adba114688",
+              "source_excerpt": "    await production(page); const comparison = page.locator('.production-planning article.settings-card').filter({ has: page.getByRole('button', { name: spec.name, exact: true }) }); await expect(comparison).toContainText('探索と戦闘の機能'); await expect(comparison).toContainText('チュートリアル'); await expect(comparison).toContainText('\"value\":5'); await comparison.getByRole('button', { name: '遊びと物語の差を確認候補へ保存', exact: true }).click(); await expect(comparison.getByRole('button', { name: '遊びと物語の差を確認候補へ保存', exact: true })).toBeEnabled(); await expect(page.locator('.production-planning').getByRole('alert')).toHaveCount(0);\n",
               "snippet": "production(page)"
             },
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 78,
-              "end_line": 78,
-              "excerpt_sha256": "3c593150d945a36380a6ef9eac73784dfe76dfb1c9817116fa196f421f1c3d1c",
-              "source_excerpt": "    await production(page); const comparison = page.locator('.production-planning article.settings-card').filter({ has: page.getByRole('button', { name: spec.name, exact: true }) }); await expect(comparison).toContainText('探索と戦闘の機能'); await expect(comparison).toContainText('チュートリアル'); await expect(comparison).toContainText('\"value\":5'); await comparison.getByRole('button', { name: '遊びと物語の差を確認候補へ保存', exact: true }).click(); await expect(comparison.getByRole('button', { name: '遊びと物語の差を確認候補へ保存', exact: true })).toBeEnabled();\n",
+              "line": 95,
+              "end_line": 95,
+              "excerpt_sha256": "5e42abe6b2ccc18a61246e3dbf4d765d93127047d65d4cd4d593f7adba114688",
+              "source_excerpt": "    await production(page); const comparison = page.locator('.production-planning article.settings-card').filter({ has: page.getByRole('button', { name: spec.name, exact: true }) }); await expect(comparison).toContainText('探索と戦闘の機能'); await expect(comparison).toContainText('チュートリアル'); await expect(comparison).toContainText('\"value\":5'); await comparison.getByRole('button', { name: '遊びと物語の差を確認候補へ保存', exact: true }).click(); await expect(comparison.getByRole('button', { name: '遊びと物語の差を確認候補へ保存', exact: true })).toBeEnabled(); await expect(page.locator('.production-planning').getByRole('alert')).toHaveCount(0);\n",
               "snippet": "comparison.getByRole('button', { name: '遊びと物語の差を確認候補へ保存', exact: true }).click()"
             }
           ]
@@ -8204,81 +8228,201 @@
         {
           "name": "then",
           "original": "物語で危険な場所が、実際には安全に通れるなどの食い違いを、意図も含めて確認できる。",
-          "callback_line": 80,
+          "callback_line": 97,
           "result": "not_run",
           "source_entry_refs": [
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 80,
-              "end_line": 84,
-              "excerpt_sha256": "990e48bc0d5d813de829e8f6d43fb670380de68db94521a0025ae52cbdde5d25",
-              "source_excerpt": "  await clause('AT-F50', 'then', async () => {\n    const saved = (await backup(page)).project, candidate = saved.entities.find((row): row is Entity<'review'> => row.kind === 'review' && row.data.target === spec.id); expect(candidate).toBeDefined();\n    const text = candidate!.data.body.map(block => block.text).join('\\n'); expect(text).toContain('危険な城門'); expect(text).toContain('城門を探索し'); expect(text).toContain('通過を保証する意図'); expect(candidate!.data.stage).toBe('open'); expect(saved.snapshots.some(pin => pin.id === candidate!.data.targetVersionId)).toBe(true);\n    expect(findEntity(saved, spec.id, 'gameplay_spec').data.taskIds).toEqual([implementation.id]); await attachObservation(info, 'AT-F50-intentional-difference-candidate', candidate);\n  });\n",
-              "snippet": "{\n    const saved = (await backup(page)).project, candidate = saved.entities.find((row): row is Entity<'review'> => row.kind === 'review' && row.data.target === spec.id); expect(candidate).toBeDefined();\n    const text = candidate!.data.body.map(block => block.text).join('\\n'); expect(text).toContain('危険な城門'); expect(text).toContain('城門を探索し'); expect(text).toContain('通過を保証する意図'); expect(candidate!.data.stage).toBe('open'); expect(saved.snapshots.some(pin => pin.id === candidate!.data.targetVersionId)).toBe(true);\n    expect(findEntity(saved, spec.id, 'gameplay_spec').data.taskIds).toEqual([implementation.id]); await attachObservation(info, 'AT-F50-intentional-difference-candidate', candidate);\n  }"
+              "line": 97,
+              "end_line": 115,
+              "excerpt_sha256": "7c2b08e15e20c58c4dbbea415145d5ac8fc31671d4f77a22116959d109936021",
+              "source_excerpt": "  await clause('AT-F50', 'then', async () => {\n    const saved = (await backup(page)).project, candidate = saved.entities.find((row): row is Entity<'review'> => row.kind === 'review' && row.data.target === spec.id); expect(candidate).toBeDefined();\n    const text = candidate!.data.body.map(block => block.text).join('\\n'); expect(text).toContain('危険な城門'); expect(text).toContain('城門を探索し'); expect(text).toContain('通過を保証する意図'); expect(candidate!.data.stage).toBe('open'); expect(saved.snapshots.some(pin => pin.id === candidate!.data.targetVersionId)).toBe(true);\n    expect(findEntity(saved, spec.id, 'gameplay_spec').data.taskIds).toEqual([implementation.id]); await attachObservation(info, 'AT-F50-intentional-difference-candidate', candidate);\n    expect(saved.entities.filter(row => row.kind === 'review')).toHaveLength(1); expect(candidate!.visibility).toBe('private');\n    const pin = saved.snapshots.find(pin => pin.id === candidate!.data.targetVersionId)!;\n    const { history: _history, snapshots: _snapshots, authorAlternatives: _authorAlternatives, ...pinnedContent } = beforeReview.project;\n    expect(pin.content).toEqual(pinnedContent); expect(pin.contentHash).toBe(await sha256(jsonBytes(pin.content)));\n    expect(saved.snapshots).toEqual([...beforeReview.project.snapshots, pin]);\n    expect(saved.entities.map(row => row.id)).toEqual([...beforeReview.project.entities.map(row => row.id), pin.id, candidate!.id]);\n    for (const row of beforeReview.project.entities) expect(saved.entities.find(entity => entity.id === row.id)).toEqual(row);\n    expect(findEntity(saved, pin.id, 'snapshot').data).toMatchObject({ immutable: true, contentHash: pin.contentHash, versionLabel: pin.versionLabel });\n    expect(saved.history.slice(0, -1)).toEqual(beforeReview.project.history); expect(saved.history).toHaveLength(beforeReview.project.history.length + 1);\n    const command = saved.history.at(-1)!; expect(command.baseRevision).toBe(beforeReview.project.revision); expect(command.revision).toBe(saved.revision);\n    nativeSaved = await nativeRecords(); expect(nativeSaved.historyIds).toEqual(saved.history.map(command => command.operationId));\n    expect(nativeSaved.commandIds).toEqual([...nativeBefore.commandIds, command.operationId].sort()); expect(nativeSaved.outboxIds).toEqual([...nativeBefore.outboxIds, command.operationId].sort());\n    persistedProject = saved; await attachObservation(info, 'AT-F50-committed-history-and-native', { historyIds: nativeSaved.historyIds, commandIds: nativeSaved.commandIds, outboxIds: nativeSaved.outboxIds, pin });\n\n  });\n",
+              "snippet": "{\n    const saved = (await backup(page)).project, candidate = saved.entities.find((row): row is Entity<'review'> => row.kind === 'review' && row.data.target === spec.id); expect(candidate).toBeDefined();\n    const text = candidate!.data.body.map(block => block.text).join('\\n'); expect(text).toContain('危険な城門'); expect(text).toContain('城門を探索し'); expect(text).toContain('通過を保証する意図'); expect(candidate!.data.stage).toBe('open'); expect(saved.snapshots.some(pin => pin.id === candidate!.data.targetVersionId)).toBe(true);\n    expect(findEntity(saved, spec.id, 'gameplay_spec').data.taskIds).toEqual([implementation.id]); await attachObservation(info, 'AT-F50-intentional-difference-candidate', candidate);\n    expect(saved.entities.filter(row => row.kind === 'review')).toHaveLength(1); expect(candidate!.visibility).toBe('private');\n    const pin = saved.snapshots.find(pin => pin.id === candidate!.data.targetVersionId)!;\n    const { history: _history, snapshots: _snapshots, authorAlternatives: _authorAlternatives, ...pinnedContent } = beforeReview.project;\n    expect(pin.content).toEqual(pinnedContent); expect(pin.contentHash).toBe(await sha256(jsonBytes(pin.content)));\n    expect(saved.snapshots).toEqual([...beforeReview.project.snapshots, pin]);\n    expect(saved.entities.map(row => row.id)).toEqual([...beforeReview.project.entities.map(row => row.id), pin.id, candidate!.id]);\n    for (const row of beforeReview.project.entities) expect(saved.entities.find(entity => entity.id === row.id)).toEqual(row);\n    expect(findEntity(saved, pin.id, 'snapshot').data).toMatchObject({ immutable: true, contentHash: pin.contentHash, versionLabel: pin.versionLabel });\n    expect(saved.history.slice(0, -1)).toEqual(beforeReview.project.history); expect(saved.history).toHaveLength(beforeReview.project.history.length + 1);\n    const command = saved.history.at(-1)!; expect(command.baseRevision).toBe(beforeReview.project.revision); expect(command.revision).toBe(saved.revision);\n    nativeSaved = await nativeRecords(); expect(nativeSaved.historyIds).toEqual(saved.history.map(command => command.operationId));\n    expect(nativeSaved.commandIds).toEqual([...nativeBefore.commandIds, command.operationId].sort()); expect(nativeSaved.outboxIds).toEqual([...nativeBefore.outboxIds, command.operationId].sort());\n    persistedProject = saved; await attachObservation(info, 'AT-F50-committed-history-and-native', { historyIds: nativeSaved.historyIds, commandIds: nativeSaved.commandIds, outboxIds: nativeSaved.outboxIds, pin });\n\n  }"
             }
           ],
           "assertion_refs": [
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 81,
-              "end_line": 81,
+              "line": 98,
+              "end_line": 98,
               "excerpt_sha256": "d9101763a1eb741109440c2d66c0addb662caac7336048b1bde0f65ada798840",
               "source_excerpt": "    const saved = (await backup(page)).project, candidate = saved.entities.find((row): row is Entity<'review'> => row.kind === 'review' && row.data.target === spec.id); expect(candidate).toBeDefined();\n",
               "snippet": "expect(candidate).toBeDefined()"
             },
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 82,
-              "end_line": 82,
+              "line": 99,
+              "end_line": 99,
               "excerpt_sha256": "b46fbd7696ef8ed17b09d11da5e8ea6c83b73b02e1f0a91192b5836b5725c9ec",
               "source_excerpt": "    const text = candidate!.data.body.map(block => block.text).join('\\n'); expect(text).toContain('危険な城門'); expect(text).toContain('城門を探索し'); expect(text).toContain('通過を保証する意図'); expect(candidate!.data.stage).toBe('open'); expect(saved.snapshots.some(pin => pin.id === candidate!.data.targetVersionId)).toBe(true);\n",
               "snippet": "expect(text).toContain('危険な城門')"
             },
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 82,
-              "end_line": 82,
+              "line": 99,
+              "end_line": 99,
               "excerpt_sha256": "b46fbd7696ef8ed17b09d11da5e8ea6c83b73b02e1f0a91192b5836b5725c9ec",
               "source_excerpt": "    const text = candidate!.data.body.map(block => block.text).join('\\n'); expect(text).toContain('危険な城門'); expect(text).toContain('城門を探索し'); expect(text).toContain('通過を保証する意図'); expect(candidate!.data.stage).toBe('open'); expect(saved.snapshots.some(pin => pin.id === candidate!.data.targetVersionId)).toBe(true);\n",
               "snippet": "expect(text).toContain('城門を探索し')"
             },
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 82,
-              "end_line": 82,
+              "line": 99,
+              "end_line": 99,
               "excerpt_sha256": "b46fbd7696ef8ed17b09d11da5e8ea6c83b73b02e1f0a91192b5836b5725c9ec",
               "source_excerpt": "    const text = candidate!.data.body.map(block => block.text).join('\\n'); expect(text).toContain('危険な城門'); expect(text).toContain('城門を探索し'); expect(text).toContain('通過を保証する意図'); expect(candidate!.data.stage).toBe('open'); expect(saved.snapshots.some(pin => pin.id === candidate!.data.targetVersionId)).toBe(true);\n",
               "snippet": "expect(text).toContain('通過を保証する意図')"
             },
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 82,
-              "end_line": 82,
+              "line": 99,
+              "end_line": 99,
               "excerpt_sha256": "b46fbd7696ef8ed17b09d11da5e8ea6c83b73b02e1f0a91192b5836b5725c9ec",
               "source_excerpt": "    const text = candidate!.data.body.map(block => block.text).join('\\n'); expect(text).toContain('危険な城門'); expect(text).toContain('城門を探索し'); expect(text).toContain('通過を保証する意図'); expect(candidate!.data.stage).toBe('open'); expect(saved.snapshots.some(pin => pin.id === candidate!.data.targetVersionId)).toBe(true);\n",
               "snippet": "expect(candidate!.data.stage).toBe('open')"
             },
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 82,
-              "end_line": 82,
+              "line": 99,
+              "end_line": 99,
               "excerpt_sha256": "b46fbd7696ef8ed17b09d11da5e8ea6c83b73b02e1f0a91192b5836b5725c9ec",
               "source_excerpt": "    const text = candidate!.data.body.map(block => block.text).join('\\n'); expect(text).toContain('危険な城門'); expect(text).toContain('城門を探索し'); expect(text).toContain('通過を保証する意図'); expect(candidate!.data.stage).toBe('open'); expect(saved.snapshots.some(pin => pin.id === candidate!.data.targetVersionId)).toBe(true);\n",
               "snippet": "expect(saved.snapshots.some(pin => pin.id === candidate!.data.targetVersionId)).toBe(true)"
             },
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 83,
-              "end_line": 83,
+              "line": 100,
+              "end_line": 100,
               "excerpt_sha256": "517b77c0689c93414415a78bbe83a0b1feeeacd6f17823851ac97547c2e05643",
               "source_excerpt": "    expect(findEntity(saved, spec.id, 'gameplay_spec').data.taskIds).toEqual([implementation.id]); await attachObservation(info, 'AT-F50-intentional-difference-candidate', candidate);\n",
               "snippet": "expect(findEntity(saved, spec.id, 'gameplay_spec').data.taskIds).toEqual([implementation.id])"
+            },
+            {
+              "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
+              "line": 101,
+              "end_line": 101,
+              "excerpt_sha256": "893fb3327681a62f9cbefc0c7dbc27646271ff07ada296e1ae6b0d227b3d0985",
+              "source_excerpt": "    expect(saved.entities.filter(row => row.kind === 'review')).toHaveLength(1); expect(candidate!.visibility).toBe('private');\n",
+              "snippet": "expect(saved.entities.filter(row => row.kind === 'review')).toHaveLength(1)"
+            },
+            {
+              "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
+              "line": 101,
+              "end_line": 101,
+              "excerpt_sha256": "893fb3327681a62f9cbefc0c7dbc27646271ff07ada296e1ae6b0d227b3d0985",
+              "source_excerpt": "    expect(saved.entities.filter(row => row.kind === 'review')).toHaveLength(1); expect(candidate!.visibility).toBe('private');\n",
+              "snippet": "expect(candidate!.visibility).toBe('private')"
+            },
+            {
+              "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
+              "line": 104,
+              "end_line": 104,
+              "excerpt_sha256": "8916374509890e14350088f81c779a680591f15deb20332d0d31b7a632967b00",
+              "source_excerpt": "    expect(pin.content).toEqual(pinnedContent); expect(pin.contentHash).toBe(await sha256(jsonBytes(pin.content)));\n",
+              "snippet": "expect(pin.content).toEqual(pinnedContent)"
+            },
+            {
+              "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
+              "line": 104,
+              "end_line": 104,
+              "excerpt_sha256": "8916374509890e14350088f81c779a680591f15deb20332d0d31b7a632967b00",
+              "source_excerpt": "    expect(pin.content).toEqual(pinnedContent); expect(pin.contentHash).toBe(await sha256(jsonBytes(pin.content)));\n",
+              "snippet": "expect(pin.contentHash).toBe(await sha256(jsonBytes(pin.content)))"
+            },
+            {
+              "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
+              "line": 105,
+              "end_line": 105,
+              "excerpt_sha256": "311e2c95eed5eb756ac2c49b2e6a36402a2eda8ffe0c167691f659e000b9ca4d",
+              "source_excerpt": "    expect(saved.snapshots).toEqual([...beforeReview.project.snapshots, pin]);\n",
+              "snippet": "expect(saved.snapshots).toEqual([...beforeReview.project.snapshots, pin])"
+            },
+            {
+              "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
+              "line": 106,
+              "end_line": 106,
+              "excerpt_sha256": "0a57ed4a2985a856790b8ef08d001e9cf8de333239c1d022e84a53f0ef2dfced",
+              "source_excerpt": "    expect(saved.entities.map(row => row.id)).toEqual([...beforeReview.project.entities.map(row => row.id), pin.id, candidate!.id]);\n",
+              "snippet": "expect(saved.entities.map(row => row.id)).toEqual([...beforeReview.project.entities.map(row => row.id), pin.id, candidate!.id])"
+            },
+            {
+              "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
+              "line": 107,
+              "end_line": 107,
+              "excerpt_sha256": "67563eec76eae6a60933aeaf47c206bf6c79c8ddda35c2eb2946c9d775f704d7",
+              "source_excerpt": "    for (const row of beforeReview.project.entities) expect(saved.entities.find(entity => entity.id === row.id)).toEqual(row);\n",
+              "snippet": "expect(saved.entities.find(entity => entity.id === row.id)).toEqual(row)"
+            },
+            {
+              "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
+              "line": 108,
+              "end_line": 108,
+              "excerpt_sha256": "f4fa60e0b2734e0174c600e8e01d072c5e811a7ec4cd7ccde44acaf0b630c571",
+              "source_excerpt": "    expect(findEntity(saved, pin.id, 'snapshot').data).toMatchObject({ immutable: true, contentHash: pin.contentHash, versionLabel: pin.versionLabel });\n",
+              "snippet": "expect(findEntity(saved, pin.id, 'snapshot').data).toMatchObject({ immutable: true, contentHash: pin.contentHash, versionLabel: pin.versionLabel })"
+            },
+            {
+              "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
+              "line": 109,
+              "end_line": 109,
+              "excerpt_sha256": "ae1cd6abcf2e4f0e321063372504c93bbcddaba1eeec32d87b1f3c9a231c9c7c",
+              "source_excerpt": "    expect(saved.history.slice(0, -1)).toEqual(beforeReview.project.history); expect(saved.history).toHaveLength(beforeReview.project.history.length + 1);\n",
+              "snippet": "expect(saved.history.slice(0, -1)).toEqual(beforeReview.project.history)"
+            },
+            {
+              "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
+              "line": 109,
+              "end_line": 109,
+              "excerpt_sha256": "ae1cd6abcf2e4f0e321063372504c93bbcddaba1eeec32d87b1f3c9a231c9c7c",
+              "source_excerpt": "    expect(saved.history.slice(0, -1)).toEqual(beforeReview.project.history); expect(saved.history).toHaveLength(beforeReview.project.history.length + 1);\n",
+              "snippet": "expect(saved.history).toHaveLength(beforeReview.project.history.length + 1)"
+            },
+            {
+              "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
+              "line": 110,
+              "end_line": 110,
+              "excerpt_sha256": "194e4b9f24524b4ec8536dc512894a3eac2b0d21d2b7e5f76e4988416e33bcc0",
+              "source_excerpt": "    const command = saved.history.at(-1)!; expect(command.baseRevision).toBe(beforeReview.project.revision); expect(command.revision).toBe(saved.revision);\n",
+              "snippet": "expect(command.baseRevision).toBe(beforeReview.project.revision)"
+            },
+            {
+              "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
+              "line": 110,
+              "end_line": 110,
+              "excerpt_sha256": "194e4b9f24524b4ec8536dc512894a3eac2b0d21d2b7e5f76e4988416e33bcc0",
+              "source_excerpt": "    const command = saved.history.at(-1)!; expect(command.baseRevision).toBe(beforeReview.project.revision); expect(command.revision).toBe(saved.revision);\n",
+              "snippet": "expect(command.revision).toBe(saved.revision)"
+            },
+            {
+              "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
+              "line": 111,
+              "end_line": 111,
+              "excerpt_sha256": "4c2e8cb827de70efbf9b21ad526cc8eec91729e2ac2c7c34dcbc0eedecc31b5d",
+              "source_excerpt": "    nativeSaved = await nativeRecords(); expect(nativeSaved.historyIds).toEqual(saved.history.map(command => command.operationId));\n",
+              "snippet": "expect(nativeSaved.historyIds).toEqual(saved.history.map(command => command.operationId))"
+            },
+            {
+              "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
+              "line": 112,
+              "end_line": 112,
+              "excerpt_sha256": "cbd2f536baf9f25901a7bf736197b26d93972ea6a01bba15e875fb50159a525d",
+              "source_excerpt": "    expect(nativeSaved.commandIds).toEqual([...nativeBefore.commandIds, command.operationId].sort()); expect(nativeSaved.outboxIds).toEqual([...nativeBefore.outboxIds, command.operationId].sort());\n",
+              "snippet": "expect(nativeSaved.commandIds).toEqual([...nativeBefore.commandIds, command.operationId].sort())"
+            },
+            {
+              "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
+              "line": 112,
+              "end_line": 112,
+              "excerpt_sha256": "cbd2f536baf9f25901a7bf736197b26d93972ea6a01bba15e875fb50159a525d",
+              "source_excerpt": "    expect(nativeSaved.commandIds).toEqual([...nativeBefore.commandIds, command.operationId].sort()); expect(nativeSaved.outboxIds).toEqual([...nativeBefore.outboxIds, command.operationId].sort());\n",
+              "snippet": "expect(nativeSaved.outboxIds).toEqual([...nativeBefore.outboxIds, command.operationId].sort())"
             }
           ],
           "normal_operation_refs": [
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 81,
-              "end_line": 81,
+              "line": 98,
+              "end_line": 98,
               "excerpt_sha256": "d9101763a1eb741109440c2d66c0addb662caac7336048b1bde0f65ada798840",
               "source_excerpt": "    const saved = (await backup(page)).project, candidate = saved.entities.find((row): row is Entity<'review'> => row.kind === 'review' && row.data.target === spec.id); expect(candidate).toBeDefined();\n",
               "snippet": "backup(page)"
@@ -8288,81 +8432,97 @@
         {
           "name": "negative_or_edge",
           "original": "遊びの仕様と物語の記述の差は意図付き確認候補にする。ゲーム機能の未実装を執筆未完了と混同しない。",
-          "callback_line": 85,
+          "callback_line": 116,
           "result": "not_run",
           "source_entry_refs": [
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 85,
-              "end_line": 89,
-              "excerpt_sha256": "bccbd59b06572392c927a03ce4b8c6b6d5afe923ffa38585c7c2518dbad37c6d",
-              "source_excerpt": "  await clause('AT-F50', 'negative_or_edge', async () => {\n    await production(page); await expect(page.locator('.production-planning article').filter({ hasText: writing.name })).toContainText('writing · done'); await expect(page.locator('.production-planning article').filter({ hasText: implementation.name })).toContainText('implementation · todo');\n    await page.reload(); const saved = (await backup(page)).project; expect(findEntity(saved, scene.id, 'scene').data).toEqual(scene.data); expect(findEntity(saved, writing.id, 'production_task').data.progress).toBe('done'); expect(findEntity(saved, implementation.id, 'production_task').data.progress).toBe('todo');\n    await attachObservation(info, 'AT-F50-observed', { storySceneId: scene.id, gameplaySpecificationId: spec.id, authoredTaskDone: writing.id, implementationTaskPending: implementation.id, automaticallyRewrittenStory: false, differenceRequiresAuthorReview: true });\n  });\n",
-              "snippet": "{\n    await production(page); await expect(page.locator('.production-planning article').filter({ hasText: writing.name })).toContainText('writing · done'); await expect(page.locator('.production-planning article').filter({ hasText: implementation.name })).toContainText('implementation · todo');\n    await page.reload(); const saved = (await backup(page)).project; expect(findEntity(saved, scene.id, 'scene').data).toEqual(scene.data); expect(findEntity(saved, writing.id, 'production_task').data.progress).toBe('done'); expect(findEntity(saved, implementation.id, 'production_task').data.progress).toBe('todo');\n    await attachObservation(info, 'AT-F50-observed', { storySceneId: scene.id, gameplaySpecificationId: spec.id, authoredTaskDone: writing.id, implementationTaskPending: implementation.id, automaticallyRewrittenStory: false, differenceRequiresAuthorReview: true });\n  }"
+              "line": 116,
+              "end_line": 121,
+              "excerpt_sha256": "0170ab33639078b8167fb7b16e6a602c8e167e94766951d4e40210bc529cc561",
+              "source_excerpt": "  await clause('AT-F50', 'negative_or_edge', async () => {\n    await production(page); await expect(page.locator('.production-planning article').filter({ hasText: writing.name })).toContainText('writing · done'); await expect(page.locator('.production-planning article').filter({ hasText: implementation.name })).toContainText('implementation · todo');\n    await page.reload(); const saved = (await backup(page)).project; expect(findEntity(saved, scene.id, 'scene').data).toEqual(scene.data); expect(findEntity(saved, writing.id, 'production_task').data.progress).toBe('done'); expect(findEntity(saved, implementation.id, 'production_task').data.progress).toBe('todo');\n    expect(saved).toEqual(persistedProject); expect((await nativeRecords()).fingerprint).toBe(nativeSaved.fingerprint);\n    await attachObservation(info, 'AT-F50-observed', { storySceneId: scene.id, gameplaySpecificationId: spec.id, authoredTaskDone: writing.id, implementationTaskPending: implementation.id, automaticallyRewrittenStory: false, differenceRequiresAuthorReview: true });\n  });\n",
+              "snippet": "{\n    await production(page); await expect(page.locator('.production-planning article').filter({ hasText: writing.name })).toContainText('writing · done'); await expect(page.locator('.production-planning article').filter({ hasText: implementation.name })).toContainText('implementation · todo');\n    await page.reload(); const saved = (await backup(page)).project; expect(findEntity(saved, scene.id, 'scene').data).toEqual(scene.data); expect(findEntity(saved, writing.id, 'production_task').data.progress).toBe('done'); expect(findEntity(saved, implementation.id, 'production_task').data.progress).toBe('todo');\n    expect(saved).toEqual(persistedProject); expect((await nativeRecords()).fingerprint).toBe(nativeSaved.fingerprint);\n    await attachObservation(info, 'AT-F50-observed', { storySceneId: scene.id, gameplaySpecificationId: spec.id, authoredTaskDone: writing.id, implementationTaskPending: implementation.id, automaticallyRewrittenStory: false, differenceRequiresAuthorReview: true });\n  }"
             }
           ],
           "assertion_refs": [
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 86,
-              "end_line": 86,
+              "line": 117,
+              "end_line": 117,
               "excerpt_sha256": "7761529c25dbf01811ba971b11c40c00de7f0541d8422967f3cd33a1eb8dfda6",
               "source_excerpt": "    await production(page); await expect(page.locator('.production-planning article').filter({ hasText: writing.name })).toContainText('writing · done'); await expect(page.locator('.production-planning article').filter({ hasText: implementation.name })).toContainText('implementation · todo');\n",
               "snippet": "expect(page.locator('.production-planning article').filter({ hasText: writing.name })).toContainText('writing · done')"
             },
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 86,
-              "end_line": 86,
+              "line": 117,
+              "end_line": 117,
               "excerpt_sha256": "7761529c25dbf01811ba971b11c40c00de7f0541d8422967f3cd33a1eb8dfda6",
               "source_excerpt": "    await production(page); await expect(page.locator('.production-planning article').filter({ hasText: writing.name })).toContainText('writing · done'); await expect(page.locator('.production-planning article').filter({ hasText: implementation.name })).toContainText('implementation · todo');\n",
               "snippet": "expect(page.locator('.production-planning article').filter({ hasText: implementation.name })).toContainText('implementation · todo')"
             },
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 87,
-              "end_line": 87,
+              "line": 118,
+              "end_line": 118,
               "excerpt_sha256": "b25ccd214af3e48c807e2d2e0fc410f3697ab1990fd1f358d22b4ea8b948a153",
               "source_excerpt": "    await page.reload(); const saved = (await backup(page)).project; expect(findEntity(saved, scene.id, 'scene').data).toEqual(scene.data); expect(findEntity(saved, writing.id, 'production_task').data.progress).toBe('done'); expect(findEntity(saved, implementation.id, 'production_task').data.progress).toBe('todo');\n",
               "snippet": "expect(findEntity(saved, scene.id, 'scene').data).toEqual(scene.data)"
             },
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 87,
-              "end_line": 87,
+              "line": 118,
+              "end_line": 118,
               "excerpt_sha256": "b25ccd214af3e48c807e2d2e0fc410f3697ab1990fd1f358d22b4ea8b948a153",
               "source_excerpt": "    await page.reload(); const saved = (await backup(page)).project; expect(findEntity(saved, scene.id, 'scene').data).toEqual(scene.data); expect(findEntity(saved, writing.id, 'production_task').data.progress).toBe('done'); expect(findEntity(saved, implementation.id, 'production_task').data.progress).toBe('todo');\n",
               "snippet": "expect(findEntity(saved, writing.id, 'production_task').data.progress).toBe('done')"
             },
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 87,
-              "end_line": 87,
+              "line": 118,
+              "end_line": 118,
               "excerpt_sha256": "b25ccd214af3e48c807e2d2e0fc410f3697ab1990fd1f358d22b4ea8b948a153",
               "source_excerpt": "    await page.reload(); const saved = (await backup(page)).project; expect(findEntity(saved, scene.id, 'scene').data).toEqual(scene.data); expect(findEntity(saved, writing.id, 'production_task').data.progress).toBe('done'); expect(findEntity(saved, implementation.id, 'production_task').data.progress).toBe('todo');\n",
               "snippet": "expect(findEntity(saved, implementation.id, 'production_task').data.progress).toBe('todo')"
+            },
+            {
+              "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
+              "line": 119,
+              "end_line": 119,
+              "excerpt_sha256": "4c76fd0fde4833f93dbaaf13962d4e26484f2e9f903586c2ded0a07398859adb",
+              "source_excerpt": "    expect(saved).toEqual(persistedProject); expect((await nativeRecords()).fingerprint).toBe(nativeSaved.fingerprint);\n",
+              "snippet": "expect(saved).toEqual(persistedProject)"
+            },
+            {
+              "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
+              "line": 119,
+              "end_line": 119,
+              "excerpt_sha256": "4c76fd0fde4833f93dbaaf13962d4e26484f2e9f903586c2ded0a07398859adb",
+              "source_excerpt": "    expect(saved).toEqual(persistedProject); expect((await nativeRecords()).fingerprint).toBe(nativeSaved.fingerprint);\n",
+              "snippet": "expect((await nativeRecords()).fingerprint).toBe(nativeSaved.fingerprint)"
             }
           ],
           "normal_operation_refs": [
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 86,
-              "end_line": 86,
+              "line": 117,
+              "end_line": 117,
               "excerpt_sha256": "7761529c25dbf01811ba971b11c40c00de7f0541d8422967f3cd33a1eb8dfda6",
               "source_excerpt": "    await production(page); await expect(page.locator('.production-planning article').filter({ hasText: writing.name })).toContainText('writing · done'); await expect(page.locator('.production-planning article').filter({ hasText: implementation.name })).toContainText('implementation · todo');\n",
               "snippet": "production(page)"
             },
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 87,
-              "end_line": 87,
+              "line": 118,
+              "end_line": 118,
               "excerpt_sha256": "b25ccd214af3e48c807e2d2e0fc410f3697ab1990fd1f358d22b4ea8b948a153",
               "source_excerpt": "    await page.reload(); const saved = (await backup(page)).project; expect(findEntity(saved, scene.id, 'scene').data).toEqual(scene.data); expect(findEntity(saved, writing.id, 'production_task').data.progress).toBe('done'); expect(findEntity(saved, implementation.id, 'production_task').data.progress).toBe('todo');\n",
               "snippet": "page.reload()"
             },
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-              "line": 87,
-              "end_line": 87,
+              "line": 118,
+              "end_line": 118,
               "excerpt_sha256": "b25ccd214af3e48c807e2d2e0fc410f3697ab1990fd1f358d22b4ea8b948a153",
               "source_excerpt": "    await page.reload(); const saved = (await backup(page)).project; expect(findEntity(saved, scene.id, 'scene').data).toEqual(scene.data); expect(findEntity(saved, writing.id, 'production_task').data.progress).toBe('done'); expect(findEntity(saved, implementation.id, 'production_task').data.progress).toBe('todo');\n",
               "snippet": "backup(page)"
@@ -8423,6 +8583,21 @@
       "source": "src/storage/recordPartsDatabase.ts",
       "execution": "not_run",
       "source_sha256": "b717a52e1b422a9858557d0f3aea3f0806326d965bfb5edc317368f0b8a6ec0c"
+    },
+    {
+      "source": "src/domain/narrative.ts",
+      "execution": "not_run",
+      "source_sha256": "0a068dad46c6d6d5fd85f8ceed559be796afecb6d81cc310e5b23860c25b4219"
+    },
+    {
+      "source": "src/ui/GameplayProductionLinks.tsx",
+      "execution": "not_run",
+      "source_sha256": "61f88bb9441f3d76da4d6d61a6e3457c78c5e7b86210727ed34adc9bf120f221"
+    },
+    {
+      "source": "tests/rb05-narrative.test.ts",
+      "execution": "not_run",
+      "source_sha256": "b36aba5a6d3e3e11bda65226e0da0e8d2c9990a30c8e4d9ad0f67db07daf6eb2"
     }
   ]
 }

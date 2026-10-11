@@ -3,6 +3,7 @@ import { createProject, emptyValidity, textToRichText } from '../../src/domain/m
 import { dialogueContentHash } from '../../src/domain/production';
 import { createWorldSnapshot } from '../../src/domain/world';
 import type { Entity } from '../../src/domain/types';
+import { jsonBytes, sha256 } from '../../src/storage/json';
 import { add, attachObservation, authorFingerprint, backup, clause, editData, entity, findEntity, given, navigate, openEntity, production, reader, record, start } from './ap04-original-e-f37-50-helpers';
 
 test('AT-F48 時期で変わる一人称と表記ゆれ・意図した例外を、台詞・字幕・翻訳の確認候補として検査する', async ({ page }, info) => {
@@ -72,19 +73,50 @@ test('AT-F49 企画目的と版1採用判断へ修正指摘を結び、却下理
 test('AT-F50 危険と書いた場面と無条件通過の仕様を探索・戦闘・報酬・導入・実装作業へ結び、意図付き確認候補にする', async ({ page }, info) => {
   const p = createProject('AT-F50 物語と遊びの差'), scene = entity(p, 'scene', '危険な場所を説明する場面', { summary: textToRichText('危険な城門であり、守護者との戦いが待つ。'), body: textToRichText('危険な城門を通り抜ける。') }), spec = entity(p, 'gameplay_spec', '無条件通過する実装仕様', { sceneId: scene.id, action: textToRichText('条件を調べず無条件に城門を通過する。'), mechanic: '無条件通過', intentionalDifference: '' });
   const writing = entity(p, 'production_task', '場面本文の執筆済み', { targetIds: [scene.id], stage: 'writing', progress: 'done' }), implementation = entity(p, 'production_task', 'ゲーム機能の実装未完了', { targetIds: [scene.id], stage: 'implementation', progress: 'todo', dependsOn: [writing.id] });
+  const nativeRecords = () => page.evaluate(async () => {
+    const db = await new Promise<IDBDatabase>((resolve, reject) => {
+      const request = indexedDB.open('scenario-manager-local-v1');
+      request.onsuccess = () => resolve(request.result); request.onerror = () => reject(request.error);
+    });
+    try {
+      const names = ['projects', 'entities', 'relations', 'blocks', 'snapshots', 'views', 'commands', 'outbox', 'recordParts'];
+      const tx = db.transaction(names, 'readonly');
+      const rows = await Promise.all(names.map(name => new Promise<Record<string, unknown>[]>((resolve, reject) => {
+        const request = tx.objectStore(name).getAll(); request.onsuccess = () => resolve(request.result); request.onerror = () => reject(request.error);
+      })));
+      return { fingerprint: JSON.stringify(rows), historyIds: rows[0][0].historyIds as string[], commandIds: rows[6].map(row => row.operationId as string), outboxIds: rows[7].map(row => row.operationId as string) };
+    } finally { db.close(); }
+  });
+  let beforeReview!: Awaited<ReturnType<typeof backup>>, persistedProject!: Awaited<ReturnType<typeof backup>>['project'], nativeBefore!: Awaited<ReturnType<typeof nativeRecords>>, nativeSaved!: Awaited<ReturnType<typeof nativeRecords>>;
   await clause('AT-F50', 'given', async () => { await given(page, info, 'AT-F50', p); await production(page); const comparison = page.locator('.production-planning article.settings-card').filter({ has: page.getByRole('button', { name: spec.name, exact: true }) }); await expect(comparison).toContainText('危険な城門'); await expect(comparison).toContainText('無条件に城門を通過'); });
   await clause('AT-F50', 'when', async () => {
     await openEntity(page, 'gameplay_spec', spec.name); await editData(page, { ...spec.data, action: textToRichText('城門を探索し、守護者との戦闘を経て通過する。'), mechanic: '探索と戦闘の機能', reward: { type: 'integer', value: 5 }, tutorial: textToRichText('城門を調べ、戦闘の操作を確認してから進む。'), taskIds: [implementation.id], intentionalDifference: '導入区間では危険を演出しつつ、失敗による足止めを避けて通過を保証する意図' });
-    await production(page); const comparison = page.locator('.production-planning article.settings-card').filter({ has: page.getByRole('button', { name: spec.name, exact: true }) }); await expect(comparison).toContainText('探索と戦闘の機能'); await expect(comparison).toContainText('チュートリアル'); await expect(comparison).toContainText('"value":5'); await comparison.getByRole('button', { name: '遊びと物語の差を確認候補へ保存', exact: true }).click(); await expect(comparison.getByRole('button', { name: '遊びと物語の差を確認候補へ保存', exact: true })).toBeEnabled();
+    beforeReview = await backup(page); nativeBefore = await nativeRecords(); expect(beforeReview.project.history).toHaveLength(1);
+    await production(page); const comparison = page.locator('.production-planning article.settings-card').filter({ has: page.getByRole('button', { name: spec.name, exact: true }) }); await expect(comparison).toContainText('探索と戦闘の機能'); await expect(comparison).toContainText('チュートリアル'); await expect(comparison).toContainText('"value":5'); await comparison.getByRole('button', { name: '遊びと物語の差を確認候補へ保存', exact: true }).click(); await expect(comparison.getByRole('button', { name: '遊びと物語の差を確認候補へ保存', exact: true })).toBeEnabled(); await expect(page.locator('.production-planning').getByRole('alert')).toHaveCount(0);
   });
   await clause('AT-F50', 'then', async () => {
     const saved = (await backup(page)).project, candidate = saved.entities.find((row): row is Entity<'review'> => row.kind === 'review' && row.data.target === spec.id); expect(candidate).toBeDefined();
     const text = candidate!.data.body.map(block => block.text).join('\n'); expect(text).toContain('危険な城門'); expect(text).toContain('城門を探索し'); expect(text).toContain('通過を保証する意図'); expect(candidate!.data.stage).toBe('open'); expect(saved.snapshots.some(pin => pin.id === candidate!.data.targetVersionId)).toBe(true);
     expect(findEntity(saved, spec.id, 'gameplay_spec').data.taskIds).toEqual([implementation.id]); await attachObservation(info, 'AT-F50-intentional-difference-candidate', candidate);
+    expect(saved.entities.filter(row => row.kind === 'review')).toHaveLength(1); expect(candidate!.visibility).toBe('private');
+    const pin = saved.snapshots.find(pin => pin.id === candidate!.data.targetVersionId)!;
+    const { history: _history, snapshots: _snapshots, authorAlternatives: _authorAlternatives, ...pinnedContent } = beforeReview.project;
+    expect(pin.content).toEqual(pinnedContent); expect(pin.contentHash).toBe(await sha256(jsonBytes(pin.content)));
+    expect(saved.snapshots).toEqual([...beforeReview.project.snapshots, pin]);
+    expect(saved.entities.map(row => row.id)).toEqual([...beforeReview.project.entities.map(row => row.id), pin.id, candidate!.id]);
+    for (const row of beforeReview.project.entities) expect(saved.entities.find(entity => entity.id === row.id)).toEqual(row);
+    expect(findEntity(saved, pin.id, 'snapshot').data).toMatchObject({ immutable: true, contentHash: pin.contentHash, versionLabel: pin.versionLabel });
+    expect(saved.history.slice(0, -1)).toEqual(beforeReview.project.history); expect(saved.history).toHaveLength(beforeReview.project.history.length + 1);
+    const command = saved.history.at(-1)!; expect(command.baseRevision).toBe(beforeReview.project.revision); expect(command.revision).toBe(saved.revision);
+    nativeSaved = await nativeRecords(); expect(nativeSaved.historyIds).toEqual(saved.history.map(command => command.operationId));
+    expect(nativeSaved.commandIds).toEqual([...nativeBefore.commandIds, command.operationId].sort()); expect(nativeSaved.outboxIds).toEqual([...nativeBefore.outboxIds, command.operationId].sort());
+    persistedProject = saved; await attachObservation(info, 'AT-F50-committed-history-and-native', { historyIds: nativeSaved.historyIds, commandIds: nativeSaved.commandIds, outboxIds: nativeSaved.outboxIds, pin });
+
   });
   await clause('AT-F50', 'negative_or_edge', async () => {
     await production(page); await expect(page.locator('.production-planning article').filter({ hasText: writing.name })).toContainText('writing · done'); await expect(page.locator('.production-planning article').filter({ hasText: implementation.name })).toContainText('implementation · todo');
     await page.reload(); const saved = (await backup(page)).project; expect(findEntity(saved, scene.id, 'scene').data).toEqual(scene.data); expect(findEntity(saved, writing.id, 'production_task').data.progress).toBe('done'); expect(findEntity(saved, implementation.id, 'production_task').data.progress).toBe('todo');
+    expect(saved).toEqual(persistedProject); expect((await nativeRecords()).fingerprint).toBe(nativeSaved.fingerprint);
     await attachObservation(info, 'AT-F50-observed', { storySceneId: scene.id, gameplaySpecificationId: spec.id, authoredTaskDone: writing.id, implementationTaskPending: implementation.id, automaticallyRewrittenStory: false, differenceRequiresAuthorReview: true });
   });
 });

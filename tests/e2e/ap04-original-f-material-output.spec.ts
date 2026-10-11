@@ -32,9 +32,13 @@ async function outputBytes(page: Page, profile: 'reader' | 'playable_preview' | 
   await output(page);
   await page.getByLabel('出力目的', { exact: true }).selectOption(profile);
   await page.getByRole('button', { name: '内容を検査・プレビュー', exact: true }).click();
-  await expect(page.locator('.export-result .export-artifact')).toHaveCount(1);
+  await expect(page.locator('.export-result .export-artifact')).toHaveCount(profile === 'production' ? 2 : 1);
+  const artifact = profile === 'production'
+    ? page.locator('.export-result .export-artifact').filter({ has: page.getByText('production.json', { exact: true }) })
+    : page.locator('.export-result .export-artifact');
+  await expect(artifact).toHaveCount(1);
   const pending = page.waitForEvent('download');
-  await page.locator('.export-artifact').getByRole('button', { name: 'この内容を保存', exact: true }).click();
+  await artifact.getByRole('button', { name: 'この内容を保存', exact: true }).click();
   return new Uint8Array(await readFile((await (await pending).path())!));
 }
 
@@ -121,7 +125,7 @@ function fixturePublicPolicy(p: ProjectData, selected: Entity[]) {
     for (const [field, value] of Object.entries(entity.data)) {
       if (value == null || !['summary', 'body', 'text', 'key', 'label', 'terminalReason', 'description', 'displayName', 'locator', 'excerptLocation', 'interpretation'].includes(field)) continue;
       const copy = structuredClone(value);
-      if (Array.isArray(copy)) for (const block of copy) if (block && typeof block.id === 'string' && typeof block.text === 'string') { const origin = block.id; block.id = newId(); blockSources[block.id] = origin; }
+      if (Array.isArray(copy)) for (const block of copy) if (block && typeof block.id === 'string' && typeof block.text === 'string') { const origin = block.id; block.id = newId(); if (entity.status === 'confirmed' && !entity.deletedAt) blockSources[block.id] = origin; }
       output[field] = copy;
     }
     publicTexts[entity.id] = output;
@@ -364,7 +368,7 @@ test('AT-F25 公開版1から作者別案の新場面を作って没にし、別
   const currentPolicy = withGraph.project.entities.find(e => e.id === policy.id)!;
   if (currentPolicy.kind !== 'projection_profile' || edge.kind !== 'flow_edge') throw new Error('制作範囲または新選択がありません');
   await openEntity(page, 'projection_profile', policy.name);
-  await editData(page, { ...currentPolicy.data, includedIds: [...currentPolicy.data.includedIds, edge.id], publicTexts: { ...currentPolicy.data.publicTexts, [edge.id]: { label: edge.data.label } } });
+  await editData(page, { ...currentPolicy.data, includedIds: [...currentPolicy.data.includedIds, edge.id], allowedKinds: [...new Set([...(currentPolicy.data.allowedKinds ?? []), 'flow_edge' as const])], publicTexts: { ...currentPolicy.data.publicTexts, [edge.id]: { label: edge.data.label } } });
   await page.reload();
   const saved = await backup(page);
   const alternative = saved.project.authorAlternatives!.find(a => a.id === alternativeId)!;
@@ -376,11 +380,16 @@ test('AT-F25 公開版1から作者別案の新場面を作って没にし、別
   expect(saved.project.entities.find(e => e.id === scene.id)?.data).toEqual(scene.data);
   const nativeBeforeOutputs = await authorFingerprint(page);
   const production = JSON.parse(strFromU8(await outputBytes(page, 'production')));
+  const productionMarkdownArtifact = page.locator('.export-result .export-artifact').filter({ has: page.getByText('production.md', { exact: true }) });
+  await expect(productionMarkdownArtifact).toHaveCount(1);
+  const productionMarkdownDownload = page.waitForEvent('download');
+  await productionMarkdownArtifact.getByRole('button', { name: 'この内容を保存', exact: true }).click();
+  const productionMarkdown = strFromU8(new Uint8Array(await readFile((await (await productionMarkdownDownload).path())!)));
   const runtime = JSON.parse(strFromU8(await outputBytes(page, 'runtime_json')));
   expect(production.format).toBe('scenario-production');
   expect(JSON.stringify(production)).toContain('正本だけの制作本文。');
   expect(runtime.flow.edges.some((e: { id: string }) => e.id === edge.id)).toBe(true);
-  for (const text of [JSON.stringify(production), JSON.stringify(runtime)]) {
+  for (const text of [JSON.stringify(production), productionMarkdown, JSON.stringify(runtime)]) {
     expect(text).not.toContain('作者別案だけの没結末本文。');
     expect(text).not.toContain('仮の場面だけにある未採用本文。');
     expect(text).not.toContain(alternativeId); expect(text).not.toContain(alternativeSceneId);

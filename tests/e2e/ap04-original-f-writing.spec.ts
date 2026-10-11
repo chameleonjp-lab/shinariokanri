@@ -148,11 +148,21 @@ test('AT-F06 要約・本文・秘密メモを分けた場面をカードから�
   const reading = page.getByRole('region', { name: '章順・選択経路の通読', exact: true });
   await reading.getByLabel(chapter.name, { exact: true }).check();
   await reading.getByLabel(otherChapter.name, { exact: true }).uncheck();
-  await expect(reading.locator('.reading-body')).toContainText('門番は去った。門は開かない。');
+  const readingBody = reading.locator('.reading-body .rich-text');
+  const renderedBaseText = () => readingBody.evaluate(element => {
+    // Ruby readings annotate the base text; inspect only a detached copy.
+    const copy = element.cloneNode(true) as HTMLElement;
+    copy.querySelectorAll('rt, rp').forEach(annotation => annotation.remove());
+    return copy.textContent;
+  });
+  await expect(readingBody).toHaveCount(1);
+  await expect.poll(renderedBaseText).toBe('門番は去った。門は開かない。');
   await expect(reading).not.toContainText('選ばない章だけにある文章');
   for (const orientation of ['横書き', '縦書き']) {
     await reading.getByRole('button', { name: orientation, exact: true }).click();
     await expect(reading.locator('.reading-body .rich-text')).toHaveClass(orientation === '縦書き' ? /vertical-text/ : /^rich-text\s*$/);
+    await expect.poll(renderedBaseText).toBe('門番は去った。門は開かない。');
+    await expect(readingBody.locator('ruby')).toHaveText('門番もんばん');
     await expect(reading.locator('.reading-body ruby rt')).toHaveText('もんばん');
     await expect(reading).not.toContainText('秘密の作者メモ: 鳥は黒幕');
   }
