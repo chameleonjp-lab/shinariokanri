@@ -167,6 +167,7 @@ export function EntityEditor({ entity, project, referenceProject, isNew, hasUnsa
       if (manual) { setTemplateReview({ template: structuredClone(current), project }); setTemplateTargets([]); setTemplateReplacements({}); setTemplateFailure(''); }
       return;
     }
+    if (!dirty) return;
     const stamp = JSON.stringify(current);
     if (!manual && (stamp === attemptRef.current || !current.name.trim() && !['event', 'dialogue_line'].includes(current.kind))) return;
     attemptRef.current = stamp;
