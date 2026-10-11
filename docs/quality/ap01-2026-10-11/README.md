@@ -8,7 +8,9 @@ main `8285608c75791ed1ea01380751abb3805913b639`（PR #43取り込み後）から
 
 [一件ずつの差分照合と配信bytes](integration.json)は22製品・検査・CIファイルのmain基準/後続/統合後のGit blob、bytes、SHA-256、変更目的を記録する。全22件は後続の実bytesを保持し、#38〜#42のheadが統合commitの祖先であることも確認した。元要件・工程・受入レジストリと `scripts/check_release.py` のbytesは不変。
 
-同じ統合入力のproduction buildは `64a162ebfac9e7f65105`、基底 `/shinariokanri/`、配信13ファイルを固定した。文書・完成計画・歴史監査Git blob検査とPython24件は成功した。単体・通常画面・Large・実機・実APIの成功をこの文書検査から推定しない。後続修正は別の候補commit/buildと実行記録に固定する。
+初回production buildは `64a162ebfac9e7f65105`、基底 `/shinariokanri/`、配信13ファイルのbytesを記録した。ただしdefault実行環境の `spawnSync git EPERM` により配布メタデータはcommit/tree=`unknown`、dirty=`true`だった。ビルドの処理自体は成功したが、固定候補に結び付いたclean buildの合格証拠としては扱わない。版情報を取得できる追加network権限の実行環境で新候補をビルドし直し、実メタデータを確認する。これは製品のGit検出規則の変更ではない。
+
+文書・完成計画・歴史監査Git blob検査とPython24件は成功した。単体・通常画面・Large・実機・実APIの成功をこの文書検査から推定しない。後続修正は別の候補commit/buildと実行記録に固定する。
 
 ## 証拠と完成までの順序
 
