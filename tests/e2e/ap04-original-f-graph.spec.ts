@@ -136,7 +136,11 @@ test('AT-F59 六種類が混在する図を種類/一段/二段/表へ切り替�
   if ((await identity.getAttribute('open')) === null) await identity.locator('summary').click();
   await expect(identity.locator('.record-meta dd').first()).toHaveText(edge.id);
   await page.locator('.detail-panel').getByRole('button', { name: '詳細を閉じる', exact: true }).click();
-  await graph(page); await expect(panel.locator('.world-graph-scope')).toContainText('非表示 0線');
+  await graph(page);
+  await expect(panel.getByLabel('中心にする情報', { exact: true })).toHaveValue(edge.id);
+  await panel.getByLabel('中心にする情報', { exact: true }).selectOption('');
+  await expect(panel.getByLabel('中心にする情報', { exact: true })).toHaveValue('');
+  await expect(panel.locator('.world-graph-scope')).toContainText('非表示 0線');
   expect(await authorFingerprint(page)).toBe(before);
   await navigate(page, /^作品・保存/); await page.getByRole('tab', { name: '目的別出力', exact: true }).click();
   await page.getByLabel('出力する公開範囲', { exact: true }).selectOption(policy.id);
