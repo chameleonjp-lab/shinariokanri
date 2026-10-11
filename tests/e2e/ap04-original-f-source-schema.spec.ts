@@ -598,9 +598,9 @@ test('AT-F29 ローカル引用保護: reviewer UUID の版1指摘から改訂�
   await expect(actions.locator('blockquote')).toHaveText(quotedText);
 
   await actions.getByRole('button', { name: '修正済みとして保存', exact: true }).click();
-  await expect(actions.getByRole('status')).toContainText('端末の指摘を修正済みにしました');
+  await expect(actions.getByRole('status').filter({ hasText: '端末の指摘を修正済みにしました' })).toContainText('端末の指摘を修正済みにしました');
   await actions.getByRole('button', { name: '確認済みとして保存', exact: true }).click();
-  await expect(actions.getByRole('status')).toContainText('端末の指摘を確認済みにしました');
+  await expect(actions.getByRole('status').filter({ hasText: '端末の指摘を確認済みにしました' })).toContainText('端末の指摘を確認済みにしました');
   await expectOriginalReviewQuote(page, originalBody, quotedText);
   const beforeCold = await backup(page);
   const verified = record(beforeCold.project, review.id, 'review');
