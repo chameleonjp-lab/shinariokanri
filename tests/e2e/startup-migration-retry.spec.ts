@@ -97,11 +97,13 @@ for (const failures of [1, 2]) test(`旧native v1の移行を${failures}回原�
   await info.attach('actual-retried-complete-file.scenario', { body: Buffer.from(bytes), contentType: 'application/zip' });
   await page.reload();
   await expect(page.locator('.project-switch')).toContainText(original.name);
-  const empty = await browser.newContext();
-  try {
+  for (const mode of ['new', 'clone'] as const) {
+    const empty = await browser.newContext();
+    try {
     const restored = await empty.newPage(); await restored.goto(page.url());
     await restored.getByRole('button', { name: '保存ファイルを読み込む', exact: true }).click();
     await restored.locator('input[type=file]').setInputFiles({ name: 'retried-complete.scenario', mimeType: 'application/zip', buffer: Buffer.from(bytes) });
+    if (mode === 'clone') await restored.getByLabel('復元方法', { exact: true }).selectOption('clone');
     await restored.getByLabel('復元方法と対象への影響を確認しました').check();
     await restored.getByRole('button', { name: 'この内容で復元する', exact: true }).click();
     await expect(restored.locator('.project-switch')).toContainText(original.name);
@@ -112,7 +114,22 @@ for (const failures of [1, 2]) test(`旧native v1の移行を${failures}回原�
     await restored.getByRole('button', { name: /再実行して状態を比較/ }).first().click();
     await expect(restored.locator('.reader-trial-heading')).toContainText('意図した終端');
     await expect(restored.locator('.reader-issue')).toHaveCount(0);
-  } finally { await empty.close(); }
+    await restored.locator('.sidebar').getByRole('button', { name: /^作品/ }).click();
+    await restored.getByRole('tab', { name: '完全保存・復元', exact: true }).click();
+    const downloaded = restored.waitForEvent('download'); await restored.getByRole('button', { name: '完全保存ファイルを作成', exact: true }).click();
+    const restoredBytes = new Uint8Array(await readFile((await (await downloaded).path())!));
+    const coldProject = (await inspectScenario(restoredBytes, { worker: false })).project;
+    if (mode === 'new') expect(coldProject).toEqual(original);
+    else {
+      expect(coldProject.projectId).not.toBe(original.projectId);
+      expect(coldProject.entities.map(entity => [entity.kind, entity.name])).toEqual(original.entities.map(entity => [entity.kind, entity.name]));
+      expect(coldProject.entities.every(entity => !original.entities.some(before => before.id === entity.id))).toBe(true);
+      expect(coldProject.snapshots.map(snapshot => snapshot.versionLabel)).toEqual(original.snapshots.map(snapshot => snapshot.versionLabel));
+      expect(coldProject.history).toHaveLength(original.history.length);
+    }
+    await info.attach(`actual-retried-${mode}-cold.scenario`, { body: Buffer.from(restoredBytes), contentType: 'application/zip' });
+    } finally { await empty.close(); }
+  }
   await info.attach('observations.json', { body: Buffer.from(JSON.stringify({ failures, browserVersion: browser.version(), legacySHA256: hash(legacy), nativeVersionBefore: before.version,
     nativeVersionAfterRetry: migrated.version, allTablesUnchangedAtEachRefusal: true, completeFileSHA256: hash(bytes), completeProjectExact: true,
     coldAndEmptyEnvironmentReplay: true, originalWholeAcceptancePromotion: false, physicalDevice: false }, null, 2)), contentType: 'application/json' });
