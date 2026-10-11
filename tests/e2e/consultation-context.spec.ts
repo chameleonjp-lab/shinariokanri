@@ -1,4 +1,4 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect, type Browser, type Page } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import { createEntity, createProject, newId, textToRichText } from '../../src/domain/model';
 import { createWorldSnapshot } from '../../src/domain/world';
@@ -35,6 +35,24 @@ async function consultationFile(page: Page) {
   const bytes = await readFile((await (await pending).path())!);
   await test.info().attach('consultation.md', { body: bytes, contentType: 'text/markdown' });
   return bytes.toString('utf8');
+}
+async function restoreComplete(browser: Browser, bytes: Uint8Array, mode: 'new' | 'clone') {
+  const context = await browser.newContext();
+  try {
+    const page = await context.newPage(); await page.goto('./');
+    await page.getByRole('button', { name: '保存ファイルを読み込む', exact: true }).click();
+    await page.locator('input[type=file]').setInputFiles({ name: 'consultation-complete.scenario', mimeType: 'application/zip', buffer: Buffer.from(bytes) });
+    if (mode === 'clone') await page.getByLabel('復元方法', { exact: true }).selectOption('clone');
+    await page.getByLabel('復元方法と対象への影響を確認しました').check();
+    await page.getByRole('button', { name: 'この内容で復元する', exact: true }).click();
+    await expect(page.locator('.import-preview')).toBeHidden();
+    await page.reload(); await nav(page, /^作品・保存/);
+    await page.getByRole('tab', { name: '完全保存・復元', exact: true }).click();
+    const download = page.waitForEvent('download'); await page.getByRole('button', { name: '完全保存ファイルを作成', exact: true }).click();
+    const restoredBytes = new Uint8Array(await readFile((await (await download).path())!));
+    await test.info().attach(`consultation-complete-${mode}-cold.scenario`, { body: Buffer.from(restoredBytes), contentType: 'application/zip' });
+    return (await inspectScenario(restoredBytes, { worker: false })).project;
+  } finally { await context.close(); }
 }
 async function nativeField(page: Page, projectId: string, table: 'projects' | 'authorToolDrafts') {
   return page.evaluate(async ({ projectId, table }) => {
@@ -76,7 +94,7 @@ test.beforeEach(async ({ browser, browserName, page }) => {
   await test.info().attach('browser-environment.json', { body: JSON.stringify({ capturedAt: new Date().toISOString(), browserName, actualVersion: browser.version(), viewport: page.viewportSize(), nodeVersion: process.version, physicalDevice: false, actualAuthRlsStorage: false }), contentType: 'application/json' });
 });
 
-test('相談の前後状態を版・範囲付き下書きとしてcold再開し、承認した値と未確定事項だけを実MDへ出力する', async ({ page }) => {
+test('相談の前後状態を版・範囲付き下書きとしてcold再開し、承認した値と未確定事項だけを実MDへ出力する', async ({ page, browser }) => {
   test.setTimeout(180000);
   const f = fixture(), pinned = await createWorldSnapshot(f.project, '相談の旧版'), pin = pinned.snapshots.at(-1)!;
   const outbound: string[] = [];
@@ -137,6 +155,18 @@ test('相談の前後状態を版・範囲付き下書きとしてcold再開し�
   expect(restored.project.entities.find(entity => entity.id === f.scene.id)).toMatchObject({ data: { body: [{ text: '公開する場面Sの本文' }] } });
   expect(restored.project.authorAlternatives?.[0].applyReceipts).toHaveLength(0);
   expect(restored.project.authorAlternatives?.[0].versions.at(-1)?.content.entities.find(entity => entity.kind === 'note')?.customValues).toMatchObject({ consultationSource: '作者が確認した consultation.md', consultationTargetVersionId: pin.id });
+  expect(await restoreComplete(browser, new Uint8Array(fullBytes), 'new')).toEqual(restored.project);
+  const cloned = await restoreComplete(browser, new Uint8Array(fullBytes), 'clone');
+  expect(cloned.projectId).not.toBe(restored.project.projectId);
+  expect(cloned.entities.find(entity => entity.name === f.scene.name)).toMatchObject({ data: { body: [{ text: '公開する場面Sの本文' }] } });
+  expect(cloned.entities.find(entity => entity.name === f.state.name)).toMatchObject({ data: { initial: { type: 'boolean', value: false } } });
+  expect(cloned.entities.find(entity => entity.name === f.secret.name)).toBeTruthy();
+  const clonedPin = cloned.snapshots.find(snapshot => snapshot.versionLabel === pin.versionLabel);
+  expect(clonedPin).toBeTruthy(); expect(clonedPin!.id).not.toBe(pin.id);
+  expect(cloned.authorAlternatives?.[0].applyReceipts).toHaveLength(0);
+  const proposalVersion = cloned.authorAlternatives?.[0].versions.at(-1);
+  expect(proposalVersion?.content.entities.find(entity => entity.name === f.scene.name)).toMatchObject({ data: { body: [{ text: '😀相談から届いた変更候補' }] } });
+  expect(proposalVersion?.content.entities.find(entity => entity.kind === 'note')?.customValues?.consultationSource).toBe('作者が確認した consultation.md');
   expect(outbound).toEqual([]);
 });
 

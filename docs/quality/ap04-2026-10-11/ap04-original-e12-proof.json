@@ -1,0 +1,1008 @@
+{
+  "schemaVersion": "shinariokanri-ap04-original-e12-planned-proof-v1",
+  "created_at": "2026-10-11",
+  "status": "planned_not_run",
+  "acceptance_pass_inferred": false,
+  "browser_executed": false,
+  "actual_execution_observed": false,
+  "candidate_commit": null,
+  "candidate_tree": null,
+  "candidate_build": null,
+  "authorship_context": {
+    "source_head": "b56e8b953ee5398a8c4b97031b4a426bb6a9f512",
+    "active_root_verification_result_not_created": true,
+    "head_is_source_context_only": true,
+    "future_exact_run_binding_required": true
+  },
+  "original_audit": {
+    "file": "docs/review-2026-10-11/original_acceptance_audit.json",
+    "bytes": 363765,
+    "sha256": "c3f843c573007c407266c75114cdb8f8fce5f6dd9020417599f05e60755d7e00"
+  },
+  "original_cases_source": {
+    "file": "docs/data/acceptance_cases.json",
+    "bytes": 64743,
+    "sha256": "e1e4b06a3bb1cd79fc590239ab6350103323335f2e1ee87a2e6a283755834c4f"
+  },
+  "planning_source": {
+    "files": [
+      {
+        "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+        "bytes": 24464,
+        "sha256": "190c79807c566966beb38317f21df2beb0177c9cf4f904500f72c93ee0730478"
+      },
+      {
+        "file": "tests/e2e/ap04-original-helpers.ts",
+        "bytes": 4372,
+        "sha256": "d682676dde860f7e95fec51a1faf363384d9b1adc99ee9ba4ff52b33866f0116"
+      },
+      {
+        "file": "docs/quality/current-review/evidence/legacy/3099c9d-flow-trace.scenario",
+        "bytes": 2237,
+        "sha256": "ab5b4b920b22ebd4453945e4d366bccc8f3c5893357c04993548e0a4359b84e1"
+      },
+      {
+        "file": "docs/quality/ap04-2026-10-11/ap04-original-e12-plan.md",
+        "bytes": 4096,
+        "sha256": "5b8f8f434c4f62cba658dd12473ea3e035c7a796693ebb218c95f7cefee26d74"
+      },
+      {
+        "file": "src/ui/EntityEditor.tsx",
+        "bytes": 40347,
+        "sha256": "00fb4afe43df88c15b8cbb810650ab546bd2e6e3c2f6235f4ae6ccdc4d60a15b"
+      }
+    ],
+    "source_hashes_need_root_freeze_refresh": false
+  },
+  "original_case": {
+    "id": "AT-E12",
+    "requirement_ids": [
+      "REQ-B23",
+      "REQ-F34",
+      "REQ-F35",
+      "REQ-N06",
+      "REQ-N11",
+      "REQ-N18"
+    ],
+    "package_id": "WP23",
+    "given": "キャッシュ済みアプリと未送信作品",
+    "when": "機内モード、保存容量不足、途中更新、移行失敗、専用出力からの再開を行う",
+    "then": "失敗と未保存を明示し、更新は安全地点で適用し、書き出しと復元で再開できる",
+    "negative_or_edge": "初回未取得・未取得素材・保存先取消を成功と扱わない"
+  },
+  "result": "not_run",
+  "clauses": [
+    {
+      "name": "given",
+      "sources": [
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 133,
+          "end_line": 138,
+          "excerpt_sha256": "0936a8f878333feadafe8b5969ed593ef90117979d7ca8ecb4edde06a9ebfaf0",
+          "source_excerpt": "test('AT-E12 キャッシュ済み未送信作品をoffline・容量拒否・実waiting-worker・移行retry・完全new/cloneで継続する（実OS条件は別記）', async ({ page, browser }, info) => {\n  test.setTimeout(240000);\n  const bytes = new Uint8Array(await readFile('docs/quality/current-review/evidence/legacy/3099c9d-flow-trace.scenario'));\n  const given = await inspectScenario(bytes, { worker: false });\n  const scene = given.project.entities.find(e => e.kind === 'scene');\n  if (!scene) throw new Error('原fixtureに編集対象の場面がありません');\n",
+          "purpose": "Read actual fixed legacy project and require an editable scene."
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 174,
+          "end_line": 174,
+          "excerpt_sha256": "6de975e4e5c178f5a671407c1705de3d21635448edc718b4fac2c8dc2434ff3a",
+          "source_excerpt": "    await importComplete(page, url, bytes);\n",
+          "purpose": "Normal import, cached controller after cold reload, normal scene edit/save, real nonempty outbox, runtime given attachment."
+        }
+      ],
+      "normal_operations": [
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 174,
+          "source": "await importComplete(page, url, bytes);",
+          "kind": "normal_ui_or_reload"
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 176,
+          "source": "await page.reload(); await expect.poll(() => page.evaluate(() => Boolean(navigator.serviceWorker.controller))).toBe(true);",
+          "kind": "normal_ui_or_reload"
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 177,
+          "source": "await openEntity(page, 'scene', scene.name);",
+          "kind": "normal_ui_or_reload"
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 179,
+          "source": "await page.locator('.detail-panel').getByLabel('名前', { exact: true }).fill(initialName);",
+          "kind": "normal_ui_or_reload"
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 180,
+          "source": "await page.locator('.editor-footer').getByRole('button', { name: '保存する', exact: true }).click();",
+          "kind": "normal_ui_or_reload"
+        }
+      ],
+      "assertions": [
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 138,
+          "source": "if (!scene) throw new Error('原fixtureに編集対象の場面がありません');",
+          "kind": "planned_given_assertion"
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 176,
+          "source": "await page.reload(); await expect.poll(() => page.evaluate(() => Boolean(navigator.serviceWorker.controller))).toBe(true);",
+          "kind": "planned_given_assertion"
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 181,
+          "source": "await expect(page.locator('.editor-save-state')).toContainText('端末内保存済み');",
+          "kind": "planned_given_assertion"
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 183,
+          "source": "expect(pendingImage.tables.outbox.length).toBeGreaterThan(0);",
+          "kind": "planned_given_assertion"
+        }
+      ],
+      "helper_uses": [
+        "importComplete",
+        "nativeImage",
+        "openEntity",
+        "attachGiven"
+      ],
+      "mapping_scope": "planned_local_cached_controller_and_unsent_native_outbox; no execution observation",
+      "missing_condition_ids": [
+        "physical_flight_mode",
+        "fixture_hash_binding_at_execution"
+      ],
+      "limits": [
+        "Input archive does not itself contain unsent operations; normal UI save creates them at runtime.",
+        "Nonempty native outbox is checked locally; no real account/server delivery observation is present."
+      ],
+      "original": "キャッシュ済みアプリと未送信作品",
+      "result": "not_run"
+    },
+    {
+      "name": "when",
+      "sources": [
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 198,
+          "end_line": 230,
+          "excerpt_sha256": "caa8b94a723c110230f734fc0d4f8cac82884eba9705a3ce3f1618347f741f61",
+          "source_excerpt": "    const otherTab = await page.context().newPage(); await otherTab.goto(url); await expect(otherTab.locator('.app-shell')).toBeVisible();\n    updateAvailable = true;\n    await page.evaluate(async () => { const registration = await navigator.serviceWorker.getRegistration(); if (!registration) throw new Error('No cached registration'); await registration.update(); });\n    await expect.poll(() => page.evaluate(async () => (await navigator.serviceWorker.getRegistration())?.waiting?.state)).toBe('installed');\n    const beforeCold = await nativeImage(page);\n    expect(durableImage(beforeCold)).toEqual(durableImage(pendingImage));\n    const beforeDocumentNonce = await page.evaluate(() => { const value: unknown = Reflect.get(window, '__ap04E12DocumentNonce'); if (typeof value !== 'string') throw new Error('E12 document nonce unavailable'); return value; });\n    expect(beforeDocumentNonce).toEqual(expect.any(String));\n    await page.context().setOffline(true);\n    await expect.poll(() => page.evaluate(() => navigator.onLine)).toBe(false);\n    // A cached reload must create a new document while the context stays offline.\n    // The nonce and complete durable image verify actual cold startup.\n    const coldURL = new URL(url);\n    await page.reload(); await expect(page.locator('.project-switch')).toContainText(given.project.name);\n    const offlineDocumentNonce = await page.evaluate(() => { const value: unknown = Reflect.get(window, '__ap04E12DocumentNonce'); if (typeof value !== 'string') throw new Error('E12 document nonce unavailable'); return value; });\n    expect(offlineDocumentNonce).toEqual(expect.any(String)); expect(offlineDocumentNonce).not.toBe(beforeDocumentNonce);\n    await expect.poll(() => page.evaluate(() => navigator.onLine)).toBe(false);\n    await expect.poll(() => page.evaluate(() => {\n      const controller = navigator.serviceWorker.controller;\n      return controller && { scriptURL: controller.scriptURL, state: controller.state };\n    })).toEqual({ scriptURL: new URL('sw.js', url).href, state: 'activated' });\n    expect(await page.evaluate(async () => (await navigator.serviceWorker.getRegistration())?.waiting?.state)).toBe('installed');\n    expect(durableImage(await nativeImage(page))).toEqual(durableImage(beforeCold));\n    await openEntity(page, 'scene', initialName);\n    const beforeRefusal = await nativeImage(page), failedName = `${initialName}・容量不足でも残す入力`;\n    await page.evaluate(() => {\n      const put = IDBObjectStore.prototype.put; let armed = true;\n      IDBObjectStore.prototype.put = function (...args: Parameters<IDBObjectStore['put']>) {\n        if (armed && this.name === 'projects') { armed = false; throw new DOMException('E12 native quota fixture', 'QuotaExceededError'); }\n        return put.apply(this, args);\n      };\n    });\n    await page.locator('.detail-panel').getByLabel('名前', { exact: true }).fill(failedName);\n",
+          "purpose": "Actual registration.update creates a waiting worker; context offline and one-shot native quota fixture then normal editor input."
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 236,
+          "end_line": 243,
+          "excerpt_sha256": "2fc087fded91fc32bfaa6f674a31a79d514d5731a1349d58bf4f91097f1bbb1c",
+          "source_excerpt": "    await page.locator('.editor-footer').getByRole('button', { name: '保存を再試行', exact: true }).click();\n    await expect(page.locator('.editor-save-state')).toContainText('端末内保存済み');\n    const saved = await backup(page), savedImage = await nativeImage(page);\n    expect(saved.project.entities.find(e => e.id === scene.id)?.name).toBe(failedName);\n    expect(saved.project.history.length).toBe(given.project.history.length + 2);\n    expect(saved.recovery?.pending.length).toBeGreaterThanOrEqual(2);\n    expect(await page.evaluate(async () => (await navigator.serviceWorker.getRegistration())?.waiting?.state)).toBe('installed');\n    await info.attach('AT-E12-offline-complete.scenario', { body: Buffer.from(saved.bytes), contentType: 'application/zip' });\n",
+          "purpose": "Ordinary save retry followed by real complete download."
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 246,
+          "end_line": 254,
+          "excerpt_sha256": "dd7cc1629de2c54928777289c0f737abb71cead3bd914461dfd4500c01632814",
+          "source_excerpt": "    await otherTab.close(); await page.context().setOffline(false);\n    await page.goto(new URL('/e12-safe-point', url).href);\n    await expect.poll(() => page.evaluate(async scope => Boolean((await navigator.serviceWorker.getRegistration(scope))?.waiting), url)).toBe(false);\n    await page.goto(url);\n    await expect(page.locator('.project-switch')).toContainText(given.project.name);\n    await expect.poll(() => page.evaluate(async expected => (await caches.keys()).includes(expected), newCache)).toBe(true);\n    await expect.poll(() => page.evaluate(async () => Boolean((await navigator.serviceWorker.getRegistration())?.waiting))).toBe(false);\n    const afterUpdate = await backup(page); expect(afterUpdate.project).toEqual(saved.project);\n    expect((await nativeImage(page)).tables.outbox).toEqual(savedImage.tables.outbox);\n",
+          "purpose": "Close the other controlled tab, leave scope, return, and inspect waiting/cache/project/outbox state."
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 261,
+          "end_line": 281,
+          "excerpt_sha256": "d19e4ab95dff0967621925cdca417465a2cd8cf22458b4c94fe0ce12dc6e782b",
+          "source_excerpt": "    const recovery = await fullNewClone(browser, url, saved.bytes, saved.project);\n\n    const migrationContext = await browser.newContext();\n    try {\n      const migratedPage = await migrationContext.newPage(); await seedVersionOne(migratedPage, url, saved.project, savedImage.tables.outbox);\n      const oldImage = await nativeImage(migratedPage); expect(oldImage.version).toBe(10);\n      await migratedPage.addInitScript(name => {\n        const create = IDBDatabase.prototype.createObjectStore; let armed = true;\n        IDBDatabase.prototype.createObjectStore = function (...args: Parameters<IDBDatabase['createObjectStore']>) {\n          if (armed && this.name === name && args[0] === 'importDrafts') { armed = false; throw new DOMException('E12 copied native migration quota fixture', 'QuotaExceededError'); }\n          return create.apply(this, args);\n        };\n      }, databaseName);\n      await migratedPage.goto(url); await expect(migratedPage.getByRole('alert').filter({ hasText: /quota|Quota/ })).toBeVisible();\n      expect(await nativeImage(migratedPage)).toEqual(oldImage);\n      await migratedPage.getByRole('button', { name: '読み込みを再試行', exact: true }).click();\n      await migratedPage.locator('.project-card').filter({ hasText: saved.project.name }).click();\n      await migratedPage.reload(); await expect(migratedPage.locator('.project-switch')).toContainText(saved.project.name);\n      const migrated = await backup(migratedPage); expect(migrated.project).toEqual(saved.project);\n      expect((await nativeImage(migratedPage)).tables.outbox).toEqual(savedImage.tables.outbox);\n      await info.attach('AT-E12-migration-retry-complete.scenario', { body: Buffer.from(migrated.bytes), contentType: 'application/zip' });\n",
+          "purpose": "Separate new/clone full-file restart plus copied old native layout migration refusal and ordinary UI retry."
+        }
+      ],
+      "normal_operations": [
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 198,
+          "source": "const otherTab = await page.context().newPage(); await otherTab.goto(url); await expect(otherTab.locator('.app-shell')).toBeVisible();",
+          "kind": "planned_ui_or_document_lifecycle"
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 211,
+          "source": "await page.reload(); await expect(page.locator('.project-switch')).toContainText(given.project.name);",
+          "kind": "planned_ui_or_document_lifecycle"
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 221,
+          "source": "await openEntity(page, 'scene', initialName);",
+          "kind": "planned_ui_or_document_lifecycle"
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 230,
+          "source": "await page.locator('.detail-panel').getByLabel('名前', { exact: true }).fill(failedName);",
+          "kind": "planned_ui_or_document_lifecycle"
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 236,
+          "source": "await page.locator('.editor-footer').getByRole('button', { name: '保存を再試行', exact: true }).click();",
+          "kind": "planned_ui_or_document_lifecycle"
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 238,
+          "source": "const saved = await backup(page), savedImage = await nativeImage(page);",
+          "kind": "planned_ui_or_document_lifecycle"
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 246,
+          "source": "await otherTab.close(); await page.context().setOffline(false);",
+          "kind": "planned_ui_or_document_lifecycle"
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 247,
+          "source": "await page.goto(new URL('/e12-safe-point', url).href);",
+          "kind": "planned_ui_or_document_lifecycle"
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 249,
+          "source": "await page.goto(url);",
+          "kind": "planned_ui_or_document_lifecycle"
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 261,
+          "source": "const recovery = await fullNewClone(browser, url, saved.bytes, saved.project);",
+          "kind": "planned_ui_or_document_lifecycle"
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 274,
+          "source": "await migratedPage.goto(url); await expect(migratedPage.getByRole('alert').filter({ hasText: /quota|Quota/ })).toBeVisible();",
+          "kind": "planned_ui_or_document_lifecycle"
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 276,
+          "source": "await migratedPage.getByRole('button', { name: '読み込みを再試行', exact: true }).click();",
+          "kind": "planned_ui_or_document_lifecycle"
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 277,
+          "source": "await migratedPage.locator('.project-card').filter({ hasText: saved.project.name }).click();",
+          "kind": "planned_ui_or_document_lifecycle"
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 278,
+          "source": "await migratedPage.reload(); await expect(migratedPage.locator('.project-switch')).toContainText(saved.project.name);",
+          "kind": "planned_ui_or_document_lifecycle"
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 279,
+          "source": "const migrated = await backup(migratedPage); expect(migrated.project).toEqual(saved.project);",
+          "kind": "planned_ui_or_document_lifecycle"
+        }
+      ],
+      "boundary_fixture_operations": [
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 199,
+          "source": "updateAvailable = true;",
+          "kind": "fixture_transport_worker_or_native_fault_setup"
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 200,
+          "source": "await page.evaluate(async () => { const registration = await navigator.serviceWorker.getRegistration(); if (!registration) throw new Error('No cached registration'); await registration.update(); });",
+          "kind": "fixture_transport_worker_or_native_fault_setup"
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 206,
+          "source": "await page.context().setOffline(true);",
+          "kind": "fixture_transport_worker_or_native_fault_setup"
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 226,
+          "source": "if (armed && this.name === 'projects') { armed = false; throw new DOMException('E12 native quota fixture', 'QuotaExceededError'); }",
+          "kind": "fixture_transport_worker_or_native_fault_setup"
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 265,
+          "source": "const migratedPage = await migrationContext.newPage(); await seedVersionOne(migratedPage, url, saved.project, savedImage.tables.outbox);",
+          "kind": "fixture_transport_worker_or_native_fault_setup"
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 270,
+          "source": "if (armed && this.name === name && args[0] === 'importDrafts') { armed = false; throw new DOMException('E12 copied native migration quota fixture', 'QuotaExceededError'); }",
+          "kind": "fixture_transport_worker_or_native_fault_setup"
+        }
+      ],
+      "assertions": [
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 201,
+          "source": "await expect.poll(() => page.evaluate(async () => (await navigator.serviceWorker.getRegistration())?.waiting?.state)).toBe('installed');",
+          "kind": "planned_when_guard_or_recovery_assertion"
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 211,
+          "source": "await page.reload(); await expect(page.locator('.project-switch')).toContainText(given.project.name);",
+          "kind": "planned_when_guard_or_recovery_assertion"
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 207,
+          "source": "await expect.poll(() => page.evaluate(() => navigator.onLine)).toBe(false);",
+          "kind": "planned_when_guard_or_recovery_assertion"
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 237,
+          "source": "await expect(page.locator('.editor-save-state')).toContainText('端末内保存済み');",
+          "kind": "planned_when_guard_or_recovery_assertion"
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 239,
+          "source": "expect(saved.project.entities.find(e => e.id === scene.id)?.name).toBe(failedName);",
+          "kind": "planned_when_guard_or_recovery_assertion"
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 240,
+          "source": "expect(saved.project.history.length).toBe(given.project.history.length + 2);",
+          "kind": "planned_when_guard_or_recovery_assertion"
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 241,
+          "source": "expect(saved.recovery?.pending.length).toBeGreaterThanOrEqual(2);",
+          "kind": "planned_when_guard_or_recovery_assertion"
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 242,
+          "source": "expect(await page.evaluate(async () => (await navigator.serviceWorker.getRegistration())?.waiting?.state)).toBe('installed');",
+          "kind": "planned_when_guard_or_recovery_assertion"
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 248,
+          "source": "await expect.poll(() => page.evaluate(async scope => Boolean((await navigator.serviceWorker.getRegistration(scope))?.waiting), url)).toBe(false);",
+          "kind": "planned_when_guard_or_recovery_assertion"
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 250,
+          "source": "await expect(page.locator('.project-switch')).toContainText(given.project.name);",
+          "kind": "planned_when_guard_or_recovery_assertion"
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 251,
+          "source": "await expect.poll(() => page.evaluate(async expected => (await caches.keys()).includes(expected), newCache)).toBe(true);",
+          "kind": "planned_when_guard_or_recovery_assertion"
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 252,
+          "source": "await expect.poll(() => page.evaluate(async () => Boolean((await navigator.serviceWorker.getRegistration())?.waiting))).toBe(false);",
+          "kind": "planned_when_guard_or_recovery_assertion"
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 253,
+          "source": "const afterUpdate = await backup(page); expect(afterUpdate.project).toEqual(saved.project);",
+          "kind": "planned_when_guard_or_recovery_assertion"
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 254,
+          "source": "expect((await nativeImage(page)).tables.outbox).toEqual(savedImage.tables.outbox);",
+          "kind": "planned_when_guard_or_recovery_assertion"
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 266,
+          "source": "const oldImage = await nativeImage(migratedPage); expect(oldImage.version).toBe(10);",
+          "kind": "planned_when_guard_or_recovery_assertion"
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 274,
+          "source": "await migratedPage.goto(url); await expect(migratedPage.getByRole('alert').filter({ hasText: /quota|Quota/ })).toBeVisible();",
+          "kind": "planned_when_guard_or_recovery_assertion"
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 275,
+          "source": "expect(await nativeImage(migratedPage)).toEqual(oldImage);",
+          "kind": "planned_when_guard_or_recovery_assertion"
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 278,
+          "source": "await migratedPage.reload(); await expect(migratedPage.locator('.project-switch')).toContainText(saved.project.name);",
+          "kind": "planned_when_guard_or_recovery_assertion"
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 279,
+          "source": "const migrated = await backup(migratedPage); expect(migrated.project).toEqual(saved.project);",
+          "kind": "planned_when_guard_or_recovery_assertion"
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 280,
+          "source": "expect((await nativeImage(migratedPage)).tables.outbox).toEqual(savedImage.tables.outbox);",
+          "kind": "planned_when_guard_or_recovery_assertion"
+        }
+      ],
+      "helper_uses": [
+        "fullNewClone",
+        "seedVersionOne",
+        "backup",
+        "nativeImage"
+      ],
+      "mapping_scope": "planned_local_transport/quota/lifecycle/copied_layout/new_clone_control; original external conditions remain",
+      "missing_condition_ids": [
+        "physical_flight_mode",
+        "real_storage_exhaustion",
+        "actual_old_application_upgrade",
+        "actual_old_database_migration",
+        "restore_pending_identity_and_materials"
+      ],
+      "original": "機内モード、保存容量不足、途中更新、移行失敗、専用出力からの再開を行う",
+      "result": "not_run"
+    },
+    {
+      "name": "then",
+      "sources": [
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 231,
+          "end_line": 243,
+          "excerpt_sha256": "c5b048b06e6d0b9de7b03b5c16924b539edb7419d300c7ad8a47e77107baa246",
+          "source_excerpt": "    await expect(page.locator('.detail-panel').getByRole('alert')).toContainText('容量');\n    await expect(page.locator('.editor-save-state')).toContainText('未保存');\n    await expect(page.locator('.detail-panel').getByLabel('名前', { exact: true })).toHaveValue(failedName);\n    expect(durableImage(await nativeImage(page))).toEqual(durableImage(beforeRefusal));\n    expect(await page.evaluate(async () => (await navigator.serviceWorker.getRegistration())?.waiting?.state)).toBe('installed');\n    await page.locator('.editor-footer').getByRole('button', { name: '保存を再試行', exact: true }).click();\n    await expect(page.locator('.editor-save-state')).toContainText('端末内保存済み');\n    const saved = await backup(page), savedImage = await nativeImage(page);\n    expect(saved.project.entities.find(e => e.id === scene.id)?.name).toBe(failedName);\n    expect(saved.project.history.length).toBe(given.project.history.length + 2);\n    expect(saved.recovery?.pending.length).toBeGreaterThanOrEqual(2);\n    expect(await page.evaluate(async () => (await navigator.serviceWorker.getRegistration())?.waiting?.state)).toBe('installed');\n    await info.attach('AT-E12-offline-complete.scenario', { body: Buffer.from(saved.bytes), contentType: 'application/zip' });\n",
+          "purpose": "Failure/unsaved/input guidance, selected durable tables unchanged, ordinary save retry, history/pending checks and real complete bytes."
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 244,
+          "end_line": 254,
+          "excerpt_sha256": "b1c8bd43c07a893dd8b473f5c0fa1bcac4bc24c4e960f4709bddd7ce081a7dca",
+          "source_excerpt": "    // The real waiting worker can activate only after both controlled documents\n    // leave the scope. No skipWaiting or privileged product API is called.\n    await otherTab.close(); await page.context().setOffline(false);\n    await page.goto(new URL('/e12-safe-point', url).href);\n    await expect.poll(() => page.evaluate(async scope => Boolean((await navigator.serviceWorker.getRegistration(scope))?.waiting), url)).toBe(false);\n    await page.goto(url);\n    await expect(page.locator('.project-switch')).toContainText(given.project.name);\n    await expect.poll(() => page.evaluate(async expected => (await caches.keys()).includes(expected), newCache)).toBe(true);\n    await expect.poll(() => page.evaluate(async () => Boolean((await navigator.serviceWorker.getRegistration())?.waiting))).toBe(false);\n    const afterUpdate = await backup(page); expect(afterUpdate.project).toEqual(saved.project);\n    expect((await nativeImage(page)).tables.outbox).toEqual(savedImage.tables.outbox);\n",
+          "purpose": "Waiting remains until controlled pages leave; actual cache lifecycle and saved project/outbox preservation checks."
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 274,
+          "end_line": 290,
+          "excerpt_sha256": "95b109da6618f93c3ae018d8036f4e6f7a936da563bf1522f9761a1c956c5cdc",
+          "source_excerpt": "      await migratedPage.goto(url); await expect(migratedPage.getByRole('alert').filter({ hasText: /quota|Quota/ })).toBeVisible();\n      expect(await nativeImage(migratedPage)).toEqual(oldImage);\n      await migratedPage.getByRole('button', { name: '読み込みを再試行', exact: true }).click();\n      await migratedPage.locator('.project-card').filter({ hasText: saved.project.name }).click();\n      await migratedPage.reload(); await expect(migratedPage.locator('.project-switch')).toContainText(saved.project.name);\n      const migrated = await backup(migratedPage); expect(migrated.project).toEqual(saved.project);\n      expect((await nativeImage(migratedPage)).tables.outbox).toEqual(savedImage.tables.outbox);\n      await info.attach('AT-E12-migration-retry-complete.scenario', { body: Buffer.from(migrated.bytes), contentType: 'application/zip' });\n    } finally { await migrationContext.close(); }\n    await attachObservation(info, 'AT-E12-local-observed', { build, browserVersion: browser.version(), completeSHA256: sha256(saved.bytes), recovery,\n      cachedOfflineCold: true, realPendingOutbox: true, quotaRejectedDurableEditionUnchanged: true, unsavedInputAndFailureVisible: true,\n      offlineColdNavigation: { url: coldURL.href, beforeDocumentNonce, offlineDocumentNonce, originalCache, cachedEntries, entireDurableImageUnchanged: true },\n      normalSaveRetry: true, actualWaitingWorkerStayedInstalledUntilAllTabsLeft: true, copiedNativeMigrationRefusalAtomicAndNormalRetry: true,\n      firstUncachedOfflineNavigationRejected: true,\n      workerFixture: { originalSHA256: sha256(originalWorker), updatedSHA256: sha256(updatedWorker), changedOnlyCacheIdentity: true, applicationBytesChanged: false },\n      blockedConditions: ['real old-application-build upgrade', 'physical-device flight mode', 'real OS Files save-location cancellation', 'unfetched material via its actual product control'],\n      physicalDevice: false, realOSFilesVerified: false, originalWholeAcceptancePromotion: false });\n",
+          "purpose": "Migration refusal atomicity and ordinary UI retry, complete bytes and planned runtime observations with blocked conditions."
+        }
+      ],
+      "normal_operations": [
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 236,
+          "source": "await page.locator('.editor-footer').getByRole('button', { name: '保存を再試行', exact: true }).click();",
+          "kind": "planned_normal_retry_export_or_document_leave"
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 238,
+          "source": "const saved = await backup(page), savedImage = await nativeImage(page);",
+          "kind": "planned_normal_retry_export_or_document_leave"
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 246,
+          "source": "await otherTab.close(); await page.context().setOffline(false);",
+          "kind": "planned_normal_retry_export_or_document_leave"
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 247,
+          "source": "await page.goto(new URL('/e12-safe-point', url).href);",
+          "kind": "planned_normal_retry_export_or_document_leave"
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 249,
+          "source": "await page.goto(url);",
+          "kind": "planned_normal_retry_export_or_document_leave"
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 276,
+          "source": "await migratedPage.getByRole('button', { name: '読み込みを再試行', exact: true }).click();",
+          "kind": "planned_normal_retry_export_or_document_leave"
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 277,
+          "source": "await migratedPage.locator('.project-card').filter({ hasText: saved.project.name }).click();",
+          "kind": "planned_normal_retry_export_or_document_leave"
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 278,
+          "source": "await migratedPage.reload(); await expect(migratedPage.locator('.project-switch')).toContainText(saved.project.name);",
+          "kind": "planned_normal_retry_export_or_document_leave"
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 279,
+          "source": "const migrated = await backup(migratedPage); expect(migrated.project).toEqual(saved.project);",
+          "kind": "planned_normal_retry_export_or_document_leave"
+        }
+      ],
+      "assertions": [
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 231,
+          "source": "await expect(page.locator('.detail-panel').getByRole('alert')).toContainText('容量');",
+          "kind": "planned_then_assertion"
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 232,
+          "source": "await expect(page.locator('.editor-save-state')).toContainText('未保存');",
+          "kind": "planned_then_assertion"
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 233,
+          "source": "await expect(page.locator('.detail-panel').getByLabel('名前', { exact: true })).toHaveValue(failedName);",
+          "kind": "planned_then_assertion"
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 234,
+          "source": "expect(durableImage(await nativeImage(page))).toEqual(durableImage(beforeRefusal));",
+          "kind": "planned_then_assertion"
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 235,
+          "source": "expect(await page.evaluate(async () => (await navigator.serviceWorker.getRegistration())?.waiting?.state)).toBe('installed');",
+          "kind": "planned_then_assertion"
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 237,
+          "source": "await expect(page.locator('.editor-save-state')).toContainText('端末内保存済み');",
+          "kind": "planned_then_assertion"
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 239,
+          "source": "expect(saved.project.entities.find(e => e.id === scene.id)?.name).toBe(failedName);",
+          "kind": "planned_then_assertion"
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 240,
+          "source": "expect(saved.project.history.length).toBe(given.project.history.length + 2);",
+          "kind": "planned_then_assertion"
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 241,
+          "source": "expect(saved.recovery?.pending.length).toBeGreaterThanOrEqual(2);",
+          "kind": "planned_then_assertion"
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 242,
+          "source": "expect(await page.evaluate(async () => (await navigator.serviceWorker.getRegistration())?.waiting?.state)).toBe('installed');",
+          "kind": "planned_then_assertion"
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 248,
+          "source": "await expect.poll(() => page.evaluate(async scope => Boolean((await navigator.serviceWorker.getRegistration(scope))?.waiting), url)).toBe(false);",
+          "kind": "planned_then_assertion"
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 250,
+          "source": "await expect(page.locator('.project-switch')).toContainText(given.project.name);",
+          "kind": "planned_then_assertion"
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 251,
+          "source": "await expect.poll(() => page.evaluate(async expected => (await caches.keys()).includes(expected), newCache)).toBe(true);",
+          "kind": "planned_then_assertion"
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 252,
+          "source": "await expect.poll(() => page.evaluate(async () => Boolean((await navigator.serviceWorker.getRegistration())?.waiting))).toBe(false);",
+          "kind": "planned_then_assertion"
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 253,
+          "source": "const afterUpdate = await backup(page); expect(afterUpdate.project).toEqual(saved.project);",
+          "kind": "planned_then_assertion"
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 254,
+          "source": "expect((await nativeImage(page)).tables.outbox).toEqual(savedImage.tables.outbox);",
+          "kind": "planned_then_assertion"
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 274,
+          "source": "await migratedPage.goto(url); await expect(migratedPage.getByRole('alert').filter({ hasText: /quota|Quota/ })).toBeVisible();",
+          "kind": "planned_then_assertion"
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 275,
+          "source": "expect(await nativeImage(migratedPage)).toEqual(oldImage);",
+          "kind": "planned_then_assertion"
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 278,
+          "source": "await migratedPage.reload(); await expect(migratedPage.locator('.project-switch')).toContainText(saved.project.name);",
+          "kind": "planned_then_assertion"
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 279,
+          "source": "const migrated = await backup(migratedPage); expect(migrated.project).toEqual(saved.project);",
+          "kind": "planned_then_assertion"
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 280,
+          "source": "expect((await nativeImage(migratedPage)).tables.outbox).toEqual(savedImage.tables.outbox);",
+          "kind": "planned_then_assertion"
+        }
+      ],
+      "helper_uses": [
+        "durableImage",
+        "nativeImage",
+        "backup",
+        "fullNewClone"
+      ],
+      "mapping_scope": "planned_failure_and_restart_assertions; no current-run result",
+      "missing_condition_ids": [
+        "actual_old_application_upgrade",
+        "actual_old_database_migration",
+        "real_storage_exhaustion",
+        "restore_pending_identity_and_materials",
+        "os_file_save_location_cancel"
+      ],
+      "limits": [
+        "Quota rejection compares exactly projects/entities/relations/blocks/snapshots/commands/outbox/assets/worlds/recoveredPending/recordParts; it does not assert every native table unchanged.",
+        "The worker safe point is a fixture route outside its scope after closing the other tab, not an actual old/new application upgrade.",
+        "Runtime observation booleans and recorded pendingCount are not additional direct assertions."
+      ],
+      "original": "失敗と未保存を明示し、更新は安全地点で適用し、書き出しと復元で再開できる",
+      "result": "not_run"
+    },
+    {
+      "name": "negative_or_edge",
+      "sources": [
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 255,
+          "end_line": 260,
+          "excerpt_sha256": "436538860d1c289abc82cf7a83b98ef2ebf33b1607898f473151d5cf13a220b3",
+          "source_excerpt": "    const uncachedContext = await browser.newContext({ offline: true });\n    try {\n      const uncachedPage = await uncachedContext.newPage();\n      const rejected = await uncachedPage.goto(url).then(() => false, () => true);\n      expect(rejected).toBe(true);\n    } finally { await uncachedContext.close(); }\n",
+          "purpose": "Fresh uncached offline context only: first goto must reject."
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 283,
+          "end_line": 290,
+          "excerpt_sha256": "55be47e7312dcaa9573e46d98bd18d0a8dd98ba680fef8f29d4af6febbbb1761",
+          "source_excerpt": "    await attachObservation(info, 'AT-E12-local-observed', { build, browserVersion: browser.version(), completeSHA256: sha256(saved.bytes), recovery,\n      cachedOfflineCold: true, realPendingOutbox: true, quotaRejectedDurableEditionUnchanged: true, unsavedInputAndFailureVisible: true,\n      offlineColdNavigation: { url: coldURL.href, beforeDocumentNonce, offlineDocumentNonce, originalCache, cachedEntries, entireDurableImageUnchanged: true },\n      normalSaveRetry: true, actualWaitingWorkerStayedInstalledUntilAllTabsLeft: true, copiedNativeMigrationRefusalAtomicAndNormalRetry: true,\n      firstUncachedOfflineNavigationRejected: true,\n      workerFixture: { originalSHA256: sha256(originalWorker), updatedSHA256: sha256(updatedWorker), changedOnlyCacheIdentity: true, applicationBytesChanged: false },\n      blockedConditions: ['real old-application-build upgrade', 'physical-device flight mode', 'real OS Files save-location cancellation', 'unfetched material via its actual product control'],\n      physicalDevice: false, realOSFilesVerified: false, originalWholeAcceptancePromotion: false });\n",
+          "purpose": "Planned attachment explicitly lists blocked physical/OS/unfetched/old-app conditions; this is disclosure rather than execution of missing controls."
+        }
+      ],
+      "normal_operations": [
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 255,
+          "source": "const uncachedContext = await browser.newContext({ offline: true });",
+          "kind": "planned_fresh_context_navigation_control"
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 257,
+          "source": "const uncachedPage = await uncachedContext.newPage();",
+          "kind": "planned_fresh_context_navigation_control"
+        },
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 258,
+          "source": "const rejected = await uncachedPage.goto(url).then(() => false, () => true);",
+          "kind": "planned_fresh_context_navigation_control"
+        }
+      ],
+      "assertions": [
+        {
+          "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "line": 259,
+          "source": "expect(rejected).toBe(true);",
+          "kind": "planned_browser_navigation_refusal_assertion"
+        }
+      ],
+      "mapping_scope": "partial_first_uncached_browser_navigation_refusal_only; unfetched material and OS cancel controls absent",
+      "missing_condition_ids": [
+        "first_uncached_product_guidance",
+        "unfetched_material_control",
+        "os_file_save_location_cancel"
+      ],
+      "limits": [
+        "No fabricated source span is supplied for missing material/OS cancellation controls.",
+        "A rejected browser goto alone does not discharge the three original negative conditions."
+      ],
+      "original": "初回未取得・未取得素材・保存先取消を成功と扱わない",
+      "result": "not_run"
+    }
+  ],
+  "source_entry": {
+    "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+    "line": 133,
+    "end_line": 292,
+    "title": "AT-E12 キャッシュ済み未送信作品をoffline・容量拒否・実waiting-worker・移行retry・完全new/cloneで継続する（実OS条件は別記）",
+    "command": "npx playwright test tests/e2e/ap04-original-e12-continuity.spec.ts --project chromium --project firefox --project webkit --workers 1 --retries 0 --max-failures 0 --trace on",
+    "result": "not_run"
+  },
+  "supporting_helper_spans": [
+    {
+      "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+      "line": 13,
+      "end_line": 21,
+      "excerpt_sha256": "abadcf18094f963637c1badce24d8d8da2a2942ecae60cb0cc66912bcf3a391e",
+      "source_excerpt": "async function importComplete(page: Page, url: string, bytes: Uint8Array, mode: 'new' | 'clone' = 'new') {\n  await page.goto(url);\n  await page.getByRole('button', { name: '保存ファイルを読み込む', exact: true }).click();\n  await page.locator('input[type=file][accept*=\".scenario\"]').setInputFiles({ name: 'e12-complete.scenario', mimeType: 'application/zip', buffer: Buffer.from(bytes) });\n  await page.getByLabel('復元方法', { exact: true }).selectOption(mode);\n  await page.getByLabel('復元方法と対象への影響を確認しました').check();\n  await page.getByRole('button', { name: 'この内容で復元する', exact: true }).click();\n  await expect(page.locator('.app-shell')).toBeVisible();\n}\n",
+      "purpose": "Local importComplete normal Files input + new/clone confirmation helper."
+    },
+    {
+      "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+      "line": 23,
+      "end_line": 41,
+      "excerpt_sha256": "0069396ff09f3d96633b0fe8b4638ced1ab033d0e65e60127aa3a6c90c9604ff",
+      "source_excerpt": "async function nativeImage(page: Page) {\n  return page.evaluate(async name => {\n    const db = await new Promise<IDBDatabase>((resolve, reject) => { const request = indexedDB.open(name); request.onsuccess = () => resolve(request.result); request.onerror = () => reject(request.error); });\n    try {\n      const names = [...db.objectStoreNames].sort();\n      const tables = await new Promise<Record<string, unknown[]>>((resolve, reject) => {\n        const transaction = db.transaction(names, 'readonly'), rows: Record<string, unknown[]> = {};\n        for (const name of names) { const request = transaction.objectStore(name).getAll(); request.onsuccess = () => { rows[name] = request.result; }; }\n        transaction.oncomplete = () => resolve(rows); transaction.onabort = () => reject(transaction.error);\n      });\n      return { version: db.version, tables };\n    } finally { db.close(); }\n  }, databaseName);\n}\n\nconst durableNames = ['projects', 'entities', 'relations', 'blocks', 'snapshots', 'commands', 'outbox', 'assets', 'worlds', 'recoveredPending', 'recordParts'];\nfunction durableImage(image: Awaited<ReturnType<typeof nativeImage>>) {\n  return Object.fromEntries(durableNames.map(name => [name, image.tables[name]]));\n}\n",
+      "purpose": "Read-only native all-table capture and the explicitly selected eleven-table durable subset."
+    },
+    {
+      "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+      "line": 43,
+      "end_line": 95,
+      "excerpt_sha256": "5ebdf47df4e8d8ac64463ce89d849c1fd6cc13075f46e2d26f55565335f236d5",
+      "source_excerpt": "async function fullNewClone(browser: Browser, url: string, bytes: Uint8Array, original: ProjectData) {\n  const results: Record<string, unknown> = {};\n  for (const mode of ['new', 'clone'] as const) {\n    const context = await browser.newContext();\n    try {\n      const restored = await context.newPage(); await importComplete(restored, url, bytes, mode);\n      await restored.reload(); await expect(restored.locator('.project-switch')).toContainText(original.name);\n      await navigate(restored, /^構成/);\n      await restored.getByRole('tab', { name: '試読・検査', exact: true }).click();\n      await restored.getByRole('button', { name: /再実行して状態を比較/ }).first().click();\n      await expect(restored.locator('.reader-trial-heading')).toContainText('意図した終端');\n      await expect(restored.locator('.reader-issue')).toHaveCount(0);\n      const complete = await backup(restored);\n      if (mode === 'new') expect(complete.project).toEqual(original);\n      else {\n        expect(complete.project.projectId).not.toBe(original.projectId);\n        expect(complete.project.entities.map(e => [e.kind, e.name])).toEqual(original.entities.map(e => [e.kind, e.name]));\n        expect(complete.project.entities.every(e => !original.entities.some(before => before.id === e.id))).toBe(true);\n        expect(complete.project.snapshots.map(pin => pin.versionLabel)).toEqual(original.snapshots.map(pin => pin.versionLabel));\n        expect(complete.project.history).toHaveLength(original.history.length + 1);\n        const cloneCommand = complete.project.history.at(-1)!;\n        expect(cloneCommand.reason).toBe('専用ファイルをcloneで復元');\n        expect(cloneCommand.projectId).toBe(complete.project.projectId);\n        expect(cloneCommand.revision).toBe((BigInt(original.revision) + 1n).toString());\n        expect(cloneCommand.baseRevision).toBe('0');\n        expect(original.history.some(command => command.operationId === cloneCommand.operationId)).toBe(false);\n        const idMap = cloneCommand.idMap!; expect(idMap).toBeDefined();\n        expect(idMap[original.projectId]).toBe(complete.project.projectId);\n        expect(Object.values(idMap)).not.toContain(cloneCommand.operationId);\n        const retained = complete.project.history.slice(0, -1);\n        expect(retained.map(command => command.operationId)).toEqual(original.history.map(command => idMap[command.operationId]));\n        for (const [index, source] of original.history.entries()) {\n          const command = retained[index];\n          expect(command).toMatchObject({ projectId: complete.project.projectId, reason: source.reason, revision: source.revision,\n            baseRevision: source.baseRevision, createdAt: source.createdAt, targetIds: source.targetIds.map(id => idMap[id] ?? id) });\n          for (const state of ['before', 'after'] as const) {\n            expect(command[state].name).toBe(source[state].name);\n            expect(command[state].revision).toBe(source[state].revision);\n            expect(command[state].entities.map(e => [e.id, e.kind, e.name, e.revision])).toEqual(source[state].entities.map(e => [idMap[e.id], e.kind, e.name, e.revision]));\n            expect(command[state].snapshots.map(pin => [pin.id, pin.versionLabel, pin.createdAt])).toEqual(source[state].snapshots.map(pin => [idMap[pin.id], pin.versionLabel, pin.createdAt]));\n          }\n        }\n        const { history: _history, ...cloneContent } = complete.project;\n        expect(cloneCommand.after).toEqual(cloneContent);\n        expect(cloneCommand.after.entities.map(e => [e.id, e.kind, e.name])).toEqual(original.entities.map(e => [idMap[e.id], e.kind, e.name]));\n        expect(cloneCommand.before.entities).toHaveLength(0);\n      }\n      results[mode] = { projectId: complete.project.projectId, fileSHA256: sha256(complete.bytes), historyCount: complete.project.history.length,\n        pendingCount: complete.recovery?.pending.length ?? 0, oldTraceReplayedAfterCold: true };\n    } finally { await context.close(); }\n  }\n  return results;\n}\n",
+      "purpose": "Actual separate-context new/clone restore/cold/replay and project/ID/history assertions; pendingCount recorded only."
+    },
+    {
+      "file": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+      "line": 99,
+      "end_line": 131,
+      "excerpt_sha256": "107885d51ec78219faec84a7f5cfdf9b7648ed0cf6bba94723d3f0ce0cd931ca",
+      "source_excerpt": "async function seedVersionOne(page: Page, url: string, project: ProjectData, pending: unknown[]) {\n  await page.goto(`${url}build-info.json`);\n  await page.evaluate(async ({ name, p, pending }) => {\n    const schema: Record<string, { key: string | string[]; indexes: [string, string | string[]][] }> = {\n      projects: { key: 'projectId', indexes: [['name', 'name']] }, entities: { key: ['projectId', 'id'], indexes: [['projectId', 'projectId'], ['[projectId+kind]', ['projectId', 'kind']]] },\n      relations: { key: ['projectId', 'id'], indexes: [['projectId', 'projectId'], ['[projectId+fromId]', ['projectId', 'fromId']], ['[projectId+toId]', ['projectId', 'toId']]] },\n      blocks: { key: ['projectId', 'id'], indexes: [['projectId', 'projectId'], ['[projectId+entityId]', ['projectId', 'entityId']]] }, snapshots: { key: ['projectId', 'id'], indexes: [['projectId', 'projectId']] },\n      commands: { key: 'operationId', indexes: [['projectId', 'projectId'], ['[projectId+revision]', ['projectId', 'revision']]] }, outbox: { key: 'operationId', indexes: [['projectId', 'projectId'], ['accountId', 'accountId']] },\n      assets: { key: 'contentHash', indexes: [] }, views: { key: ['projectId', 'id'], indexes: [['projectId', 'projectId']] }, viewStates: { key: 'key', indexes: [['projectId', 'projectId']] },\n      syncMetadata: { key: 'projectId', indexes: [] }, acks: { key: 'operationId', indexes: [['projectId', 'projectId']] }, restorePoints: { key: 'id', indexes: [['projectId', 'projectId'], ['createdAt', 'createdAt']] },\n      worlds: { key: 'id', indexes: [] }, importLogs: { key: 'operationId', indexes: [['projectId', 'projectId']] },\n    };\n    const db = await new Promise<IDBDatabase>((resolve, reject) => {\n      const request = indexedDB.open(name, 10);\n      request.onupgradeneeded = () => { for (const [name, spec] of Object.entries(schema)) { const table = request.result.createObjectStore(name, { keyPath: spec.key }); for (const [index, key] of spec.indexes) table.createIndex(index, key); } };\n      request.onsuccess = () => resolve(request.result); request.onerror = () => reject(request.error);\n    });\n    try {\n      await new Promise<void>((resolve, reject) => {\n        const tx = db.transaction(Object.keys(schema), 'readwrite'), { entities, relations, snapshots, history, views, ...header } = p;\n        tx.objectStore('projects').put({ ...header, entityIds: entities.map(e => e.id), relationIds: relations.map(e => e.id), snapshotIds: snapshots.map(e => e.id), historyIds: history.map(e => e.operationId), viewIds: views.map(e => e.id) });\n        for (const entity of entities) tx.objectStore('entities').put({ id: entity.id, projectId: p.projectId, kind: entity.kind, record: entity });\n        for (const relation of relations) tx.objectStore('relations').put(relation);\n        for (const snapshot of snapshots) tx.objectStore('snapshots').put({ ...snapshot, projectId: p.projectId });\n        for (const command of history) tx.objectStore('commands').put({ operationId: command.operationId, projectId: p.projectId, revision: command.revision, record: command });\n        for (const view of views) tx.objectStore('views').put({ ...view, projectId: p.projectId });\n        for (const operation of pending) tx.objectStore('outbox').put(operation);\n        tx.objectStore('syncMetadata').put({ projectId: p.projectId, serverRevision: '0', state: 'pending' });\n        tx.oncomplete = () => resolve(); tx.onabort = () => reject(tx.error);\n      });\n    } finally { db.close(); }\n  }, { name: databaseName, p: project, pending });\n}\n",
+      "purpose": "Copied old native layout setup, not an actual old-app user procedure."
+    },
+    {
+      "file": "tests/e2e/ap04-original-helpers.ts",
+      "line": 6,
+      "end_line": 10,
+      "excerpt_sha256": "8c2965a8b840e4f8878685fd6b5ad7deafb25832946eca356c3ca1d20aee780e",
+      "source_excerpt": "export async function navigate(page: Page, name: RegExp) {\n  const menu = page.getByRole('button', { name: 'メニューを開く' });\n  if (await menu.isVisible()) await menu.click();\n  await page.locator('.sidebar').getByRole('button', { name }).first().click();\n}\n",
+      "purpose": "Shared helper definition used by planned E12 procedures: navigate"
+    },
+    {
+      "file": "tests/e2e/ap04-original-helpers.ts",
+      "line": 25,
+      "end_line": 29,
+      "excerpt_sha256": "fa841a1b3d6d15c82dd7b760c635fd5ba16556914ea0d2d2f60ce8a94b34e9fd",
+      "source_excerpt": "export async function openEntity(page: Page, kind: string, name: string) {\n  await navigate(page, /^資料/);\n  await page.getByLabel('情報の種類', { exact: true }).selectOption(kind);\n  await page.locator('.entity-card').filter({ has: page.getByRole('heading', { name, exact: true }) }).click();\n}\n",
+      "purpose": "Shared helper definition used by planned E12 procedures: openEntity"
+    },
+    {
+      "file": "tests/e2e/ap04-original-helpers.ts",
+      "line": 41,
+      "end_line": 48,
+      "excerpt_sha256": "34e0c079edd84f8a28d2b2af0d96620c886dfde3d503be198a072eae5c867365",
+      "source_excerpt": "export async function backup(page: Page) {\n  await navigate(page, /^作品・保存/);\n  await page.getByRole('tab', { name: '完全保存・復元', exact: true }).click();\n  const pending = page.waitForEvent('download');\n  await page.getByRole('button', { name: '完全保存ファイルを作成', exact: true }).click();\n  const bytes = new Uint8Array(await readFile((await (await pending).path())!));\n  return { bytes, ...(await inspectScenario(bytes, { worker: false })) };\n}\n",
+      "purpose": "Shared helper definition used by planned E12 procedures: backup"
+    },
+    {
+      "file": "tests/e2e/ap04-original-helpers.ts",
+      "line": 72,
+      "end_line": 77,
+      "excerpt_sha256": "b45f5560bae7d55e327aad8b21a837954c4421b132690105f6771948ffcd7774",
+      "source_excerpt": "export async function attachGiven(info: TestInfo, caseId: string, bytes: Uint8Array, facts: unknown) {\n  await info.attach(`${caseId}-given.scenario`, { body: Buffer.from(bytes), contentType: 'application/zip' });\n  await attachObservation(info, `${caseId}-given`, {\n    fixtureSha256: createHash('sha256').update(bytes).digest('hex'), fixtureBytes: bytes.length, facts,\n  });\n}\n",
+      "purpose": "Shared helper definition used by planned E12 procedures: attachGiven"
+    },
+    {
+      "file": "tests/e2e/ap04-original-helpers.ts",
+      "line": 79,
+      "end_line": 81,
+      "excerpt_sha256": "1deb815e4bddeb8ddca8ba094351aaa5fed86684ed3aefb09f388670de3b4b63",
+      "source_excerpt": "export async function attachObservation(info: TestInfo, name: string, observation: unknown) {\n  await info.attach(`${name}.json`, { body: Buffer.from(JSON.stringify(observation, null, 2)), contentType: 'application/json' });\n}\n",
+      "purpose": "Shared helper definition used by planned E12 procedures: attachObservation"
+    }
+  ],
+  "static_fixture_inventory": {
+    "project_id": "1b970349-9d2c-4ccb-951c-2d212d583316",
+    "project_name": "Historical successful trace",
+    "entity_count": 8,
+    "entity_kinds": [
+      "checkpoint",
+      "flow_edge",
+      "flow_node",
+      "scene",
+      "trace",
+      "variable"
+    ],
+    "snapshot_count": 1,
+    "history_count": 0,
+    "archive_entries": [
+      {
+        "path": "data/project.json",
+        "expanded_bytes": 10536
+      },
+      {
+        "path": "manifest.json",
+        "expanded_bytes": 399
+      }
+    ],
+    "contains_attachment_entity": false,
+    "contains_asset_entries": false
+  },
+  "missing_conditions": {
+    "physical_flight_mode": {
+      "condition": "原whenの実端末機内モード",
+      "classification": "physical_environment_unobserved",
+      "source_support": "lines179-181 use Playwright context.setOffline and navigator.onLine; no physical-device radio procedure.",
+      "required_next_observation": "Cache the fixed candidate on the original required device, leave genuine unsent UI edits, enter actual flight mode, then record cold editing/export/resume and retained input.",
+      "result": "not_run"
+    },
+    "real_storage_exhaustion": {
+      "condition": "実ブラウザー/端末容量の枯渇",
+      "classification": "physical_capacity_unobserved",
+      "source_support": "lines184-190 inject one native projects.put QuotaExceededError; a real quota is not exhausted.",
+      "required_next_observation": "Observe genuine quota refusal and normal recovery in the required environment; keep fault injection as supplemental evidence only.",
+      "result": "not_run"
+    },
+    "actual_old_application_upgrade": {
+      "condition": "異なる実旧アプリbytesからの途中更新と安全地点適用",
+      "classification": "application_upgrade_fixture_missing",
+      "source_support": "lines139-156 change only the service-worker CACHE identity; application bytes stay the same fixed candidate. lines207-215 leave worker scope through a fixture route.",
+      "required_next_observation": "Bind actual old/new application bytes and their build/source hashes, create cached unsent work with the old app, then perform actual update and safe-point resumption without replacing the original conditions.",
+      "result": "not_run"
+    },
+    "actual_old_database_migration": {
+      "condition": "実旧アプリが作成したDBの移行失敗と再開",
+      "classification": "actual_producer_state_unobserved",
+      "source_support": "seedVersionOne lines99-131 writes a copied native version10 layout and pending rows directly; lines224-242 fault and retry this copied DB.",
+      "required_next_observation": "Retain the actual old-app DB/input bytes and pending operations, observe failure atomicity and ordinary retry on that original state, and keep copied-layout injection as supplemental.",
+      "result": "not_run"
+    },
+    "first_uncached_product_guidance": {
+      "condition": "原negativeの初回未取得を成功と扱わず説明する",
+      "classification": "partial_browser_refusal_only",
+      "source_support": "lines216-221 only assert that fresh offline context goto rejects. Product failure guidance, save status and durable invariants are not asserted in this control.",
+      "required_next_observation": "Record actual first acquisition refusal and the product/browser guidance applicable to an uncached app; do not infer the whole negative clause from rejected navigation alone.",
+      "result": "not_run"
+    },
+    "unfetched_material_control": {
+      "condition": "原negativeの未取得素材を利用済みと扱わない",
+      "classification": "local_spec_control_absent",
+      "source_support": "The 2237-byte fixture has project+manifest only, no attachment entities or asset entries; this spec never opens an unfetched material through its product control.",
+      "required_next_observation": "Prepare the original cached/unsent work with an actual unfetched material, open its normal product control while offline, assert the missing indication and no false successful-use/save status, and retain original author data.",
+      "result": "not_run"
+    },
+    "os_file_save_location_cancel": {
+      "condition": "原negativeの保存先取消を成功と扱わない",
+      "classification": "actual_os_files_unobserved",
+      "source_support": "backup helper accepts a Playwright download and reads bytes; no OS save-location dialog or cancellation operation/assert exists in this spec.",
+      "required_next_observation": "Cancel the actual OS Files destination from the normal export action; directly observe cancellation feedback, no false completed export, input/pending preservation and subsequent ordinary retry.",
+      "result": "not_run"
+    },
+    "restore_pending_identity_and_materials": {
+      "condition": "専用出力復元後の送信待ち同一性・素材継続の直接確認",
+      "classification": "supplemental_assertion_limit",
+      "source_support": "fullNewClone lines90-91 records pendingCount without asserting equality; it asserts project/new-clone ID/history/replay behavior but no material/world byte equality. The fixed fixture has no asset entries.",
+      "required_next_observation": "If adjudicating pending/material preservation, compare the restored pending operations and actual relevant material/world bytes in the same original-given run; counts and constant observation flags alone do not establish those properties.",
+      "result": "not_run"
+    },
+    "fixture_hash_binding_at_execution": {
+      "condition": "実行入力を予定fixture SHAへ照合",
+      "classification": "pre_execution_input_binding_required",
+      "source_support": "lines135-136 read/inspect the fixture but do not compare against a predeclared fixture SHA; attachGiven records actual bytes/hash at runtime.",
+      "required_next_observation": "Before adjudication, compare the attached actual 2237 bytes and SHA with the planned fixed fixture, and bind build/worker/source hashes from the same execution.",
+      "result": "not_run"
+    }
+  },
+  "future_execution_artifacts": [
+    {
+      "name": "AT-E12-given.scenario and AT-E12-given.json",
+      "required": "Actual input bytes/SHA and actual cached controller + nonempty outbox operation IDs + same-run build.",
+      "result": "not_run"
+    },
+    {
+      "name": "AT-E12-offline-complete.scenario",
+      "required": "Real downloaded complete bytes after ordinary save retry; attach actual file hash/size and inspect author/recovery state.",
+      "result": "not_run"
+    },
+    {
+      "name": "new/clone output downloads and AT-E12-local-observed.json",
+      "required": "Separate-context cold/UI replay/project/ID/history assertions; record limitations of pending/material comparisons.",
+      "result": "not_run"
+    },
+    {
+      "name": "AT-E12-migration-retry-complete.scenario",
+      "required": "Actual copied-layout failed migration before/after native image and UI retry output; retain actual-producer migration as separate condition.",
+      "result": "not_run"
+    },
+    {
+      "name": "same-run build-info + original/updated SW SHA",
+      "required": "Exact commit/tree/dirty/base/13-dist bytes binding from root, plus actual worker bytes; cache-identity lifecycle is supplemental.",
+      "result": "not_run"
+    }
+  ],
+  "policy": {
+    "original_four_literals_unchanged": true,
+    "every_case_clause_and_control_result_remains_not_run": true,
+    "authorship_hashes_are_not_runtime_evidence": true,
+    "runtime_output_flags_are_not_extra_assertions": true,
+    "original_116_464_audit_and_plan_untouched": true,
+    "product_test_helper_checker_and_existing_proof_untouched": true,
+    "physical_conditions_and_absent_local_controls_not_substituted": true,
+    "no_heavy_commands_or_browser_run": true
+  },
+  "totals": {
+    "original_cases": 1,
+    "original_clauses": 4,
+    "passed": 0,
+    "not_run": 4
+  },
+  "offline_cold_navigation_source_correction": {
+    "status": "planned_not_run",
+    "prior_head": "0b42e7c5c9e88bff1e7eab459c204603d9de63b5",
+    "source_sha256": "190c79807c566966beb38317f21df2beb0177c9cf4f904500f72c93ee0730478",
+    "observation_scope": "Original offline Page.reload retained. Readonly nonce accessor, exact cached base/index/assets bytes, active controller, genuine waiting worker, and all durable native tables unchanged. Official Playwright 1.64 engine fix is verified independently before any acceptance claim.",
+    "original_clauses_changed": false,
+    "acceptance_pass_inferred": false
+  },
+  "clean_manual_save_correction": {
+    "status": "planned_not_run",
+    "guard_source": {
+      "file": "src/ui/EntityEditor.tsx",
+      "bytes": 40347,
+      "sha256": "00fb4afe43df88c15b8cbb810650ab546bd2e6e3c2f6235f4ae6ccdc4d60a15b"
+    },
+    "scope": "Clean manual save after completed auto-save creates no extra durable command. New and restored dirty drafts, failed-save retry, composition and invalid-JSON guards, template confirmation and concurrently edited drafts retain their existing handling.",
+    "original_exact_history_increment": 2,
+    "original_clauses_changed": false
+  }
+}

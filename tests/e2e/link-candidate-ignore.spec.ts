@@ -13,6 +13,8 @@ async function nav(page: Page, name: RegExp) {
 }
 async function seed(page: Page, bytes: Uint8Array, mode: 'new' | 'clone' = 'new') {
   await page.goto('./');
+  await expect(page.locator('.library-page, .app-shell')).toBeVisible();
+  if (await page.locator('.project-switch').isVisible()) await page.locator('.project-switch').click();
   await page.getByRole('button', { name: '保存ファイルを読み込む', exact: true }).click();
   await page.locator('input[type=file]').setInputFiles({ name: 'candidate-ignore.scenario', mimeType: 'application/zip', buffer: Buffer.from(bytes) });
   if (mode === 'clone') await page.getByLabel('復元方法', { exact: true }).selectOption('clone');
@@ -97,4 +99,66 @@ test('通常本文で同名人物と一般語を選び分け、候補の除外�
   expect(clonedFirst.id).not.toBe(first.id); expect(clonedScene.data.body[0].text).toBe(body[0].text);
   expect(clonedScene.data.body[0].links?.map(link => link.target.entityId)).toEqual([clonedFirst.id, clonedFirst.id]);
   await test.info().attach('candidate-ignore-observations.json', { body: JSON.stringify({ initialCandidates: initial, coldCandidates: coldOptions, selectedID: first.id, blockID: body[0].id, authoredLinks: saved.data.body[0].links, oldPinID: pin.id, preferenceScope: 'Same local account/project/source on this device. No transfer of local preferences through the complete file or actual Auth claim.' }), contentType: 'application/json' });
+});
+
+test('同名の二人への確定リンクを保ち、候補除外を別本文・別作品へ漏らさず通常画面から解除して完全復元する', async ({ page, browser, browserName }) => {
+  test.setTimeout(240000);
+  const project = createProject('候補除外を解除する作品A');
+  const first = createEntity(project.projectId, 'character', '葵', { summary: textToRichText('門番の葵') });
+  const second = createEntity(project.projectId, 'character', '葵', { summary: textToRichText('旅人の葵') });
+  const body = textToRichText('😀葵と葵が歩く。葵の花。');
+  const scene = createEntity(project.projectId, 'scene', '二人のリンクと一般語', { body });
+  const sibling = createEntity(project.projectId, 'scene', '別本文の同じ候補', { body: textToRichText(body[0].text) });
+  project.entities.push(first, second, scene, sibling);
+  project.entities.forEach(entity => { entity.status = 'confirmed'; });
+  const other = createProject('候補除外を確認する作品B');
+  other.entities = structuredClone(project.entities).map(entity => ({ ...entity, projectId: other.projectId }));
+  await seed(page, await exportScenario(project)); await openScene(page, scene.name);
+  const annotations = page.getByRole('region', { name: '本文のルビとリンク', exact: true });
+  const candidates = annotations.getByLabel('本文に見つかった候補', { exact: true });
+  const options = () => candidates.locator('option').evaluateAll(nodes => nodes.map(node => ({ value: (node as HTMLOptionElement).value, label: node.textContent ?? '' })));
+  for (const [person, position] of [[first, '2〜2文字目'], [second, '4〜4文字目']] as const) {
+    const candidate = (await options()).find(option => option.label.includes(person.id.slice(-6)) && option.label.includes(position))!;
+    expect(candidate).toBeTruthy(); await candidates.selectOption(candidate.value);
+    await annotations.getByRole('button', { name: 'リンクを付ける', exact: true }).click();
+    await expect(page.locator('.editor-save-state')).toContainText('端末内保存済み');
+  }
+  for (const person of [first, second]) {
+    const common = (await options()).find(option => option.label.includes(person.id.slice(-6)) && option.label.includes('9〜9文字目'))!;
+    expect(common).toBeTruthy(); await candidates.selectOption(common.value);
+    await annotations.getByRole('button', { name: 'この語句とリンク先の候補を表示しない', exact: true }).click();
+  }
+  expect((await options()).some(option => option.label.includes('「葵」'))).toBe(false);
+  await openScene(page, sibling.name);
+  for (const person of [first, second]) expect((await options()).some(option => option.label.includes(person.id.slice(-6)))).toBe(true);
+  await page.locator('.project-switch').click(); await seed(page, await exportScenario(other)); await openScene(page, scene.name);
+  for (const person of [first, second]) expect((await options()).some(option => option.label.includes(person.id.slice(-6)))).toBe(true);
+  await page.locator('.project-switch').click(); await page.locator('.project-card').filter({ hasText: project.name }).click(); await openScene(page, scene.name);
+  expect((await options()).some(option => option.label.includes('「葵」'))).toBe(false);
+  await page.evaluate(() => {
+    const setItem = Storage.prototype.setItem; let fail = true;
+    Storage.prototype.setItem = function (key, value) {
+      if (fail && key.startsWith('scenario-link-candidate-suppressions:v1:')) { fail = false; throw new DOMException('fixture preference quota', 'QuotaExceededError'); }
+      return setItem.call(this, key, value);
+    };
+  });
+  await annotations.getByRole('button', { name: 'この本文の候補除外を解除', exact: true }).click();
+  await expect(annotations.getByRole('alert')).toContainText('除外解除を保存できませんでした');
+  expect((await options()).some(option => option.label.includes('「葵」'))).toBe(false);
+  await page.reload(); await openScene(page, scene.name);
+  expect((await options()).some(option => option.label.includes('「葵」'))).toBe(false);
+  await annotations.getByRole('button', { name: 'この本文の候補除外を解除', exact: true }).click();
+  await expect(annotations.getByRole('alert')).toHaveCount(0);
+  expect((await options()).filter(option => option.label.includes('「葵」'))).toHaveLength(6);
+  await page.reload(); await openScene(page, scene.name);
+  expect((await options()).filter(option => option.label.includes('「葵」'))).toHaveLength(6);
+  const saved = await backup(page), linkedScene = saved.project.entities.find((entity): entity is Entity<'scene'> => entity.id === scene.id && entity.kind === 'scene')!;
+  expect(linkedScene.data.body[0].text).toBe(body[0].text);
+  expect(linkedScene.data.body[0].links?.map(link => ({ start: link.start, end: link.end, entityId: link.target.entityId }))).toEqual([{ start: 1, end: 2, entityId: first.id }, { start: 3, end: 4, entityId: second.id }]);
+  expect(await fresh(browser, saved.bytes, 'new')).toEqual(saved.project);
+  const clone = await fresh(browser, saved.bytes, 'clone');
+  const clonedPeople = [first, second].map(person => clone.entities.find((entity): entity is Entity<'character'> => entity.kind === 'character' && entity.data.summary?.[0].text === person.data.summary?.[0].text)!);
+  const clonedScene = clone.entities.find((entity): entity is Entity<'scene'> => entity.kind === 'scene' && entity.name === scene.name)!;
+  expect(clonedScene.data.body[0].links?.map(link => link.target.entityId)).toEqual(clonedPeople.map(person => person.id));
+  await test.info().attach('candidate-ignore-clear-observations.json', { body: JSON.stringify({ browserName, actualVersion: browser.version(), twoLinkedPeople: true, sourceAndProjectIsolation: true, failedClearRetained: true, clearColdAndCompleteNewClone: true, accountIsolation: 'Preference utility test only; actual Auth not tested.', physicalDevice: false, originalWholeAcceptancePromotion: false }), contentType: 'application/json' });
 });

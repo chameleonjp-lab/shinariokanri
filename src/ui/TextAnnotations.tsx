@@ -19,7 +19,7 @@ import {
 } from '../domain/linkCandidates';
 import { KIND_LABELS } from '../domain/model';
 import { referenceProject } from '../domain/referenceChoices';
-import { candidateIgnoreKey, loadIgnoredLinkCandidates, saveIgnoredLinkCandidate } from './linkCandidatePreferences';
+import { candidateIgnoreKey, clearIgnoredLinkCandidates, loadIgnoredLinkCandidates, saveIgnoredLinkCandidate } from './linkCandidatePreferences';
 import { PagedSelect } from './PagedSelect';
 import { WindowedList } from './WindowedList';
 
@@ -88,7 +88,9 @@ export function TextAnnotations({
 
   useEffect(() => {
     setPersistedIgnored(storedIgnored(authorScope, sourceEntityId));
-  }, [project.projectId, sourceEntityId]);
+    setLocallyIgnored(new Set());
+    setCandidateId('');
+  }, [authorScope, sourceEntityId]);
 
   const activeBlock = blocks.find(block => block.id === selectedBlockId) ?? blocks[0];
   const allIgnored = useMemo(() => new Set([...ignoredCandidateKeys, ...persistedIgnored, ...locallyIgnored]), [ignoredCandidateKeys, persistedIgnored, locallyIgnored]);
@@ -157,6 +159,18 @@ export function TextAnnotations({
     setError('');
   };
 
+  const restoreIgnoredCandidates = () => {
+    try {
+      clearIgnoredLinkCandidates(window.localStorage, authorScope, sourceEntityId);
+      setPersistedIgnored(new Set());
+      setLocallyIgnored(new Set());
+      setCandidateId('');
+      setError('');
+    } catch {
+      setError('候補の除外解除を保存できませんでした。確定したリンクと除外を保持しています。再試行してください。');
+    }
+  };
+
   const split = () => {
     if (!activeBlock) return;
     if (!splitValid) { setError('段落の途中にある整数の文字位置を入力してください。'); return; }
@@ -211,6 +225,7 @@ export function TextAnnotations({
             items={candidates.map(candidate => ({ id: candidate.id, label: `${candidate.label} · 「${candidate.term}」 · ${candidate.start + 1}〜${candidate.end}文字目` }))}
             emptyLabel="候補を選ぶ（手入力もできます）" onChange={id => chooseCandidate(candidates.find(candidate => candidate.id === id))}/>
           {!candidates.length && <span className="field-hint">一致する候補はありません。本文の語句を直接入力できます。</span>}
+          {(persistedIgnored.size > 0 || locallyIgnored.size > 0) && <button type="button" className="text-button" onClick={restoreIgnoredCandidates}>この本文の候補除外を解除</button>}
         </div>
         <div className="form-field">
           <label htmlFor={`annotation-phrase-${sourceEntityId}`}>リンクまたはルビを付ける語句</label>
