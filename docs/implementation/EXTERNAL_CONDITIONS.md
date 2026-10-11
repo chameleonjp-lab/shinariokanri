@@ -1,3 +1,5 @@
+C29 `09d39faae9c7293fe77b5675cc7286605a1809a6` / build `b59572f71d050cd96e0f` の候補ZIP・実Files手順・専用接続計画は準備済み。[現在の不足条件](C29_MANUAL_REVIEW.md)を記録する。実iPhone/iPad・実OS/ブラウザー・VoiceOver/NVDA、専用HTTPS origin、専用Auth URL/public key/project ID/region/管理者/fixture tenant、owner/editor/reviewer/reader/nonmemberの5実アカウント、private bucket、現行tier/quota/usage/費用/上限は未指定または未確認。独立してできる検査は続け、必要な実接続確認だけを未実行で残す。外部DB変更・公開・新規課金は実行していない。
+
 # 実環境で残る確認条件
 
 現在のmain、部品/CI/production Chromium、模擬HTTP/隔離PostgreSQLの成功を実端末・実Auth/RLS/Storage・原116受入の完成に換算しない。公開、mainへのマージ、有料機能の有効化、既存の別用途DB変更は行っていない。
@@ -12,7 +14,7 @@
 
 ## 公表料金と実tenant
 
-2026-10-08、[Supabase料金](https://supabase.com/pricing)と[Compute/Disk](https://supabase.com/docs/guides/platform/compute-and-disk)を読み取り確認した。次は公表値の抜粋であり、契約・残枠・地域・税・実費の確認ではない。
+2026-10-08の初回確認を保持し、2026-10-10にも[Supabase料金](https://supabase.com/pricing)と[Compute/Disk](https://supabase.com/docs/guides/platform/compute-and-disk)を読み取り再確認した。以下の掲載枠は再確認時にも一致した。専用tenantの契約・残枠・地域・税・実費を確認した結果ではない。
 
 | 公表プラン | 基本料金/月 | 主な掲載枠 |
 |---|---|---|
