@@ -167,16 +167,40 @@ describe('independent game receiver contract', () => {
     }
   });
 
-  it('validates retained entity field semantics through the strict native runtime schema', async () => {
+  it.each([['targetEnd', 1], ['blockId', ''], ['sourceVersionId', false]])('refuses unsupported public link %s with coherent native content and hashes', async (field, value) => {
     const fixture = await receiverFixture();
-    const invalid = fixture.package;
-    const contract = invalid.publicProjection.entities.find((entity: { kind: string }) => entity.kind === 'external_contract');
-    contract.data.outputType = 'javascript';
-    invalid.entities = invalid.publicProjection.entities;
-    invalid.externalContracts = [contract];
-    invalid.contentVersionId = `sha256:${await sha256(jsonBytes(invalid.publicProjection))}`;
+    const input = fixture.package;
+    const scene = input.publicProjection.entities.find((entity: { kind: string }) => entity.kind === 'scene');
+    scene.data.body[0].links = [{ start: 0, end: 1, targetId: scene.id }];
+    await resealPublicPackage(input);
+    await expect(receiveGamePackage(input)).resolves.toBeDefined();
+    const invalid = structuredClone(input);
+    invalid.publicProjection.entities.find((entity: { kind: string }) => entity.kind === 'scene').data.body[0].links[0][field] = value;
+    // The native adapter discards these unsupported optional values. Rebuild
+    // the resulting native content and all bindings to isolate this boundary.
+    await resealPublicPackage(invalid);
+    expect(invalid.runtimeProjectHash).toBe(await sha256(jsonBytes(invalid.runtimeProject)));
+    expect(invalid.contentVersionId).toBe(`sha256:${await sha256(jsonBytes(invalid.publicProjection))}`);
     const before = canonicalJson(invalid);
-    await expect(receiveGamePackage(invalid)).rejects.toThrow(/strict契約/);
+    await expect(receiveGamePackage(invalid)).rejects.toThrow(/公開本文リンク/);
     expect(canonicalJson(invalid)).toBe(before);
+  });
+
+  it('refuses unsupported projected types and versions with consistent native content, hashes and ID maps', async () => {
+    const fixture = await receiverFixture();
+    for (const [field, value] of [['outputType', 'javascript'], ['version', 'not-semver']]) {
+      const invalid = structuredClone(fixture.package);
+      const contract = invalid.publicProjection.entities.find((entity: { kind: string }) => entity.kind === 'external_contract');
+      contract.data[field] = value;
+      invalid.externalContracts = [contract];
+      // Native author contracts allow arbitrary result type strings. Rebuild
+      // every hash and ID binding so rejection must enforce the public contract.
+      await resealPublicPackage(invalid);
+      expect(invalid.runtimeProjectHash).toBe(await sha256(jsonBytes(invalid.runtimeProject)));
+      expect(invalid.contentVersionId).toBe(`sha256:${await sha256(jsonBytes(invalid.publicProjection))}`);
+      const before = canonicalJson(invalid);
+      await expect(receiveGamePackage(invalid)).rejects.toThrow(/公開実行契約/);
+      expect(canonicalJson(invalid)).toBe(before);
+    }
   });
 });
