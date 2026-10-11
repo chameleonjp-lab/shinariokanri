@@ -8,6 +8,10 @@
 
 `scripts/measure-large-history.mjs` は通常Appの112保存から元113入力を作り、実downloadの全履歴・hash・操作順・ID・素材を空new/cloneとcold後のnative保存情報で照合する。`--soak-seconds 0` は完全入力の診断だけであり7200秒の合格ではない。`--soak-seconds 7200` は実時計で7200秒以上の通常編集・検索・補助試読・viewport変更・offline cold後に同じ完全照合を行う。入力を減らす処理はない。
 
-現在の診断ではimmutable async capture、canonical bytes共有、復元検査sessionの3ファイル30件が成功した（10.01秒）。実ファイル出力・全復元・性能30回・7200秒の実結果は固定した統合候補の記録へ別途結び付ける。部品検査からそれらの成功は推定しない。
+全履歴のreadは一つのprivate captureと同じ検証sessionを一回のWorker jobへ渡し、構造/JSON→固定世界→snapshot hash→全履歴整合性の順序を保持する。破棄される巨大な検査戻り値の再転送も省く。これはsource準備とcold読込の変更であり、完全保存600000msの成功を証明するものではない。
+
+固定3bea751の実Large113診断は元download600000msで失敗し、全ファイル/空new-clone/coldは未実行、firstPaint/heartbeatとpointer取消2秒は未測定のまま保持する。後続ハーネスは失敗時のUI進捗/alert/Worker時刻を記録し、全helper bytesを測定前に保存して終了後に全SHA/bytesを再照合する。旧統合候補の部品unitについて、この工程packetにはraw/対象版bindingを追加しておらず、本工程のunit証拠として使わない。
+
+[main基準のAP03工程候補](../quality/ap03-2026-10-11/README.md)ではbuild/unit/browser/CI、性能30回、実7200秒と全ACをまだ実行していない。旧統合候補の部品検査や失敗をこの工程branchの実結果へ移記しない。実ファイル出力・全復元・性能30回・7200秒は同じ最終commit/tree/buildの直接結果だけで判定する。
 
 戻す場合はこの最適化を個別に取り除ける。正本/履歴/送信待ちの原子性、元canonical形式と全検査が残るため、既存完全ファイルへの移行は不要である。Linux自動ブラウザーは実端末・支援技術・実同期の証拠を代替しない。
