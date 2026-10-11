@@ -4,7 +4,16 @@ import { createEntity, createProject, textToRichText } from '../../src/domain/mo
 import { exportScenario, inspectScenario } from '../../src/storage/archive';
 async function navigate(page: Page, name: RegExp) { const menu = page.getByRole('button', { name: 'メニューを開く' }); if (await menu.isVisible()) await menu.click(); await page.locator('.sidebar').getByRole('button', { name }).first().click(); }
 async function work(page: Page, tab: string) { await navigate(page, /^作品・保存/); await page.getByRole('tab', { name: tab, exact: true }).click(); }
-async function seed(page: Page, bytes: Uint8Array) { await page.goto('./'); await page.getByRole('button', { name: '保存ファイルを読み込む', exact: true }).click(); await page.locator('input[type=file]').setInputFiles({ name: 'recovery.scenario', mimeType: 'application/zip', buffer: Buffer.from(bytes) }); await page.getByLabel('復元方法と対象への影響を確認しました').check(); await page.getByRole('button', { name: 'この内容で復元する', exact: true }).click(); await expect(page.locator('.sidebar')).toBeVisible(); }
+async function seed(page: Page, bytes: Uint8Array) {
+  await page.goto('./');
+  await page.getByRole('button', { name: '保存ファイルを読み込む', exact: true }).click();
+  await page.locator('input[type=file]').setInputFiles({ name: 'recovery.scenario', mimeType: 'application/zip', buffer: Buffer.from(bytes) });
+  await page.getByLabel('復元方法と対象への影響を確認しました').check();
+  await page.getByRole('button', { name: 'この内容で復元する', exact: true }).click();
+  // The dialog closes after atomic restoration commits; this wait shares the existing test budget.
+  await page.getByRole('dialog', { name: '作品ファイルを読み込む', exact: true }).waitFor({ state: 'hidden' });
+  await expect(page.locator('.sidebar')).toBeVisible();
+}
 async function backup(page: Page) { await work(page, '完全保存・復元'); const pending = page.waitForEvent('download'); await page.getByRole('button', { name: '完全保存ファイルを作成', exact: true }).click(); const download = await pending; return inspectScenario(new Uint8Array(await readFile((await download.path())!)), { worker: false }); }
 async function oldHistory() { const bytes = new Uint8Array(await readFile('tests/fixtures/rb06-history.scenario')), prepared = await inspectScenario(bytes, { worker: false }), p = prepared.project, first = p.history[0], scene = first.after.entities[0]; return { bytes, p, operation: first.operationId, scene }; }
 
