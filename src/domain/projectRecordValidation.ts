@@ -1,6 +1,7 @@
 import type { Entity, ProjectData, ProjectSnapshot, ProjectContent, ValidationIssue, ContentState, AuthorAlternative, AlternativeVersion, AlternativeApplyReceipt } from './types';
 import type { ProjectValidationOptions } from './model';
-import { validateProject,validateCurrentProject, type DomainReference } from './model';
+import { validateProject,validateCurrentProject,createProjectValidator,RELATION_TYPES, type DomainReference } from './model';
+import { captureImmutablePlainData } from './immutablePlainData';
 import { validateAuthorAlternatives } from './authorAlternativeIntegrity';
 import { validateReadingTraceRecord } from './runtimeRecordValidation';
 import { captureRuntimeContent } from './runtimeVersions';
@@ -127,6 +128,27 @@ async function checkChapterTraces(project: ProjectData, validationOptions: Proje
 
 /** Async durable-boundary checks for hashes, isolated branch contents, and replayable chapter evidence. */
 export async function validateProjectIntegrity(input: ProjectData, options: ProjectValidationOptions = {}, requireReceiptHistory = input.history.length > 0, verifiedStorage?:{previous:ProjectData;references:WeakMap<Entity,DomainReference[]>}): Promise<ValidationIssue[]> {
+  return validateProjectIntegrityData(input, options, requireReceiptHistory, verifiedStorage);
+}
+
+/** No caller-supplied validator or skip flag is accepted. This factory owns
+ * the dependency capture and supplies the same full validator to each image. */
+export function createProjectValidationSession(options: ProjectValidationOptions = {}) {
+  const captured = captureImmutablePlainData(options);
+  const dependencies = captured.captured ? captureImmutablePlainData({ ...captured.value, relationTypes: captured.value.relationTypes ?? RELATION_TYPES }) : captured;
+  if (!dependencies.captured) return {
+    validate: (input: unknown) => validateProject(input, options),
+    integrity: (input: ProjectData, requireReceiptHistory = input.history.length > 0) => validateProjectIntegrity(input, options, requireReceiptHistory),
+  };
+  const validate = createProjectValidator(dependencies.value);
+  return { validate, integrity: (input: ProjectData, requireReceiptHistory = input.history.length > 0) => {
+    const owned = captureImmutablePlainData(input);
+    return validateProjectIntegrityData(owned.value, dependencies.value, requireReceiptHistory, undefined, validate);
+  } };
+}
+
+async function validateProjectIntegrityData(input: ProjectData, options: ProjectValidationOptions, requireReceiptHistory: boolean,
+  verifiedStorage?:{previous:ProjectData;references:WeakMap<Entity,DomainReference[]>}, scopedValidator?:ReturnType<typeof createProjectValidator>): Promise<ValidationIssue[]> {
   try {const {verifyStoredGameEvidence}=await import('./gameProtocol');await verifyStoredGameEvidence(input,options.worldSnapshots??{});}catch(error){return [{code:'INTEGRITY_FAILED',path:'project.entities.handoffReceipt',message:(error as Error).message}];}
   // Freeze the exact dependency images at the durable boundary. Async hash checks
   // must never validate a different world map from the one structural validation read.
@@ -135,7 +157,7 @@ export async function validateProjectIntegrity(input: ProjectData, options: Proj
   // Storage has already verified immutable snapshots and the previous content.
   // Recheck every changed current record and every affected reference using the
   // same structural contract; imports/history still take the full validator.
-  const structural = verifiedStorage&&!requireReceiptHistory&&!input.history.length
+  const structural = scopedValidator ? scopedValidator(input) : verifiedStorage&&!requireReceiptHistory&&!input.history.length
     ?validateCurrentProject(input,validationOptions,verifiedStorage):validateProject(input, validationOptions);
   if (!structural.ok) return structural.issues;
   const issues: ValidationIssue[] = [];
