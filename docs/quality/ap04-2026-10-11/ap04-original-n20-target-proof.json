@@ -1,0 +1,194 @@
+{
+  "schemaVersion": "1.0.0",
+  "status": "authored_not_run",
+  "acceptance_pass_inferred": false,
+  "browser_executed": false,
+  "heavy_build_or_test_executed": false,
+  "candidate_commit": null,
+  "candidate_tree": null,
+  "candidate_build": null,
+  "original_requirement": {
+    "id": "REQ-N20",
+    "title": "持ち出しと互換性",
+    "provenance": "仕様を成立させる品質条件・PRレビュー対象",
+    "decision_status": "review_proposal",
+    "implementation_status": "planned",
+    "release_scope": "complete_v1",
+    "package_id": "WP22",
+    "shall": "完全保存・汎用JSON・読み物等の出力に仕様版と対象版を付け、未対応機能と除外項目を表示すること。互換性の検証範囲を記録すること。",
+    "failure_behavior": "Unity・Unreal・ink・Yarn等すべてに対応済みと仮定しない",
+    "acceptance_ids": [
+      "AT-N20"
+    ],
+    "source_refs": []
+  },
+  "original_case": {
+    "id": "AT-N20",
+    "requirement_ids": [
+      "REQ-N20"
+    ],
+    "package_id": "WP22",
+    "given": "未対応の外部コマンドがある作品",
+    "when": "対応先別の制作出力を選ぶ",
+    "then": "不一致の箇所を示し安全な出力だけを生成する",
+    "negative_or_edge": "Unity・Unreal・ink・Yarn等すべてに対応済みと仮定しない",
+    "result": "not_run"
+  },
+  "source_plan": "docs/quality/ap04-2026-10-11/local_acceptance_plan.json",
+  "source_plan_sha256": "bbbbd0397c084a61a8616379a0dd9e051e76eaf2181238f4daae67ec4e1c6160",
+  "original_cases_sha256": "e1e4b06a3bb1cd79fc590239ab6350103323335f2e1ee87a2e6a283755834c4f",
+  "original_requirements_sha256": "df11649ab7ec25c31ae2aad6aacdca98d7324aba2e701352f9a78136c3bed0dc",
+  "clauses": [
+    {
+      "name": "given",
+      "original": "未対応の外部コマンドがある作品",
+      "result_on_new_target": "not_run",
+      "candidate_file": "tests/e2e/ap04-original-n20-targets.spec.ts",
+      "authored_file_sha256": "451ff264ac98db62cc828c5b7e33dda9a8571bd273b5a8e1da934fcee2e08ee3",
+      "test_callback": {
+        "file": "tests/e2e/ap04-original-n20-targets.spec.ts",
+        "title": "AT-N20 未対応外部契約がある同じ作品で対応先を選び、実ID・項目の不一致と未実装先を示し、明示した本文だけを保存する",
+        "line": 47,
+        "result": "not_run"
+      },
+      "normal_ui_operation": "未対応inputTypeを宣言した外部契約・同契約を使うgateを含む原作品を通常ファイル読込する。",
+      "assertions_authored_not_run": [
+        "actual source project/contract UUIDとinputType/outputTypeをgiven添付する。",
+        "原givenは宣言契約型による未対応であり、任意コマンド実行を意味しない。"
+      ],
+      "limits": [
+        "Unsupported external-contract type models only a declared incompatibility. Arbitrary external command semantics/execution are not implemented or proved.",
+        "Unity/Unreal/ink/Yarn conversion and real engine execution are not supported or observed."
+      ]
+    },
+    {
+      "name": "when",
+      "original": "対応先別の制作出力を選ぶ",
+      "result_on_new_target": "not_run",
+      "candidate_file": "tests/e2e/ap04-original-n20-targets.spec.ts",
+      "authored_file_sha256": "451ff264ac98db62cc828c5b7e33dda9a8571bd273b5a8e1da934fcee2e08ee3",
+      "test_callback": {
+        "file": "tests/e2e/ap04-original-n20-targets.spec.ts",
+        "title": "AT-N20 未対応外部契約がある同じ作品で対応先を選び、実ID・項目の不一致と未実装先を示し、明示した本文だけを保存する",
+        "line": 47,
+        "result": "not_run"
+      },
+      "normal_ui_operation": "通常の制作の対応先selectorでscenario-runtimeとUnity/Unreal/ink/Yarnをruntime_json/playable_previewごとに選ぶ。",
+      "assertions_authored_not_run": [
+        "選択変更で旧preview/artifactが消える。",
+        "宣言表に実装済みはscenario-runtime1.1.0のみ、各engineは未対応/変換器未実装。",
+        "選択は通常画面の往復・cold reload後にも保持。"
+      ],
+      "limits": [
+        "Unsupported external-contract type models only a declared incompatibility. Arbitrary external command semantics/execution are not implemented or proved.",
+        "Unity/Unreal/ink/Yarn conversion and real engine execution are not supported or observed."
+      ]
+    },
+    {
+      "name": "then",
+      "original": "不一致の箇所を示し安全な出力だけを生成する",
+      "result_on_new_target": "not_run",
+      "candidate_file": "tests/e2e/ap04-original-n20-targets.spec.ts",
+      "authored_file_sha256": "451ff264ac98db62cc828c5b7e33dda9a8571bd273b5a8e1da934fcee2e08ee3",
+      "test_callback": {
+        "file": "tests/e2e/ap04-original-n20-targets.spec.ts",
+        "title": "AT-N20 未対応外部契約がある同じ作品で対応先を選び、実ID・項目の不一致と未実装先を示し、明示した本文だけを保存する",
+        "line": 47,
+        "result": "not_run"
+      },
+      "normal_ui_operation": "実不一致alertの契約UUID/inputTypeを確認して対象を開き、明示body-only範囲＋readerを選んで実ファイルを保存する。",
+      "assertions_authored_not_run": [
+        "共通diagnostic code EXPORT_UNSUPPORTED・entityId=実contract UUID・field=inputType。",
+        "独立のprojection oneOf拒否も保持、未対応runtime/playableはartifact0/download0。",
+        "明示安全readerだけdownloadし公開本文/対象版を含み、契約ID・作者秘密・診断を含まない。",
+        "全手順後author fingerprintとcold entitiesが不変。"
+      ],
+      "limits": [
+        "Unsupported external-contract type models only a declared incompatibility. Arbitrary external command semantics/execution are not implemented or proved.",
+        "Unity/Unreal/ink/Yarn conversion and real engine execution are not supported or observed."
+      ]
+    },
+    {
+      "name": "negative_or_edge",
+      "original": "Unity・Unreal・ink・Yarn等すべてに対応済みと仮定しない",
+      "result_on_new_target": "not_run",
+      "candidate_file": "tests/e2e/ap04-original-n20-targets.spec.ts",
+      "authored_file_sha256": "451ff264ac98db62cc828c5b7e33dda9a8571bd273b5a8e1da934fcee2e08ee3",
+      "test_callback": {
+        "file": "tests/e2e/ap04-original-n20-targets.spec.ts",
+        "title": "AT-N20 未対応外部契約がある同じ作品で対応先を選び、実ID・項目の不一致と未実装先を示し、明示した本文だけを保存する",
+        "line": 47,
+        "result": "not_run"
+      },
+      "normal_ui_operation": "同じ原作品の全engine選択で実結果を確認し、別の有効契約fixtureでgeneric正常出力を補助照合する。",
+      "assertions_authored_not_run": [
+        "未対応engineはruntimeProfile.profileIdのEXPORT_UNSUPPORTEDで0artifact、汎用への自動fallbackなし。",
+        "補助valid fixtureのruntime.jsonは既存format1.0.0/profile1.1.0/公開版/hash/omissions/externalEvidence not_includedを保持。",
+        "補助正常fixtureはoriginal unsupported givenの証拠へ換算しない。"
+      ],
+      "limits": [
+        "Unsupported external-contract type models only a declared incompatibility. Arbitrary external command semantics/execution are not implemented or proved.",
+        "Unity/Unreal/ink/Yarn conversion and real engine execution are not supported or observed."
+      ]
+    }
+  ],
+  "supplemental_positive_control": {
+    "file": "tests/e2e/ap04-original-n20-targets.spec.ts",
+    "title": "AT-N20 補助: 対応する宣言契約の汎用JSONだけを選択した対応先・仕様版・公開版・hashで保存し、未対応先へ切替えると旧結果を破棄する",
+    "line": 129,
+    "result": "not_run"
+  },
+  "focused_unit": {
+    "file": "tests/runtimeTargetCompatibility.test.ts",
+    "authored_cases": 6,
+    "result": "not_run",
+    "checks": [
+      "all unimplemented/unknown targets in both executable profiles",
+      "source UUID and input/output mismatch fields plus independent public-schema rejection",
+      "valid generic versions/capabilities/public prose and external evidence boundary",
+      "explicit safe body-only scope without automatic fallback",
+      "version/schema/privacy/unknown-capability guards",
+      "selected immutable edition and corrupt pin rejection"
+    ]
+  },
+  "authorized_source_changes": [
+    "src/domain/exports.ts",
+    "src/ui/WorkPage.tsx"
+  ],
+  "preserved_scope": [
+    "Existing reader/publicCatalogIndex edits stay intact.",
+    "Native archive, public projection oneOf, source version/hash/privacy/reference guards and downloadable runtime schemas/formats are unchanged.",
+    "Unsupported target selection is a compatibility inspection only."
+  ],
+  "authored_file_sha256": {
+    "src/domain/exports.ts": "f1a0becd60b1bd0c41af066e70b66fae465a341c4501961d155fa0b9929d4577",
+    "src/ui/WorkPage.tsx": "496c63080cac7b3d0861a7b161899a66563262ad24c16260eeeb29f079b782bb",
+    "tests/runtimeTargetCompatibility.test.ts": "7a2985ecabf0d6d091b64af4bafafb1a851bdc719e593d779f20e277604f7e78",
+    "tests/e2e/ap04-original-n20-targets.spec.ts": "451ff264ac98db62cc828c5b7e33dda9a8571bd273b5a8e1da934fcee2e08ee3"
+  },
+  "file_hash_binding": "Working-tree authoring snapshot only. Root must refresh hashes/callbacks and bind exact commit/tree/build after final type/flow fixes.",
+  "remaining_conditions": [
+    {
+      "condition": "Browser replay on the final bound candidate",
+      "result": "not_run"
+    },
+    {
+      "condition": "Focused unit and candidate typecheck",
+      "result": "not_run"
+    },
+    {
+      "condition": "Arbitrary external command semantic implementation/execution",
+      "result": "not_run",
+      "reason": "No arbitrary code execution semantics are invented; the original given is represented by an authored unsupported contract type.",
+      "support_status": "not_implemented",
+      "actual_execution_observed": false
+    },
+    {
+      "condition": "Unity/Unreal/ink/Yarn adapters and real engine execution",
+      "result": "not_run",
+      "reason": "Explicitly outside implemented target support; selecting these destinations must refuse executable output.",
+      "support_status": "not_implemented",
+      "actual_execution_observed": false
+    }
+  ]
+}

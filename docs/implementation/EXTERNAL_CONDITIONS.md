@@ -24,3 +24,11 @@ C29 `09d39faae9c7293fe77b5675cc7286605a1809a6` / build `b59572f71d050cd96e0f` �
 専用tenantのtier/region/使用量/残枠/StorageとEdge制限/spend cap/メール等は未指定。アプリの完全保存上限64MiBとFree upload上限50MBを同一視しない。通信前のアプリ上限だけで実Storage成功を認定しない。接続先の現在設定を確認し、超過/失敗時は端末の作品・bytes・送信待ちを保持する。新規project、課金、add-onを自動で有効化しない。
 
 実API準備: [live-plan.example.json](../../scripts/sync/live-plan.example.json)と[同期手順](RB09_SYNC_SHARING.md)でUUID/hash/対象commit/tree/役割を固定する。原116の正常・境界/失敗条件と実結果を記録し、未実行条件を合格に置換しない。
+
+## AP06で再確認した接続条件（2026-10-11）
+
+接続済みSupabaseのproject一覧・public table名・Edge Function名を読取りで確認した。指定された専用構成に必要なscenario tablesと同期functionは確認できず、5役割・二端末を使える専用接続先は特定できていない。既存の別用途projectにmigrationを適用したり、データ・権限・bucketを変更したりしていない。実quota・役割別直接API・private素材の合格証拠は未実行のままである。
+
+同日に公式料金、Compute/Disk、Storage upload limits、Edge limitsを取得した。取得原文・時刻・bytes・SHAと保管先は [fetch-manifest.json](../quality/runtime-2026-10-11/ap06-public-limits/fetch-manifest.json) と [retention.json](../quality/runtime-2026-10-11/ap06-public-limits/retention.json) に残す。Storageのglobal file size limitはFreeでは50MBまで、Pro以上では設定により500GBまでと掲載されている。これを専用projectに設定済みの上限として扱わない。Edge FunctionはFree worker duration 150秒、paid 400秒、CPU時間は各request 2秒、request idle timeout 150秒と掲載されている。Worker durationとCPU時間を同じ実行予算として扱わない。
+
+次の実操作には、専用project ID・管理者・fixture tenant・公開URL/public key・5実アカウント・private bucket・二端末と、tier/region/現在使用量/残枠の指定が必要になる。その構成を得たら、既存live planの対象commit/tree・各fixture ID/hash・期待する許可/拒否を固定して実行する。公開文書の確認から実tenantの費用・残枠・成功を推定しない。
