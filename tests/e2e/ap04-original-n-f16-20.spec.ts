@@ -248,7 +248,17 @@ test('AT-F19 共通台詞Cを固定参照S・独立複製T・台詞のみ上書�
     await expect(page.locator('.reader-sheet')).toContainText('共通の舞台指示は変えない。');
   }
   const revisedText = '改訂台詞：大切な情報の出所も伝える。';
-  await openEntity(page, 'dialogue_line', commonLine.name);
+  // A real independent clone retains the same name. Select the original from
+  // the ordinary index's fixed-ID display, then verify its full editor UUID.
+  await navigate(page, /^検索/);
+  await page.getByRole('tab', { name: '五十音・分類索引', exact: true }).click();
+  const originalLine = page.locator('.search-page button.reference-link').filter({ hasText: commonLine.name }).filter({ hasText: commonLine.id.slice(0, 8) });
+  await expect(originalLine).toHaveCount(1);
+  await originalLine.click();
+  const indexDialog = page.getByRole('dialog', { name: '索引の項目を編集', exact: true });
+  await indexDialog.getByRole('button', { name: 'この項目の本文を開く', exact: true }).click();
+  await expect(indexDialog).toHaveCount(0);
+  await expect(page.locator('.detail-panel [data-field="text"] textarea')).toHaveAttribute('id', `rich-text-editor-${commonLine.id}-text`);
   await editData(page, { ...commonLine.data, text: commonLine.data.text.map(block => ({ ...block, text: revisedText })) });
   await openEntity(page, 'scene', s.name);
   const reuse = page.locator('.detail-panel details.settings-card').filter({ has: page.getByText('共通元の固定参照・複製・部分上書き', { exact: true }) });

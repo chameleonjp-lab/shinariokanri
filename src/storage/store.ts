@@ -719,7 +719,14 @@ export class ScenarioStore {
     const extracted = entityChanges.put.map(entity => ({ entity, ...extractBlocks(entity) }));
     const changedEntityIds = new Set([...entityChanges.put.map(entity => entity.id), ...entityChanges.remove.map(key => key[1])]);
     const oldBlocks = (previous?.entities ?? []).filter(entity => changedEntityIds.has(entity.id)).flatMap(entity => extractBlocks(entity).blocks);
-    const blockChanges = changed(oldBlocks, extracted.flatMap(row => row.blocks));
+    const newBlocks = extracted.flatMap(row => row.blocks);
+    const blockIds = [...new Set([...oldBlocks.map(block => block.id), ...newBlocks.map(block => block.id)])];
+    // Inline legacy records can be read without native block rows. When they
+    // gain markers, compare against durable rows rather than hydrated values.
+    const nativeBlocks = blockIds.length
+      ? await this.db.blocks.bulkGet(blockIds.map(id => [project.projectId, id] as [string, string]))
+      : [];
+    const blockChanges = changed(nativeBlocks.filter((block): block is StoredBlock => !!block), newBlocks);
     await Promise.all([
       this.db.entities.bulkDelete(entityChanges.remove), this.db.relations.bulkDelete(relationChanges.remove),
       this.db.blocks.bulkDelete(blockChanges.remove), this.db.snapshots.bulkDelete(snapshotChanges.remove), this.db.views.bulkDelete(viewChanges.remove),

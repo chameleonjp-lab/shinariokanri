@@ -1,10 +1,10 @@
 import { expect, test } from '@playwright/test';
-import { createProject, newId, textToRichText } from '../../src/domain/model';
+import { createProject, KIND_LABELS, newId, textToRichText } from '../../src/domain/model';
 import { attachObservation, backup, clause, editData, entity, findEntity, given, navigate, openEntity, reader, sceneStructure } from './ap04-original-bm-helpers';
 
 test('AT-B08 参加者未設定から二人の異なる役割とメモを登録し、両人物の参照元へ同じ出来事を出す', async ({ page }, info) => {
   const p = createProject('AT-B08 参加と知識'), a = entity(p, 'character', '当事者A'), b = entity(p, 'character', '目撃者B'), event = entity(p, 'event', '未設定から参加を記録', { participants: [] });
-  await clause('AT-B08', 'given', async () => { expect(event.data.participants).toEqual([]); await given(page, info, 'AT-B08', p); await openEntity(page, 'event', event.name); await page.getByRole('tab', { name: '詳細', exact: true }).click(); });
+  await clause('AT-B08', 'given', async () => { expect(event.data.participants).toEqual([]); await given(page, info, 'AT-B08', p); await openEntity(page, 'event', event.name); const editor = page.getByRole('complementary', { name: '出来事の詳細', exact: true }); await expect(editor.getByRole('button', { name: '参加者を追加', exact: true })).toBeVisible(); await expect(editor.getByLabel('参加者1', { exact: true })).toHaveCount(0); });
   await clause('AT-B08', 'when', async () => {
     await page.getByRole('button', { name: '参加者を追加', exact: true }).click(); await page.getByLabel('参加者1', { exact: true }).selectOption(a.id); await page.getByLabel('参加者1の役割', { exact: true }).selectOption('actor');
     await page.getByRole('button', { name: '参加者を追加', exact: true }).click(); await page.getByLabel('参加者2', { exact: true }).selectOption(b.id); await page.getByLabel('参加者2の役割', { exact: true }).selectOption('witness');
@@ -13,7 +13,7 @@ test('AT-B08 参加者未設定から二人の異なる役割とメモを登録�
   });
   await clause('AT-B08', 'then', async () => {
     for (const person of [a, b]) {
-      await openEntity(page, 'character', person.name); await page.locator('.references-section').getByRole('button', { name: new RegExp(event.name) }).click(); await expect(page.locator('#entity-name')).toHaveValue(event.name); await page.getByRole('tab', { name: '詳細', exact: true }).click();
+      await openEntity(page, 'character', person.name); await page.locator('.references-section').getByRole('button', { name: new RegExp(event.name) }).click(); await expect(page.locator('#entity-name')).toHaveValue(event.name); await expect(page.getByRole('complementary', { name: '出来事の詳細', exact: true }).getByLabel('参加者1', { exact: true })).toBeVisible();
       await expect(page.getByLabel('参加者1', { exact: true })).toHaveValue(a.id); await expect(page.getByLabel('参加者2', { exact: true })).toHaveValue(b.id);
     }
   });
@@ -35,11 +35,11 @@ test('AT-B11 場所・物品型・個体を出来事へ関連付けて相互移�
   await clause('AT-B11', 'then', async () => {
     for (const record of [place, individual, person]) {
       await openEntity(page, record.kind, record.name); await page.locator('.references-section').getByRole('button', { name: new RegExp(event.name) }).click(); await expect(page.locator('#entity-name')).toHaveValue(event.name);
-      await page.getByRole('tab', { name: '確認表示', exact: true }).click(); const label = record === person ? '人物' : record === place ? '場所' : '個体'; await page.locator('.detail-panel').getByRole('button', { name: label, exact: true }).click(); await expect(page.locator('#entity-name')).toHaveValue(record.name);
+      const label = record === person ? '人物' : record === place ? '場所' : '個体'; const summary = page.getByRole('region', { name: '要約のルビとリンク', exact: true }); await expect(summary).toBeVisible(); const link = summary.locator('.condition-row').filter({ has: page.getByText(`リンク：「${label}」→ ${record.name} · ${KIND_LABELS[record.kind]} · ${record.id.slice(-6)}`, { exact: true }) }); await expect(link).toHaveCount(1); await link.getByRole('button', { name: '対象を開く', exact: true }).click(); await expect(page.locator('#entity-name')).toHaveValue(record.name);
     }
   });
   await clause('AT-B11', 'negative_or_edge', async () => {
-    await openEntity(page, 'item', type.name); await page.getByRole('tab', { name: '詳細', exact: true }).click(); await expect(page.getByLabel('物品の扱い', { exact: true })).toHaveValue('type'); await openEntity(page, 'item', individual.name); await page.getByRole('tab', { name: '詳細', exact: true }).click(); await expect(page.getByLabel('物品の扱い', { exact: true })).toHaveValue('instance');
+    await openEntity(page, 'item', type.name); await expect(page.getByRole('complementary', { name: '物品の詳細', exact: true }).getByLabel('物品の扱い', { exact: true })).toBeVisible(); await expect(page.getByLabel('物品の扱い', { exact: true })).toHaveValue('type'); await openEntity(page, 'item', individual.name); await expect(page.getByRole('complementary', { name: '物品の詳細', exact: true }).getByLabel('物品の扱い', { exact: true })).toBeVisible(); await expect(page.getByLabel('物品の扱い', { exact: true })).toHaveValue('instance');
     await reader(page); await page.getByLabel('試読の開始点', { exact: true }).selectOption(start.id); await page.getByRole('button', { name: '試読を始める', exact: true }).click(); await page.getByRole('button', { name: '個体を一度取得', exact: true }).click(); await expect(page.locator('.reader-state-counts')).toContainText('1個'); await page.getByRole('button', { name: '同じ個体を再取得', exact: true }).click(); await expect(page.locator('.reader-page')).toContainText('二重取得'); await expect(page.locator('.reader-state-counts')).toContainText('1個');
     const saved = await backup(page); expect(saved.project.entities.filter(e => e.kind === 'item').map(e => e.id)).toEqual([type.id, individual.id]); expect(findEntity(saved.project, event.id, 'event').data.itemIds).toEqual([individual.id]); expect(saved.project.entities.filter(e => e.kind === 'assertion')).toEqual([]); await attachObservation(info, 'AT-B11-observed', { typeId: type.id, individualId: individual.id, eventId: event.id, duplicateAcquisitionRejected: true });
   });
@@ -74,7 +74,7 @@ test('AT-B22 会話・クエスト・設定を前提と本文リンクへ関連�
   });
   await clause('AT-B22', 'then', async () => {
     for (const [target, label] of [[quest, '任務'], [lore, '伝承']] as const) {
-      await openEntity(page, 'dialogue_line', line.name); await page.getByRole('tab', { name: '確認表示', exact: true }).click(); await page.locator('.detail-panel').getByRole('button', { name: label, exact: true }).click(); await expect(page.locator('#entity-name')).toHaveValue(target.name); await page.locator('.references-section').getByRole('button', { name: new RegExp(line.name) }).click(); await expect(page.locator('#entity-name')).toHaveValue(line.name);
+      await openEntity(page, 'dialogue_line', line.name); const annotations = page.getByRole('region', { name: '台詞のルビとリンク', exact: true }); await expect(annotations).toBeVisible(); const link = annotations.locator('.condition-row').filter({ has: page.getByText(`リンク：「${label}」→ ${target.name} · ${KIND_LABELS[target.kind]} · ${target.id.slice(-6)}`, { exact: true }) }); await expect(link).toHaveCount(1); await link.getByRole('button', { name: '対象を開く', exact: true }).click(); await expect(page.locator('#entity-name')).toHaveValue(target.name); await page.locator('.references-section').getByRole('button', { name: new RegExp(line.name) }).click(); await expect(page.locator('#entity-name')).toHaveValue(line.name);
     }
     await openEntity(page, 'variable', state.name); await page.locator('.references-section').getByRole('button', { name: new RegExp(node.name) }).click(); await expect(page.locator('#entity-name')).toHaveValue(node.name);
   });

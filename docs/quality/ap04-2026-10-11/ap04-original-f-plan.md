@@ -9,8 +9,8 @@
 | AT-F03 | ap04-original-f-writing.spec.ts | 通常scene詳細で二筋を追加し、恋愛カードから本文を編集・保存して戦争カードから同じ本文を開く。 |
 | AT-F04 | ap04-original-f-writing.spec.ts | Sの視点A/目標/葛藤/結果/新情報を通常詳細で入力して保存し、Tを空欄のまま保存する。 |
 | AT-F05 | ap04-original-f-writing.spec.ts | 通常作者別案を分岐し、導入/展開/結末へ未入力/8/2を割り当てて順序差分を確認・取消・下書き適用する。 |
-| AT-F06 | ap04-original-f-writing.spec.ts | 章カードからS本文を編集し要約を別に変更、章選択後に横書き/縦書き/記録付き提示を通常操作する。 |
-| AT-F09 | ap04-original-f-world-versions.spec.ts | Wの場所説明を通常編集し改訂固定版2を作成、Qだけ世界版差分を確認して新pinを保存、Pの旧固定情報を開く。 |
+| AT-F06 | ap04-original-f-writing.spec.ts | 章カードからS本文の元文字を残すnative末尾追加を行い、要約を別に変更、章選択後に横書き/縦書き/記録付き提示を通常操作する。 |
+| AT-F09 | ap04-original-f-world-versions.spec.ts | Wの場所説明を通常編集し改訂固定版2を作成、Qだけ世界版差分を確認して新pinを保存、固定版参照modalをその通常閉じるcontrolで閉じてPの旧固定情報を開く。 |
 | AT-F13 | ap04-original-f-hierarchy.spec.ts | 通常分岐の階層図で章折りたたみ件数を読み、場面・台詞へ掘り下げ未接続出口を正常selectorで再接続する。 |
 | AT-F21 | ap04-original-f-dialogue.spec.ts | 話者名変更、sceneのL2/L1順序、L1本文変更、production toolsの独立copy/splitを通常保存する。 |
 | AT-F22 | ap04-original-f-material-output.spec.ts | 章の記録付き提示で本文だけ/演出込みを通常切替し、制作素材一覧で仮/完成/bytes不足を確認する。 |

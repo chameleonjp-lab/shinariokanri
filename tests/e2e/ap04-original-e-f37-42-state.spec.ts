@@ -24,10 +24,25 @@ test('AT-F37 新しい作品の下書きから一つの生存enum・integer好�
   });
   await clause('AT-F37', 'negative_or_edge', async () => {
     await openEntity(page, 'variable', life.name); await rejectData(page, { ...life.data, initial: { type: 'enum', value: '蘇生中' } }, /許容集合|許容値/); await editData(page, life.data);
-    await openEntity(page, 'flow_edge', unknownEdge.name); await rejectData(page, { ...unknownEdge.data, condition: { op: 'compare', variableId: newId(), comparator: 'eq', value: { type: 'boolean', value: true } } }, /参照|定義|見つか/); await editData(page, unknownEdge.data);
+    await openEntity(page, 'flow_edge', unknownEdge.name);
+    const beforeUndefinedReference = await authorFingerprint(page), undefinedVariableId = newId();
+    const invalidData = { ...unknownEdge.data, condition: { op: 'compare', variableId: undefinedVariableId, comparator: 'eq', value: { type: 'boolean', value: true } } };
+    const details = page.locator('.detail-panel details.advanced-details').filter({ has: page.locator('summary').filter({ hasText: '詳細データ・ルビ・本文リンクを編集' }) });
+    if ((await details.getAttribute('open')) === null) await details.locator('summary').click();
+    const invalidJson = JSON.stringify(invalidData, null, 2);
+    await details.getByRole('textbox', { name: '詳細データ', exact: true }).fill(invalidJson);
+    // An undefined comparison is rejected before save; the original input stays editable.
+    await expect(page.locator('.condition-editor').getByRole('alert')).toHaveText('比較する状態を選んでください。');
+    await expect(page.locator('.editor-footer').getByRole('button', { name: '保存する', exact: true })).toBeDisabled();
+    const retainedInvalidData = JSON.parse(await details.getByRole('textbox', { name: '詳細データ', exact: true }).inputValue()); expect(retainedInvalidData).toEqual(invalidData);
+    expect(p.entities.some(row => row.id === undefinedVariableId)).toBe(false);
+    const afterUndefinedReference = await authorFingerprint(page); expect(afterUndefinedReference).toBe(beforeUndefinedReference);
+    await editData(page, unknownEdge.data);
+    expect(JSON.parse(await details.getByRole('textbox', { name: '詳細データ', exact: true }).inputValue())).toEqual(unknownEdge.data);
     const saved = (await backup(page)).project; expect(saved.entities.filter(row => row.kind === 'variable')).toHaveLength(3);
     expect(findEntity(saved, life.id, 'variable').data.allowed.values).toEqual(['存命', '死亡']); expect(findEntity(saved, unknown.id, 'variable').data.initial.type).toBe('unknown');
-    await attachObservation(info, 'AT-F37-observed', { stateDefinitions: saved.entities.filter(row => row.kind === 'variable'), rejected: ['type_mismatch', 'outside_allowed_values', 'undefined_reference'], unknownIsFalse: false });
+    expect(findEntity(saved, unknownEdge.id, 'flow_edge').data).toEqual(unknownEdge.data);
+    await attachObservation(info, 'AT-F37-observed', { stateDefinitions: saved.entities.filter(row => row.kind === 'variable'), rejected: ['type_mismatch', 'outside_allowed_values', 'undefined_reference'], unknownIsFalse: false, undefinedReference: { undefinedVariableId, reason: '比較する状態を選んでください。', retainedInvalidData, authorBefore: beforeUndefinedReference, authorAfter: afterUndefinedReference, restoredData: findEntity(saved, unknownEdge.id, 'flow_edge').data } });
   });
 });
 
@@ -60,13 +75,24 @@ test('AT-F39 Xの読取・更新・resetをIDで追い、外部利用を宣言�
   const { p, entry, end } = runtimeFixture('AT-F39 利用箇所と変更原因');
   const x = entity(p, 'variable', '利用する状態X', { key: 'x', valueType: 'integer', initial: { type: 'integer', value: 0 }, allowed: { min: 0, max: 10 } }), y = entity(p, 'variable', '作品外で使う未使用Y', { key: 'y', valueType: 'boolean', initial: { type: 'boolean', value: false }, externalUseDeclared: true });
   const add = entity(p, 'effect', 'Xを更新する処理', { operation: 'add', targetId: x.id, value: { type: 'integer', value: 1 }, reason: '選択によってXを増やす' }), reset = entity(p, 'effect', 'Xをresetする処理', { operation: 'reset', targetId: x.id, value: { type: 'integer', value: 0 }, reason: '作者が指定した初期状態へ戻す' }), read = entity(p, 'flow_edge', 'Xを読む選択', { fromId: entry.id, toId: end.id, label: 'Xを読む選択', condition: { op: 'compare', variableId: x.id, comparator: 'eq', value: { type: 'integer', value: 0 } }, effectIds: [add.id] });
+  let usageSourceVersionId = '', usageSourceVersionLabel = '', usageAuthorBefore = '', usageAuthorAfter = '';
   entity(p, 'flow_edge', 'Xを初期化する選択', { fromId: entry.id, toId: end.id, label: 'Xを初期化する選択', effectIds: [reset.id] });
   await clause('AT-F39', 'given', async () => { await given(page, info, 'AT-F39', p); await start(page, entry.id); });
   await clause('AT-F39', 'when', async () => {
     await page.getByRole('button', { name: new RegExp(read.name) }).click(); await expect(page.locator('.runtime-diff')).toContainText(x.name); await record(page);
     const usage = page.locator('details').filter({ has: page.locator('summary').filter({ hasText: `${x.name} · run` }) }); await usage.locator('summary').click();
     for (const name of [read.name, add.name, reset.name]) await expect(usage).toContainText(name);
-    await usage.getByRole('button', { name: add.name, exact: true }).click(); await expect(page.locator('#entity-name')).toHaveValue(add.name); await page.getByRole('button', { name: '詳細を閉じる', exact: true }).click();
+    usageSourceVersionId = await page.getByLabel('試読する作品版', { exact: true }).inputValue();
+    usageSourceVersionLabel = await page.getByLabel('試読する作品版', { exact: true }).locator('option:checked').innerText();
+    expect(usageSourceVersionId).not.toBe('');
+    usageAuthorBefore = await authorFingerprint(page);
+    await usage.getByRole('button', { name: add.name, exact: true }).click();
+    const pinned = page.getByRole('dialog', { name: '固定版の参照先', exact: true }).getByRole('region', { name: '固定版の参照先', exact: true });
+    await expect(pinned.getByRole('heading', { name: add.name, exact: true })).toBeVisible();
+    await expect(pinned).toContainText(`固定版: ${usageSourceVersionLabel} · 保存日時:`);
+    await expect(pinned.locator('#entity-name')).toHaveCount(0);
+    await page.getByRole('dialog', { name: '固定版の参照先', exact: true }).getByRole('button', { name: '閉じる', exact: true }).click();
+    usageAuthorAfter = await authorFingerprint(page); expect(usageAuthorAfter).toBe(usageAuthorBefore);
     await navigate(page, /^検索/); await page.getByRole('tab', { name: '見直しと統合', exact: true }).click();
   });
   await clause('AT-F39', 'then', async () => {
@@ -76,8 +102,11 @@ test('AT-F39 Xの読取・更新・resetをIDで追い、外部利用を宣言�
   await clause('AT-F39', 'negative_or_edge', async () => {
     await page.reload(); const saved = (await backup(page)).project; expect(findEntity(saved, y.id, 'variable').deletedAt).toBeFalsy(); expect(findEntity(saved, y.id, 'variable').data.externalUseDeclared).toBe(true);
     const trace = saved.entities.find(row => row.kind === 'trace'); if (!trace || trace.kind !== 'trace') throw Error('Xの変更履歴がありません');
+    expect(trace.data.contentVersionId).toBe(usageSourceVersionId);
+    const usageSnapshot = saved.snapshots.find(snapshot => snapshot.id === usageSourceVersionId); expect(usageSnapshot?.versionLabel).toBe(usageSourceVersionLabel);
+    const pinnedEffect = usageSnapshot?.content.entities.find(row => row.id === add.id); expect(pinnedEffect?.kind).toBe('effect'); expect(pinnedEffect?.data).toEqual(add.data);
     expect(trace.data.steps[0].edgeIds).toEqual([read.id]); expect(findEntity(saved, read.id, 'flow_edge').data.effectIds).toEqual([add.id]); expect(trace.data.steps[0].before.variableValues[x.id].value).toBe(0); expect(trace.data.steps[0].after.variableValues[x.id].value).toBe(1);
-    await attachObservation(info, 'AT-F39-observed', { readId: read.id, writeId: add.id, resetId: reset.id, savedStep: trace.data.steps[0], externalUnusedRetained: y.id });
+    await attachObservation(info, 'AT-F39-observed', { readId: read.id, writeId: add.id, resetId: reset.id, savedStep: trace.data.steps[0], externalUnusedRetained: y.id, fixedUsageTarget: { sourceVersionId: usageSourceVersionId, sourceVersionLabel: usageSourceVersionLabel, entityId: add.id, data: pinnedEffect?.data, authorBefore: usageAuthorBefore, authorAfter: usageAuthorAfter } });
   });
 });
 
@@ -88,13 +117,29 @@ test('AT-F40 括弧付きall/any条件の真・偽・不明を通常試読し、
   const c = { op: 'all' as const, children: [{ op: 'compare' as const, variableId: key.id, comparator: 'eq' as const, value: { type: 'boolean' as const, value: true } }, { op: 'any' as const, children: ['昼', '夜'].map(value => ({ op: 'compare' as const, variableId: time.id, comparator: 'eq' as const, value: { type: 'enum' as const, value } })) }] };
   const edge = entity(p, 'flow_edge', '括弧を持つ選択', { fromId: entry.id, toId: end.id, label: '括弧を持つ選択' });
   const autoA = entity(p, 'flow_edge', '同時成立自動A', { fromId: auto.id, toId: end.id, edgeType: 'automatic', priority: 1, condition: { op: 'constant', value: true } }), autoB = entity(p, 'flow_edge', '同時成立自動B', { fromId: auto.id, toId: end.id, edgeType: 'automatic', priority: 2, condition: { op: 'constant', value: true } });
+  const unknownKeyData = { ...key.data, initial: { type: 'unknown' as const, value: null, reason: '鍵の取得は未設定' } };
+  const evaluations: { result: 'true' | 'false' | 'unknown'; keyId: string; edgeId: string; entryId: string; stateText: string; choiceText: string; choiceClass: string | null }[] = [];
+  let rejectedUnknownStubObservation: { code: string; issueText: string; stateBefore: string; stateAfter: string; choiceClass: string | null } | undefined;
   entity(p, 'flow_edge', '不成立の自動条件', { fromId: blocked.id, toId: end.id, edgeType: 'automatic', condition: { op: 'constant', value: false } });
   await clause('AT-F40', 'given', async () => { await given(page, info, 'AT-F40', p); });
   await clause('AT-F40', 'when', async () => {
     await openEntity(page, 'flow_edge', edge.name); edge.data.condition = c; await editData(page, edge.data);
-    await start(page, entry.id); await expect(page.getByRole('button', { name: new RegExp(edge.name) })).toBeEnabled();
-    await stub(page, key.name, 'boolean', 'false'); await expect(page.getByRole('button', { name: new RegExp(edge.name) })).toBeDisabled(); await expect(page.getByRole('button', { name: new RegExp(edge.name) })).toContainText('条件を満たしていません');
-    await stub(page, key.name, 'unknown', '鍵の取得は未設定'); await expect(page.getByRole('button', { name: new RegExp(edge.name) })).toContainText('未確認');
+    await start(page, entry.id);
+    const choice = page.locator('.reader-choice').filter({ has: page.getByText(edge.name, { exact: true }) }), state = page.locator('.runtime-variable').filter({ hasText: key.name });
+    await expect(choice).toBeEnabled(); await expect(choice).toHaveClass('reader-choice choice-true'); await expect(state).toContainText('true');
+    evaluations.push({ result: 'true', keyId: key.id, edgeId: edge.id, entryId: entry.id, stateText: await state.innerText(), choiceText: await choice.innerText(), choiceClass: await choice.getAttribute('class') });
+    await stub(page, key.name, 'boolean', 'false'); await expect(choice).toBeDisabled(); await expect(choice).toHaveClass('reader-choice choice-false'); await expect(choice).toContainText('条件を満たしていません'); await expect(state).toContainText('false');
+    evaluations.push({ result: 'false', keyId: key.id, edgeId: edge.id, entryId: entry.id, stateText: await state.innerText(), choiceText: await choice.innerText(), choiceClass: await choice.getAttribute('class') });
+    const beforeRejectedUnknown = await state.innerText();
+    await stub(page, key.name, 'unknown', '鍵の取得は未設定');
+    const rejectedUnknown = page.locator('.reader-issue').filter({ hasText: '未定の値はこの操作で使えません。' });
+    await expect(rejectedUnknown.locator('code')).toHaveText('CONDITION_UNKNOWN'); await expect(rejectedUnknown).toContainText('未定の値はこの操作で使えません。'); await expect(state).toHaveText(beforeRejectedUnknown); await expect(choice).toHaveClass('reader-choice choice-false');
+    rejectedUnknownStubObservation = { code: await rejectedUnknown.locator('code').innerText(), issueText: await rejectedUnknown.innerText(), stateBefore: beforeRejectedUnknown, stateAfter: await state.innerText(), choiceClass: await choice.getAttribute('class') };
+    // Unknown assignment is rejected. Re-evaluate the same declarations from an
+    // explicitly authored unknown initial state, rather than assuming it applied.
+    await openEntity(page, 'variable', key.name); await editData(page, unknownKeyData); await start(page, entry.id);
+    await expect(choice).toBeDisabled(); await expect(choice).toHaveClass('reader-choice choice-unknown'); await expect(choice).toContainText('未確認'); await expect(state).toContainText('鍵の取得は未設定');
+    evaluations.push({ result: 'unknown', keyId: key.id, edgeId: edge.id, entryId: entry.id, stateText: await state.innerText(), choiceText: await choice.innerText(), choiceClass: await choice.getAttribute('class') });
     await openEntity(page, 'flow_edge', autoB.name); await rejectData(page, { ...autoB.data, priority: autoA.data.priority }, /優先順位が重複/); await editData(page, autoB.data);
     await start(page, blocked.id); await expect(page.locator('.reader-trial-heading')).toContainText('進行不可');
   });
@@ -104,10 +149,20 @@ test('AT-F40 括弧付きall/any条件の真・偽・不明を通常試読し、
     await expect(page.locator('.branch-node').filter({ hasText: auto.name })).toContainText(autoA.name); await expect(page.locator('.branch-node').filter({ hasText: auto.name })).toContainText(autoB.name);
   });
   await clause('AT-F40', 'negative_or_edge', async () => {
-    await openEntity(page, 'flow_edge', edge.name); await rejectData(page, { ...edge.data, condition: { op: 'javascript', code: 'globalThis.__shouldNeverExecute = true' } }, /種類|条件|op|未知|不正/); await editData(page, edge.data);
+    await openEntity(page, 'flow_edge', edge.name);
+    const beforeArbitraryCode = await authorFingerprint(page), invalidData = { ...edge.data, condition: { op: 'javascript', code: 'globalThis.__shouldNeverExecute = true' } };
+    const details = page.locator('.detail-panel details.advanced-details').filter({ has: page.locator('summary').filter({ hasText: '詳細データ・ルビ・本文リンクを編集' }) });
+    if ((await details.getAttribute('open')) === null) await details.locator('summary').click();
+    await details.getByRole('textbox', { name: '詳細データ', exact: true }).fill(JSON.stringify(invalidData, null, 2));
+    const invalidCondition = page.locator('.condition-editor').getByRole('alert'); await expect(invalidCondition).toContainText('未知の条件・式opです。'); await expect(invalidCondition.locator('code')).toHaveText('VALIDATION_FAILED');
+    await expect(page.locator('.editor-footer').getByRole('button', { name: '保存する', exact: true })).toBeDisabled();
+    expect(JSON.parse(await details.getByRole('textbox', { name: '詳細データ', exact: true }).inputValue())).toEqual(invalidData); expect(await authorFingerprint(page)).toBe(beforeArbitraryCode);
+    await editData(page, edge.data);
     expect(await page.evaluate(() => Object.hasOwn(globalThis, '__shouldNeverExecute'))).toBe(false);
     const saved = (await backup(page)).project; expect(findEntity(saved, edge.id, 'flow_edge').data.condition).toEqual(c); expect(findEntity(saved, blocked.id, 'flow_node').data.fallbackId).toBeNull();
-    await attachObservation(info, 'AT-F40-observed', { condition: c, evaluated: ['true', 'false', 'unknown'], equalPriority: 1, noFallbackBlocked: blocked.id, arbitraryCodeExecuted: false });
+    expect(findEntity(saved, key.id, 'variable').data).toEqual(unknownKeyData); expect(findEntity(saved, time.id, 'variable').data).toEqual(time.data);
+    for (const original of p.entities.filter(row => ![key.id, edge.id].includes(row.id))) expect(saved.entities.find(row => row.id === original.id)?.data).toEqual(original.data);
+    await attachObservation(info, 'AT-F40-observed', { condition: c, evaluated: evaluations, originalKeyData: key.data, authoredUnknownKeyData: unknownKeyData, rejectedUnknownStub: rejectedUnknownStubObservation, equalPriority: 1, noFallbackBlocked: blocked.id, arbitraryCodeExecuted: false });
   });
 });
 
@@ -154,7 +209,8 @@ test('AT-F42 戦闘enum契約のstub経路とLinux受取例のactual証跡をID�
     const pkg = JSON.parse(runtime.toString()), game = await context.newPage(); await game.goto(new URL('examples/browser-game/index.html', page.url()).href); await game.getByLabel('ゲームが受け取るruntime.json', { exact: true }).setInputFiles({ name: 'runtime.json', mimeType: 'application/json', buffer: runtime });
     await game.getByLabel('ゲーム開始入口', { exact: true }).selectOption(pkg.publicToRuntime[entry.id]); await game.getByRole('button', { name: `ゲームで勝利 (${contract.id})`, exact: true }).click(); await game.getByRole('button', { name: '測定結果でゲームの物語を開始', exact: true }).click(); await game.getByRole('button', { name: 'ゲームの規則で次へ', exact: true }).click();
     const actual = game.waitForEvent('download'); await game.getByRole('button', { name: '受領hash・実結果の証跡を保存', exact: true }).click(); receipt = await readFile((await (await actual).path())!); await game.close();
-    await reader(page); const handoff = page.locator('.game-handoff'); await handoff.locator('summary').click(); await handoff.getByLabel('受渡しの公開範囲', { exact: true }).selectOption(profile.id); await handoff.getByLabel('ゲームの受領証跡', { exact: true }).setInputFiles({ name: 'receipt.json', mimeType: 'application/json', buffer: receipt }); await handoff.getByRole('button', { name: '受領hash・ID対応・実結果を検証', exact: true }).click(); await expect(handoff).toContainText('実行証跡による分類 actual'); await handoff.getByRole('button', { name: '検証したゲーム受領を保存', exact: true }).click();
+    await navigate(page, /^作品・保存/); await page.getByRole('tab', { name: '目的別出力', exact: true }).click();
+    const handoff = page.locator('.game-handoff'); await handoff.locator('summary').click(); await handoff.getByLabel('受渡しの公開範囲', { exact: true }).selectOption(profile.id); await handoff.getByLabel('ゲームの受領証跡', { exact: true }).setInputFiles({ name: 'receipt.json', mimeType: 'application/json', buffer: receipt }); await handoff.getByRole('button', { name: '受領hash・ID対応・実結果を検証', exact: true }).click(); await expect(handoff).toContainText('実行証跡による分類 actual'); await handoff.getByRole('button', { name: '検証したゲーム受領を保存', exact: true }).click();
   });
   await clause('AT-F42', 'then', async () => {
     const saved = (await backup(page)).project, trace = saved.entities.find(row => row.kind === 'trace'), handoff = saved.entities.find(row => row.kind === 'note' && row.data.handoffReceipt);

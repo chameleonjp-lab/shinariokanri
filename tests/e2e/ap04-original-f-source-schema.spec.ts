@@ -2,7 +2,7 @@ import { expect, test, type Locator, type Page } from '@playwright/test';
 import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { strFromU8, unzipSync, zipSync } from 'fflate';
-import { createEntity, createProject, emptyValidity, newId, textToRichText } from '../../src/domain/model';
+import { createEntity, createProject, emptyValidity, ID_PATTERN, newId, textToRichText } from '../../src/domain/model';
 import type { Entity, ProjectData } from '../../src/domain/types';
 import { prepareAsset } from '../../src/domain/attachments';
 import { createSharedCommentReview } from '../../src/domain/sharedReviews';
@@ -44,7 +44,7 @@ async function saveEditor(page: Page) {
   await page.locator('.editor-footer').getByRole('button', { name: /保存する|保存を再試行/ }).click();
   await expect(page.locator('.editor-save-state')).toContainText('端末内保存済み');
 }
-function record<K extends Entity['kind']>(p: ProjectData, id: string, kind: K): Entity<K> {
+function record<K extends Entity['kind']>(p: Pick<ProjectData, 'entities'>, id: string, kind: K): Entity<K> {
   const found = p.entities.find(entity => entity.id === id);
   if (!found || found.kind !== kind) throw new Error(`${kind}の保存対象がありません: ${id}`);
   return found as Entity<K>;
@@ -104,6 +104,8 @@ test.describe('AT-F32 常時見えるボタンと一覧の操作', () => {
 
       await modeNavigate(page, /^構成/, mode);
       await activate(page.getByRole('tab', { name: '章・本文', exact: true }), mode);
+      await choose(page.getByRole('combobox', { name: '物語の並べ方', exact: true }), 'chapter', mode);
+      await expect(page.getByRole('combobox', { name: '物語の並べ方', exact: true })).toHaveValue('chapter');
       const secondCard = page.locator(`[data-scene-id="${second.id}"]`);
       await expect(secondCard.getByRole('button', { name: '前へ', exact: true })).toBeVisible();
       await activate(secondCard.getByRole('button', { name: '前へ', exact: true }), mode);
@@ -352,16 +354,38 @@ test('AT-F35 条件・線・実素材・巨大 tick・通常保存履歴を完�
   const body = page.locator('.detail-panel').getByRole('textbox', { name: '本文', exact: true });
   const historicalBody = '初期の本文😀 単体復元する版1';
   const currentBody = '初期の本文😀 全体復元する最新版2';
+  const initialBlockId = scene.data.body[0].id;
+  expect(initialBlockId).toMatch(ID_PATTERN);
   await body.fill(historicalBody); await saveEditor(page);
   const firstSaved = await backup(page);
+  const historicalScene = record(firstSaved.project, scene.id, 'scene');
+  expect(historicalScene.id).toBe(scene.id);
+  expect(historicalScene.data.body).toHaveLength(1);
+  const historicalBlockId = historicalScene.data.body[0].id;
+  expect(historicalBlockId).toMatch(ID_PATTERN);
+  expect(historicalBlockId).not.toBe(initialBlockId);
+  expect(historicalScene.data).toEqual({ ...scene.data, body: [{ ...scene.data.body[0], id: historicalBlockId, text: historicalBody }] });
   const unitOperation = firstSaved.project.history.find(command => command.after.entities.some(entity => entity.id === scene.id && entity.kind === 'scene' && entity.data.body[0]?.text === historicalBody));
   if (!unitOperation) throw new Error('通常保存から版1の単体履歴を取得できません');
+  expect(record(unitOperation.before, scene.id, 'scene').data).toEqual(scene.data);
+  expect(record(unitOperation.after, scene.id, 'scene').data).toEqual(historicalScene.data);
   await openEntity(page, 'scene', scene.name);
   await page.getByRole('tab', { name: '本文', exact: true }).click();
   await body.fill(currentBody); await saveEditor(page);
   const given = await backup(page);
-  await attachGiven(info, 'AT-F35', given.bytes, { projectId: p.projectId, unitOperationId: unitOperation.operationId, sceneId: scene.id, bodyBlockId: scene.data.body[0].id, hugeTick, condition: edge.data.condition, relation: p.relations[0], assetId: asset.id, assetHash: prepared.contentHash, assetBytes: assetBytes.length, givenConstructedBy: 'normal UI saves followed by actual full download' });
-  expect(record(given.project, scene.id, 'scene').data.body[0].id).toBe(scene.data.body[0].id);
+  const currentScene = record(given.project, scene.id, 'scene');
+  expect(currentScene.id).toBe(scene.id);
+  expect(currentScene.data.body).toHaveLength(1);
+  const currentBlockId = currentScene.data.body[0].id;
+  expect(currentBlockId).toMatch(ID_PATTERN);
+  expect(new Set([initialBlockId, historicalBlockId, currentBlockId]).size).toBe(3);
+  expect(currentScene.data).toEqual({ ...scene.data, body: [{ ...scene.data.body[0], id: currentBlockId, text: currentBody }] });
+  const currentOperation = given.project.history.find(command => command.after.entities.some(entity => entity.id === scene.id && entity.kind === 'scene' && entity.data.body[0]?.id === currentBlockId));
+  if (!currentOperation) throw new Error('通常保存から最新版2の段落対応を取得できません');
+  expect(record(currentOperation.before, scene.id, 'scene').data).toEqual(historicalScene.data);
+  expect(record(currentOperation.after, scene.id, 'scene').data).toEqual(currentScene.data);
+  expect(given.project.history.slice(0, firstSaved.project.history.length)).toEqual(firstSaved.project.history);
+  await attachGiven(info, 'AT-F35', given.bytes, { projectId: p.projectId, unitOperationId: unitOperation.operationId, currentOperationId: currentOperation.operationId, sceneId: scene.id, initialBlockId, historicalBlockId, bodyBlockId: currentBlockId, hugeTick, condition: edge.data.condition, relation: p.relations[0], assetId: asset.id, assetHash: prepared.contentHash, assetBytes: assetBytes.length, givenConstructedBy: 'normal UI saves followed by actual full download' });
   expect(given.assets).toHaveLength(1);
   expect(given.assets[0].bytes).toEqual(assetBytes);
 
@@ -406,7 +430,19 @@ test('AT-F35 条件・線・実素材・巨大 tick・通常保存履歴を完�
     expect(clone.project.projectId).not.toBe(p.projectId);
     for (const original of given.project.entities) expect(idMap[original.id]).not.toBe(original.id);
     const clonedScene = record(clone.project, idMap[scene.id], 'scene');
-    expect(clonedScene.data.body[0]).toMatchObject({ id: idMap[scene.data.body[0].id], text: currentBody });
+    for (const blockId of [initialBlockId, historicalBlockId, currentBlockId]) {
+      expect(idMap[blockId]).toMatch(ID_PATTERN);
+      expect(idMap[blockId]).not.toBe(blockId);
+    }
+    expect(new Set([initialBlockId, historicalBlockId, currentBlockId].map(id => idMap[id])).size).toBe(3);
+    expect(clonedScene.data.body).toEqual([{ ...currentScene.data.body[0], id: idMap[currentBlockId] }]);
+    const clonedUnitOperation = clone.project.history.find(command => command.operationId === idMap[unitOperation.operationId]);
+    const clonedCurrentOperation = clone.project.history.find(command => command.operationId === idMap[currentOperation.operationId]);
+    if (!clonedUnitOperation || !clonedCurrentOperation) throw new Error('複製後の初期・単体履歴・最新版の対応がありません');
+    expect(record(clonedUnitOperation.before, clonedScene.id, 'scene').data.body).toEqual([{ ...scene.data.body[0], id: idMap[initialBlockId] }]);
+    expect(record(clonedUnitOperation.after, clonedScene.id, 'scene').data.body).toEqual([{ ...historicalScene.data.body[0], id: idMap[historicalBlockId] }]);
+    expect(record(clonedCurrentOperation.before, clonedScene.id, 'scene').data.body).toEqual([{ ...historicalScene.data.body[0], id: idMap[historicalBlockId] }]);
+    expect(record(clonedCurrentOperation.after, clonedScene.id, 'scene').data.body).toEqual(clonedScene.data.body);
     expect(clonedScene.data.chapterId).toBe(idMap[chapter.id]);
     expect(clonedScene.data.eventIds).toEqual([idMap[event.id]]);
     expect(record(clone.project, idMap[chapter.id], 'chapter').data.sceneIds).toEqual([clonedScene.id]);
@@ -440,7 +476,7 @@ test('AT-F35 条件・線・実素材・巨大 tick・通常保存履歴を完�
   await unitPreview.getByRole('button', { name: 'この内容へ復元する', exact: true }).click();
   await expect(history.getByRole('status').filter({ hasText: '保存した版を確認' })).toBeVisible();
   const unitSaved = await backup(page);
-  expect(record(unitSaved.project, scene.id, 'scene').data.body[0]).toMatchObject({ id: scene.data.body[0].id, text: historicalBody });
+  expect(record(unitSaved.project, scene.id, 'scene').data).toEqual(historicalScene.data);
   for (const original of given.project.entities.filter(entity => entity.id !== scene.id)) expect(record(unitSaved.project, original.id, original.kind).data).toEqual(original.data);
   expect(unitSaved.project.relations).toEqual(given.project.relations);
   expect(unitSaved.assets[0].bytes).toEqual(assetBytes);
@@ -510,12 +546,30 @@ test('AT-F29 ローカル引用保護: reviewer UUID の版1指摘から改訂�
   await expect(actions.locator('blockquote')).toHaveText(quotedText);
   await expectOriginalReviewQuote(page, originalBody, quotedText);
 
-  // Revise the real current line first, preserving the existing paragraph ID.
+  // A whole-field replacement has a new paragraph identity. Preserve the
+  // initial paragraph in the recorded before-image and the immutable source pin.
+  const originalBlockId = f.line.data.text[0].id;
+  const revisedBody = '😀改訂された台詞L。版1の指摘の引用は書き換えない。';
+  expect(originalBlockId).toMatch(ID_PATTERN);
   await openEntity(page, 'dialogue_line', f.line.name);
-  await page.locator('.detail-panel').getByRole('textbox', { name: '台詞', exact: true }).fill('😀改訂された台詞L。版1の指摘の引用は書き換えない。');
+  await page.locator('.detail-panel').getByRole('textbox', { name: '台詞', exact: true }).fill(revisedBody);
   await saveEditor(page);
   const revised = await backup(page);
-  expect(record(revised.project, f.line.id, 'dialogue_line').data.text[0].id).toBe(f.line.data.text[0].id);
+  const revisedLine = record(revised.project, f.line.id, 'dialogue_line');
+  expect(revisedLine.id).toBe(f.line.id);
+  expect(revisedLine.data.text).toHaveLength(1);
+  const revisedBlockId = revisedLine.data.text[0].id;
+  expect(revisedBlockId).toMatch(ID_PATTERN);
+  expect(revisedBlockId).not.toBe(originalBlockId);
+  expect(revisedLine.data).toEqual({ ...f.line.data, text: [{ ...f.line.data.text[0], id: revisedBlockId, text: revisedBody }] });
+  const revisionOperation = revised.project.history.find(command => command.after.entities.some(entity => entity.id === f.line.id && entity.kind === 'dialogue_line' && entity.data.text[0]?.id === revisedBlockId));
+  if (!revisionOperation) throw new Error('本文改訂の旧段落と保存済み新段落の履歴対応がありません');
+  expect(record(revisionOperation.before, f.line.id, 'dialogue_line').data).toEqual(f.line.data);
+  expect(record(revisionOperation.after, f.line.id, 'dialogue_line').data).toEqual(revisedLine.data);
+  for (const image of [revisionOperation.before, revisionOperation.after]) {
+    expect(record(image, review.id, 'review').data).toEqual(review.data);
+    expect(image.snapshots).toEqual(f.p.snapshots);
+  }
   expect(record(revised.project, review.id, 'review').data).toEqual(review.data);
   expect(revised.project.snapshots).toEqual(f.p.snapshots);
   await openEntity(page, 'review', review.name);
@@ -528,7 +582,14 @@ test('AT-F29 ローカル引用保護: reviewer UUID の版1指摘から改訂�
   await openEntity(page, 'dialogue_line', f.line.name);
   await editData(page, { ...record(revised.project, f.line.id, 'dialogue_line').data, text: [] });
   const deleted = await backup(page);
-  expect(record(deleted.project, f.line.id, 'dialogue_line').data.text).toEqual([]);
+  const deletedLine = record(deleted.project, f.line.id, 'dialogue_line');
+  expect(deletedLine.id).toBe(f.line.id);
+  expect(deletedLine.data).toEqual({ ...revisedLine.data, text: [] });
+  const deletionOperation = [...deleted.project.history].reverse().find(command => command.targetIds.includes(f.line.id) && command.after.entities.some(entity => entity.id === f.line.id && entity.kind === 'dialogue_line' && entity.data.text.length === 0));
+  if (!deletionOperation) throw new Error('対象段落削除の保存履歴がありません');
+  expect(record(deletionOperation.before, f.line.id, 'dialogue_line').data).toEqual(revisedLine.data);
+  expect(record(deletionOperation.after, f.line.id, 'dialogue_line').data).toEqual(deletedLine.data);
+  expect(deleted.project.history.slice(0, revised.project.history.length)).toEqual(revised.project.history);
   expect(record(deleted.project, review.id, 'review').data.target).toEqual(originalTarget);
   expect(record(deleted.project, review.id, 'review').data.quotedText).toBe(quotedText);
   expect(deleted.project.snapshots).toEqual(f.p.snapshots);
@@ -583,6 +644,19 @@ test('AT-F29 ローカル引用保護: reviewer UUID の版1指摘から改訂�
         expect(restoredReview.data.targetVersionId).toBe(command.idMap[f.pin.id]);
         expect(restoredReview.data.target).toEqual({ ...(typeof originalTarget === 'string' ? {} : originalTarget), entityId: command.idMap[f.line.id], blockId: command.idMap[f.line.data.text[0].id], sourceVersionId: command.idMap[f.pin.id] });
         expect(record(restored.project, command.idMap[task.id], 'production_task').data.targetIds).toEqual([restoredReview.id, command.idMap[f.line.id]]);
+        for (const blockId of [originalBlockId, revisedBlockId]) {
+          expect(command.idMap[blockId]).toMatch(ID_PATTERN);
+          expect(command.idMap[blockId]).not.toBe(blockId);
+        }
+        expect(command.idMap[originalBlockId]).not.toBe(command.idMap[revisedBlockId]);
+        const clonedRevision = restored.project.history.find(item => item.operationId === command.idMap![revisionOperation.operationId]);
+        const clonedDeletion = restored.project.history.find(item => item.operationId === command.idMap![deletionOperation.operationId]);
+        if (!clonedRevision || !clonedDeletion) throw new Error('複製後の原段落・改訂段落・削除の履歴対応がありません');
+        const clonedLineId = command.idMap[f.line.id];
+        expect(record(clonedRevision.before, clonedLineId, 'dialogue_line').data.text).toEqual([{ ...f.line.data.text[0], id: command.idMap[originalBlockId] }]);
+        expect(record(clonedRevision.after, clonedLineId, 'dialogue_line').data.text).toEqual([{ ...revisedLine.data.text[0], id: command.idMap[revisedBlockId] }]);
+        expect(record(clonedDeletion.before, clonedLineId, 'dialogue_line').data.text).toEqual([{ ...revisedLine.data.text[0], id: command.idMap[revisedBlockId] }]);
+        expect(record(clonedDeletion.after, clonedLineId, 'dialogue_line').data.text).toEqual([]);
       }
       await openEntity(restoredPage, 'review', review.name);
       await expect(restoredPage.getByRole('region', { name: '指摘の修正と確認', exact: true })).toContainText('現在稿の位置 不明');

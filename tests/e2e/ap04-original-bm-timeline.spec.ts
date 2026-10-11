@@ -52,15 +52,17 @@ test('AT-B03 二重所属の同じ人物を折りたたみ・並替えし、削�
     await dialog.locator('.timeline-group-editor-row').filter({ hasText: g1.name }).getByRole('button', { name: '改名・階層・人物を編集', exact: true }).click();
     const before = await authorFingerprint(page);
     await dialog.getByRole('button', { name: 'グループを外す前に確認', exact: true }).click();
-    await expect(dialog.getByRole('status')).toContainText('人物・出来事の本体・IDは保持');
+    await expect(dialog.getByRole('status')).toContainText('人物と出来事の本体・IDは保持します。');
     expect(await authorFingerprint(page)).toBe(before);
     await dialog.getByRole('button', { name: '影響を確認してグループを外す', exact: true }).click();
     await expect(dialog.locator('.timeline-group-editor-row')).toHaveCount(1);
     await dialog.getByRole('button', { name: '閉じる', exact: true }).click();
     await page.reload(); const saved = await backup(page);
+    expect(saved.project.entities.map(e => e.id).sort()).toEqual(f.p.entities.map(e => e.id).sort());
     expect(findEntity(saved.project, g1.id, 'group').deletedAt).toBeTruthy();
     expect(findEntity(saved.project, g2.id, 'group').data.members).toContain(f.a.id);
-    for (const record of [f.a, f.b, f.common, f.shared]) { expect(findEntity(saved.project, record.id, record.kind).deletedAt).toBeFalsy(); expect(findEntity(saved.project, record.id, record.kind).data).toEqual(record.data); }
+    expect(findEntity(saved.project, g2.id, 'group').data).toEqual(g2.data);
+    for (const record of [f.a, f.b, f.common, f.shared]) { expect(findEntity(saved.project, record.id, record.kind).deletedAt).toBeFalsy(); expect(findEntity(saved.project, record.id, record.kind).data).toEqual(record.data); expect(findEntity(saved.project, record.id, record.kind)).toEqual(record); }
     await attachObservation(info, 'AT-B03-observed', { orderedGroupIds: [g2.id, g1.id], archivedGroupId: g1.id, retainedPersonIds: [f.a.id, f.b.id], retainedEventIds: [f.common.id, f.shared.id] });
   });
 });
@@ -113,7 +115,7 @@ test('AT-B05 確定・不確定日時で表示単位と倍率だけを切替え�
   await clause('AT-B05', 'then', async () => { expect(await authorFingerprint(page)).toBe(before); const saved = await backup(page); expect(saved.project.entities.filter(e => e.kind === 'event').map(e => e.data)).toEqual([f.common.data, f.shared.data]); expect(saved.project.relations[0]).toMatchObject({ ...line }); });
   await clause('AT-B05', 'negative_or_edge', async () => {
     await timeline(page); const hour = page.getByLabel('年表の表示単位', { exact: true }).locator('option[value="hour"]');
-    await expect(hour).toBeDisabled(); await expect(hour).toContainText('時'); expect((await hour.textContent())?.length).toBeGreaterThan(3);
+    await expect(hour).toHaveJSProperty('disabled', true); await expect(hour).toHaveAttribute('title', 'この暦には時の定義がありません。'); await expect(hour).toHaveText('時（この暦には時の定義がありません。）');
     expect(await authorFingerprint(page)).toBe(before);
   });
 });
@@ -142,16 +144,38 @@ test('AT-B07 二つの出来事をタップで結び、同じ関係IDを一覧�
     await dialog.getByLabel('年表の関係の種類', { exact: true }).selectOption('causes'); await dialog.getByRole('button', { name: '関係を保存', exact: true }).click(); await expect(dialog).toHaveCount(0);
   });
   let id = '';
+  const openRelationTable = async () => {
+    await timeline(page);
+    await page.getByRole('tab', { name: '関係表・図', exact: true }).click();
+    await page.getByRole('button', { name: '関係表', exact: true }).click();
+    const row = page.locator(`.world-relation-table article[data-relation-id="${id}"]`);
+    await expect(row).toHaveCount(1);
+    await row.locator('button.world-relation-meaning').click();
+    const dialog = page.getByRole('dialog', { name: '意味付きの関係を編集', exact: true });
+    await expect(dialog).toBeVisible();
+    return dialog;
+  };
   await clause('AT-B07', 'then', async () => {
     const saved = await backup(page); expect(saved.project.relations).toHaveLength(1); id = saved.project.relations[0].id; expect(saved.project.relations[0]).toMatchObject({ fromId: f.common.id, toId: f.shared.id, relationType: 'causes' });
-    await timeline(page); await page.locator(`button[data-relation-id="${id}"]`).click();
-    const dialog = page.getByRole('dialog', { name: '意味付きの関係を編集' });
+    await timeline(page); const timelineLine = page.locator(`button[data-relation-id="${id}"]`); await expect(timelineLine).toHaveCount(1); await timelineLine.click();
+    const timelineDialog = page.getByRole('dialog', { name: '年表の関係を編集', exact: true });
+    await expect(timelineDialog).toContainText(`関係ID ${id}`);
+    await expect(timelineDialog.getByLabel('年表の関係の始点', { exact: true })).toHaveValue(f.common.id);
+    await expect(timelineDialog.getByLabel('年表の関係の終点', { exact: true })).toHaveValue(f.shared.id);
+    await expect(timelineDialog.getByLabel('年表の関係の種類', { exact: true })).toHaveValue('causes');
+    await timelineDialog.getByLabel('年表の関係の種類', { exact: true }).selectOption('requires');
+    await timelineDialog.getByRole('button', { name: '関係を保存', exact: true }).click(); await expect(timelineDialog).toHaveCount(0);
+    const timelineUpdated = await backup(page); expect(timelineUpdated.project.relations).toHaveLength(1); expect(timelineUpdated.project.relations[0]).toMatchObject({ id, fromId: f.common.id, toId: f.shared.id, relationType: 'requires' }); expect(BigInt(timelineUpdated.project.revision)).toBeGreaterThan(BigInt(saved.project.revision));
+    const dialog = await openRelationTable();
     await expect(dialog.getByLabel('関係の始点', { exact: true })).toHaveValue(f.common.id);
+    await expect(dialog.getByLabel('関係の終点', { exact: true })).toHaveValue(f.shared.id);
+    await expect(dialog.getByLabel('関係の種類', { exact: true })).toHaveValue('requires');
     await dialog.getByLabel('関係の種類', { exact: true }).selectOption('requires'); await dialog.getByLabel('関係の始点', { exact: true }).selectOption(f.common.id); await dialog.getByLabel('関係の終点', { exact: true }).selectOption(f.shared.id); await dialog.getByRole('button', { name: '関係を保存', exact: true }).click(); await expect(dialog).toHaveCount(0);
     const updated = await backup(page); expect(updated.project.relations).toHaveLength(1); expect(updated.project.relations[0]).toMatchObject({ id, relationType: 'requires' });
+    expect(updated.project.relations[0]).toMatchObject({ fromId: f.common.id, toId: f.shared.id }); expect(BigInt(updated.project.revision)).toBeGreaterThan(BigInt(timelineUpdated.project.revision));
   });
   await clause('AT-B07', 'negative_or_edge', async () => {
-    await timeline(page); await page.locator(`button[data-relation-id="${id}"]`).click(); const dialog = page.getByRole('dialog', { name: '意味付きの関係を編集' }); const before = await authorFingerprint(page);
+    const dialog = await openRelationTable(); const before = await authorFingerprint(page);
     await dialog.getByLabel('関係の種類', { exact: true }).selectOption('trust');
     await expect(dialog.getByLabel('関係の始点', { exact: true }).locator(`option[value="${f.common.id}"]`)).toHaveCount(0);
     await expect(dialog.getByLabel('関係の終点', { exact: true }).locator('option[value="ffffffff-ffff-4fff-8fff-ffffffffffff"]')).toHaveCount(0);
@@ -160,6 +184,7 @@ test('AT-B07 二つの出来事をタップで結び、同じ関係IDを一覧�
     // A disabled selector proves prevention, but this original clause also
     // Requires the computed rejection reason as well as the disabled action.
     await expect(dialog).toContainText(/人物.*人物|人物同士|人物間/);
+    await expect(dialog.getByRole('status')).toHaveText('この関係は人物から人物へ結びます。存在する人物を始点に選んでください。');
   });
 });
 
@@ -183,16 +208,15 @@ test('AT-B09 年表の二人の関係を図で更新し、配置だけは所属�
   });
 });
 test('AT-B21 未定日時からの日数範囲を保存し、相対循環と存在しない暦日で正本を変更しない', async ({ page }, info) => {
-  const p = createProject('AT-B21 未定と相対制約'), pending = entity(p, 'event', '日付が未定の先行出来事', { time: { mode: 'unknown', reason: '先行日付はまだ決めていない' }, laneRole: 'common' }), relative = entity(p, 'event', '先行から二日から四日後', { time: { mode: 'relative', anchorEventId: pending.id, anchorPoint: 'end', minOffset: '2', maxOffset: '4' }, laneRole: 'common' });
-  p.calendars[0].ticksPerDay = '1';
+  const p = createProject('AT-B21 未定と相対制約'), pending = entity(p, 'event', '日付が未定の先行出来事', { time: { mode: 'unknown', reason: '先行日付はまだ決めていない' }, laneRole: 'common' }), relative = entity(p, 'event', '先行から二日から四日後', { time: { mode: 'relative', anchorEventId: pending.id, anchorPoint: 'end', minOffset: '172800', maxOffset: '345600' }, laneRole: 'common' });
   const openTime = async (name: string, id: string) => { await timeline(page); await page.getByRole('button', { name: '出来事一覧', exact: true }).click(); await page.locator(`.event-table-row[data-event-id="${id}"]`).click(); await page.getByRole('button', { name: '選択した出来事の日時・制約', exact: true }).click(); return page.getByRole('dialog', { name: `日時・前後関係 · ${name}`, exact: true }); };
-  await clause('AT-B21', 'given', async () => { await given(page, info, 'AT-B21', p); expect(pending.data.time.mode).toBe('unknown'); expect(relative.data.time.mode).toBe('relative'); });
+  await clause('AT-B21', 'given', async () => { expect(p.calendars[0]).toMatchObject({ kind: 'gregorian', ticksPerDay: '86400' }); await given(page, info, 'AT-B21', p); expect(pending.data.time.mode).toBe('unknown'); expect(relative.data.time.mode).toBe('relative'); });
   await clause('AT-B21', 'when', async () => {
     const modal = await openTime(pending.name, pending.id); await modal.getByRole('button', { name: '日時制約を追加', exact: true }).click(); await modal.getByLabel('日時制約1の種類', { exact: true }).selectOption('end_gap'); await modal.getByLabel('日時制約1の対象', { exact: true }).selectOption(relative.id); await modal.getByLabel('日時制約1の時間差の入力単位', { exact: true }).selectOption('day'); await modal.getByLabel('日時制約1の時間差の最小', { exact: true }).fill('2'); await modal.getByLabel('日時制約1の時間差の最大', { exact: true }).fill('4'); await modal.getByRole('button', { name: '変更前の影響を確認', exact: true }).click(); await modal.getByRole('button', { name: '差分を一括確定', exact: true }).click(); await expect(modal).toBeHidden();
   });
   await clause('AT-B21', 'then', async () => {
-    const saved = await backup(page); expect(findEntity(saved.project, pending.id, 'event').data.time).toEqual(pending.data.time); expect(findEntity(saved.project, relative.id, 'event').data.time).toEqual(relative.data.time); expect(findEntity(saved.project, pending.id, 'event').data.constraints).toEqual([{ type: 'end_gap', targetEventId: relative.id, minimumTicks: '2', maximumTicks: '4' }]);
-    let modal = await openTime(relative.name, relative.id); await expect(modal.getByLabel('相対日時の基準', { exact: true })).toHaveValue(pending.id); await expect(modal.getByLabel('相対日時の差の最小', { exact: true })).toHaveValue('2'); await expect(modal.getByLabel('相対日時の差の最大', { exact: true })).toHaveValue('4'); await modal.getByRole('button', { name: '変更を中止', exact: true }).click(); modal = await openTime(pending.name, pending.id); await expect(modal.getByLabel('日時未定の理由', { exact: true })).toHaveValue('先行日付はまだ決めていない'); await modal.getByRole('button', { name: '変更を中止', exact: true }).click(); await attachObservation(info, 'AT-B21-range', { pending: findEntity(saved.project, pending.id, 'event').data, relative: findEntity(saved.project, relative.id, 'event').data });
+    const saved = await backup(page); expect(findEntity(saved.project, pending.id, 'event').data.time).toEqual(pending.data.time); expect(findEntity(saved.project, relative.id, 'event').data.time).toEqual(relative.data.time); expect(findEntity(saved.project, pending.id, 'event').data.constraints).toEqual([{ type: 'end_gap', targetEventId: relative.id, minimumTicks: '172800', maximumTicks: '345600' }]);
+    let modal = await openTime(relative.name, relative.id); await expect(modal.getByLabel('相対日時の基準', { exact: true })).toHaveValue(pending.id); await expect(modal.getByLabel('相対日時の差の最小', { exact: true })).toHaveValue('172800'); await expect(modal.getByLabel('相対日時の差の最大', { exact: true })).toHaveValue('345600'); await modal.getByLabel('相対日時の差の入力単位', { exact: true }).selectOption('day'); await expect(modal.getByLabel('相対日時の差の最小', { exact: true })).toHaveValue('2'); await expect(modal.getByLabel('相対日時の差の最大', { exact: true })).toHaveValue('4'); await modal.getByRole('button', { name: '変更を中止', exact: true }).click(); modal = await openTime(pending.name, pending.id); await expect(modal.getByLabel('日時未定の理由', { exact: true })).toHaveValue('先行日付はまだ決めていない'); await modal.getByRole('button', { name: '変更を中止', exact: true }).click(); await attachObservation(info, 'AT-B21-range', { pending: findEntity(saved.project, pending.id, 'event').data, relative: findEntity(saved.project, relative.id, 'event').data });
   });
   await clause('AT-B21', 'negative_or_edge', async () => {
     const original = await authorFingerprint(page); let modal = await openTime(pending.name, pending.id); await modal.getByLabel('日時の種類', { exact: true }).selectOption('relative'); await modal.getByLabel('相対日時の基準', { exact: true }).selectOption(relative.id); await modal.getByRole('button', { name: '変更前の影響を確認', exact: true }).click(); await expect(modal).toContainText('循環'); await expect(modal.getByRole('button', { name: '差分を一括確定', exact: true })).toBeDisabled(); expect(await authorFingerprint(page)).toBe(original); await modal.getByRole('button', { name: '変更を中止', exact: true }).click();

@@ -50,6 +50,8 @@ test('AT-E02 -10tickの後章回想を同じ作品で単位・基準・章順変
     await expect(dialog).toBeHidden();
     await expect(page.locator('.timeline-context')).toContainText('中心の本編基準 −10 tick');
     await navigate(page, /^構成/); await page.getByRole('tab', { name: '章・本文', exact: true }).click();
+    await page.getByLabel('物語の並べ方', { exact: true }).selectOption('chapter');
+    await expect(page.getByLabel('物語の並べ方', { exact: true })).toHaveValue('chapter');
     await page.getByRole('button', { name: `${flashback.name}を上へ`, exact: true }).click();
     await chapterReading(page);
     expect(await page.locator('.chapter-reading-sequence > li').evaluateAll(nodes => nodes.map(node => node.getAttribute('data-scene-id')))).toEqual([memoryScene.id, currentScene.id]);

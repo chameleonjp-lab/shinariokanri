@@ -167,6 +167,46 @@ describe('atomic IndexedDB commands', () => {
       expect(await durable()).toBe(before);
     } finally { native.close(); }
   });
+  it('edits supported inline legacy text with quota rollback and exact cold block identity', async () => {
+    const project = fixture(), note = project.entities.find((entity): entity is Entity<'note'> => entity.kind === 'note')!;
+    project.snapshots.push(await snapshot(project));
+    const name = `legacy-inline-edit-${newId()}`, writer = store(undefined, name);
+    const original = (await writer.saveProject(project, { reason: '旧形式の固定本文' })).project;
+    writer.close();
+    const native = new Dexie(name); await native.open();
+    try {
+      const row = await native.table('entities').get([project.projectId, note.id]);
+      row.record.data.body = structuredClone(note.data.body);
+      await native.transaction('rw', native.table('entities'), native.table('blocks'), async () => {
+        await native.table('entities').put(row);
+        await native.table('blocks').bulkDelete(note.data.body.map(block => [project.projectId, block.id]));
+      });
+      const durable = async () => sha256(jsonBytes(Object.fromEntries(await Promise.all(native.tables.map(async table => [table.name, await table.toArray()])))));
+      const before = await durable();
+      let fail = true;
+      const editor = store(stage => {
+        if (fail && stage === 'after-content') { fail = false; throw Object.assign(new Error('inline legacy block quota'), { name: 'QuotaExceededError' }); }
+      }, name);
+      const draft = (await editor.getProjectForEditing(project.projectId))!;
+      expect(draft.entities).toEqual(original.entities); expect(draft.snapshots).toEqual(original.snapshots);
+      const edited = { ...draft, entities: draft.entities.map(entity => entity.id === note.id ? { ...entity, name: '旧本文の互換編集' } : entity) };
+      await expect(editor.saveProject(edited, { reason: '旧inline本文を維持して改名' })).rejects.toMatchObject({ code: 'QUOTA_EXCEEDED' });
+      expect(await durable()).toBe(before);
+      const committed = await editor.saveProject(edited, { reason: '旧inline本文を維持して改名' });
+      editor.close();
+      const coldStore = store(undefined, name);
+      try {
+        const cold = (await coldStore.getProject(project.projectId))!;
+        expect(cold.entities).toEqual(committed.project.entities); expect(cold.snapshots).toEqual(original.snapshots);
+        const retained = cold.entities.find((entity): entity is Entity<'note'> => entity.id === note.id)!;
+        expect(retained.name).toBe('旧本文の互換編集'); expect(retained.data.body).toEqual(note.data.body);
+        const blocks = await native.table('blocks').where('[projectId+entityId]').equals([project.projectId, note.id]).toArray();
+        expect(blocks).toEqual(note.data.body.map(block => ({ id: block.id, projectId: project.projectId, entityId: note.id, block })).sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+        expect(cold.history).toHaveLength(original.history.length + 1);
+        expect(BigInt(cold.revision)).toBe(BigInt(original.revision) + 1n);
+      } finally { coldStore.close(); }
+    } finally { native.close(); }
+  });
   it('reads legacy public-text markers as independent copies without changing native rows or the fixed image', async () => {
     const project = createProject('旧markerの公開用コピー'), name = `legacy-public-copy-${newId()}`;
     const note = createEntity(project.projectId, 'note', '旧原稿', { body: textToRichText('旧形式本文😀') });

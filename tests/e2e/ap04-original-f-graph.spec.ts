@@ -122,9 +122,9 @@ test('AT-F59 六種類が混在する図を種類/一段/二段/表へ切り替�
   await expect(panel.locator('.world-graph-scope')).toContainText('非表示 0線');
   await panel.getByRole('button', { name: '関係図', exact: true }).click();
   const manual = panel.getByRole('button', { name: `${a.name}から${b.name}へ、信頼、関係を編集`, exact: true });
-  await expect(manual.locator('line[marker-end]')).toHaveCount(1);
+  await expect(manual).toHaveAttribute('aria-controls', /.+/); await expect.poll(() => manual.evaluate(control => { const path = document.getElementById(control.getAttribute('aria-controls')!); return { sameDiagram: path?.closest('svg') === control.closest('svg'), arrows: path?.querySelectorAll('line[marker-end]').length, markerEnd: path?.querySelector('line[marker-end]')?.getAttribute('marker-end') }; })).toEqual({ sameDiagram: true, arrows: 1, markerEnd: 'url(#world-relation-arrow)' });
   const derived = panel.getByRole('button', { name: `${entry.name}から${end.name}へ、choice · ${edge.name}、元情報を確認`, exact: true });
-  await expect(derived.locator('line[stroke-dasharray="8 5"]')).toHaveCount(1);
+  await expect(derived).toHaveAttribute('aria-controls', /.+/); await expect.poll(() => derived.evaluate(control => { const path = document.getElementById(control.getAttribute('aria-controls')!); return { sameDiagram: path?.closest('svg') === control.closest('svg'), dashedLines: path?.querySelectorAll('line[stroke-dasharray="8 5"]').length, arrows: path?.querySelectorAll('line[marker-end]').length }; })).toEqual({ sameDiagram: true, dashedLines: 1, arrows: 1 });
   await derived.click();
   const origin = page.getByRole('dialog', { name: '元情報からの関係', exact: true });
   await expect(origin).toContainText(`元情報：${edge.name} · data.toId`);

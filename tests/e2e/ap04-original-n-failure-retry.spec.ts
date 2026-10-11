@@ -44,15 +44,20 @@ test('AT-N18 同じ作品の保存・参照・同期失敗を通常 UI で修正
     const request = route.request();
     if (request.method() === 'OPTIONS') return route.fulfill({ status: 204 });
     if (new URL(request.url()).pathname.includes('/auth/v1/token')) return route.fulfill({ json: { access_token: 'fixture-only-memory-token-18', user: { id: accountId }, expires_in: 3600 } });
-    const body = request.postDataJSON() as { action?: string; project?: ProjectData } | null;
+    const body = request.postDataJSON() as { specification?: string; action?: string; input?: { project?: ProjectData } } | null;
+    expect(body?.specification).toBe('scenario-sync-native/1.0.0');
+    if (body?.action === 'projects' || body?.action === 'shares') return route.fulfill({ json: [] });
+    if (body?.action === 'members') return route.fulfill({ json: { membershipRevision: '0', members: [] } });
     if (body?.action === 'bootstrap') {
-      if (!body.project) throw new Error('通常同期の登録入力に作品がありません');
-      bootstrapRequests.push(structuredClone(body.project));
+      const submitted = body.input?.project;
+      if (!submitted) throw new Error('通常同期の登録入力に作品がありません');
+      expect(submitted.projectId).toBe(p.projectId);
+      bootstrapRequests.push(structuredClone(submitted));
       if (failSync) return route.fulfill({ status: 503, json: { code: 'TRANSPORT_UNAVAILABLE' } });
-      const documents = nativeDocuments(body.project, body.project.revision);
-      return route.fulfill({ json: { serverRevision: body.project.revision, documents, contentHash: await valueHash(documents) } });
+      const documents = nativeDocuments(submitted, submitted.revision);
+      return route.fulfill({ json: { serverRevision: submitted.revision, documents, contentHash: await valueHash(documents) } });
     }
-    return route.fulfill({ json: [] });
+    throw new Error(`AT-N18 の通常手順にない同期操作: ${body?.action ?? '未指定'}`);
   });
   try {
     await page.goto('./');

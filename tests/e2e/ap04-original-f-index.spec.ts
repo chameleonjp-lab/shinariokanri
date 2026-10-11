@@ -94,10 +94,33 @@ test('AT-F57 読み/旧名/別名/同名を原文と別に探し、作者の分�
   await panel.getByLabel('索引の分類', { exact: true }).selectOption(category.name);
   await sameNameRows.filter({ hasText: first.id.slice(0, 8) }).click();
   const beforeNavigation = await authorFingerprint(page);
-  await index.getByRole('button', { name: 'この項目の本文を開く', exact: true }).click(); await expect(index).toHaveCount(0);
-  const body = page.locator('.detail-panel').getByRole('textbox', { name: '本文', exact: true });
-  await expect(body).toBeFocused(); await expect(body).toHaveValue(firstBody.map(block => block.text).join('\n'));
-  expect(await body.evaluate((input: HTMLTextAreaElement) => input.value.slice(input.selectionStart, input.selectionEnd))).toBe(firstBody[0].text);
+  await page.evaluate(() => {
+    const events: unknown[] = [];
+    Reflect.set(window, '__ap04F57Focus', events);
+    const describe = (element: Element | null) => element && { tag: element.tagName, id: element.id, connected: element.isConnected, field: element.closest<HTMLElement>('[data-field]')?.dataset.field ?? null, ...(element instanceof HTMLTextAreaElement ? { selectionStart: element.selectionStart, selectionEnd: element.selectionEnd } : {}) };
+    events.push({ event: 'armed', at: performance.now(), documentHasFocus: document.hasFocus(), active: describe(document.activeElement) });
+    for (const type of ['focus', 'blur', 'focusin', 'focusout', 'select']) document.addEventListener(type, event => {
+      if (events.length < 500) events.push({ event: type, at: performance.now(), documentHasFocus: document.hasFocus(), target: describe(event.target instanceof Element ? event.target : null), active: describe(document.activeElement) });
+    }, true);
+    for (const type of ['focus', 'blur']) window.addEventListener(type, event => {
+      if (event.target !== window) return;
+      if (events.length < 500) events.push({ event: `window-${type}`, at: performance.now(), documentHasFocus: document.hasFocus(), target: { kind: 'window' }, active: describe(document.activeElement) });
+    });
+  });
+  try {
+    await index.getByRole('button', { name: 'この項目の本文を開く', exact: true }).click(); await expect(index).toHaveCount(0);
+    const body = page.locator('.detail-panel').getByRole('textbox', { name: '本文', exact: true });
+    await expect(body).toBeFocused(); await expect(body).toHaveValue(firstBody.map(block => block.text).join('\n'));
+    expect(await body.evaluate((input: HTMLTextAreaElement) => input.value.slice(input.selectionStart, input.selectionEnd))).toBe(firstBody[0].text);
+  } finally {
+    const focus = await page.evaluate(() => {
+      const active = document.activeElement;
+      const events: unknown = Reflect.get(window, '__ap04F57Focus');
+      if (!Array.isArray(events)) throw new Error('AT-F57 focus observation is unavailable');
+      return { events, documentHasFocus: document.hasFocus(), finalActive: active && { tag: active.tagName, id: active.id, connected: active.isConnected, field: active.closest<HTMLElement>('[data-field]')?.dataset.field ?? null, ...(active instanceof HTMLTextAreaElement ? { selectionStart: active.selectionStart, selectionEnd: active.selectionEnd } : {}) }, navigationAlerts: [...document.querySelectorAll('.detail-panel > .error-notice')].map(element => element.textContent), dialogs: [...document.querySelectorAll('dialog[open]')].map(element => element.getAttribute('aria-labelledby')) };
+    });
+    await info.attach('AT-F57-body-focus-observation.json', { body: Buffer.from(JSON.stringify(focus, null, 2)), contentType: 'application/json' });
+  }
   expect(await authorFingerprint(page)).toBe(beforeNavigation);
   await page.locator('.detail-panel').getByRole('button', { name: '詳細を閉じる', exact: true }).click();
   const html = await readerArtifact(page, profile.id, 'html'), markdown = await readerArtifact(page, profile.id, 'markdown');

@@ -62,6 +62,14 @@ test('AT-N10 script と javascript URL の同じ本文を編集・試読・公�
   // when/then: edit the literal text, then display the same saved text in trial.
   await openEntity(page, 'scene', scene.name);
   await editBody(page, edited);
+  // Full replacement has an actual new paragraph identity. Keep that saved
+  // identity across all displays and cold rereads; import identity is separate.
+  const editedSceneData = JSON.parse(await (await dataInput(page)).inputValue());
+  expect(editedSceneData.body).toHaveLength(1);
+  const editedBodyId = editedSceneData.body[0].id;
+  expect(editedBodyId).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+  expect(editedBodyId).not.toBe(scene.data.body[0].id);
+  expect(editedSceneData).toEqual({ ...scene.data, body: [{ ...scene.data.body[0], id: editedBodyId, text: edited }] });
   await page.locator('.detail-panel').getByRole('tab', { name: '確認表示', exact: true }).click();
   await expect(page.locator('.detail-panel .rich-text')).toContainText(edited);
   expect(await executableDom(page, '.detail-panel .rich-text')).toEqual({ scripts: 0, handlers: [], unsafeUrls: [] });
@@ -83,6 +91,15 @@ test('AT-N10 script と javascript URL の同じ本文を編集・試読・公�
   await dialog.getByLabel('選んだ対象の本文・表記を公開文へコピーする', { exact: true }).check();
   await dialog.getByRole('button', { name: '範囲を作成して内容を確認', exact: true }).click();
   await expect(dialog).toBeHidden();
+  await expect(page.locator('#entity-name')).toHaveValue('AT-N10 公開資料 · 公開範囲');
+  const confirmedProfileData = JSON.parse(await (await dataInput(page)).inputValue());
+  expect(confirmedProfileData.includedIds).toEqual([scene.id]);
+  expect(confirmedProfileData.includeAuthorNotes).toBe(false);
+  expect(confirmedProfileData.publicTexts[scene.id].body.map((block: { text: string }) => block.text).join('\n')).toBe(edited);
+  await page.getByLabel('情報の状態', { exact: true }).selectOption('confirmed');
+  await page.locator('.editor-footer').getByRole('button', { name: /^(保存する|保存を再試行)$/ }).click();
+  await expect(page.locator('.editor-save-state')).toContainText('端末内保存済み');
+  await expect(page.getByLabel('情報の状態', { exact: true })).toHaveValue('confirmed');
   await work(page, '目的別出力');
   await page.getByLabel('出力目的', { exact: true }).selectOption('reader');
   await page.getByLabel('本文の出力形式', { exact: true }).selectOption('html');
@@ -131,10 +148,15 @@ test('AT-N10 script と javascript URL の同じ本文を編集・試読・公�
   const cold = await backup(page), coldScene = cold.project.entities.find(entity => entity.id === scene.id);
   expect(coldScene?.kind).toBe('scene');
   if (!coldScene || coldScene.kind !== 'scene') throw new Error('保存後の場面がありません');
-  expect(coldScene.data.body).toEqual([{ ...scene.data.body[0], text: edited }]);
+  expect(coldScene.data).toEqual(editedSceneData);
+  const editOperation = cold.project.history.find(command => command.before.entities.some(entity => entity.id === scene.id && entity.kind === 'scene' && entity.data.body[0]?.id === scene.data.body[0].id)
+    && command.after.entities.some(entity => entity.id === scene.id && entity.kind === 'scene' && entity.data.body[0]?.id === editedBodyId && entity.data.body[0]?.text === edited));
+  expect(editOperation).toBeDefined();
+  const confirmedProfiles = cold.project.entities.filter(entity => entity.kind === 'projection_profile' && entity.name === 'AT-N10 公開資料 · 公開範囲');
+  expect(confirmedProfiles).toHaveLength(1); expect(confirmedProfiles[0].status).toBe('confirmed'); expect(confirmedProfiles[0].data).toEqual(confirmedProfileData);
   expect(cold.project.entities.find(entity => entity.id === edge.id)?.data).toEqual(original);
   expect(cold.project.entities.some(entity => entity.kind === 'attachment')).toBe(false);
-  await attachObservation(info, 'AT-N10-observation', { publicHtmlSha256: sha256(htmlBytes), publicHtmlBytes: htmlBytes.length, coldRevision: cold.project.revision, coldArchiveSha256: sha256(cold.bytes), bodyBlockId: coldScene.data.body[0].id, invalidConditionRetainedAndRejected: true, falseImageRejected: true });
+  await attachObservation(info, 'AT-N10-observation', { publicHtmlSha256: sha256(htmlBytes), publicHtmlBytes: htmlBytes.length, coldRevision: cold.project.revision, coldArchiveSha256: sha256(cold.bytes), originalBodyBlockId: scene.data.body[0].id, bodyBlockId: coldScene.data.body[0].id, editOperationId: editOperation?.operationId, confirmedProfile: confirmedProfiles[0], invalidConditionRetainedAndRejected: true, falseImageRejected: true });
 });
 
 test('AT-N14 実完全保存を端末内正本も履歴もない空 context に持ち込み、本文・ID・条件・素材を保って編集を再開する', async ({ page, browser, baseURL }, info) => {
@@ -154,6 +176,16 @@ test('AT-N14 実完全保存を端末内正本も履歴もない空 context に�
   await openEntity(page, 'scene', scene.name);
   await editBody(page, '外部ファイルへ保存した本文😀');
   const external = await backup(page);
+  const externalScene = external.project.entities.find(entity => entity.id === scene.id);
+  if (!externalScene || externalScene.kind !== 'scene') throw new Error('外部ファイルへ保存した場面がありません');
+  expect(externalScene.data.body).toHaveLength(1);
+  const externalBodyId = externalScene.data.body[0].id;
+  expect(externalBodyId).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+  expect(externalBodyId).not.toBe(scene.data.body[0].id);
+  expect(externalScene.data).toEqual({ ...scene.data, body: [{ ...scene.data.body[0], id: externalBodyId, text: '外部ファイルへ保存した本文😀' }] });
+  const externalEdit = external.project.history.find(command => command.before.entities.some(entity => entity.id === scene.id && entity.kind === 'scene' && entity.data.body[0]?.id === scene.data.body[0].id)
+    && command.after.entities.some(entity => entity.id === scene.id && entity.kind === 'scene' && entity.data.body[0]?.id === externalBodyId && entity.data.body[0]?.text === '外部ファイルへ保存した本文😀'));
+  expect(externalEdit).toBeDefined();
   const givenIds = new Set(p.entities.map(entity => entity.id));
   expect(external.project.entities.filter(entity => givenIds.has(entity.id))
     .map(({ id, kind }) => ({ id, kind })).sort((a, b) => a.id.localeCompare(b.id)))
@@ -208,7 +240,11 @@ test('AT-N14 実完全保存を端末内正本も履歴もない空 context に�
     const resumedScene = resumed.project.entities.find(entity => entity.id === scene.id);
     if (!resumedScene || resumedScene.kind !== 'scene') throw new Error('再編集した本文がありません');
     expect(resumedScene.revision).toBe('2');
-    expect(resumedScene.data).toEqual({ ...scene.data, body: [{ ...scene.data.body[0], text: '空環境で編集を再開した本文😀' }] });
+    expect(resumedScene.data.body).toHaveLength(1);
+    const resumedBodyId = resumedScene.data.body[0].id;
+    expect(resumedBodyId).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+    expect(resumedBodyId).not.toBe(externalBodyId);
+    expect(resumedScene.data).toEqual({ ...externalScene.data, body: [{ ...externalScene.data.body[0], id: resumedBodyId, text: '空環境で編集を再開した本文😀' }] });
     const resumedReviews = resumed.project.entities.filter(entity => !externalIds.has(entity.id));
     expect(resumedReviews).toHaveLength(1);
     const review = resumedReviews[0];
@@ -227,13 +263,17 @@ test('AT-N14 実完全保存を端末内正本も履歴もない空 context に�
     expect(resumed.assets).toEqual(external.assets);
     expect(resumed.project.history.slice(0, imported.project.history.length)).toEqual(imported.project.history);
     expect(resumed.project.history).toHaveLength(imported.project.history.length + 1);
+    const resumedEdit = resumed.project.history.at(-1)!;
+    expect(resumedEdit.operationId).not.toBe(externalEdit?.operationId);
+    expect(resumedEdit.before.entities.find(entity => entity.id === scene.id)).toEqual(externalScene);
+    expect(resumedEdit.after.entities.find(entity => entity.id === scene.id)).toEqual(resumedScene);
     expect(resumed.project.snapshots).toEqual(imported.project.snapshots);
     const resumedFingerprint = await authorFingerprint(restoredPage);
     await restoredPage.reload();
     expect(await authorFingerprint(restoredPage)).toBe(resumedFingerprint);
     const cold = await backup(restoredPage), actual = cold.project.entities.find(entity => entity.id === scene.id);
     if (!actual || actual.kind !== 'scene') throw new Error('復旧後の本文がありません');
-    expect(actual.data.body[0]).toEqual({ ...scene.data.body[0], text: '空環境で編集を再開した本文😀' });
+    expect(actual.data).toEqual(resumedScene.data);
     expect(cold.project.entities.map(entity => entity.id).sort()).toEqual(resumed.project.entities.map(entity => entity.id).sort());
     expect(cold.project.entities).toEqual(resumed.project.entities);
     expect(cold.project.history).toEqual(resumed.project.history);
@@ -244,7 +284,7 @@ test('AT-N14 実完全保存を端末内正本も履歴もない空 context に�
     expect(cold.assets).toEqual(resumed.assets);
     // negative_or_edge: the recovery source is a downloaded file, not history
     // in the lost context. Separate-device/off-device retention remains blocked.
-    await attachObservation(info, 'AT-N14-observation', { initialDurableRows: [[], [], [], [], [], []], externalFileSha256: sha256(external.bytes), resumedFileSha256: sha256(resumed.bytes), coldFileSha256: sha256(cold.bytes), coldRevision: cold.project.revision, originalGivenIds: p.entities.map(entity => entity.id).sort(), importedExternalIds: [...externalIds].sort(), resumedBaselineIds: resumed.project.entities.map(entity => entity.id).sort(), resumedReview: review, fullResumedBaselineEntities: resumed.project.entities, canonicalColdUnchanged: true, preservedEntityIds: cold.project.entities.map(entity => entity.id), preservedBlockId: actual.data.body[0].id, preservedAssetSha256: sha256(cold.assets[0].bytes), sourceWasDownloadedFile: true, physicalDeviceLossObserved: false, separateDeviceFileRetention: 'blocked_external_condition' });
+    await attachObservation(info, 'AT-N14-observation', { initialDurableRows: [[], [], [], [], [], []], externalFileSha256: sha256(external.bytes), resumedFileSha256: sha256(resumed.bytes), coldFileSha256: sha256(cold.bytes), coldRevision: cold.project.revision, originalGivenIds: p.entities.map(entity => entity.id).sort(), importedExternalIds: [...externalIds].sort(), importedParagraphId: externalBodyId, originalParagraphId: scene.data.body[0].id, editOperations: [externalEdit?.operationId, resumedEdit.operationId], resumedBaselineIds: resumed.project.entities.map(entity => entity.id).sort(), resumedReview: review, fullResumedBaselineEntities: resumed.project.entities, canonicalColdUnchanged: true, preservedEntityIds: cold.project.entities.map(entity => entity.id), preservedBlockId: actual.data.body[0].id, preservedAssetSha256: sha256(cold.assets[0].bytes), sourceWasDownloadedFile: true, physicalDeviceLossObserved: false, separateDeviceFileRetention: 'blocked_external_condition' });
   } finally { await emptyContext.close(); }
 });
 

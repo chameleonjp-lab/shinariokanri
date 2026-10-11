@@ -138,6 +138,16 @@ test('AT-E12 キャッシュ済み未送信作品をoffline・容量拒否・実
   if (!scene) throw new Error('原fixtureに編集対象の場面がありません');
   const root = resolve('dist'), originalWorker = await readFile(resolve(root, 'sw.js'), 'utf8');
   const build = JSON.parse(await readFile(resolve(root, 'build-info.json'), 'utf8'));
+  const cacheMatch = originalWorker.match(/^const CACHE=("[^"]+")/), urlsMatch = originalWorker.match(/ URLS=(\[[^\n]+\]);/);
+  if (!cacheMatch || !urlsMatch) throw new Error('E12 fixed worker cache manifest unavailable');
+  const originalCache: string = JSON.parse(cacheMatch[1]), cachedURLs: string[] = JSON.parse(urlsMatch[1]);
+  expect(originalCache).toBe(`shinariokanri:${build.base}:${build.version}`);
+  expect(cachedURLs).toContain(build.base); expect(cachedURLs).toContain(`${build.base}index.html`);
+  expect(cachedURLs.some(pathname => pathname.startsWith(`${build.base}assets/`))).toBe(true);
+  const expectedCacheEntries = await Promise.all(cachedURLs.map(async pathname => {
+    const bytes = await readFile(resolve(root, pathname.slice(build.base.length) || 'index.html'));
+    return { pathname, bytes: bytes.byteLength, sha256: sha256(bytes) };
+  }));
   // A cache identity change exercises the real waiting/activation lifecycle.
   // Application bytes stay the fixed candidate; this is not an old-app upgrade.
   const newCache = `shinariokanri:${build.base}:${build.version}-e12-lifecycle-fixture`;
@@ -160,6 +170,7 @@ test('AT-E12 キャッシュ済み未送信作品をoffline・容量拒否・実
   const address = server.address(); if (!address || typeof address === 'string') throw new Error('E12 fixture server unavailable');
   const url = `http://127.0.0.1:${address.port}${build.base}`;
   try {
+    await page.addInitScript(() => { Object.defineProperty(window, '__ap04E12DocumentNonce', { value: crypto.randomUUID() }); });
     await importComplete(page, url, bytes);
     await page.evaluate(async () => { await navigator.serviceWorker.ready; });
     await page.reload(); await expect.poll(() => page.evaluate(() => Boolean(navigator.serviceWorker.controller))).toBe(true);
@@ -170,15 +181,43 @@ test('AT-E12 キャッシュ済み未送信作品をoffline・容量拒否・実
     await expect(page.locator('.editor-save-state')).toContainText('端末内保存済み');
     const pendingImage = await nativeImage(page);
     expect(pendingImage.tables.outbox.length).toBeGreaterThan(0);
+    const cachedEntries = await page.evaluate(async ({ cacheName, pathnames }) => {
+      if (!(await caches.keys()).includes(cacheName)) throw new Error('E12 fixed active-worker cache unavailable');
+      const cache = await caches.open(cacheName);
+      return Promise.all(pathnames.map(async pathname => {
+        const response = await cache.match(pathname, { ignoreVary: true });
+        if (!response || !response.ok) throw new Error(`E12 cached resource unavailable: ${pathname}`);
+        const bytes = await response.arrayBuffer(), digest = new Uint8Array(await crypto.subtle.digest('SHA-256', bytes));
+        return { pathname, bytes: bytes.byteLength, sha256: [...digest].map(byte => byte.toString(16).padStart(2, '0')).join('') };
+      }));
+    }, { cacheName: originalCache, pathnames: cachedURLs });
+    expect(cachedEntries).toEqual(expectedCacheEntries);
     await attachGiven(info, 'AT-E12', bytes, { originalGiven: 'キャッシュ済みアプリと未送信作品', cachedController: true,
-      initialFixtureIsGenuineLegacy: true, pendingOperationIds: pendingImage.tables.outbox.map(row => (row as { operationId: string }).operationId), build });
+      initialFixtureIsGenuineLegacy: true, pendingOperationIds: pendingImage.tables.outbox.map(row => (row as { operationId: string }).operationId), build,
+      originalCache, cachedEntries });
     const otherTab = await page.context().newPage(); await otherTab.goto(url); await expect(otherTab.locator('.app-shell')).toBeVisible();
     updateAvailable = true;
     await page.evaluate(async () => { const registration = await navigator.serviceWorker.getRegistration(); if (!registration) throw new Error('No cached registration'); await registration.update(); });
     await expect.poll(() => page.evaluate(async () => (await navigator.serviceWorker.getRegistration())?.waiting?.state)).toBe('installed');
+    const beforeCold = await nativeImage(page);
+    expect(durableImage(beforeCold)).toEqual(durableImage(pendingImage));
+    const beforeDocumentNonce = await page.evaluate(() => { const value: unknown = Reflect.get(window, '__ap04E12DocumentNonce'); if (typeof value !== 'string') throw new Error('E12 document nonce unavailable'); return value; });
+    expect(beforeDocumentNonce).toEqual(expect.any(String));
     await page.context().setOffline(true);
-    await page.reload(); await expect(page.locator('.project-switch')).toContainText(given.project.name);
     await expect.poll(() => page.evaluate(() => navigator.onLine)).toBe(false);
+    // A cached reload must create a new document while the context stays offline.
+    // The nonce and complete durable image verify actual cold startup.
+    const coldURL = new URL(url);
+    await page.reload(); await expect(page.locator('.project-switch')).toContainText(given.project.name);
+    const offlineDocumentNonce = await page.evaluate(() => { const value: unknown = Reflect.get(window, '__ap04E12DocumentNonce'); if (typeof value !== 'string') throw new Error('E12 document nonce unavailable'); return value; });
+    expect(offlineDocumentNonce).toEqual(expect.any(String)); expect(offlineDocumentNonce).not.toBe(beforeDocumentNonce);
+    await expect.poll(() => page.evaluate(() => navigator.onLine)).toBe(false);
+    await expect.poll(() => page.evaluate(() => {
+      const controller = navigator.serviceWorker.controller;
+      return controller && { scriptURL: controller.scriptURL, state: controller.state };
+    })).toEqual({ scriptURL: new URL('sw.js', url).href, state: 'activated' });
+    expect(await page.evaluate(async () => (await navigator.serviceWorker.getRegistration())?.waiting?.state)).toBe('installed');
+    expect(durableImage(await nativeImage(page))).toEqual(durableImage(beforeCold));
     await openEntity(page, 'scene', initialName);
     const beforeRefusal = await nativeImage(page), failedName = `${initialName}・容量不足でも残す入力`;
     await page.evaluate(() => {
@@ -243,6 +282,7 @@ test('AT-E12 キャッシュ済み未送信作品をoffline・容量拒否・実
     } finally { await migrationContext.close(); }
     await attachObservation(info, 'AT-E12-local-observed', { build, browserVersion: browser.version(), completeSHA256: sha256(saved.bytes), recovery,
       cachedOfflineCold: true, realPendingOutbox: true, quotaRejectedDurableEditionUnchanged: true, unsavedInputAndFailureVisible: true,
+      offlineColdNavigation: { url: coldURL.href, beforeDocumentNonce, offlineDocumentNonce, originalCache, cachedEntries, entireDurableImageUnchanged: true },
       normalSaveRetry: true, actualWaitingWorkerStayedInstalledUntilAllTabsLeft: true, copiedNativeMigrationRefusalAtomicAndNormalRetry: true,
       firstUncachedOfflineNavigationRejected: true,
       workerFixture: { originalSHA256: sha256(originalWorker), updatedSHA256: sha256(updatedWorker), changedOnlyCacheIdentity: true, applicationBytesChanged: false },

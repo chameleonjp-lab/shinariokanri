@@ -48,7 +48,7 @@ test('AT-E10 同じ抽選・無制限ループ・外部戦闘作品で再実行�
     expect(analysis.limits).toEqual({ maxStates: 100000, maxTransitions: 10000, maxMs: 30000 });
     expect(analysis.truncated).toBe(true); expect(analysis.status).toBe('unknown');
     expect(analysis.findings.some(finding => finding.status === 'unknown' && /上限|未確認/.test(finding.message))).toBe(true);
-    expect(analysis.coverage.scenes.total).toBe(1); expect(analysis.coverage.choices.total).toBe(3); expect(analysis.coverage.conditions.total).toBe(2);
+    expect(analysis.coverage.scenes.total).toBe(1); expect(analysis.coverage.choices.total).toBe(3); const conditionTargets = [entry, loop, battle, end, toLoop, toEnd, toBattle, repeat, win]; expect(conditionTargets).toHaveLength(9); for (const target of conditionTargets) expect(target.kind === 'flow_node' ? target.data.gate : target.data.condition).toBeDefined(); expect(analysis.coverage.conditions.total).toBe(conditionTargets.length * 2); expect(analysis.coverage.conditions.total).toBe(18); expect([...analysis.coverage.conditions.ids].sort()).toEqual(conditionTargets.filter(target => target.id !== battle.id).map(target => `${target.id}:true`).sort()); expect(analysis.coverage.conditions.reached).toBe(8); expect(analysis.coverage.conditions.unknown).toBe(1);
     await page.getByLabel('試読する作品版', { exact: true }).selectOption(''); await page.getByLabel('試読の開始点', { exact: true }).selectOption(battle.id); await page.getByRole('button', { name: 'この状態から開始し直す', exact: true }).click();
     await expect(page.locator('.reader-trial-heading')).toContainText('未確認の条件');
     await page.locator('.runtime-external .runtime-variable').filter({ hasText: contract.name }).getByRole('button', { name: '仮値', exact: true }).click();

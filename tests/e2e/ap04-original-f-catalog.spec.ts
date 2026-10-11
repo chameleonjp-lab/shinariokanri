@@ -13,9 +13,19 @@ async function catalog(page: Page, tab = '複合検索・一覧') {
   await navigate(page, /^検索/); await page.getByRole('tab', { name: tab, exact: true }).click(); return page.locator('.search-page');
 }
 async function undo(page: Page) {
+  const before = await backup(page), previous = before.project.history.at(-1);
+  if (!previous) throw new Error('取り消す最新の保存操作がありません');
   await navigate(page, /^作品・保存/); await page.getByRole('tab', { name: '変更履歴', exact: true }).click();
-  await page.getByRole('button', { name: 'この変更を取り消す', exact: true }).click();
-  await expect(page.locator('.history-page').getByRole('status').filter({ hasText: /取り消|保存|復元/ })).toBeVisible();
+  const history = page.locator('.history-page'), control = history.getByRole('button', { name: 'この変更を取り消す', exact: true });
+  await expect(history.locator('.history-list > li').first().locator('.history-entry > button small')).toContainText(previous.operationId);
+  await control.click();
+  await expect(history.getByRole('status').filter({ hasText: /^対象版を確認・保存中…$/ })).toHaveCount(0);
+  await expect(control).toBeEnabled();
+  await expect(history.locator('.success-notice')).toHaveText('確認した対象を新しい版へ復元し、保存した版を確認しました。');
+  const after = await backup(page), compensation = after.project.history.at(-1);
+  expect(BigInt(after.project.revision)).toBe(BigInt(before.project.revision) + 1n);
+  expect(compensation).toMatchObject({ compensatesOperationId: previous.operationId, reason: `取り消し: ${previous.reason}`, before: { revision: before.project.revision }, after: { revision: after.project.revision } });
+  expect(compensation?.operationId).not.toBe(previous.operationId);
 }
 async function saveEditor(page: Page) {
   await page.locator('.editor-footer').getByRole('button', { name: /保存する|保存を再試行/ }).click();

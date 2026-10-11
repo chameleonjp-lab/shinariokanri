@@ -54,14 +54,31 @@ for (const width of [320, 390]) test(`AT-N01 幅${width} CSS pxの縦画面で�
     await reachable(page, destination);
     await destination.selectOption(end.id);
     const comparator = editor.locator('[data-field="condition"]').getByLabel('比較演算', { exact: true });
-    await comparator.selectOption('lt');
+    // The structured Boolean selector correctly prevents an ordered operator.
+    // Exercise the same invalid AST through the ordinary advanced JSON input.
+    await expect(comparator.locator('option[value="lt"]')).toBeDisabled();
+    const save = editor.locator('.editor-footer').getByRole('button', { name: /保存する|保存を再試行/ });
+    await reachable(page, save);
+    await save.tap();
+    await expect(editor.locator('.editor-save-state')).toContainText('端末内保存済み');
+    const details = editor.locator('details.advanced-details').filter({ has: page.locator('summary').filter({ hasText: '詳細データ・ルビ・本文リンクを編集' }) });
+    await details.locator('summary').tap();
+    const raw = details.getByRole('textbox', { name: '詳細データ', exact: true });
+    const validData = JSON.parse(await raw.inputValue());
+    expect(validData.toId).toBe(end.id);
+    expect(validData.condition).toEqual(unfinished.data.condition);
+    const invalidData = { ...validData, condition: { ...validData.condition, comparator: 'lt' } };
+    const beforeInvalid = await authorFingerprint(page);
+    await reachable(page, raw);
+    await raw.fill(JSON.stringify(invalidData, null, 2));
     const issue = editor.locator('[data-field="condition"]').getByRole('alert');
     await expect(issue).toContainText('大小の比較には整数');
     await reachable(page, issue);
-    const save = editor.locator('.editor-footer').getByRole('button', { name: /保存する|保存を再試行/ });
     await reachable(page, save);
     await expect(save).toBeDisabled();
-    await comparator.selectOption('eq');
+    await expect(raw).toHaveValue(JSON.stringify(invalidData, null, 2));
+    expect(await authorFingerprint(page)).toBe(beforeInvalid);
+    await raw.fill(JSON.stringify(validData, null, 2));
     await expect(issue).toHaveCount(0);
     await reachable(page, save);
     await save.tap();
@@ -138,16 +155,37 @@ test('AT-N11 補助: 取得済みPWAの作品をbrowser offlineで編集し、�
     await expect(page.locator('.editor-save-state')).toContainText('端末内保存済み');
     await expect(page.locator('.topbar-status')).toContainText('端末内保存済み');
     await expect(page.locator('.topbar-status')).toContainText('OFFLINE');
+    const beforeClose = await backup(page), beforeCloseScene = beforeClose.project.entities.find(entity => entity.id === scene.id);
+    if (!beforeCloseScene || beforeCloseScene.kind !== 'scene') throw new Error('閉じる前に保存した本文がありません');
+    expect(beforeCloseScene.data.body).toHaveLength(1);
+    const editedBlockId = beforeCloseScene.data.body[0].id;
+    expect(editedBlockId).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+    expect(editedBlockId).not.toBe(scene.data.body[0].id);
+    expect(beforeCloseScene.data).toEqual({ ...scene.data, body: [{ ...scene.data.body[0], id: editedBlockId, text: changedBody }] });
+    expect(beforeClose.project.entities.map(({ id, kind }) => ({ id, kind })).sort((a, b) => a.id.localeCompare(b.id)))
+      .toEqual(p.entities.map(({ id, kind }) => ({ id, kind })).sort((a, b) => a.id.localeCompare(b.id)));
+    expect(beforeClose.project.entities.find(entity => entity.id === attachment.id)?.data).toEqual(attachment.data);
+    const editOperation = beforeClose.project.history.find(command => command.before.entities.some(entity => entity.id === scene.id && entity.kind === 'scene' && entity.data.body[0]?.id === scene.data.body[0].id)
+      && command.after.entities.some(entity => entity.id === scene.id && entity.kind === 'scene' && entity.data.body[0]?.id === editedBlockId && entity.data.body[0]?.text === changedBody));
+    expect(editOperation).toBeDefined();
+    const beforeCloseFingerprint = await authorFingerprint(page);
+    await info.attach('AT-N11-before-close.scenario', { body: Buffer.from(beforeClose.bytes), contentType: 'application/zip' });
     await page.close();
     const reopened = await context.newPage();
     await reopened.goto(url);
     await expect(reopened.locator('.app-shell')).toBeVisible();
     await expect.poll(() => reopened.evaluate(() => navigator.onLine)).toBe(false);
+    expect(await authorFingerprint(reopened)).toBe(beforeCloseFingerprint);
     await openEntity(reopened, 'scene', scene.name);
     await reopened.locator('.detail-panel').getByRole('tab', { name: '本文', exact: true }).click();
     await expect(reopened.locator('.detail-panel').getByRole('textbox', { name: '本文', exact: true })).toHaveValue(changedBody);
     const saved = await backup(reopened);
-    expect(saved.project.entities.find(entity => entity.id === scene.id)?.data).toMatchObject({ body: [{ id: scene.data.body[0].id, kind: 'paragraph', text: changedBody }] });
+    expect(saved.project.entities).toEqual(beforeClose.project.entities);
+    expect(saved.project.history).toEqual(beforeClose.project.history);
+    expect(saved.project.snapshots).toEqual(beforeClose.project.snapshots);
+    expect(saved.assets).toEqual(beforeClose.assets);
+    expect(saved.recovery?.pending).toEqual(beforeClose.recovery?.pending);
+    expect(saved.project.entities.find(entity => entity.id === scene.id)?.data).toEqual(beforeCloseScene.data);
     expect(saved.assets[0].bytes).toEqual(preparedAsset.bytes);
     expect(saved.recovery?.pending.length).toBeGreaterThan(0);
     await info.attach('AT-N11-offline-complete.scenario', { body: Buffer.from(saved.bytes), contentType: 'application/zip' });
@@ -188,6 +226,6 @@ test('AT-N11 補助: 取得済みPWAの作品をbrowser offlineで編集し、�
       expect(await firstPage.goto(url).then(() => false, () => true)).toBe(true);
       await expect(firstPage.locator('.app-shell')).toHaveCount(0);
     } finally { await firstAcquisition.close(); }
-    await attachObservation(info, 'AT-N11-supporting-observation', { projectId: p.projectId, sceneId: scene.id, bodyBlockId: scene.data.body[0].id, coldBody: changedBody, pendingOperations: saved.recovery?.pending.map(operation => operation.operationId), embeddedAssetBytesBeforeLoss: saved.assets[0].bytes.length, firstAcquisitionOfflineRejected: true, missingAssetNotPresentedAsAvailable: true, networkCondition: 'synthetic_browser_offline', materialCondition: 'synthetic_native_cache_loss', physicalAirplaneMode: 'blocked_external_condition', realUncachedRemoteAttachment: 'blocked_external_condition', fullOriginalAcceptanceResult: 'not_run' });
+    await attachObservation(info, 'AT-N11-supporting-observation', { projectId: p.projectId, sceneId: scene.id, originalBodyBlockId: scene.data.body[0].id, bodyBlockId: editedBlockId, editOperationId: editOperation?.operationId, coldBody: changedBody, fullBeforeCloseEntities: beforeClose.project.entities, fullAfterReopenEntities: saved.project.entities, pendingOperations: saved.recovery?.pending.map(operation => operation.operationId), embeddedAssetBytesBeforeLoss: saved.assets[0].bytes.length, firstAcquisitionOfflineRejected: true, missingAssetNotPresentedAsAvailable: true, networkCondition: 'synthetic_browser_offline', materialCondition: 'synthetic_native_cache_loss', physicalAirplaneMode: 'blocked_external_condition', realUncachedRemoteAttachment: 'blocked_external_condition', fullOriginalAcceptanceResult: 'not_run' });
   } finally { await context.setOffline(false); }
 });

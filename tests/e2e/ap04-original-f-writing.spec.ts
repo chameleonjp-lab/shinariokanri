@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
-import { createEntity, createProject, textToRichText } from '../../src/domain/model';
+import { createEntity, createProject, ID_PATTERN, textToRichText } from '../../src/domain/model';
 import { exportScenario } from '../../src/storage/archive';
 import { attachGiven, attachObservation, authorFingerprint, backup, navigate, openEntity, seed } from './ap04-original-helpers';
 
@@ -44,10 +44,14 @@ test('AT-F03 同じ場面Sを恋愛・戦争の二つの筋から開き、一方
   await page.locator('.detail-panel').getByRole('tab', { name: '本文', exact: true }).click();
   await page.locator('.detail-panel').getByRole('textbox', { name: '本文', exact: true }).fill('恋愛の筋のカードから修正した同じ本文。');
   await saveEditor(page);
+  const editedBlockId = await page.locator('.detail-panel [data-field="body"] [data-block-id]').getAttribute('data-block-id');
+  if (!editedBlockId) throw new Error('修正後の場面Sの実段落IDがありません');
+  expect(editedBlockId).toMatch(ID_PATTERN);
   await page.getByRole('button', { name: '詳細を閉じる', exact: true }).click();
   await warCard.locator('.story-scene-link').click();
   await page.locator('.detail-panel').getByRole('tab', { name: '本文', exact: true }).click();
   await expect(page.locator('.detail-panel').getByRole('textbox', { name: '本文', exact: true })).toHaveValue('恋愛の筋のカードから修正した同じ本文。');
+  await expect(page.locator('.detail-panel [data-field="body"] [data-block-id]')).toHaveAttribute('data-block-id', editedBlockId);
   await page.getByRole('button', { name: '詳細を閉じる', exact: true }).click();
   await romanceCard.getByRole('button', { name: 'この筋から外す', exact: true }).click();
   await expect(romanceCard).toHaveCount(0); await expect(warCard).toBeVisible();
@@ -55,12 +59,22 @@ test('AT-F03 同じ場面Sを恋愛・戦争の二つの筋から開き、一方
   const saved = await backup(page);
   expect(saved.project.entities.filter(e => e.id === scene.id)).toHaveLength(1);
   expect(saved.project.entities.filter(e => e.kind === 'scene')).toHaveLength(1);
-  expect(saved.project.entities.find(e => e.id === scene.id)).toMatchObject({ data: { threadIds: [war.id], eventIds: [event.id], body: [{ id: scene.data.body[0].id, text: '恋愛の筋のカードから修正した同じ本文。' }] } });
+  const savedScene = saved.project.entities.find(e => e.id === scene.id);
+  if (!savedScene || savedScene.kind !== 'scene') throw new Error('保存後の同じ場面Sがありません');
+  expect(savedScene).toMatchObject({ id: scene.id, projectId: p.projectId, name: scene.name, data: { threadIds: [war.id], eventIds: [event.id] } });
+  expect(savedScene.data.body).toEqual([{ id: editedBlockId, kind: 'paragraph', text: '恋愛の筋のカードから修正した同じ本文。' }]);
+  const editCommand = saved.project.history.find(command => command.targetIds.includes(scene.id)
+    && command.before.entities.some(entity => entity.id === scene.id && entity.kind === 'scene' && JSON.stringify(entity.data.body) === JSON.stringify(scene.data.body))
+    && command.after.entities.some(entity => entity.id === scene.id && entity.kind === 'scene' && JSON.stringify(entity.data.body) === JSON.stringify(savedScene.data.body)));
+  if (!editCommand) throw new Error('場面Sの元本文と修正後の同じ本文を保持する履歴がありません');
+  const originalScene = editCommand.before.entities.find(entity => entity.id === scene.id);
+  if (!originalScene || originalScene.kind !== 'scene') throw new Error('場面Sの元本文を保持する変更前履歴がありません');
+  expect(originalScene.data.body).toEqual(scene.data.body);
   expect(saved.project.entities.find(e => e.id === event.id)?.data).toEqual(event.data);
   await writing(page, '章・本文');
   await workspace.getByLabel('物語の並べ方', { exact: true }).selectOption('thread');
   await expect(romanceCard).toHaveCount(0); await expect(warCard).toBeVisible();
-  await attachObservation(info, 'AT-F03-observed', { sceneId: scene.id, bodyBlockId: scene.data.body[0].id, remainingThreadIds: [war.id], participantIds: [actor.id], revision: saved.project.revision, bodyWasNotDuplicated: true });
+  await attachObservation(info, 'AT-F03-observed', { sceneId: scene.id, bodyBlockId: editedBlockId, originalBodyBlockId: scene.data.body[0].id, editHistoryOperationId: editCommand.operationId, remainingThreadIds: [war.id], participantIds: [actor.id], revision: saved.project.revision, bodyWasNotDuplicated: true });
 });
 
 test('AT-F04 鍵を探す場面Sの視点・目標・対立・結果・新情報を通常入力し、役割未入力の場面Tも保存できる', async ({ page }, info) => {
@@ -118,7 +132,11 @@ test('AT-F06 要約・本文・秘密メモを分けた場面をカードから�
   await workspace.locator(`[data-lane-id="${chapter.id}"] [data-scene-id="${scene.id}"] .story-scene-link`).click();
   const editor = page.locator('.detail-panel');
   await editor.getByRole('tab', { name: '本文', exact: true }).click();
-  await editor.getByRole('textbox', { name: '本文', exact: true }).fill('門番は去った。門は開かない。');
+  const body = editor.getByRole('textbox', { name: '本文', exact: true });
+  await body.focus();
+  await body.press('ControlOrMeta+End');
+  await body.pressSequentially('。門は開かない。');
+  await expect(body).toHaveValue('門番は去った。門は開かない。');
   await saveEditor(page);
   await editor.getByRole('tab', { name: '要約', exact: true }).click();
   await editor.getByRole('textbox', { name: '要約', exact: true }).fill('門が閉じる');

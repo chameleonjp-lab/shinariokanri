@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import { unzipSync, zipSync, strFromU8, strToU8 } from 'fflate';
-import { createEntity, createProject, textToRichText } from '../../src/domain/model';
+import { createEntity, createProject, ID_PATTERN, textToRichText } from '../../src/domain/model';
 import { dialogueContentHash } from '../../src/domain/production';
 import { prepareAsset } from '../../src/domain/attachments';
 import { exportScenario } from '../../src/storage/archive';
@@ -95,7 +95,22 @@ test('AT-F21 L1/L2と実音声・翻訳・外部参照を保ち、話者改名/�
   await editor.getByRole('textbox', { name: '台詞', exact: true }).fill('第一台詞を編集した。後半も保持する。');
   await saveEditor(page);
   const edited = await backup(page);
-  expect(edited.project.entities.find(e => e.id === l1.id)).toMatchObject({ data: { text: [{ id: l1.data.text[0].id, text: '第一台詞を編集した。後半も保持する。' }] } });
+  const editedL1 = edited.project.entities.find(e => e.id === l1.id);
+  if (!editedL1 || editedL1.kind !== 'dialogue_line') throw new Error('編集後の元L1がありません');
+  const editedText = '第一台詞を編集した。後半も保持する。';
+  expect(editedL1).toMatchObject({ id: l1.id, projectId: p.projectId, name: l1.name, data: { speakerId: speaker.id } });
+  expect(editedL1.data.text).toHaveLength(1);
+  const editedBlock = editedL1.data.text[0];
+  expect(editedBlock.id).toMatch(ID_PATTERN);
+  expect(editedL1.data.text).toEqual([{ id: editedBlock.id, kind: 'paragraph', text: editedText }]);
+  expect({ ...editedL1.data, text: l1.data.text }).toEqual(l1.data);
+  const editCommand = edited.project.history.find(command => command.targetIds.includes(l1.id)
+    && command.before.entities.some(entity => entity.id === l1.id && entity.kind === 'dialogue_line' && JSON.stringify(entity.data.text) === JSON.stringify(l1.data.text))
+    && command.after.entities.some(entity => entity.id === l1.id && entity.kind === 'dialogue_line' && JSON.stringify(entity.data.text) === JSON.stringify(editedL1.data.text)));
+  if (!editCommand) throw new Error('L1の本文変更を保持する保存操作がありません');
+  const oldL1 = editCommand.before.entities.find(entity => entity.id === l1.id);
+  if (!oldL1 || oldL1.kind !== 'dialogue_line') throw new Error('初期L1の本文を保持する編集前履歴がありません');
+  expect(oldL1.data.text).toEqual(l1.data.text);
   expect(edited.project.entities.find(e => e.id === l2.id)?.data).toEqual(l2.data);
   for (const deliverable of [translation1, recording1]) expect(edited.project.entities.find(e => e.id === deliverable.id)).toMatchObject({ data: { sourceLineId: l1.id, sourceHash: sourceHash1, stage: 'needs_review' } });
   for (const deliverable of [translation2, recording2]) expect(edited.project.entities.find(e => e.id === deliverable.id)?.data).toEqual(deliverable.data);
@@ -107,8 +122,11 @@ test('AT-F21 L1/L2と実音声・翻訳・外部参照を保ち、話者改名/�
   expect(copy?.kind).toBe('dialogue_line');
   if (!copy || copy.kind !== 'dialogue_line') throw new Error('新IDの独立複製がありません');
   expect(copy.id).not.toBe(l1.id); expect(copy.id).not.toBe(l2.id);
+  expect(copy.data.text.map(block => block.text).join('\n')).toBe(editedText);
+  expect(copy.data.text[0].id).toMatch(ID_PATTERN);
+  expect(copy.data.text[0].id).not.toBe(editedBlock.id);
   expect(copy.data.text[0].id).not.toBe(l1.data.text[0].id);
-  expect(copy.data.lineage?.segments[0].source.entityId).toBe(l1.id);
+  expect(copy.data.lineage?.segments[0].source).toMatchObject({ entityId: l1.id, lineId: l1.id, blockId: editedBlock.id, start: 0, end: Array.from(editedText).length });
   expect(copy.data.lineage?.segments[0].target.entityId).toBe(copy.id);
   expect(copied.project.entities.find(e => e.id === scene.id)).toMatchObject({ data: { dialogueLineIds: [l2.id, l1.id] } });
   await openEntity(page, 'dialogue_line', l1.name);
@@ -150,5 +168,5 @@ test('AT-F21 L1/L2と実音声・翻訳・外部参照を保ち、話者改名/�
   await page.reload();
   const afterReject = await backup(page);
   expect(afterReject.project).toEqual(saved.project);
-  await attachObservation(info, 'AT-F21-observed', { originalLineIds: [l1.id, l2.id], editedBlockId: l1.data.text[0].id, copiedLineId: copy.id, splitLineIds: splitIds, finalSceneOrder: [l2.id, ...splitIds], audioIds: [audio1.id, audio2.id], wavSha256: wav.contentHash, duplicateArchiveHadValidManifestHash: true, duplicateImportPreservedNativeRecords: true, revision: saved.project.revision });
+  await attachObservation(info, 'AT-F21-observed', { originalLineIds: [l1.id, l2.id], initialBlockId: l1.data.text[0].id, editedBlockId: editedBlock.id, editedHistoryOperationId: editCommand.operationId, copiedLineId: copy.id, copiedBlockId: copy.data.text[0].id, splitLineIds: splitIds, finalSceneOrder: [l2.id, ...splitIds], audioIds: [audio1.id, audio2.id], wavSha256: wav.contentHash, duplicateArchiveHadValidManifestHash: true, duplicateImportPreservedNativeRecords: true, revision: saved.project.revision });
 });

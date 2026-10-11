@@ -18,6 +18,11 @@ async function importAnother(page: Page, bytes: Uint8Array) {
   await page.getByRole('button', { name: 'この内容で復元する', exact: true }).click(); await expect(page.locator('.app-shell')).toBeVisible();
 }
 async function switchWork(page: Page, name: string) {
+  const fixedSource = page.getByRole('dialog', { name: '固定版の参照先', exact: true });
+  if (await fixedSource.count()) {
+    await fixedSource.getByRole('button', { name: '閉じる', exact: true }).click();
+    await expect(fixedSource).toHaveCount(0);
+  }
   await page.locator('.project-switch').click(); await page.locator('.project-card').filter({ hasText: name }).click();
 }
 async function reviseWorld(page: Page, worldName: string, placeName: string) {

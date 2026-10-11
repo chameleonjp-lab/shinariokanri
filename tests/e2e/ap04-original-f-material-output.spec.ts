@@ -347,15 +347,16 @@ test('AT-F25 公開版1から作者別案の新場面を作って没にし、別
   await add.getByLabel('名前', { exact: true }).fill('正本へ追加したゲーム内選択');
   await add.getByRole('button', { name: '編集を始める', exact: true }).click();
   const editor = page.locator('.detail-panel');
-  await editor.getByLabel('始点ノード', { exact: true }).selectOption(entry.id);
+  await editor.getByLabel('出発ノード', { exact: true }).selectOption(entry.id); await expect(editor.getByLabel('出発ノード', { exact: true })).toHaveValue(entry.id);
   await editor.getByLabel('行き先未定の下書き', { exact: true }).uncheck();
   await editor.getByLabel('行き先ノード', { exact: true }).selectOption(end.id);
   await editor.getByLabel('選択肢の文言', { exact: true }).fill('正本のゲーム選択で進む');
   await editor.getByLabel('情報の状態', { exact: true }).selectOption('confirmed');
-  await editor.locator('.editor-footer').getByRole('button', { name: '保存する', exact: true }).click();
+  await editor.locator('.editor-footer').getByRole('button', { name: /^(保存する|保存を再試行)$/ }).click();
   await expect(editor.locator('.editor-save-state')).toContainText('端末内保存済み');
   const withEdge = await backup(page);
   const edge = withEdge.project.entities.find(e => e.kind === 'flow_edge' && e.name === '正本へ追加したゲーム内選択')!;
+  expect(edge).toMatchObject({ kind: 'flow_edge', status: 'confirmed', data: { fromId: entry.id, toId: end.id, label: '正本のゲーム選択で進む', edgeType: 'choice' } });
   expect(new Set([alternativeId, alternativeSceneId, edge.id, graph.id]).size).toBe(4);
   await openEntity(page, 'flow_graph', graph.name);
   await editData(page, { ...graph.data, edgeIds: [edge.id] });
