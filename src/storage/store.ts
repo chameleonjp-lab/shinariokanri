@@ -455,6 +455,9 @@ export class ScenarioStore {
     }
   }
   close(): void { this.cacheLifetime++; for (const id of this.cacheEpochs.keys()) this.invalidateProjectCache(id); this.db.close(); }
+  /** Explicit open resets Dexie's failed-open state after an aborted native
+   * migration. An already open connection stays open; no data is deleted. */
+  async reopen(): Promise<void> { await this.db.open(); }
   async deleteDatabase(): Promise<void> { this.close(); await this.db.delete(); }
 
   private invalidateProjectCache(projectId: string): void {
