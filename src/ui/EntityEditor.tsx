@@ -80,6 +80,8 @@ export function EntityEditor({ entity, project, referenceProject, isNew, hasUnsa
   const attemptRef = useRef('');
   const editorContent = useRef<HTMLDivElement>(null);
   const positionsReady = useRef(false);
+  const editorInteractionVersion = useRef(0);
+  const recordEditorInteraction = () => { editorInteractionVersion.current++; };
   const lastSelection = useRef<EditorSelection | undefined>(initialPosition.selection);
   const lastScroll = useRef({ scrollTop: initialPosition.scrollTop, scrollY: initialPosition.scrollY });
   const tabRef = useRef(tab); tabRef.current = tab;
@@ -111,10 +113,18 @@ export function EntityEditor({ entity, project, referenceProject, isNew, hasUnsa
   useEffect(() => {
     positionsReady.current = false;
     const state = loadEditorViewState(localStorage, positionKey);
+    const interactionVersion = editorInteractionVersion.current;
     lastSelection.current = state.selection;
     lastScroll.current = { scrollTop: state.scrollTop, scrollY: state.scrollY };
     if (navigationTarget && (navigationTarget.anchor.entityId === draft.id || navigationTarget.anchor.lineId === draft.id)) { positionsReady.current = true; return; }
     let frame = requestAnimationFrame(() => { frame = requestAnimationFrame(() => {
+      // A saved position is only an initial suggestion. A new focus, selection
+      // or edit must win even when rendering delays these animation frames.
+      if (editorInteractionVersion.current !== interactionVersion) {
+        positionsReady.current = true;
+        persistRef.current(document.activeElement);
+        return;
+      }
       if (editorContent.current) editorContent.current.scrollTop = state.scrollTop;
       if (window.innerWidth < 768) window.scrollTo(0, state.scrollY);
       const control = state.selection ? editorContent.current?.querySelector<HTMLTextAreaElement>(`[data-field="${CSS.escape(state.selection.fieldKey)}"] textarea[data-rich-text-editor]`) : null;
@@ -137,8 +147,10 @@ export function EntityEditor({ entity, project, referenceProject, isNew, hasUnsa
     const targetTab: EditorTab = !hasTextTabs || !target.fieldKey || ['summary', 'reading'].includes(target.fieldKey) ? 'main' : target.fieldKey === 'body' ? 'body' : target.fieldKey === 'authorNotes' ? 'notes' : 'detail';
     setTab(targetTab);
     setDisplay(previous => ({ hiddenFields: previous.hiddenFields.filter(key => key !== (target.fieldKey ?? 'name')), hiddenTabs: previous.hiddenTabs.filter(key => key !== targetTab) }));
+    const interactionVersion = editorInteractionVersion.current;
     let frame = requestAnimationFrame(() => {
       frame = requestAnimationFrame(() => {
+        if (editorInteractionVersion.current !== interactionVersion) return;
         const control = target.fieldKey ? editorContent.current?.querySelector<HTMLElement>(`[data-field="${CSS.escape(target.fieldKey)}"] textarea, [data-field="${CSS.escape(target.fieldKey)}"] input, [data-field="${CSS.escape(target.fieldKey)}"] select`) : document.getElementById('entity-name');
         if (!control) { setNavigationNotice('参照先の項目を表示できませんでした。詳細データから保存された段落IDを確認できます。'); return; }
         control.scrollIntoView({ block: 'center' }); control.focus();
@@ -239,7 +251,7 @@ export function EntityEditor({ entity, project, referenceProject, isNew, hasUnsa
     if (onOpenTarget) onOpenTarget(anchor, undefined, origin); else onOpen(anchor.lineId ?? anchor.entityId);
   };
 
-  return <aside className="detail-panel" aria-label={`${KIND_LABELS[draft.kind]}の詳細`} onSelectCapture={event => persistPosition(event.target)} onBlurCapture={event => persistPosition(event.target)} onCompositionStart={() => setComposing(true)} onCompositionEnd={() => setComposing(false)}>
+  return <aside className="detail-panel" aria-label={`${KIND_LABELS[draft.kind]}の詳細`} onFocusCapture={recordEditorInteraction} onPointerDownCapture={recordEditorInteraction} onKeyDownCapture={recordEditorInteraction} onChangeCapture={recordEditorInteraction} onSelectCapture={event => { recordEditorInteraction(); persistPosition(event.target); }} onBlurCapture={event => persistPosition(event.target)} onCompositionStart={() => { recordEditorInteraction(); setComposing(true); }} onCompositionEnd={() => setComposing(false)}>
     <div className="detail-heading"><button type="button" className="icon-button detail-back" aria-label="一覧に戻る" onClick={onClose}><Icon name="back"/></button><div><span className="eyebrow">{KIND_LABELS[draft.kind]} {isNew && '・ 新規'}</span><h2>{labelOf(draft)}</h2></div><button type="button" className="icon-button desktop-close" aria-label="詳細を閉じる" onClick={onClose}><Icon name="close"/></button></div>
     {dirty&&!isNew&&<button type="button" className="button secondary small" disabled={saving||reuseBusy} onClick={()=>{const saved=project.entities.find(e=>e.id===draft.id);if(!saved)return;setDraft(saved);setDirty(false);setTemplateReview(null);setTemplateFailure('');setError('');setIssues([]);setInvalidJson([]);for(const key of Object.keys(jsonBuffers))onJsonBuffer?.(key,undefined);}}>保存済みの内容へ戻す</button>}
     <div className="editor-save-state" role="status" aria-live="polite"><span className={`save-dot ${error || invalidJson.length ? 'failed' : dirty ? 'pending' : ''}`}/>{saving ? '保存中…' : error || invalidJson.length ? '未保存 · 入力は保持されています' : dirty ? draft.kind === 'template' ? '変更あり · 差分の確認待ち' : '変更あり · 保存待ち' : '端末内保存済み'}<span className="revision-label">版 {draft.revision}</span></div>

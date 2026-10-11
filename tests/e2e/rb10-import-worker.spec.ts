@@ -97,6 +97,10 @@ test('実Workerで復元検査中も画面が応答し、取消で既存デー�
   await expect(page.locator('.project-switch strong')).toHaveText(original.name);
   await expect(page.getByLabel('復元方法と対象への影響を確認しました')).toBeChecked();
   await page.getByRole('button', {name: 'この内容で復元する', exact: true}).click();
+  // Restore inspection and atomic import are a cancellable long operation.
+  // Wait for its completion within the unchanged whole-test budget before
+  // asserting the screen state and interrupting it with a cold reload.
+  await page.locator('.import-preview').waitFor({state: 'hidden'});
   await expect(page.locator('.import-preview')).toBeHidden(); await page.reload(); await expect(page.locator('.app-shell')).toBeVisible();
   await expect(page.locator('.project-switch strong')).toHaveText(incoming.name);
   await page.locator('.sidebar').getByRole('button', {name: '作品・保存', exact: true}).click();

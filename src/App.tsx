@@ -128,6 +128,7 @@ export default function App() {
     return undefined;
   }, [project, selectedId, selected, fixedWorldContents, worldSources]);
   const queue = useRef<Promise<unknown>>(Promise.resolve());
+  const pendingCommands = useRef(0);
   const previousScroll = useRef(0);
   const editorHistory = useRef<string[]>([]);
 
@@ -140,7 +141,7 @@ export default function App() {
   }, []);
   useEffect(() => { setPreference('scenario-theme', theme); const media = window.matchMedia('(prefers-color-scheme: dark)'); const update = () => document.documentElement.dataset.theme = theme === 'system' ? media.matches ? 'dark' : 'light' : theme; update(); media.addEventListener('change', update); return () => media.removeEventListener('change', update); }, [theme]);
   useEffect(() => { const update = () => setOnline(navigator.onLine); window.addEventListener('online', update); window.addEventListener('offline', update); return () => { window.removeEventListener('online', update); window.removeEventListener('offline', update); }; }, []);
-  useEffect(() => { const handler = (e: BeforeUnloadEvent) => { if (Object.values(settingsDrafts).some(settingsDraftChanged) || Object.values(settingsSaving).some(Boolean) || Object.keys(drafts).length || Object.keys(jsonBuffers).length || Object.entries(alternativeDrafts).some(([id, draft]) => hasUnsavedAlternativeWorkspaceDraft(draft, projects.find(item => item.projectId === id)?.authorAlternatives ?? []))) { e.preventDefault(); e.returnValue = ''; } }; window.addEventListener('beforeunload', handler); return () => window.removeEventListener('beforeunload', handler); }, [drafts, jsonBuffers, alternativeDrafts, projects, settingsDrafts, settingsSaving]);
+  useEffect(() => { const handler = (e: BeforeUnloadEvent) => { if (pendingCommands.current > 0 || Object.values(settingsDrafts).some(settingsDraftChanged) || Object.values(settingsSaving).some(Boolean) || Object.keys(drafts).length || Object.keys(jsonBuffers).length || Object.entries(alternativeDrafts).some(([id, draft]) => hasUnsavedAlternativeWorkspaceDraft(draft, projects.find(item => item.projectId === id)?.authorAlternatives ?? []))) { e.preventDefault(); e.returnValue = ''; } }; window.addEventListener('beforeunload', handler); return () => window.removeEventListener('beforeunload', handler); }, [drafts, jsonBuffers, alternativeDrafts, projects, settingsDrafts, settingsSaving]);
 
   const restoreView = useCallback((next: WorkspacePreferences, selected: string | null) => {
     setWorldTick(next.worldTick); setWorldCheckpoint(next.worldCheckpoint ?? ''); setWorldPlace(next.worldPlace ?? null); setHiddenPages(next.hiddenPages ?? []); setPage(next.hiddenPages?.includes(next.page) ? 'work' : next.page); setStructureTab(next.structureTab); setWorkTab(next.workTab); setTimelineTab(next.timelineTab); setKind(next.kind); setSearchKind(next.searchKind); setStatusFilter(next.statusFilter); setQuery(next.query); setSelectedId(selected); editorHistory.current = [];
@@ -153,7 +154,7 @@ export default function App() {
   }, []);
   const measurementStart = useRef<number | undefined>(undefined);
   const saveController=useRef<AbortController|null>(null);const [commandSaving,setCommandSaving]=useState(false);
-  const enqueue = <T,>(operation: () => Promise<T>): Promise<T> => { const run=async()=>{measurementStart.current=commandMeasurementStart();const controller=new AbortController();saveController.current=controller;setCommandSaving(true);try{return await operation();}finally{measurementStart.current=undefined;saveController.current=null;setCommandSaving(false);}};const next = queue.current.then(run, run); queue.current = next.catch(() => undefined); return next; };
+  const enqueue = <T,>(operation: () => Promise<T>): Promise<T> => { pendingCommands.current++; const run=async()=>{measurementStart.current=commandMeasurementStart();const controller=new AbortController();saveController.current=controller;setCommandSaving(true);try{return await operation();}finally{measurementStart.current=undefined;saveController.current=null;pendingCommands.current--;setCommandSaving(pendingCommands.current > 0);}};const next = queue.current.then(run, run); queue.current = next.catch(() => undefined); return next; };
   const persist = async (candidate: ProjectData, reason: string, assets?: AssetInput[]) => {
     const latest = projectRef.current;
     const withReviews = latest?.projectId === candidate.projectId ? addChangeReviews(latest, candidate) : candidate;
