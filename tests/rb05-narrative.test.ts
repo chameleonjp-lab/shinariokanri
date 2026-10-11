@@ -33,7 +33,7 @@ function proposalStory() {
   const disclosure = createEntity(p.projectId, 'disclosure', 'actual acquisition', { foreshadowId: f.question.id, anchor, role: 'clue', knowledgeEffects: [acquire.id] });
   const acquisitionNode = createEntity(p.projectId, 'flow_node', 'acquisition scene', { nodeType: 'scene', sceneId: acquisitionScene.id });
   const finish = createEntity(p.projectId, 'flow_edge', 'finish after acquisition', { fromId: acquisitionNode.id, toId: f.end.id });
-  f.edge.data.toId = acquisitionNode.id; f.question.data.clueIds.push(disclosure.id);
+  f.edge.data.toId = acquisitionNode.id; f.question.data.clueIds!.push(disclosure.id);
   p.entities.push(a, b, c, truth, lie, mistaken, knowledge, proposal, line, aLine, bLine, acquisitionScene, acquire, disclosure, acquisitionNode, finish);
   for (const entity of p.entities) entity.status = 'confirmed'; proposal.status = 'provisional';
   return { ...f, a, b, c, truth, lie, mistaken, knowledge, proposal, line, aLine, bLine, acquisitionScene, acquire, disclosure };
@@ -148,7 +148,7 @@ describe('same presentation proof in chapters and paths', () => {
     f.proposal.data.value = { type: 'boolean', value: true }; f.proposal.data.holderId = f.c.id; f.proposal.data.sourceIds = [f.truth.id]; f.proposal.data.evidenceLocation = anchor;
     const draftEffect = createEntity(f.project.projectId, 'effect', 'record a proposed belief', { operation: 'assert', targetId: f.proposal.id, value: { type: 'boolean', value: true } });
     const draftDisclosure = createEntity(f.project.projectId, 'disclosure', 'proposed belief acquisition', { foreshadowId: f.question.id, anchor, role: 'clue', knowledgeEffects: [draftEffect.id] });
-    draftEffect.status = draftDisclosure.status = 'confirmed'; f.question.data.clueIds.push(draftDisclosure.id); f.project.entities.push(draftEffect, draftDisclosure);
+    draftEffect.status = draftDisclosure.status = 'confirmed'; f.question.data.clueIds!.push(draftDisclosure.id); f.project.entities.push(draftEffect, draftDisclosure);
     expect(validateProject(f.project).ok).toBe(true);
     const session = startTrial(f.project, { entryId: f.entry.id });
     expect(session.state.assertions).toEqual([{ assertionId: f.proposal.id, holderId: f.c.id, truth: 'true', sourceEffectId: draftEffect.id }]);
