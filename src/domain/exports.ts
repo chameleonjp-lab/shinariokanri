@@ -23,6 +23,7 @@ export interface ExportPreview {
   warnings: string[];
   assetCount: number;
   assetBytesIncluded: boolean;
+  runtimeTarget?: { profileId: string; profileVersion: string; schemaVersion: string; implemented: boolean; verificationScope: string };
 }
 export type ExportResult =
   | { ok: true; artifact: ExportArtifact; artifacts: ExportArtifact[]; preview: ExportPreview }
@@ -48,6 +49,15 @@ export const GENERIC_RUNTIME_PROFILE: Readonly<RuntimeExportProfile> = Object.fr
   omissions: Object.freeze(['author_notes', 'rejected_and_alternate_records', 'private_names_and_aliases', 'original_source_ids_unless_explicitly_approved', 'asset_bytes', 'playtest_traces']),
 });
 export const PLAYABLE_PREVIEW_PROFILE: Readonly<RuntimeExportProfile> = GENERIC_RUNTIME_PROFILE;
+/** These are compatibility-check destinations, not a claim that every adapter exists. */
+export const RUNTIME_EXPORT_TARGETS = Object.freeze([
+  Object.freeze({ id: 'scenario-runtime', label: 'scenario-runtime 1.1.0', implemented: true, verificationScope: '宣言した条件・効果・外部値の型を検査します。実ゲーム内の外部処理は未検証です。' }),
+  ...['Unity', 'Unreal', 'ink', 'Yarn'].map(label => Object.freeze({ id: label.toLowerCase(), label, implemented: false, verificationScope: '変換器は未実装です。対応先との不一致を確認でき、実行用ファイルは生成しません。' })),
+]);
+/** A non-generic profile is only an inspection request and is always refused by the existing target guard. */
+export function runtimeExportProfileForTarget(targetId: string): RuntimeExportProfile {
+  return { ...GENERIC_RUNTIME_PROFILE, profileId: targetId };
+}
 export interface ExportOptions {
   profile: ExportProfile;
   projectionProfileId: ID;
@@ -97,6 +107,10 @@ async function exportCapturedProject(input: ProjectData, options: ExportOptions)
   const policyEntity = project.entities.find((entity): entity is Entity<'projection_profile'> => entity.id === options.projectionProfileId && entity.kind === 'projection_profile' && !entity.deletedAt);
   if (policyEntity?.data.sourceVersionId != null && policyEntity.data.sourceVersionId !== options.targetVersionId && policyEntity.data.sourceVersionId !== project.revision) return { ok: false, issues: [{ code: 'VALIDATION_FAILED', message: 'この公開範囲が対象とする版と、選択した版が一致しません。', entityId: policyEntity.id, field: 'sourceVersionId' }] };
   const executable = options.profile === 'runtime_json' || options.profile === 'playable_preview';
+  const runtimeProfile = options.runtimeProfile ?? GENERIC_RUNTIME_PROFILE;
+  // Keep author-side incompatibilities even when the public schema independently
+  // rejects the same external type. Neither check permits a lossy projection.
+  const targetIssues = executable ? runtimeTargetCompatibilityIssues(project, runtimeProfile, policyEntity?.data.includedIds ?? []) : [];
   const citations=await prepareExportCitations(captured,project,options,executable);
   const result = createProjection(project, options.projectionProfileId, { strictReferences: executable, confirmedOnly: options.profile !== 'consultation', targetVersionId: options.targetVersionId,versionTargets:citations.targets });
   if(result.ok&&citations.versions.length)result.projection.versions=citations.versions;
@@ -104,10 +118,12 @@ async function exportCapturedProject(input: ProjectData, options: ExportOptions)
     profile: options.profile, sourceRevision: project.revision,sourceVersionId:options.targetVersionId??authorProject.projectId,sourceContentHash:await sha256(jsonBytes({...authorProject,history:[]})),sourceIdMap:result.ok?result.idMap:undefined, includedCount: result.ok ? result.projection.entities.length : 0,
     omissions: result.omissions, warnings: ['公開用の文面は作者が内容を確認してください。文章から秘密を自動で判定する機能ではありません。'],
     assetCount: result.ok ? [result.projection,...citations.versions.map(version=>version.projection)].reduce((count,edition)=>count+edition.entities.filter(entity=>entity.kind==='attachment').length,0) : 0, assetBytesIncluded: false,
+    ...(executable ? { runtimeTarget: { profileId: runtimeProfile.profileId, profileVersion: runtimeProfile.profileVersion, schemaVersion: runtimeProfile.schemaVersion, implemented: runtimeProfile.profileId === GENERIC_RUNTIME_PROFILE.profileId && runtimeProfile.profileVersion === GENERIC_RUNTIME_PROFILE.profileVersion && runtimeProfile.schemaVersion === GENERIC_RUNTIME_PROFILE.schemaVersion, verificationScope: RUNTIME_EXPORT_TARGETS.find(target => target.id === runtimeProfile.profileId)?.verificationScope ?? '未宣言の対応先です。実行用ファイルは生成しません。' } } : {}),
   };
-  if (!result.ok) return { ok: false, issues: result.issues, preview };
+  if (!result.ok) return { ok: false, issues: [...targetIssues, ...result.issues], preview };
   const projection = result.projection;
   const positions=validatePublicPositions(projection);if(positions.length)return {ok:false,issues:positions,preview};
+  if (targetIssues.length) return { ok: false, issues: targetIssues, preview };
   const policy = policyEntity!.data;
   const publicVersionLabel = policy.publicVersionLabel ?? '公開版';
   const artifact = (filename: string, mimeType: string, content: string): ExportArtifact => ({ filename, mimeType, content });
@@ -120,7 +136,6 @@ async function exportCapturedProject(input: ProjectData, options: ExportOptions)
       return succeed([artifact(`reader.${format === 'html' ? 'html' : 'md'}`, format === 'html' ? 'text/html;charset=utf-8' : 'text/markdown;charset=utf-8', format === 'html' ? renderReaderHtml(projection, publicVersionLabel, options.writingMode ?? 'horizontal') : renderReaderMarkdown(projection, publicVersionLabel))]);
     }
     case 'runtime_json': {
-      const runtimeProfile = options.runtimeProfile ?? GENERIC_RUNTIME_PROFILE;
       const issues = runtimeCapabilityIssues(project,projection,result.idMap,policy,runtimeProfile,citations.sources);
       if (issues.length) return { ok: false, issues, preview };
       const includedAssets = await exportAllAssetBytes(project,projection,result.idMap,citations.sources,options.assetBytes);
@@ -178,7 +193,7 @@ async function exportCapturedProject(input: ProjectData, options: ExportOptions)
       return succeed([artifact('consultation.md', 'text/markdown;charset=utf-8', content)]);
     }
     case 'playable_preview': {
-      const issues = runtimeCapabilityIssues(project,projection,result.idMap,policy,PLAYABLE_PREVIEW_PROFILE,citations.sources);
+      const issues = runtimeCapabilityIssues(project,projection,result.idMap,policy,runtimeProfile,citations.sources);
       if (issues.length) return { ok: false, issues, preview };
       const assets=await exportAllAssetBytes(project,projection,result.idMap,citations.sources,options.assetBytes);
       if(!assets.complete)return {ok:false,issues:[{code:'REFERENCE_INVALID',message:'試遊に含める素材bytesが不足しています。完全保存から復元して再検査してください。'}],preview};
@@ -227,11 +242,21 @@ function runtimeCapabilityIssues(project:ProjectData,projection:PublicProjection
  for(const citation of citations){const policy=citation.project.entities.find((entity):entity is Entity<'projection_profile'>=>entity.id===citation.profileId&&entity.kind==='projection_profile');if(!policy)issues.push({code:'REFERENCE_INVALID',message:'引用版の公開範囲がありません。'});else issues.push(...validateRuntimeExport(citation.project,citation.projection,citation.idMap,policy.data,profile,false));}
  return issues;
 }
-function validateRuntimeExport(project: ProjectData, projection: PublicProjection, idMap: Record<string, string>, policy: Entity<'projection_profile'>['data'], profile: RuntimeExportProfile,requireGraph=true): ProjectionIssue[] {
+/** The same declared target/type rules run before projection and on each fixed citation. */
+function runtimeTargetCompatibilityIssues(project: ProjectData, profile: RuntimeExportProfile, includedIds: readonly ID[]): ProjectionIssue[] {
   const issues: ProjectionIssue[] = [];
+  const fail = (message: string, entityId?: ID, field?: string) => issues.push({ code: 'EXPORT_UNSUPPORTED' as const, message, ...(entityId ? { entityId } : {}), ...(field ? { field } : {}) });
+  if (profile.profileId !== GENERIC_RUNTIME_PROFILE.profileId || profile.schemaVersion !== GENERIC_RUNTIME_PROFILE.schemaVersion || profile.profileVersion !== GENERIC_RUNTIME_PROFILE.profileVersion) fail('この制作出力は汎用scenario-runtime 1.1.0専用です。未実装のゲームエンジンへ直接変換できません。', undefined, 'runtimeProfile.profileId');
+  for (const field of ['supportedNodeTypes', 'supportedConditions', 'supportedEffects', 'externalContracts', 'assetTypes'] as const) if (!Array.isArray(profile[field]) || profile[field].some(value => !GENERIC_RUNTIME_PROFILE[field].includes(value))) fail('対応先の機能一覧に未対応の種類が含まれています。', undefined, `runtimeProfile.${field}`);
+  const included = new Set(includedIds);
+  for (const entity of project.entities) if (included.has(entity.id) && entity.kind === 'external_contract' && !entity.deletedAt && entity.status === 'confirmed') {
+    for (const field of ['inputType', 'outputType'] as const) if (!Array.isArray(profile.externalContracts) || !profile.externalContracts.includes(entity.data[field])) fail('この外部値の型を対応先で表せません。外部コマンドの実行や型の置換は行いません。', entity.id, field);
+  }
+  return issues;
+}
+function validateRuntimeExport(project: ProjectData, projection: PublicProjection, idMap: Record<string, string>, policy: Entity<'projection_profile'>['data'], profile: RuntimeExportProfile,requireGraph=true): ProjectionIssue[] {
+  const issues: ProjectionIssue[] = runtimeTargetCompatibilityIssues(project, profile, Object.keys(idMap));
   const fail = (message: string, entityId?: string, field?: string) => { issues.push({ code: 'EXPORT_UNSUPPORTED', message, ...(entityId ? { entityId } : {}), ...(field ? { field } : {}) }); };
-  if (profile.profileId !== 'scenario-runtime' || profile.schemaVersion !== '1.0.0' || profile.profileVersion !== '1.1.0') fail('この制作出力は汎用scenario-runtime 1.1.0専用です。未実装のゲームエンジンへ直接変換できません。');
-  for (const field of ['supportedNodeTypes', 'supportedConditions', 'supportedEffects', 'externalContracts', 'assetTypes'] as const) if (!Array.isArray(profile[field]) || profile[field].some(value => !GENERIC_RUNTIME_PROFILE[field].includes(value))) fail('対応先の機能一覧に未対応の種類が含まれています。', undefined, field);
   const included = new Set(Object.keys(idMap)),projectedById=new Map(projection.entities.map(entity=>[entity.id,entity]));
   issues.push(...stableIdIssues(idMap, policy));
   for (const disclosure of presentationDisclosures(project, idMap)) {
@@ -274,7 +299,6 @@ function validateRuntimeExport(project: ProjectData, projection: PublicProjectio
       if (entity.data.valueType === 'enum' && !entity.data.allowed.values?.length) fail('列挙変数の許可値を指定してください。', entity.id, 'allowed');
       if (entity.data.externalContractId && !projection.entities.some(candidate => candidate.id === idMap[entity.data.externalContractId!] && candidate.kind === 'external_contract')) fail('外部値の契約が公開範囲にありません。', entity.id, 'externalContractId');
     }
-    if (entity.kind === 'external_contract' && (!profile.externalContracts.includes(entity.data.inputType) || !profile.externalContracts.includes(entity.data.outputType))) fail('この外部値の型を対応先で表せません。', entity.id);
     if (entity.kind === 'attachment' && !profile.assetTypes.includes(entity.data.mediaType)) fail('この素材形式を対応先で表せません。', entity.id, 'mediaType');
     checkTypedConditionCapabilities(projected.data,ENTITY_SCHEMAS[entity.kind],profile,(message,field)=>fail(message,entity.id,field));
   }

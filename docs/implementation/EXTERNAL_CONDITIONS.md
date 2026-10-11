@@ -1,3 +1,5 @@
+C29 `09d39faae9c7293fe77b5675cc7286605a1809a6` / build `b59572f71d050cd96e0f` の候補ZIP・実Files手順・専用接続計画は準備済み。[現在の不足条件](C29_MANUAL_REVIEW.md)を記録する。実iPhone/iPad・実OS/ブラウザー・VoiceOver/NVDA、専用HTTPS origin、専用Auth URL/public key/project ID/region/管理者/fixture tenant、owner/editor/reviewer/reader/nonmemberの5実アカウント、private bucket、現行tier/quota/usage/費用/上限は未指定または未確認。独立してできる検査は続け、必要な実接続確認だけを未実行で残す。外部DB変更・公開・新規課金は実行していない。
+
 # 実環境で残る確認条件
 
 現在のmain、部品/CI/production Chromium、模擬HTTP/隔離PostgreSQLの成功を実端末・実Auth/RLS/Storage・原116受入の完成に換算しない。公開、mainへのマージ、有料機能の有効化、既存の別用途DB変更は行っていない。
@@ -12,7 +14,7 @@
 
 ## 公表料金と実tenant
 
-2026-10-08、[Supabase料金](https://supabase.com/pricing)と[Compute/Disk](https://supabase.com/docs/guides/platform/compute-and-disk)を読み取り確認した。次は公表値の抜粋であり、契約・残枠・地域・税・実費の確認ではない。
+2026-10-08の初回確認を保持し、2026-10-10にも[Supabase料金](https://supabase.com/pricing)と[Compute/Disk](https://supabase.com/docs/guides/platform/compute-and-disk)を読み取り再確認した。以下の掲載枠は再確認時にも一致した。専用tenantの契約・残枠・地域・税・実費を確認した結果ではない。
 
 | 公表プラン | 基本料金/月 | 主な掲載枠 |
 |---|---|---|
@@ -22,3 +24,11 @@
 専用tenantのtier/region/使用量/残枠/StorageとEdge制限/spend cap/メール等は未指定。アプリの完全保存上限64MiBとFree upload上限50MBを同一視しない。通信前のアプリ上限だけで実Storage成功を認定しない。接続先の現在設定を確認し、超過/失敗時は端末の作品・bytes・送信待ちを保持する。新規project、課金、add-onを自動で有効化しない。
 
 実API準備: [live-plan.example.json](../../scripts/sync/live-plan.example.json)と[同期手順](RB09_SYNC_SHARING.md)でUUID/hash/対象commit/tree/役割を固定する。原116の正常・境界/失敗条件と実結果を記録し、未実行条件を合格に置換しない。
+
+## AP06で再確認した接続条件（2026-10-11）
+
+接続済みSupabaseのproject一覧・public table名・Edge Function名を読取りで確認した。指定された専用構成に必要なscenario tablesと同期functionは確認できず、5役割・二端末を使える専用接続先は特定できていない。既存の別用途projectにmigrationを適用したり、データ・権限・bucketを変更したりしていない。実quota・役割別直接API・private素材の合格証拠は未実行のままである。
+
+同日に公式料金、Compute/Disk、Storage upload limits、Edge limitsを取得した。取得原文・時刻・bytes・SHAと保管先は [fetch-manifest.json](../quality/runtime-2026-10-11/ap06-public-limits/fetch-manifest.json) と [retention.json](../quality/runtime-2026-10-11/ap06-public-limits/retention.json) に残す。Storageのglobal file size limitはFreeでは50MBまで、Pro以上では設定により500GBまでと掲載されている。これを専用projectに設定済みの上限として扱わない。Edge FunctionはFree worker duration 150秒、paid 400秒、CPU時間は各request 2秒、request idle timeout 150秒と掲載されている。Worker durationとCPU時間を同じ実行予算として扱わない。
+
+次の実操作には、専用project ID・管理者・fixture tenant・公開URL/public key・5実アカウント・private bucket・二端末と、tier/region/現在使用量/残枠の指定が必要になる。その構成を得たら、既存live planの対象commit/tree・各fixture ID/hash・期待する許可/拒否を固定して実行する。公開文書の確認から実tenantの費用・残枠・成功を推定しない。
