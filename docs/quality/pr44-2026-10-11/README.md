@@ -6,7 +6,11 @@ Both failures were the first RB06 recovery case in Firefox and WebKit. `seed()` 
 
 The fix waits for the normal import dialog to close before keeping the original sidebar assertion. App closes this dialog only after `importScenario()` has committed and the imported project is opened. No wait timeout override is added: Playwright config does not override its 30,000 ms test budget or 0 action timeout, so the wait is interrupted by the existing test deadline. The 5,000 ms sidebar assertion, 74-history fixture, recovery assertions, retry policy, and performance thresholds are unchanged. Product source and Playwright config are unchanged.
 
-At this retention commit the fixed browser spec has **not been rerun**. Build and all four RB06 cases in all three engines will be run from a clean fixed commit after exclusive execution is available, with raw JSON/HTML/trace output and before/after source/build bindings retained separately. This failure record does not promote original acceptance or claim CI success.
+The first clean fix commit `4810f0f55dacd1ae9fc252f114854b0c53ab8033` built successfully (`ac70e61536847e511bdc`) and ran all four RB06 cases in all three engines: **9 passed, 3 failed**, with no skipped/flaky cases. The seed restoration boundary passed in all engines; the first full case then exceeded the original 30,000 ms budget later in the workflow. `rb06-4810f0f-run1/` preserves the raw runner/JSON/HTML reports, three failure traces, stage durations, build information and clean before/after source/build hashes. These failures remain explicit.
+
+Trace timing identified about 5.7 seconds spent fully inspecting the static 74-history fixture in Node before any UI action. The second fix moves only this unchanged file read and full inspection to `test.beforeAll`, which retains Playwright's existing 30,000 ms hook budget. Normal UI import, quota failure/retry, navigation, cold reload, both actual complete-file downloads, both downloaded-file inspections, and every original assertion remain within the unchanged 30,000 ms test budget. No product source or validation is changed. This is fixture preparation before the UI acceptance sequence, and does not exempt any UI/recovery operation from its deadline.
+
+The second fixed candidate has **not been rerun at this commit**. Its forthcoming clean build and 12-case result will be recorded separately. Neither retained failed run promotes original acceptance or claims CI success.
 
 Targeted command (source the pinned browser environment first; do not override test timeouts):
 
