@@ -278,14 +278,16 @@ export async function mapImportedProject(source: ProjectData, target: ProjectDat
           return { ...structuredClone(receipt), id: lookup(receipt.id), alternativeVersionId: receipt.alternativeVersionId ? lookup(receipt.alternativeVersionId) : undefined,
             sourceSnapshotId: receipt.sourceSnapshotId ? lookup(receipt.sourceSnapshotId) : null, patches, selectedChangeKeys: patches.map(patch => patch.key).sort() };
         });
-        return sealAuthorAlternative(branch);
+        // Final sealing follows every snapshot-reference/hash rewrite below.
+        return branch;
       }));
       (content as ContentState).authorAlternatives = mappedAlternatives;
     }
     if ('snapshots' in content && 'snapshots' in input) content.snapshots = await Promise.all(input.snapshots.map(async snapshot => ({ ...structuredClone(snapshot), id: lookup(snapshot.id), content: await state(snapshot.content) })));
     return content;
   };
-  const project: ProjectData = { ...await state(source), history: await Promise.all(source.history.map(async command => ({ ...structuredClone(command), operationId: lookup(command.operationId), projectId: lookup(command.projectId), targetIds: command.targetIds.map(lookup), before: await state(command.before), after: await state(command.after), ...(command.compensatesOperationId ? { compensatesOperationId: lookup(command.compensatesOperationId) } : {}), ...(command.importOrigin ? { importOrigin: { ...command.importOrigin, importOperationId: lookup(command.importOrigin.importOperationId) } } : {}), ...(command.idMap ? { idMap: Object.fromEntries(Object.entries(command.idMap).map(([oldId, currentId]) => [oldId, lookup(currentId)])) } : {}) }))) };
+  const { history: _history, ...sourceContent } = source;
+  const project: ProjectData = { ...await state(sourceContent), history: await Promise.all(source.history.map(async command => ({ ...structuredClone(command), operationId: lookup(command.operationId), projectId: lookup(command.projectId), targetIds: command.targetIds.map(lookup), before: await state(command.before), after: await state(command.after), ...(command.compensatesOperationId ? { compensatesOperationId: lookup(command.compensatesOperationId) } : {}), ...(command.importOrigin ? { importOrigin: { ...command.importOrigin, importOperationId: lookup(command.importOrigin.importOperationId) } } : {}), ...(command.idMap ? { idMap: Object.fromEntries(Object.entries(command.idMap).map(([oldId, currentId]) => [oldId, lookup(currentId)])) } : {}) }))) };
   const snapshots = new Map<string, ProjectSnapshot>();
   const visitStates = (callback: (state: ProjectContent | ContentState) => void) => {
     const visit = (content: ProjectContent | ContentState) => {

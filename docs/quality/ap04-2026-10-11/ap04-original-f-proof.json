@@ -14,7 +14,7 @@
     "sha256": "e1e4b06a3bb1cd79fc590239ab6350103323335f2e1ee87a2e6a283755834c4f"
   },
   "planning_source": {
-    "head": "9cb4d9f05c5726cce49a3ab56abc1ab26f72267a",
+    "head": "bf6362b098b608174b947d4a3dc15bd1e8b63ddc",
     "working_tree_not_frozen": true,
     "files": [
       {
@@ -58,9 +58,24 @@
         "sha256": "d62d9de2365aa4ee5798d4c4f1847473c224015f53e2749a5afa4eb3eed7325f"
       },
       {
+        "file": "src/ui/EntityEditor.tsx",
+        "bytes": 41293,
+        "sha256": "be02c5b8fc1afc639fc54034a25d8221161632953f3a6464f2d45bbb98d5899a"
+      },
+      {
         "file": "src/ui/JapaneseIndexEntryEditor.tsx",
         "bytes": 13587,
         "sha256": "bbb20cc2fa5d99a312d8d34da045dea245b1bcc9e8a40e58f934f640990638bf"
+      },
+      {
+        "file": "src/ui/Relationships.tsx",
+        "bytes": 33575,
+        "sha256": "d7d9b5b33ae3d453f874a1224b65e8ebbb5dc19b32255ddc67c4cebc05550a47"
+      },
+      {
+        "file": "src/ui/relationGraphLabels.ts",
+        "bytes": 3428,
+        "sha256": "89f539ee4e35903ec77768dabf14cd85a445a8fe4bc934388856c282c8699419"
       },
       {
         "file": "src/ui/useRelationView.ts",
@@ -99,8 +114,8 @@
       },
       {
         "file": "tests/e2e/ap04-original-f-graph.spec.ts",
-        "bytes": 17493,
-        "sha256": "4b4b6cbd2131cbfdfc4408f0995e31d000865978fb5717cfd7e26f9a4492eed8"
+        "bytes": 17621,
+        "sha256": "983ebd661f714d9099e410ef488f5902daa7f8c79cadfac8161391a6b4b96346"
       },
       {
         "file": "tests/e2e/ap04-original-f-hierarchy.spec.ts",
@@ -149,8 +164,8 @@
       },
       {
         "file": "tests/e2e/ap04-original-helpers.ts",
-        "bytes": 4372,
-        "sha256": "d682676dde860f7e95fec51a1faf363384d9b1adc99ee9ba4ff52b33866f0116"
+        "bytes": 4505,
+        "sha256": "2c14faffcdb10f9592d03db73d8acb5416a270bfa07f4016a92fc1d43a23faaa"
       },
       {
         "file": "tests/flowStructureAncestorGraph.test.ts",
@@ -5564,10 +5579,10 @@
         {
           "file": "tests/e2e/ap04-original-f-graph.spec.ts",
           "line": 21,
-          "end_line": 83,
+          "end_line": 85,
           "title_source": "test('AT-F55 B中心でAからの信頼を逆側から表示し、期間/経路と根拠を保ち、整列から対称性や推移性を作らない', async ({ page }, info) => {",
-          "excerpt_sha256": "b0634ccbfe8c251c38533032b38377150836ff6f322f1df8c33ca94c700ecefc",
-          "source_excerpt": "test('AT-F55 B中心でAからの信頼を逆側から表示し、期間/経路と根拠を保ち、整列から対称性や推移性を作らない', async ({ page }, info) => {\n  const p = createProject('AT-F55 方向と表示配置');\n  const a = createEntity(p.projectId, 'character', '信頼するA'), b = createEntity(p.projectId, 'character', '信頼されるB'), c = createEntity(p.projectId, 'character', 'Bが信頼するC');\n  const faction = createEntity(p.projectId, 'group', '期間限定の所属先', { groupType: 'faction' });\n  const evidence = createEntity(p.projectId, 'event', '信頼と所属の根拠', { time: { mode: 'instant', at: '50', calendarId: p.calendarId } });\n  const route = createEntity(p.projectId, 'variable', '所属経路の選択', { key: 'membership_route', valueType: 'boolean', initial: { type: 'boolean', value: true } });\n  p.entities.push(a, b, c, faction, evidence, route);\n  const yes = initializeRuntimeState(p), no = structuredClone(yes); no.variableValues[route.id] = { type: 'boolean', value: false };\n  const cpYes = createEntity(p.projectId, 'checkpoint', '所属が成立する経路', { contentVersionId: p.projectId, origin: 'partial', runtimeState: { ...yes, provenance: 'partial' } });\n  const cpNo = createEntity(p.projectId, 'checkpoint', '所属が成立しない経路', { contentVersionId: p.projectId, origin: 'partial', runtimeState: { ...no, provenance: 'partial' } });\n  const membership = createEntity(p.projectId, 'assertion', '時期と経路を持つ所属', { subjectId: a.id, predicate: 'world.membership', value: { type: 'ref', value: faction.id }, truthKind: 'author_truth', sourceIds: [evidence.id], validity: { ...emptyValidity(), worldRange: { start: '50', end: '100' }, routeCondition: { op: 'compare', variableId: route.id, comparator: 'eq', value: { type: 'boolean', value: true } } } });\n  p.entities.push(cpYes, cpNo, membership); p.entities.forEach(entity => { entity.status = 'confirmed'; });\n  const ab = relation(p, a.id, b.id, 'trust', [evidence.id]), bc = relation(p, b.id, c.id, 'trust', [evidence.id]); ab.validity.worldRange = { start: '0', end: '100' };\n  p.relations = [ab, bc];\n  const bytes = await exportScenario(p);\n  await attachGiven(info, 'AT-F55', bytes, { relationIds: [ab.id, bc.id], direction: 'forward', membershipAssertionId: membership.id, membershipValidity: membership.data.validity, evidenceId: evidence.id, checkpointIds: [cpYes.id, cpNo.id], sourceIds: [a.id, b.id, c.id] });\n  await seed(page, bytes); const panel = await graph(page);\n  await panel.getByLabel('中心にする情報', { exact: true }).selectOption(b.id);\n  await panel.getByLabel('世界時点（tick）', { exact: true }).fill('49');\n  await panel.getByLabel('経路・状態の記録', { exact: true }).selectOption(cpYes.id);\n  const arrow = panel.getByRole('button', { name: `${a.name}から${b.name}へ、信頼、関係を編集`, exact: true });\n  await expect(arrow).toBeVisible();\n  await expect(panel.getByRole('button', { name: `${b.name}から${a.name}へ、信頼、関係を編集`, exact: true })).toHaveCount(0);\n  await panel.getByLabel('中心にする情報', { exact: true }).selectOption(a.id);\n  await panel.getByLabel('図の意味を選択', { exact: true }).selectOption('reference');\n  await expect(panel.getByRole('button', { name: `${a.name}から${faction.name}へ、記録 · world.membership、元情報を確認`, exact: true })).toHaveCount(0);\n  await panel.getByLabel('世界時点（tick）', { exact: true }).fill('50');\n  await expect(panel.getByRole('button', { name: `${a.name}から${faction.name}へ、記録 · world.membership、元情報を確認`, exact: true })).toBeVisible();\n  await panel.getByLabel('経路・状態の記録', { exact: true }).selectOption(cpNo.id);\n  await expect(panel.getByRole('button', { name: `${a.name}から${faction.name}へ、記録 · world.membership、元情報を確認`, exact: true })).toHaveCount(0);\n  await panel.getByLabel('経路・状態の記録', { exact: true }).selectOption(cpYes.id);\n  await panel.getByLabel('図の意味を選択', { exact: true }).selectOption('all');\n  await panel.getByLabel('関係の表示範囲', { exact: true }).selectOption('2');\n  const before = await authorFingerprint(page);\n  await panel.getByRole('button', { name: '表示項目を整列対象に', exact: true }).click();\n  await panel.getByRole('button', { name: '格子に整列', exact: true }).click();\n  await panel.getByRole('button', { name: '横に整列', exact: true }).click();\n  expect(await authorFingerprint(page)).toBe(before);\n  await expect(panel.getByRole('button', { name: `${a.name}から${c.name}へ、信頼、関係を編集`, exact: true })).toHaveCount(0);\n  await arrow.click(); const dialog = page.getByRole('dialog', { name: '意味付きの関係を編集', exact: true });\n  await expect(dialog.getByLabel('関係の終点', { exact: true }).locator(`option[value=\"${a.id}\"]`)).toHaveCount(0);\n  await expect(dialog.getByLabel('関係の向き', { exact: true }).locator('option[value=\"symmetric\"]')).toBeDisabled();\n  await expect(dialog).toContainText(evidence.name);\n  await expect(dialog.getByLabel('有効期間の開始', { exact: true })).toHaveValue('0');\n  await expect(dialog.getByLabel('有効期間の終了', { exact: true })).toHaveValue('100');\n  await dialog.getByRole('button', { name: '中止', exact: true }).click();\n  expect(await authorFingerprint(page)).toBe(before);\n  const unchanged = await backup(page);\n  expect(unchanged.project.relations).toEqual(p.relations);\n  expect(unchanged.project.entities.find(entity => entity.id === membership.id)?.data).toEqual(membership.data);\n  await graph(page); await panel.getByRole('button', { name: '関係を追加', exact: true }).click();\n  await dialog.getByLabel('関係の種類', { exact: true }).selectOption('reference');\n  await dialog.getByLabel('関係の始点', { exact: true }).selectOption(a.id);\n  await dialog.getByLabel('関係の終点', { exact: true }).selectOption(a.id);\n  await dialog.getByRole('button', { name: '関係を保存', exact: true }).click(); await expect(dialog).toHaveCount(0);\n  await page.reload(); const saved = await backup(page);\n  expect(saved.project.relations.find(row => row.id === ab.id)).toEqual(ab); expect(saved.project.relations.find(row => row.id === bc.id)).toEqual(bc);\n  const self = saved.project.relations.filter(row => row.fromId === a.id && row.toId === a.id);\n  expect(self).toHaveLength(1); expect(self[0]).toMatchObject({ relationType: 'reference', direction: 'forward' });\n  expect(saved.project.relations.filter(row => row.relationType === 'trust')).toHaveLength(2);\n  await attachObservation(info, 'AT-F55-observed', { forwardTrustIds: [ab.id, bc.id], noInverseOrTransitiveTrustAdded: true, membershipAssertionId: membership.id, membershipValidity: membership.data.validity, evidenceId: evidence.id, layoutDidNotChangeAuthorData: true, allowedSelfReferenceId: self[0].id, revision: saved.project.revision });\n});\n\n",
+          "excerpt_sha256": "cc7653d46cf2aa52f3db11abf5d585a0e0e9255fbea26aa530f1c2c2130b40e5",
+          "source_excerpt": "test('AT-F55 B中心でAからの信頼を逆側から表示し、期間/経路と根拠を保ち、整列から対称性や推移性を作らない', async ({ page }, info) => {\n  const p = createProject('AT-F55 方向と表示配置');\n  const a = createEntity(p.projectId, 'character', '信頼するA'), b = createEntity(p.projectId, 'character', '信頼されるB'), c = createEntity(p.projectId, 'character', 'Bが信頼するC');\n  const faction = createEntity(p.projectId, 'group', '期間限定の所属先', { groupType: 'faction' });\n  const evidence = createEntity(p.projectId, 'event', '信頼と所属の根拠', { time: { mode: 'instant', at: '50', calendarId: p.calendarId } });\n  const route = createEntity(p.projectId, 'variable', '所属経路の選択', { key: 'membership_route', valueType: 'boolean', initial: { type: 'boolean', value: true } });\n  p.entities.push(a, b, c, faction, evidence, route);\n  const yes = initializeRuntimeState(p), no = structuredClone(yes); no.variableValues[route.id] = { type: 'boolean', value: false };\n  const cpYes = createEntity(p.projectId, 'checkpoint', '所属が成立する経路', { contentVersionId: p.projectId, origin: 'partial', runtimeState: { ...yes, provenance: 'partial' } });\n  const cpNo = createEntity(p.projectId, 'checkpoint', '所属が成立しない経路', { contentVersionId: p.projectId, origin: 'partial', runtimeState: { ...no, provenance: 'partial' } });\n  const membership = createEntity(p.projectId, 'assertion', '時期と経路を持つ所属', { subjectId: a.id, predicate: 'world.membership', value: { type: 'ref', value: faction.id }, truthKind: 'author_truth', sourceIds: [evidence.id], validity: { ...emptyValidity(), worldRange: { start: '50', end: '100' }, routeCondition: { op: 'compare', variableId: route.id, comparator: 'eq', value: { type: 'boolean', value: true } } } });\n  p.entities.push(cpYes, cpNo, membership); p.entities.forEach(entity => { entity.status = 'confirmed'; });\n  const ab = relation(p, a.id, b.id, 'trust', [evidence.id]), bc = relation(p, b.id, c.id, 'trust', [evidence.id]); ab.validity.worldRange = { start: '0', end: '100' };\n  p.relations = [ab, bc];\n  const bytes = await exportScenario(p);\n  await attachGiven(info, 'AT-F55', bytes, { relationIds: [ab.id, bc.id], direction: 'forward', membershipAssertionId: membership.id, membershipValidity: membership.data.validity, evidenceId: evidence.id, checkpointIds: [cpYes.id, cpNo.id], sourceIds: [a.id, b.id, c.id] });\n  await seed(page, bytes); const panel = await graph(page);\n  await panel.getByLabel('中心にする情報', { exact: true }).selectOption(b.id);\n  await panel.getByLabel('世界時点（tick）', { exact: true }).fill('49');\n  await panel.getByLabel('経路・状態の記録', { exact: true }).selectOption(cpYes.id);\n  const arrow = panel.getByRole('button', { name: `${a.name}から${b.name}へ、信頼、関係を編集`, exact: true });\n  await expect(arrow).toBeVisible();\n  await expect(panel.getByRole('button', { name: `${b.name}から${a.name}へ、信頼、関係を編集`, exact: true })).toHaveCount(0);\n  await panel.getByLabel('中心にする情報', { exact: true }).selectOption(a.id);\n  await panel.getByLabel('図の意味を選択', { exact: true }).selectOption('reference');\n  await expect(panel.getByRole('button', { name: `${a.name}から${faction.name}へ、記録 · world.membership、元情報を確認`, exact: true })).toHaveCount(0);\n  await panel.getByLabel('世界時点（tick）', { exact: true }).fill('50');\n  await expect(panel.getByRole('button', { name: `${a.name}から${faction.name}へ、記録 · world.membership、元情報を確認`, exact: true })).toBeVisible();\n  await panel.getByLabel('経路・状態の記録', { exact: true }).selectOption(cpNo.id);\n  await expect(panel.getByRole('button', { name: `${a.name}から${faction.name}へ、記録 · world.membership、元情報を確認`, exact: true })).toHaveCount(0);\n  await panel.getByLabel('経路・状態の記録', { exact: true }).selectOption(cpYes.id);\n  await panel.getByLabel('図の意味を選択', { exact: true }).selectOption('all');\n  await panel.getByLabel('関係の表示範囲', { exact: true }).selectOption('2');\n  const before = await authorFingerprint(page);\n  await panel.getByRole('button', { name: '表示項目を整列対象に', exact: true }).click();\n  await panel.getByRole('button', { name: '格子に整列', exact: true }).click();\n  await panel.getByRole('button', { name: '横に整列', exact: true }).click();\n  expect(await authorFingerprint(page)).toBe(before);\n  await expect(panel.getByRole('button', { name: `${a.name}から${c.name}へ、信頼、関係を編集`, exact: true })).toHaveCount(0);\n  await arrow.click(); const dialog = page.getByRole('dialog', { name: '意味付きの関係を編集', exact: true });\n  await expect(dialog.getByLabel('関係の終点', { exact: true }).locator(`option[value=\"${a.id}\"]`)).toHaveCount(0);\n  const symmetricOption = dialog.getByLabel('関係の向き', { exact: true }).locator('option[value=\"symmetric\"]');\n  await expect(symmetricOption).toHaveJSProperty('disabled', true);\n  await expect(symmetricOption).toHaveAttribute('disabled', '');\n  await expect(dialog).toContainText(evidence.name);\n  await expect(dialog.getByLabel('有効期間の開始', { exact: true })).toHaveValue('0');\n  await expect(dialog.getByLabel('有効期間の終了', { exact: true })).toHaveValue('100');\n  await dialog.getByRole('button', { name: '中止', exact: true }).click();\n  expect(await authorFingerprint(page)).toBe(before);\n  const unchanged = await backup(page);\n  expect(unchanged.project.relations).toEqual(p.relations);\n  expect(unchanged.project.entities.find(entity => entity.id === membership.id)?.data).toEqual(membership.data);\n  await graph(page); await panel.getByRole('button', { name: '関係を追加', exact: true }).click();\n  await dialog.getByLabel('関係の種類', { exact: true }).selectOption('reference');\n  await dialog.getByLabel('関係の始点', { exact: true }).selectOption(a.id);\n  await dialog.getByLabel('関係の終点', { exact: true }).selectOption(a.id);\n  await dialog.getByRole('button', { name: '関係を保存', exact: true }).click(); await expect(dialog).toHaveCount(0);\n  await page.reload(); const saved = await backup(page);\n  expect(saved.project.relations.find(row => row.id === ab.id)).toEqual(ab); expect(saved.project.relations.find(row => row.id === bc.id)).toEqual(bc);\n  const self = saved.project.relations.filter(row => row.fromId === a.id && row.toId === a.id);\n  expect(self).toHaveLength(1); expect(self[0]).toMatchObject({ relationType: 'reference', direction: 'forward' });\n  expect(saved.project.relations.filter(row => row.relationType === 'trust')).toHaveLength(2);\n  await attachObservation(info, 'AT-F55-observed', { forwardTrustIds: [ab.id, bc.id], noInverseOrTransitiveTrustAdded: true, membershipAssertionId: membership.id, membershipValidity: membership.data.validity, evidenceId: evidence.id, layoutDidNotChangeAuthorData: true, allowedSelfReferenceId: self[0].id, revision: saved.project.revision });\n});\n\n",
           "normal_operations": [
             {
               "line": 37,
@@ -5578,15 +5593,15 @@
               "source": "await arrow.click(); const dialog = page.getByRole('dialog', { name: '意味付きの関係を編集', exact: true });"
             },
             {
-              "line": 68,
+              "line": 70,
               "source": "const unchanged = await backup(page);"
             },
             {
-              "line": 71,
+              "line": 73,
               "source": "await graph(page); await panel.getByRole('button', { name: '関係を追加', exact: true }).click();"
             },
             {
-              "line": 76,
+              "line": 78,
               "source": "await page.reload(); const saved = await backup(page);"
             }
           ],
@@ -5624,47 +5639,51 @@
               "source": "await expect(dialog.getByLabel('関係の終点', { exact: true }).locator(`option[value=\"${a.id}\"]`)).toHaveCount(0);"
             },
             {
-              "line": 62,
-              "source": "await expect(dialog.getByLabel('関係の向き', { exact: true }).locator('option[value=\"symmetric\"]')).toBeDisabled();"
-            },
-            {
               "line": 63,
-              "source": "await expect(dialog).toContainText(evidence.name);"
+              "source": "await expect(symmetricOption).toHaveJSProperty('disabled', true);"
             },
             {
               "line": 64,
-              "source": "await expect(dialog.getByLabel('有効期間の開始', { exact: true })).toHaveValue('0');"
+              "source": "await expect(symmetricOption).toHaveAttribute('disabled', '');"
             },
             {
               "line": 65,
-              "source": "await expect(dialog.getByLabel('有効期間の終了', { exact: true })).toHaveValue('100');"
+              "source": "await expect(dialog).toContainText(evidence.name);"
+            },
+            {
+              "line": 66,
+              "source": "await expect(dialog.getByLabel('有効期間の開始', { exact: true })).toHaveValue('0');"
             },
             {
               "line": 67,
-              "source": "expect(await authorFingerprint(page)).toBe(before);"
+              "source": "await expect(dialog.getByLabel('有効期間の終了', { exact: true })).toHaveValue('100');"
             },
             {
               "line": 69,
+              "source": "expect(await authorFingerprint(page)).toBe(before);"
+            },
+            {
+              "line": 71,
               "source": "expect(unchanged.project.relations).toEqual(p.relations);"
             },
             {
-              "line": 70,
+              "line": 72,
               "source": "expect(unchanged.project.entities.find(entity => entity.id === membership.id)?.data).toEqual(membership.data);"
             },
             {
-              "line": 75,
+              "line": 77,
               "source": "await dialog.getByRole('button', { name: '関係を保存', exact: true }).click(); await expect(dialog).toHaveCount(0);"
             },
             {
-              "line": 77,
+              "line": 79,
               "source": "expect(saved.project.relations.find(row => row.id === ab.id)).toEqual(ab); expect(saved.project.relations.find(row => row.id === bc.id)).toEqual(bc);"
             },
             {
-              "line": 79,
+              "line": 81,
               "source": "expect(self).toHaveLength(1); expect(self[0]).toMatchObject({ relationType: 'reference', direction: 'forward' });"
             },
             {
-              "line": 80,
+              "line": 82,
               "source": "expect(saved.project.relations.filter(row => row.relationType === 'trust')).toHaveLength(2);"
             }
           ]
@@ -5684,8 +5703,8 @@
             {
               "file": "tests/e2e/ap04-original-f-graph.spec.ts",
               "line": 21,
-              "end_line": 83,
-              "excerpt_sha256": "b0634ccbfe8c251c38533032b38377150836ff6f322f1df8c33ca94c700ecefc"
+              "end_line": 85,
+              "excerpt_sha256": "cc7653d46cf2aa52f3db11abf5d585a0e0e9255fbea26aa530f1c2c2130b40e5"
             }
           ],
           "operation_and_assertion_details": "同一caseの authored_entries.normal_operations/assertions の実ソースを直接参照する。これは実行結果ではない。",
@@ -5702,8 +5721,8 @@
             {
               "file": "tests/e2e/ap04-original-f-graph.spec.ts",
               "line": 21,
-              "end_line": 83,
-              "excerpt_sha256": "b0634ccbfe8c251c38533032b38377150836ff6f322f1df8c33ca94c700ecefc"
+              "end_line": 85,
+              "excerpt_sha256": "cc7653d46cf2aa52f3db11abf5d585a0e0e9255fbea26aa530f1c2c2130b40e5"
             }
           ],
           "operation_and_assertion_details": "同一caseの authored_entries.normal_operations/assertions の実ソースを直接参照する。これは実行結果ではない。",
@@ -5720,8 +5739,8 @@
             {
               "file": "tests/e2e/ap04-original-f-graph.spec.ts",
               "line": 21,
-              "end_line": 83,
-              "excerpt_sha256": "b0634ccbfe8c251c38533032b38377150836ff6f322f1df8c33ca94c700ecefc"
+              "end_line": 85,
+              "excerpt_sha256": "cc7653d46cf2aa52f3db11abf5d585a0e0e9255fbea26aa530f1c2c2130b40e5"
             }
           ],
           "operation_and_assertion_details": "同一caseの authored_entries.normal_operations/assertions の実ソースを直接参照する。これは実行結果ではない。",
@@ -5738,8 +5757,8 @@
             {
               "file": "tests/e2e/ap04-original-f-graph.spec.ts",
               "line": 21,
-              "end_line": 83,
-              "excerpt_sha256": "b0634ccbfe8c251c38533032b38377150836ff6f322f1df8c33ca94c700ecefc"
+              "end_line": 85,
+              "excerpt_sha256": "cc7653d46cf2aa52f3db11abf5d585a0e0e9255fbea26aa530f1c2c2130b40e5"
             }
           ],
           "operation_and_assertion_details": "同一caseの authored_entries.normal_operations/assertions の実ソースを直接参照する。これは実行結果ではない。",
@@ -6661,136 +6680,136 @@
       "authored_entries": [
         {
           "file": "tests/e2e/ap04-original-f-graph.spec.ts",
-          "line": 84,
-          "end_line": 152,
+          "line": 86,
+          "end_line": 154,
           "title_source": "test('AT-F59 六種類が混在する図を種類/一段/二段/表へ切り替え、凡例・矢印・線種・非表示件数と全体復帰を確認する', async ({ page }, info) => {",
           "excerpt_sha256": "03cd251033dc1c12ee061d7dbfb8116ee649bfd2825b15358f3daad71f1ddc27",
           "source_excerpt": "test('AT-F59 六種類が混在する図を種類/一段/二段/表へ切り替え、凡例・矢印・線種・非表示件数と全体復帰を確認する', async ({ page }, info) => {\n  const p = createProject('AT-F59 意味の異なる関係図');\n  const a = createEntity(p.projectId, 'character', '公開人物A'), b = createEntity(p.projectId, 'character', '公開人物B'), secret = createEntity(p.projectId, 'character', 'SECRET_GRAPH_PERSON');\n  const first = createEntity(p.projectId, 'event', '原因の出来事'), second = createEntity(p.projectId, 'event', '結果の出来事');\n  const scene = createEntity(p.projectId, 'scene', '公開する根拠場面', { body: textToRichText('六種類の情報を区別する公開本文。'), eventIds: [first.id] });\n  const q = createEntity(p.projectId, 'foreshadow', '独立した伏線', { question: textToRichText('何が起きたか。') });\n  const clue = createEntity(p.projectId, 'disclosure', '伏線の手掛かり', { foreshadowId: q.id, anchor: { entityId: scene.id }, stage: 'hint', role: 'clue' }); q.data.clueIds = [clue.id];\n  const entry = createEntity(p.projectId, 'flow_node', '図の進行入口', { nodeType: 'entry', sceneId: scene.id }), end = createEntity(p.projectId, 'flow_node', '図の進行終端', { nodeType: 'terminal', terminalReason: '終える' });\n  const edge = createEntity(p.projectId, 'flow_edge', '進行の線', { fromId: entry.id, toId: end.id, label: '進行の線' });\n  const flow = createEntity(p.projectId, 'flow_graph', '図の分岐', { nodeIds: [entry.id, end.id], entryIds: [entry.id], exitIds: [end.id], edgeIds: [edge.id] });\n  const written = createEntity(p.projectId, 'production_task', '先行する執筆', { targetIds: [scene.id], stage: 'writing', progress: 'done' }), implementation = createEntity(p.projectId, 'production_task', '後続の実装', { targetIds: [scene.id], stage: 'implementation', progress: 'todo', dependsOn: [written.id] });\n  p.entities.push(a, b, secret, first, second, scene, q, clue, entry, end, edge, flow, written, implementation); p.entities.forEach(entity => { entity.status = 'confirmed'; });\n  const trust = relation(p, a.id, b.id, 'trust', [first.id]), causal = relation(p, first.id, second.id, 'causes', [first.id]), hidden = relation(p, secret.id, a.id, 'trust', [second.id]); p.relations = [trust, causal, hidden];\n  const publicBody = scene.data.body.map(block => ({ ...block, id: newId() }));\n  const policy = createEntity(p.projectId, 'projection_profile', '秘密の図を含めない公開範囲', { audience: 'reader', includedIds: [a.id, b.id, scene.id], publicTitle: '公開した範囲の資料', namePolicy: { byEntityId: { [a.id]: { mode: 'replace', replacement: a.name }, [b.id]: { mode: 'replace', replacement: b.name }, [scene.id]: { mode: 'replace', replacement: scene.name } } }, publicTexts: { [scene.id]: { body: publicBody } }, blockSources: Object.fromEntries(publicBody.map((block, index) => [block.id, scene.data.body[index].id])), allowedRelationIds: [trust.id] }); policy.status = 'confirmed'; p.entities.push(policy);\n  const bytes = await exportScenario(p);\n  await attachGiven(info, 'AT-F59', bytes, { categories: ['characters', 'causal', 'foreshadow', 'progress', 'reference', 'production'], relationIds: [trust.id, causal.id, hidden.id], sceneId: scene.id, disclosureId: clue.id, flowEdgeId: edge.id, dependencyIds: [written.id, implementation.id], privateId: secret.id, publicProfileId: policy.id });\n  await seed(page, bytes); const panel = await graph(page);\n  const before = await authorFingerprint(page);\n  for (const category of ['characters', 'causal', 'foreshadow', 'progress', 'reference', 'production']) {\n    await panel.getByLabel('図の意味を選択', { exact: true }).selectOption(category);\n    await panel.getByLabel('中心にする情報', { exact: true }).selectOption('');\n    await expect(panel.locator('.world-graph-scope')).toContainText(/表示 \\d+項目・[1-9]\\d*線.*非表示 \\d+線/);\n    await expect(panel.locator('.world-graph-legend')).toContainText('実線：保存された関係');\n    await expect(panel.locator('.world-graph-legend')).toContainText('破線：元情報からの参照');\n    await expect(panel.locator('.world-graph-legend')).toContainText('→ 一方向');\n    await expect(panel.locator('.world-graph-legend')).toContainText('←→ 対称');\n  }\n  await panel.getByLabel('図の意味を選択', { exact: true }).selectOption('all');\n  await panel.getByLabel('中心にする情報', { exact: true }).selectOption(scene.id);\n  await panel.getByLabel('関係の表示範囲', { exact: true }).selectOption('1');\n  const one = await panel.locator('.world-graph-scope').innerText();\n  await panel.getByLabel('関係の表示範囲', { exact: true }).selectOption('2');\n  const two = await panel.locator('.world-graph-scope').innerText(); expect(two).not.toBe(one);\n  await panel.getByRole('button', { name: '関係表', exact: true }).click();\n  await expect(panel.locator('.world-relation-meaning').first()).toContainText('→ 一方向');\n  await panel.getByLabel('中心にする情報', { exact: true }).selectOption('');\n  await panel.getByLabel('関係を検索', { exact: true }).fill('');\n  await expect(panel.locator('.world-graph-scope')).toContainText('非表示 0線');\n  await panel.getByRole('button', { name: '関係図', exact: true }).click();\n  const manual = panel.getByRole('button', { name: `${a.name}から${b.name}へ、信頼、関係を編集`, exact: true });\n  await expect(manual).toHaveAttribute('aria-controls', /.+/); await expect.poll(() => manual.evaluate(control => { const path = document.getElementById(control.getAttribute('aria-controls')!); return { sameDiagram: path?.closest('svg') === control.closest('svg'), arrows: path?.querySelectorAll('line[marker-end]').length, markerEnd: path?.querySelector('line[marker-end]')?.getAttribute('marker-end') }; })).toEqual({ sameDiagram: true, arrows: 1, markerEnd: 'url(#world-relation-arrow)' });\n  const derived = panel.getByRole('button', { name: `${entry.name}から${end.name}へ、choice · ${edge.name}、元情報を確認`, exact: true });\n  await expect(derived).toHaveAttribute('aria-controls', /.+/); await expect.poll(() => derived.evaluate(control => { const path = document.getElementById(control.getAttribute('aria-controls')!); return { sameDiagram: path?.closest('svg') === control.closest('svg'), dashedLines: path?.querySelectorAll('line[stroke-dasharray=\"8 5\"]').length, arrows: path?.querySelectorAll('line[marker-end]').length }; })).toEqual({ sameDiagram: true, dashedLines: 1, arrows: 1 });\n  await derived.click();\n  const origin = page.getByRole('dialog', { name: '元情報からの関係', exact: true });\n  await expect(origin).toContainText(`元情報：${edge.name} · data.toId`);\n  await origin.getByRole('button', { name: '元情報を編集', exact: true }).click();\n  await expect(origin).toHaveCount(0); await expect(page.locator('.detail-panel h2')).toHaveText(edge.name);\n  const identity = page.locator('.detail-panel details').filter({ has: page.locator('summary').filter({ hasText: 'IDと履歴情報' }) });\n  if ((await identity.getAttribute('open')) === null) await identity.locator('summary').click();\n  await expect(identity.locator('.record-meta dd').first()).toHaveText(edge.id);\n  await page.locator('.detail-panel').getByRole('button', { name: '詳細を閉じる', exact: true }).click();\n  await graph(page); await expect(panel.locator('.world-graph-scope')).toContainText('非表示 0線');\n  expect(await authorFingerprint(page)).toBe(before);\n  await navigate(page, /^作品・保存/); await page.getByRole('tab', { name: '目的別出力', exact: true }).click();\n  await page.getByLabel('出力する公開範囲', { exact: true }).selectOption(policy.id);\n  await page.getByLabel('出力目的', { exact: true }).selectOption('reader');\n  await page.getByLabel('本文の出力形式', { exact: true }).selectOption('html');\n  await page.getByRole('button', { name: '内容を検査・プレビュー', exact: true }).click();\n  await expect(page.locator('.export-artifact')).toHaveCount(1);\n  const pending = page.waitForEvent('download'); await page.locator('.export-artifact').getByRole('button', { name: 'この内容を保存', exact: true }).click();\n  const html = await readFile((await (await pending).path())!, 'utf8');\n  expect(html).toContain(scene.data.body[0].text); expect(html).not.toContain(secret.name); expect(html).not.toContain(secret.id); expect(html).not.toMatch(/非表示\\s*\\d+線/);\n  expect(await authorFingerprint(page)).toBe(before);\n  await page.reload(); const saved = await backup(page);\n  expect(saved.project.entities).toEqual(p.entities); expect(saved.project.relations).toEqual(p.relations);\n  await attachObservation(info, 'AT-F59-observed', { categories: ['characters', 'causal', 'foreshadow', 'progress', 'reference', 'production'], oneHopScope: one, twoHopScope: two, returnedToAll: true, openedActualOriginId: edge.id, nonColorLegendAndLineStylesObserved: true, authorDataUnchanged: true, privateNameIdAndCountsAbsentFromPublicFile: true, revision: saved.project.revision });\n});\n",
           "normal_operations": [
             {
-              "line": 101,
+              "line": 103,
               "source": "await seed(page, bytes); const panel = await graph(page);"
             },
             {
-              "line": 132,
+              "line": 134,
               "source": "await expect(origin).toHaveCount(0); await expect(page.locator('.detail-panel h2')).toHaveText(edge.name);"
             },
             {
-              "line": 136,
+              "line": 138,
               "source": "await page.locator('.detail-panel').getByRole('button', { name: '詳細を閉じる', exact: true }).click();"
             },
             {
-              "line": 137,
+              "line": 139,
               "source": "await graph(page); await expect(panel.locator('.world-graph-scope')).toContainText('非表示 0線');"
             },
             {
-              "line": 139,
+              "line": 141,
               "source": "await navigate(page, /^作品・保存/); await page.getByRole('tab', { name: '目的別出力', exact: true }).click();"
             },
             {
-              "line": 140,
+              "line": 142,
               "source": "await page.getByLabel('出力する公開範囲', { exact: true }).selectOption(policy.id);"
             },
             {
-              "line": 141,
+              "line": 143,
               "source": "await page.getByLabel('出力目的', { exact: true }).selectOption('reader');"
             },
             {
-              "line": 142,
+              "line": 144,
               "source": "await page.getByLabel('本文の出力形式', { exact: true }).selectOption('html');"
             },
             {
-              "line": 143,
+              "line": 145,
               "source": "await page.getByRole('button', { name: '内容を検査・プレビュー', exact: true }).click();"
             },
             {
-              "line": 144,
+              "line": 146,
               "source": "await expect(page.locator('.export-artifact')).toHaveCount(1);"
             },
             {
-              "line": 145,
+              "line": 147,
               "source": "const pending = page.waitForEvent('download'); await page.locator('.export-artifact').getByRole('button', { name: 'この内容を保存', exact: true }).click();"
             },
             {
-              "line": 149,
+              "line": 151,
               "source": "await page.reload(); const saved = await backup(page);"
             }
           ],
           "assertions": [
             {
-              "line": 106,
+              "line": 108,
               "source": "await expect(panel.locator('.world-graph-scope')).toContainText(/表示 \\d+項目・[1-9]\\d*線.*非表示 \\d+線/);"
             },
             {
-              "line": 107,
+              "line": 109,
               "source": "await expect(panel.locator('.world-graph-legend')).toContainText('実線：保存された関係');"
             },
             {
-              "line": 108,
+              "line": 110,
               "source": "await expect(panel.locator('.world-graph-legend')).toContainText('破線：元情報からの参照');"
             },
             {
-              "line": 109,
+              "line": 111,
               "source": "await expect(panel.locator('.world-graph-legend')).toContainText('→ 一方向');"
             },
             {
-              "line": 110,
+              "line": 112,
               "source": "await expect(panel.locator('.world-graph-legend')).toContainText('←→ 対称');"
             },
             {
-              "line": 117,
+              "line": 119,
               "source": "const two = await panel.locator('.world-graph-scope').innerText(); expect(two).not.toBe(one);"
             },
             {
-              "line": 119,
+              "line": 121,
               "source": "await expect(panel.locator('.world-relation-meaning').first()).toContainText('→ 一方向');"
             },
             {
-              "line": 122,
+              "line": 124,
               "source": "await expect(panel.locator('.world-graph-scope')).toContainText('非表示 0線');"
             },
             {
-              "line": 125,
+              "line": 127,
               "source": "await expect(manual).toHaveAttribute('aria-controls', /.+/); await expect.poll(() => manual.evaluate(control => { const path = document.getElementById(control.getAttribute('aria-controls')!); return { sameDiagram: path?.closest('svg') === control.closest('svg'), arrows: path?.querySelectorAll('line[marker-end]').length, markerEnd: path?.querySelector('line[marker-end]')?.getAttribute('marker-end') }; })).toEqual({ sameDiagram: true, arrows: 1, markerEnd: 'url(#world-relation-arrow)' });"
             },
             {
-              "line": 127,
+              "line": 129,
               "source": "await expect(derived).toHaveAttribute('aria-controls', /.+/); await expect.poll(() => derived.evaluate(control => { const path = document.getElementById(control.getAttribute('aria-controls')!); return { sameDiagram: path?.closest('svg') === control.closest('svg'), dashedLines: path?.querySelectorAll('line[stroke-dasharray=\"8 5\"]').length, arrows: path?.querySelectorAll('line[marker-end]').length }; })).toEqual({ sameDiagram: true, dashedLines: 1, arrows: 1 });"
             },
             {
-              "line": 130,
+              "line": 132,
               "source": "await expect(origin).toContainText(`元情報：${edge.name} · data.toId`);"
             },
             {
-              "line": 132,
+              "line": 134,
               "source": "await expect(origin).toHaveCount(0); await expect(page.locator('.detail-panel h2')).toHaveText(edge.name);"
             },
             {
-              "line": 135,
+              "line": 137,
               "source": "await expect(identity.locator('.record-meta dd').first()).toHaveText(edge.id);"
             },
             {
-              "line": 137,
+              "line": 139,
               "source": "await graph(page); await expect(panel.locator('.world-graph-scope')).toContainText('非表示 0線');"
             },
             {
-              "line": 138,
+              "line": 140,
               "source": "expect(await authorFingerprint(page)).toBe(before);"
             },
             {
-              "line": 144,
+              "line": 146,
               "source": "await expect(page.locator('.export-artifact')).toHaveCount(1);"
             },
             {
-              "line": 147,
+              "line": 149,
               "source": "expect(html).toContain(scene.data.body[0].text); expect(html).not.toContain(secret.name); expect(html).not.toContain(secret.id); expect(html).not.toMatch(/非表示\\s*\\d+線/);"
             },
             {
-              "line": 148,
+              "line": 150,
               "source": "expect(await authorFingerprint(page)).toBe(before);"
             },
             {
-              "line": 150,
+              "line": 152,
               "source": "expect(saved.project.entities).toEqual(p.entities); expect(saved.project.relations).toEqual(p.relations);"
             }
           ]
@@ -6809,8 +6828,8 @@
           "source_entry_refs": [
             {
               "file": "tests/e2e/ap04-original-f-graph.spec.ts",
-              "line": 84,
-              "end_line": 152,
+              "line": 86,
+              "end_line": 154,
               "excerpt_sha256": "03cd251033dc1c12ee061d7dbfb8116ee649bfd2825b15358f3daad71f1ddc27"
             }
           ],
@@ -6827,8 +6846,8 @@
           "source_entry_refs": [
             {
               "file": "tests/e2e/ap04-original-f-graph.spec.ts",
-              "line": 84,
-              "end_line": 152,
+              "line": 86,
+              "end_line": 154,
               "excerpt_sha256": "03cd251033dc1c12ee061d7dbfb8116ee649bfd2825b15358f3daad71f1ddc27"
             }
           ],
@@ -6845,8 +6864,8 @@
           "source_entry_refs": [
             {
               "file": "tests/e2e/ap04-original-f-graph.spec.ts",
-              "line": 84,
-              "end_line": 152,
+              "line": 86,
+              "end_line": 154,
               "excerpt_sha256": "03cd251033dc1c12ee061d7dbfb8116ee649bfd2825b15358f3daad71f1ddc27"
             }
           ],
@@ -6863,8 +6882,8 @@
           "source_entry_refs": [
             {
               "file": "tests/e2e/ap04-original-f-graph.spec.ts",
-              "line": 84,
-              "end_line": 152,
+              "line": 86,
+              "end_line": 154,
               "excerpt_sha256": "03cd251033dc1c12ee061d7dbfb8116ee649bfd2825b15358f3daad71f1ddc27"
             }
           ],

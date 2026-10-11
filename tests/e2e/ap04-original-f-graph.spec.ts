@@ -59,7 +59,9 @@ test('AT-F55 B中心でAからの信頼を逆側から表示し、期間/経路�
   await expect(panel.getByRole('button', { name: `${a.name}から${c.name}へ、信頼、関係を編集`, exact: true })).toHaveCount(0);
   await arrow.click(); const dialog = page.getByRole('dialog', { name: '意味付きの関係を編集', exact: true });
   await expect(dialog.getByLabel('関係の終点', { exact: true }).locator(`option[value="${a.id}"]`)).toHaveCount(0);
-  await expect(dialog.getByLabel('関係の向き', { exact: true }).locator('option[value="symmetric"]')).toBeDisabled();
+  const symmetricOption = dialog.getByLabel('関係の向き', { exact: true }).locator('option[value="symmetric"]');
+  await expect(symmetricOption).toHaveJSProperty('disabled', true);
+  await expect(symmetricOption).toHaveAttribute('disabled', '');
   await expect(dialog).toContainText(evidence.name);
   await expect(dialog.getByLabel('有効期間の開始', { exact: true })).toHaveValue('0');
   await expect(dialog.getByLabel('有効期間の終了', { exact: true })).toHaveValue('100');

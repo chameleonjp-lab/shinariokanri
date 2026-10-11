@@ -4,7 +4,8 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { strFromU8, strToU8, unzipSync, zipSync } from 'fflate';
 import type { Block, Condition, Entity, ProjectData } from '../../src/domain/types';
 import type { ScenarioManifest } from '../../src/storage/archiveData';
-import { ARCHIVE_LIMITS } from '../../src/storage/json';
+import { ARCHIVE_LIMITS, equalJson } from '../../src/storage/json';
+import { unpackRecordData, type PackedRecord, type RecordPart } from '../../src/storage/recordPartsCore';
 
 // All expensive work is inside buildBoundaryFile, invoked only by a browser test.
 // No limits override, forged signature, dishonest size, or detached ZIP padding.
@@ -249,23 +250,113 @@ export async function restoreBoundaryFile(page: Page, file: BoundaryFile) {
   await expect(page.getByRole('dialog', { name: '作品ファイルを読み込む', exact: true })).toHaveCount(0, { timeout: 300_000 });
 }
 
-/** Read only native committed counts and each real asset. No import hook. */
+type SerializedNativePart = Omit<RecordPart, 'bytes'> & { bytes: number[] };
+interface CapturedNativeRecord {
+  row: Record<string, unknown>;
+  indexPaths: string[];
+  parts: SerializedNativePart[];
+}
+
+const nativeObject = (value: unknown): value is Record<string, unknown> => !!value && typeof value === 'object' && !Array.isArray(value);
+function requirePackedRecord(value: unknown): asserts value is PackedRecord {
+  const atom = (entry: unknown) => entry === null || typeof entry === 'boolean' || typeof entry === 'number' && Number.isSafeInteger(entry)
+    || nativeObject(entry) && Object.keys(entry).length === 1 && (Object.hasOwn(entry, 'undefined') && entry.undefined === true || Object.hasOwn(entry, 'number') && typeof entry.number === 'number' && Number.isFinite(entry.number));
+  if (!nativeObject(value) || value.version !== 1 || typeof value.scope !== 'string' || !value.scope
+    || typeof value.nodes !== 'number' || !Number.isSafeInteger(value.nodes) || value.nodes < 0 || typeof value.strings !== 'number' || !Number.isSafeInteger(value.strings) || value.strings < 0
+    || !Object.hasOwn(value, 'root') || !atom(value.root) || !Array.isArray(value.parts)
+    || value.parts.some(part => !nativeObject(part) || typeof part.key !== 'string' || !part.key || part.kind !== 'strings' && part.kind !== 'nodes'
+      || typeof part.bytes !== 'number' || !Number.isSafeInteger(part.bytes) || part.bytes < 0 || typeof part.sha256 !== 'string' || !/^[a-f0-9]{64}$/.test(part.sha256))) {
+    throw Error('Committed split-record descriptor is malformed');
+  }
+}
+
+/** Decode only the native row and referenced parts captured on one read snapshot. */
+async function decodeCommittedNative(capture: CapturedNativeRecord, label: string) {
+  const marker = '__scenarioRecordParts';
+  if (!Object.hasOwn(capture.row, marker)) {
+    if (capture.parts.length) throw Error(`${label}: legacy row unexpectedly has split parts`);
+    return capture.row;
+  }
+  const packed = capture.row[marker];
+  requirePackedRecord(packed);
+  // Uint8Array construction happens after capture, outside IndexedDB. The real
+  // decoder checks every part's key/scope/order/size/hash and the whole graph.
+  const parts: RecordPart[] = capture.parts.map(part => {
+    if (!Array.isArray(part.bytes) || part.bytes.some(byte => !Number.isInteger(byte) || byte < 0 || byte > 255)) throw Error(`${label}: malformed captured bytes`);
+    return { ...part, bytes: new Uint8Array(part.bytes) };
+  });
+  const decoded = await unpackRecordData(packed, parts);
+  if (!nativeObject(decoded) || Object.hasOwn(decoded, marker)) throw Error(`${label}: invalid decoded native row`);
+  const indexed: Record<string, unknown> = { [marker]: packed };
+  for (const path of capture.indexPaths) {
+    if (!path || path.includes('.')) throw Error(`${label}: unsupported native index path`);
+    if (Object.hasOwn(decoded, path)) indexed[path] = decoded[path];
+  }
+  if (!equalJson(indexed, capture.row)) throw Error(`${label}: split record and native indexes differ`);
+  return decoded;
+}
+
+/** Read only native committed counts, referenced split bytes and each real asset. No import hook. */
 export async function committedBoundary(page: Page, file: BoundaryFile) {
-  return page.evaluate(async input => {
+  const captured = await page.evaluate(async input => {
     const db = await new Promise<IDBDatabase>((resolve, reject) => {
       const request = indexedDB.open('scenario-manager-local-v1'); request.onsuccess = () => resolve(request.result); request.onerror = () => reject(request.error);
     });
     const read = <T>(request: IDBRequest<T>) => new Promise<T>((resolve, reject) => { request.onsuccess = () => resolve(request.result); request.onerror = () => reject(request.error); });
+    const object = (value: unknown): value is Record<string, unknown> => !!value && typeof value === 'object' && !Array.isArray(value);
     try {
-      const tx = db.transaction(['projects', 'entities', 'relations', 'snapshots', 'views', 'worlds', 'blocks'], 'readonly');
-      const result = await Promise.all([
-        read(tx.objectStore('projects').get(input.project.id)),
-        ...['entities', 'relations', 'snapshots', 'views'].map(name => read(tx.objectStore(name).index('projectId').count(input.project.id))),
+      const tables = ['projects', 'entities', 'relations', 'snapshots', 'views', 'worlds', 'blocks'];
+      if (db.objectStoreNames.contains('recordParts')) tables.push('recordParts');
+      const tx = db.transaction(tables, 'readonly');
+      const complete = new Promise<void>((resolve, reject) => {
+        tx.oncomplete = () => resolve(); tx.onabort = () => reject(tx.error ?? Error('Native observation transaction aborted'));
+        tx.onerror = () => reject(tx.error ?? Error('Native observation transaction failed'));
+      });
+      // Schedule part GETs directly inside the native row's success callback.
+      // No asynchronous digest or worker can let this read snapshot expire.
+      const capture = (table: 'projects' | 'entities', key: IDBValidKey) => new Promise<CapturedNativeRecord>((resolve, reject) => {
+        const store = tx.objectStore(table), request = store.get(key);
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => {
+          const row: unknown = request.result;
+          if (!object(row)) { reject(Error(`Committed ${table} row is missing or malformed`)); return; }
+          const paths: string[] = [];
+          for (const keyPath of [store.keyPath, ...[...store.indexNames].map(name => store.index(name).keyPath)]) {
+            if (typeof keyPath === 'string') paths.push(keyPath);
+            else if (Array.isArray(keyPath) && keyPath.every(path => typeof path === 'string')) paths.push(...keyPath);
+            else { reject(Error(`Committed ${table} has an unsupported native index`)); return; }
+          }
+          const indexPaths = [...new Set(paths)], descriptor = row.__scenarioRecordParts;
+          if (!Object.hasOwn(row, '__scenarioRecordParts')) { resolve({ row, indexPaths, parts: [] }); return; }
+          if (!object(descriptor) || !Array.isArray(descriptor.parts) || !db.objectStoreNames.contains('recordParts')) { reject(Error('Committed split-record descriptor or table is missing')); return; }
+          const keys: string[] = [];
+          for (const part of descriptor.parts) {
+            if (!object(part) || typeof part.key !== 'string' || !part.key) { reject(Error('Committed split-record reference is malformed')); return; }
+            keys.push(part.key);
+          }
+          if (new Set(keys).size !== keys.length) { reject(Error('Committed split-record references are duplicated')); return; }
+          const reads = keys.map(partKey => new Promise<SerializedNativePart>((resolvePart, rejectPart) => {
+            const partRequest = tx.objectStore('recordParts').get(partKey);
+            partRequest.onerror = () => rejectPart(partRequest.error);
+            partRequest.onsuccess = () => {
+              const part: unknown = partRequest.result;
+              if (!object(part) || part.key !== partKey || typeof part.scope !== 'string' || typeof part.sequence !== 'number'
+                || !Number.isSafeInteger(part.sequence) || part.sequence < 0 || part.kind !== 'strings' && part.kind !== 'nodes'
+                || typeof part.sha256 !== 'string' || !(part.bytes instanceof Uint8Array)) { rejectPart(Error(`Committed split-record part missing or malformed: ${partKey}`)); return; }
+              resolvePart({ ...part, key: part.key, scope: part.scope, sequence: part.sequence, kind: part.kind, sha256: part.sha256, bytes: [...part.bytes] });
+            };
+          }));
+          void Promise.all(reads).then(parts => resolve({ row, indexPaths, parts }), reject);
+        };
+      });
+      const observation = Promise.all([
+        capture('projects', input.project.id),
+        Promise.all(['entities', 'relations', 'snapshots', 'views'].map(name => read(tx.objectStore(name).index('projectId').count(input.project.id)))),
         read(tx.objectStore('worlds').getAllKeys()),
-        ...input.addedNoteBlocks.map(note => read(tx.objectStore('blocks').index('[projectId+entityId]').count([input.project.id, note.entityId]))),
-        ...(input.addedGroups.lastId ? [read(tx.objectStore('entities').get([input.project.id, input.addedGroups.lastId]))] : []),
-      ]);
-      const header = result[0] as { projectId: string; name: string; entityIds: string[]; relationIds: string[] } | undefined;
+        Promise.all(input.addedNoteBlocks.map(note => read(tx.objectStore('blocks').index('[projectId+entityId]').count([input.project.id, note.entityId])))),
+        input.addedGroups.lastId ? capture('entities', [input.project.id, input.addedGroups.lastId]) : Promise.resolve(undefined),
+      ] as const);
+      const [[nativeHeader, counts, worldIds, noteBlocks, nativeGroup]] = await Promise.all([observation, complete]);
       const assets: { contentHash: string; bytes: number; mediaType: string; actualHash: string }[] = [];
       for (const asset of input.assets) {
         const stored = await read(db.transaction('assets', 'readonly').objectStore('assets').get(asset.contentHash)) as { contentHash: string; bytes: Uint8Array; mediaType: string } | undefined;
@@ -273,13 +364,56 @@ export async function committedBoundary(page: Page, file: BoundaryFile) {
         const digest = await crypto.subtle.digest('SHA-256', new Uint8Array(stored.bytes));
         assets.push({ contentHash: stored.contentHash, bytes: stored.bytes.byteLength, mediaType: stored.mediaType, actualHash: [...new Uint8Array(digest)].map(byte => byte.toString(16).padStart(2, '0')).join('') });
       }
-      const group = input.addedGroups.lastId ? result.at(-1) as { id: string; kind: string; record: { name: string; data: { groupType: string } } } | undefined : undefined;
-      return { header: header && { id: header.projectId, name: header.name, entities: header.entityIds.length, relations: header.relationIds.length },
-        entities: result[1], relations: result[2], snapshots: result[3], views: result[4], worldIds: result[5],
-        noteBlocks: result.slice(6, 6 + input.addedNoteBlocks.length), assets,
-        lastGroup: group && { id: group.id, kind: group.kind, name: group.record.name, groupType: group.record.data.groupType } };
+      return { header: nativeHeader,
+        entities: counts[0], relations: counts[1], snapshots: counts[2], views: counts[3], worldIds,
+        noteBlocks, assets, group: nativeGroup };
     } finally { db.close(); }
   }, file);
+  // Bind the complete committed header ID sequences to the actual retained
+  // fixture ZIP. Inflate only project.json, not any large asset or world.
+  const sourceBytes = new Uint8Array(await readFile(file.path));
+  expect(sourceBytes.byteLength, 'actual boundary archive size').toBe(file.bytes);
+  const sourceArchiveHash = sha256(sourceBytes);
+  expect(sourceArchiveHash, 'actual boundary archive SHA').toBe(file.sha256);
+  const sourceData = unzipSync(sourceBytes, { filter: entry => entry.name === 'data/project.json' })['data/project.json'];
+  if (!sourceData) throw Error('Actual boundary archive lacks project.json');
+  const sourceProject: unknown = JSON.parse(strFromU8(sourceData));
+  if (!nativeObject(sourceProject) || sourceProject.projectId !== file.project.id || sourceProject.name !== file.project.name) throw Error('Actual boundary project identity differs from its fixture metadata');
+  // Keep exactly the original native counts/keys; never derive a fallback count.
+  const header = await decodeCommittedNative(captured.header, 'projects');
+  if (header.projectId !== file.project.id || header.name !== file.project.name) throw Error('Committed project identity differs from its actual fixture');
+  const lists: Record<'entities' | 'relations' | 'snapshots' | 'views', string[]> = { entities: [], relations: [], snapshots: [], views: [] };
+  for (const [key, field] of [['entities', 'entityIds'], ['relations', 'relationIds'], ['snapshots', 'snapshotIds'], ['views', 'viewIds']] as const) {
+    const ids = header[field];
+    if (!Array.isArray(ids) || ids.some(id => typeof id !== 'string' || !id) || new Set(ids).size !== ids.length) throw Error(`Committed ${field} are missing, malformed or duplicated`);
+    if (ids.length !== file.project[key] || typeof captured[key] !== 'number' || captured[key] !== ids.length) throw Error(`Committed ${field} do not match all native records`);
+    const records = sourceProject[key];
+    if (!Array.isArray(records)) throw Error(`Actual boundary archive lacks ${key}`);
+    const expectedIds = records.map(record => {
+      if (!nativeObject(record) || typeof record.id !== 'string' || !record.id) throw Error(`Actual boundary ${key} record ID is malformed`);
+      return record.id;
+    });
+    if (new Set(expectedIds).size !== expectedIds.length) throw Error(`Actual boundary ${key} IDs are duplicated`);
+    expect(ids, `complete ${field} sequence from actual fixture ZIP`).toEqual(expectedIds);
+    lists[key] = ids;
+  }
+  let group: Record<string, unknown> | undefined;
+  if (file.addedGroups.lastId) {
+    if (!captured.group) throw Error('Committed final group capture is missing');
+    group = await decodeCommittedNative(captured.group, 'entities final group');
+    if (group.id !== file.addedGroups.lastId || group.projectId !== file.project.id || group.kind !== 'group' || !nativeObject(group.record)
+      || group.record.id !== group.id || group.record.projectId !== group.projectId || group.record.kind !== group.kind
+      || group.record.name !== file.addedGroups.lastName || !nativeObject(group.record.data) || group.record.data.groupType !== 'category') throw Error('Committed final group differs from its actual fixture');
+  }
+  const groupRecord = group && nativeObject(group.record) ? group.record : undefined;
+  const groupData = groupRecord && nativeObject(groupRecord.data) ? groupRecord.data : undefined;
+  return { header: { id: header.projectId, name: header.name, entities: lists.entities.length, relations: lists.relations.length },
+    entities: captured.entities, relations: captured.relations, snapshots: captured.snapshots, views: captured.views, worldIds: captured.worldIds,
+    noteBlocks: captured.noteBlocks, assets: captured.assets,
+    lastGroup: group && { id: group.id, kind: group.kind, name: groupRecord!.name, groupType: groupData!.groupType },
+    nativeRecords: { header: captured.header, lastGroup: captured.group,
+      sourceArchive: { path: file.path, bytes: sourceBytes.byteLength, sha256: sourceArchiveHash, projectJsonSha256: sha256(sourceData) },
+      idSequencesSha256: Object.fromEntries(Object.entries(lists).map(([key, ids]) => [key, sha256(strToU8(JSON.stringify(ids)))])) } };
 }
 
 /** Snapshot every author/sync table, including binary bytes and split records. */
