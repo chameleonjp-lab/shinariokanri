@@ -1,7 +1,9 @@
 import type { CommandRecord, ProjectContent, ProjectData } from '../domain/types';
-import { ID_PATTERN, validateProject } from '../domain/model';
-import { validateProjectIntegrity } from '../domain/projectRecordValidation';
-import { equalJson, isValidUnicode, jsonBytes, sha256 } from './json';
+import { ID_PATTERN } from '../domain/model';
+import { createProjectValidationSession } from '../domain/projectRecordValidation';
+import { captureImmutablePlainData } from '../domain/immutablePlainData';
+import { createSharedArrayJsonEncoder } from './sharedArrayJson';
+import { equalJson, isValidUnicode, sha256 } from './json';
 import { checkCancelled, StorageError } from './errors';
 
 /** Portable pending intents are retained without account credentials or permission claims. */
@@ -142,19 +144,25 @@ export async function validateRecovery(input: unknown, project: ProjectData, wor
   if (!input || typeof input !== 'object' || Array.isArray(input)) return invalid('送信待ち復元情報はオブジェクトです。');
   const raw = input as Record<string, unknown>;
   if (Object.keys(raw).some(key => !['version', 'projectId', 'sourceRevision', 'serverRevision', 'pending'].includes(key)) || raw.version !== 1 || raw.projectId !== project.projectId || raw.sourceRevision !== project.revision || typeof raw.serverRevision !== 'string' || !/^(0|[1-9]\d*)$/.test(raw.serverRevision) || !Array.isArray(raw.pending) || raw.pending.length > 100_000) return invalid('送信待ち復元情報の版・作品・基底版・件数が不正です。');
-  const recovery = structuredClone(input) as PortableRecovery, seen = new Set<string>();
+  const captured = captureImmutablePlainData(input);
+  const recovery = (captured.captured ? captured.value : structuredClone(input)) as PortableRecovery, seen = new Set<string>();
+  const commandBytes = createSharedArrayJsonEncoder();
+  const validation = createProjectValidationSession({ worldSnapshots: worlds });
   for (const item of recovery.pending) {
     checkCancelled(signal);
     if (!item || typeof item !== 'object' || Object.keys(item).some(key => !['operationId', 'command', 'commandHash', 'origin'].includes(key)) || !ID_PATTERN.test(item.operationId) || seen.has(item.operationId) || typeof item.commandHash !== 'string' || !/^[0-9a-f]{64}$/.test(item.commandHash)) return invalid('送信待ちの操作IDまたはhashが不正・重複しています。');
     if ('origin' in item && (!item.origin || typeof item.origin !== 'object' || Array.isArray(item.origin) || Object.keys(item.origin).some(key => !['projectId', 'operationId', 'serverRevision'].includes(key)) || !ID_PATTERN.test(item.origin.projectId) || !ID_PATTERN.test(item.origin.operationId) || !/^(0|[1-9]\d*)$/.test(item.origin.serverRevision))) return invalid('送信待ちの元操作の記録が不正です。');
     seen.add(item.operationId);
-    if (!item.command || item.command.operationId !== item.operationId || item.command.projectId !== project.projectId || await sha256(jsonBytes(item.command)) !== item.commandHash) return invalid('送信待ち操作の内容が固定したhashと一致しません。');
+    if (!item.command || item.command.operationId !== item.operationId || item.command.projectId !== project.projectId || await sha256(commandBytes(item.command)) !== item.commandHash) return invalid('送信待ち操作の内容が固定したhashと一致しません。');
     const recordProject = { ...item.command.after, history: [item.command] };
-    const validation = validateProject(recordProject, { worldSnapshots: worlds }); if (!validation.ok) return invalid(validation.issues.map(issue => `${issue.path}: ${issue.message}`).join('\n'));
+    const result = validation.validate(recordProject); if (!result.ok) return invalid(result.issues.map(issue => `${issue.path}: ${issue.message}`).join('\n'));
     for (const image of recoveryImages({ ...recovery, pending: [item] })) {
-      const issues = await validateProjectIntegrity(image, { worldSnapshots: worlds }, false); if (issues.length) return invalid(issues.map(issue => issue.message).join('\n'));
+      const issues = await validation.integrity(image, false); if (issues.length) return invalid(issues.map(issue => issue.message).join('\n'));
     }
   }
   projectWithRecoveryHistory(project, recovery);
-  return recovery;
+  // Private validation proofs never change the existing editable recovery
+  // result. Callers may inspect/correct or deliberately forge a copy for a
+  // negative import check; they cannot mutate the captured proof graph.
+  return structuredClone(recovery);
 }
