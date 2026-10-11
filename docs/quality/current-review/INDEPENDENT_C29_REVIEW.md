@@ -1,0 +1,65 @@
+# C29の独立照合と残る受入条件
+
+現在結果は、元33境界＋固定Large2の実成功、原28ケース112節の局所wholeと部分ケース54節、計166節を独立照合済み。全116ケース/464節と実機・実権限・工程の最終完成は保留する。下記の64節等の途中件数は、その時点の歴史的照合記録として保持する。
+
+小規模通常の閉鎖した第1残り実行は15成功/22失敗/12時間切れ/1取消/74未実行、第4実行は12成功/11失敗/2時間切れ/1取消/83未実行。元の実入力・trace・終了code・441入力/73helper・封印を保持し、不正な肯定fixtureや古い私有selector/ACK待ちの手順を訂正した別実行で再確認する。部品成功や手順訂正から全ケース成功を推定しない。第4loopは17:46:47.670〜19:47:53.593 UTCの実7265.923秒、112編集・112保存画像/素材bytes照合・22オフラインcoldを実行した。その後の最終完全保存downloadは元600000msでtimeoutし、processは19:57:55.482609 UTC/exit1で閉鎖した。完全ファイルは未観測、最終空環境復元は未実行であり、N04/E11/回帰群の完成へ換算しない。raw SHA256 `5f3ab04a71bf25bb254aabea542f7e28953b0d39adb5ebbb6435e87490e13c94`、441入力/HEAD/tree不変を保持した。実helperが最終画面/alert/progressを捕捉していないため原因は未確定。別の113履歴の短い診断で保存進捗・画面・具体的拒否を確認し、2時間の成功へ転用しない。
+
+下記の各途中記録はその観測時点の履歴である。旧FAILや準備失敗を現在の成功へ書き換えない。
+
+閉鎖した通常5ケースの原句レビューsealはSHA256 `f7324727f12478e07ba59b53d267359bfda93c94668de1ff799144e9c858f1a1`、F39/F41は `374d83b7a7998ce236d3d44bdf6ffb05f22684c7af28298a72f6e2a4e61b13ff`。同fixtureの元4節を実UI・保存trace・cold・実完全new/clone・厳密拒否へ照合し、計7ケース28節の局所成立を記録した。B11の既関連を同じ値で選んだ観測だけでは新しい関連付け保存を認定せず、解除・保存・同ID再関連付け・保存の追加観測を待つ。F47も各finding分類の直接観測を待つ。B24/E01の実端末・OSキーボード・Files、全116/104、全工程/回帰・公開の完成は別の未判定条件。
+
+原要件全文の追加レビューsealはSHA256 `23db1c50d1b31d281f7004f88539d44b136c8c0f59307928aefbc202da3d03f2`。閉鎖した通常11シナリオの原句追加レビューsealはSHA256 `d066f62281bd65c4d0b847a3de01afaa18bf06515ce74961b998b03c4c94a0fb`。原44節のうちtrue22節/partial22節を記録し、B19の必須・任意・代替・続編持越しと理解を自動認定しない元4節だけを局所wholeへ追加した。その他は対象人物改名・回収本体の参照・最初から最後への移動・資料取得位置の通常登録・確認者ID・企画各種の結合・世界改訂の作成操作・実機/実権限の不足を個別に保持する。
+
+C29のREQ-F36には既知差分を確認した。domainの相談出力は前後状態を扱うが、通常のExportPanelはその指定を渡せず、実MDでは「前後の状態は未指定」となる。元given/shallを満たした完成として扱わない。独立seal SHA256 `0b3a67c37633262a5e7dcdc2f72d50d6a843648a02137b098bca27fcc89bafb8`。後続の別ブランチで対象・前後状態・版/公開範囲ごとの下書きと確認を補修中であり、C29の製品hashや受入結果へ混ぜない。
+
+C29の通常本文フォームでは候補除外ボタンが表示されない。選んだ人物への2つのUnicodeリンクは保存できたが、一般語除外の操作で元240000ms timeoutした。既存のaccount/project/source別除外保存は存在し、optional callbackを必須とする表示条件が通常導線を遮断している。リンク保存と除外未成立を区別し、別ブランチで表示条件を補修して同fixtureの除外/cold/逆参照/完全new-cloneを再検査する。 独立seal SHA256 `8025971f627957f1d79798103f7f5273939f74158b318b5d82ce0805445508bf`。
+
+別の113履歴診断も20:35:31.102152 UTC/exit1で閉鎖した。通常112編集後の現画像88003記録・全素材72MiB hash・履歴113/送信待ち113を確認したが、完全保存downloadは元600000msを超過した。実画面は「保存した操作を照合113/113」の後「内容と履歴を検査0/1」のままで、alertは未観測。raw SHA256 `e243fc3652fb6a24003d8fe7d7824e8e455bb73c89bba612d2f54da387414525`、最終PNG/進捗/元helperと441入力/HEAD/tree不変を保持する。完全ファイル・空環境最終復元・2時間受入の成功へ換算しない。履歴と送信待ちの再展開・検証の反復が調査対象であり、単独の原因や修正合格は未確定。
+
+閉鎖remaining-5の原12ケースを4節ずつ独立照合した。10ケース40節とB04/F04の各3節、計46節をAT ID/原句で重複排除して追加。B04の自然な編集欄scrollとF04の場面4理由の詳細は未確認のまま。seal SHA256 `7733bbd7b4ab538ae0d634c01a85e5d549fea704a484a50283432264dd03272d`。監査自体の新runtimeは0で、閉鎖した実App/原子保存/cold/実完全bytesを照合した。全104/116/24/6の完成判定は変えない。
+
+閉鎖remaining-5の分岐8題とremaining-8/9の9題を原句で独立照合し、F16/F17/F20/F40/F35の5局所wholeと計46直接句を追加した。同occurrenceId再送の通常UI、旧checkpoint実選択、未定義使用、素材だけ差替の依存コマ、暦単位/開始/日付/周期の連続操作、同fixtureの逆順二提案、実端末/実権限等の未観測は残す。seal SHA256 `d7ea1dcd803ed090b25f9caf7878d7278fe502324a450c78d4ede3b6ae54465f` と `8f8292db4b8f498f5cbe113ea8350aa654523152d4b852ed13cad35af635cb98`。監査の新runtime0、原104/116/24/6の最終結果は未実行のまま。
+
+B04/F04/B11/F47の不足句を同じC29の別の閉鎖通常操作で補い、旧B04/F04の6直接句を重複計上せず10句・4局所wholeを追加した。複数実行のfixture/時刻/ID/実ファイルと元失敗を各出所で保持し、単一連続実行へ付け替えない。独立combinedレビューseal SHA256 `a0ddd2b0b1816b1103b4456f7d2a1d53f4f5f06435341b05e36005a7da624d7f`。原104/116/24/6の最終判定は未実行のまま。F41の要件全体に関する局所補助も別記録に保ち、原句の加算は0。
+
+現在の原句照合は原28ケース112節の局所whole成立（B02/B03/B04/B05/B06/B07/B08/B09/B11/B12/B13/B14/B15/B17/B18/B19/B20/B21・F03/F04/F16/F17/F20/F35/F39/F40/F41/F47）と、他の部分ケースで直接確認した54節の計166節。F39は原要件全文の読取・更新・初期化・原因一覧・未使用候補を同じ実操作/固定原因/保存/復元へ独立照合済みで、要件全体の最終gateは保留する。F41は原AT4節の局所成立と、別の閉鎖操作で確認した相互排他の通常登録・明示例外・原子拒否を含む要件全文の局所補助を区別する。B11の新しい関連付け保存とF47の各finding分類は追加操作で独立照合済みである。原句の追加と要件全体の最終gateは別に保持する。
+
+C29の接続したコードでは、通常再利用はresolveReuseContentを通り、通常出力/限定公開はexecutionExportViewから公開投影する。古い未解決reuseの拒否文言は単独で現行未対応の証拠にしない。これは6ファイルhashを持つ静的確認であり、通常操作・固定旧版・cold/復元・実APIの合格へ換算しない。
+
+閉鎖12の原句追加レビューsealはSHA256 `f8bd3943e08a4dc0f77b0989dd047657249ed4a6f85455570bd0e4f1ff443e8b`。B13だけを原4節の局所wholeへ追加した。8ケース計32節のうちtrue14節/partial18節を個別に記録し、true14節にはB13の4節を含む。他7ケースの具体的追加手順を保持する。元ケース・global final not_run・実環境条件は保持する。
+
+携帯可能な証拠byte検証器は、分割packet・manifest・tar・安全logical path・blob hashを確認し、新しい空ディレクトリにだけ復元する。旧6境界と追加3境界の小fixture検査が成功し、独立static2 seal SHA256 `bc66dfffb6bd55dffafdca32bd46f15f716722c42d83d80b4e7109896424f66f`で最小6行の名前空間/祖先衝突preflightと元fixture不変を照合した。実最終packetの全量照合は作成後に行い、byte一致から受入合格を推定しない。
+
+対象製品は `09d39faae9c7293fe77b5675cc7286605a1809a6`、tree `352863bf81bd56b3c563f76e6b7586fe5f471e24`、build `b59572f71d050cd96e0f`、base `/shinariokanri/`。source401・原資料26・dist13・runtimeの441入力を固定し、証拠を届ける文書commitとは区別する。原104要件、116ケース、464句、24工程、6回帰群の原文と最終判定は[現在レジストリ](current-implementation.json)に保持する。
+
+独立static20は2026-10-10 15:49:51.895324〜15:49:53.026060 UTCの取得bytesで実CIと性能を照合した。封印は `/workspace/shinariokanri-independent-c29-ci-performance-static-20/FINAL_SEAL.json`、53,292 bytes、SHA256 `8521ae101588dbdc34717f3145ef4b1b09472cc16ddd01931d980de3edce3763`。88ファイル/30,464,911 bytesの再読取に不一致はなかった。以後のRV27/29/30の編集と原180結果の追記は取得後の文書更新であり、古い取得hashを現在の文書hashへ付け替えない。
+
+CI run38060502013/job114237627771は全21 stepがsuccess。実ログの876単体/93files、318通常画面、Large解析1、RB03/RB04等と完了状態を確認した。実証拠ZIP17,952,487 bytes、SHA256 `8d6633660917d293081efa85c0842d928fe4a5ec5900b94c69a5a12ad8ba76e4`の全634 memberでCRC、安全かつ一意なpath、bytes、hashが一致した。Git objectをbytesとして検証し、製品09d39と実CI checkout084fd2のtree352863が一致することを確認した。CI dist/runtimeはアップロードされておらず、ローカル配信bytesとの一致は未確認である。
+
+Standard8,800の元8数値基準と、Large88,003記録・実72MiBの起動/検索は各30件の生値からp95を再計算し基準内だった。Largeの起動p95は9331.700000017881ms、検索p95は942.2999999821186msで、最大起動11167msを除外していない。Largeの保存/図/年表の記録は補足値であり、Standardの保存1000ms/操作200ms/frame33.4msへ転用しない。各sizeの31表示・focus・編集可能性probe、30の新document起点、実helper13とgenerated entry、441入力の一致も確認した。測定rawには実sessionのbrowser.version()がなく、UAだけから正確な実版を認定しない。
+
+ローカル関連81の80成功/1WebKit時間切れと、同じ条件の単独1件成功は別結果として保持する。旧C25のLarge起動未達、旧C28/C26の時間切れや準備失敗も各対象版の履歴として保持する。Linux CI、型/list、静的照合を原116全句の通常保存・再読込・対象版/復元や実機・実Auth/RLS/private Storageの合格へ換算しない。
+
+以下の35solo実行前から各封印までの記述は、当時の未実行/途中結果を保持した履歴である。最終35件の実成功はこの文書冒頭と総合sealに記録する。
+
+後続35soloの実行前レビューでは、guardとsupervisorのexpected.commitだけが旧C28を指したままの準備不一致を発見した。対象templateはC29であり、実行guardが拒否するため、まだfixture/受入の実結果は出ていない。sealed solo5/prep13/型確認の旧bytesを保持して新しい実行用コピーへ最小訂正し、元33境界＋Large/pointer2、fixture、期待値、上限、timeout/retryを維持する。訂正は新solo6で封印済み（FINAL_SEAL.json SHA256 `abbef21dbdfe71f014fd00c14ecd547adb13c86a21ff0f297f5eb1816c62fdef`、68 files/1,649,505 bytes・再読取0差分）。guard/supervisor/現候補ヘッダー各1値以外に検査/fixture/上限の変更はない。通常73helpersに旧commitは残っていない。文字列値の訂正時点では型/listの再実行はなく、beforeEach guardの本実行成立も未実行だった。その後に新しい実行環境でTS7の型/33＋2一覧を確認し、元depth31/32/33等6寸法18件の実fixture→通常復元/coldまたは超過拒否/保存画像不変が成功した。元33境界＋固定Large2の実行と最終照合は継続中であり、この時点で全体を完成としない。
+
+独立static21 review4は、作品名/台詞/二記録原子保存の3形式×各30×素材なし/ありの実180件を生値から再計算し、元の保存1000msのp95基準内を確認した。二記録原子保存の単発1154.1ms、入力から画面ACKまでの1294.8ms/1104msも除外していない。入力/debounceを含む画面値を保存区間や操作200msへ転用しない。封印は `/workspace/shinariokanri-independent-c29-original-180-static-21-review-4/FINAL_SEAL.json`、11,531 bytes、SHA256 `5c74cb8dc35e3bdb02f8c96d8cfa3466ca1f94ed759263989158ec5c026f2c86`。55 files/18,619,072 bytesの再読取に不一致はなかった。素材なし/実3MiB付きの完全ファイルは全manifest/CRC/bytes/hash、全8,800/8,803記録・台詞Unicode/段落ID・暦/本編開始・91履歴・90保存操作ID・送信待ち91・素材bytesを照合し、空環境390での通常復元→coldと一致した。Windowのdigest観測だけではWorker内hash回数を認定せず、resolvedAtを持たない観測から2秒応答/取消を認定しない。先行する3回の静的メタ情報訂正は各旧sealを保持し、製品の成功/失敗と区別する。
+
+独立static22は、元の実91履歴完全ファイル255,211 bytes/SHA256 `5fc45f32b1ef2a428e7cd0facbd7388b32f8a05edfc22dd0f28bb7f5bc4efd9a`を変更せず、C29の通常new/clone→coldの実証拠を照合した。封印は `/workspace/shinariokanri-independent-c29-old91-static-22/FINAL_SEAL.json`、11,265 bytes、SHA256 `9d47b24e05c745c970dc923822b44c5e34c68903bbd200fb7eb4a8fd6e343e81`。60 files/32,762,653 bytesの再読取に不一致はなかった。実current画像のcanonical hashを独立再計算し、new全current値と元fileの一致、cloneの6,800 entity・5,000本文/段落ID・2,000関係・暦/本編開始のID対応を確認した。new91/clone92履歴metadataとpending1/recovered91は両coldで一致する。native historyPage/historyCommandのrevision8/name5→6は実観測である。旧版8の画面選択/復元、全歴史payload/native row hash、clone再export、長い復元中の2秒応答はこの証拠で未観測であり、認定しない。原fileの旧対象C13の合否はC29へ付け替えない。
+
+実records99,999/100,000の通常復元→coldは成功したが、100,001の最初の実検査は理由文の正規表現不一致でexit1となった。実製品は「data/project.json: project: entityとrelationの合計は100,000件までです。」と拒否し、traceのfile選択開始から具体拒否ログは1901.831msだった。検査の180000ms待機が失敗し、その後のnative12表比較は未実行である。失敗input653,413 bytes/SHA256 `11861de340195e67911f0da2e751409d3a05606048ec2dc641d29f234d33a2d9`、PNG/trace/reportと失敗評価seal SHA256 `20aed92a709c5be2da5c57176aa8bf0395c6061383e55a94fb6836844b493efe`を保持する。別attemptで同じ100,001入力について具体文の厳密期待と保存画像不変を確認する。製品や元100,000上限は変更しない。後続5寸法の制御stdoutがseal後に1行追記された記録不備も旧sealを保持し、旧size0 prefixのSHAが旧sealと一致することを新補正closureで確認した（seal SHA256 `d6f572845ea50e17196e8586546ff6fb23eb3fcb692743e900fd58a86e0a29f7`）。実入力・trace・guardの差分はなく、結果の書換えとは区別する。
+
+独立の元11寸法×上限直前/上限/超過33件＋元固定Large functional1＋pointer1が同じC29で実行成功した。33件は22正常復元→coldと11超過拒否→native12表不変を実入力hashと照合した。固定Largeは88,522記録/実72MiB/256遷移の元1ca2ファイル、取消/画面移動/未完入力再開とnative27表不変を確認。初回進捗303.7ms、最大timer324.4ms、pointer取消可視frame277.5ms≤2000msだった。総合seal SHA256 `8045b5d3df326ccc15d5ec39567d00c67acad3093cfcb7da5fb6f2e9978daaf4`は1,282,822,185論理bytesを再照合し不一致0。records+1は具体的拒否文の厳密oracleへ最小訂正し、同じ入力でnative不変まで再検査した。旧oracle/選択/guard/closure準備失敗と5stdout封印後追記の訂正を保持し、失敗を成功へ書換えていない。whole原116/464、実機/実権限/実7200の完成とは別である。
+
+実7200秒の最初の起動は、default sandboxでNode spawnSync git EPERMとなりfixture/browser前に終了した。次の実起動は編集1回後に旧tab名「試読」を待って終了し、7200完了ではない。両raw/実stdout/終了code/441不変と旧helperを保持する。現在のAppのtabは「試読・検査」であり、別helperにこの1文字列だけを訂正した（旧SHA256 `e2a20552da38fdacdbe81832351a325eb25b2a27a9459ab3e9ed1fbb39581753`、新SHA256 `a18ad64c0cf101fbd1f521413969aceba75e225a78d6b3a38c896af492885b32`）。元fixture/保存区間/7200実秒/期待/上限は不変で、新attempt3の実編集loopは17:34:11.701 UTCから始まった。この時点で初回保存/検索/試読/全記録・素材照合は観測済みだが、2時間と最終完全復元は未完了である。
+
+現在は原116/464句の全体完成、実7200秒、実端末・支援技術・専用接続の完成を認定しない。[実機手順と不足情報](../../implementation/C29_MANUAL_REVIEW.md)を残し、元release evidence gateの149保留を条件緩和で通過させない。
+
+第3実7200試行は17:40:04.657894 UTC/exit1で閉じた。実loop17:34:11.701から5編集・5試読・4全量照合まで進み、第5巡390幅のオフラインcold reloadで一覧カードの待機が120000ms timeoutとなった。補助初期表示probeが詳細を開くため、現UIのmobile詳細表示では一覧が非表示になる。raw SHA256 `0f5b9f8e470dc202fb8273b269e0b0876fea7192fac971fd3202305d7c3cab7a`、実helper/13compiledファイル、441/HEAD/tree不変を保持し、製品障害や2時間合格と断定しない。別helperは最新保存名をオフラインcoldで厳密照合し、可視「一覧に戻る」/「詳細を閉じる」を通常操作して一覧復帰を確認する。新SHA256 `111ee9814d7413cdcf19f08f6112ba571e214187e4e484fad69cabe02621892f`、元7200秒/88,003記録/72MiB/最終空環境完全復元/120000ms個別waitは保持。第4起動17:45:06 UTCの起動だけを記録し、完了は未判定。
+
+旧DB移行失敗後の通常再試行に、C29の追加挙動差を実確認した。元native version10・保存内容は拒否後も不変だが、通常retryは0作品と同じエラーに留まった。独立readonly seal SHA256 `fd877beae74152f8a33a3a75c47988c1c37383c7c055bfffbdd760337d033fbf`。別候補 `5ab86a27f15bdf5205ea0fc711544e6eb7445d24` で再試行・取消・旧結果抑止を補修し検証中。後の成功をC29や旧アプリ更新の合格へ付け替えない。
+
+後続[Draft候補の別対象検証](FOLLOW_UP_CANDIDATES.md)はC29の結果へ付け替えない。原116の未確認には実機・実接続だけでなく、Linux通常操作で追加観測できる条件も残る。
+
+配送レビューstatic5の2所見（F41の旧観測待ち文とgateの古い局所未実行説明）は、旧取得bytesを保持して訂正した。static6は2026-10-10 23:11:55の実gate、最新registry d57f3c79…とevidence968457db…を含む58 files/20,013,721 bytesを読み取り照合し、原104/116/464/24/6、局所28/29/59・句166/40/258、final not_run/149保留/対象不一致0と新旧入力の保持を確認した。封印SHA256 `72dfecf11ed9ae1ba2a137868f5060277491f687aac2239f18db5431f206da39`。製品/runtime/共有書込0、閉鎖packetの再実行0。後続候補の成功をC29へ移記しない。

@@ -23,6 +23,11 @@ export function saveIgnoredLinkCandidate(storage: PreferenceStorage, projectId: 
   return next;
 }
 
+/** Clear only this account/project/source preference; authored links are unchanged. */
+export function clearIgnoredLinkCandidates(storage: PreferenceStorage, projectId: string, sourceEntityId: string): void {
+  storage.setItem(storageKey(projectId, sourceEntityId), '[]');
+}
+
 export function candidateIgnoreKey(projectId: string, sourceEntityId: string, targetEntityId: string, term: string): string {
   return ignoredLinkCandidateKey(projectId, sourceEntityId, targetEntityId, term);
 }

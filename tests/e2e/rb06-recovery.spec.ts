@@ -4,12 +4,24 @@ import { createEntity, createProject, textToRichText } from '../../src/domain/mo
 import { exportScenario, inspectScenario } from '../../src/storage/archive';
 async function navigate(page: Page, name: RegExp) { const menu = page.getByRole('button', { name: 'メニューを開く' }); if (await menu.isVisible()) await menu.click(); await page.locator('.sidebar').getByRole('button', { name }).first().click(); }
 async function work(page: Page, tab: string) { await navigate(page, /^作品・保存/); await page.getByRole('tab', { name: tab, exact: true }).click(); }
-async function seed(page: Page, bytes: Uint8Array) { await page.goto('./'); await page.getByRole('button', { name: '保存ファイルを読み込む', exact: true }).click(); await page.locator('input[type=file]').setInputFiles({ name: 'recovery.scenario', mimeType: 'application/zip', buffer: Buffer.from(bytes) }); await page.getByLabel('復元方法と対象への影響を確認しました').check(); await page.getByRole('button', { name: 'この内容で復元する', exact: true }).click(); await expect(page.locator('.sidebar')).toBeVisible(); }
+async function seed(page: Page, bytes: Uint8Array) {
+  await page.goto('./');
+  await page.getByRole('button', { name: '保存ファイルを読み込む', exact: true }).click();
+  await page.locator('input[type=file]').setInputFiles({ name: 'recovery.scenario', mimeType: 'application/zip', buffer: Buffer.from(bytes) });
+  await page.getByLabel('復元方法と対象への影響を確認しました').check();
+  await page.getByRole('button', { name: 'この内容で復元する', exact: true }).click();
+  // The dialog closes after atomic restoration commits; this wait shares the existing test budget.
+  await page.getByRole('dialog', { name: '作品ファイルを読み込む', exact: true }).waitFor({ state: 'hidden' });
+  await expect(page.locator('.sidebar')).toBeVisible();
+}
 async function backup(page: Page) { await work(page, '完全保存・復元'); const pending = page.waitForEvent('download'); await page.getByRole('button', { name: '完全保存ファイルを作成', exact: true }).click(); const download = await pending; return inspectScenario(new Uint8Array(await readFile((await download.path())!)), { worker: false }); }
 async function oldHistory() { const bytes = new Uint8Array(await readFile('tests/fixtures/rb06-history.scenario')), prepared = await inspectScenario(bytes, { worker: false }), p = prepared.project, first = p.history[0], scene = first.after.entities[0]; return { bytes, p, operation: first.operationId, scene }; }
+let historyFixture: Awaited<ReturnType<typeof oldHistory>>;
+// Fully inspect the fixed archive in the existing hook budget; UI actions retain their original test budget.
+test.beforeAll(async () => { historyFixture = await oldHistory(); });
 
 test('50件より古い版を通常検索し、単体復元と作品全体復元を区別して保存失敗・再入・cold再生する', async ({ page }) => {
-  const f = await oldHistory(); await seed(page, f.bytes); await work(page, '変更履歴'); const panel = page.locator('.history-page'); expect(await panel.locator('.history-list > li').count()).toBeLessThanOrEqual(30); await panel.getByLabel('履歴を検索', { exact: true }).fill(f.operation); await panel.getByRole('button', { name: /原作品を保存 · 版 1/ }).click(); await panel.getByLabel('単体復元する対象', { exact: true }).selectOption(f.scene.id); await panel.getByRole('button', { name: 'この情報だけの復元を確認', exact: true }).click();
+  const f = historyFixture; await seed(page, f.bytes); await work(page, '変更履歴'); const panel = page.locator('.history-page'); expect(await panel.locator('.history-list > li').count()).toBeLessThanOrEqual(30); await panel.getByLabel('履歴を検索', { exact: true }).fill(f.operation); await panel.getByRole('button', { name: /原作品を保存 · 版 1/ }).click(); await panel.getByLabel('単体復元する対象', { exact: true }).selectOption(f.scene.id); await panel.getByRole('button', { name: 'この情報だけの復元を確認', exact: true }).click();
   await page.evaluate(() => { const original = IDBObjectStore.prototype.put; (window as any).__rb06Fail = true; IDBObjectStore.prototype.put = function (...args: Parameters<IDBObjectStore['put']>) { if ((window as any).__rb06Fail && this.name === 'projects') { (window as any).__rb06Fail = false; throw new DOMException('fixture full', 'QuotaExceededError'); } return original.apply(this, args); }; });
   await panel.getByRole('button', { name: 'この内容へ復元する', exact: true }).click(); await expect(panel.getByRole('alert')).toContainText('容量'); await expect(panel.getByRole('region', { name: '確認した復元差分' })).toContainText('原場面'); await navigate(page, /^資料/); await work(page, '変更履歴'); await expect(panel.getByRole('region', { name: '確認した復元差分' })).toBeVisible(); await panel.getByRole('button', { name: 'この内容へ復元する', exact: true }).click(); await expect(panel.getByRole('status').filter({ hasText: '保存した版を確認' })).toBeVisible();
   await page.reload(); await work(page, '変更履歴'); await expect(panel.getByLabel('履歴を検索', { exact: true })).toHaveValue(f.operation); await expect(panel.getByLabel('単体復元する対象', { exact: true })).toHaveValue(f.scene.id); let inspected = await backup(page); expect(inspected.project.name).toBe(f.p.name); expect(inspected.project.entities.find(e => e.id === f.scene.id)!.name).toBe('原場面'); expect(inspected.project.snapshots).toEqual(f.p.snapshots);

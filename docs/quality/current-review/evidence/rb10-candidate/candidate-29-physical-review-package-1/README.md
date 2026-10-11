@@ -1,0 +1,1 @@
+C29の固定配信13ファイルと依存LICENSE/NOTICEを含むZIP。MANIFEST.jsonの実bytes/SHAを確認する。ZIPの元bytesは変更せず、内蔵手順は梱包時点の履歴として保持する。現在の実機手順は docs/implementation/C29_MANUAL_REVIEW.md を参照する。別途承認されたHTTPS確認先で /shinariokanri/ に配信して実機確認する。ZIP取得やLinux検査の成功だけで実端末・実Auth・公開の合格へ換算しない。

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { candidateIgnoreKey, loadIgnoredLinkCandidates, saveIgnoredLinkCandidate } from './linkCandidatePreferences';
+import { candidateIgnoreKey, clearIgnoredLinkCandidates, loadIgnoredLinkCandidates, saveIgnoredLinkCandidate } from './linkCandidatePreferences';
 
 function memoryStorage() {
   const values = new Map<string, string>();
@@ -26,5 +26,19 @@ describe('device link-candidate preferences', () => {
     const failingStorage = { getItem: () => { throw new Error('blocked'); }, setItem: () => { throw new Error('blocked'); } };
     expect(loadIgnoredLinkCandidates(failingStorage, 'p', 's')).toEqual(new Set());
     expect(saveIgnoredLinkCandidate(failingStorage, 'p', 's', 'key')).toEqual(new Set(['key']));
+  });
+
+  it('clears only the selected account, project and source and preserves a failed clear', () => {
+    const storage = memoryStorage();
+    for (const [scope, source] of [['a:p', 's'], ['b:p', 's'], ['a:other', 's'], ['a:p', 'other']]) {
+      saveIgnoredLinkCandidate(storage, scope, source, 'candidate');
+    }
+    expect(() => clearIgnoredLinkCandidates({ getItem: storage.getItem, setItem: () => { throw new Error('quota'); } }, 'a:p', 's')).toThrow('quota');
+    expect(loadIgnoredLinkCandidates(storage, 'a:p', 's')).toEqual(new Set(['candidate']));
+    clearIgnoredLinkCandidates(storage, 'a:p', 's');
+    expect(loadIgnoredLinkCandidates(storage, 'a:p', 's')).toEqual(new Set());
+    for (const [scope, source] of [['b:p', 's'], ['a:other', 's'], ['a:p', 'other']]) {
+      expect(loadIgnoredLinkCandidates(storage, scope, source)).toEqual(new Set(['candidate']));
+    }
   });
 });
