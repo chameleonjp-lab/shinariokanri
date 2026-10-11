@@ -24,9 +24,9 @@ test('正常UIの自動保存後の同じ手動保存は11保存表・履歴・�
   if (!scene) throw new Error('Regression legacy fixture has no scene');
   await seed(page, bytes);
   const imported = await durableImage(page);
-  expect(imported.commands).toHaveLength(original.history.length + 1);
+  expect(imported.commands).toHaveLength(original.history.length);
   expect(imported.outbox).toHaveLength(1);
-  expect(JSON.stringify(imported.commands)).toContain('専用ファイルをnewで復元');
+  expect(JSON.stringify(imported.outbox)).toContain('専用ファイルをnewで復元');
   await openEntity(page, 'scene', scene.name);
   const name = page.locator('.detail-panel').getByLabel('名前', { exact: true });
   await name.fill(`${scene.name}・自動保存された編集`);
