@@ -7370,7 +7370,7 @@
         "negative_or_edge": "表記・口調の期間と例外を保持する。指摘は置換候補であり、本文や翻訳を自動修正しない。"
       },
       "source": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-      "source_sha256": "60d2c5e27223bc9b41028a83c289f2efd6e2fea959ecc38b850809cfbdac6dfb",
+      "source_sha256": "d481931a29aaa342f6127189156debf6fa1ab9e04166fd1cf076175f8321d49b",
       "clauses": [
         {
           "name": "given",
@@ -7740,7 +7740,7 @@
         "negative_or_edge": "企画・判断には対象版と根拠を保存する。却下・保留を削除せず、方針変更を公開済み版へ自動反映しない。"
       },
       "source": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-      "source_sha256": "60d2c5e27223bc9b41028a83c289f2efd6e2fea959ecc38b850809cfbdac6dfb",
+      "source_sha256": "d481931a29aaa342f6127189156debf6fa1ab9e04166fd1cf076175f8321d49b",
       "clauses": [
         {
           "name": "given",
@@ -8063,7 +8063,7 @@
         "negative_or_edge": "遊びの仕様と物語の記述の差は意図付き確認候補にする。ゲーム機能の未実装を執筆未完了と混同しない。"
       },
       "source": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
-      "source_sha256": "60d2c5e27223bc9b41028a83c289f2efd6e2fea959ecc38b850809cfbdac6dfb",
+      "source_sha256": "d481931a29aaa342f6127189156debf6fa1ab9e04166fd1cf076175f8321d49b",
       "clauses": [
         {
           "name": "given",
@@ -8439,9 +8439,9 @@
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
               "line": 116,
               "end_line": 121,
-              "excerpt_sha256": "0170ab33639078b8167fb7b16e6a602c8e167e94766951d4e40210bc529cc561",
-              "source_excerpt": "  await clause('AT-F50', 'negative_or_edge', async () => {\n    await production(page); await expect(page.locator('.production-planning article').filter({ hasText: writing.name })).toContainText('writing · done'); await expect(page.locator('.production-planning article').filter({ hasText: implementation.name })).toContainText('implementation · todo');\n    await page.reload(); const saved = (await backup(page)).project; expect(findEntity(saved, scene.id, 'scene').data).toEqual(scene.data); expect(findEntity(saved, writing.id, 'production_task').data.progress).toBe('done'); expect(findEntity(saved, implementation.id, 'production_task').data.progress).toBe('todo');\n    expect(saved).toEqual(persistedProject); expect((await nativeRecords()).fingerprint).toBe(nativeSaved.fingerprint);\n    await attachObservation(info, 'AT-F50-observed', { storySceneId: scene.id, gameplaySpecificationId: spec.id, authoredTaskDone: writing.id, implementationTaskPending: implementation.id, automaticallyRewrittenStory: false, differenceRequiresAuthorReview: true });\n  });\n",
-              "snippet": "{\n    await production(page); await expect(page.locator('.production-planning article').filter({ hasText: writing.name })).toContainText('writing · done'); await expect(page.locator('.production-planning article').filter({ hasText: implementation.name })).toContainText('implementation · todo');\n    await page.reload(); const saved = (await backup(page)).project; expect(findEntity(saved, scene.id, 'scene').data).toEqual(scene.data); expect(findEntity(saved, writing.id, 'production_task').data.progress).toBe('done'); expect(findEntity(saved, implementation.id, 'production_task').data.progress).toBe('todo');\n    expect(saved).toEqual(persistedProject); expect((await nativeRecords()).fingerprint).toBe(nativeSaved.fingerprint);\n    await attachObservation(info, 'AT-F50-observed', { storySceneId: scene.id, gameplaySpecificationId: spec.id, authoredTaskDone: writing.id, implementationTaskPending: implementation.id, automaticallyRewrittenStory: false, differenceRequiresAuthorReview: true });\n  }"
+              "excerpt_sha256": "2506532b32ce2fd2a3eb22637186a4f568e2b67298d906f96281a5e375d08544",
+              "source_excerpt": "  await clause('AT-F50', 'negative_or_edge', async () => {\n    await production(page); await expect(page.locator('.production-planning > article').filter({ has: page.getByRole('button', { name: writing.name, exact: true }) })).toContainText('writing · done'); await expect(page.locator('.production-planning > article').filter({ has: page.getByRole('button', { name: implementation.name, exact: true }) })).toContainText('implementation · todo');\n    await page.reload(); const saved = (await backup(page)).project; expect(findEntity(saved, scene.id, 'scene').data).toEqual(scene.data); expect(findEntity(saved, writing.id, 'production_task').data.progress).toBe('done'); expect(findEntity(saved, implementation.id, 'production_task').data.progress).toBe('todo');\n    expect(saved).toEqual(persistedProject); expect((await nativeRecords()).fingerprint).toBe(nativeSaved.fingerprint);\n    await attachObservation(info, 'AT-F50-observed', { storySceneId: scene.id, gameplaySpecificationId: spec.id, authoredTaskDone: writing.id, implementationTaskPending: implementation.id, automaticallyRewrittenStory: false, differenceRequiresAuthorReview: true });\n  });\n",
+              "snippet": "{\n    await production(page); await expect(page.locator('.production-planning > article').filter({ has: page.getByRole('button', { name: writing.name, exact: true }) })).toContainText('writing · done'); await expect(page.locator('.production-planning > article').filter({ has: page.getByRole('button', { name: implementation.name, exact: true }) })).toContainText('implementation · todo');\n    await page.reload(); const saved = (await backup(page)).project; expect(findEntity(saved, scene.id, 'scene').data).toEqual(scene.data); expect(findEntity(saved, writing.id, 'production_task').data.progress).toBe('done'); expect(findEntity(saved, implementation.id, 'production_task').data.progress).toBe('todo');\n    expect(saved).toEqual(persistedProject); expect((await nativeRecords()).fingerprint).toBe(nativeSaved.fingerprint);\n    await attachObservation(info, 'AT-F50-observed', { storySceneId: scene.id, gameplaySpecificationId: spec.id, authoredTaskDone: writing.id, implementationTaskPending: implementation.id, automaticallyRewrittenStory: false, differenceRequiresAuthorReview: true });\n  }"
             }
           ],
           "assertion_refs": [
@@ -8449,17 +8449,17 @@
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
               "line": 117,
               "end_line": 117,
-              "excerpt_sha256": "7761529c25dbf01811ba971b11c40c00de7f0541d8422967f3cd33a1eb8dfda6",
-              "source_excerpt": "    await production(page); await expect(page.locator('.production-planning article').filter({ hasText: writing.name })).toContainText('writing · done'); await expect(page.locator('.production-planning article').filter({ hasText: implementation.name })).toContainText('implementation · todo');\n",
-              "snippet": "expect(page.locator('.production-planning article').filter({ hasText: writing.name })).toContainText('writing · done')"
+              "excerpt_sha256": "75efec281009d14874f1d31b842910a19bde562bf3342a13edd17a6c5ecd1557",
+              "source_excerpt": "    await production(page); await expect(page.locator('.production-planning > article').filter({ has: page.getByRole('button', { name: writing.name, exact: true }) })).toContainText('writing · done'); await expect(page.locator('.production-planning > article').filter({ has: page.getByRole('button', { name: implementation.name, exact: true }) })).toContainText('implementation · todo');\n",
+              "snippet": "expect(page.locator('.production-planning > article').filter({ has: page.getByRole('button', { name: writing.name, exact: true }) })).toContainText('writing · done')"
             },
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
               "line": 117,
               "end_line": 117,
-              "excerpt_sha256": "7761529c25dbf01811ba971b11c40c00de7f0541d8422967f3cd33a1eb8dfda6",
-              "source_excerpt": "    await production(page); await expect(page.locator('.production-planning article').filter({ hasText: writing.name })).toContainText('writing · done'); await expect(page.locator('.production-planning article').filter({ hasText: implementation.name })).toContainText('implementation · todo');\n",
-              "snippet": "expect(page.locator('.production-planning article').filter({ hasText: implementation.name })).toContainText('implementation · todo')"
+              "excerpt_sha256": "75efec281009d14874f1d31b842910a19bde562bf3342a13edd17a6c5ecd1557",
+              "source_excerpt": "    await production(page); await expect(page.locator('.production-planning > article').filter({ has: page.getByRole('button', { name: writing.name, exact: true }) })).toContainText('writing · done'); await expect(page.locator('.production-planning > article').filter({ has: page.getByRole('button', { name: implementation.name, exact: true }) })).toContainText('implementation · todo');\n",
+              "snippet": "expect(page.locator('.production-planning > article').filter({ has: page.getByRole('button', { name: implementation.name, exact: true }) })).toContainText('implementation · todo')"
             },
             {
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
@@ -8507,8 +8507,8 @@
               "file": "tests/e2e/ap04-original-e-f48-50-production.spec.ts",
               "line": 117,
               "end_line": 117,
-              "excerpt_sha256": "7761529c25dbf01811ba971b11c40c00de7f0541d8422967f3cd33a1eb8dfda6",
-              "source_excerpt": "    await production(page); await expect(page.locator('.production-planning article').filter({ hasText: writing.name })).toContainText('writing · done'); await expect(page.locator('.production-planning article').filter({ hasText: implementation.name })).toContainText('implementation · todo');\n",
+              "excerpt_sha256": "75efec281009d14874f1d31b842910a19bde562bf3342a13edd17a6c5ecd1557",
+              "source_excerpt": "    await production(page); await expect(page.locator('.production-planning > article').filter({ has: page.getByRole('button', { name: writing.name, exact: true }) })).toContainText('writing · done'); await expect(page.locator('.production-planning > article').filter({ has: page.getByRole('button', { name: implementation.name, exact: true }) })).toContainText('implementation · todo');\n",
               "snippet": "production(page)"
             },
             {

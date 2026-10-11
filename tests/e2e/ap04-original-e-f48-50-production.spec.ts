@@ -114,7 +114,7 @@ test('AT-F50 危険と書いた場面と無条件通過の仕様を探索・戦�
 
   });
   await clause('AT-F50', 'negative_or_edge', async () => {
-    await production(page); await expect(page.locator('.production-planning article').filter({ hasText: writing.name })).toContainText('writing · done'); await expect(page.locator('.production-planning article').filter({ hasText: implementation.name })).toContainText('implementation · todo');
+    await production(page); await expect(page.locator('.production-planning > article').filter({ has: page.getByRole('button', { name: writing.name, exact: true }) })).toContainText('writing · done'); await expect(page.locator('.production-planning > article').filter({ has: page.getByRole('button', { name: implementation.name, exact: true }) })).toContainText('implementation · todo');
     await page.reload(); const saved = (await backup(page)).project; expect(findEntity(saved, scene.id, 'scene').data).toEqual(scene.data); expect(findEntity(saved, writing.id, 'production_task').data.progress).toBe('done'); expect(findEntity(saved, implementation.id, 'production_task').data.progress).toBe('todo');
     expect(saved).toEqual(persistedProject); expect((await nativeRecords()).fingerprint).toBe(nativeSaved.fingerprint);
     await attachObservation(info, 'AT-F50-observed', { storySceneId: scene.id, gameplaySpecificationId: spec.id, authoredTaskDone: writing.id, implementationTaskPending: implementation.id, automaticallyRewrittenStory: false, differenceRequiresAuthorReview: true });

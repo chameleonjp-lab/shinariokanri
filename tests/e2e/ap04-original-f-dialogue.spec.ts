@@ -160,13 +160,15 @@ test('AT-F21 L1/L2と実音声・翻訳・外部参照を保ち、話者改名/�
   expect(saved.project.entities.find(e => e.id === recording2.id)?.data).toEqual(recording2.data);
   expect(saved.assets).toHaveLength(1); expect(saved.assets[0].bytes).toEqual(wavBytes);
 
+  const reusedLineIndex = saved.project.entities.findIndex(entity => entity.id === copy.id);
+  expect(reusedLineIndex).toBeGreaterThanOrEqual(0);
   const invalid = await duplicateLineIdArchive(saved.bytes, l2.id, copy.id);
   const nativeBefore = await authorFingerprint(page);
   await page.locator('.project-switch').click();
   await page.getByRole('button', { name: '保存ファイルを読み込む', exact: true }).click();
   const importDialog = page.getByRole('dialog', { name: '作品ファイルを読み込む', exact: true });
   await importDialog.locator('input[type=file]').setInputFiles({ name: '台詞ID再利用.scenario', mimeType: 'application/zip', buffer: Buffer.from(invalid) });
-  await expect(importDialog.getByRole('alert')).toContainText(/重複|一意/);
+  await expect(importDialog.getByRole('alert')).toHaveText(`data/project.json: project.entities[${reusedLineIndex}].id: 現在の作品と参照中の共通世界でentity・relationのIDが衝突しています。曖昧な参照は保存できません。`);
   await expect(importDialog.getByRole('button', { name: 'この内容で復元する', exact: true })).toHaveCount(0);
   expect(await authorFingerprint(page)).toBe(nativeBefore);
   await importDialog.getByRole('button', { name: '閉じる', exact: true }).click();
