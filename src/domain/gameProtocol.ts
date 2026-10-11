@@ -4,8 +4,10 @@ import { stepTrial, type TrialRequest } from './runtime';
 import { canonicalJson, jsonBytes, sha256, parseStrictJson, ARCHIVE_LIMITS } from '../storage/json';
 import { portableRuntimeProject } from './portableRuntimeProject';
 import type { PublicProjection } from './projection';
+import { buildProjectionSearchIndex, PROJECTION_FIELDS } from './projection';
 import { prepareAsset } from './attachments';
 import { rebuildGameExecution } from './gameEvidence';
+import { validateCalendar } from './time';
 
 export const GAME_SPEC='scenario-browser-game/1.0.0' as const;
 export const GAME_FEATURES=['runtime-project-1','lifecycle-1','presentation-1','reuse-flattening-1','finite-exceptions-1'] as const;
@@ -15,6 +17,68 @@ export interface GameAction { sequence:number;id:string;contractId:string;action
 export interface GameReceipt { format:'scenario-game-receipt';formatVersion:'1.0.0';specification:typeof GAME_SPEC;receiverId:'independent-browser-game';sessionId:string;receivedAt:string;packageHash:string;runtimeProjectHash:string;entryId:ID;worldTick?:string;actions:GameAction[];requests:TrialRequest[];finalState:unknown;status:string;mode:'stub'|'actual'|'mixed';dialogueIds:string[];assets:{id:string;contentHash:string}[];receiptHash:string }
 const uuid=/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
 const failure=(message:string):never=>{throw Error(`INTEGRITY_FAILED: ${message}`);};
+function knownFields(value:unknown,allowed:readonly string[],required:readonly string[]=allowed):asserts value is Record<string,unknown>{
+ if(!value||typeof value!=='object'||Array.isArray(value)||Object.keys(value).some(key=>!allowed.includes(key))||required.some(key=>!Object.hasOwn(value,key)))failure('受取内容に未対応の項目または不足した構造があります。');
+}
+/** The receiver accepts one declared wire contract, including the public metadata it cannot execute. */
+function checkedPublicProjection(input:unknown):asserts input is PublicProjection{
+ knownFields(input,['format','formatVersion','title','mainStart','calendars','entities','relations','searchIndex','versions'],['format','formatVersion','title','calendars','entities','relations','searchIndex']);
+ if(input.format!=='scenario-projection'||input.formatVersion!=='1.0.0'||typeof input.title!=='string'||!Array.isArray(input.entities)||!Array.isArray(input.relations)||!Array.isArray(input.calendars)||!Array.isArray(input.searchIndex))failure('公開内容の仕様版または構造に対応していません。');
+ for(const entity of input.entities as unknown[]){
+  knownFields(entity,['id','kind','name','status','data']);
+  const schema=PROJECTION_FIELDS[entity.kind as keyof typeof PROJECTION_FIELDS];
+  if(!schema||typeof entity.id!=='string'||typeof entity.name!=='string'||entity.status!=='confirmed')failure('公開項目の種類・ID・確認状態が不正です。');
+  const assetFields=entity.kind==='attachment'?['mediaType','contentHash','byteSize','assetPath','bytesIncluded']:[];
+  knownFields(entity.data,[...Object.keys(schema!),...assetFields],[]);
+  for(const [field,rule]of Object.entries(schema!))if(rule.type==='rich'&&entity.data[field]!=null){
+   if(!Array.isArray(entity.data[field]))failure('公開本文の構造が不正です。');
+   for(const block of entity.data[field] as unknown[]){
+    knownFields(block,['id','kind','text','ruby','links'],['id','kind','text']);
+    if(block.ruby!=null){if(!Array.isArray(block.ruby))failure('公開ルビの構造が不正です。');for(const ruby of block.ruby as unknown[]){knownFields(ruby,['start','end','text']);if(!Number.isSafeInteger(ruby.start)||!Number.isSafeInteger(ruby.end)||Number(ruby.start)<0||Number(ruby.start)>=Number(ruby.end)||typeof ruby.text!=='string')failure('公開ルビの文字範囲・読みの型が不正です。');}}
+    if(block.links!=null){if(!Array.isArray(block.links))failure('公開本文リンクの構造が不正です。');for(const link of block.links as unknown[])knownFields(link,['start','end','targetId','blockId','lineId','sourceVersionId','targetStart','targetEnd'],['start','end','targetId']);}
+   }
+  }
+ }
+ for(const relation of input.relations as unknown[]){
+  knownFields(relation,['id','fromId','toId','relationType','direction','evidenceIds','validity'],['id','fromId','toId','relationType','direction','evidenceIds']);
+  if(['id','fromId','toId','relationType'].some(field=>typeof relation[field]!=='string'||!relation[field])||!['forward','symmetric'].includes(String(relation.direction))||!Array.isArray(relation.evidenceIds)||(relation.evidenceIds as unknown[]).some(id=>typeof id!=='string'||!id))failure('公開関係のID・種類・方向・根拠の型が不正です。');
+  if(relation.validity!=null)knownFields(relation.validity,['worldRange','routeCondition','presentationAnchor']);
+ }
+ // The native adapter translates public IDs and links, and uses the Gregorian
+ // definition for that calendar kind. Validate metadata before that conversion;
+ // all retained field values still pass portableRuntimeProject's strict schema.
+ for(const calendar of input.calendars as unknown[]){const result=validateCalendar(calendar);if(!result.ok)failure(`公開暦の型・定義が不正です。${result.issues[0].message}`);}
+ if(canonicalJson(input.searchIndex)!==canonicalJson(buildProjectionSearchIndex(input as unknown as PublicProjection)))failure('公開検索索引が許可された本文・項目と一致しません。');
+ if(input.versions!=null){
+  if(!Array.isArray(input.versions)||input.versions.length>128)failure('公開引用版の構造・上限が不正です。');
+  for(const version of input.versions as unknown[]){knownFields(version,['id','projection']);if(typeof version.id!=='string')failure('公開引用版のIDが不正です。');knownFields(version.projection,['format','formatVersion','title','mainStart','calendars','entities','relations','searchIndex'],['format','formatVersion','title','calendars','entities','relations','searchIndex']);checkedPublicProjection(version.projection);}
+ }
+}
+const gameCapabilities={
+ supportedNodeTypes:['scene','choice','automatic','call','entry','exit','terminal'],
+ supportedConditions:['constant','all','any','not','compare','item','known','visited','external'],
+ supportedEffects:['set','add','grant','consume','move','assert','mark_seen','reset'],
+ externalContracts:['boolean','integer','enum'],
+ assetTypes:['image/png','image/jpeg','image/gif','image/webp','audio/wav','audio/mpeg','application/pdf','video/mp4','video/webm','video/ogg','audio/ogg','text/plain','application/json','application/octet-stream'],
+};
+function checkedPackageMetadata(input:unknown){
+ const fields=['format','formatVersion','requiredFeatures','profile','title','versionLabel','contentVersionId','hashScope','entities','relations','calendars','flow','dialogue','scenes','characters','variables','effects','items','assertions','quests','disclosures','cues','externalContracts','assets','externalEvidence','publicProjection','assetBytesIncluded','runtimeProject','runtimeProjectHash','publicToRuntime','assetData'];
+ knownFields(input,fields);
+ knownFields(input.profile,['profileId','profileVersion','schemaVersion',...Object.keys(gameCapabilities),'omissions']);
+ const profile=input.profile;
+ if(profile.schemaVersion!=='1.0.0'||Object.entries(gameCapabilities).some(([key,values])=>!Array.isArray(profile[key])||(profile[key] as unknown[]).some(value=>typeof value!=='string'||!values.includes(value))))failure('受取profileの仕様版または能力宣言に対応していません。');
+ const omissions=['author_notes','rejected_and_alternate_records','private_names_and_aliases','original_source_ids_unless_explicitly_approved',...input.assetBytesIncluded===true?[]:['asset_bytes'],'playtest_traces'];
+ if(canonicalJson(profile.omissions)!==canonicalJson(omissions))failure('受取profileの除外宣言に対応していません。');
+ checkedPublicProjection(input.publicProjection);
+ const projection=input.publicProjection;
+ if(input.title!==projection.title||typeof input.versionLabel!=='string'||input.hashScope!=='public_projection'||input.externalEvidence!=='not_included'||typeof input.assetBytesIncluded!=='boolean'||canonicalJson(input.relations)!==canonicalJson(projection.relations)||canonicalJson(input.calendars)!==canonicalJson(projection.calendars))failure('受取内容の公開metadataが一致しません。');
+ knownFields(input.flow,['graphs','nodes','edges']);
+ const groups={dialogue:'dialogue_line',scenes:'scene',characters:'character',variables:'variable',effects:'effect',items:'item',assertions:'assertion',quests:'quest',disclosures:'disclosure',cues:'cue',externalContracts:'external_contract',assets:'attachment'};
+ for(const [field,kind]of Object.entries(groups))if(canonicalJson(input[field])!==canonicalJson(projection.entities.filter(entity=>entity.kind===kind)))failure('受取内容の種類別一覧が公開内容と一致しません。');
+ for(const [field,kind]of Object.entries({graphs:'flow_graph',nodes:'flow_node',edges:'flow_edge'}))if(canonicalJson(input.flow[field])!==canonicalJson(projection.entities.filter(entity=>entity.kind===kind)))failure('受取内容の分岐一覧が公開内容と一致しません。');
+ if(!input.assetData||typeof input.assetData!=='object'||Array.isArray(input.assetData))failure('受取素材bytesの構造が不正です。');
+ for(const payload of Object.values(input.assetData as object))knownFields(payload,['mediaType','base64']);
+}
 function checkedReceiptShape(input:unknown):GameReceipt{
  const raw=input as GameReceipt,allowed=['format','formatVersion','specification','receiverId','sessionId','receivedAt','packageHash','runtimeProjectHash','entryId','worldTick','actions','requests','finalState','status','mode','dialogueIds','assets','receiptHash'],digest=/^[a-f0-9]{64}$/;
  if(!raw||typeof raw!=='object'||Array.isArray(raw)||Object.keys(raw).some(key=>!allowed.includes(key))||raw.format!=='scenario-game-receipt'||raw.formatVersion!=='1.0.0'||raw.specification!==GAME_SPEC||raw.receiverId!=='independent-browser-game'||(typeof raw.sessionId!=='string'||!uuid.test(raw.sessionId))||(typeof raw.entryId!=='string'||!uuid.test(raw.entryId))||(typeof raw.receivedAt!=='string'||!Number.isFinite(Date.parse(raw.receivedAt)))||![raw.packageHash,raw.runtimeProjectHash,raw.receiptHash].every(value=>typeof value==='string'&&digest.test(value))||!['stub','actual','mixed'].includes(raw.mode)||!['ready','terminal','blocked','unknown','error'].includes(raw.status)||!raw.finalState||typeof raw.finalState!=='object'||Array.isArray(raw.finalState)||raw.worldTick!=null&&(typeof raw.worldTick!=='string'||! /^(?:0|-[1-9][0-9]*|[1-9][0-9]*)$/.test(raw.worldTick))||!Array.isArray(raw.actions)||raw.actions.length>10000||!Array.isArray(raw.requests)||raw.requests.length>10000||!Array.isArray(raw.dialogueIds)||raw.dialogueIds.some(id=>typeof id!=='string')||new Set(raw.dialogueIds).size!==raw.dialogueIds.length||!Array.isArray(raw.assets)||raw.assets.some(asset=>!asset||Object.keys(asset).some(key=>!['id','contentHash'].includes(key))||typeof asset.id!=='string'||!digest.test(asset.contentHash))||new Set(raw.assets.map(asset=>asset.id)).size!==raw.assets.length||jsonBytes(raw).byteLength>1024*1024)failure('受領証跡の仕様・構造・上限が不正です。');
@@ -27,6 +91,7 @@ function contract(pkg:ExecutionPackage,id:string){const record=pkg.runtimeProjec
 /** Example game mechanics produce measurements; a hand-entered actual label is never an input. */
 export function gameResult(pkg:ExecutionPackage,id:string,action:GameAction['action'],oldScore:number,stubIndex?:number){const c=contract(pkg,id);if(action==='stub'){const value=c.data.stubValues?.[stubIndex??-1];if(!value)failure('宣言済み仮値がありません。');return {score:oldScore,value:structuredClone(value!)};}if(c.data.owner!=='game')failure('ゲーム管理以外の外部契約を実測にできません。');const score=action==='win'?oldScore+3:action==='collect'?oldScore+1:Math.max(0,oldScore-1);let value:TypedValue;if(c.data.outputType==='boolean')value={type:'boolean',value:action!=='lose'};else if(c.data.outputType==='integer')value={type:'integer',value:score};else if(c.data.outputType==='enum'){const values=(c.data.stubValues??[]).filter((v):v is Extract<TypedValue,{type:'enum'}>=>v.type==='enum');if(!values.length)failure('列挙結果の宣言がありません。');value=structuredClone(values[action==='lose'?values.length-1:action==='win'?0:Math.min(1,values.length-1)]);}else return failure('受取例が未対応の結果型です。');return {score,value};}
 export async function receiveGamePackage(input:unknown):Promise<GamePackage>{
+ checkedPackageMetadata(input);
  const p=structuredClone(input) as GamePackage;
  if(p?.format!=='scenario-runtime'||p.formatVersion!=='1.0.0'||p.profile?.profileId!=='scenario-runtime'||p.profile.profileVersion!=='1.1.0'||!p.runtimeProject||!p.publicToRuntime||!Array.isArray(p.entities)||!p.publicProjection||!Array.isArray(p.requiredFeatures)||p.requiredFeatures.length!==GAME_FEATURES.length||new Set(p.requiredFeatures).size!==p.requiredFeatures.length||p.requiredFeatures.some(feature=>!(GAME_FEATURES as readonly string[]).includes(feature)))failure('受取仕様版または必須機能に対応していません。');
  if(await sha256(jsonBytes(p.runtimeProject))!==p.runtimeProjectHash||p.contentVersionId!==`sha256:${await sha256(jsonBytes(p.publicProjection))}`||canonicalJson(p.entities)!==canonicalJson(p.publicProjection.entities))failure('受領内容hashまたは公開内容が一致しません。');
