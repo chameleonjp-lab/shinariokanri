@@ -201,7 +201,7 @@ test('AT-E12 キャッシュ済み未送信作品をoffline・容量拒否・実
     await expect.poll(() => page.evaluate(async () => (await navigator.serviceWorker.getRegistration())?.waiting?.state)).toBe('installed');
     const beforeCold = await nativeImage(page);
     expect(durableImage(beforeCold)).toEqual(durableImage(pendingImage));
-    const beforeDocumentNonce = await page.evaluate(() => (window as Window & { __ap04E12DocumentNonce: string }).__ap04E12DocumentNonce);
+    const beforeDocumentNonce = await page.evaluate(() => { const value: unknown = Reflect.get(window, '__ap04E12DocumentNonce'); if (typeof value !== 'string') throw new Error('E12 document nonce unavailable'); return value; });
     expect(beforeDocumentNonce).toEqual(expect.any(String));
     await page.context().setOffline(true);
     await expect.poll(() => page.evaluate(() => navigator.onLine)).toBe(false);
@@ -209,7 +209,7 @@ test('AT-E12 キャッシュ済み未送信作品をoffline・容量拒否・実
     // It exercises cached startup without WebKit's Page.reload protocol path.
     const coldURL = new URL(url); coldURL.searchParams.set('e12-cold-document', beforeDocumentNonce);
     await page.goto(coldURL.href); await expect(page.locator('.project-switch')).toContainText(given.project.name);
-    const offlineDocumentNonce = await page.evaluate(() => (window as Window & { __ap04E12DocumentNonce: string }).__ap04E12DocumentNonce);
+    const offlineDocumentNonce = await page.evaluate(() => { const value: unknown = Reflect.get(window, '__ap04E12DocumentNonce'); if (typeof value !== 'string') throw new Error('E12 document nonce unavailable'); return value; });
     expect(offlineDocumentNonce).toEqual(expect.any(String)); expect(offlineDocumentNonce).not.toBe(beforeDocumentNonce);
     await expect.poll(() => page.evaluate(() => navigator.onLine)).toBe(false);
     await expect.poll(() => page.evaluate(() => {
