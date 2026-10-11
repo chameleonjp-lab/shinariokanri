@@ -20,7 +20,9 @@ jobs:
       - run: python3 -m unittest discover -s scripts -p 'test_check_*.py' -v
       - run: npx playwright install --with-deps chromium firefox webkit
       - run: node -e 'require("fs").appendFileSync(process.env.GITHUB_ENV, "CHROMIUM_PATH=" + require("playwright").chromium.executablePath() + "\n")'
-      - run: npm test
+      # Large fixture and native-history checks share the hosted runner's CPU/memory.
+      # Preserve every assertion and test timeout; run files without resource contention.
+      - run: npm test -- --maxWorkers=1 --fileParallelism=false
       - run: npm run build
       - run: BROWSER_ENGINES=all npm run test:e2e
       - run: npx playwright test -c tests/rb10/playwright.config.ts --project=chromium --output=test-results/rb10-large-analysis-chromium

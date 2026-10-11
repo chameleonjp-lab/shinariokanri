@@ -1,3 +1,5 @@
+現在のC29は `09d39faae9c7293fe77b5675cc7286605a1809a6`、build `b59572f71d050cd96e0f`、base `/shinariokanri/`。[固定対象と直接結果](../quality/current-review/FINAL_CANDIDATE.md)に結合する。C28から製品src・native1.0.0・serialized fields・schema・kind・全6profileの対応/拒否規則は変えていない。補修した編集位置、8192読込、索引ID/kind、捕捉signal、保存待ち、復元Workerは元完全保存・clone・公開投影・履歴・固定世界・素材bytesの検査を保持する。同版の全profile/完全空復元/原116は別の直接判定が必要で、下の歴史結果や局所成功だけでは互換完了としない。
+
 # RB10追加の保存互換性（同一候補の最終受入前）
 
 ## 原稿と公開本文コピーの端末内保存
