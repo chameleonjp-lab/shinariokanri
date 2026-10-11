@@ -125,7 +125,32 @@ for (const failures of [1, 2]) test(`旧native v1の移行を${failures}回原�
       expect(coldProject.entities.map(entity => [entity.kind, entity.name])).toEqual(original.entities.map(entity => [entity.kind, entity.name]));
       expect(coldProject.entities.every(entity => !original.entities.some(before => before.id === entity.id))).toBe(true);
       expect(coldProject.snapshots.map(snapshot => snapshot.versionLabel)).toEqual(original.snapshots.map(snapshot => snapshot.versionLabel));
-      expect(coldProject.history).toHaveLength(original.history.length);
+      expect(coldProject.history).toHaveLength(original.history.length + 1);
+      const audit = coldProject.history.at(-1)!;
+      expect(audit).toMatchObject({ reason: '専用ファイルをcloneで復元', projectId: coldProject.projectId,
+        revision: (BigInt(original.revision) + 1n).toString(), baseRevision: '0' });
+      expect(original.history.some(command => command.operationId === audit.operationId)).toBe(false);
+      expect(audit.idMap).toBeDefined();
+      const idMap = audit.idMap!;
+      expect(idMap[original.projectId]).toBe(coldProject.projectId);
+      expect(Object.values(idMap)).not.toContain(audit.operationId);
+      const retained = coldProject.history.slice(0, -1);
+      expect(retained.map(command => command.operationId)).toEqual(original.history.map(command => idMap[command.operationId]));
+      for (const [index, source] of original.history.entries()) {
+        const command = retained[index];
+        expect(command).toMatchObject({ projectId: coldProject.projectId, reason: source.reason, revision: source.revision,
+          baseRevision: source.baseRevision, createdAt: source.createdAt, targetIds: source.targetIds.map(id => idMap[id] ?? id) });
+        for (const state of ['before', 'after'] as const) {
+          expect(command[state].name).toBe(source[state].name);
+          expect(command[state].revision).toBe(source[state].revision);
+          expect(command[state].entities.map(e => [e.id, e.kind, e.name, e.revision])).toEqual(source[state].entities.map(e => [idMap[e.id], e.kind, e.name, e.revision]));
+          expect(command[state].snapshots.map(pin => [pin.id, pin.versionLabel, pin.createdAt])).toEqual(source[state].snapshots.map(pin => [idMap[pin.id], pin.versionLabel, pin.createdAt]));
+        }
+      }
+      const { history: _history, ...cloneContent } = coldProject;
+      expect(audit.after).toEqual(cloneContent);
+      expect(audit.after.entities.map(e => [e.id, e.kind, e.name])).toEqual(original.entities.map(e => [idMap[e.id], e.kind, e.name]));
+      expect(audit.before).toMatchObject({ projectId: coldProject.projectId, revision: '0', entities: [], relations: [], snapshots: [] });
     }
     await info.attach(`actual-retried-${mode}-cold.scenario`, { body: Buffer.from(restoredBytes), contentType: 'application/zip' });
     } finally { await empty.close(); }
