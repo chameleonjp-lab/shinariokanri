@@ -6,7 +6,7 @@ import type { CommandRecord, ProjectData } from '../domain/types';
 import { inspectScenario } from './archive';
 import { StorageError } from './errors';
 import { equalJson, jsonBytes, sha256 } from './json';
-import { projectWithRecoveryHistory, validateRecovery, type PortableRecovery } from './recovery';
+import { createRecoveryValidationSession, projectWithRecoveryHistory, validateRecovery, type PortableRecovery } from './recovery';
 import { ScenarioStore } from './store';
 
 const operationId = '1468c347-01e3-4ae1-84d6-46884c7bfbc8';
@@ -117,6 +117,25 @@ async function validFixture() {
 }
 
 describe('model-valid hashed history and portable recovery; support only', () => {
+  it('reuses only successful private structural proofs while rechecking pending bytes, metadata and references', async () => {
+    const f = await validFixture(), session = createRecoveryValidationSession({});
+    expect(session.validate(f.project)).toMatchObject({ ok: true });
+    expect(await session.integrity(f.project, true)).toEqual([]);
+    const returned = await session.recovery(f.recovery, f.project);
+    expect(returned).toEqual(f.recovery); expect(Object.isFrozen(returned.pending[0].command)).toBe(false);
+    returned.pending[0].command.reason = '編集可能な検査結果';
+    await expect(session.recovery(f.recovery, f.project)).resolves.toEqual(f.recovery);
+    const forgedHash = structuredClone(f.recovery); forgedHash.pending[0].commandHash = '0'.repeat(64);
+    await expect(session.recovery(forgedHash, f.project)).rejects.toMatchObject({ code: 'VALIDATION_FAILED' });
+    const unknown = structuredClone(f.recovery), command = unknown.pending.at(-1)!.command;
+    Object.assign(command, { unexpected: true }); unknown.pending.at(-1)!.commandHash = await sha256(jsonBytes(command));
+    await expect(session.recovery(unknown, f.project)).rejects.toMatchObject({ code: 'VALIDATION_FAILED' });
+    const broken = structuredClone(f.recovery), pending = broken.pending.at(-1)!;
+    const scene = pending.command.after.entities.find(entity => entity.kind === 'scene')!;
+    if (scene.kind !== 'scene') throw Error('fixture'); scene.data.povId = newId(); pending.commandHash = await sha256(jsonBytes(pending.command));
+    await expect(session.recovery(broken, f.project)).rejects.toMatchObject({ code: 'VALIDATION_FAILED' });
+  });
+
   it('merges all real equal commands without changing hashes, IDs, order or pending data', async () => {
     const f = await validFixture(), beforeProject = jsonBytes(f.project), beforeRecovery = jsonBytes(f.recovery);
     const reordered = structuredClone(f.recovery);

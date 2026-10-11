@@ -4,6 +4,25 @@ import { jsonBytes, sha256 } from './json';
 import { createSharedArrayJsonEncoder } from './sharedArrayJson';
 
 describe('canonical pending-command bytes with shared ordered collections', () => {
+  it('retains exact ordered bytes when edits share records across different large arrays and segment boundaries', async () => {
+    const records = captureImmutablePlainData(Array.from({ length: 193 }, (_, index) => ({ id: `record-${index}`, value: index, text: '😀e\u0301', omitted: undefined }))).value;
+    const encode = createSharedArrayJsonEncoder();
+    for (const changedAt of [0, 1, 63, 64, 65, 127, 128, 192]) {
+      const after = [...records]; after[changedAt] = { ...records[changedAt], text: `変更${changedAt}😀` };
+      const input = captureImmutablePlainData({ before: records, after }).value;
+      expect(encode(input)).toEqual(jsonBytes(input));
+      expect(await sha256(encode(input))).toBe(await sha256(jsonBytes(input)));
+    }
+    // The same first object does not prove that later items or segment length
+    // match. Nor may a previous ordering substitute for this array's ordering.
+    for (const array of [records.slice(0, 64), records.slice(0, 65), [records[0], ...records.slice(1).reverse()], records.map((item, index) => index === 1 ? records[0] : item)]) {
+      const input = captureImmutablePlainData(array).value;
+      expect(encode(input)).toEqual(jsonBytes(input));
+    }
+    const scalars = captureImmutablePlainData(Array.from({ length: 128 }, (_, index) => index % 2 ? '😀' : index)).value;
+    expect(encode(scalars)).toEqual(jsonBytes(scalars)); expect(encode(records)).toEqual(jsonBytes(records));
+  });
+
   it('retains every old byte and hash for header changes, Unicode and ordered record variants', async () => {
     const records = Array.from({ length: 67 }, (_, index) => ({ id: `record-${index}`, kind: 'scene',
       data: { text: '😀e\u0301\n"引用"', zero: -0, value: index, omitted: undefined }, enabled: index % 2 === 0 }));

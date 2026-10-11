@@ -139,7 +139,19 @@ export function projectWithRecoveryHistory(project: ProjectData, recovery?: Port
   }
   return { ...project, history: [...history.values()] };
 }
+/** One archive owns the world capture and every full structural/integrity
+ * check. Callers cannot inject a validator or claim that an image is verified. */
+export function createRecoveryValidationSession(worlds: Record<string, ProjectContent>) {
+  const validation = createProjectValidationSession({ worldSnapshots: worlds });
+  return { ...validation, recovery: (input: unknown, project: ProjectData, signal?: AbortSignal) => validateRecoveryData(input, project, worlds, signal, validation) };
+}
+
 export async function validateRecovery(input: unknown, project: ProjectData, worlds: Record<string, ProjectContent>, signal?: AbortSignal): Promise<PortableRecovery> {
+  return validateRecoveryData(input, project, worlds, signal);
+}
+
+async function validateRecoveryData(input: unknown, project: ProjectData, worlds: Record<string, ProjectContent>, signal?: AbortSignal,
+  session?: ReturnType<typeof createProjectValidationSession>): Promise<PortableRecovery> {
   const invalid = (message: string, path = 'data/recovery.json'): never => { throw new StorageError('VALIDATION_FAILED', message, path); };
   if (!input || typeof input !== 'object' || Array.isArray(input)) return invalid('送信待ち復元情報はオブジェクトです。');
   const raw = input as Record<string, unknown>;
@@ -147,7 +159,7 @@ export async function validateRecovery(input: unknown, project: ProjectData, wor
   const captured = captureImmutablePlainData(input);
   const recovery = (captured.captured ? captured.value : structuredClone(input)) as PortableRecovery, seen = new Set<string>();
   const commandBytes = createSharedArrayJsonEncoder();
-  const validation = createProjectValidationSession({ worldSnapshots: worlds });
+  const validation = session ?? createProjectValidationSession({ worldSnapshots: worlds });
   for (const item of recovery.pending) {
     checkCancelled(signal);
     if (!item || typeof item !== 'object' || Object.keys(item).some(key => !['operationId', 'command', 'commandHash', 'origin'].includes(key)) || !ID_PATTERN.test(item.operationId) || seen.has(item.operationId) || typeof item.commandHash !== 'string' || !/^[0-9a-f]{64}$/.test(item.commandHash)) return invalid('送信待ちの操作IDまたはhashが不正・重複しています。');

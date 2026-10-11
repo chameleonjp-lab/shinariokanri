@@ -1,5 +1,5 @@
 import {mergeImportConflicts} from './importWork';
-import {freezeCapturedPlainData} from '../domain/immutablePlainData';
+import {freezeCapturedPlainDataAsync} from '../domain/immutablePlainData';
 import {createSharedArrayJsonEncoder} from './sharedArrayJson';
 import {cloneProject as clonePrivateProject} from './clone';
 import {recordDiagnostic} from '../diagnostics';
@@ -592,7 +592,7 @@ export class ScenarioStore {
         const knownWorlds = await this.validationWorlds(), worlds = worldSnapshotContents(knownWorlds);
         // Unlike the current-only editing validator, these checks retain every
         // historical command and require its original full integrity contract.
-        for (const step of ['structure', 'worlds', 'hashes', 'integrity'] as const) await performImportWork({step, project, worlds, knownWorlds}, {signal});
+        await performImportWork({step: 'full_read', project, worlds, knownWorlds}, {signal});
         checkCancelled(signal);
         project = this.rememberProject(project, read.contentHeadOperationId, read.historyIds, readEpoch);
       }
@@ -1200,7 +1200,7 @@ export class ScenarioStore {
     const pending = options.snapshotId ? [] : capturedPending, retained = options.snapshotId ? [] : captured.retained;
     // These graphs came from the single private read transaction above. Freeze
     // only plain own-data captures; unusual legacy language retains its old path.
-    freezeCapturedPlainData({ project, pending, retained });
+    await freezeCapturedPlainDataAsync({ project, pending, retained }, options.signal);
     const commandBytes = createSharedArrayJsonEncoder();
     const operations = new Map(retained.map(row => [row.operation.operationId, row.operation]));
     for (const row of pending) {
