@@ -5,7 +5,7 @@
   "source_plan": "docs/quality/ap04-2026-10-11/local_acceptance_plan.json",
   "source_plan_sha256": "bbbbd0397c084a61a8616379a0dd9e051e76eaf2181238f4daae67ec4e1c6160",
   "source_candidates": "tests/e2e/ap04-original-n-candidates.json",
-  "source_candidates_sha256": "0edc2459c6a110026a7c97fd538cadc2233543028b47bff8072421d227da48da",
+  "source_candidates_sha256": "831925c2650769b5733ad6df9258478eb36bd2a7f34429e3ddfe1045c0a37b80",
   "candidate_commit": null,
   "candidate_tree": null,
   "candidate_build": null,
@@ -1591,18 +1591,18 @@
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
               "title": "AT-N06 同じ旧作品の移行失敗と台詞の複数対象保存の容量不足を原子拒否し、通常再試行後だけ全変更を確定する",
-              "line": 98,
+              "line": 99,
               "parameter_values": {},
               "binding_status": "authored_working_tree_location; refresh at final proof freeze"
             }
           ],
-          "authored_file_sha256": "ea154a94770eee6001926854b6e1a3ec7a6562212e837a28a6a42d237ec510fd",
+          "authored_file_sha256": "3c2857ad62360f29a56dd15c0e265cead2bf05cad4424eae4211700e4838c2ad",
           "missing_conditions": [],
           "sources": [
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 98,
-              "end_line": 178,
+              "line": 99,
+              "end_line": 179,
               "excerpt_sha256": "28c36cf1a977e79ac7de8605ba731bf0ca2103e3502d4b8016da0d7393b875a5",
               "binding_status": "authored_not_run; exact whole test callback span; no individual clause execution inferred"
             }
@@ -1610,224 +1610,224 @@
           "normal_operation_source_lines": [
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 121,
+              "line": 122,
               "source": "await page.goto('./');"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 125,
+              "line": 126,
               "source": "await page.getByRole('button', { name: '読み込みを再試行', exact: true }).click();"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 126,
+              "line": 127,
               "source": "await page.locator('.project-card').filter({ hasText: p.name }).click();"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 127,
+              "line": 128,
               "source": "const migrated = await backup(page);"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 133,
+              "line": 134,
               "source": "await openEntity(page, 'dialogue_line', line.name);"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 135,
-              "source": "await tools.locator('summary').click();"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
               "line": 136,
-              "source": "await tools.getByLabel('分割する文字位置', { exact: true }).fill('4');"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 137,
-              "source": "await tools.getByLabel('台詞変更の理由', { exact: true }).fill('AT-N06 同じ複数対象の変更を再試行');"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 138,
-              "source": "await tools.getByRole('button', { name: '変更の影響を確認', exact: true }).click();"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 148,
-              "source": "await tools.getByRole('button', { name: '確認した変更を保存', exact: true }).click();"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 155,
-              "source": "await navigate(page, /^構成/);"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 156,
-              "source": "await openEntity(page, 'dialogue_line', line.name);"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 157,
               "source": "await tools.locator('summary').click();"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 159,
+              "line": 137,
+              "source": "await tools.getByLabel('分割する文字位置', { exact: true }).fill('4');"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
+              "line": 138,
+              "source": "await tools.getByLabel('台詞変更の理由', { exact: true }).fill('AT-N06 同じ複数対象の変更を再試行');"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
+              "line": 139,
+              "source": "await tools.getByRole('button', { name: '変更の影響を確認', exact: true }).click();"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
+              "line": 149,
               "source": "await tools.getByRole('button', { name: '確認した変更を保存', exact: true }).click();"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 161,
-              "source": "await page.reload();"
+              "line": 156,
+              "source": "await navigate(page, /^構成/);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
+              "line": 157,
+              "source": "await openEntity(page, 'dialogue_line', line.name);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
+              "line": 158,
+              "source": "await tools.locator('summary').click();"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
+              "line": 160,
+              "source": "await tools.getByRole('button', { name: '確認した変更を保存', exact: true }).click();"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
               "line": 162,
+              "source": "await page.reload();"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
+              "line": 163,
               "source": "const cold = await backup(page), oldLine = cold.project.entities.find(entity => entity.id === line.id);"
             }
           ],
           "assertion_source_lines": [
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 105,
+              "line": 106,
               "source": "expect(linked.length).toBeGreaterThanOrEqual(2);"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 109,
+              "line": 110,
               "source": "expect(oldNative.version).toBe(10);"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 111,
+              "line": 112,
               "source": "expect(nativeRows.blocks.length).toBeGreaterThan(0);"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 112,
+              "line": 113,
               "source": "expect(oldNative.tables.blocks.rows).toEqual(byId(nativeRows.blocks));"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 113,
+              "line": 114,
               "source": "expect(oldNative.tables.entities.rows).toEqual(byId(nativeRows.entities));"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 122,
+              "line": 123,
               "source": "await expect(page.getByRole('alert').filter({ hasText: /quota|Quota/ })).toBeVisible();"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 123,
+              "line": 124,
               "source": "expect(await image(page)).toEqual(oldNative);"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 124,
+              "line": 125,
               "source": "await expect(page.locator('.app-shell')).toHaveCount(0);"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 128,
+              "line": 129,
               "source": "expect(migrated.project).toEqual(p);"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 129,
+              "line": 130,
               "source": "expect((await image(page)).version).toBe(70);"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 139,
+              "line": 140,
               "source": "await expect(tools).toContainText('新台詞 2件');"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 149,
-              "source": "await expect(tools.getByRole('alert')).toContainText('容量');"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
               "line": 150,
-              "source": "await expect(tools).toContainText('新台詞 2件');"
+              "source": "await expect(tools.getByRole('alert')).toContainText('容量');"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
               "line": 151,
-              "source": "await expect(tools.getByLabel('分割する文字位置', { exact: true })).toHaveValue('4');"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 152,
-              "source": "await expect(tools.getByLabel('台詞変更の理由', { exact: true })).toHaveValue('AT-N06 同じ複数対象の変更を再試行');"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 153,
-              "source": "await expect(tools.getByRole('status').filter({ hasText: '表示版を確認' })).toHaveCount(0);"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 154,
-              "source": "expect(await image(page, true)).toEqual(beforeSave);"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 158,
               "source": "await expect(tools).toContainText('新台詞 2件');"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 160,
+              "line": 152,
+              "source": "await expect(tools.getByLabel('分割する文字位置', { exact: true })).toHaveValue('4');"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
+              "line": 153,
+              "source": "await expect(tools.getByLabel('台詞変更の理由', { exact: true })).toHaveValue('AT-N06 同じ複数対象の変更を再試行');"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
+              "line": 154,
+              "source": "await expect(tools.getByRole('status').filter({ hasText: '表示版を確認' })).toHaveCount(0);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
+              "line": 155,
+              "source": "expect(await image(page, true)).toEqual(beforeSave);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
+              "line": 159,
+              "source": "await expect(tools).toContainText('新台詞 2件');"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
+              "line": 161,
               "source": "await expect(tools.getByRole('status').filter({ hasText: '表示版を確認' })).toBeVisible();"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 164,
+              "line": 165,
               "source": "expect(oldLine.status).toBe('rejected');"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 165,
+              "line": 166,
               "source": "expect(oldLine.data.replacedByLineIds).toHaveLength(2);"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 168,
+              "line": 169,
               "source": "expect(newLines.every(entity => entity?.kind === 'dialogue_line')).toBe(true);"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 171,
+              "line": 172,
               "source": "expect(splitText).toBe(originalText);"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 172,
+              "line": 173,
               "source": "expect(cold.project.entities.some(entity => entity.kind === 'scene' && newIds.every(id => entity.data.dialogueLineIds?.includes(id)) && !entity.data.dialogueLineIds?.includes(line.id))).toBe(true);"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 173,
+              "line": 174,
               "source": "for (const original of linked) expect(cold.project.entities.find(entity => entity.id === original.id)?.data).toMatchObject({ stage: 'needs_review' });"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 174,
+              "line": 175,
               "source": "expect(cold.project.snapshots).toEqual(p.snapshots);"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 175,
+              "line": 176,
               "source": "expect(cold.project.history).toHaveLength(p.history.length + 1);"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 176,
+              "line": 177,
               "source": "expect(BigInt(cold.project.revision)).toBe(BigInt(p.revision) + 1n);"
             }
           ],
@@ -1851,18 +1851,18 @@
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
               "title": "AT-N06 同じ旧作品の移行失敗と台詞の複数対象保存の容量不足を原子拒否し、通常再試行後だけ全変更を確定する",
-              "line": 98,
+              "line": 99,
               "parameter_values": {},
               "binding_status": "authored_working_tree_location; refresh at final proof freeze"
             }
           ],
-          "authored_file_sha256": "ea154a94770eee6001926854b6e1a3ec7a6562212e837a28a6a42d237ec510fd",
+          "authored_file_sha256": "3c2857ad62360f29a56dd15c0e265cead2bf05cad4424eae4211700e4838c2ad",
           "missing_conditions": [],
           "sources": [
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 98,
-              "end_line": 178,
+              "line": 99,
+              "end_line": 179,
               "excerpt_sha256": "28c36cf1a977e79ac7de8605ba731bf0ca2103e3502d4b8016da0d7393b875a5",
               "binding_status": "authored_not_run; exact whole test callback span; no individual clause execution inferred"
             }
@@ -1870,224 +1870,224 @@
           "normal_operation_source_lines": [
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 121,
+              "line": 122,
               "source": "await page.goto('./');"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 125,
+              "line": 126,
               "source": "await page.getByRole('button', { name: '読み込みを再試行', exact: true }).click();"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 126,
+              "line": 127,
               "source": "await page.locator('.project-card').filter({ hasText: p.name }).click();"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 127,
+              "line": 128,
               "source": "const migrated = await backup(page);"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 133,
+              "line": 134,
               "source": "await openEntity(page, 'dialogue_line', line.name);"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 135,
-              "source": "await tools.locator('summary').click();"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
               "line": 136,
-              "source": "await tools.getByLabel('分割する文字位置', { exact: true }).fill('4');"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 137,
-              "source": "await tools.getByLabel('台詞変更の理由', { exact: true }).fill('AT-N06 同じ複数対象の変更を再試行');"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 138,
-              "source": "await tools.getByRole('button', { name: '変更の影響を確認', exact: true }).click();"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 148,
-              "source": "await tools.getByRole('button', { name: '確認した変更を保存', exact: true }).click();"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 155,
-              "source": "await navigate(page, /^構成/);"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 156,
-              "source": "await openEntity(page, 'dialogue_line', line.name);"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 157,
               "source": "await tools.locator('summary').click();"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 159,
+              "line": 137,
+              "source": "await tools.getByLabel('分割する文字位置', { exact: true }).fill('4');"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
+              "line": 138,
+              "source": "await tools.getByLabel('台詞変更の理由', { exact: true }).fill('AT-N06 同じ複数対象の変更を再試行');"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
+              "line": 139,
+              "source": "await tools.getByRole('button', { name: '変更の影響を確認', exact: true }).click();"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
+              "line": 149,
               "source": "await tools.getByRole('button', { name: '確認した変更を保存', exact: true }).click();"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 161,
-              "source": "await page.reload();"
+              "line": 156,
+              "source": "await navigate(page, /^構成/);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
+              "line": 157,
+              "source": "await openEntity(page, 'dialogue_line', line.name);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
+              "line": 158,
+              "source": "await tools.locator('summary').click();"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
+              "line": 160,
+              "source": "await tools.getByRole('button', { name: '確認した変更を保存', exact: true }).click();"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
               "line": 162,
+              "source": "await page.reload();"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
+              "line": 163,
               "source": "const cold = await backup(page), oldLine = cold.project.entities.find(entity => entity.id === line.id);"
             }
           ],
           "assertion_source_lines": [
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 105,
+              "line": 106,
               "source": "expect(linked.length).toBeGreaterThanOrEqual(2);"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 109,
+              "line": 110,
               "source": "expect(oldNative.version).toBe(10);"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 111,
+              "line": 112,
               "source": "expect(nativeRows.blocks.length).toBeGreaterThan(0);"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 112,
+              "line": 113,
               "source": "expect(oldNative.tables.blocks.rows).toEqual(byId(nativeRows.blocks));"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 113,
+              "line": 114,
               "source": "expect(oldNative.tables.entities.rows).toEqual(byId(nativeRows.entities));"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 122,
+              "line": 123,
               "source": "await expect(page.getByRole('alert').filter({ hasText: /quota|Quota/ })).toBeVisible();"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 123,
+              "line": 124,
               "source": "expect(await image(page)).toEqual(oldNative);"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 124,
+              "line": 125,
               "source": "await expect(page.locator('.app-shell')).toHaveCount(0);"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 128,
+              "line": 129,
               "source": "expect(migrated.project).toEqual(p);"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 129,
+              "line": 130,
               "source": "expect((await image(page)).version).toBe(70);"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 139,
+              "line": 140,
               "source": "await expect(tools).toContainText('新台詞 2件');"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 149,
-              "source": "await expect(tools.getByRole('alert')).toContainText('容量');"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
               "line": 150,
-              "source": "await expect(tools).toContainText('新台詞 2件');"
+              "source": "await expect(tools.getByRole('alert')).toContainText('容量');"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
               "line": 151,
-              "source": "await expect(tools.getByLabel('分割する文字位置', { exact: true })).toHaveValue('4');"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 152,
-              "source": "await expect(tools.getByLabel('台詞変更の理由', { exact: true })).toHaveValue('AT-N06 同じ複数対象の変更を再試行');"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 153,
-              "source": "await expect(tools.getByRole('status').filter({ hasText: '表示版を確認' })).toHaveCount(0);"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 154,
-              "source": "expect(await image(page, true)).toEqual(beforeSave);"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 158,
               "source": "await expect(tools).toContainText('新台詞 2件');"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 160,
+              "line": 152,
+              "source": "await expect(tools.getByLabel('分割する文字位置', { exact: true })).toHaveValue('4');"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
+              "line": 153,
+              "source": "await expect(tools.getByLabel('台詞変更の理由', { exact: true })).toHaveValue('AT-N06 同じ複数対象の変更を再試行');"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
+              "line": 154,
+              "source": "await expect(tools.getByRole('status').filter({ hasText: '表示版を確認' })).toHaveCount(0);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
+              "line": 155,
+              "source": "expect(await image(page, true)).toEqual(beforeSave);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
+              "line": 159,
+              "source": "await expect(tools).toContainText('新台詞 2件');"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
+              "line": 161,
               "source": "await expect(tools.getByRole('status').filter({ hasText: '表示版を確認' })).toBeVisible();"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 164,
+              "line": 165,
               "source": "expect(oldLine.status).toBe('rejected');"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 165,
+              "line": 166,
               "source": "expect(oldLine.data.replacedByLineIds).toHaveLength(2);"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 168,
+              "line": 169,
               "source": "expect(newLines.every(entity => entity?.kind === 'dialogue_line')).toBe(true);"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 171,
+              "line": 172,
               "source": "expect(splitText).toBe(originalText);"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 172,
+              "line": 173,
               "source": "expect(cold.project.entities.some(entity => entity.kind === 'scene' && newIds.every(id => entity.data.dialogueLineIds?.includes(id)) && !entity.data.dialogueLineIds?.includes(line.id))).toBe(true);"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 173,
+              "line": 174,
               "source": "for (const original of linked) expect(cold.project.entities.find(entity => entity.id === original.id)?.data).toMatchObject({ stage: 'needs_review' });"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 174,
+              "line": 175,
               "source": "expect(cold.project.snapshots).toEqual(p.snapshots);"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 175,
+              "line": 176,
               "source": "expect(cold.project.history).toHaveLength(p.history.length + 1);"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 176,
+              "line": 177,
               "source": "expect(BigInt(cold.project.revision)).toBe(BigInt(p.revision) + 1n);"
             }
           ],
@@ -2111,18 +2111,18 @@
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
               "title": "AT-N06 同じ旧作品の移行失敗と台詞の複数対象保存の容量不足を原子拒否し、通常再試行後だけ全変更を確定する",
-              "line": 98,
+              "line": 99,
               "parameter_values": {},
               "binding_status": "authored_working_tree_location; refresh at final proof freeze"
             }
           ],
-          "authored_file_sha256": "ea154a94770eee6001926854b6e1a3ec7a6562212e837a28a6a42d237ec510fd",
+          "authored_file_sha256": "3c2857ad62360f29a56dd15c0e265cead2bf05cad4424eae4211700e4838c2ad",
           "missing_conditions": [],
           "sources": [
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 98,
-              "end_line": 178,
+              "line": 99,
+              "end_line": 179,
               "excerpt_sha256": "28c36cf1a977e79ac7de8605ba731bf0ca2103e3502d4b8016da0d7393b875a5",
               "binding_status": "authored_not_run; exact whole test callback span; no individual clause execution inferred"
             }
@@ -2130,224 +2130,224 @@
           "normal_operation_source_lines": [
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 121,
+              "line": 122,
               "source": "await page.goto('./');"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 125,
+              "line": 126,
               "source": "await page.getByRole('button', { name: '読み込みを再試行', exact: true }).click();"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 126,
+              "line": 127,
               "source": "await page.locator('.project-card').filter({ hasText: p.name }).click();"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 127,
+              "line": 128,
               "source": "const migrated = await backup(page);"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 133,
+              "line": 134,
               "source": "await openEntity(page, 'dialogue_line', line.name);"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 135,
-              "source": "await tools.locator('summary').click();"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
               "line": 136,
-              "source": "await tools.getByLabel('分割する文字位置', { exact: true }).fill('4');"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 137,
-              "source": "await tools.getByLabel('台詞変更の理由', { exact: true }).fill('AT-N06 同じ複数対象の変更を再試行');"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 138,
-              "source": "await tools.getByRole('button', { name: '変更の影響を確認', exact: true }).click();"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 148,
-              "source": "await tools.getByRole('button', { name: '確認した変更を保存', exact: true }).click();"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 155,
-              "source": "await navigate(page, /^構成/);"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 156,
-              "source": "await openEntity(page, 'dialogue_line', line.name);"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 157,
               "source": "await tools.locator('summary').click();"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 159,
+              "line": 137,
+              "source": "await tools.getByLabel('分割する文字位置', { exact: true }).fill('4');"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
+              "line": 138,
+              "source": "await tools.getByLabel('台詞変更の理由', { exact: true }).fill('AT-N06 同じ複数対象の変更を再試行');"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
+              "line": 139,
+              "source": "await tools.getByRole('button', { name: '変更の影響を確認', exact: true }).click();"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
+              "line": 149,
               "source": "await tools.getByRole('button', { name: '確認した変更を保存', exact: true }).click();"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 161,
-              "source": "await page.reload();"
+              "line": 156,
+              "source": "await navigate(page, /^構成/);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
+              "line": 157,
+              "source": "await openEntity(page, 'dialogue_line', line.name);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
+              "line": 158,
+              "source": "await tools.locator('summary').click();"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
+              "line": 160,
+              "source": "await tools.getByRole('button', { name: '確認した変更を保存', exact: true }).click();"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
               "line": 162,
+              "source": "await page.reload();"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
+              "line": 163,
               "source": "const cold = await backup(page), oldLine = cold.project.entities.find(entity => entity.id === line.id);"
             }
           ],
           "assertion_source_lines": [
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 105,
+              "line": 106,
               "source": "expect(linked.length).toBeGreaterThanOrEqual(2);"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 109,
+              "line": 110,
               "source": "expect(oldNative.version).toBe(10);"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 111,
+              "line": 112,
               "source": "expect(nativeRows.blocks.length).toBeGreaterThan(0);"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 112,
+              "line": 113,
               "source": "expect(oldNative.tables.blocks.rows).toEqual(byId(nativeRows.blocks));"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 113,
+              "line": 114,
               "source": "expect(oldNative.tables.entities.rows).toEqual(byId(nativeRows.entities));"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 122,
+              "line": 123,
               "source": "await expect(page.getByRole('alert').filter({ hasText: /quota|Quota/ })).toBeVisible();"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 123,
+              "line": 124,
               "source": "expect(await image(page)).toEqual(oldNative);"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 124,
+              "line": 125,
               "source": "await expect(page.locator('.app-shell')).toHaveCount(0);"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 128,
+              "line": 129,
               "source": "expect(migrated.project).toEqual(p);"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 129,
+              "line": 130,
               "source": "expect((await image(page)).version).toBe(70);"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 139,
+              "line": 140,
               "source": "await expect(tools).toContainText('新台詞 2件');"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 149,
-              "source": "await expect(tools.getByRole('alert')).toContainText('容量');"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
               "line": 150,
-              "source": "await expect(tools).toContainText('新台詞 2件');"
+              "source": "await expect(tools.getByRole('alert')).toContainText('容量');"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
               "line": 151,
-              "source": "await expect(tools.getByLabel('分割する文字位置', { exact: true })).toHaveValue('4');"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 152,
-              "source": "await expect(tools.getByLabel('台詞変更の理由', { exact: true })).toHaveValue('AT-N06 同じ複数対象の変更を再試行');"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 153,
-              "source": "await expect(tools.getByRole('status').filter({ hasText: '表示版を確認' })).toHaveCount(0);"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 154,
-              "source": "expect(await image(page, true)).toEqual(beforeSave);"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 158,
               "source": "await expect(tools).toContainText('新台詞 2件');"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 160,
+              "line": 152,
+              "source": "await expect(tools.getByLabel('分割する文字位置', { exact: true })).toHaveValue('4');"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
+              "line": 153,
+              "source": "await expect(tools.getByLabel('台詞変更の理由', { exact: true })).toHaveValue('AT-N06 同じ複数対象の変更を再試行');"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
+              "line": 154,
+              "source": "await expect(tools.getByRole('status').filter({ hasText: '表示版を確認' })).toHaveCount(0);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
+              "line": 155,
+              "source": "expect(await image(page, true)).toEqual(beforeSave);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
+              "line": 159,
+              "source": "await expect(tools).toContainText('新台詞 2件');"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
+              "line": 161,
               "source": "await expect(tools.getByRole('status').filter({ hasText: '表示版を確認' })).toBeVisible();"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 164,
+              "line": 165,
               "source": "expect(oldLine.status).toBe('rejected');"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 165,
+              "line": 166,
               "source": "expect(oldLine.data.replacedByLineIds).toHaveLength(2);"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 168,
+              "line": 169,
               "source": "expect(newLines.every(entity => entity?.kind === 'dialogue_line')).toBe(true);"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 171,
+              "line": 172,
               "source": "expect(splitText).toBe(originalText);"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 172,
+              "line": 173,
               "source": "expect(cold.project.entities.some(entity => entity.kind === 'scene' && newIds.every(id => entity.data.dialogueLineIds?.includes(id)) && !entity.data.dialogueLineIds?.includes(line.id))).toBe(true);"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 173,
+              "line": 174,
               "source": "for (const original of linked) expect(cold.project.entities.find(entity => entity.id === original.id)?.data).toMatchObject({ stage: 'needs_review' });"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 174,
+              "line": 175,
               "source": "expect(cold.project.snapshots).toEqual(p.snapshots);"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 175,
+              "line": 176,
               "source": "expect(cold.project.history).toHaveLength(p.history.length + 1);"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 176,
+              "line": 177,
               "source": "expect(BigInt(cold.project.revision)).toBe(BigInt(p.revision) + 1n);"
             }
           ],
@@ -2371,18 +2371,18 @@
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
               "title": "AT-N06 同じ旧作品の移行失敗と台詞の複数対象保存の容量不足を原子拒否し、通常再試行後だけ全変更を確定する",
-              "line": 98,
+              "line": 99,
               "parameter_values": {},
               "binding_status": "authored_working_tree_location; refresh at final proof freeze"
             }
           ],
-          "authored_file_sha256": "ea154a94770eee6001926854b6e1a3ec7a6562212e837a28a6a42d237ec510fd",
+          "authored_file_sha256": "3c2857ad62360f29a56dd15c0e265cead2bf05cad4424eae4211700e4838c2ad",
           "missing_conditions": [],
           "sources": [
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 98,
-              "end_line": 178,
+              "line": 99,
+              "end_line": 179,
               "excerpt_sha256": "28c36cf1a977e79ac7de8605ba731bf0ca2103e3502d4b8016da0d7393b875a5",
               "binding_status": "authored_not_run; exact whole test callback span; no individual clause execution inferred"
             }
@@ -2390,224 +2390,224 @@
           "normal_operation_source_lines": [
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 121,
+              "line": 122,
               "source": "await page.goto('./');"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 125,
+              "line": 126,
               "source": "await page.getByRole('button', { name: '読み込みを再試行', exact: true }).click();"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 126,
+              "line": 127,
               "source": "await page.locator('.project-card').filter({ hasText: p.name }).click();"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 127,
+              "line": 128,
               "source": "const migrated = await backup(page);"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 133,
+              "line": 134,
               "source": "await openEntity(page, 'dialogue_line', line.name);"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 135,
-              "source": "await tools.locator('summary').click();"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
               "line": 136,
-              "source": "await tools.getByLabel('分割する文字位置', { exact: true }).fill('4');"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 137,
-              "source": "await tools.getByLabel('台詞変更の理由', { exact: true }).fill('AT-N06 同じ複数対象の変更を再試行');"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 138,
-              "source": "await tools.getByRole('button', { name: '変更の影響を確認', exact: true }).click();"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 148,
-              "source": "await tools.getByRole('button', { name: '確認した変更を保存', exact: true }).click();"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 155,
-              "source": "await navigate(page, /^構成/);"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 156,
-              "source": "await openEntity(page, 'dialogue_line', line.name);"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 157,
               "source": "await tools.locator('summary').click();"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 159,
+              "line": 137,
+              "source": "await tools.getByLabel('分割する文字位置', { exact: true }).fill('4');"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
+              "line": 138,
+              "source": "await tools.getByLabel('台詞変更の理由', { exact: true }).fill('AT-N06 同じ複数対象の変更を再試行');"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
+              "line": 139,
+              "source": "await tools.getByRole('button', { name: '変更の影響を確認', exact: true }).click();"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
+              "line": 149,
               "source": "await tools.getByRole('button', { name: '確認した変更を保存', exact: true }).click();"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 161,
-              "source": "await page.reload();"
+              "line": 156,
+              "source": "await navigate(page, /^構成/);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
+              "line": 157,
+              "source": "await openEntity(page, 'dialogue_line', line.name);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
+              "line": 158,
+              "source": "await tools.locator('summary').click();"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
+              "line": 160,
+              "source": "await tools.getByRole('button', { name: '確認した変更を保存', exact: true }).click();"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
               "line": 162,
+              "source": "await page.reload();"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
+              "line": 163,
               "source": "const cold = await backup(page), oldLine = cold.project.entities.find(entity => entity.id === line.id);"
             }
           ],
           "assertion_source_lines": [
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 105,
+              "line": 106,
               "source": "expect(linked.length).toBeGreaterThanOrEqual(2);"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 109,
+              "line": 110,
               "source": "expect(oldNative.version).toBe(10);"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 111,
+              "line": 112,
               "source": "expect(nativeRows.blocks.length).toBeGreaterThan(0);"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 112,
+              "line": 113,
               "source": "expect(oldNative.tables.blocks.rows).toEqual(byId(nativeRows.blocks));"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 113,
+              "line": 114,
               "source": "expect(oldNative.tables.entities.rows).toEqual(byId(nativeRows.entities));"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 122,
+              "line": 123,
               "source": "await expect(page.getByRole('alert').filter({ hasText: /quota|Quota/ })).toBeVisible();"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 123,
+              "line": 124,
               "source": "expect(await image(page)).toEqual(oldNative);"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 124,
+              "line": 125,
               "source": "await expect(page.locator('.app-shell')).toHaveCount(0);"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 128,
+              "line": 129,
               "source": "expect(migrated.project).toEqual(p);"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 129,
+              "line": 130,
               "source": "expect((await image(page)).version).toBe(70);"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 139,
+              "line": 140,
               "source": "await expect(tools).toContainText('新台詞 2件');"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 149,
-              "source": "await expect(tools.getByRole('alert')).toContainText('容量');"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
               "line": 150,
-              "source": "await expect(tools).toContainText('新台詞 2件');"
+              "source": "await expect(tools.getByRole('alert')).toContainText('容量');"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
               "line": 151,
-              "source": "await expect(tools.getByLabel('分割する文字位置', { exact: true })).toHaveValue('4');"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 152,
-              "source": "await expect(tools.getByLabel('台詞変更の理由', { exact: true })).toHaveValue('AT-N06 同じ複数対象の変更を再試行');"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 153,
-              "source": "await expect(tools.getByRole('status').filter({ hasText: '表示版を確認' })).toHaveCount(0);"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 154,
-              "source": "expect(await image(page, true)).toEqual(beforeSave);"
-            },
-            {
-              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 158,
               "source": "await expect(tools).toContainText('新台詞 2件');"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 160,
+              "line": 152,
+              "source": "await expect(tools.getByLabel('分割する文字位置', { exact: true })).toHaveValue('4');"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
+              "line": 153,
+              "source": "await expect(tools.getByLabel('台詞変更の理由', { exact: true })).toHaveValue('AT-N06 同じ複数対象の変更を再試行');"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
+              "line": 154,
+              "source": "await expect(tools.getByRole('status').filter({ hasText: '表示版を確認' })).toHaveCount(0);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
+              "line": 155,
+              "source": "expect(await image(page, true)).toEqual(beforeSave);"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
+              "line": 159,
+              "source": "await expect(tools).toContainText('新台詞 2件');"
+            },
+            {
+              "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
+              "line": 161,
               "source": "await expect(tools.getByRole('status').filter({ hasText: '表示版を確認' })).toBeVisible();"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 164,
+              "line": 165,
               "source": "expect(oldLine.status).toBe('rejected');"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 165,
+              "line": 166,
               "source": "expect(oldLine.data.replacedByLineIds).toHaveLength(2);"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 168,
+              "line": 169,
               "source": "expect(newLines.every(entity => entity?.kind === 'dialogue_line')).toBe(true);"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 171,
+              "line": 172,
               "source": "expect(splitText).toBe(originalText);"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 172,
+              "line": 173,
               "source": "expect(cold.project.entities.some(entity => entity.kind === 'scene' && newIds.every(id => entity.data.dialogueLineIds?.includes(id)) && !entity.data.dialogueLineIds?.includes(line.id))).toBe(true);"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 173,
+              "line": 174,
               "source": "for (const original of linked) expect(cold.project.entities.find(entity => entity.id === original.id)?.data).toMatchObject({ stage: 'needs_review' });"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 174,
+              "line": 175,
               "source": "expect(cold.project.snapshots).toEqual(p.snapshots);"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 175,
+              "line": 176,
               "source": "expect(cold.project.history).toHaveLength(p.history.length + 1);"
             },
             {
               "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-              "line": 176,
+              "line": 177,
               "source": "expect(BigInt(cold.project.revision)).toBe(BigInt(p.revision) + 1n);"
             }
           ],
@@ -2621,8 +2621,8 @@
       "clause_mapping_result": "authored_not_run",
       "whole_test_source_entry": {
         "file": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
-        "line": 98,
-        "end_line": 178,
+        "line": 99,
+        "end_line": 179,
         "excerpt_sha256": "28c36cf1a977e79ac7de8605ba731bf0ca2103e3502d4b8016da0d7393b875a5",
         "source_excerpt": "test('AT-N06 同じ旧作品の移行失敗と台詞の複数対象保存の容量不足を原子拒否し、通常再試行後だけ全変更を確定する', async ({ page }, info) => {\n  const fixture = new Uint8Array(await readFile('tests/fixtures/rb07-production.scenario'));\n  const p = (await inspectScenario(fixture, { worker: false })).project;\n  const nativeRows = versionOneRows(p);\n  const line = p.entities.find(entity => entity.kind === 'dialogue_line');\n  if (!line || line.kind !== 'dialogue_line') throw new Error('複数対象へ影響する既存の原台詞 fixture がありません');\n  const linked = p.entities.filter(entity => (entity.kind === 'localization' || entity.kind === 'recording') && entity.data.sourceLineId === line.id);\n  expect(linked.length).toBeGreaterThanOrEqual(2);\n  await attachGiven(info, 'AT-N06', fixture, { projectId: p.projectId, nativeVersionBefore: 10, lineId: line.id, linkedIds: linked.map(entity => entity.id), oldSnapshotIds: p.snapshots.map(snapshot => snapshot.id), failures: ['createObjectStore(importDrafts) during native versionchange throws quota once', 'projects put during normal multi-target split throws quota once'] });\n  await installVersionOne(page, p, nativeRows);\n  const oldNative = await image(page);\n  expect(oldNative.version).toBe(10);\n  const byId = <T extends { id: string }>(rows: T[]) => rows.slice().sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0);\n  expect(nativeRows.blocks.length).toBeGreaterThan(0);\n  expect(oldNative.tables.blocks.rows).toEqual(byId(nativeRows.blocks));\n  expect(oldNative.tables.entities.rows).toEqual(byId(nativeRows.entities));\n  await page.addInitScript(name => {\n    const create = IDBDatabase.prototype.createObjectStore; let armed = true;\n    IDBDatabase.prototype.createObjectStore = function (...args: Parameters<IDBDatabase['createObjectStore']>) {\n      if (armed && this.name === name && args[0] === 'importDrafts') { armed = false; throw new DOMException('AT-N06 native migration quota', 'QuotaExceededError'); }\n      return create.apply(this, args);\n    };\n  }, databaseName);\n  await page.goto('./');\n  await expect(page.getByRole('alert').filter({ hasText: /quota|Quota/ })).toBeVisible();\n  expect(await image(page)).toEqual(oldNative);\n  await expect(page.locator('.app-shell')).toHaveCount(0);\n  await page.getByRole('button', { name: '読み込みを再試行', exact: true }).click();\n  await page.locator('.project-card').filter({ hasText: p.name }).click();\n  const migrated = await backup(page);\n  expect(migrated.project).toEqual(p);\n  expect((await image(page)).version).toBe(70);\n\n  // when: a normal split affects the old line, two new lines, scene ordering,\n  // translations/recording review state, history and outbox in one transaction.\n  await openEntity(page, 'dialogue_line', line.name);\n  const tools = page.locator('.production-tools');\n  await tools.locator('summary').click();\n  await tools.getByLabel('分割する文字位置', { exact: true }).fill('4');\n  await tools.getByLabel('台詞変更の理由', { exact: true }).fill('AT-N06 同じ複数対象の変更を再試行');\n  await tools.getByRole('button', { name: '変更の影響を確認', exact: true }).click();\n  await expect(tools).toContainText('新台詞 2件');\n  const beforeSave = await image(page, true);\n  await page.evaluate(() => {\n    const put = IDBObjectStore.prototype.put; let armed = true;\n    IDBObjectStore.prototype.put = function (...args: Parameters<IDBObjectStore['put']>) {\n      if (armed && this.name === 'projects') { armed = false; throw new DOMException('AT-N06 multi-target save quota', 'QuotaExceededError'); }\n      return put.apply(this, args);\n    };\n  });\n  await tools.getByRole('button', { name: '確認した変更を保存', exact: true }).click();\n  await expect(tools.getByRole('alert')).toContainText('容量');\n  await expect(tools).toContainText('新台詞 2件');\n  await expect(tools.getByLabel('分割する文字位置', { exact: true })).toHaveValue('4');\n  await expect(tools.getByLabel('台詞変更の理由', { exact: true })).toHaveValue('AT-N06 同じ複数対象の変更を再試行');\n  await expect(tools.getByRole('status').filter({ hasText: '表示版を確認' })).toHaveCount(0);\n  expect(await image(page, true)).toEqual(beforeSave);\n  await navigate(page, /^構成/);\n  await openEntity(page, 'dialogue_line', line.name);\n  await tools.locator('summary').click();\n  await expect(tools).toContainText('新台詞 2件');\n  await tools.getByRole('button', { name: '確認した変更を保存', exact: true }).click();\n  await expect(tools.getByRole('status').filter({ hasText: '表示版を確認' })).toBeVisible();\n  await page.reload();\n  const cold = await backup(page), oldLine = cold.project.entities.find(entity => entity.id === line.id);\n  if (!oldLine || oldLine.kind !== 'dialogue_line') throw new Error('保存した原台詞がありません');\n  expect(oldLine.status).toBe('rejected');\n  expect(oldLine.data.replacedByLineIds).toHaveLength(2);\n  const newIds = oldLine.data.replacedByLineIds!;\n  const newLines = newIds.map(id => cold.project.entities.find(entity => entity.id === id));\n  expect(newLines.every(entity => entity?.kind === 'dialogue_line')).toBe(true);\n  const originalText = line.data.text.map(block => block.text).join('\\n');\n  const splitText = newLines.map(entity => entity?.kind === 'dialogue_line' ? entity.data.text.map(block => block.text).join('\\n') : '').join('');\n  expect(splitText).toBe(originalText);\n  expect(cold.project.entities.some(entity => entity.kind === 'scene' && newIds.every(id => entity.data.dialogueLineIds?.includes(id)) && !entity.data.dialogueLineIds?.includes(line.id))).toBe(true);\n  for (const original of linked) expect(cold.project.entities.find(entity => entity.id === original.id)?.data).toMatchObject({ stage: 'needs_review' });\n  expect(cold.project.snapshots).toEqual(p.snapshots);\n  expect(cold.project.history).toHaveLength(p.history.length + 1);\n  expect(BigInt(cold.project.revision)).toBe(BigInt(p.revision) + 1n);\n  await attachObservation(info, 'AT-N06-observation', { oldNativeVersion: oldNative.version, currentNativeVersion: (await image(page, true)).version, rejectedMigrationNativeUnchanged: true, rejectedMultiTargetNativeUnchanged: true, observedCanonicalTables: Object.keys(beforeSave.tables), originalLineId: line.id, newLineIds: newIds, affectedLinkedIds: linked.map(entity => entity.id), coldRevision: cold.project.revision, coldHistoryLength: cold.project.history.length, oldSnapshotIds: cold.project.snapshots.map(snapshot => snapshot.id) });\n});\n",
         "binding_status": "authored_not_run; exact whole test callback span; no individual clause execution inferred"
@@ -20512,7 +20512,7 @@
     "src/ui/Fields.tsx": "1b61e659a73b6d20068e4e380306ef1893e1584103fb904deb83eae57898fda1",
     "src/ui/Reader.tsx": "25e51addb64d60f19ef51199940b03849f38df6ee77cf08437b2507ddf606406",
     "tests/conditionInputIssue.test.ts": "303f1e04531d05adb67e0bee4c04fc063154eaa5477374c4db1893c9c434283d",
-    "tests/e2e/ap04-original-n-atomic-migration.spec.ts": "ea154a94770eee6001926854b6e1a3ec7a6562212e837a28a6a42d237ec510fd",
+    "tests/e2e/ap04-original-n-atomic-migration.spec.ts": "3c2857ad62360f29a56dd15c0e265cead2bf05cad4424eae4211700e4838c2ad",
     "tests/e2e/ap04-original-n-condition-parity.spec.ts": "fb4531c77e656e42cf4715af423e967857fc029fe38b8320c2905fc221735740",
     "tests/e2e/ap04-original-n-f14-trigger.spec.ts": "d0cc69cc57c671d9ad006d3e27f1e54d152af9d47c8472129b18c6e0742f8644",
     "tests/e2e/ap04-original-n-f16-20.spec.ts": "57f915446494f7f39b8de1579be3d5f39e523fcf617b6780a42198e8a60fe792",

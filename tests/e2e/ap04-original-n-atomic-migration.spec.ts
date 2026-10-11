@@ -39,7 +39,8 @@ async function image(page: Page, canonicalOnly = false) {
       const canonical = ['projects', 'entities', 'relations', 'blocks', 'snapshots', 'commands', 'outbox', 'assets', 'recordParts', 'historyKeyframes', 'historyDeltas'];
       const names = [...db.objectStoreNames].filter(name => !canonicalOnly || canonical.includes(name)).sort();
       const tx = db.transaction(names, 'readonly');
-      const tables = await Promise.all(names.map(name => new Promise<[string, unknown]>((resolve, reject) => {
+      type NativeTableImage = { keyPath: IDBObjectStore['keyPath']; indexes: Array<{ name: string; keyPath: IDBIndex['keyPath']; unique: boolean }>; rows: unknown[] };
+      const tables = await Promise.all(names.map(name => new Promise<[string, NativeTableImage]>((resolve, reject) => {
         const table = tx.objectStore(name), request = table.getAll();
         request.onsuccess = () => resolve([name, { keyPath: table.keyPath, indexes: [...table.indexNames].sort().map(key => ({ name: key, keyPath: table.index(key).keyPath, unique: table.index(key).unique })), rows: request.result }]);
         request.onerror = () => reject(request.error);
