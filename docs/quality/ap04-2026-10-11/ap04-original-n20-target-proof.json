@@ -4,8 +4,8 @@
   "acceptance_pass_inferred": false,
   "browser_executed": false,
   "heavy_build_or_test_executed": false,
-  "candidate_commit": null,
-  "candidate_tree": null,
+  "candidate_commit": "4a435029e13a5e27af208b7ebe3c939bf0baa7e8",
+  "candidate_tree": "5e058d4969d011eac423ef760bc0a81f24aaf15d",
   "candidate_build": null,
   "original_requirement": {
     "id": "REQ-N20",
@@ -156,17 +156,18 @@
     "src/ui/WorkPage.tsx"
   ],
   "preserved_scope": [
-    "Existing reader/publicCatalogIndex edits stay intact.",
+    "AP04 publicCatalog import and reader-index export hunks are excluded. Prerequisite reader/publicCatalog behavior is preserved; only AP06 runtime-target changes are applied.",
     "Native archive, public projection oneOf, source version/hash/privacy/reference guards and downloadable runtime schemas/formats are unchanged.",
     "Unsupported target selection is a compatibility inspection only."
   ],
   "authored_file_sha256": {
-    "src/domain/exports.ts": "f1a0becd60b1bd0c41af066e70b66fae465a341c4501961d155fa0b9929d4577",
+    "src/domain/exports.ts": "1f4d51a28f0c67da82858c6216420ededdcbf19579f999e66cb654f665402abf",
     "src/ui/WorkPage.tsx": "496c63080cac7b3d0861a7b161899a66563262ad24c16260eeeb29f079b782bb",
     "tests/runtimeTargetCompatibility.test.ts": "7a2985ecabf0d6d091b64af4bafafb1a851bdc719e593d779f20e277604f7e78",
-    "tests/e2e/ap04-original-n20-targets.spec.ts": "451ff264ac98db62cc828c5b7e33dda9a8571bd273b5a8e1da934fcee2e08ee3"
+    "tests/e2e/ap04-original-n20-targets.spec.ts": "451ff264ac98db62cc828c5b7e33dda9a8571bd273b5a8e1da934fcee2e08ee3",
+    "tests/e2e/ap04-original-helpers.ts": "d682676dde860f7e95fec51a1faf363384d9b1adc99ee9ba4ff52b33866f0116"
   },
-  "file_hash_binding": "Working-tree authoring snapshot only. Root must refresh hashes/callbacks and bind exact commit/tree/build after final type/flow fixes.",
+  "file_hash_binding": "AP06 main-based source package at candidate_commit/tree. Actual phase bytes bound; build/browser/unit not_run. Documentation-only proof refresh is a later commit and does not claim accepted runtime evidence.",
   "remaining_conditions": [
     {
       "condition": "Browser replay on the final bound candidate",
@@ -190,5 +191,6 @@
       "support_status": "not_implemented",
       "actual_execution_observed": false
     }
-  ]
+  ],
+  "candidate_binding_kind": "authored_source_only_not_generated_or_executed"
 }

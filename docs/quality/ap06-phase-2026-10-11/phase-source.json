@@ -1,0 +1,681 @@
+{
+  "schemaVersion": 1,
+  "phase": "AP06",
+  "status": "authored_source_only_not_run",
+  "mainCommit": "8285608c75791ed1ea01380751abb3805913b639",
+  "mainTree": "bd4a7bd57e557743c08b530d85d035fe63bdc676",
+  "prerequisiteAP03Tip": "4d0f844535e7976153514830809ca52a2734aa94",
+  "sourceCommitBeforeDocumentationRefresh": "4a435029e13a5e27af208b7ebe3c939bf0baa7e8",
+  "sourceTreeBeforeDocumentationRefresh": "5e058d4969d011eac423ef760bc0a81f24aaf15d",
+  "intendedBranch": "fix/ap06-runtime-contract-targets-20261011",
+  "originalAP06Plan": {
+    "id": "AP06",
+    "title": "実同期・秘密・出力互換・容量を確認する",
+    "depends_on": [
+      "AP03"
+    ],
+    "gap_ids": [
+      "G11",
+      "G12",
+      "G14"
+    ],
+    "extension_ids": [],
+    "phase": "existing_completion",
+    "paths": [
+      "src/sync",
+      "supabase/migrations",
+      "scripts/sync",
+      "src/domain/exports.ts",
+      "src/portable/gameReceiver.ts"
+    ],
+    "deliverables": "専用構成/役割表/現行上限表、5実アカウント/二端末/直接API/private素材の結果、出力互換表、汎用受取例の版/hash往復。",
+    "gate": "原E05/E06/E09/N07/N08/N17/N20の実条件を満たす。未対応は拒否、秘密は図/索引/件数/素材/出力すべてから除外。",
+    "rollback": "専用fixture tenantと元データのbackupを用意。構成差分を具体化した後、本人の既存許可の範囲でのみ適用する。別用途の実験場へ接続しない。",
+    "risks": "接続先/権限/現行上限が未指定。外部条件を理由に独立の受取例/通常検査を止めない。",
+    "status": "planned",
+    "estimate_status": "unestimated",
+    "acceptance_ids": [
+      "AC-G11-N",
+      "AC-G11-E",
+      "AC-G12-N",
+      "AC-G12-E",
+      "AC-G14-N",
+      "AC-G14-E"
+    ],
+    "original_requirement_ids": [
+      "REQ-F19",
+      "REQ-F21",
+      "REQ-F24",
+      "REQ-F29",
+      "REQ-F30",
+      "REQ-F34",
+      "REQ-F42",
+      "REQ-F54",
+      "REQ-N04",
+      "REQ-N05",
+      "REQ-N07",
+      "REQ-N08",
+      "REQ-N17",
+      "REQ-N19",
+      "REQ-N20"
+    ],
+    "original_work_packages": [
+      "WP10",
+      "WP12",
+      "WP14",
+      "WP17",
+      "WP18",
+      "WP19",
+      "WP21",
+      "WP22",
+      "WP23",
+      "WP24"
+    ]
+  },
+  "receiverOriginalCommits": [
+    "592d29e",
+    "7271171"
+  ],
+  "receiverPhaseCommits": [
+    "46b37cd",
+    "e0c7dc5"
+  ],
+  "targetOnlyOriginalCommit": "70fa53bfd85b8e04564c95aa9f19e6e2e9afcffc",
+  "includedExportsHunks": [
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+  ],
+  "excludedAP04ExportsHunks": [
+    1,
+    10,
+    11
+  ],
+  "sourceBindings": [
+    {
+      "file": "docs/implementation/AP06_GAME_RECEIVER.md",
+      "bytes": 6174,
+      "sha256": "2e3d2305b6714b57a4a3180af6554f16705c8438cdaa8ec8f180fe6899c18e08"
+    },
+    {
+      "file": "docs/quality/ap04-2026-10-11/local_acceptance_plan.json",
+      "bytes": 791066,
+      "sha256": "bbbbd0397c084a61a8616379a0dd9e051e76eaf2181238f4daae67ec4e1c6160"
+    },
+    {
+      "file": "src/domain/exports.ts",
+      "bytes": 60277,
+      "sha256": "1f4d51a28f0c67da82858c6216420ededdcbf19579f999e66cb654f665402abf"
+    },
+    {
+      "file": "src/domain/gameProtocol.ts",
+      "bytes": 26483,
+      "sha256": "7983c172bab7a3f5c8e76cf93a08d19119c044957c7b809acfce0ce8088ac47a"
+    },
+    {
+      "file": "src/ui/WorkPage.tsx",
+      "bytes": 31807,
+      "sha256": "496c63080cac7b3d0861a7b161899a66563262ad24c16260eeeb29f079b782bb"
+    },
+    {
+      "file": "tests/e2e/ap04-original-helpers.ts",
+      "bytes": 4372,
+      "sha256": "d682676dde860f7e95fec51a1faf363384d9b1adc99ee9ba4ff52b33866f0116"
+    },
+    {
+      "file": "tests/e2e/ap04-original-n20-targets.spec.ts",
+      "bytes": 13154,
+      "sha256": "451ff264ac98db62cc828c5b7e33dda9a8571bd273b5a8e1da934fcee2e08ee3"
+    },
+    {
+      "file": "tests/gameReceiverContract.test.ts",
+      "bytes": 13778,
+      "sha256": "e4b105877cfc4f6f9529ca2808e41eaad5daf371a653662c49876f1b2a8e0479"
+    },
+    {
+      "file": "tests/runtimeTargetCompatibility.test.ts",
+      "bytes": 9719,
+      "sha256": "7a2985ecabf0d6d091b64af4bafafb1a851bdc719e593d779f20e277604f7e78"
+    }
+  ],
+  "relativeImports": [
+    {
+      "file": "src/domain/exports.ts",
+      "relativeImport": "./types",
+      "exists": true,
+      "status": "exists",
+      "requiresPhaseGeneration": false
+    },
+    {
+      "file": "src/domain/exports.ts",
+      "relativeImport": "../portable/generated/runtime.js?raw",
+      "exists": false,
+      "status": "generated_dependency_not_run",
+      "requiresPhaseGeneration": true
+    },
+    {
+      "file": "src/domain/exports.ts",
+      "relativeImport": "./portableRuntimeProject",
+      "exists": true,
+      "status": "exists",
+      "requiresPhaseGeneration": false
+    },
+    {
+      "file": "src/domain/exports.ts",
+      "relativeImport": "../storage/json",
+      "exists": true,
+      "status": "exists",
+      "requiresPhaseGeneration": false
+    },
+    {
+      "file": "src/domain/exports.ts",
+      "relativeImport": "./attachments",
+      "exists": true,
+      "status": "exists",
+      "requiresPhaseGeneration": false
+    },
+    {
+      "file": "src/domain/exports.ts",
+      "relativeImport": "./production",
+      "exists": true,
+      "status": "exists",
+      "requiresPhaseGeneration": false
+    },
+    {
+      "file": "src/domain/exports.ts",
+      "relativeImport": "./model",
+      "exists": true,
+      "status": "exists",
+      "requiresPhaseGeneration": false
+    },
+    {
+      "file": "src/domain/exports.ts",
+      "relativeImport": "./projection",
+      "exists": true,
+      "status": "exists",
+      "requiresPhaseGeneration": false
+    },
+    {
+      "file": "src/domain/exports.ts",
+      "relativeImport": "./exportPreparation",
+      "exists": true,
+      "status": "exists",
+      "requiresPhaseGeneration": false
+    },
+    {
+      "file": "src/domain/exports.ts",
+      "relativeImport": "./projection",
+      "exists": true,
+      "status": "exists",
+      "requiresPhaseGeneration": false
+    },
+    {
+      "file": "src/domain/gameProtocol.ts",
+      "relativeImport": "./types",
+      "exists": true,
+      "status": "exists",
+      "requiresPhaseGeneration": false
+    },
+    {
+      "file": "src/domain/gameProtocol.ts",
+      "relativeImport": "./runtimeVerified",
+      "exists": true,
+      "status": "exists",
+      "requiresPhaseGeneration": false
+    },
+    {
+      "file": "src/domain/gameProtocol.ts",
+      "relativeImport": "./runtime",
+      "exists": true,
+      "status": "exists",
+      "requiresPhaseGeneration": false
+    },
+    {
+      "file": "src/domain/gameProtocol.ts",
+      "relativeImport": "../storage/json",
+      "exists": true,
+      "status": "exists",
+      "requiresPhaseGeneration": false
+    },
+    {
+      "file": "src/domain/gameProtocol.ts",
+      "relativeImport": "./portableRuntimeProject",
+      "exists": true,
+      "status": "exists",
+      "requiresPhaseGeneration": false
+    },
+    {
+      "file": "src/domain/gameProtocol.ts",
+      "relativeImport": "./projection",
+      "exists": true,
+      "status": "exists",
+      "requiresPhaseGeneration": false
+    },
+    {
+      "file": "src/domain/gameProtocol.ts",
+      "relativeImport": "./projection",
+      "exists": true,
+      "status": "exists",
+      "requiresPhaseGeneration": false
+    },
+    {
+      "file": "src/domain/gameProtocol.ts",
+      "relativeImport": "./attachments",
+      "exists": true,
+      "status": "exists",
+      "requiresPhaseGeneration": false
+    },
+    {
+      "file": "src/domain/gameProtocol.ts",
+      "relativeImport": "./gameEvidence",
+      "exists": true,
+      "status": "exists",
+      "requiresPhaseGeneration": false
+    },
+    {
+      "file": "src/domain/gameProtocol.ts",
+      "relativeImport": "./time",
+      "exists": true,
+      "status": "exists",
+      "requiresPhaseGeneration": false
+    },
+    {
+      "file": "src/ui/WorkPage.tsx",
+      "relativeImport": "./StoreContext",
+      "exists": true,
+      "status": "exists",
+      "requiresPhaseGeneration": false
+    },
+    {
+      "file": "src/ui/WorkPage.tsx",
+      "relativeImport": "./authorOperation",
+      "exists": true,
+      "status": "exists",
+      "requiresPhaseGeneration": false
+    },
+    {
+      "file": "src/ui/WorkPage.tsx",
+      "relativeImport": "./PagedSelect",
+      "exists": true,
+      "status": "exists",
+      "requiresPhaseGeneration": false
+    },
+    {
+      "file": "src/ui/WorkPage.tsx",
+      "relativeImport": "./WindowedList",
+      "exists": true,
+      "status": "exists",
+      "requiresPhaseGeneration": false
+    },
+    {
+      "file": "src/ui/WorkPage.tsx",
+      "relativeImport": "./ExportCitationTools",
+      "exists": true,
+      "status": "exists",
+      "requiresPhaseGeneration": false
+    },
+    {
+      "file": "src/ui/WorkPage.tsx",
+      "relativeImport": "./ConsultationContext",
+      "exists": true,
+      "status": "exists",
+      "requiresPhaseGeneration": false
+    },
+    {
+      "file": "src/ui/WorkPage.tsx",
+      "relativeImport": "../domain/projection",
+      "exists": true,
+      "status": "exists",
+      "requiresPhaseGeneration": false
+    },
+    {
+      "file": "src/ui/WorkPage.tsx",
+      "relativeImport": "../domain/reuse",
+      "exists": true,
+      "status": "exists",
+      "requiresPhaseGeneration": false
+    },
+    {
+      "file": "src/ui/WorkPage.tsx",
+      "relativeImport": "../domain/pinnedWorlds",
+      "exists": true,
+      "status": "exists",
+      "requiresPhaseGeneration": false
+    },
+    {
+      "file": "src/ui/WorkPage.tsx",
+      "relativeImport": "./projectSettingsDraft",
+      "exists": true,
+      "status": "exists",
+      "requiresPhaseGeneration": false
+    },
+    {
+      "file": "src/ui/WorkPage.tsx",
+      "relativeImport": "../domain/types",
+      "exists": true,
+      "status": "exists",
+      "requiresPhaseGeneration": false
+    },
+    {
+      "file": "src/ui/WorkPage.tsx",
+      "relativeImport": "../domain/model",
+      "exists": true,
+      "status": "exists",
+      "requiresPhaseGeneration": false
+    },
+    {
+      "file": "src/ui/WorkPage.tsx",
+      "relativeImport": "../domain/exports",
+      "exists": true,
+      "status": "exists",
+      "requiresPhaseGeneration": false
+    },
+    {
+      "file": "src/ui/WorkPage.tsx",
+      "relativeImport": "../storage",
+      "exists": true,
+      "status": "exists",
+      "requiresPhaseGeneration": false
+    },
+    {
+      "file": "src/ui/WorkPage.tsx",
+      "relativeImport": "../domain/attachments",
+      "exists": true,
+      "status": "exists",
+      "requiresPhaseGeneration": false
+    },
+    {
+      "file": "src/ui/WorkPage.tsx",
+      "relativeImport": "./components",
+      "exists": true,
+      "status": "exists",
+      "requiresPhaseGeneration": false
+    },
+    {
+      "file": "src/ui/WorkPage.tsx",
+      "relativeImport": "./Fields",
+      "exists": true,
+      "status": "exists",
+      "requiresPhaseGeneration": false
+    },
+    {
+      "file": "src/ui/WorkPage.tsx",
+      "relativeImport": "./BackupPanel",
+      "exists": true,
+      "status": "exists",
+      "requiresPhaseGeneration": false
+    },
+    {
+      "file": "src/ui/WorkPage.tsx",
+      "relativeImport": "./HistoryPanel",
+      "exists": true,
+      "status": "exists",
+      "requiresPhaseGeneration": false
+    },
+    {
+      "file": "tests/e2e/ap04-original-helpers.ts",
+      "relativeImport": "../../src/storage/archive",
+      "exists": true,
+      "status": "exists",
+      "requiresPhaseGeneration": false
+    },
+    {
+      "file": "tests/e2e/ap04-original-n20-targets.spec.ts",
+      "relativeImport": "../../src/domain/model",
+      "exists": true,
+      "status": "exists",
+      "requiresPhaseGeneration": false
+    },
+    {
+      "file": "tests/e2e/ap04-original-n20-targets.spec.ts",
+      "relativeImport": "../../src/storage/archive",
+      "exists": true,
+      "status": "exists",
+      "requiresPhaseGeneration": false
+    },
+    {
+      "file": "tests/e2e/ap04-original-n20-targets.spec.ts",
+      "relativeImport": "../../src/storage/json",
+      "exists": true,
+      "status": "exists",
+      "requiresPhaseGeneration": false
+    },
+    {
+      "file": "tests/e2e/ap04-original-n20-targets.spec.ts",
+      "relativeImport": "./ap04-original-helpers",
+      "exists": true,
+      "status": "exists",
+      "requiresPhaseGeneration": false
+    },
+    {
+      "file": "tests/gameReceiverContract.test.ts",
+      "relativeImport": "../src/domain/model",
+      "exists": true,
+      "status": "exists",
+      "requiresPhaseGeneration": false
+    },
+    {
+      "file": "tests/gameReceiverContract.test.ts",
+      "relativeImport": "../src/domain/exports",
+      "exists": true,
+      "status": "exists",
+      "requiresPhaseGeneration": false
+    },
+    {
+      "file": "tests/gameReceiverContract.test.ts",
+      "relativeImport": "../src/domain/gameProtocol",
+      "exists": true,
+      "status": "exists",
+      "requiresPhaseGeneration": false
+    },
+    {
+      "file": "tests/gameReceiverContract.test.ts",
+      "relativeImport": "../src/domain/portableRuntimeProject",
+      "exists": true,
+      "status": "exists",
+      "requiresPhaseGeneration": false
+    },
+    {
+      "file": "tests/gameReceiverContract.test.ts",
+      "relativeImport": "../src/domain/projection",
+      "exists": true,
+      "status": "exists",
+      "requiresPhaseGeneration": false
+    },
+    {
+      "file": "tests/gameReceiverContract.test.ts",
+      "relativeImport": "../src/storage/json",
+      "exists": true,
+      "status": "exists",
+      "requiresPhaseGeneration": false
+    },
+    {
+      "file": "tests/runtimeTargetCompatibility.test.ts",
+      "relativeImport": "../src/domain/model",
+      "exists": true,
+      "status": "exists",
+      "requiresPhaseGeneration": false
+    },
+    {
+      "file": "tests/runtimeTargetCompatibility.test.ts",
+      "relativeImport": "../src/domain/exports",
+      "exists": true,
+      "status": "exists",
+      "requiresPhaseGeneration": false
+    },
+    {
+      "file": "tests/runtimeTargetCompatibility.test.ts",
+      "relativeImport": "../src/storage/json",
+      "exists": true,
+      "status": "exists",
+      "requiresPhaseGeneration": false
+    },
+    {
+      "file": "tests/runtimeTargetCompatibility.test.ts",
+      "relativeImport": "../src/domain/exports",
+      "exists": true,
+      "status": "exists",
+      "requiresPhaseGeneration": false
+    }
+  ],
+  "rawSourceSnapshots": [
+    {
+      "path": "tests/e2e/ap04-original-n20-targets.spec.ts",
+      "sourceCommit": "c2077620ca6b72a1994aec6e29efdd7325cea6ab",
+      "bytes": 13154,
+      "sha256": "451ff264ac98db62cc828c5b7e33dda9a8571bd273b5a8e1da934fcee2e08ee3"
+    },
+    {
+      "path": "tests/e2e/ap04-original-helpers.ts",
+      "sourceCommit": "c2077620ca6b72a1994aec6e29efdd7325cea6ab",
+      "bytes": 4372,
+      "sha256": "d682676dde860f7e95fec51a1faf363384d9b1adc99ee9ba4ff52b33866f0116"
+    },
+    {
+      "path": "docs/quality/ap04-2026-10-11/ap04-original-n20-target-proof.json",
+      "sourceCommit": "c2077620ca6b72a1994aec6e29efdd7325cea6ab",
+      "bytes": 10491,
+      "sha256": "0740d4abd42af68f2609584cf06ee7bf71b243108c4954cadf9469b8894209ea"
+    },
+    {
+      "path": "docs/quality/ap04-2026-10-11/local_acceptance_plan.json",
+      "sourceCommit": "c2077620ca6b72a1994aec6e29efdd7325cea6ab",
+      "bytes": 791066,
+      "sha256": "bbbbd0397c084a61a8616379a0dd9e051e76eaf2181238f4daae67ec4e1c6160"
+    },
+    {
+      "path": "docs/quality/runtime-2026-10-11/ap06-public-limits/compute_and_disk.html",
+      "sourceCommit": "c2077620ca6b72a1994aec6e29efdd7325cea6ab",
+      "bytes": 240325,
+      "sha256": "1b9223de96feb40b0c6d584a5bf239e78bd6db111ab4aaeb8663567249dc43f8"
+    },
+    {
+      "path": "docs/quality/runtime-2026-10-11/ap06-public-limits/compute_and_disk.txt",
+      "sourceCommit": "c2077620ca6b72a1994aec6e29efdd7325cea6ab",
+      "bytes": 12663,
+      "sha256": "602bce7cc92a5e178e60181d806f34f9d02f0f39d6803b569c1c2c4dc165d244"
+    },
+    {
+      "path": "docs/quality/runtime-2026-10-11/ap06-public-limits/edge_limits.html",
+      "sourceCommit": "c2077620ca6b72a1994aec6e29efdd7325cea6ab",
+      "bytes": 144131,
+      "sha256": "85c9d8ff871a4eb08ee91414c2335dc93ce36460fac3596c4070e2d9f69f5d9a"
+    },
+    {
+      "path": "docs/quality/runtime-2026-10-11/ap06-public-limits/edge_limits.txt",
+      "sourceCommit": "c2077620ca6b72a1994aec6e29efdd7325cea6ab",
+      "bytes": 3803,
+      "sha256": "2ff20976dcb4ce5531b92c9b25c1f390cf4e3ce96b53d62fc3d72b6a1f15c57c"
+    },
+    {
+      "path": "docs/quality/runtime-2026-10-11/ap06-public-limits/fetch-manifest.json",
+      "sourceCommit": "c2077620ca6b72a1994aec6e29efdd7325cea6ab",
+      "bytes": 1846,
+      "sha256": "1bb2bcb74109769be08ab0280716f0c2fca36806e209f80addfc2f57a441ec67"
+    },
+    {
+      "path": "docs/quality/runtime-2026-10-11/ap06-public-limits/pricing.html",
+      "sourceCommit": "c2077620ca6b72a1994aec6e29efdd7325cea6ab",
+      "bytes": 386726,
+      "sha256": "ea4ddee13072625cd3f4dfd0c0663803b298ffa70dfc994ab8ea75967f613bf8"
+    },
+    {
+      "path": "docs/quality/runtime-2026-10-11/ap06-public-limits/pricing.txt",
+      "sourceCommit": "c2077620ca6b72a1994aec6e29efdd7325cea6ab",
+      "bytes": 17855,
+      "sha256": "6fb08fc12b0e7a31ff7821158e885ca37cff54cd2138bac1a3befe121699374d"
+    },
+    {
+      "path": "docs/quality/runtime-2026-10-11/ap06-public-limits/retention.json",
+      "sourceCommit": "c2077620ca6b72a1994aec6e29efdd7325cea6ab",
+      "bytes": 2789,
+      "sha256": "b6d02145853a48262ae122000c2c434273b40da85e79204860296120089aed4f"
+    },
+    {
+      "path": "docs/quality/runtime-2026-10-11/ap06-public-limits/storage_file_limits.html",
+      "sourceCommit": "c2077620ca6b72a1994aec6e29efdd7325cea6ab",
+      "bytes": 148445,
+      "sha256": "713446136da22295797d20016917408606a94c6005c46b181bc80474363dc2ac"
+    },
+    {
+      "path": "docs/quality/runtime-2026-10-11/ap06-public-limits/storage_file_limits.txt",
+      "sourceCommit": "c2077620ca6b72a1994aec6e29efdd7325cea6ab",
+      "bytes": 2779,
+      "sha256": "72e6d81fad9361fcdd29edea1f8d4725da42f2f330565bc991fa0f3ff352bdd7"
+    },
+    {
+      "path": "docs/implementation/EXTERNAL_CONDITIONS.md",
+      "sourceCommit": "c2077620ca6b72a1994aec6e29efdd7325cea6ab",
+      "bytes": 5612,
+      "sha256": "fbe40bb82f512600de60353fbdb57add3cb0a53e96b425641abd28d57ac22326"
+    },
+    {
+      "path": "docs/quality/runtime-2026-10-11/external-prerequisites.json",
+      "sourceCommit": "c2077620ca6b72a1994aec6e29efdd7325cea6ab",
+      "bytes": 945,
+      "sha256": "dc7a57608330f18cf2cdba6e78354cdc372aa5c5375b2a4af8e2cfb1bcd90565"
+    }
+  ],
+  "staticChecks": {
+    "allNonGeneratedRelativeImportsExist": true,
+    "allRelativeImportsExist": false,
+    "uncreatedGeneratedDependencies": [
+      {
+        "file": "src/domain/exports.ts",
+        "relativeImport": "../portable/generated/runtime.js?raw",
+        "exists": false,
+        "status": "generated_dependency_not_run",
+        "requiresPhaseGeneration": true
+      }
+    ],
+    "publicLimitOriginalHashes": true,
+    "originalN20FourClausesUnchanged": true,
+    "exportsSubsetPlusAP04ReconstructsOriginal": {
+      "status": "passed_static_source_only",
+      "baseSHA256": "e12ee6aa221e0807469c066c2b838a5328ac7a0e6de37082906c27c57ca794f9",
+      "AP06OnlySHA256": "1f4d51a28f0c67da82858c6216420ededdcbf19579f999e66cb654f665402abf",
+      "AP06PlusAP04Equals70fa53bFinal": true,
+      "combinedSHA256": "f1a0becd60b1bd0c41af066e70b66fae465a341c4501961d155fa0b9929d4577",
+      "noBuildUnitBrowserExportExecuted": true
+    },
+    "syntaxParse": {
+      "result": "not_run",
+      "reason": "Fresh phase dependencies are not installed. Existing runtime checkout has TypeScript 7.0.2 native CLI/version module and no createSourceFile compiler API; source-only syntax attempt could not run. No dependency install/typecheck/build performed.",
+      "attempts": [
+        {
+          "result": "tool_unavailable",
+          "module": "/workspace/shinariokanri/node_modules/typescript",
+          "reason": "MODULE_NOT_FOUND; root dependencies not installed"
+        },
+        {
+          "result": "api_unavailable",
+          "module": "/workspace/runtime-verification/node_modules/typescript/lib/version.cjs",
+          "version": "7.0.2",
+          "createSourceFile": "undefined"
+        }
+      ]
+    }
+  },
+  "proofReboundToActualPhaseBytes": true,
+  "dependencyInstall": "not_run",
+  "portableRuntimeGenerated": "not_run",
+  "productionBuild": "not_run",
+  "candidateBuild": null,
+  "phaseUnit": "not_run",
+  "phaseBrowser": "not_run",
+  "phasePerformance": "not_run",
+  "actualAuthRlsStorageQuotas": "not_run",
+  "dedicatedFiveRolesTwoDevices": "not_run",
+  "phaseHostedCI": "not_run",
+  "b56OrPR44ResultsTransferredToPhaseAcceptance": false,
+  "wholeOriginalAcceptancePromotion": false,
+  "schemaOrArchiveLimitsOrThresholdsChanged": false,
+  "databaseOrStorageOrBillingModified": false,
+  "rootOrRuntimeWorktreeModified": false,
+  "pushOrPRCreated": false
+}
