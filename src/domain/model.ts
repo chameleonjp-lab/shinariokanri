@@ -7,7 +7,7 @@ import { validateTemplateAssignments, validateTemplateDefinition } from './templ
 import { measureText } from './textMetrics';
 import { contentValidationContext, type ContentValidationMemo } from './contentValidationMemo';
 import { captureImmutablePlainData, isImmutablePlainData } from './immutablePlainData';
-import { canonicalJson } from '../storage/json';
+import { isValidUnicode } from '../storage/json';
 
 export const KIND_LABELS: Record<EntityKind, string> = {
   character: '人物', group: 'グループ', event: '出来事', place: '場所', item: '物品', note: 'メモ', chapter: '章', scene: '場面', goal: '目標',
@@ -1159,6 +1159,7 @@ function validationSchemaSignature(): string | undefined {
   const visit = (value: unknown, depth: number): unknown => {
     if (depth > 128) throw new Error('Unsupported schema depth');
     if (value === undefined) return ['undefined'];
+    if (typeof value === 'string' && !isValidUnicode(value) || typeof value === 'number' && !Number.isFinite(value)) throw new Error('Unsupported schema scalar');
     if (value === null || ['string', 'boolean', 'number'].includes(typeof value)) return ['value', value];
     if (typeof value !== 'object' || active.has(value)) throw new Error('Unsupported schema value');
     const object = value as object, previous = seen.get(object);
@@ -1166,7 +1167,7 @@ function validationSchemaSignature(): string | undefined {
     const array = Array.isArray(object), prototype = Object.getPrototypeOf(object);
     if (array ? prototype !== Array.prototype : prototype !== Object.prototype && prototype !== null) throw new Error('Unsupported schema prototype');
     const keys = Reflect.ownKeys(object);
-    if (keys.some(key => typeof key !== 'string' || ['__proto__', 'constructor', 'prototype'].includes(key))) throw new Error('Unsupported schema key');
+    if (keys.some(key => typeof key !== 'string' || !isValidUnicode(key) || ['__proto__', 'constructor', 'prototype'].includes(key))) throw new Error('Unsupported schema key');
     if (array && (keys.length !== object.length + 1 || keys.some(key => key !== 'length' && (!/^(0|[1-9]\d*)$/.test(String(key)) || Number(key) >= object.length)))) throw new Error('Unsupported schema array');
     const id = nodes.length, fields: unknown[] = [];
     seen.set(object, id); active.add(object); nodes.push([array ? 'array' : 'object', fields]);
@@ -1181,7 +1182,10 @@ function validationSchemaSignature(): string | undefined {
   };
   try {
     const root = visit({ schemas: ENTITY_SCHEMAS, kinds: ENTITY_KINDS, statuses: STATUSES, scopes: SCOPES }, 0);
-    return canonicalJson({ root, nodes });
+    // The traversal already sorted every own key and produced finite, valid
+    // primitive values in tagged dense arrays. Native JSON encoding preserves
+    // this exact internal signature without rewalking it in canonicalJson.
+    return JSON.stringify({ root, nodes });
   } catch { return undefined; }
 }
 

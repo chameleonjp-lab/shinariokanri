@@ -17,6 +17,7 @@ import { validateProjectIntegrity } from '../domain/projectRecordValidation';
 import { sealAuthorAlternative } from '../domain/authorAlternativeIntegrity';
 import { appendAlternativeVersion, applyAlternativeChanges, projectContent } from '../domain/writingWorkspace';
 import { assetPath, attachmentMetadata, closureAttachmentMetadata, exportScenario, exportNativeScenario, performImportWork, referencedWorlds, validateAsset, verifySnapshotHashes, verifyWorlds, worldSnapshotContents, type PreparedScenario, type ImportWorkStep } from './archive';
+import {createImportWorkSession} from './importWorkSession';
 import { checkCancelled, saveError, StorageError } from './errors';
 import { canonicalJson, createCanonicalJsonCache, equalJson, jsonBytes as encodeJsonBytes, sha256, validateJsonValue } from './json';
 import { recoveryImages, projectWithRecoveryHistory, type PortableRecovery } from './recovery';
@@ -1351,6 +1352,7 @@ export class ScenarioStore {
 
   async importScenario(preparedInput: PreparedScenario, optionsInput: ImportOptions): Promise<ImportResult> {
     const options = { ...optionsInput, idMap: optionsInput.idMap ? copy(optionsInput.idMap) : undefined, resolutions: optionsInput.resolutions ? copy(optionsInput.resolutions) : undefined };
+    const session = createImportWorkSession();
     try {
       checkCancelled(options.signal);
       if (!['new', 'clone', 'replace', 'merge', 'mapped_merge'].includes(options.mode)) throw new StorageError('FORMAT_UNSUPPORTED', '読み込みモードが未対応です。');
@@ -1358,7 +1360,7 @@ export class ScenarioStore {
       const knownWorlds = await this.validationWorlds(prepared.worlds), worldContents = worldSnapshotContents(knownWorlds);
       const work = (step: ImportWorkStep, project: ProjectData, extra: {recovery?: PortableRecovery; syncRecovery?: NativeSyncRecovery[]; idMap?: Record<string, string>; target?: ProjectData; resolutions?: Record<string, 'existing' | 'incoming'>} = {}) => {
         options.onStage?.(step);
-        return performImportWork({step, project, worlds: worldContents, ...extra}, {signal: options.signal});
+        return session.run({step, project, worlds: worldContents, ...extra}, {signal: options.signal});
       };
       prepared.project = (await work('structure', prepared.project)).project!;
       if (prepared.recovery) prepared.recovery = (await work('recovery', prepared.project, {recovery: prepared.recovery})).recovery!;
@@ -1378,7 +1380,7 @@ export class ScenarioStore {
       }
       if (options.mode === 'clone') {
         const cloned = (await work('clone', project, {recovery})).cloned!; idMap = cloned.idMap;
-        recovery = recovery ? await mappedPortableRecovery(recovery, cloned.project, idMap, options.signal) : undefined;
+        recovery = recovery ? (await session.run({step: 'map_recovery', project: cloned.project, worlds: {}, recovery, idMap}, {signal: options.signal})).recovery! : undefined;
         const historyIds = new Set(project.history.map(command => idMap![command.operationId]));
         project = { ...cloned.project, history: cloned.project.history.filter(command => historyIds.has(command.operationId)) };
       }
@@ -1473,6 +1475,7 @@ export class ScenarioStore {
       this.invalidateProjectCache(project.projectId);
       return result;
     } catch (error) { throw saveError(error); }
+    finally { session.dispose(); }
   }
 }
 

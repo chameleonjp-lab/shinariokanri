@@ -8,6 +8,7 @@ import {inspectScenario, performImportWork} from './archive';
 import {FORMAT_VERSION} from './json';
 import {StorageError} from './errors';
 import {runImportWork, type ImportWork} from './importWork';
+import {createImportWorkSession} from './importWorkSession';
 import {ScenarioStore} from './store';
 
 class ControlledWorker {
@@ -29,10 +30,10 @@ class ControlledWorker {
       return;
     }
     if (ControlledWorker.automatic) queueMicrotask(() => { void runImportWork(captured.work, undefined, hash => new Promise((resolve, reject) => {
-      const id = ++this.nextAsset; this.assets.set(id, {resolve, reject}); this.emit({type: 'asset', id, hash});
+      const id = ++this.nextAsset; this.assets.set(id, {resolve, reject}); this.emit({type: 'asset', requestId: captured.requestId, id, hash});
     }))
-      .then(result => this.emit({type: 'done', result: structuredClone(result)}))
-      .catch(cause => this.emit({type: 'error', error: {
+      .then(result => this.emit({type: 'done', requestId: captured.requestId, result: structuredClone(result)}))
+      .catch(cause => this.emit({type: 'error', requestId: captured.requestId, error: {
         code: cause.code, message: cause.message, path: cause.path, issues: cause.issues,
       }})); });
   }
@@ -136,6 +137,45 @@ describe('cancellable import worker transport', () => {
     const rejection = expect(promise).rejects.toMatchObject({code: 'CANCELLED'});
     worker.emit({type: 'asset', id: 9, hash: 'fixture-content-hash'}); await vi.waitFor(() => expect(release).toBeTypeOf('function'));
     controller.abort(); release(new Uint8Array([3, 4])); await rejection; await Promise.resolve();
+    expect(worker.messages).toHaveLength(1); expect(worker.terminated).toBe(1);
+  });
+});
+
+describe('operation-owned import worker', () => {
+  it('runs the real checks again on changed input rather than reusing the previous proof', async () => {
+    browser(true); const session = createImportWorkSession(), first = request();
+    try {
+      expect((await session.run(first)).project).toEqual(first.project);
+      const changed = structuredClone(first); (changed.project as unknown as {name: unknown}).name = 42;
+      await expect(session.run(changed)).rejects.toMatchObject({code: 'VALIDATION_FAILED'});
+      expect(first.project.name).toBe('受領した作品😀');
+      expect(ControlledWorker.instances).toHaveLength(1);
+      expect(ControlledWorker.instances[0].terminated).toBe(1);
+    } finally { session.dispose(); }
+  });
+  it('ignores the preceding step\'s delayed result and asset request', async () => {
+    browser(); const session = createImportWorkSession();
+    try {
+      const first = session.run(request()), worker = ControlledWorker.instances[0];
+      const oldId = worker.messages[0].requestId; worker.emit({type: 'done', requestId: oldId, result: {}}); await first;
+      const read = vi.fn(), second = session.run(request(), {loadAsset: read}); let settled = false;
+      void second.then(() => { settled = true; });
+      worker.emit({type: 'done', requestId: oldId, result: {ids: []}});
+      worker.emit({type: 'asset', requestId: oldId, id: 91, hash: 'preceding-step'});
+      await Promise.resolve(); await Promise.resolve();
+      expect(settled).toBe(false); expect(read).not.toHaveBeenCalled();
+      worker.emit({type: 'done', requestId: worker.messages[1].requestId, result: {}}); await expect(second).resolves.toEqual({});
+    } finally { session.dispose(); }
+    expect(ControlledWorker.instances[0].terminated).toBe(1);
+  });
+  it('terminates a cancelled session and discards an already requested asset reply', async () => {
+    browser(); const session = createImportWorkSession(), controller = new AbortController(); let release!: (bytes: Uint8Array) => void;
+    const pending = session.run(request(), {signal: controller.signal, loadAsset: () => new Promise(resolve => { release = resolve; })});
+    const rejected = expect(pending).rejects.toMatchObject({code: 'CANCELLED'}), worker = ControlledWorker.instances[0];
+    worker.emit({type: 'asset', requestId: worker.messages[0].requestId, id: 23, hash: 'held-asset'});
+    await vi.waitFor(() => expect(release).toBeTypeOf('function'));
+    controller.abort(); release(new Uint8Array([1, 2, 3])); await rejected; await Promise.resolve();
+    await expect(session.run(request())).rejects.toMatchObject({code: 'CANCELLED'}); session.dispose();
     expect(worker.messages).toHaveLength(1); expect(worker.terminated).toBe(1);
   });
 });

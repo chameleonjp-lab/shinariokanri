@@ -95,6 +95,21 @@ describe('captured full-validation sessions', () => {
     } finally { reading.min = minimum; }
   });
 
+  it('does not coerce a nonfinite schema limit into an earlier successful nullable limit', () => {
+    const source = createProject('非有限の検証規則も再確認する');
+    source.entities.push(createEntity(source.projectId, 'character', '人物', {reading: 'あ'}));
+    const project = own(source), validate = createProjectValidator(), character = ENTITY_SCHEMAS.character;
+    if (character.type !== 'object' || character.fields.reading.schema.type !== 'text') throw new Error('Expected reading text schema');
+    const reading = character.fields.reading.schema, minimum = reading.min;
+    try {
+      // Registry values are mutable at runtime, including unsupported values.
+      reading.min = null as unknown as number; expect(validate(project).ok).toBe(true);
+      reading.min = Infinity; refused(validate(project), '.data.reading');
+      expect(validateProject(project).ok).toBe(false);
+      reading.min = minimum; expect(validate(project).ok).toBe(true);
+    } finally { reading.min = minimum; }
+  });
+
   it('checks each changed namespace and reference target after immutable record schemas already succeeded', () => {
     const source = createProject('同じ人物・出来事・関係を持つ履歴');
     const a = createEntity(source.projectId, 'character', '人物A'), b = createEntity(source.projectId, 'character', '人物B');
