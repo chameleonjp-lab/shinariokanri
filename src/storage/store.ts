@@ -1,5 +1,6 @@
 import {mergeImportConflicts} from './importWork';
 import {freezeCapturedPlainDataAsync} from '../domain/immutablePlainData';
+import {internImmutableRecordsAsync} from '../domain/internImmutableRecords';
 import {cloneProject as clonePrivateProject} from './clone';
 import {recordDiagnostic} from '../diagnostics';
 import {bindRecordPartsSignal,installRecordPartsDatabase} from './recordPartsDatabase';
@@ -1238,26 +1239,13 @@ export class ScenarioStore {
     await freezeCapturedPlainDataAsync({ project, pending, retained }, options.signal);
     const nativePending=pending.map(row=>({operationId:row.operationId,command:row.command,baseRevision:row.baseRevision}));
     const nativeRetained=retained.map(row=>row.operation);
-    // Discover the exact same historical world pins before file construction.
-    // The worker still verifies duplicate pending IDs and every full hash.
-    const pendingImages=[...nativePending.map(row=>row.command),...nativeRetained.map(row=>row.command)]
-      .flatMap(command=>[command.before,command.after].map(state=>({...state,history:[]})));
+    // The worker discovers every historical pin from this same captured
+    // registry, then runs the unchanged world and full-file validators.
     const syncRecovery:NativeSyncRecovery[]=options.snapshotId?[]:captured.syncRetained.map(r=>r.evidence);
     if(!options.snapshotId&&(captured.syncBase||captured.syncPrepared.length||captured.syncConflicts.length||captured.syncAcks.length)){const payload={format:'scenario-sync-recovery' as const,version:1 as const,state:'needs_reconnect' as const,origin:{...project,history:[]},...(captured.syncBase?{base:captured.syncBase}:{}),prepared:captured.syncPrepared,conflicts:captured.syncConflicts,acknowledgements:captured.syncAcks,assetAcknowledgements:captured.syncAssetAcks};const evidence={...payload,contentHash:await valueHash(payload)};if(!syncRecovery.some(r=>r.contentHash===evidence.contentHash))syncRecovery.push(evidence);}
-    const worlds: Record<string, ProjectData> = {};
-    let discovered = [project, ...pendingImages,...syncRecoveryImages(syncRecovery)];
-    while (discovered.length) {
-      const next: ProjectData[] = [];
-      for (const reference of referencedWorlds(discovered,captured.registry)) {
-        if (worlds[reference.immutableSnapshotId]) continue;
-        const world = captured.registry[reference.immutableSnapshotId];
-        if (world) { worlds[reference.immutableSnapshotId] = world; next.push(world); }
-      }
-      discovered = next;
-    }
-    const capture={project,pending:nativePending,retained:nativeRetained,serverRevision:captured.metadata?.serverRevision??'0',worlds,syncRecovery};
+    const capture={project,pending:nativePending,retained:nativeRetained,serverRevision:captured.metadata?.serverRevision??'0',worlds:{},availableWorlds:captured.registry,syncRecovery};
     await freezeCapturedPlainDataAsync(capture, options.signal);
-    return exportNativeScenario(capture, { ...options, loadAsset: hash => this.getAsset(hash) });
+    return exportNativeScenario(await internImmutableRecordsAsync(capture,options.signal), { ...options, loadAsset: hash => this.getAsset(hash) });
   }
 
   async previewImport(preparedInput: PreparedScenario, optionsInput: ImportOptions): Promise<ImportPreview> {

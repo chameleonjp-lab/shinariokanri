@@ -3,6 +3,51 @@ import { createEntity, createProject, newId } from '../../src/domain/model';
 import { exportScenario } from '../../src/storage/archive';
 import { authorFingerprint, backup, navigate, openEntity, seed } from './ap04-original-helpers';
 
+test('遅れて届くnative表示設定が作者の画面移動を戻さず、cold再読込でも移動先を保持する', async ({ page }) => {
+  const project = createProject('遅い表示設定と作者の移動');
+  await seed(page, await exportScenario(project));
+  await navigate(page, /^年表/);
+  const before = await authorFingerprint(page);
+  await page.addInitScript(() => {
+    const get = IDBObjectStore.prototype.get, held: (() => void)[] = [];
+    IDBObjectStore.prototype.get = function (...args: Parameters<IDBObjectStore['get']>) {
+      const request = get.apply(this, args);
+      if (this.name === 'viewStates') {
+        request.addEventListener('success', event => {
+          event.stopImmediatePropagation();
+          held.push(() => request.dispatchEvent(new Event('success')));
+        }, { once: true });
+      }
+      return request;
+    };
+    Reflect.set(window, '__heldWorkspaceReads', () => held.length);
+    Reflect.set(window, '__releaseWorkspaceReads', () => { for (const release of held.splice(0)) release(); });
+  });
+  await page.reload();
+  await expect(page.locator('.project-switch')).toContainText(project.name);
+  await expect.poll(() => page.evaluate(() => Reflect.get(window, '__heldWorkspaceReads')())).toBe(1);
+  await navigate(page, /^作品・保存/);
+  const tab = page.getByRole('tab', { name: '完全保存・復元', exact: true });
+  await expect(tab).toBeVisible();
+  await page.evaluate(() => Reflect.get(window, '__releaseWorkspaceReads')());
+  await expect.poll(() => page.evaluate(id => {
+    const key = Object.keys(localStorage).find(key => key.startsWith('scenario-workspace-view:v1:') && key.includes(id));
+    return key ? JSON.parse(localStorage.getItem(key)!).filters['workspace.page'] : null;
+  }, project.projectId)).toBe('work');
+  await expect(tab).toBeVisible();
+  const actual = await backup(page);
+  expect(actual.project).toEqual(project);
+  expect(await authorFingerprint(page)).toBe(before);
+  // The optional mirror is written when the held native read finishes, so a
+  // second cold read must select the author's destination instead of the old
+  // timeline. It still uses the real native view record and ordinary buttons.
+  await page.reload();
+  await expect.poll(() => page.evaluate(() => Reflect.get(window, '__heldWorkspaceReads')())).toBe(1);
+  await page.evaluate(() => Reflect.get(window, '__releaseWorkspaceReads')());
+  await expect(tab).toBeVisible();
+  expect(await authorFingerprint(page)).toBe(before);
+});
+
 test('CP02 cold復元のID検査が終わるまで影響確認を待ち、検査後に同じ入力で確認できる', async ({ page }) => {
   const destination = createProject('ID検査を待つ統合先');
   await seed(page, await exportScenario(destination));

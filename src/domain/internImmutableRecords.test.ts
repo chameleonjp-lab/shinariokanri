@@ -1,7 +1,8 @@
 import {describe,expect,it} from 'vitest';
 import {createEntity,createProject,newId,textToRichText,validateProject} from './model';
 import {captureImmutablePlainData} from './immutablePlainData';
-import {internImmutableRecords} from './internImmutableRecords';
+import {internImmutableRecords,internImmutableRecordsAsync} from './internImmutableRecords';
+import {deepStrictEqual} from 'node:assert/strict';
 import {jsonBytes,sha256} from '../storage/json';
 
 const own=<T>(v:T)=>captureImmutablePlainData(v).value;
@@ -32,4 +33,17 @@ describe('scope-owned full-value record sharing',()=>{
   let reads=0;const getter=Object.freeze({id:newId(),projectId:p.projectId,kind:'note',get data(){reads++;return {};}});
   expect(internImmutableRecords(getter)).toBe(getter);expect(reads).toBe(0);
  });
+});
+
+it('compares every own value asynchronously without changing legacy bytes or private input',async()=>{
+ const p=createProject('mainの全値比較'),first=createEntity(p.projectId,'note','原稿',{body:textToRichText('😀原文')});
+ const different={...first,data:{...first.data,unknown:undefined}},a={...first,data:{...first.data,zero:-0}},b={...first,data:{...first.data,zero:0}};
+ const input=own({before:[first,a],after:[structuredClone(first),different,b]}),before=jsonBytes(input),result=await internImmutableRecordsAsync(input);
+ deepStrictEqual(result,input);expect(Buffer.from(jsonBytes(result)).equals(Buffer.from(before))).toBe(true);expect(result.before[0]).toBe(result.after[0]);expect(result.after[1]).not.toBe(result.before[0]);expect(result.before[1]).not.toBe(result.after[2]);expect(Object.hasOwn(result.after[1].data,'unknown')).toBe(true);expect(Object.is((result.before[1].data as unknown as Record<string,unknown>).zero,-0)).toBe(true);expect(Object.isFrozen(result)).toBe(true);
+});
+it('yields to a queued cancellation during a large private comparison and keeps all source fields',async()=>{
+ const projectId=newId(),records=Array.from({length:20000},(_,i)=>({id:newId(),projectId,kind:'note',data:{body:[{id:newId(),kind:'paragraph',text:'😀原文'+i}]}}));
+ const input=own({before:records,after:structuredClone(records)}),before=jsonBytes(input),controller=new AbortController();
+ const task=internImmutableRecordsAsync(input,controller.signal),rejected=expect(task).rejects.toMatchObject({code:'CANCELLED'});setTimeout(()=>controller.abort(),0);await rejected;
+ expect(input.before).toHaveLength(20000);expect(input.after).toHaveLength(20000);expect(Buffer.from(jsonBytes(input)).equals(Buffer.from(before))).toBe(true);
 });

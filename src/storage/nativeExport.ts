@@ -1,11 +1,12 @@
 import type {CommandRecord,ProjectData} from '../domain/types';
 import type {NativeSyncRecovery} from './syncRecovery';
-import {exportScenarioData,type ExportOptions} from './archiveData';
+import {exportScenarioData,referencedWorlds,type ExportOptions} from './archiveData';
 import type {PortableRecovery} from './recovery';
 import {createSharedArrayJsonEncoder} from './sharedArrayJson';
 import {sha256} from './json';
 import {checkCancelled,StorageError} from './errors';
 import {internImmutableRecords} from '../domain/internImmutableRecords';
+import {syncRecoveryImages} from './syncRecovery';
 
 /** One private native read image, not a caller-supplied verification result. */
 export interface NativeExportCapture {
@@ -14,6 +15,7 @@ export interface NativeExportCapture {
   retained:PortableRecovery['pending'];
   serverRevision:string;
   worlds:Record<string,ProjectData>;
+  availableWorlds?:Record<string,ProjectData>;
   syncRecovery:NativeSyncRecovery[];
 }
 
@@ -22,6 +24,12 @@ export interface NativeExportCapture {
 export async function exportNativeScenarioData(capture:NativeExportCapture,options:ExportOptions={}):Promise<Uint8Array>{
   checkCancelled(options.signal);
   capture=internImmutableRecords(capture);
+  let worlds=capture.worlds;
+  if(capture.availableWorlds){
+    worlds={};const pendingImages=[...capture.pending.map(row=>row.command),...capture.retained.map(row=>row.command)].flatMap(command=>[command.before,command.after].map(state=>({...state,history:[]})));
+    let discovered=[capture.project,...pendingImages,...syncRecoveryImages(capture.syncRecovery)];
+    while(discovered.length){const next:ProjectData[]=[];for(const reference of referencedWorlds(discovered,capture.availableWorlds)){if(worlds[reference.immutableSnapshotId])continue;const world=capture.availableWorlds[reference.immutableSnapshotId];if(world){worlds[reference.immutableSnapshotId]=world;next.push(world);}}discovered=next;}
+  }
   const commandBytes=createSharedArrayJsonEncoder();
   const operations=new Map(capture.retained.map(row=>[row.operationId,row]));
   for(const row of capture.pending){
@@ -34,5 +42,5 @@ export async function exportNativeScenarioData(capture:NativeExportCapture,optio
     await new Promise<void>(resolve=>setTimeout(resolve,0));checkCancelled(options.signal);
   }
   const recovery:PortableRecovery|undefined=operations.size?{version:1,projectId:capture.project.projectId,sourceRevision:capture.project.revision,serverRevision:capture.serverRevision,pending:[...operations.values()]}:undefined;
-  return exportScenarioData(capture.project,{...options,recovery,worlds:capture.worlds,syncRecovery:capture.syncRecovery});
+  return exportScenarioData(capture.project,{...options,recovery,worlds,syncRecovery:capture.syncRecovery});
 }

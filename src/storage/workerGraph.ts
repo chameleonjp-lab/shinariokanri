@@ -43,7 +43,10 @@ export async function sendWorkerGraph(value: object, post: (chunk: WorkerGraphCh
       chunk.properties.push({ id: frame.id, key, value: reference(descriptor.value) });
       estimatedBytes += key.length * 2 + (typeof descriptor.value === 'string' ? descriptor.value.length * 2 : 32);
       frame.index++;
-      if (chunk.properties.length >= 512 || estimatedBytes >= 256 * 1024) await flush();
+      // A bounded 256KiB message can contain thousands of short references.
+      // Avoid one browser timer per 512 properties while retaining the same
+      // byte bound and returning to real UI/cancel tasks between messages.
+      if (chunk.properties.length >= 4096 || estimatedBytes >= 256 * 1024) await flush();
     }
     frames[index] = undefined;
   }

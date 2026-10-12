@@ -28,11 +28,17 @@ export function useWorkspaceView(projectId: string | null, preferences: Workspac
   useEffect(() => {
     if (!projectId) { scope.current = null; setReady(null); return; }
     let live = true; const switching = scope.current !== projectId; scope.current = projectId; setReady(null);
+    // A native read can finish after the author has already navigated. Only
+    // the unchanged opening view may adopt those earlier preferences.
+    const opening = JSON.stringify([latest.current.preferences, latest.current.selectedId]);
     if (switching) { try { setMarks(parseEntityNavigationMarks(localStorage.getItem(workspaceMarksStorageKey(userId.current, projectId)))); } catch { setMarks({ recentIds: [], favoriteIds: [] }); } }
     void scenarioStore.getViewState(projectId, userId.current, device, WORKSPACE_VIEW_ID).then(stored => {
       const view = mirroredView(projectId, userId.current, device, stored);
       if (!live) return; previous.current = view;
-      if (switching) { const next = restoreWorkspacePreferences(view); latest.current.restore(next, view?.lastOpenedId ?? null); requestAnimationFrame(() => { if (live) window.scrollTo(0, next.scrollY); }); }
+      if (switching && opening === JSON.stringify([latest.current.preferences, latest.current.selectedId])) {
+        const next = restoreWorkspacePreferences(view); latest.current.restore(next, view?.lastOpenedId ?? null);
+        requestAnimationFrame(() => { if (live && latest.current.preferences.page === next.page && latest.current.selectedId === (view?.lastOpenedId ?? null)) window.scrollTo(0, next.scrollY); });
+      }
       setReady(`${projectId}:${device}`);
     }).catch(() => { if (live) setReady(`${projectId}:${device}`); });
     return () => { live = false; };
