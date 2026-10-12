@@ -24,6 +24,7 @@ export class RecordDictionaryWriter{
  private readonly arrayIds=new Map<string,number>();
  private readonly previous=new Map<number,{id:number;values:number[]}>();
  private readonly previousRecords=new Map<string,{id:number;value:Record<string,unknown>}>();
+ private readonly previousKinds=new Map<string,{id:number;value:Record<string,unknown>}>();
  readonly usedFeatures=new Set<string>();
  constructor(private readonly features:DictionaryFeatures={}){}
  private eligible(value:unknown){return record(value)||!!this.features.calendarRecords&&calendar(value);}
@@ -32,16 +33,25 @@ export class RecordDictionaryWriter{
   const key=canonicalJson(value);let id=this.ids.get(key);
   if(id===undefined){
    id=this.records.length;let encoded:unknown=value;
-   const typedKey=JSON.stringify([value.projectId??null,value.kind??value.relationType??'shadow',value.id]),previous=this.previousRecords.get(typedKey);
-   if(this.features.recordDeltas&&previous&&!Object.hasOwn(value,baseKey)&&!Object.hasOwn(value,deleteKey)&&!Object.hasOwn(previous.value,baseKey)&&!Object.hasOwn(previous.value,deleteKey)){
+   const category=typeof value.kind==='string'&&object(value.data)?'entity':typeof value.relationType==='string'?'relation':calendar(value)?'calendar':'shadow';
+   const kindKey=JSON.stringify([category,value.projectId??null,value.kind??value.relationType??null]);
+   const typedKey=JSON.stringify([kindKey,value.id]);
+   // A base is an encoding choice, never a record identity. Comparing every
+   // field permits repeated structure across distinct IDs without merging them.
+   const previousRecord=this.previousRecords.get(typedKey),previousKind=this.previousKinds.get(kindKey);
+   const candidates=previousRecord?.id===previousKind?.id?[previousRecord]:[previousRecord,previousKind];
+   let encodedLength=key.length;
+   if(this.features.recordDeltas&&!Object.hasOwn(value,baseKey)&&!Object.hasOwn(value,deleteKey))for(const previous of candidates){
+    if(!previous||Object.hasOwn(previous.value,baseKey)||Object.hasOwn(previous.value,deleteKey))continue;
     const delta:Record<string,unknown>={[baseKey]:previous.id};const removed:string[]=[];
     for(const field of Object.keys(previous.value))if(previous.value[field]!==undefined&&(!Object.hasOwn(value,field)||value[field]===undefined))removed.push(field);
     for(const field of Object.keys(value))if(value[field]!==undefined&&(!Object.hasOwn(previous.value,field)||previous.value[field]===undefined||canonicalJson(value[field])!==canonicalJson(previous.value[field])))Object.defineProperty(delta,field,{value:value[field],enumerable:true});
     if(removed.length)delta[deleteKey]=removed;
-    if(canonicalJson(delta).length<key.length){encoded=delta;this.usedFeatures.add(RECORD_DELTA_FEATURE);}
+    const length=canonicalJson(delta).length;
+    if(length<encodedLength){encoded=delta;encodedLength=length;this.usedFeatures.add(RECORD_DELTA_FEATURE);}
    }
    if(!record(value)&&calendar(value))this.usedFeatures.add(CALENDAR_RECORD_FEATURE);
-   this.records.push(encoded);this.ids.set(key,id);this.previousRecords.set(typedKey,{id,value});
+   this.records.push(encoded);this.ids.set(key,id);this.previousRecords.set(typedKey,{id,value});this.previousKinds.set(kindKey,{id,value});
   }
   this.identities.set(value,id);return id;
  }

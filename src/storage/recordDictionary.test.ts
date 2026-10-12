@@ -2,7 +2,7 @@ import 'fake-indexeddb/auto';
 import {it,expect} from 'vitest';
 import {RecordDictionaryWriter,RecordDictionaryReader,RECORD_DELTA_FEATURE,CALENDAR_RECORD_FEATURE} from './recordDictionary';
 import {createHash} from 'node:crypto';
-import {ARCHIVE_LIMITS,jsonBytes,parseStrictJson} from './json';
+import {ARCHIVE_LIMITS,jsonBytes,parseStrictJson,sha256} from './json';
 import {createProject,createEntity} from '../domain/model';
 
 it('retains every historical record variant, order and opaque custom fields with bounded ordered deltas',()=>{
@@ -67,4 +67,26 @@ it('reduces actual serialized containers while preserving the original quotas an
  const old=encode({}),current=encode({recordDeltas:true,calendarRecords:true});expect(current.objects).toBeLessThan(old.objects);
  expect(()=>new RecordDictionaryReader(current.pool,{...ARCHIVE_LIMITS,expandedBytes:8},{recordDeltas:true,calendarRecords:true})).toThrow();
  const marker={...entity,__recordBase:'literal',__recordDelete:['literal']},writer=new RecordDictionaryWriter({recordDeltas:true});const wire=writer.encode([marker,{...marker,name:'別'},entity]);const reader=new RecordDictionaryReader({records:writer.records,arrays:writer.arrays},ARCHIVE_LIMITS,{recordDeltas:true});expect(reader.decode(wire,'project')).toEqual([marker,{...marker,name:'別'},entity]);reader.assertComplete();
+});
+
+it('shares repeated structure across distinct typed IDs without dropping values, revisions, removals or array order',async()=>{
+ const p=createProject('別々の記録の繰り返し構造');
+ const entities=Array.from({length:240},(_,i)=>({...createEntity(p.projectId,'note','本文'+i),revision:String(i),opaque:{value:i%2===0?null:false,ordered:[i,'雪',i+1]}}));
+ const foreign={...entities[0],projectId:createProject('別作品').projectId,name:'別作品の同じID'};
+ const otherKind={...createEntity(p.projectId,'character','別型の同じID'),id:entities[0].id};
+ const changed={...entities[0],name:'改稿',revision:'241',opaque:{value:true,ordered:['雪',0]}};
+ const {opaque:_removed,...removed}=changed;
+ const source={entities:[...entities,foreign,otherKind,changed,removed],historic:entities.slice().reverse(),references:[entities[0],changed,removed]};
+ const writer=new RecordDictionaryWriter({recordDeltas:true,calendarRecords:true}),wire=writer.encode(source),budget={objects:0};
+ const pool=parseStrictJson(jsonBytes({records:writer.records,arrays:writer.arrays}),'records',ARCHIVE_LIMITS,budget);
+ const reader=new RecordDictionaryReader(pool,ARCHIVE_LIMITS,{recordDeltas:true,calendarRecords:true});
+ const decoded=reader.decode(parseStrictJson(jsonBytes(wire),'project',ARCHIVE_LIMITS,budget),'project') as typeof source;reader.assertComplete();
+ expect(await sha256(jsonBytes(decoded))).toBe(await sha256(jsonBytes(source)));
+ expect(decoded.entities.map(e=>[e.projectId,e.kind,e.id,e.revision])).toEqual(source.entities.map(e=>[e.projectId,e.kind,e.id,e.revision]));
+ expect(decoded.historic.map(e=>e.id)).toEqual(entities.map(e=>e.id).reverse());
+ expect(Object.hasOwn(decoded.entities.at(-1)!,'opaque')).toBe(false);
+ expect(decoded.entities[0]).not.toBe(decoded.entities[240]);expect(decoded.entities[0]).not.toBe(decoded.entities[241]);
+ const legacy=new RecordDictionaryWriter();legacy.encode(source);
+ const legacyBudget={objects:0};parseStrictJson(jsonBytes({records:legacy.records,arrays:legacy.arrays}),'legacy',ARCHIVE_LIMITS,legacyBudget);
+ expect(budget.objects).toBeLessThan(legacyBudget.objects);
 });
