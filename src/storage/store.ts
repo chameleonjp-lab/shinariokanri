@@ -1191,7 +1191,12 @@ export class ScenarioStore {
     options = { ...options };
     // Content, all history and pending intents come from one database read image.
     checkCancelled(options.signal);
-    const captured = await this.db.transaction('r', this.writeTables, async () => ({ current: await this.readProject(projectId, false), commands: await this.db.commands.where('projectId').equals(projectId).toArray(), rows: await this.db.outbox.where('projectId').equals(projectId).toArray(), retained: await this.listRecoveredPending(projectId), metadata: await this.db.syncMetadata.get(projectId), syncBase:await this.db.syncBases.get(projectId),syncPrepared:await this.db.preparedSync.where('projectId').equals(projectId).toArray(),syncConflicts:await this.db.syncConflicts.where('projectId').equals(projectId).toArray(),syncAcks:await this.db.syncAckEvidence.where('projectId').equals(projectId).toArray(),syncAssetAcks:await this.db.syncAssetAcks.where('projectId').equals(projectId).toArray(),syncRetained:await this.db.retainedSyncRecovery.where('projectId').equals(projectId).toArray(), registry: await this.validationWorlds() }));
+    const captured = await this.db.transaction('r', this.writeTables, async () => {
+      // Cancellation must also reach the split-record workers and bounded
+      // current-row reads on this same native snapshot, before serialization.
+      bindRecordPartsSignal(options.signal); checkCancelled(options.signal);
+      return { current: await this.readProject(projectId, false, undefined, undefined, options.signal), commands: await this.db.commands.where('projectId').equals(projectId).toArray(), rows: await this.db.outbox.where('projectId').equals(projectId).toArray(), retained: await this.listRecoveredPending(projectId), metadata: await this.db.syncMetadata.get(projectId), syncBase:await this.db.syncBases.get(projectId),syncPrepared:await this.db.preparedSync.where('projectId').equals(projectId).toArray(),syncConflicts:await this.db.syncConflicts.where('projectId').equals(projectId).toArray(),syncAcks:await this.db.syncAckEvidence.where('projectId').equals(projectId).toArray(),syncAssetAcks:await this.db.syncAssetAcks.where('projectId').equals(projectId).toArray(),syncRetained:await this.db.retainedSyncRecovery.where('projectId').equals(projectId).toArray(), registry: await this.validationWorlds() };
+    });
     checkCancelled(options.signal);
     if (!captured.current) throw new StorageError('NOT_FOUND', '書き出す作品が見つかりません。');
     const commandRows = new Map(captured.commands.map(row => [row.operationId, row])), ready = new Map<string, CommandRecord>(), history: CommandRecord[] = [];
