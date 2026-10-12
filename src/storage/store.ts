@@ -1003,7 +1003,22 @@ export class ScenarioStore {
     return this.materializeOutbox(captured.rows, new Map(captured.commands.map(row => [row.operationId, row])));
   }
   async getSaveState(projectId:string):Promise<{localSaved:boolean;pendingCount:number;recoveredPendingCount:number;pendingAssetCount:number;serverRevision:string;syncState:'pending'|'synced'|'conflict'}>{
-    return this.db.transaction('r',this.writeTables,async()=>{const [read,metadata,pendingCount,recoveredPendingCount,assets]=await Promise.all([this.readProject(projectId,false),this.db.syncMetadata.get(projectId),this.db.outbox.where('projectId').equals(projectId).count(),this.db.recoveredPending.where('projectId').equals(projectId).count(),this.db.syncAssetAcks.where('projectId').equals(projectId).toArray()]);const pendingAssetCount=read?closureAttachmentMetadata(read.project,await this.validationWorlds()).filter(m=>!assets.some(a=>a.contentHash===m.contentHash&&a.byteSize===m.byteSize&&a.mediaType===m.mediaType)).length:0;return {localSaved:!!read,pendingCount,recoveredPendingCount,pendingAssetCount,serverRevision:metadata?.serverRevision??'0',syncState:metadata?.state==='conflict'?'conflict':pendingCount||pendingAssetCount?'pending':metadata?.state??'pending'};});
+    return this.db.transaction('r',this.writeTables,async()=>{
+      const current = async () => {
+        const header = await this.db.projects.get(projectId), cached = this.cachedProjects.get(projectId);
+        if (!header) return undefined;
+        if (header.projectId !== projectId) throw new StorageError('SAVE_FAILED', '作品の保存情報が別の作品を指しています。', projectId);
+        // The same durable revision/history guard used by editing reads lets
+        // status reuse its private verified image without another manuscript
+        // hydration. Counts, acknowledgements and worlds still come from this
+        // one native snapshot; a newer edition takes the full current-row path.
+        if (cached?.revision === header.revision && sameJson(this.cachedHistoryIds.get(projectId), header.historyIds)) return {project: {...cached, history: []}};
+        return this.readProject(projectId, false, undefined, header);
+      };
+      const [read,metadata,pendingCount,recoveredPendingCount,assets]=await Promise.all([current(),this.db.syncMetadata.get(projectId),this.db.outbox.where('projectId').equals(projectId).count(),this.db.recoveredPending.where('projectId').equals(projectId).count(),this.db.syncAssetAcks.where('projectId').equals(projectId).toArray()]);
+      const pendingAssetCount=read?closureAttachmentMetadata(read.project,await this.validationWorlds()).filter(m=>!assets.some(a=>a.contentHash===m.contentHash&&a.byteSize===m.byteSize&&a.mediaType===m.mediaType)).length:0;
+      return {localSaved:!!read,pendingCount,recoveredPendingCount,pendingAssetCount,serverRevision:metadata?.serverRevision??'0',syncState:metadata?.state==='conflict'?'conflict':pendingCount||pendingAssetCount?'pending':metadata?.state??'pending'};
+    });
   }
   async getAssetSyncAck(projectId:string,contentHash:string){return copy(await this.db.syncAssetAcks.get(`${projectId}:${contentHash}`));}
   async confirmAssetUpload(projectId:string,input:{contentHash:string;bytes:number;mediaType:string}){
@@ -1195,8 +1210,13 @@ export class ScenarioStore {
       // Cancellation must also reach the split-record workers and bounded
       // current-row reads on this same native snapshot, before serialization.
       bindRecordPartsSignal(options.signal); checkCancelled(options.signal);
-      return { current: await this.readProject(projectId, false, undefined, undefined, options.signal), commands: await this.db.commands.where('projectId').equals(projectId).toArray(), rows: await this.db.outbox.where('projectId').equals(projectId).toArray(), retained: await this.listRecoveredPending(projectId), metadata: await this.db.syncMetadata.get(projectId), syncBase:await this.db.syncBases.get(projectId),syncPrepared:await this.db.preparedSync.where('projectId').equals(projectId).toArray(),syncConflicts:await this.db.syncConflicts.where('projectId').equals(projectId).toArray(),syncAcks:await this.db.syncAckEvidence.where('projectId').equals(projectId).toArray(),syncAssetAcks:await this.db.syncAssetAcks.where('projectId').equals(projectId).toArray(),syncRetained:await this.db.retainedSyncRecovery.where('projectId').equals(projectId).toArray(), registry: await this.validationWorlds() };
-    });
+      const transaction = Dexie.currentTransaction, abort = () => transaction?.abort();
+      options.signal?.addEventListener('abort', abort, {once: true});
+      try {
+        checkCancelled(options.signal);
+        return { current: await this.readProject(projectId, false, undefined, undefined, options.signal), commands: await this.db.commands.where('projectId').equals(projectId).toArray(), rows: await this.db.outbox.where('projectId').equals(projectId).toArray(), retained: await this.listRecoveredPending(projectId), metadata: await this.db.syncMetadata.get(projectId), syncBase:await this.db.syncBases.get(projectId),syncPrepared:await this.db.preparedSync.where('projectId').equals(projectId).toArray(),syncConflicts:await this.db.syncConflicts.where('projectId').equals(projectId).toArray(),syncAcks:await this.db.syncAckEvidence.where('projectId').equals(projectId).toArray(),syncAssetAcks:await this.db.syncAssetAcks.where('projectId').equals(projectId).toArray(),syncRetained:await this.db.retainedSyncRecovery.where('projectId').equals(projectId).toArray(), registry: await this.validationWorlds() };
+      } finally { options.signal?.removeEventListener('abort', abort); }
+    }).catch(error => { checkCancelled(options.signal); throw error; });
     checkCancelled(options.signal);
     if (!captured.current) throw new StorageError('NOT_FOUND', '書き出す作品が見つかりません。');
     const commandRows = new Map(captured.commands.map(row => [row.operationId, row])), ready = new Map<string, CommandRecord>(), history: CommandRecord[] = [];
