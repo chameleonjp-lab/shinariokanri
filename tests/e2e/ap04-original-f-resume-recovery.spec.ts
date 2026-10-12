@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
+import { readFile } from 'node:fs/promises';
 import { createEntity, createProject, emptyValidity, newId, textToRichText } from '../../src/domain/model';
-import { exportScenario } from '../../src/storage/archive';
+import { exportScenario, inspectScenario } from '../../src/storage/archive';
 import { attachGiven, attachObservation, authorFingerprint, backup, navigate, openEntity, seed } from './ap04-original-helpers';
 
 // This independent F33 entrance covers a local deleted resume link and device
@@ -101,4 +102,48 @@ test('AT-F33 ローカル補助: お気に入り・最近開いた削除済み�
   await expect(node.locator('text')).toHaveAttribute('x', '220');
   await expect(page.getByLabel('関係図の拡大率', { exact: true })).toHaveValue('1');
   await attachObservation(info, 'AT-F33-local-recovery-observed', { sceneId: scene.id, sourceBlockIds: sceneBody.map(block => block.id), savedMarks, recoveryGuidanceFromBothLists: true, guidanceDoesNotRestoreOrChangeAuthorData: true, undoRestoredSameEntityAndBlockIds: true, sameBrowserDesktop: { x: 400, zoom: 1.5 }, sameBrowserPhoneClass: { x: 220, zoom: 1 }, physicalSmartphoneAndOtherDevice: 'not_run', revision: saved.project.revision });
+});
+
+test('CP08 AT-F33 ローカル補助: 変更前へ復元して実際に欠けたIDを両再開一覧から説明し、元履歴を完全保存する', async ({ page }, info) => {
+  const bytes = new Uint8Array(await readFile('tests/fixtures/rb06-history.scenario'));
+  const original = (await inspectScenario(bytes, { worker: false })).project;
+  const first = original.history[0], scene = original.entities.find(entity => entity.kind === 'scene')!;
+  expect(first.before.entities.some(entity => entity.id === scene.id)).toBe(false);
+  await attachGiven(info, 'AT-F33-missing-native-local', bytes, { projectId: original.projectId, missingEntityId: scene.id, firstOperationId: first.operationId, localScopeOnly: true });
+  await seed(page, bytes);
+  await openEntity(page, 'scene', scene.name);
+  await (await marks(page)).getByRole('button', { name: 'お気に入りに登録', exact: true }).click();
+  const savedMarks = await readMarks(page, original.projectId);
+  await navigate(page, /^作品・保存/);
+  await page.getByRole('tab', { name: '変更履歴', exact: true }).click();
+  const history = page.locator('.history-page');
+  await history.getByLabel('履歴を検索', { exact: true }).fill(first.operationId);
+  await history.getByRole('button', { name: /原作品を保存 · 版 1/ }).click();
+  await history.getByLabel('復元する時点', { exact: true }).selectOption('before');
+  await history.getByRole('button', { name: '作品全体の復元差分を確認', exact: true }).click();
+  await history.getByRole('button', { name: '確認した作品全体へ復元', exact: true }).click();
+  await expect(history.getByRole('status').filter({ hasText: '保存した版を確認' })).toBeVisible();
+  await page.reload();
+  const beforeGuidance = await authorFingerprint(page);
+  for (const title of ['お気に入り', '最近開いた情報']) {
+    const section = (await marks(page)).locator('section').filter({ has: page.getByRole('heading', { name: title, exact: true }) });
+    const stale = section.locator('.navigation-mark-stale').filter({ hasText: scene.id });
+    await expect(stale).toContainText('対象が見つかりません');
+    await expect(stale).toContainText('変更履歴または完全保存ファイルからの復元を確認してください');
+    await stale.getByRole('button', { name: `対象 ${scene.id} の履歴・復元案内を開く`, exact: true }).click();
+    await expect(page.getByRole('tab', { name: '変更履歴', exact: true })).toHaveAttribute('aria-selected', 'true');
+    await expect(history).toBeVisible();
+    expect(await readMarks(page, original.projectId)).toEqual(savedMarks);
+    expect(await authorFingerprint(page)).toBe(beforeGuidance);
+  }
+  const exported = await backup(page);
+  expect(exported.project.entities.some(entity => entity.id === scene.id)).toBe(false);
+  expect(exported.project.history.slice(0, original.history.length)).toEqual(original.history);
+  expect(exported.project.history).toHaveLength(original.history.length + 1);
+  await page.reload();
+  const cold = await backup(page);
+  expect(cold.project).toEqual(exported.project);
+  expect(cold.worlds).toEqual(exported.worlds);
+  expect(cold.assets).toEqual(exported.assets);
+  await attachObservation(info, 'AT-F33-missing-native-local-observed', { projectId: original.projectId, missingEntityId: scene.id, savedMarks, bothListsExplainAndKeepAuthorData: true, originalHistoryIds: original.history.map(command => command.operationId), finalHistoryIds: cold.project.history.map(command => command.operationId), physicalDeviceAndTwoDeviceSync: 'not_run' });
 });
