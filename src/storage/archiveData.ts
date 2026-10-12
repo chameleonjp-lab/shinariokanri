@@ -1,6 +1,6 @@
 import {validateSyncRecovery,syncRecoveryImages,type NativeSyncRecovery} from './syncRecovery';
 import {captureImmutablePlainData,freezeCapturedPlainData,isImmutablePlainData} from '../domain/immutablePlainData';
-import {RECORD_DICTIONARY_FEATURE,RecordDictionaryWriter,RecordDictionaryReader} from './recordDictionary';
+import {RECORD_DICTIONARY_FEATURE,RECORD_DELTA_FEATURE,CALENDAR_RECORD_FEATURE,RecordDictionaryWriter,RecordDictionaryReader} from './recordDictionary';
 import { Inflate, zipSync } from 'fflate';
 import { createRecoveryValidationSession, validateRecovery, recoveryImages, type PortableRecovery } from './recovery';
 import { projectWithRecoveryHistory } from './recovery';
@@ -219,7 +219,7 @@ function parseManifest(value: unknown): ScenarioManifest {
   if (data.format !== 'scenario-package' || data.formatVersion !== FORMAT_VERSION) throw new StorageError('FORMAT_UNSUPPORTED', 'この専用形式の版には対応していません。元のファイルを保持してください。', 'manifest.json');
   const minimum = typeof data.minimumReaderVersion === 'string' && /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/.test(data.minimumReaderVersion) ? data.minimumReaderVersion.split('.').map(Number) : undefined;
   if (!minimum || minimum[0] > 1 || minimum[0] === 1 && (minimum[1] > 0 || minimum[2] > 0)) throw new StorageError('FORMAT_UNSUPPORTED', '読み込みに新しいアプリが必要です。', 'manifest.json/minimumReaderVersion');
-  if (data.requiredFeatures !== undefined && (!Array.isArray(data.requiredFeatures) || data.requiredFeatures.some(feature => !['portable-recovery-v1','native-sync-recovery-v1','shared-review-source-v1',RECORD_DICTIONARY_FEATURE].includes(feature)))) throw new StorageError('FORMAT_UNSUPPORTED', '未知の必須機能が宣言されています。', 'manifest.json/requiredFeatures');
+  if (data.requiredFeatures !== undefined && (!Array.isArray(data.requiredFeatures) || data.requiredFeatures.some(feature => !['portable-recovery-v1','native-sync-recovery-v1','shared-review-source-v1',RECORD_DICTIONARY_FEATURE,RECORD_DELTA_FEATURE,CALENDAR_RECORD_FEATURE].includes(feature)))) throw new StorageError('FORMAT_UNSUPPORTED', '未知の必須機能が宣言されています。', 'manifest.json/requiredFeatures');
   if (typeof data.projectId !== 'string' || !uuid.test(data.projectId) || typeof data.snapshotId !== 'string' || !uuid.test(data.snapshotId)
     || typeof data.exportedAt !== 'string' || !Number.isFinite(Date.parse(data.exportedAt)) || !data.exportedAt.endsWith('Z')
     || !['embedded', 'metadata_only'].includes(data.assetMode as string) || !Array.isArray(data.files)) throw new StorageError('ARCHIVE_INVALID', 'manifestの必須項目が不正です。', 'manifest.json');
@@ -415,7 +415,9 @@ export async function inspectScenarioData(bytes: Uint8Array, options: InspectOpt
   const hasDictionary=manifest.requiredFeatures?.includes(RECORD_DICTIONARY_FEATURE)??false;
   options.onProgress?.({ stage: 'validating', completed: 0, total: 1 });
   if(hasDictionary!==files.has('data/records.json'))throw new StorageError('FORMAT_UNSUPPORTED','共有レコード辞書には対応する必須機能の宣言が必要です。');
-  const dictionary=hasDictionary?new RecordDictionaryReader(parseStrictJson(files.get('data/records.json')!,'data/records.json',limits,budget),limits):undefined;
+  const dictionaryFeatures={recordDeltas:manifest.requiredFeatures?.includes(RECORD_DELTA_FEATURE)??false,calendarRecords:manifest.requiredFeatures?.includes(CALENDAR_RECORD_FEATURE)??false};
+  if(!hasDictionary&&(dictionaryFeatures.recordDeltas||dictionaryFeatures.calendarRecords))throw new StorageError('FORMAT_UNSUPPORTED','辞書の必須機能には共有レコード辞書が必要です。');
+  const dictionary=hasDictionary?new RecordDictionaryReader(parseStrictJson(files.get('data/records.json')!,'data/records.json',limits,budget),limits,dictionaryFeatures):undefined;
   const read=(path:string)=>{const value=parseStrictJson(files.get(path)!,path,limits,budget);return dictionary?dictionary.decode(value,path):value;};
   const rawWorlds: Record<string, unknown> = Object.create(null) as Record<string, unknown>;
   for (const file of manifest.files.filter(item => item.role === 'world')) rawWorlds[file.path.slice(7, -5)] = read(file.path);
@@ -501,7 +503,7 @@ export async function exportScenarioData(input: ProjectData, options: ExportOpti
   // Older readers reject the required feature before interpreting any image.
   const retained = project.history.length + project.snapshots.length + (project.authorAlternatives?.length ?? 0) + (recovery?.pending.length ?? 0) + (syncRecovery?.length ?? 0);
   const needsDictionary = recordCount >= 5000 && retained > 0 || [project, ...Object.values(worlds), recovery, syncRecovery].some(value => value !== undefined && exceedsJsonBytes(value, ARCHIVE_LIMITS.jsonBytes));
-  const dictionary = needsDictionary ? new RecordDictionaryWriter() : undefined;
+  const dictionary = needsDictionary ? new RecordDictionaryWriter({recordDeltas:true,calendarRecords:true}) : undefined;
   const encode=(value:unknown)=>jsonBytes(dictionary?dictionary.encode(value):value);
   const files: Record<string, Uint8Array> = { 'data/project.json': encode(project), ...(recovery ? { 'data/recovery.json': encode(recovery) } : {}),...(syncRecovery?{'data/sync-recovery.json':encode(syncRecovery)}:{}) };
   for (const [id, world] of Object.entries(worlds)) {
@@ -534,7 +536,7 @@ export async function exportScenarioData(input: ProjectData, options: ExportOpti
   const sharedReviews=hasSharedReviewSource([project,...operationalImages,...Object.values(worlds)]);
   const manifest: ScenarioManifest = { format: 'scenario-package', formatVersion: FORMAT_VERSION, projectId: project.projectId,
     snapshotId: options.snapshotId ?? newId(), exportedAt: options.exportedAt ?? new Date().toISOString(), assetMode: mode,
-    files: manifestFiles, minimumReaderVersion: FORMAT_VERSION, ...((recovery||syncRecovery||dictionary||sharedReviews)?{requiredFeatures:[...(recovery?['portable-recovery-v1']:[]),...(syncRecovery?['native-sync-recovery-v1']:[]),...(dictionary?[RECORD_DICTIONARY_FEATURE]:[]),...(sharedReviews?['shared-review-source-v1']:[])]}:{}) };
+    files: manifestFiles, minimumReaderVersion: FORMAT_VERSION, ...((recovery||syncRecovery||dictionary||sharedReviews)?{requiredFeatures:[...(recovery?['portable-recovery-v1']:[]),...(syncRecovery?['native-sync-recovery-v1']:[]),...(dictionary?[RECORD_DICTIONARY_FEATURE,...dictionary.usedFeatures]:[]),...(sharedReviews?['shared-review-source-v1']:[])]}:{}) };
   // Validate metadata created from optional caller parameters, and count the manifest in all quotas.
   parseManifest(manifest);
   files['manifest.json'] = jsonBytes(manifest);

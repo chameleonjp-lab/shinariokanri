@@ -4,6 +4,9 @@ import {StorageError} from './errors';
 /** Lossless archive encoding. Positions, IDs, all historic variants and protocol
  * hashes are unchanged after decoding; the dictionary is never an active image. */
 export const RECORD_DICTIONARY_FEATURE='shared-records-v1';
+export const RECORD_DELTA_FEATURE='shared-record-deltas-v1';
+export const CALENDAR_RECORD_FEATURE='shared-calendar-records-v1';
+export interface DictionaryFeatures {recordDeltas?:boolean;calendarRecords?:boolean}
 type Path=(string|number)[];
 type Envelope={version:1;value:unknown;arrays:Path[];records:Path[]};
 type RecordArray={values:number[]}|{base:number;length:number;changes:[number,number][]};
@@ -11,6 +14,8 @@ const object=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&
 const record=(v:unknown)=>object(v)&&typeof v.id==='string'&&typeof v.projectId==='string'&&(
  typeof v.kind==='string'&&object(v.data)||typeof v.relationType==='string'&&typeof v.fromId==='string'&&typeof v.toId==='string'||
  typeof v.revision==='string'&&object(v.fields)&&Object.hasOwn(v,'tombstone'));
+const calendar=(v:unknown)=>object(v)&&typeof v.id==='string'&&(v.kind==='gregorian'||v.kind==='repeating');
+const baseKey='__recordBase',deleteKey='__recordDelete';
 export class RecordDictionaryWriter{
  readonly records:unknown[]=[];
  readonly arrays:RecordArray[]=[];
@@ -18,12 +23,33 @@ export class RecordDictionaryWriter{
  private readonly identities=new WeakMap<object,number>();
  private readonly arrayIds=new Map<string,number>();
  private readonly previous=new Map<number,{id:number;values:number[]}>();
- private add(value:object){const known=this.identities.get(value);if(known!==undefined)return known;const key=canonicalJson(value);let id=this.ids.get(key);if(id===undefined){id=this.records.length;this.records.push(value);this.ids.set(key,id);}this.identities.set(value,id);return id;}
+ private readonly previousRecords=new Map<string,{id:number;value:Record<string,unknown>}>();
+ readonly usedFeatures=new Set<string>();
+ constructor(private readonly features:DictionaryFeatures={}){}
+ private eligible(value:unknown){return record(value)||!!this.features.calendarRecords&&calendar(value);}
+ private add(value:Record<string,unknown>){
+  const known=this.identities.get(value);if(known!==undefined)return known;
+  const key=canonicalJson(value);let id=this.ids.get(key);
+  if(id===undefined){
+   id=this.records.length;let encoded:unknown=value;
+   const typedKey=JSON.stringify([value.projectId??null,value.kind??value.relationType??'shadow',value.id]),previous=this.previousRecords.get(typedKey);
+   if(this.features.recordDeltas&&previous&&!Object.hasOwn(value,baseKey)&&!Object.hasOwn(value,deleteKey)&&!Object.hasOwn(previous.value,baseKey)&&!Object.hasOwn(previous.value,deleteKey)){
+    const delta:Record<string,unknown>={[baseKey]:previous.id};const removed:string[]=[];
+    for(const field of Object.keys(previous.value))if(previous.value[field]!==undefined&&(!Object.hasOwn(value,field)||value[field]===undefined))removed.push(field);
+    for(const field of Object.keys(value))if(value[field]!==undefined&&(!Object.hasOwn(previous.value,field)||previous.value[field]===undefined||canonicalJson(value[field])!==canonicalJson(previous.value[field])))Object.defineProperty(delta,field,{value:value[field],enumerable:true});
+    if(removed.length)delta[deleteKey]=removed;
+    if(canonicalJson(delta).length<key.length){encoded=delta;this.usedFeatures.add(RECORD_DELTA_FEATURE);}
+   }
+   if(!record(value)&&calendar(value))this.usedFeatures.add(CALENDAR_RECORD_FEATURE);
+   this.records.push(encoded);this.ids.set(key,id);this.previousRecords.set(typedKey,{id,value});
+  }
+  this.identities.set(value,id);return id;
+ }
  encode(value:unknown):Envelope{
   const arrays:Path[]=[],records:Path[]=[];
   const walk=(v:unknown,path:Path):unknown=>{
-   if(Array.isArray(v)){if(v.length&&v.every(record)){arrays.push(path);const values=v.map(item=>this.add(item)),key=values.join(',');let id=this.arrayIds.get(key);if(id===undefined){id=this.arrays.length;const previous=this.previous.get(values.length),changes=previous?values.flatMap((value,index)=>value===previous.values[index]?[]:[[index,value] as [number,number]]):undefined;this.arrays.push(previous&&changes&&changes.length*2<values.length?{base:previous.id,length:values.length,changes}:{values});this.arrayIds.set(key,id);}this.previous.set(values.length,{id,values});return id;}return v.map((item,index)=>walk(item,[...path,index]));}
-   if(object(v)){if(record(v)){records.push(path);return this.add(v);}return Object.fromEntries(Object.entries(v).filter(([,item])=>item!==undefined).map(([key,item])=>[key,walk(item,[...path,key])]));}
+   if(Array.isArray(v)){if(v.length&&v.every(item=>this.eligible(item))){arrays.push(path);const values=v.map(item=>this.add(item as Record<string,unknown>)),key=values.join(',');let id=this.arrayIds.get(key);if(id===undefined){id=this.arrays.length;const previous=this.previous.get(values.length),changes=previous?values.flatMap((value,index)=>value===previous.values[index]?[]:[[index,value] as [number,number]]):undefined;this.arrays.push(previous&&changes&&changes.length*2<values.length?{base:previous.id,length:values.length,changes}:{values});this.arrayIds.set(key,id);}this.previous.set(values.length,{id,values});return id;}return v.map((item,index)=>walk(item,[...path,index]));}
+   if(object(v)){if(this.eligible(v)){records.push(path);return this.add(v);}return Object.fromEntries(Object.entries(v).filter(([,item])=>item!==undefined).map(([key,item])=>[key,walk(item,[...path,key])]));}
    return v;
   };
   return {version:1,value:walk(value,[]),arrays,records};
@@ -31,15 +57,36 @@ export class RecordDictionaryWriter{
 }
 export class RecordDictionaryReader{
  private references=0;
- private readonly depths:number[];
- private readonly records:unknown[];
- private readonly arrays:RecordArray[];
+ private readonly depths:number[]=[];
+ private readonly records:unknown[]=[];
+ private readonly arrays:RecordArray[]=[];
  private readonly arrayCache=new Map<number,unknown[]>();
  private readonly recordIds=new Map<unknown,number>();
  private readonly usedRecords=new Set<number>();
- constructor(private readonly pool:unknown,private readonly limits:ArchiveLimits){
-  if(!object(pool)||Object.keys(pool).some(key=>!['records','arrays'].includes(key))||!Array.isArray(pool.records)||!Array.isArray(pool.arrays)||pool.records.length>limits.objects||pool.arrays.length>limits.objects||pool.records.some(item=>!record(item)))throw new StorageError('ARCHIVE_INVALID','共有レコード辞書の形式が不正です。','data/records.json');
-  this.records=pool.records;this.arrays=pool.arrays as RecordArray[];this.records.forEach((value,index)=>this.recordIds.set(value,index));
+ private readonly recordBases=new Map<number,number>();
+ constructor(private readonly pool:unknown,private readonly limits:ArchiveLimits,features:DictionaryFeatures={}){
+  const invalid=():never=>{throw new StorageError('ARCHIVE_INVALID','共有レコード辞書の形式が不正です。','data/records.json');};
+  if(!object(pool)||Object.keys(pool).some(key=>!['records','arrays'].includes(key))||!Array.isArray(pool.records)||!Array.isArray(pool.arrays)||pool.records.length>limits.objects||pool.arrays.length>limits.objects)return invalid();
+  this.records=[];
+  for(const [index,item]of pool.records.entries()){
+   let value:unknown=item;
+   if(!record(item)&&!(features.calendarRecords&&calendar(item))){
+    if(!features.recordDeltas||!object(item)||!Number.isSafeInteger(item[baseKey])||Number(item[baseKey])<0||Number(item[baseKey])>=index)return invalid();
+    const base=Number(item[baseKey]),previous=this.records[base] as Record<string,unknown>;
+    const result:Record<string,unknown>=Object.create(Object.getPrototypeOf(previous));
+    for(const [key,value]of Object.entries(previous))Object.defineProperty(result,key,{value,enumerable:true,writable:true,configurable:true});
+    if(Object.hasOwn(item,deleteKey)){
+     const removed=item[deleteKey];if(!Array.isArray(removed)||new Set(removed).size!==removed.length)return invalid();
+     for(const key of removed){if(typeof key!=='string'||[baseKey,deleteKey].includes(key)||!Object.hasOwn(result,key)||Object.hasOwn(item,key))return invalid();delete result[key];}
+    }
+    for(const [key,value]of Object.entries(item))if(![baseKey,deleteKey].includes(key))Object.defineProperty(result,key,{value,enumerable:true,writable:true,configurable:true});
+    value=result;this.recordBases.set(index,base);this.references++;
+    if(this.references>Math.floor(limits.expandedBytes/8))throw new StorageError('LIMIT_EXCEEDED','共有レコード参照の展開が安全上限を超えています。');
+    if(!record(value)&&!(features.calendarRecords&&calendar(value)))return invalid();
+   }
+   this.records.push(value);
+  }
+  this.arrays=pool.arrays as RecordArray[];this.records.forEach((value,index)=>this.recordIds.set(value,index));
   const depth=(v:unknown):number=>{if(!v||typeof v!=='object')return 0;let maximum=0;for(const child of Object.values(v))maximum=Math.max(maximum,depth(child));return maximum+1;};
   this.depths=this.records.map(depth);
   // A pooled historic record is a value, not a mutable alias between editions.
@@ -82,7 +129,7 @@ export class RecordDictionaryReader{
    const key=keys.at(-1),value=key===undefined?root:parent&&typeof parent==='object'&&Object.hasOwn(parent,key)?(parent as Record<string,unknown>)[key]:undefined;
    const isArray=index<input.arrays.length,values=isArray?this.values(value):Number.isSafeInteger(value)&&Number(value)>=0&&Number(value)<this.records.length?[this.records[Number(value)]]:invalid();
    if(!isArray){this.references++;if(this.references>Math.floor(this.limits.expandedBytes/8))throw new StorageError('LIMIT_EXCEEDED','共有レコード参照の展開が安全上限を超えています。',path);}
-   for(const record of values){const id=this.recordIds.get(record)!;if(keys.length+this.depths[id]!>this.limits.depth)throw new StorageError('LIMIT_EXCEEDED','共有レコードの展開深さが安全上限を超えています。',path);this.usedRecords.add(id);}
+   for(const record of values){const id=this.recordIds.get(record)!;if(keys.length+this.depths[id]!>this.limits.depth)throw new StorageError('LIMIT_EXCEEDED','共有レコードの展開深さが安全上限を超えています。',path);let used:number|undefined=id;while(used!==undefined&&!this.usedRecords.has(used)){this.usedRecords.add(used);used=this.recordBases.get(used);}}
    const decoded=isArray?values:values[0];
    if(key===undefined){if(paths.length!==1)return invalid();root=decoded;}else{if(!parent||typeof parent!=='object'||Array.isArray(parent)&&typeof key!=='number'||!Array.isArray(parent)&&typeof key!=='string')return invalid();writes.push({parent:parent as Record<string,unknown>,key,value:decoded});}
   }
