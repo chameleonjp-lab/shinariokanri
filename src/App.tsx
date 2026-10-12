@@ -19,7 +19,7 @@ import { effectiveWorldContent } from './domain/world';
 import { resolvePinnedWorlds } from './domain/pinnedWorlds';
 import { adoptedWorldEntityIds, mergeWorldSources } from './domain/worldSources';
 import { addChangeReviews } from './domain/changeReviews';
-import { type AssetInput } from './storage';
+import { equalJson, type AssetInput } from './storage';
 import { EmptyState, Icon, Modal, normalizeSearch, downloadBytes, safeFileName, type IconName, STATUS_LABELS } from './ui/components';
 import { EntityEditor } from './ui/EntityEditor';
 import { CatalogPanel } from './ui/CatalogPanel';
@@ -231,6 +231,15 @@ export default function App() {
     if (!latest || latest.projectId !== entity.projectId) throw new Error('この入力の作品を開いてから保存してください。');
     const existing = latest.entities.find(e => e.id === entity.id);
     if (existing && existing.revision !== entity.revision) throw new Error('この情報が別の操作で更新されました。入力は保持されています。現在版と比較してから再試行してください。');
+    if (existing && equalJson(existing, entity)) {
+      // Correcting an invalid draft back to its saved image is an acknowledgement,
+      // not a new edit. Verify the native version before clearing the draft.
+      const durable = await scenarioStore.getProjectForEditing(entity.projectId, { signal: saveController.current?.signal, immutableView: true });
+      const stored = durable?.entities.find(record => record.id === entity.id);
+      if (!durable || durable.revision !== latest.revision || !stored || !equalJson(stored, entity)) throw new Error('保存済みの内容が別の操作で更新されました。入力を保持し、現在版を確認して再試行してください。');
+      setDrafts(previous => reconcileSavedDrafts(previous, entity, stored));
+      return stored;
+    }
     let entities = existing ? latest.entities.map(e => e.id === entity.id ? entity : e) : [...latest.entities, entity];
     if (existing) entities = remapEditedTextReferences(entities, existing, entity);
     if (entity.kind === 'scene') {

@@ -181,6 +181,7 @@ export function EntityEditor({ entity, project, referenceProject, isNew, hasUnsa
     }
     if (!dirty) return;
     const stamp = JSON.stringify(current);
+    const interactionVersion = editorInteractionVersion.current;
     if (!manual && (stamp === attemptRef.current || !current.name.trim() && !['event', 'dialogue_line'].includes(current.kind))) return;
     attemptRef.current = stamp;
     savingRef.current = true;
@@ -194,6 +195,9 @@ export function EntityEditor({ entity, project, referenceProject, isNew, hasUnsa
       setError(failure.message || '端末内に保存できませんでした。入力はこの画面に保持されています。');
       setIssues(failure.issues || []);
       if (manual) requestAnimationFrame(() => {
+        // A late failure may suggest a field, but cannot take focus from a
+        // correction or selection that the author started after this save.
+        if (editorInteractionVersion.current !== interactionVersion || JSON.stringify(draftRef.current) !== stamp) return;
         const path = failure.issues?.[0]?.path.split('.').pop();
         const field = path ? document.querySelector<HTMLElement>(`[data-field="${CSS.escape(path)}"] input, [data-field="${CSS.escape(path)}"] textarea, [data-field="${CSS.escape(path)}"] select`) : null;
         field?.focus();
