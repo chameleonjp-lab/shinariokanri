@@ -73,6 +73,28 @@ describe('captured full-validation sessions', () => {
     expect(validate(project).ok).toBe(true);
   });
 
+  it('invalidates successful proofs when a shared schema leaf changes in both owning paths', () => {
+    const source = createProject('共有する読みの検証規則');
+    source.entities.push(createEntity(source.projectId, 'character', '人物', {
+      reading: 'あ', aliases: [{ id: newId(), text: '別名', reading: 'い', validity: emptyValidity(), audienceHolderIds: [], isPublicDefault: false }],
+    }));
+    const project = own(source), validate = createProjectValidator(), character = ENTITY_SCHEMAS.character;
+    if (character.type !== 'object') throw new Error('Expected character schema');
+    const reading = character.fields.reading.schema, aliases = character.fields.aliases.schema;
+    if (reading.type !== 'text' || aliases.type !== 'array' || aliases.item.type !== 'object') throw new Error('Expected typed readings and aliases');
+    expect(aliases.item.fields.reading.schema).toBe(reading);
+    const minimum = reading.min;
+    try {
+      expect(validate(project).ok).toBe(true);
+      reading.min = 2;
+      const result = validate(project);
+      refused(result, '.data.reading');
+      refused(result, '.data.aliases[0].reading');
+      reading.min = minimum;
+      expect(validate(project).ok).toBe(true);
+    } finally { reading.min = minimum; }
+  });
+
   it('checks each changed namespace and reference target after immutable record schemas already succeeded', () => {
     const source = createProject('同じ人物・出来事・関係を持つ履歴');
     const a = createEntity(source.projectId, 'character', '人物A'), b = createEntity(source.projectId, 'character', '人物B');
