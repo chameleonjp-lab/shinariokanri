@@ -5,6 +5,7 @@ import type {PortableRecovery} from './recovery';
 import {createSharedArrayJsonEncoder} from './sharedArrayJson';
 import {sha256} from './json';
 import {checkCancelled,StorageError} from './errors';
+import {internImmutableRecords} from '../domain/internImmutableRecords';
 
 /** One private native read image, not a caller-supplied verification result. */
 export interface NativeExportCapture {
@@ -20,6 +21,7 @@ export interface NativeExportCapture {
  * structural, integrity, recovery, asset and archive-capacity validators. */
 export async function exportNativeScenarioData(capture:NativeExportCapture,options:ExportOptions={}):Promise<Uint8Array>{
   checkCancelled(options.signal);
+  capture=internImmutableRecords(capture);
   const commandBytes=createSharedArrayJsonEncoder();
   const operations=new Map(capture.retained.map(row=>[row.operationId,row]));
   for(const row of capture.pending){

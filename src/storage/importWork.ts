@@ -2,6 +2,7 @@ import type {ProjectContent, ProjectData} from '../domain/types';
 import {validateProject} from '../domain/model';
 import {createProjectValidationSession, validateProjectIntegrity} from '../domain/projectRecordValidation';
 import {captureImmutablePlainData} from '../domain/immutablePlainData';
+import {internImmutableRecords} from '../domain/internImmutableRecords';
 import {verifySnapshotHashes, verifyWorlds, type PreparedScenario} from './archiveData';
 import {cloneProject} from './clone';
 import {collectImportIds, planCrossProjectImport, type CrossProjectImportPlan, type ImportId} from './importMapping';
@@ -36,7 +37,7 @@ export async function runImportWork(work: ImportWork, signal?: AbortSignal, load
       // One read owns the complete manuscript and exact fixed dependencies.
       // Only successful proofs over this private immutable capture can share
       // structural work; unsupported graphs retain the uncached checks.
-      const owned = captureImmutablePlainData({project, worlds, knownWorlds: work.knownWorlds ?? {}}).value;
+      const owned = internImmutableRecords(captureImmutablePlainData({project, worlds, knownWorlds: work.knownWorlds ?? {}}).value);
       const validation = createProjectValidationSession({worldSnapshots: owned.worlds});
       const structural = validation.validate(owned.project);
       if (!structural.ok) throw Object.assign(new StorageError('VALIDATION_FAILED', structural.issues.map(issue => `${issue.path}: ${issue.message}`).join('\n')), {issues: structural.issues});

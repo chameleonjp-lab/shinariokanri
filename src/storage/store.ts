@@ -1224,6 +1224,9 @@ export class ScenarioStore {
       checkCancelled(options.signal); const row = commandRows.get(id);
       if (!row) throw new StorageError('SAVE_FAILED', '完全保存に必要な履歴が不足しています。', id);
       history.push(await this.materializeCommand(row, commandRows, ready, new Set(), false));
+      // Already decoded deltas resolve in microtasks. Let real UI tasks and
+      // cancellation run between complete command images without dropping any.
+      await new Promise<void>(resolve => setTimeout(resolve, 0)); checkCancelled(options.signal);
     }
     const content = { ...captured.current.project, history }, capturedPending = await this.materializeOutbox(captured.rows, commandRows, ready);
     const selected = options.snapshotId ? content.snapshots.find(snapshot => snapshot.id === options.snapshotId) : undefined;
