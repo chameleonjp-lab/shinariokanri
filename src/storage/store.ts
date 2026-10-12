@@ -1,6 +1,5 @@
 import {mergeImportConflicts} from './importWork';
 import {freezeCapturedPlainDataAsync} from '../domain/immutablePlainData';
-import {createSharedArrayJsonEncoder} from './sharedArrayJson';
 import {cloneProject as clonePrivateProject} from './clone';
 import {recordDiagnostic} from '../diagnostics';
 import {bindRecordPartsSignal,installRecordPartsDatabase} from './recordPartsDatabase';
@@ -17,7 +16,7 @@ import { addChangeReviews } from '../domain/changeReviews';
 import { validateProjectIntegrity } from '../domain/projectRecordValidation';
 import { sealAuthorAlternative } from '../domain/authorAlternativeIntegrity';
 import { appendAlternativeVersion, applyAlternativeChanges, projectContent } from '../domain/writingWorkspace';
-import { assetPath, attachmentMetadata, closureAttachmentMetadata, exportScenario, performImportWork, referencedWorlds, validateAsset, verifySnapshotHashes, verifyWorlds, worldSnapshotContents, type PreparedScenario, type ImportWorkStep } from './archive';
+import { assetPath, attachmentMetadata, closureAttachmentMetadata, exportScenario, exportNativeScenario, performImportWork, referencedWorlds, validateAsset, verifySnapshotHashes, verifyWorlds, worldSnapshotContents, type PreparedScenario, type ImportWorkStep } from './archive';
 import { checkCancelled, saveError, StorageError } from './errors';
 import { canonicalJson, createCanonicalJsonCache, equalJson, jsonBytes as encodeJsonBytes, sha256, validateJsonValue } from './json';
 import { recoveryImages, projectWithRecoveryHistory, type PortableRecovery } from './recovery';
@@ -1233,20 +1232,16 @@ export class ScenarioStore {
     // These graphs came from the single private read transaction above. Freeze
     // only plain own-data captures; unusual legacy language retains its old path.
     await freezeCapturedPlainDataAsync({ project, pending, retained }, options.signal);
-    const commandBytes = createSharedArrayJsonEncoder();
-    const operations = new Map(retained.map(row => [row.operation.operationId, row.operation]));
-    for (const row of pending) {
-      checkCancelled(options.signal);
-      const commandHash = await sha256(commandBytes(row.command)), previous = operations.get(row.operationId);
-      if (previous && previous.commandHash !== commandHash) throw new StorageError('OPERATION_CONFLICT', '復元した送信待ちと現在の送信待ちが同じIDで異なります。');
-      operations.set(row.operationId, { operationId: row.operationId, command: row.command, commandHash, origin: { projectId, operationId: row.operationId, serverRevision: row.baseRevision } });
-      options.onProgress?.({stage:'hashes',completed:operations.size,total:pending.length});
-    }
-    const recovery = operations.size ? { version: 1 as const, projectId, sourceRevision: project.revision, serverRevision: captured.metadata?.serverRevision ?? '0', pending: [...operations.values()] } : undefined;
+    const nativePending=pending.map(row=>({operationId:row.operationId,command:row.command,baseRevision:row.baseRevision}));
+    const nativeRetained=retained.map(row=>row.operation);
+    // Discover the exact same historical world pins before file construction.
+    // The worker still verifies duplicate pending IDs and every full hash.
+    const pendingImages=[...nativePending.map(row=>row.command),...nativeRetained.map(row=>row.command)]
+      .flatMap(command=>[command.before,command.after].map(state=>({...state,history:[]})));
     const syncRecovery:NativeSyncRecovery[]=options.snapshotId?[]:captured.syncRetained.map(r=>r.evidence);
     if(!options.snapshotId&&(captured.syncBase||captured.syncPrepared.length||captured.syncConflicts.length||captured.syncAcks.length)){const payload={format:'scenario-sync-recovery' as const,version:1 as const,state:'needs_reconnect' as const,origin:{...project,history:[]},...(captured.syncBase?{base:captured.syncBase}:{}),prepared:captured.syncPrepared,conflicts:captured.syncConflicts,acknowledgements:captured.syncAcks,assetAcknowledgements:captured.syncAssetAcks};const evidence={...payload,contentHash:await valueHash(payload)};if(!syncRecovery.some(r=>r.contentHash===evidence.contentHash))syncRecovery.push(evidence);}
     const worlds: Record<string, ProjectData> = {};
-    let discovered = [project, ...recoveryImages(recovery),...syncRecoveryImages(syncRecovery)];
+    let discovered = [project, ...pendingImages,...syncRecoveryImages(syncRecovery)];
     while (discovered.length) {
       const next: ProjectData[] = [];
       for (const reference of referencedWorlds(discovered,captured.registry)) {
@@ -1256,7 +1251,9 @@ export class ScenarioStore {
       }
       discovered = next;
     }
-    return exportScenario(project, { ...options, ...(recovery ? { recovery } : {}), worlds,syncRecovery, loadAsset: hash => this.getAsset(hash) });
+    const capture={project,pending:nativePending,retained:nativeRetained,serverRevision:captured.metadata?.serverRevision??'0',worlds,syncRecovery};
+    await freezeCapturedPlainDataAsync(capture, options.signal);
+    return exportNativeScenario(capture, { ...options, loadAsset: hash => this.getAsset(hash) });
   }
 
   async previewImport(preparedInput: PreparedScenario, optionsInput: ImportOptions): Promise<ImportPreview> {
