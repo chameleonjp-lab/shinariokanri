@@ -5,8 +5,34 @@ on:
     branches: [main]
 permissions:
   contents: read
+# Only superseded PR checks are cancelled. Main and release evidence are retained.
+concurrency:
+  group: validate-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 jobs:
-  verify:
+  scope:
+    runs-on: ubuntu-latest
+    outputs:
+      run_product: ${{ steps.select.outputs.run_product }}
+      reason: ${{ steps.select.outputs.reason }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The merge checkout and its two parents suffice; unknown diffs run all tests.
+          fetch-depth: 2
+      - id: select
+        run: python3 scripts/ci/ci_controls.py scope
+  documents:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 scripts/check_docs.py
+      - run: python3 scripts/check_completion_plan.py
+      - run: python3 -m unittest discover -s scripts -p 'test_check_*.py' -v
+      - run: python3 -m unittest discover -s scripts/ci -p 'test_*.py' -v
+  unit:
+    needs: [scope, documents]
+    if: needs.scope.outputs.run_product == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -15,28 +41,77 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
-      - run: python3 scripts/check_docs.py
-      - run: python3 scripts/check_completion_plan.py
-      - run: python3 -m unittest discover -s scripts -p 'test_check_*.py' -v
+      # Preserve the original unit-test environment, including browser availability.
       - run: npx playwright install --with-deps chromium firefox webkit
       - run: node -e 'require("fs").appendFileSync(process.env.GITHUB_ENV, "CHROMIUM_PATH=" + require("playwright").chromium.executablePath() + "\n")'
-      # Large fixture and native-history checks share the hosted runner's CPU/memory.
-      # Preserve every assertion and test timeout; run files without resource contention.
       - run: npm test -- --maxWorkers=1 --fileParallelism=false
       - run: npm run build
-      - run: BROWSER_ENGINES=all npm run test:e2e
-      - run: npx playwright test -c tests/rb10/playwright.config.ts --project=chromium --output=test-results/rb10-large-analysis-chromium
-      - run: RB03_ENGINES=chromium,firefox,webkit node tests/browser/run-rb03-components.mjs
-      - run: |
-          for engine in chromium firefox webkit; do
-            RB04_ENGINE="$engine" RB04_OUTPUT_DIR=test-results/rb04 node tests/browser/rb04-author-regressions.mjs
-          done
-      - run: npx playwright test -c tests/rb04/playwright.config.ts --project=chromium --output=test-results/rb04-writing-chromium
-      - run: npx playwright test -c tests/rb04/playwright.config.ts --project=webkit --output=test-results/rb04-writing-webkit
+  browser:
+    needs: [scope, unit]
+    if: needs.scope.outputs.run_product == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        engine: [chromium, firefox, webkit]
+    env:
+      BROWSER_ENGINES: all
+      SCENARIO_CI_ENGINE: ${{ matrix.engine }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps "$SCENARIO_CI_ENGINE"
+      - if: matrix.engine == 'chromium'
+        run: node -e 'require("fs").appendFileSync(process.env.GITHUB_ENV, "CHROMIUM_PATH=" + require("playwright").chromium.executablePath() + "\n")'
+      # The build also generates the portable runtime needed by source component tests.
+      - run: npm run build
+      - run: python3 scripts/ci/ci_controls.py record --engine "$SCENARIO_CI_ENGINE" --output ci-browser-evidence/source.json
+      - name: Record complete browser test inventory
+        run: npx playwright test --project="$SCENARIO_CI_ENGINE" --list --reporter=json
+        env:
+          PLAYWRIGHT_JSON_OUTPUT_NAME: ci-browser-evidence/inventory.json
+      # Keep every test, assertion, timeout and one worker inside each separate runner.
+      - name: Run complete browser test inventory
+        run: npm run test:e2e -- --project="$SCENARIO_CI_ENGINE" --reporter=list,html,json
+        env:
+          PLAYWRIGHT_JSON_OUTPUT_NAME: ci-browser-evidence/results.json
+      - if: matrix.engine == 'chromium'
+        run: npx playwright test -c tests/rb10/playwright.config.ts --project=chromium --output=test-results/rb10-large-analysis-chromium
+      - run: RB03_ENGINES="$SCENARIO_CI_ENGINE" node tests/browser/run-rb03-components.mjs
+      - run: RB04_ENGINE="$SCENARIO_CI_ENGINE" RB04_OUTPUT_DIR=test-results/rb04 node tests/browser/rb04-author-regressions.mjs
+      - if: matrix.engine != 'firefox'
+        run: npx playwright test -c tests/rb04/playwright.config.ts --project="$SCENARIO_CI_ENGINE" --output="test-results/rb04-writing-$SCENARIO_CI_ENGINE"
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: browser-evidence
+          name: browser-evidence-${{ matrix.engine }}-attempt${{ github.run_attempt }}
           path: |
+            ci-browser-evidence/
             playwright-report/
             test-results/
+  # Preserve the existing required-check name and reject silent skips or partial matrices.
+  verify:
+    if: always()
+    needs: [scope, documents, unit, browser]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        if: needs.scope.outputs.run_product == 'true'
+        with:
+          pattern: browser-evidence-*-attempt*
+          path: browser-evidence
+      - name: Verify all required jobs and browser evidence
+        run: python3 scripts/ci/ci_controls.py verify --evidence browser-evidence
+        env:
+          SCENARIO_CI_NEEDS: ${{ toJSON(needs) }}
+      - uses: actions/upload-artifact@v4
+        if: always() && needs.scope.outputs.run_product == 'true'
+        with:
+          name: browser-evidence
+          overwrite: true
+          path: browser-evidence/
