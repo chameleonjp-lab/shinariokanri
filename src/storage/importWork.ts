@@ -1,7 +1,7 @@
 import type {ProjectContent, ProjectData} from '../domain/types';
 import {validateProject} from '../domain/model';
 import {createProjectValidationSession, validateProjectIntegrity} from '../domain/projectRecordValidation';
-import {captureImmutablePlainData} from '../domain/immutablePlainData';
+import {captureImmutablePlainData, freezeCapturedPlainData} from '../domain/immutablePlainData';
 import {internImmutableRecords} from '../domain/internImmutableRecords';
 import {verifySnapshotHashes, verifyWorlds, type PreparedScenario} from './archiveData';
 import {cloneProject} from './clone';
@@ -25,6 +25,19 @@ export interface ImportWorkResult {
   project?: ProjectData; recovery?: PortableRecovery; syncRecovery?: NativeSyncRecovery[];
   ids?: ImportId[]; cloned?: {project: ProjectData; idMap: Record<string, string>};
   mappedPlan?: CrossProjectImportPlan; conflicts?: ImportConflict[]; history?: ProjectData['history'];
+}
+
+const immutableImportValidationSteps: ReadonlySet<ImportWorkStep> = new Set([
+  'full_read', 'structure', 'integrity', 'recovery', 'ids', 'hashes', 'map_recovery', 'rehash_recovery',
+]);
+
+/** Freeze only private transport copies whose work is read-only validation.
+ * Result-bearing transformations retain their existing mutable/frozen output
+ * contracts and continue on the original path. Unsupported graphs are left
+ * wholly untouched by freezeCapturedPlainData's all-or-none proof. */
+export function freezeCapturedImportWork(work: ImportWork): ImportWork {
+  if (immutableImportValidationSteps.has(work.step)) freezeCapturedPlainData(work);
+  return work;
 }
 
 /** Return a mutable copy without exposing aliases introduced only for private validation/encoding. */
