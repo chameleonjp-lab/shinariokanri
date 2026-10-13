@@ -1,7 +1,7 @@
 import { inspectScenarioData, type ArchiveProgress } from './archiveData';
 import { StorageError } from './errors';
 import type { LimitOverrides } from './json';
-import {freezeCapturedImportWork, runImportWorkForWorker, type ImportWork} from './importWork';
+import {createImportWorkWorkerRunner, freezeCapturedImportWork, type ImportWork} from './importWork';
 
 const scope = self as unknown as {
   onmessage: ((event: MessageEvent) => void) | null;
@@ -9,6 +9,7 @@ const scope = self as unknown as {
 };
 let nextAsset = 0;
 const assets = new Map<number, {resolve: (bytes: Uint8Array | undefined) => void; reject: (cause: unknown) => void}>();
+const importWorkRunner = createImportWorkWorkerRunner();
 scope.onmessage = event => {
   if (event.data.type === 'import-asset') {
     const pending = assets.get(event.data.id); assets.delete(event.data.id);
@@ -20,7 +21,7 @@ scope.onmessage = event => {
   if (event.data.type === 'import-work') {
     const requestId = event.data.requestId;
     const work = freezeCapturedImportWork(event.data.work as ImportWork);
-    void runImportWorkForWorker(work, undefined, hash => new Promise((resolve, reject) => {
+    void importWorkRunner.run(work, undefined, hash => new Promise((resolve, reject) => {
       const id = ++nextAsset; assets.set(id, {resolve, reject}); scope.postMessage({type: 'asset', requestId, id, hash});
     }))
       .then(result => scope.postMessage({type: 'done', requestId, result}))
@@ -30,6 +31,7 @@ scope.onmessage = event => {
       });
     return;
   }
+  importWorkRunner.reset();
   const { bytes, limits } = event.data as { bytes: Uint8Array; limits?: LimitOverrides };
   void inspectScenarioData(bytes, { limits, onProgress: (progress: ArchiveProgress) => scope.postMessage({ type: 'progress', progress }) })
     .then(prepared => scope.postMessage({ type: 'done', prepared }, prepared.assets.map(asset => asset.bytes.buffer as ArrayBuffer)))

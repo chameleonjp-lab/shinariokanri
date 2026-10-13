@@ -3,13 +3,13 @@ import 'fake-indexeddb/auto';
 import Dexie from 'dexie';
 import {createHash} from 'node:crypto';
 import {afterEach, describe, expect, it, vi} from 'vitest';
-import {createEntity, createProject, newId, textToRichText} from '../domain/model';
+import {createEntity, createProject, newId, RELATION_TYPES, textToRichText} from '../domain/model';
 import type {CommandRecord, ContentState} from '../domain/types';
 import {createWorldSnapshot} from '../domain/world';
 import {inspectScenario, performImportWork} from './archive';
 import {FORMAT_VERSION, jsonBytes, sha256} from './json';
 import {StorageError} from './errors';
-import {freezeCapturedImportWork, runImportWork, runImportWorkForWorker, type ImportWork} from './importWork';
+import {createImportWorkWorkerRunner, freezeCapturedImportWork, runImportWork, runImportWorkForWorker, type ImportWork} from './importWork';
 import {createImportWorkSession} from './importWorkSession';
 import {ScenarioStore} from './store';
 import {isImmutablePlainData} from '../domain/immutablePlainData';
@@ -399,6 +399,157 @@ describe('cancellable import worker transport', () => {
 });
 
 describe('operation-owned import worker', () => {
+  it('reuses one private validation session only for unchanged worker images and clears it on corruption', async () => {
+    const source = await capturedOutputWork('recovery'), runner = createImportWorkWorkerRunner();
+    const structure = await runner.run({step: 'structure', project: source.project, worlds: source.worlds});
+    expect(structure.project).toEqual(source.project);
+    expect(Object.isFrozen(source.project)).toBe(false);
+    const received = structuredClone(structure.project!);
+    received.name = '受信後に編集した値';
+    expect(source.project.name).not.toBe(received.name);
+
+    const integrity = await runner.run({step: 'integrity', project: structuredClone(source.project), worlds: structuredClone(source.worlds)});
+    expect(integrity).toEqual({});
+    const recovery = await runner.run(structuredClone(source));
+    expect(structuredClone(recovery.recovery)).toEqual(source.recovery);
+
+    source.project.history[0]!.projectId = newId();
+    expect(Object.isFrozen(source.project.history[0])).toBe(false);
+    const changedHistory: ImportWork = {step: 'integrity', project: source.project, worlds: source.worlds};
+    const details = async (promise: Promise<unknown>) => {
+      try { await promise; } catch (error) {
+        const value = error as StorageError;
+        return {code: value.code, message: value.message, path: value.path};
+      }
+      throw new Error('Expected changed history owner to reject');
+    };
+    expect(await details(runner.run(changedHistory))).toEqual(await details(runImportWork(structuredClone(changedHistory))));
+    runner.reset();
+  });
+
+  it('invalidates the session when a same-ID world snapshot or relation registry changes', async () => {
+    const fixedWorld = await createWorldSnapshot(createProject('固定世界'), '参照版'), pin = fixedWorld.snapshots[0]!;
+    const project = createProject('参照作品');
+    project.worldReferences = [{projectId: fixedWorld.projectId, immutableSnapshotId: pin.id, contentHash: pin.contentHash}];
+    const worlds = {[pin.id]: pin.content}, runner = createImportWorkWorkerRunner();
+    await runner.run({step: 'structure', project: structuredClone(project), worlds: structuredClone(worlds)});
+    const details = async (promise: Promise<unknown>) => {
+      try { await promise; } catch (error) {
+        const value = error as StorageError;
+        return {code: value.code, message: value.message, path: value.path};
+      }
+      throw new Error('Expected changed dependency to reject');
+    };
+    const unsupportedContexts = [
+      {...worlds, unused: Number.NaN as unknown as typeof pin.content},
+      {...worlds, ['\uD800']: pin.content},
+    ];
+    for (const unsupportedWorlds of unsupportedContexts) {
+      const fallbackWork: ImportWork = {step: 'structure', project: structuredClone(project), worlds: unsupportedWorlds};
+      const workerResult = await runner.run(fallbackWork), baseline = await runImportWork(structuredClone(fallbackWork));
+      expect(structuredClone(workerResult.project)).toEqual(baseline.project);
+      expect(Object.isFrozen(fallbackWork.project)).toBe(false);
+      await runner.run({step: 'structure', project: structuredClone(project), worlds: structuredClone(worlds)});
+    }
+    const editedWorld = structuredClone(pin.content); editedWorld.name = '同じIDの別内容';
+    const changedWorlds = {[pin.id]: editedWorld};
+    const worldIntegrity: ImportWork = {step: 'integrity', project: structuredClone(project), worlds: changedWorlds};
+    expect(await details(runner.run(worldIntegrity))).toEqual(await details(runImportWork(structuredClone(worldIntegrity))));
+
+    const relationProject = createProject('対称関係'), a = createEntity(relationProject.projectId, 'character', '人物A'), b = createEntity(relationProject.projectId, 'character', '人物B');
+    relationProject.entities.push(a, b);
+    relationProject.relations.push({id: newId(), projectId: relationProject.projectId, revision: '0', fromId: a.id, toId: b.id,
+      relationType: 'related', direction: 'symmetric', validity: {worldRange: null, routeCondition: null, presentationAnchor: null},
+      evidenceIds: [], status: 'provisional', visibility: 'private'});
+    const relationRunner = createImportWorkWorkerRunner();
+    await relationRunner.run({step: 'structure', project: structuredClone(relationProject), worlds: {}});
+    const related = RELATION_TYPES.find(type => type.key === 'related')!;
+    const oldAllowSymmetric = related.allowSymmetric;
+    related.allowSymmetric = false;
+    try {
+      const relationIntegrity: ImportWork = {step: 'integrity', project: structuredClone(relationProject), worlds: {}};
+      expect(await details(relationRunner.run(relationIntegrity))).toEqual(await details(runImportWork(structuredClone(relationIntegrity))));
+    } finally { related.allowSymmetric = oldAllowSymmetric; }
+    runner.reset();
+    relationRunner.reset();
+  });
+
+  it('does not reuse a same-ID pending command after its contents and SHA change, and keeps pending-only recovery valid', async () => {
+    const source = await capturedOutputWork('recovery'), runner = createImportWorkWorkerRunner();
+    await runner.run({step: 'structure', project: structuredClone(source.project), worlds: structuredClone(source.worlds)});
+    const changedPending = structuredClone(source);
+    changedPending.recovery!.pending[0]!.command.reason = '同じ操作IDの新しい本文';
+    changedPending.recovery!.pending[0]!.commandHash = await sha256(jsonBytes(changedPending.recovery!.pending[0]!.command));
+    const details = async (promise: Promise<unknown>) => {
+      try { await promise; } catch (error) {
+        const value = error as StorageError;
+        return {code: value.code, message: value.message, path: value.path};
+      }
+      throw new Error('Expected operation conflict');
+    };
+    expect(await details(runner.run(changedPending))).toEqual(await details(runImportWork(structuredClone(changedPending))));
+    await runner.run({step: 'structure', project: structuredClone(source.project), worlds: structuredClone(source.worlds)});
+    const malformed = {...structuredClone(source), recovery: {...source.recovery!, pending: [null]} as unknown as ImportWork['recovery']};
+    expect(await details(runner.run(malformed))).toEqual(await details(runImportWork(structuredClone(malformed))));
+
+    const pendingSource = recoveryFixture(1), pendingProject = structuredClone(pendingSource.project), [pendingCommand] = pendingProject.history;
+    pendingProject.history = [];
+    const pendingRecovery: NonNullable<ImportWork['recovery']> = {version: 1, projectId: pendingProject.projectId,
+      sourceRevision: pendingProject.revision, serverRevision: '2', pending: [{operationId: pendingCommand!.operationId,
+        command: structuredClone(pendingCommand!), commandHash: await sha256(jsonBytes(pendingCommand!))}]};
+    const pendingRunner = createImportWorkWorkerRunner();
+    await pendingRunner.run({step: 'structure', project: structuredClone(pendingProject), worlds: {}});
+    const pendingResult = await pendingRunner.run({step: 'recovery', project: structuredClone(pendingProject), worlds: {}, recovery: pendingRecovery});
+    expect(structuredClone(pendingResult.recovery)).toEqual(pendingRecovery);
+    runner.reset(); pendingRunner.reset();
+  });
+
+  it('clears proof state after failure, cancellation, reset, and overlapping work', async () => {
+    const fixedWorld = await createWorldSnapshot(createProject('並行確認の世界'), '固定版'), pin = fixedWorld.snapshots[0]!;
+    const project = createProject('並行確認の作品');
+    project.worldReferences = [{projectId: fixedWorld.projectId, immutableSnapshotId: pin.id, contentHash: pin.contentHash}];
+    const worlds = {[pin.id]: pin.content}, runner = createImportWorkWorkerRunner();
+    await runner.run({step: 'structure', project: structuredClone(project), worlds: structuredClone(worlds)});
+    let entered!: () => void, release!: () => void;
+    const gate = new Promise<void>(resolve => { release = resolve; }), started = new Promise<void>(resolve => { entered = resolve; });
+    const digest = crypto.subtle.digest.bind(crypto.subtle);
+    let held = false;
+    const spy = vi.spyOn(crypto.subtle, 'digest').mockImplementation(async (...args) => {
+      if (!held) { held = true; entered(); await gate; }
+      return digest(...args);
+    });
+    const controller = new AbortController();
+    try {
+      const canceled = runner.run({step: 'integrity', project: structuredClone(project), worlds: structuredClone(worlds)}, controller.signal);
+      await started;
+      const changedWorld = structuredClone(pin.content); changedWorld.name = '並行中に差し替えた同ID世界';
+      const overlapping: ImportWork = {step: 'integrity', project: structuredClone(project), worlds: {[pin.id]: changedWorld}};
+      await expect(runner.run(overlapping)).rejects.toMatchObject({code: 'VALIDATION_FAILED'});
+      controller.abort(); release();
+      await expect(canceled).rejects.toMatchObject({code: 'CANCELLED'});
+    } finally { release(); spy.mockRestore(); }
+    runner.reset();
+    const changedWorld = structuredClone(pin.content); changedWorld.name = 'reset後の同ID別世界';
+    const afterReset: ImportWork = {step: 'integrity', project: structuredClone(project), worlds: {[pin.id]: changedWorld}};
+    await expect(runner.run(afterReset)).rejects.toMatchObject({code: 'VALIDATION_FAILED'});
+  });
+
+  it('keeps runner instances isolated and warm worker publications editable without history aliases', async () => {
+    const source = await capturedOutputWork('recovery'), firstRunner = createImportWorkWorkerRunner(), secondRunner = createImportWorkWorkerRunner();
+    const first = await firstRunner.run({step: 'structure', project: structuredClone(source.project), worlds: {}});
+    const warm = structuredClone((await firstRunner.run({step: 'structure', project: structuredClone(source.project), worlds: {}})).project!);
+    const entityId = source.project.entities[0]!.id;
+    const current = warm.entities.find(entity => entity.id === entityId)!, historical = warm.history.at(-1)!.after.entities.find(entity => entity.id === entityId)!;
+    expect(historical).not.toBe(current);
+    const historyName = historical.name; current.name = 'warm worker output edit';
+    expect(historical.name).toBe(historyName); expect(source.project.entities[0]!.name).toBe(historyName);
+    const invalid = structuredClone(source.project); invalid.name = 42 as unknown as string;
+    await expect(secondRunner.run({step: 'structure', project: invalid, worlds: {}})).rejects.toMatchObject({code: 'VALIDATION_FAILED'});
+    expect((await firstRunner.run({step: 'structure', project: structuredClone(source.project), worlds: {}})).project).toEqual(source.project);
+    expect(structuredClone(first.project)).toEqual(source.project);
+    firstRunner.reset(); secondRunner.reset();
+  });
+
   it('keeps the direct Node structure result mutable and detached from caller input', async () => {
     const work = request();
     work.project = Object.assign(Object.create(null), work.project);
