@@ -1,7 +1,7 @@
 import { inspectScenarioData, type ArchiveProgress } from './archiveData';
 import { StorageError } from './errors';
 import type { LimitOverrides } from './json';
-import {runImportWork, type ImportWork} from './importWork';
+import {freezeCapturedImportWork, runImportWorkForWorker, type ImportWork} from './importWork';
 
 const scope = self as unknown as {
   onmessage: ((event: MessageEvent) => void) | null;
@@ -19,7 +19,8 @@ scope.onmessage = event => {
   }
   if (event.data.type === 'import-work') {
     const requestId = event.data.requestId;
-    void runImportWork(event.data.work as ImportWork, undefined, hash => new Promise((resolve, reject) => {
+    const work = freezeCapturedImportWork(event.data.work as ImportWork);
+    void runImportWorkForWorker(work, undefined, hash => new Promise((resolve, reject) => {
       const id = ++nextAsset; assets.set(id, {resolve, reject}); scope.postMessage({type: 'asset', requestId, id, hash});
     }))
       .then(result => scope.postMessage({type: 'done', requestId, result}))

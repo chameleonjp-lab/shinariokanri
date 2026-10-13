@@ -36,9 +36,16 @@ export function internImmutableRecords<T>(input: T): T {
       else candidates.set(key, [value]);
       count++; copied.set(value, value); return value;
     }
+    const keys = Object.keys(value);
+    let replacements: Map<string, unknown> | undefined;
+    for (const key of keys) {
+      const previous = row[key], next = visit(previous, depth + 1);
+      if (!Object.is(next, previous)) { replacements ??= new Map(); replacements.set(key, next); }
+    }
+    if (!replacements) { copied.set(value, value); return value; }
     const result: unknown[] | Record<string, unknown> = Array.isArray(value) ? new Array(value.length) : Object.create(Object.getPrototypeOf(value));
+    for (const key of keys) Object.defineProperty(result, key, {value: replacements.has(key) ? replacements.get(key) : row[key], enumerable: true, writable: true, configurable: true});
     copied.set(value, result);
-    for (const key of Object.keys(value)) Object.defineProperty(result, key, {value: visit(row[key], depth + 1), enumerable: true, writable: true, configurable: true});
     return result;
   };
   const result = visit(input) as T;

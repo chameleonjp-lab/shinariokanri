@@ -1,7 +1,7 @@
 import type {ProjectContent, ProjectData} from '../domain/types';
 import {validateProject} from '../domain/model';
 import {createProjectValidationSession, validateProjectIntegrity} from '../domain/projectRecordValidation';
-import {captureImmutablePlainData} from '../domain/immutablePlainData';
+import {captureImmutablePlainData, freezeCapturedPlainData} from '../domain/immutablePlainData';
 import {internImmutableRecords} from '../domain/internImmutableRecords';
 import {verifySnapshotHashes, verifyWorlds, type PreparedScenario} from './archiveData';
 import {cloneProject} from './clone';
@@ -27,6 +27,19 @@ export interface ImportWorkResult {
   mappedPlan?: CrossProjectImportPlan; conflicts?: ImportConflict[]; history?: ProjectData['history'];
 }
 
+const immutableImportValidationSteps: ReadonlySet<ImportWorkStep> = new Set([
+  'full_read', 'structure', 'integrity', 'recovery', 'ids', 'hashes', 'map_recovery', 'rehash_recovery',
+]);
+
+/** Freeze only private transport copies whose work is read-only validation.
+ * Result-bearing transformations retain their existing mutable/frozen output
+ * contracts and continue on the original path. Unsupported graphs are left
+ * wholly untouched by freezeCapturedPlainData's all-or-none proof. */
+export function freezeCapturedImportWork(work: ImportWork): ImportWork {
+  if (immutableImportValidationSteps.has(work.step)) freezeCapturedPlainData(work);
+  return work;
+}
+
 /** Return a mutable copy without exposing aliases introduced only for private validation/encoding. */
 function cloneMutableCaptured<T>(input: T): T {
   const copies = new WeakMap<object, object>();
@@ -46,9 +59,14 @@ function cloneMutableCaptured<T>(input: T): T {
   return copy(input) as T;
 }
 
+type CapturedPublisher = <T>(value: T) => T;
+function publishWorkerCaptured<T>(value: T): T { return value; }
+
 /** The same pure checks and transformations run in Node or the browser worker.
  * No database, account authority or mutable target is available here. */
-export async function runImportWork(work: ImportWork, signal?: AbortSignal, loadAsset?: (hash: string) => Promise<Uint8Array | undefined> | Uint8Array | undefined): Promise<ImportWorkResult> {
+async function runImportWorkCore(work: ImportWork, signal: AbortSignal | undefined,
+  loadAsset: ((hash: string) => Promise<Uint8Array | undefined> | Uint8Array | undefined) | undefined,
+  publishCaptured: CapturedPublisher): Promise<ImportWorkResult> {
   checkCancelled(signal);
   const {project, worlds, recovery} = work;
   let result: ImportWorkResult = {};
@@ -84,9 +102,9 @@ export async function runImportWork(work: ImportWork, signal?: AbortSignal, load
         const structural = validation.validate(owned);
         if (!structural.ok) throw Object.assign(new StorageError('VALIDATION_FAILED', structural.issues.map(issue => `${issue.path}: ${issue.message}`).join('\n')), {issues: structural.issues});
         validateJsonValue(structural.value);
-        // Keep the existing mutable result contract and never expose the
-        // private frozen graph or mutate the caller's input.
-        result.project = cloneMutableCaptured(captured.value);
+        // Publish the pre-intern capture: the public runner clones it to keep
+        // its mutable contract; the worker runner lets postMessage clone it.
+        result.project = publishCaptured(captured.value);
       } else {
         // Unsupported own-data graphs retain the complete uncached validator.
         const validation = validateProject(project, {worldSnapshots: worlds});
@@ -113,7 +131,7 @@ export async function runImportWork(work: ImportWork, signal?: AbortSignal, load
       if (captured.captured) {
         const owned = internImmutableRecords(captured.value);
         await validateRecovery(owned.recovery, owned.project, owned.worlds, signal);
-        result.recovery = cloneMutableCaptured(captured.value.recovery!);
+        result.recovery = publishCaptured(captured.value.recovery!);
       } else result.recovery = await validateRecovery(recovery, project, worlds, signal);
       break;
     }
@@ -164,7 +182,7 @@ export async function runImportWork(work: ImportWork, signal?: AbortSignal, load
           if (!operationId || !command || !hashCommand) throw new StorageError('IMPORT_CONFLICT', '復元する送信待ち操作の明示ID対応が不足しています。', item.operationId);
           pending.push({operationId, command, commandHash: await sha256(encodeCommand(hashCommand)), origin: item.origin ?? {projectId: captured.value.recovery.projectId, operationId: item.operationId, serverRevision: captured.value.recovery.serverRevision}});
         }
-        result.recovery = cloneMutableCaptured({...captured.value.recovery, projectId: captured.value.project.projectId, sourceRevision: captured.value.project.revision, pending});
+        result.recovery = publishCaptured({...captured.value.recovery, projectId: captured.value.project.projectId, sourceRevision: captured.value.project.revision, pending});
       } else {
         const history = new Map(project.history.map(record => [record.operationId, record]));
         const pending: PortableRecovery['pending'] = [];
@@ -191,7 +209,7 @@ export async function runImportWork(work: ImportWork, signal?: AbortSignal, load
           const command = history.get(item.operationId) ?? item.command, hashCommand = hashHistory.get(hashItem.operationId) ?? hashItem.command;
           pending.push({...item, command, commandHash: await sha256(encodeCommand(hashCommand))});
         }
-        result.recovery = cloneMutableCaptured({...captured.value.recovery, projectId: captured.value.project.projectId, sourceRevision: captured.value.project.revision, pending});
+        result.recovery = publishCaptured({...captured.value.recovery, projectId: captured.value.project.projectId, sourceRevision: captured.value.project.revision, pending});
       } else {
         const history = new Map(project.history.map(record => [record.operationId, record]));
         const pending: PortableRecovery['pending'] = [];
@@ -208,6 +226,17 @@ export async function runImportWork(work: ImportWork, signal?: AbortSignal, load
   }
   checkCancelled(signal);
   return result;
+}
+
+/** Public Node/direct-call path retains detached, editable captured results. */
+export function runImportWork(work: ImportWork, signal?: AbortSignal, loadAsset?: (hash: string) => Promise<Uint8Array | undefined> | Uint8Array | undefined): Promise<ImportWorkResult> {
+  return runImportWorkCore(work, signal, loadAsset, cloneMutableCaptured);
+}
+
+/** @internal Worker-only path. Its caller must immediately post the result so
+ * the worker message clone is the mutable, detached publication boundary. */
+export function runImportWorkForWorker(work: ImportWork, signal?: AbortSignal, loadAsset?: (hash: string) => Promise<Uint8Array | undefined> | Uint8Array | undefined): Promise<ImportWorkResult> {
+  return runImportWorkCore(work, signal, loadAsset, publishWorkerCaptured);
 }
 
 export function mergeImportConflicts(existing: ProjectData, incoming: ProjectData): ImportConflict[] {

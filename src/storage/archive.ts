@@ -3,7 +3,7 @@ import {inspectScenarioData,exportScenarioData,type InspectOptions,type ExportOp
 import type {ProjectData} from '../domain/types';
 import {checkCancelled,saveError,StorageError} from './errors';
 import {resolveLimits} from './json';
-import {runImportWork, type ImportWork, type ImportWorkResult} from './importWork';
+import {freezeCapturedImportWork, runImportWork, type ImportWork, type ImportWorkResult} from './importWork';
 import {captureImmutablePlainData,isImmutablePlainData} from '../domain/immutablePlainData';
 import {sendWorkerGraph} from './workerGraph';
 import {exportNativeScenarioData,type NativeExportCapture} from './nativeExport';
@@ -14,7 +14,7 @@ export type {ImportWorkStep} from './importWork';
 export async function performImportWork(work: ImportWork, options: {signal?: AbortSignal; loadAsset?: (hash: string) => Promise<Uint8Array | undefined> | Uint8Array | undefined} = {}): Promise<ImportWorkResult> {
   const signal = options.signal, loadAsset = options.loadAsset;
   checkCancelled(signal);
-  if (typeof window === 'undefined' || typeof Worker === 'undefined') return runImportWork(structuredClone(work), signal, loadAsset);
+  if (typeof window === 'undefined' || typeof Worker === 'undefined') return runImportWork(freezeCapturedImportWork(structuredClone(work)), signal, loadAsset);
   return new Promise((resolve, reject) => {
     const worker = new Worker(new URL('./archive.worker.ts', import.meta.url), {type: 'module'});
     let live = true;

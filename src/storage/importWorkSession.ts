@@ -1,5 +1,5 @@
 import {checkCancelled, saveError, StorageError} from './errors';
-import {runImportWork, type ImportWork, type ImportWorkResult} from './importWork';
+import {freezeCapturedImportWork, runImportWork, type ImportWork, type ImportWorkResult} from './importWork';
 
 type WorkOptions = {signal?: AbortSignal; loadAsset?: (hash: string) => Promise<Uint8Array | undefined> | Uint8Array | undefined};
 
@@ -18,7 +18,7 @@ export function createImportWorkSession() {
     checkCancelled(signal);
     if (closed) throw cancelled();
     if (active) throw new StorageError('SAVE_FAILED', '復元の確認処理が既に実行中です。');
-    if (typeof window === 'undefined' || typeof Worker === 'undefined') return runImportWork(structuredClone(work), signal, loadAsset);
+    if (typeof window === 'undefined' || typeof Worker === 'undefined') return runImportWork(freezeCapturedImportWork(structuredClone(work)), signal, loadAsset);
     worker ??= new Worker(new URL('./archive.worker.ts', import.meta.url), {type: 'module'});
     const currentWorker = worker, id = ++sequence;
     return new Promise((resolve, reject) => {

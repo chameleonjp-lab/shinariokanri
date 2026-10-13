@@ -9,9 +9,10 @@ import {createWorldSnapshot} from '../domain/world';
 import {inspectScenario, performImportWork} from './archive';
 import {FORMAT_VERSION, jsonBytes, sha256} from './json';
 import {StorageError} from './errors';
-import {runImportWork, type ImportWork} from './importWork';
+import {freezeCapturedImportWork, runImportWork, runImportWorkForWorker, type ImportWork} from './importWork';
 import {createImportWorkSession} from './importWorkSession';
 import {ScenarioStore} from './store';
+import {isImmutablePlainData} from '../domain/immutablePlainData';
 
 class ControlledWorker {
   static instances: ControlledWorker[] = [];
@@ -70,6 +71,18 @@ function recoveryFixture(count = 113) {
   Object.assign(project, structuredClone(states[count]!)); project.history = commands;
   return {project, commands};
 }
+async function capturedOutputWork(step: 'structure' | 'recovery' | 'map_recovery' | 'rehash_recovery'): Promise<ImportWork> {
+  const {project, commands} = recoveryFixture(2), serverRevision = '4';
+  const recovery = {version: 1 as const, projectId: step === 'map_recovery' ? newId() : project.projectId,
+    sourceRevision: project.revision, serverRevision,
+    pending: await Promise.all(commands.map(async command => ({operationId: step === 'map_recovery' ? newId() : command.operationId,
+      command: structuredClone(command), commandHash: step === 'rehash_recovery' ? '0'.repeat(64) : await sha256(jsonBytes(command))}))) };
+  if (step === 'structure') return {step, project, worlds: {}};
+  if (step === 'recovery') return {step, project, recovery, worlds: {}};
+  if (step === 'rehash_recovery') return {step, project, recovery, worlds: {}};
+  const idMap = Object.fromEntries(recovery.pending.map((item, index) => [item.operationId, commands[index]!.operationId]));
+  return {step, project, recovery, idMap, worlds: {}};
+}
 async function captureImportDigests(work: ImportWork, afterFirstDigest?: () => void | Promise<void>, signal?: AbortSignal) {
   const calls: Uint8Array[] = [];
   let entered!: () => void, release!: () => void, released = false;
@@ -96,6 +109,210 @@ function open(databaseName = `import-work-${newId()}`) {
 afterEach(async () => {
   vi.unstubAllGlobals(); ControlledWorker.instances = []; ControlledWorker.automatic = false;
   for (const store of stores.splice(0)) await store.deleteDatabase();
+});
+
+describe('private import validation DTO boundary', () => {
+  it.each(['full_read', 'structure', 'integrity', 'recovery', 'ids', 'hashes', 'map_recovery', 'rehash_recovery'] as const)(
+    'freezes only the private copy for %s validation', step => {
+      const caller = {...request(), step} satisfies ImportWork, privateWork = structuredClone(caller);
+      expect(freezeCapturedImportWork(privateWork)).toBe(privateWork);
+      expect(isImmutablePlainData(privateWork)).toBe(true);
+      expect(Object.isFrozen(caller)).toBe(false); expect(Object.isFrozen(caller.project)).toBe(false);
+      expect(Object.isFrozen(caller.worlds)).toBe(false); expect(caller.project.name).toBe('受領した作品😀');
+    });
+
+  it('leaves every object mutable when the captured graph contains an unsupported value', () => {
+    const privateWork = structuredClone(request());
+    Object.defineProperty(privateWork.project, 'legacyDate', {value: new Date('2026-10-13T00:00:00.000Z'), enumerable: true});
+    expect(freezeCapturedImportWork(privateWork)).toBe(privateWork);
+    expect(Object.isFrozen(privateWork)).toBe(false); expect(Object.isFrozen(privateWork.project)).toBe(false);
+    expect(Object.isFrozen(privateWork.project.entities)).toBe(false); expect(Object.isFrozen(privateWork.worlds)).toBe(false);
+  });
+
+  it.each(['worlds', 'sync_recovery', 'clone', 'mapped_plan', 'merge_conflicts', 'merge', 'combine_history'] as const)(
+    'keeps result-bearing or transformation step %s on its existing mutable path', step => {
+      const work = {...request(), step, target: createProject('既存の統合先')} satisfies ImportWork;
+      expect(freezeCapturedImportWork(work)).toBe(work);
+      expect(Object.isFrozen(work)).toBe(false); expect(Object.isFrozen(work.project)).toBe(false);
+      expect(Object.isFrozen(work.target)).toBe(false);
+    });
+
+  it.each(['performImportWork', 'createImportWorkSession'] as const)(
+    '%s freezes a detached Node validation copy and rechecks later edits', async route => {
+      const work = request(), original = structuredClone(work), session = route === 'createImportWorkSession' ? createImportWorkSession() : undefined;
+      const run = (candidate: ImportWork) => session ? session.run(candidate) : performImportWork(candidate);
+      try {
+        const result = await run(work);
+        expect(result.project).toEqual(original.project); expect(result.project).not.toBe(work.project);
+        expect(Object.isFrozen(work)).toBe(false); expect(Object.isFrozen(work.project)).toBe(false);
+        expect(Object.isFrozen(result.project)).toBe(false);
+        result.project!.name = 'Node側で編集できる結果';
+        expect(work.project).toEqual(original.project);
+
+        const changed = structuredClone(original); (changed.project as unknown as {name: unknown}).name = 42;
+        await expect(run(changed)).rejects.toMatchObject({code: 'VALIDATION_FAILED'});
+        expect(Object.isFrozen(changed)).toBe(false); expect(Object.isFrozen(changed.project)).toBe(false);
+      } finally { session?.dispose(); }
+    });
+
+  it.each([
+    ['performImportWork', 'combine_history'], ['createImportWorkSession', 'combine_history'],
+    ['performImportWork', 'merge_conflicts'], ['createImportWorkSession', 'merge_conflicts'],
+  ] as const)('%s leaves %s result aliases editable and detached from both callers', async (route, step) => {
+    const session = route === 'createImportWorkSession' ? createImportWorkSession() : undefined;
+    const run = (work: ImportWork) => session ? session.run(work) : performImportWork(work);
+    try {
+      if (step === 'combine_history') {
+        const target = recoveryFixture(1).project, originalTarget = structuredClone(target);
+        const result = await run({step, project: createProject('履歴の結合候補'), target, worlds: {}});
+        expect(result.history).toEqual(target.history); expect(Object.isFrozen(result.history)).toBe(false);
+        expect(Object.isFrozen(result.history![0]!.after.entities[0])).toBe(false);
+        result.history![0]!.after.entities[0]!.name = 'Node結合結果だけの編集';
+        expect(target).toEqual(originalTarget);
+      } else {
+        const target = createProject('競合先'), existing = createEntity(target.projectId, 'note', '既存内容');
+        target.entities.push(existing);
+        const incoming = structuredClone(target); incoming.name = '取り込み作品'; incoming.entities[0]!.name = '取り込み内容';
+        const originalTarget = structuredClone(target), originalIncoming = structuredClone(incoming);
+        const result = await run({step, project: incoming, target, worlds: {}}), conflict = result.conflicts!.find(item => item.kind === 'entity')!;
+        expect(Object.isFrozen(result.conflicts)).toBe(false); expect(Object.isFrozen(conflict.existing)).toBe(false);
+        expect(Object.isFrozen(conflict.incoming)).toBe(false);
+        (conflict.existing as {name: string}).name = '結果側の既存編集';
+        (conflict.incoming as {name: string}).name = '結果側の受入編集';
+        expect(target).toEqual(originalTarget); expect(incoming).toEqual(originalIncoming);
+      }
+    } finally { session?.dispose(); }
+  });
+
+  it.each(['performImportWork', 'createImportWorkSession'] as const)(
+    '%s keeps validated Node recovery output mutable and detached from its source images', async route => {
+      const {project, commands} = recoveryFixture(2), recovery = {version: 1 as const, projectId: project.projectId,
+        sourceRevision: project.revision, serverRevision: '4', pending: await Promise.all(commands.map(async command => ({
+          operationId: command.operationId, command: structuredClone(command), commandHash: await sha256(jsonBytes(command)),
+        })))};
+      const originalRecovery = structuredClone(recovery), originalProject = structuredClone(project), session = route === 'createImportWorkSession' ? createImportWorkSession() : undefined;
+      const work: ImportWork = {step: 'recovery', project, recovery, worlds: {}}, run = (candidate: ImportWork) => session ? session.run(candidate) : performImportWork(candidate);
+      try {
+        const result = await run(work), returned = result.recovery!;
+        expect(returned).toEqual(originalRecovery); expect(Object.isFrozen(returned)).toBe(false);
+        expect(Object.isFrozen(returned.pending[0]!.command.after.entities)).toBe(false);
+        returned.pending[0]!.command.after.entities[0]!.name = 'Node recovery結果だけの編集';
+        expect(recovery).toEqual(originalRecovery); expect(project).toEqual(originalProject);
+        expect(Object.isFrozen(work)).toBe(false); expect(Object.isFrozen(work.project)).toBe(false);
+      } finally { session?.dispose(); }
+    });
+
+  it('returns the original editable topology when equal current and historical records were interned privately', async () => {
+    const {saved} = await savedSource(), workProject = structuredClone(saved), current = workProject.entities[0]!;
+    const historical = workProject.history[0]!.after.entities.find(entity => entity.id === current.id)!;
+    workProject.history[0]!.after.entities[workProject.history[0]!.after.entities.indexOf(historical)] = structuredClone(current);
+    const source = structuredClone(workProject), work: ImportWork = {step: 'structure', project: workProject, worlds: {}};
+    const result = await performImportWork(work), currentResult = result.project!.entities.find(entity => entity.id === current.id)!;
+    const historicalResult = result.project!.history[0]!.after.entities.find(entity => entity.id === current.id)!;
+    expect(historicalResult).toEqual(currentResult); expect(historicalResult).not.toBe(currentResult);
+    expect(Object.isFrozen(currentResult)).toBe(false); expect(Object.isFrozen(historicalResult)).toBe(false);
+    currentResult.name = '編集可能な現稿';
+    expect(historicalResult.name).toBe(current.name); expect(workProject).toEqual(source);
+    expect(Object.isFrozen(work.project)).toBe(false);
+  });
+
+  it.each(['structure', 'recovery', 'map_recovery', 'rehash_recovery'] as const)(
+    'publishes %s results through the same detached mutable worker message boundary', async step => {
+      const caller = await capturedOutputWork(step), baseline = await runImportWork(structuredClone(caller));
+      const workerWork = structuredClone(caller);
+      expect(freezeCapturedImportWork(workerWork)).toBe(workerWork);
+      expect(isImmutablePlainData(workerWork)).toBe(true);
+      const privateResult = await runImportWorkForWorker(workerWork);
+      // Worker postMessage performs this structured clone before the result is
+      // visible to the caller; it restores the established mutable result API.
+      const received = structuredClone(privateResult);
+      expect(received).toEqual(baseline);
+      expect(Object.isFrozen(caller)).toBe(false); expect(Object.isFrozen(caller.project)).toBe(false);
+      expect(Object.isFrozen(workerWork)).toBe(true); expect(Object.isFrozen(workerWork.project)).toBe(true);
+      const value = step === 'structure' ? received.project! : received.recovery!;
+      expect(Object.isFrozen(value)).toBe(false);
+      if (step !== 'structure') for (const item of received.recovery!.pending) {
+        expect(item.commandHash).toBe(await sha256(jsonBytes(item.command)));
+      }
+      if (step === 'structure') {
+        const current = received.project!.entities[0]!, historical = received.project!.history.at(-1)!.after.entities.find(item => item.id === current.id)!;
+        const historicalName = historical.name, callerName = caller.project.entities[0]!.name;
+        expect(historical).not.toBe(current);
+        current.name = 'Worker受信後の現稿編集';
+        expect(historical.name).toBe(historicalName);
+        expect(caller.project.entities[0]!.name).toBe(callerName);
+        expect(workerWork.project.entities[0]!.name).toBe(callerName);
+      } else {
+        const command = received.recovery!.pending[0]!.command;
+        const originalReason = command.reason;
+        expect(Object.isFrozen(command)).toBe(false);
+        const adjacentAfter = command.after.entities[0]!;
+        const adjacentBefore = received.recovery!.pending[1]!.command.before.entities.find(item => item.id === adjacentAfter.id)!;
+        const adjacentName = adjacentBefore.name;
+        expect(adjacentBefore).not.toBe(adjacentAfter);
+        adjacentAfter.name = '隣のWorker履歴とは独立した編集';
+        expect(adjacentBefore.name).toBe(adjacentName);
+        command.reason = 'Worker受信後の復元編集';
+        expect(command.reason).not.toBe(originalReason);
+        expect(Object.isFrozen(workerWork.recovery!.pending[0]!.command)).toBe(true);
+        if (step === 'recovery') expect(caller.recovery!.pending[0]!.command.reason).toBe(originalReason);
+        else expect(caller.project.history[0]!.reason).toBe(originalReason);
+      }
+    });
+
+  it.each(['structure', 'recovery', 'map_recovery', 'rehash_recovery'] as const)(
+    'keeps %s rejection details identical on Node and worker paths', async step => {
+      const makeInvalid = async (): Promise<ImportWork> => {
+        const work = await capturedOutputWork(step);
+        if (step === 'structure') (work.project as unknown as {name: unknown}).name = 42;
+        if (step === 'recovery') work.recovery!.pending[0]!.commandHash = 'bad-hash';
+        if (step === 'map_recovery') delete work.idMap;
+        if (step === 'rehash_recovery') delete work.recovery;
+        return work;
+      };
+      const rejectionDetails = async (promise: Promise<unknown>) => {
+        try { await promise; }
+        catch (error) {
+          const value = error as StorageError & {issues?: unknown};
+          return {code: value.code, message: value.message, path: value.path, issues: value.issues};
+        }
+        throw new Error('Expected import work to reject');
+      };
+      const nodeDetails = await rejectionDetails(runImportWork(await makeInvalid()));
+      const workerWork = freezeCapturedImportWork(await makeInvalid());
+      const workerDetails = await rejectionDetails(runImportWorkForWorker(workerWork));
+      expect(workerDetails).toEqual(nodeDetails);
+    });
+});
+
+describe('archive worker private validation boundary', () => {
+  it('freezes the worker-owned validation message while keeping author input and result editable', async () => {
+    const caller = {...request(), project: recoveryFixture(2).project}, workerWork = structuredClone(caller), posted: unknown[] = [];
+    const workerScope: {onmessage: ((event: MessageEvent) => void) | null; postMessage: (message: unknown) => void} = {
+      onmessage: null, postMessage: message => { posted.push(structuredClone(message)); },
+    };
+    vi.stubGlobal('self', workerScope);
+    await import('./archive.worker');
+    workerScope.onmessage!({data: {type: 'import-work', requestId: 41, work: workerWork}} as MessageEvent);
+    await vi.waitFor(() => expect(posted).toHaveLength(1));
+    const done = posted[0] as {type: string; result: {project: NonNullable<ImportWork['project']>}};
+    expect(done.type).toBe('done');
+    expect(Object.isFrozen(workerWork)).toBe(true); expect(Object.isFrozen(workerWork.project)).toBe(true);
+    expect(Object.isFrozen(caller)).toBe(false); expect(Object.isFrozen(caller.project)).toBe(false);
+    expect(done.result.project).not.toBe(workerWork.project); expect(Object.isFrozen(done.result.project)).toBe(false);
+    const originalProjectName = caller.project.name;
+    done.result.project.name = 'Worker結果の編集';
+    expect(workerWork.project.name).toBe(originalProjectName); expect(caller.project.name).toBe(originalProjectName);
+    const entityId = workerWork.project.entities[0]!.id;
+    const current = done.result.project.entities.find(entity => entity.id === entityId)!;
+    const historical = done.result.project.history.at(-1)!.after.entities.find(entity => entity.id === entityId)!;
+    const historicalName = historical.name;
+    expect(historical).not.toBe(current);
+    current.name = 'Worker現稿の編集';
+    expect(historical.name).toBe(historicalName);
+    expect(workerWork.project.entities.find(entity => entity.id === entityId)!.name).toBe(historicalName);
+    expect(caller.project.entities.find(entity => entity.id === entityId)!.name).toBe(historicalName);
+  });
 });
 
 describe('cancellable import worker transport', () => {
