@@ -5,7 +5,7 @@ import type { Alias, CalendarDefinition, Condition, Entity, EntityDataMap, Entit
 import { GREGORIAN_CALENDAR, compareTicks, isTick, parseTick, validateCalendar, validateEventTimes, sameCalendarDefinition } from './time';
 import { validateTemplateAssignments, validateTemplateDefinition } from './templates';
 import { measureText } from './textMetrics';
-import { contentValidationContext, type ContentValidationMemo } from './contentValidationMemo';
+import { contentValidationContext, type ContentIdObservation, type ContentValidationMemo } from './contentValidationMemo';
 import { captureImmutablePlainData, isImmutablePlainData } from './immutablePlainData';
 import { isValidUnicode } from '../storage/json';
 
@@ -766,7 +766,7 @@ function validateActiveRecordNamespace(project: ProjectContent, worlds: ProjectC
     });
   }
 }
-interface ValidationReuse { previous: ProjectData; references: WeakMap<Entity, DomainReference[]> }
+interface ValidationReuse { previous: ProjectContent; references: WeakMap<Entity, DomainReference[]> }
 function validateContent(input: unknown, path: string, options: ProjectValidationOptions, snapshotIds: Set<ID>, versionContents: Map<ID, ProjectContent> = new Map(), reuse?: ValidationReuse, memo?: ContentValidationMemo): ValidationResult<ProjectContent> {
   const issues: ValidationIssue[] = [];
   if (!isObject(input)) return { ok: false, issues: [{ code: 'VALIDATION_FAILED', path, message: '作品はオブジェクトです。' }] };
@@ -780,23 +780,31 @@ function validateContent(input: unknown, path: string, options: ProjectValidatio
   const entities = input.entities as unknown[], relations = input.relations as unknown[], calendars = input.calendars as unknown[];
   if (entities.length + relations.length > 100_000) return { ok: false, issues: [{ code: 'IMPORT_LIMIT', path, message: 'entityとrelationの合計は100,000件までです。' }] };
   if (memo?.has(input as unknown as ProjectContent, snapshotIds, versionContents)) return { ok: true, value: input as unknown as ProjectContent };
+  if (!reuse) {
+    // Only this private validation scope can supply a fully successful prior
+    // image with identical calendar/world/version dependencies. Reuse the same
+    // changed-record/dependency rules as durable saves; every namespace,
+    // reference, unique key and graph-wide check continues to run.
+    const previous = memo?.previousContent(input as unknown as ProjectContent, snapshotIds, versionContents);
+    if (previous) reuse = { previous, references: new WeakMap<Entity, DomainReference[]>() };
+  }
   const previousEntities = new Map(reuse?.previous.entities.map(entity => [entity.id, entity])), previousRelations = new Map(reuse?.previous.relations.map(relation => [relation.id, relation]));
   // The structural walk already sees every typed reference. Keep those exact
   // observations for this synchronous validation instead of walking it twice.
   const entityReferences=new WeakMap<Entity,DomainReference[]>(),relationReferences=new WeakMap<Relation,DomainReference[]>();
   const relative=(references:DomainReference[],prefix:string)=>references.map(reference=>({...reference,path:reference.path.slice(prefix.length+1)}));
   entities.forEach((entity, i) => {
-    if (reuse && isObject(entity) && previousEntities.get(entity.id as ID) === entity) return;
     const cached = isObject(entity) ? memo?.entityReferences(entity as unknown as Entity) : undefined;
     if (cached) { entityReferences.set(entity as unknown as Entity, cached); return; }
+    if (reuse && isObject(entity) && previousEntities.get(entity.id as ID) === entity) return;
     const prefix=`${path}.entities[${i}]`, references:DomainReference[]=[], result=validateEntityRecord(entity,prefix,references);
     if (!result.ok) issues.push(...result.issues);
     else { const observed=relative(references,prefix); entityReferences.set(result.value,observed); memo?.rememberEntity(result.value,observed); }
   });
   relations.forEach((relation, i) => {
-    if (reuse && isObject(relation) && Object.is(previousRelations.get(relation.id as ID), relation)) return;
     const cached = isObject(relation) ? memo?.relationReferences(relation as unknown as Relation) : undefined;
     if (cached) { relationReferences.set(relation as unknown as Relation,cached); return; }
+    if (reuse && isObject(relation) && Object.is(previousRelations.get(relation.id as ID), relation)) return;
     const prefix=`${path}.relations[${i}]`, references:DomainReference[]=[], result=simpleValidate<Relation>(relationSchema,relation,prefix,references);
     if (!result.ok) issues.push(...result.issues);
     else { const observed=relative(references,prefix); relationReferences.set(result.value,observed); memo?.rememberRelation(result.value,observed); }
@@ -833,7 +841,7 @@ function validateContent(input: unknown, path: string, options: ProjectValidatio
   const worldKeys = project.worldReferences.map(world => `${world.projectId}/${world.immutableSnapshotId}`);
   if (new Set(worldKeys).size !== worldKeys.length || project.worldReferences.some(world => world.projectId === project.projectId)) addIssue(issues, `${path}.worldReferences`, '共通世界参照の重複または自己参照があります。');
   const blocks = new Map<ID, { entityId: ID; text: string }>(), aliases = new Map<ID, { entityId: ID; alias: Alias }>();
-  for (const entity of allEntities) collectContentIds(entity.data, entity.id, blocks, aliases, issues, `${path}.entities.${entity.id}.data`);
+  for (const entity of allEntities) collectContentIds(entity.data, entity.id, blocks, aliases, issues, `${path}.entities.${entity.id}.data`, 0, memo);
   const projectionIds = new Set<ID>([...entityMap.keys(), ...relationMap.keys(), ...blocks.keys()]);
   for (const entity of allEntities) {
     if (entity.kind === 'flow_node' && entity.data.trigger?.id) projectionIds.add(entity.data.trigger.id);
@@ -857,7 +865,7 @@ function validateContent(input: unknown, path: string, options: ProjectValidatio
     const before = issues.length; validateActiveRecordNamespace(content, pinnedWorlds, `${path}.versions.${versionId}`, issues);
     if (issues.length !== before) return undefined;
     const records = [...content.entities, ...pinnedWorlds.flatMap(world => world.entities)], versionBlocks = new Map<ID, { entityId: ID; text: string }>();
-    for (const record of records) if (isObject(record)) collectContentIds(record.data, record.id, versionBlocks, new Map(), [], 'version');
+    for (const record of records) if (isObject(record)) collectContentIds(record.data, record.id, versionBlocks, new Map(), [], 'version', 0, memo);
     const versionProjectionIds=new Set([...records.map(record=>record.id),...content.relations.map(relation=>relation.id),...pinnedWorlds.flatMap(world=>world.relations.map(relation=>relation.id)),...versionBlocks.keys()]);
     for(const entity of records){if(entity.kind==='flow_node'&&entity.data.trigger?.id)versionProjectionIds.add(entity.data.trigger.id);if(entity.kind==='projection_profile')for(const fields of Object.values(entity.data.publicTexts??{}))for(const value of Object.values(fields))if(Array.isArray(value))for(const block of value)if(isObject(block)&&typeof block.id==='string')versionProjectionIds.add(block.id);}
     const index = { entities: new Map(records.filter(record => isObject(record)).map(record => [record.id, record])), relations: new Map([...content.relations, ...pinnedWorlds.flatMap(world => world.relations)].filter(record => isObject(record)).map(record => [record.id, record])), blocks: versionBlocks, calendars: new Set([...content.calendars, ...pinnedWorlds.flatMap(world => world.calendars)].map(calendar => calendar.id)), projects: new Set([content.projectId, ...pinnedWorlds.map(world => world.projectId)]),projectionIds:versionProjectionIds };
@@ -930,7 +938,7 @@ function validateContent(input: unknown, path: string, options: ProjectValidatio
     for (const id of previousEntities.keys()) if (!entityMap.has(id)) affectedIds.add(id);
     for (const id of previousRelations.keys()) if (!relationMap.has(id)) affectedIds.add(id);
   }
-  validateCrossEntityRules(project, entityMap, aliases, knownVersions, blocks, issues, path, options, versionIndex, affectedIds ? entity => previousEntities.get(entity.id) !== entity || referencesFor(entity).some(reference => affectedIds!.has(reference.id)) : undefined);
+  validateCrossEntityRules(project, entityMap, aliases, knownVersions, blocks, issues, path, options, versionIndex, affectedIds && !issues.length ? entity => previousEntities.get(entity.id) !== entity || referencesFor(entity).some(reference => affectedIds!.has(reference.id)) : undefined);
   if (!issues.length) memo?.remember(project, snapshotIds, versionContents);
   return issues.length ? { ok: false, issues: issues.slice(0, 256) } : { ok: true, value: project };
 }
@@ -938,23 +946,59 @@ function validateContent(input: unknown, path: string, options: ProjectValidatio
 export function isContentCopyField(key: string): boolean {
   return key === 'runtimeState' || key === 'before' || key === 'after' || key === 'publicTexts';
 }
-function collectContentIds(value: unknown, owner: ID, blocks: Map<ID, { entityId: ID; text: string }>, aliases: Map<ID, { entityId: ID; alias: Alias }>, issues: ValidationIssue[], path: string, depth = 0): void {
+function collectContentIds(value: unknown, owner: ID, blocks: Map<ID, { entityId: ID; text: string }>, aliases: Map<ID, { entityId: ID; alias: Alias }>, issues: ValidationIssue[], path: string, depth = 0, memo?: ContentValidationMemo): void {
   if (depth > 32 || !value || typeof value !== 'object') return;
-  if (Array.isArray(value)) { value.forEach((child, i) => collectContentIds(child, owner, blocks, aliases, issues, `${path}[${i}]`, depth + 1)); return; }
-  const object = value as Record<string, unknown>;
-  if (typeof object.id === 'string' && typeof object.text === 'string' && ['paragraph', 'heading', 'list_item', 'quote'].includes(object.kind as string)) {
-    if (blocks.has(object.id)) addIssue(issues, `${path}.id`, '本文ブロックIDが重複しています。');
-    blocks.set(object.id, { entityId: owner, text: object.text });
+  if (!memo) {
+    // Keep the original read/update order for live or unsupported graphs,
+    // including values with accessors. Private captured scopes alone may
+    // separate immutable extraction from namespace replay.
+    if (Array.isArray(value)) { value.forEach((child, index) => collectContentIds(child, owner, blocks, aliases, issues, `${path}[${index}]`, depth + 1)); return; }
+    const object = value as Record<string, unknown>;
+    if (typeof object.id === 'string' && typeof object.text === 'string' && ['paragraph', 'heading', 'list_item', 'quote'].includes(object.kind as string)) {
+      if (blocks.has(object.id)) addIssue(issues, `${path}.id`, '本文ブロックIDが重複しています。');
+      blocks.set(object.id, {entityId: owner, text: object.text});
+    }
+    if (typeof object.id === 'string' && 'isPublicDefault' in object) {
+      if (aliases.has(object.id)) addIssue(issues, `${path}.id`, '別名IDが重複しています。');
+      aliases.set(object.id, {entityId: owner, alias: object as unknown as Alias});
+    }
+    for (const key of Object.keys(object)) {
+      if (isContentCopyField(key)) continue;
+      const child = object[key];
+      if (child && typeof child === 'object') collectContentIds(child, owner, blocks, aliases, issues, `${path}.${key}`, depth + 1);
+    }
+    return;
   }
-  if (typeof object.id === 'string' && 'isPublicDefault' in object) {
-    if (aliases.has(object.id)) addIssue(issues, `${path}.id`, '別名IDが重複しています。');
-    aliases.set(object.id, { entityId: owner, alias: object as unknown as Alias });
+  let ids = depth === 0 ? memo?.contentIds(value) : undefined;
+  if (!ids) {
+    ids = [];
+    const collect = (input: unknown, relative: string, currentDepth: number): void => {
+      if (currentDepth > 32 || !input || typeof input !== 'object') return;
+      if (Array.isArray(input)) { input.forEach((child, index) => collect(child, `${relative}[${index}]`, currentDepth + 1)); return; }
+      const object = input as Record<string, unknown>;
+      if (typeof object.id === 'string' && typeof object.text === 'string' && ['paragraph', 'heading', 'list_item', 'quote'].includes(object.kind as string)) ids!.push({kind: 'block', id: object.id, text: object.text, path: relative});
+      if (typeof object.id === 'string' && 'isPublicDefault' in object) ids!.push({kind: 'alias', id: object.id, alias: object as unknown as Alias, path: relative});
+      for (const key of Object.keys(object)) {
+        if (isContentCopyField(key)) continue;
+        const child = object[key];
+        if (child && typeof child === 'object') collect(child, `${relative}.${key}`, currentDepth + 1);
+      }
+    };
+    collect(value, '', depth);
+    if (depth === 0) memo?.rememberContentIds(value, ids);
   }
-  for (const key of Object.keys(object)) {
-    const child = object[key];
-    // Trace/checkpoint values and projection public text are copies, not canonical blocks.
-    if (isContentCopyField(key)) continue;
-    if (child && typeof child === 'object') collectContentIds(child, owner, blocks, aliases, issues, `${path}.${key}`, depth + 1);
+  // Replay every ID in its current namespace and traversal order, including
+  // duplicate occurrences. Only immutable own-data extraction is shared;
+  // collisions, ownership and current text/anchor indexes are rebuilt.
+  for (const entry of ids) {
+    const location = path + entry.path;
+    if (entry.kind === 'block') {
+      if (blocks.has(entry.id)) addIssue(issues, `${location}.id`, '本文ブロックIDが重複しています。');
+      blocks.set(entry.id, {entityId: owner, text: entry.text});
+    } else {
+      if (aliases.has(entry.id)) addIssue(issues, `${location}.id`, '別名IDが重複しています。');
+      aliases.set(entry.id, {entityId: owner, alias: entry.alias});
+    }
   }
 }
 function cycleIssues(nodes: Entity[], edges: (entity: Entity) => ID[], issues: ValidationIssue[], path: string, label: string): void {

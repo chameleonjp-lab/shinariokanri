@@ -12,6 +12,7 @@ import {runImportWork, type ImportWork} from './importWork';
 import {ScenarioStore} from './store';
 import {jsonBytes, sha256} from './json';
 import {StorageError} from './errors';
+import {unzipSync, zipSync} from 'fflate';
 
 const stores: ScenarioStore[] = [];
 const open = (databaseName = `full-read-${newId()}`) => {
@@ -51,6 +52,45 @@ async function pinnedSnapshot(project: ProjectData) {
 }
 
 describe('one private full-history read validation', () => {
+  it('inspects shared decoded histories without freezing public roots or trusting old command metadata', async () => {
+    const project = retainedProject(3);
+    for (let index = 0; index < 5_000; index++) {
+      project.entities.push(createEntity(project.projectId, 'note', `保存するメモ${index}`, {body: textToRichText(`本文${index}`)}));
+    }
+    const recovery = {version: 1 as const, projectId: project.projectId, sourceRevision: project.revision, serverRevision: '0',
+      pending: await Promise.all(project.history.map(async command => ({operationId: command.operationId, command, commandHash: await sha256(jsonBytes(command))}))),
+    };
+    const bytes = await archive.exportScenario(project, {worker: false, recovery});
+    const prepared = await archive.inspectScenario(bytes, {worker: false});
+    expect(prepared.manifest.requiredFeatures).toContain('shared-records-v1');
+    expect(prepared.project.entities).toEqual(project.entities);
+    for (const [index, command] of prepared.project.history.entries()) {
+      expect(command).toEqual(project.history[index]);
+    }
+    expect(Object.isFrozen(prepared.project)).toBe(false);
+    expect(Object.isFrozen(prepared.project.history[0].before)).toBe(false);
+    expect(prepared.recovery).toEqual(recovery);
+    expect(Object.isFrozen(prepared.recovery)).toBe(false);
+    expect(Object.isFrozen(prepared.recovery!.pending[0].command.before)).toBe(false);
+    prepared.project.name = '読み込み結果の編集';
+    prepared.project.history[0].before.name = '元の公開APIと同じ編集可能な履歴ヘッダ';
+    prepared.recovery!.pending[0].command.reason = '復元情報の編集';
+    const again = await archive.inspectScenario(bytes, {worker: false});
+    expect(again.project.name).toBe(project.name);
+    expect(again.recovery).toEqual(recovery);
+
+    const files = unzipSync(bytes), envelope = JSON.parse(new TextDecoder().decode(files['data/project.json']));
+    envelope.value.history[2].unexpectedApproval = true;
+    files['data/project.json'] = new Uint8Array(jsonBytes(envelope));
+    const manifest = JSON.parse(new TextDecoder().decode(files['manifest.json']));
+    const entry = manifest.files.find((item: {path: string}) => item.path === 'data/project.json');
+    entry.byteSize = files['data/project.json'].byteLength; entry.sha256 = await sha256(files['data/project.json']);
+    files['manifest.json'] = new Uint8Array(jsonBytes(manifest));
+    await expect(archive.inspectScenario(zipSync(files), {worker: false})).rejects.toMatchObject({
+      code: 'VALIDATION_FAILED', message: expect.stringContaining('project.history[2].unexpectedApproval'),
+    });
+  }, 30_000);
+
   it('accepts all 113 complete commands, returns no manuscript, and leaves author graphs editable', async () => {
     const project = retainedProject(), original = structuredClone(project);
     await expect(runImportWork(request(project))).resolves.toEqual({});

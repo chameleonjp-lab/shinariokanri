@@ -143,7 +143,10 @@ export function projectWithRecoveryHistory(project: ProjectData, recovery?: Port
  * check. Callers cannot inject a validator or claim that an image is verified. */
 export function createRecoveryValidationSession(worlds: Record<string, ProjectContent>) {
   const validation = createProjectValidationSession({ worldSnapshots: worlds });
-  return { ...validation, recovery: (input: unknown, project: ProjectData, signal?: AbortSignal) => validateRecoveryData(input, project, worlds, signal, validation) };
+  return { ...validation,
+    recovery: (input: unknown, project: ProjectData, signal?: AbortSignal) => validateRecoveryData(input, project, worlds, signal, validation),
+    recoveryForInspection: (input: unknown, project: ProjectData, signal?: AbortSignal) => validateRecoveryData(input, project, worlds, signal, validation, true),
+  };
 }
 
 export async function validateRecovery(input: unknown, project: ProjectData, worlds: Record<string, ProjectContent>, signal?: AbortSignal): Promise<PortableRecovery> {
@@ -151,7 +154,7 @@ export async function validateRecovery(input: unknown, project: ProjectData, wor
 }
 
 async function validateRecoveryData(input: unknown, project: ProjectData, worlds: Record<string, ProjectContent>, signal?: AbortSignal,
-  session?: ReturnType<typeof createProjectValidationSession>): Promise<PortableRecovery> {
+  session?: ReturnType<typeof createProjectValidationSession>, retainPrivateCapture = false): Promise<PortableRecovery> {
   const invalid = (message: string, path = 'data/recovery.json'): never => { throw new StorageError('VALIDATION_FAILED', message, path); };
   if (!input || typeof input !== 'object' || Array.isArray(input)) return invalid('送信待ち復元情報はオブジェクトです。');
   const raw = input as Record<string, unknown>;
@@ -176,5 +179,8 @@ async function validateRecoveryData(input: unknown, project: ProjectData, worlds
   // Private validation proofs never change the existing editable recovery
   // result. Callers may inspect/correct or deliberately forge a copy for a
   // negative import check; they cannot mutate the captured proof graph.
-  return structuredClone(recovery);
+  // Archive inspection still owns the decoded graph. Retain its validated
+  // dictionary identities until all internal equality/ownership checks finish;
+  // the public inspection result and ordinary recovery callers get a clone.
+  return retainPrivateCapture ? recovery : structuredClone(recovery);
 }

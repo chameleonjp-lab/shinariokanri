@@ -1,5 +1,6 @@
 import {canonicalJson,type ArchiveLimits} from './json';
 import {StorageError} from './errors';
+import {freezeCapturedPlainData} from '../domain/immutablePlainData';
 
 /** Lossless archive encoding. Positions, IDs, all historic variants and protocol
  * hashes are unchanged after decoding; the dictionary is never an active image. */
@@ -100,7 +101,8 @@ export class RecordDictionaryReader{
   const depth=(v:unknown):number=>{if(!v||typeof v!=='object')return 0;let maximum=0;for(const child of Object.values(v))maximum=Math.max(maximum,depth(child));return maximum+1;};
   this.depths=this.records.map(depth);
   // A pooled historic record is a value, not a mutable alias between editions.
-  const freeze=(v:unknown)=>{if(v&&typeof v==='object'&&!Object.isFrozen(v)){Object.values(v).forEach(freeze);Object.freeze(v);}};this.records.forEach(freeze);
+  const freeze=(v:unknown)=>{if(v&&typeof v==='object'&&!Object.isFrozen(v)){Object.values(v).forEach(freeze);Object.freeze(v);}};
+  this.records.forEach(value=>{freeze(value);freezeCapturedPlainData(value);});
   // Every delta must refer backwards and preserve the ordered array's length.
   for(const [index,array]of this.arrays.entries()){
    const invalid=!object(array)||('values'in array
@@ -122,7 +124,11 @@ export class RecordDictionaryReader{
    if('values'in array)values=array.values.map(resolve);else{values=this.arrayCache.get(array.base)!.slice();if(values.length!==array.length)return invalid();const seen=new Set<number>();for(const change of array.changes){if(!Array.isArray(change)||change.length!==2||!Number.isSafeInteger(change[0])||change[0]<0||change[0]>=values.length||seen.has(change[0]))return invalid();seen.add(change[0]);values[change[0]]=resolve(change[1]);}}
    if(values.length>this.limits.records)return invalid();
    this.references+=values.length;if(this.references>Math.floor(this.limits.expandedBytes/8))throw new StorageError('LIMIT_EXCEEDED','共有レコード参照の展開が安全上限を超えています。');
-   Object.freeze(values);this.arrayCache.set(current,values);
+   Object.freeze(values);
+   // Prove the entire private, frozen decoded array. A later inspection capture
+   // can retain these exact values instead of copying every unchanged historic
+   // array again. Unsupported own-data graphs keep the complete legacy path.
+   freezeCapturedPlainData(values);this.arrayCache.set(current,values);
   }
   return this.arrayCache.get(index)!;
  }
