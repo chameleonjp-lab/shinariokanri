@@ -1,0 +1,1 @@
+npx --no-install playwright test tests/e2e/ap04-original-f-index.spec.ts --project=chromium --workers=1 --retries=0 --max-failures=1 --trace=on --reporter=list\,json\,html --grep AT-F57\  --output /tmp/ap04-modal-successor-smoke-preparation/07-public-index/test-results 

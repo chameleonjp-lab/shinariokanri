@@ -18,13 +18,14 @@ scope.onmessage = event => {
     return;
   }
   if (event.data.type === 'import-work') {
+    const requestId = event.data.requestId;
     void runImportWork(event.data.work as ImportWork, undefined, hash => new Promise((resolve, reject) => {
-      const id = ++nextAsset; assets.set(id, {resolve, reject}); scope.postMessage({type: 'asset', id, hash});
+      const id = ++nextAsset; assets.set(id, {resolve, reject}); scope.postMessage({type: 'asset', requestId, id, hash});
     }))
-      .then(result => scope.postMessage({type: 'done', result}))
+      .then(result => scope.postMessage({type: 'done', requestId, result}))
       .catch(error => {
         const value = error instanceof StorageError ? error : new StorageError('SAVE_FAILED', '復元の確認処理を完了できませんでした。');
-        scope.postMessage({type: 'error', error: {code: value.code, message: value.message, path: value.path, issues: error?.issues ?? []}});
+        scope.postMessage({type: 'error', requestId, error: {code: value.code, message: value.message, path: value.path, issues: error?.issues ?? []}});
       });
     return;
   }

@@ -1,7 +1,8 @@
 import 'fake-indexeddb/auto';
 import {it,expect} from 'vitest';
-import {RecordDictionaryWriter,RecordDictionaryReader} from './recordDictionary';
-import {ARCHIVE_LIMITS,jsonBytes,parseStrictJson} from './json';
+import {RecordDictionaryWriter,RecordDictionaryReader,RECORD_DELTA_FEATURE,CALENDAR_RECORD_FEATURE} from './recordDictionary';
+import {createHash} from 'node:crypto';
+import {ARCHIVE_LIMITS,jsonBytes,parseStrictJson,sha256} from './json';
 import {createProject,createEntity} from '../domain/model';
 
 it('retains every historical record variant, order and opaque custom fields with bounded ordered deltas',()=>{
@@ -36,3 +37,56 @@ it('preserves the existing quota and refuses expanded reference or decoded depth
 });
 
 it('rejects unused dictionary records and shares recursively immutable history arrays without merging changed variants',()=>{const p=createProject('履歴'),writer=new RecordDictionaryWriter();p.entities.push(createEntity(p.projectId,'note','元の名前'));const wire=writer.encode({before:p,after:{...p,entities:[{...p.entities[0]!,name:'変更後'}]},alias:p});const reader=new RecordDictionaryReader({records:writer.records,arrays:writer.arrays},ARCHIVE_LIMITS),decoded=reader.decode(structuredClone(wire),'project') as any;reader.assertComplete();expect(decoded.before.entities).toBe(decoded.alias.entities);expect(decoded.before.entities).not.toBe(decoded.after.entities);expect(()=>{decoded.before.entities[0].name='改変';}).toThrow();expect(decoded.after.entities[0].name).toBe('変更後');const extra=new RecordDictionaryReader({records:[...writer.records,createEntity(p.projectId,'note','未使用')],arrays:writer.arrays},ARCHIVE_LIMITS);extra.decode(structuredClone(wire),'project');expect(()=>extra.assertComplete()).toThrow();});
+
+it('keeps all113 complete variants, removed keys, opaque values, calendar order and full canonical SHA with explicitly enabled features',()=>{
+ const project=createProject('113全値の差分');project.entities.push(createEntity(project.projectId,'character','原稿',{body:[{id:'paragraph',kind:'paragraph',text:'😀𠮷と元の本文'}]}));
+ const source=Array.from({length:113},(_,i)=>({...project,revision:String(i),entities:[{...project.entities[0],name:'版'+i,revision:String(i),data:{...project.entities[0].data,opaque:{__recordBase:'作者の本文',__recordDelete:['本文'],values:[false,null,'😀']}} ,...(i%2?{temporary:'追加と削除'}:{})}]}));
+ const writer=new RecordDictionaryWriter({recordDeltas:true,calendarRecords:true}),wire=writer.encode(source),budget={objects:0};
+ const pool=parseStrictJson(jsonBytes({records:writer.records,arrays:writer.arrays}),'records',ARCHIVE_LIMITS,budget),encoded=parseStrictJson(jsonBytes(wire),'project',ARCHIVE_LIMITS,budget);
+ expect(writer.usedFeatures).toEqual(new Set([RECORD_DELTA_FEATURE,CALENDAR_RECORD_FEATURE]));
+ expect(()=>new RecordDictionaryReader(pool,ARCHIVE_LIMITS)).toThrow();
+ const reader=new RecordDictionaryReader(pool,ARCHIVE_LIMITS,{recordDeltas:true,calendarRecords:true}),actual=reader.decode(encoded,'project') as typeof source;reader.assertComplete();
+ const hash=(value:unknown)=>createHash('sha256').update(jsonBytes(value)).digest('hex');
+ for(const [i,row]of actual.entries()){expect(hash(row)).toBe(hash(source[i]));expect(Object.hasOwn(row.entities[0],'temporary')).toBe(i%2===1);expect(row.entities[0].data).toEqual(source[i].entities[0].data);}
+ expect(()=>{actual[0].entities[0].name='変更';}).toThrow();
+});
+
+it('refuses undeclared, forward, missing and ambiguous record-delta references before completing any image',()=>{
+ const p=createProject('差分拒否'),original=createEntity(p.projectId,'note','元');
+ for(const delta of [{__recordBase:1,name:'後'},{__recordBase:-1},{__recordBase:999},{__recordBase:0,__recordDelete:['missing']},{__recordBase:0,__recordDelete:['name','name']},{__recordBase:0,__recordDelete:['name'],name:'二重指定'},{__recordBase:0,__recordDelete:['__recordBase']},{__recordBase:0,__recordDelete:['id']}]){
+  const pool={records:[original,delta],arrays:[]};expect(()=>new RecordDictionaryReader(pool,ARCHIVE_LIMITS,{recordDeltas:true})).toThrow();expect(original.name).toBe('元');
+ }
+ const calendarPool={records:[p.calendars[0]],arrays:[{values:[0]}]};expect(()=>new RecordDictionaryReader(calendarPool,ARCHIVE_LIMITS)).toThrow();
+ expect(()=>new RecordDictionaryReader({records:[original,{__recordBase:0,name:'後'}],arrays:[]},ARCHIVE_LIMITS)).toThrow();
+});
+
+it('reduces actual serialized containers while preserving the original quotas and literal marker fields',()=>{
+ const p=createProject('元の上限'),entity=createEntity(p.projectId,'note','元');p.entities.push(entity);
+ const rows=Array.from({length:80},(_,i)=>({...p,entities:[{...entity,name:'後'+i,revision:String(i)}]}));
+ const encode=(features:{recordDeltas?:boolean;calendarRecords?:boolean})=>{const writer=new RecordDictionaryWriter(features),wire=writer.encode(rows),budget={objects:0};const pool=parseStrictJson(jsonBytes({records:writer.records,arrays:writer.arrays}),'records',ARCHIVE_LIMITS,budget);parseStrictJson(jsonBytes(wire),'project',ARCHIVE_LIMITS,budget);return {writer,wire,pool,objects:budget.objects};};
+ const old=encode({}),current=encode({recordDeltas:true,calendarRecords:true});expect(current.objects).toBeLessThan(old.objects);
+ expect(()=>new RecordDictionaryReader(current.pool,{...ARCHIVE_LIMITS,expandedBytes:8},{recordDeltas:true,calendarRecords:true})).toThrow();
+ const marker={...entity,__recordBase:'literal',__recordDelete:['literal']},writer=new RecordDictionaryWriter({recordDeltas:true});const wire=writer.encode([marker,{...marker,name:'別'},entity]);const reader=new RecordDictionaryReader({records:writer.records,arrays:writer.arrays},ARCHIVE_LIMITS,{recordDeltas:true});expect(reader.decode(wire,'project')).toEqual([marker,{...marker,name:'別'},entity]);reader.assertComplete();
+});
+
+it('shares repeated structure across distinct typed IDs without dropping values, revisions, removals or array order',async()=>{
+ const p=createProject('別々の記録の繰り返し構造');
+ const entities=Array.from({length:240},(_,i)=>({...createEntity(p.projectId,'note','本文'+i),revision:String(i),opaque:{value:i%2===0?null:false,ordered:[i,'雪',i+1]}}));
+ const foreign={...entities[0],projectId:createProject('別作品').projectId,name:'別作品の同じID'};
+ const otherKind={...createEntity(p.projectId,'character','別型の同じID'),id:entities[0].id};
+ const changed={...entities[0],name:'改稿',revision:'241',opaque:{value:true,ordered:['雪',0]}};
+ const {opaque:_removed,...removed}=changed;
+ const source={entities:[...entities,foreign,otherKind,changed,removed],historic:entities.slice().reverse(),references:[entities[0],changed,removed]};
+ const writer=new RecordDictionaryWriter({recordDeltas:true,calendarRecords:true}),wire=writer.encode(source),budget={objects:0};
+ const pool=parseStrictJson(jsonBytes({records:writer.records,arrays:writer.arrays}),'records',ARCHIVE_LIMITS,budget);
+ const reader=new RecordDictionaryReader(pool,ARCHIVE_LIMITS,{recordDeltas:true,calendarRecords:true});
+ const decoded=reader.decode(parseStrictJson(jsonBytes(wire),'project',ARCHIVE_LIMITS,budget),'project') as typeof source;reader.assertComplete();
+ expect(await sha256(jsonBytes(decoded))).toBe(await sha256(jsonBytes(source)));
+ expect(decoded.entities.map(e=>[e.projectId,e.kind,e.id,e.revision])).toEqual(source.entities.map(e=>[e.projectId,e.kind,e.id,e.revision]));
+ expect(decoded.historic.map(e=>e.id)).toEqual(entities.map(e=>e.id).reverse());
+ expect(Object.hasOwn(decoded.entities.at(-1)!,'opaque')).toBe(false);
+ expect(decoded.entities[0]).not.toBe(decoded.entities[240]);expect(decoded.entities[0]).not.toBe(decoded.entities[241]);
+ const legacy=new RecordDictionaryWriter();legacy.encode(source);
+ const legacyBudget={objects:0};parseStrictJson(jsonBytes({records:legacy.records,arrays:legacy.arrays}),'legacy',ARCHIVE_LIMITS,legacyBudget);
+ expect(budget.objects).toBeLessThan(legacyBudget.objects);
+});

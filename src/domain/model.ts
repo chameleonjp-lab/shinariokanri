@@ -7,7 +7,7 @@ import { validateTemplateAssignments, validateTemplateDefinition } from './templ
 import { measureText } from './textMetrics';
 import { contentValidationContext, type ContentValidationMemo } from './contentValidationMemo';
 import { captureImmutablePlainData, isImmutablePlainData } from './immutablePlainData';
-import { canonicalJson } from '../storage/json';
+import { isValidUnicode } from '../storage/json';
 
 export const KIND_LABELS: Record<EntityKind, string> = {
   character: '人物', group: 'グループ', event: '出来事', place: '場所', item: '物品', note: 'メモ', chapter: '章', scene: '場面', goal: '目標',
@@ -1151,9 +1151,42 @@ export function validateProject(input: unknown, options: ProjectValidationOption
 }
 
 function validationSchemaSignature(): string | undefined {
-  const captured = captureImmutablePlainData({ schemas: ENTITY_SCHEMAS, kinds: ENTITY_KINDS, statuses: STATUSES, scopes: SCOPES });
-  if (!captured.captured) return undefined;
-  try { return canonicalJson(captured.value); } catch { return undefined; }
+  // Read every current schema value, including mutable registry edits, but
+  // represent shared schema nodes once. Expanding the same rich-text/condition
+  // schema at every history image used most of the recovery validation budget.
+  // This signature only invalidates scoped proofs; it is never a content hash.
+  const seen = new Map<object, number>(), active = new Set<object>(), nodes: unknown[] = [];
+  const visit = (value: unknown, depth: number): unknown => {
+    if (depth > 128) throw new Error('Unsupported schema depth');
+    if (value === undefined) return ['undefined'];
+    if (typeof value === 'string' && !isValidUnicode(value) || typeof value === 'number' && !Number.isFinite(value)) throw new Error('Unsupported schema scalar');
+    if (value === null || ['string', 'boolean', 'number'].includes(typeof value)) return ['value', value];
+    if (typeof value !== 'object' || active.has(value)) throw new Error('Unsupported schema value');
+    const object = value as object, previous = seen.get(object);
+    if (previous !== undefined) return ['reference', previous];
+    const array = Array.isArray(object), prototype = Object.getPrototypeOf(object);
+    if (array ? prototype !== Array.prototype : prototype !== Object.prototype && prototype !== null) throw new Error('Unsupported schema prototype');
+    const keys = Reflect.ownKeys(object);
+    if (keys.some(key => typeof key !== 'string' || !isValidUnicode(key) || ['__proto__', 'constructor', 'prototype'].includes(key))) throw new Error('Unsupported schema key');
+    if (array && (keys.length !== object.length + 1 || keys.some(key => key !== 'length' && (!/^(0|[1-9]\d*)$/.test(String(key)) || Number(key) >= object.length)))) throw new Error('Unsupported schema array');
+    const id = nodes.length, fields: unknown[] = [];
+    seen.set(object, id); active.add(object); nodes.push([array ? 'array' : 'object', fields]);
+    for (const key of (keys as string[]).sort()) {
+      if (array && key === 'length') continue;
+      const descriptor = Object.getOwnPropertyDescriptor(object, key);
+      if (!descriptor?.enumerable || !Object.hasOwn(descriptor, 'value')) throw new Error('Unsupported schema descriptor');
+      fields.push([key, visit(descriptor.value, depth + 1)]);
+    }
+    active.delete(object);
+    return ['reference', id];
+  };
+  try {
+    const root = visit({ schemas: ENTITY_SCHEMAS, kinds: ENTITY_KINDS, statuses: STATUSES, scopes: SCOPES }, 0);
+    // The traversal already sorted every own key and produced finite, valid
+    // primitive values in tagged dense arrays. Native JSON encoding preserves
+    // this exact internal signature without rewalking it in canonicalJson.
+    return JSON.stringify({ root, nodes });
+  } catch { return undefined; }
 }
 
 /** A durable operation captures its dependencies once. Only actual successful

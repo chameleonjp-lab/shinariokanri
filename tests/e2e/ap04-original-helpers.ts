@@ -4,8 +4,12 @@ import { createHash } from 'node:crypto';
 import { inspectScenario } from '../../src/storage/archive';
 
 export async function navigate(page: Page, name: RegExp) {
+  await expect(page.locator('.app-shell')).toBeVisible();
   const menu = page.getByRole('button', { name: 'メニューを開く' });
-  if (await menu.isVisible()) await menu.click();
+  if (await menu.isVisible()) {
+    await menu.click();
+    await expect(menu).toHaveAttribute('aria-expanded', 'true');
+  }
   await page.locator('.sidebar').getByRole('button', { name }).first().click();
 }
 

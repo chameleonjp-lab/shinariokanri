@@ -4,6 +4,9 @@ import type {ProjectData} from '../domain/types';
 import {checkCancelled,saveError,StorageError} from './errors';
 import {resolveLimits} from './json';
 import {runImportWork, type ImportWork, type ImportWorkResult} from './importWork';
+import {captureImmutablePlainData,isImmutablePlainData} from '../domain/immutablePlainData';
+import {sendWorkerGraph} from './workerGraph';
+import {exportNativeScenarioData,type NativeExportCapture} from './nativeExport';
 export type {ImportWorkStep} from './importWork';
 
 /** Revalidate captured import content off the UI thread; results never bypass
@@ -69,6 +72,20 @@ export async function inspectScenario(bytes: Uint8Array, options: InspectOptions
 export async function exportScenario(input:ProjectData,options:ExportOptions={}):Promise<Uint8Array>{
  checkCancelled(options.signal);
  if(options.worker===false||typeof window==='undefined'||typeof Worker==='undefined')return exportScenarioData(input,options);
+ const {loadAsset:_load,signal:_signal,onProgress:_progress,...portable}=options;
+ return exportInWorker({input,options:portable},options);
+}
+
+/** Private native captures compute pending hashes in the same export worker;
+ * no verification flag or caller-supplied validator can bypass file checks. */
+export async function exportNativeScenario(capture:NativeExportCapture,options:ExportOptions={}):Promise<Uint8Array>{
+ checkCancelled(options.signal);
+ if(options.worker===false||typeof window==='undefined'||typeof Worker==='undefined')return exportNativeScenarioData(capture,options);
+ const {loadAsset:_load,signal:_signal,onProgress:_progress,...portable}=options;
+ return exportInWorker({native:capture,options:portable},options);
+}
+
+function exportInWorker(request:{input:ProjectData;options:ExportOptions}|{native:NativeExportCapture;options:ExportOptions},options:ExportOptions):Promise<Uint8Array>{
  return new Promise((resolve,reject)=>{
   const worker=new Worker(new URL('./archiveExport.worker.ts',import.meta.url),{type:'module'});let live=true;
   const finish=(error?:unknown,bytes?:Uint8Array)=>{if(!live)return;live=false;worker.terminate();options.signal?.removeEventListener('abort',abort);error?reject(error):resolve(bytes!);};
@@ -77,7 +94,17 @@ export async function exportScenario(input:ProjectData,options:ExportOptions={})
    void Promise.resolve().then(()=>options.loadAsset?.(message.hash)).then(bytes=>{if(!live)return;const copy=bytes?.slice();worker.postMessage({type:'asset',id:message.id,bytes:copy},copy?[copy.buffer as ArrayBuffer]:[]);}).catch(()=>{if(live)worker.postMessage({type:'asset',id:message.id});});
   }};
   worker.onerror=()=>finish(new StorageError('SAVE_FAILED','保存ファイルを作成できませんでした。端末の作品は保持しています。'));
-  options.signal?.addEventListener('abort',abort,{once:true});const {loadAsset:_load,signal:_signal,onProgress:_progress,...portable}=options;
-  try{checkCancelled(options.signal);worker.postMessage({input,options:portable});}catch(error){finish(error);}
+  options.signal?.addEventListener('abort',abort,{once:true});
+  try {
+   checkCancelled(options.signal);
+   // Mutable/legacy caller input keeps the existing atomic structured-clone
+   // path. A store-owned immutable capture can cross in bounded messages.
+   const heavy = 'native' in request ? [request.native] : [request.input,request.options.worlds,request.options.recovery,request.options.syncRecovery].filter(value => value !== undefined);
+   if (heavy.every(isImmutablePlainData)) {
+    const captured = captureImmutablePlainData(request);
+    if (captured.captured) void sendWorkerGraph(captured.value, message => worker.postMessage(message), options.signal, () => live).catch(finish);
+    else worker.postMessage(request);
+   } else worker.postMessage(request);
+  } catch(error) {finish(error);}
  });
 }

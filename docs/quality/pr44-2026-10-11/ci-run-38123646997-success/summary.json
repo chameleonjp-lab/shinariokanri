@@ -1,0 +1,328 @@
+{
+  "repository": "chameleonjp-lab/shinariokanri",
+  "pullRequest": 44,
+  "runId": 38123646997,
+  "runNumber": 106,
+  "workflow": "Validate implementation",
+  "workflowConclusion": "success",
+  "jobId": 114423361268,
+  "jobName": "verify",
+  "jobConclusion": "success",
+  "finalObservationUtc": "2026-10-11 09:04:15 UTC",
+  "sourceBinding": {
+    "workflowHeadSha": "4e39cc1a086296226643e6105ffbfc47d467c50f",
+    "workflowHeadBranch": "feat/ap01-integrated-candidate-20261011",
+    "actualCheckoutCommit": "6212d8d20ec9cda44cd69e19313663f563b16544",
+    "checkoutRef": "refs/remotes/pull/44/merge",
+    "baseCommitFromCheckoutMergeMessage": "8285608c75791ed1ea01380751abb3805913b639",
+    "checkoutBindingSource": "raw job.log git fetch/HEAD/git log -1 output",
+    "observedHostedBuildVersion": "69f29385ad35e068039a",
+    "observedHostedBuildBase": "/shinariokanri/",
+    "buildBindingSource": "2026-10-11T08:18:54.6064530Z Offline shell generated: 69f29385ad35e068039a, /shinariokanri/",
+    "buildInfoJsonAvailableInArtifact": false,
+    "buildSourceTree": null,
+    "buildDirtyFlag": null,
+    "localBuildPromotedToHosted": false
+  },
+  "steps": [
+    {
+      "name": "Set up job",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 1
+    },
+    {
+      "name": "Run actions/checkout@v4",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 2
+    },
+    {
+      "name": "Run actions/setup-node@v4",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 3
+    },
+    {
+      "name": "Run npm ci",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 4
+    },
+    {
+      "name": "Run python3 scripts/check_docs.py",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 5
+    },
+    {
+      "name": "Run python3 scripts/check_completion_plan.py",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 6
+    },
+    {
+      "name": "Run python3 -m unittest discover -s scripts -p 'test_check_*.py' -v",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 7
+    },
+    {
+      "name": "Run npx playwright install --with-deps chromium firefox webkit",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 8
+    },
+    {
+      "name": "Run node -e 'require(\"fs\").appendFileSync(process.env.GITHUB_ENV, \"CHROMIUM_PATH=\" + require(\"playwright\").chromium.executablePath() + \"\\n\")'",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 9
+    },
+    {
+      "name": "Run npm test -- --maxWorkers=1 --fileParallelism=false",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 10
+    },
+    {
+      "name": "Run npm run build",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 11
+    },
+    {
+      "name": "Run BROWSER_ENGINES=all npm run test:e2e",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 12
+    },
+    {
+      "name": "Run npx playwright test -c tests/rb10/playwright.config.ts --project=chromium --output=test-results/rb10-large-analysis-chromium",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 13
+    },
+    {
+      "name": "Run RB03_ENGINES=chromium,firefox,webkit node tests/browser/run-rb03-components.mjs",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 14
+    },
+    {
+      "name": "Run for engine in chromium firefox webkit; do",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 15
+    },
+    {
+      "name": "Run npx playwright test -c tests/rb04/playwright.config.ts --project=chromium --output=test-results/rb04-writing-chromium",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 16
+    },
+    {
+      "name": "Run npx playwright test -c tests/rb04/playwright.config.ts --project=webkit --output=test-results/rb04-writing-webkit",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 17
+    },
+    {
+      "name": "Run actions/upload-artifact@v4",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 18
+    },
+    {
+      "name": "Post Run actions/setup-node@v4",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 35
+    },
+    {
+      "name": "Post Run actions/checkout@v4",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 36
+    },
+    {
+      "name": "Complete job",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 37
+    }
+  ],
+  "stepCount": 21,
+  "counts": {
+    "pythonCheckerUnit": {
+      "passed": 24
+    },
+    "unit": {
+      "filesPassed": 96,
+      "testsPassed": 890
+    },
+    "e2e": {
+      "engines": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "passed": 342,
+      "rb06SubsetPassed": 12,
+      "rb06FirstCaseSeconds": {
+        "chromium": 18.0,
+        "firefox": 22.5,
+        "webkit": 22.0
+      }
+    },
+    "rb10LargeAnalysis": {
+      "engine": "chromium",
+      "passed": 1
+    },
+    "rb03": {
+      "engines": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "componentGroupsPerEngine": 5,
+      "componentGroupsTotal": 15,
+      "timelineSmokesTotal": 3,
+      "worldSmokesTotal": 3,
+      "scriptProcessesExitZero": 9,
+      "scope": "isolated production components; native App transactions tested separately"
+    },
+    "rb04Author": {
+      "engines": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "checksPerEngine": 12,
+      "checksTotal": 36,
+      "scope": "isolated author components with an in-memory host; native/App acceptance excluded"
+    },
+    "rb04Writing": {
+      "chromiumPassed": 4,
+      "webkitPassed": 4
+    }
+  },
+  "rawJobLog": {
+    "path": "job.log",
+    "bytes": 304341,
+    "sha256": "ca0252ce3e7a17f50ba834c9395d491843ff4a58d9257cddfc38573b6ccd9381"
+  },
+  "browserArtifact": {
+    "metadata": {
+      "id": 11697228692,
+      "name": "browser-evidence",
+      "size_in_bytes": 18232278,
+      "url": "https://api.github.com/repos/chameleonjp-lab/shinariokanri/actions/artifacts/11697228692",
+      "archive_download_url": "https://api.github.com/repos/chameleonjp-lab/shinariokanri/actions/artifacts/11697228692/zip",
+      "expired": false,
+      "created_at": "2026-10-11T09:01:00Z",
+      "expires_at": "2027-01-09T08:06:26Z",
+      "updated_at": "2026-10-11T09:01:00Z",
+      "digest": "sha256:67fd7589678ce0f1fb8df762985a2b6314605919ad86d272d9ffe4d3f61506a3",
+      "workflow_run": {
+        "id": 38123646997,
+        "repository_id": 1405109287,
+        "head_repository_id": 1405109287,
+        "head_branch": "feat/ap01-integrated-candidate-20261011",
+        "head_sha": "4e39cc1a086296226643e6105ffbfc47d467c50f"
+      }
+    },
+    "download": {
+      "path": "browser-evidence.zip",
+      "bytes": 18232278,
+      "sha256": "67fd7589678ce0f1fb8df762985a2b6314605919ad86d272d9ffe4d3f61506a3"
+    },
+    "digestMatchesMetadata": true,
+    "entryCount": 674,
+    "buildInfoEntries": [],
+    "errorContextCount": 0,
+    "traceZipCount": 0,
+    "selectedMetadata": [
+      {
+        "artifactEntry": "test-results/rb03-components/regressions-chromium.json",
+        "path": "selected-artifact-metadata/rb03-regressions-chromium.json",
+        "bytes": 968,
+        "sha256": "e644569cfdb4cc03753cc6ce059a1e5a1121a136f618c3b67e0c4023ecaeb149"
+      },
+      {
+        "artifactEntry": "test-results/rb03-components/regressions-firefox.json",
+        "path": "selected-artifact-metadata/rb03-regressions-firefox.json",
+        "bytes": 967,
+        "sha256": "a102a692e74f98f4488f52bb8ef4f134a8573e951adfd2104c8ced8cfdebf79a"
+      },
+      {
+        "artifactEntry": "test-results/rb03-components/regressions-webkit.json",
+        "path": "selected-artifact-metadata/rb03-regressions-webkit.json",
+        "bytes": 966,
+        "sha256": "c29ec0304bca83a927f1b5bf6cf12a07642f968fd4d8660004fbb9d9a26f71de"
+      },
+      {
+        "artifactEntry": "test-results/rb03-components/runner.json",
+        "path": "selected-artifact-metadata/rb03-runner.json",
+        "bytes": 1571,
+        "sha256": "3e612f2adbae45ebcbb62947eb874d0ab97c62d82b2533c78f664607900d2140"
+      },
+      {
+        "artifactEntry": "test-results/rb03-components/timeline-chromium.json",
+        "path": "selected-artifact-metadata/rb03-timeline-chromium.json",
+        "bytes": 446,
+        "sha256": "4756ae797ef7bd6a85a659f6dffd50d655c3b6eb9e43f9c331f56128ce468bca"
+      },
+      {
+        "artifactEntry": "test-results/rb03-components/timeline-firefox.json",
+        "path": "selected-artifact-metadata/rb03-timeline-firefox.json",
+        "bytes": 445,
+        "sha256": "e0c3656c448b3597d1cc0d26fd8fe131e57c229c7c471d5a1e38a872b30147ce"
+      },
+      {
+        "artifactEntry": "test-results/rb03-components/timeline-webkit.json",
+        "path": "selected-artifact-metadata/rb03-timeline-webkit.json",
+        "bytes": 444,
+        "sha256": "f4eb2944ef975e51f2def051a635be6e3d80e509c7bbb54667efacccd542c506"
+      },
+      {
+        "artifactEntry": "test-results/rb03-components/world-chromium.json",
+        "path": "selected-artifact-metadata/rb03-world-chromium.json",
+        "bytes": 796,
+        "sha256": "a4075498a18ea5e46e1f144318569e5402e61293260358183bc6048d79e7f47f"
+      },
+      {
+        "artifactEntry": "test-results/rb03-components/world-firefox.json",
+        "path": "selected-artifact-metadata/rb03-world-firefox.json",
+        "bytes": 795,
+        "sha256": "cd04b0fd0dc7587551215b344e175f0ab4cd920779072382e683c557dda6d2f6"
+      },
+      {
+        "artifactEntry": "test-results/rb03-components/world-webkit.json",
+        "path": "selected-artifact-metadata/rb03-world-webkit.json",
+        "bytes": 794,
+        "sha256": "000f57714caf2de03430f1399d6e99439400d126b0b3a1f2772a36149c4ceaab"
+      },
+      {
+        "artifactEntry": "test-results/rb04/rb04-author-regressions-chromium-xm81Ee/results.json",
+        "path": "selected-artifact-metadata/rb04-author-chromium.json",
+        "bytes": 1463,
+        "sha256": "fdcef17d2cbec66e96ba38e2eeca2996994ae768e942542cce3417002786c41d"
+      },
+      {
+        "artifactEntry": "test-results/rb04/rb04-author-regressions-firefox-NHGOaw/results.json",
+        "path": "selected-artifact-metadata/rb04-author-firefox.json",
+        "bytes": 1415,
+        "sha256": "023a343d562e2014fdf8ee6b5dfd93ded2036fc1499868325d0c89ce83326c53"
+      },
+      {
+        "artifactEntry": "test-results/rb04/rb04-author-regressions-webkit-4nnKcu/results.json",
+        "path": "selected-artifact-metadata/rb04-author-webkit.json",
+        "bytes": 1460,
+        "sha256": "b299af11dc72b2fa7b93f53acc1d7a23fdefe76470481ecc46193f49206f9f67"
+      }
+    ]
+  },
+  "acceptanceScope": "Observed hosted workflow suite success only; original PR43 full plan/AP/AT completion is not claimed.",
+  "sourceAndPrMutations": false
+}

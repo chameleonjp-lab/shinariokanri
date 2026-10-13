@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from 'react';
+import { useEffect, useId, useRef, type ReactNode } from 'react';
 
 export type IconName = 'timeline' | 'structure' | 'people' | 'search' | 'work' | 'plus' | 'arrow' | 'back' | 'check' | 'menu' | 'close' | 'download' | 'upload' | 'more' | 'note' | 'flag' | 'link' | 'play' | 'sun' | 'moon' | 'folder' | 'spark' | 'clock';
 
@@ -37,6 +37,7 @@ export function EmptyState({ icon = 'note', title, children, action }: { icon?: 
 }
 
 export function Modal({ title, children, onClose, wide = false }: { title: string; children: ReactNode; onClose: () => void; wide?: boolean }) {
+  const titleId = useId();
   const dialog = useRef<HTMLDialogElement>(null);
   const closeRef = useRef(onClose);
   closeRef.current = onClose;
@@ -46,8 +47,8 @@ export function Modal({ title, children, onClose, wide = false }: { title: strin
     node?.showModal();
     return () => { node?.close(); prior?.focus(); };
   }, []);
-  return <dialog ref={dialog} className={`modal ${wide ? 'modal-wide' : ''}`} aria-labelledby="modal-title" onCancel={(e) => { e.preventDefault(); closeRef.current(); }} onClick={(e) => { if (e.target === e.currentTarget) closeRef.current(); }}>
-    <div className="modal-heading"><h2 id="modal-title">{title}</h2><button type="button" className="icon-button" aria-label="閉じる" onClick={onClose}><Icon name="close"/></button></div>
+  return <dialog ref={dialog} className={`modal ${wide ? 'modal-wide' : ''}`} aria-labelledby={titleId} onCancel={(e) => { e.preventDefault(); closeRef.current(); }} onClick={(e) => { if (e.target === e.currentTarget) closeRef.current(); }}>
+    <div className="modal-heading"><h2 id={titleId}>{title}</h2><button type="button" className="icon-button" aria-label="閉じる" onClick={onClose}><Icon name="close"/></button></div>
     <div className="modal-content">{children}</div>
   </dialog>;
 }

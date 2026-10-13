@@ -1,0 +1,224 @@
+{
+  "format": "ap04-original-clause-proof-plan",
+  "format_version": "1.0.0",
+  "original_audit": "docs/review-2026-10-11/original_acceptance_audit.json",
+  "original_audit_sha256": "c3f843c573007c407266c75114cdb8f8fce5f6dd9020417599f05e60755d7e00",
+  "candidate": "AP04 authored source-only 45b825c74912a1393aa42f8abe360a8b21764ac5 / tree 517d46baf44de0d9d72deedf426466fc504eef68; build/browser/unit not_run",
+  "test_execution": "not_run",
+  "case_count": 3,
+  "clause_count": 12,
+  "passing_case_count": 0,
+  "passing_clause_count": 0,
+  "source": "tests/e2e/ap04-original-root-restoration-output.spec.ts",
+  "source_sha256": "9d95c65bc293cd59a59ea1a1d7cead427847c169394af288c64a9b3f8c39aabc",
+  "policy": {
+    "authored_procedures_are_not_execution_evidence": true,
+    "existing_results_not_transferred": true,
+    "original_four_clauses_must_be_observed_same_run": true
+  },
+  "cases": [
+    {
+      "id": "AT-E07",
+      "original_case": {
+        "id": "AT-E07",
+        "requirement_ids": [
+          "REQ-B12",
+          "REQ-F35",
+          "REQ-F55",
+          "REQ-F56",
+          "REQ-N09",
+          "REQ-N14"
+        ],
+        "package_id": "WP23",
+        "given": "全entity種・未知日時・巨大tick・素材を含む作品",
+        "when": "空環境へ全情報往復し、別途ハッシュ不一致/参照切れ/危険パス/未対応版を投入する",
+        "then": "正規化した保存情報が一致し、不正ファイルは既存作品を一切変えない",
+        "negative_or_edge": "安全上限直前・直後、添付重複、ID衝突を確認する"
+      },
+      "result": "not_run",
+      "clauses": [
+        {
+          "name": "given",
+          "original": "全entity種・未知日時・巨大tick・素材を含む作品",
+          "source_lines": [
+            79,
+            86
+          ],
+          "result": "not_run",
+          "remaining_conditions": []
+        },
+        {
+          "name": "when",
+          "original": "空環境へ全情報往復し、別途ハッシュ不一致/参照切れ/危険パス/未対応版を投入する",
+          "source_lines": [
+            92,
+            96,
+            106,
+            110
+          ],
+          "result": "not_run",
+          "remaining_conditions": []
+        },
+        {
+          "name": "then",
+          "original": "正規化した保存情報が一致し、不正ファイルは既存作品を一切変えない",
+          "source_lines": [
+            90,
+            98,
+            102,
+            113,
+            124,
+            128,
+            135
+          ],
+          "result": "not_run",
+          "remaining_conditions": []
+        },
+        {
+          "name": "negative_or_edge",
+          "original": "安全上限直前・直後、添付重複、ID衝突を確認する",
+          "source_lines": [
+            106,
+            110,
+            115,
+            122,
+            124,
+            128,
+            132,
+            135
+          ],
+          "result": "not_run",
+          "remaining_conditions": [
+            "Original safety bounds besides the 1MiB field: compressed/expanded/JSON/asset bytes, file/record/object/depth/condition counts remain unobserved."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "AT-N19",
+      "original_case": {
+        "id": "AT-N19",
+        "requirement_ids": [
+          "REQ-N19"
+        ],
+        "package_id": "WP10",
+        "given": "公開済み作品と別案がある",
+        "when": "改訂して制作出力を行う",
+        "then": "選択した正本版だけが対象となり旧公開版は不変で残る",
+        "negative_or_edge": "別案の編集で公開済み本文や参照設定を上書きしない"
+      },
+      "result": "not_run",
+      "clauses": [
+        {
+          "name": "given",
+          "original": "公開済み作品と別案がある",
+          "source_lines": [
+            140,
+            149
+          ],
+          "result": "not_run",
+          "remaining_conditions": []
+        },
+        {
+          "name": "when",
+          "original": "改訂して制作出力を行う",
+          "source_lines": [
+            151,
+            171
+          ],
+          "result": "not_run",
+          "remaining_conditions": []
+        },
+        {
+          "name": "then",
+          "original": "選択した正本版だけが対象となり旧公開版は不変で残る",
+          "source_lines": [
+            172,
+            177
+          ],
+          "result": "not_run",
+          "remaining_conditions": []
+        },
+        {
+          "name": "negative_or_edge",
+          "original": "別案の編集で公開済み本文や参照設定を上書きしない",
+          "source_lines": [
+            158,
+            160,
+            179,
+            181
+          ],
+          "result": "not_run",
+          "remaining_conditions": []
+        }
+      ]
+    },
+    {
+      "id": "AT-N20",
+      "original_case": {
+        "id": "AT-N20",
+        "requirement_ids": [
+          "REQ-N20"
+        ],
+        "package_id": "WP22",
+        "given": "未対応の外部コマンドがある作品",
+        "when": "対応先別の制作出力を選ぶ",
+        "then": "不一致の箇所を示し安全な出力だけを生成する",
+        "negative_or_edge": "Unity・Unreal・ink・Yarn等すべてに対応済みと仮定しない"
+      },
+      "result": "not_run",
+      "clauses": [
+        {
+          "name": "given",
+          "original": "未対応の外部コマンドがある作品",
+          "source_lines": [
+            185,
+            197
+          ],
+          "result": "not_run",
+          "remaining_conditions": [
+            "Current fixture represents an unsupported external_contract type, not arbitrary external command semantics."
+          ]
+        },
+        {
+          "name": "when",
+          "original": "対応先別の制作出力を選ぶ",
+          "source_lines": [
+            199,
+            200,
+            206,
+            208
+          ],
+          "result": "not_run",
+          "remaining_conditions": [
+            "Actual per-destination runtime/engine selector is absent; this is a local implementation gap."
+          ]
+        },
+        {
+          "name": "then",
+          "original": "不一致の箇所を示し安全な出力だけを生成する",
+          "source_lines": [
+            202,
+            203,
+            209,
+            211
+          ],
+          "result": "not_run",
+          "remaining_conditions": [
+            "Only separate explicitly approved text-only scope is checked; original per-target safe-output behavior remains unobserved."
+          ]
+        },
+        {
+          "name": "negative_or_edge",
+          "original": "Unity・Unreal・ink・Yarn等すべてに対応済みと仮定しない",
+          "source_lines": [
+            197,
+            212
+          ],
+          "result": "not_run",
+          "remaining_conditions": []
+        }
+      ]
+    }
+  ]
+}

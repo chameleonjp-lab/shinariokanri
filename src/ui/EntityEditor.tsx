@@ -1,7 +1,7 @@
 import {EntityReferenceSection} from './EntityReferenceSection';
 import {StateMeaningPanel} from './StateMeaningPanel';
 import {WindowedList} from './WindowedList';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { ContentAnchor, Entity, ProjectData } from '../domain/types';
 import { KIND_LABELS } from '../domain/model';
 import { FIELD_SPECS, type FieldSpec } from './fieldSpecs';
@@ -69,6 +69,13 @@ export function EntityEditor({ entity, project, referenceProject, isNew, hasUnsa
   const [templateReplacements, setTemplateReplacements] = useState<TemplateReplacements>({});
   const [templateFailure, setTemplateFailure] = useState('');
   const [navigationNotice, setNavigationNotice] = useState('');
+  const [pendingNavigationFocus, setPendingNavigationFocus] = useState<{
+    request: NonNullable<typeof navigationTarget>;
+    entityId: string;
+    target: Extract<ReturnType<typeof resolveEditorNavigation>, { ok: true }>;
+    targetTab: EditorTab;
+    interactionVersion: number;
+  } | null>(null);
   const [reverseTarget, setReverseTarget] = useState<string | null>(null);
   const [reversePage, setReversePage] = useState(0);
   const [archiveConfirm, setArchiveConfirm] = useState(false);
@@ -141,24 +148,29 @@ export function EntityEditor({ entity, project, referenceProject, isNew, hasUnsa
   }, [positionKey]);
   useEffect(() => {
     setNavigationNotice('');
+    setPendingNavigationFocus(null);
     if (!navigationTarget || navigationTarget.anchor.entityId !== draft.id && navigationTarget.anchor.lineId !== draft.id) return;
     const target = resolveEditorNavigation(draftRef.current, navigationTarget.anchor, navigationTarget.fieldPath);
     if (!target.ok) { setNavigationNotice(target.message); return; }
     const targetTab: EditorTab = !hasTextTabs || !target.fieldKey || ['summary', 'reading'].includes(target.fieldKey) ? 'main' : target.fieldKey === 'body' ? 'body' : target.fieldKey === 'authorNotes' ? 'notes' : 'detail';
     setTab(targetTab);
     setDisplay(previous => ({ hiddenFields: previous.hiddenFields.filter(key => key !== (target.fieldKey ?? 'name')), hiddenTabs: previous.hiddenTabs.filter(key => key !== targetTab) }));
-    const interactionVersion = editorInteractionVersion.current;
-    let frame = requestAnimationFrame(() => {
-      frame = requestAnimationFrame(() => {
-        if (editorInteractionVersion.current !== interactionVersion) return;
-        const control = target.fieldKey ? editorContent.current?.querySelector<HTMLElement>(`[data-field="${CSS.escape(target.fieldKey)}"] textarea, [data-field="${CSS.escape(target.fieldKey)}"] input, [data-field="${CSS.escape(target.fieldKey)}"] select`) : document.getElementById('entity-name');
-        if (!control) { setNavigationNotice('参照先の項目を表示できませんでした。詳細データから保存された段落IDを確認できます。'); return; }
-        control.scrollIntoView({ block: 'center' }); control.focus();
-        if (control instanceof HTMLTextAreaElement && target.start != null && target.end != null) control.setSelectionRange(target.start, target.end);
-      });
-    });
-    return () => cancelAnimationFrame(frame);
+    setPendingNavigationFocus({ request: navigationTarget, entityId: draft.id, target, targetTab, interactionVersion: editorInteractionVersion.current });
   }, [navigationTarget, draft.id]);
+  useLayoutEffect(() => {
+    const pending = pendingNavigationFocus;
+    if (!pending) return;
+    if (pending.request !== navigationTarget || pending.entityId !== draft.id || editorInteractionVersion.current !== pending.interactionVersion) { setPendingNavigationFocus(null); return; }
+    if (tab !== pending.targetTab || display.hiddenTabs.includes(pending.targetTab) || display.hiddenFields.includes(pending.target.fieldKey ?? 'name')) return;
+    // Resolve the control after its tab and field have actually committed.
+    // A fixed number of animation frames can run before React renders them.
+    const target = pending.target;
+    const control = target.fieldKey ? editorContent.current?.querySelector<HTMLElement>(`[data-field="${CSS.escape(target.fieldKey)}"] textarea, [data-field="${CSS.escape(target.fieldKey)}"] input, [data-field="${CSS.escape(target.fieldKey)}"] select`) : document.getElementById('entity-name');
+    setPendingNavigationFocus(null);
+    if (!control) { setNavigationNotice('参照先の項目を表示できませんでした。詳細データから保存された段落IDを確認できます。'); return; }
+    control.scrollIntoView({ block: 'center' }); control.focus();
+    if (control instanceof HTMLTextAreaElement && target.start != null && target.end != null) control.setSelectionRange(target.start, target.end);
+  }, [pendingNavigationFocus, navigationTarget, draft.id, tab, display]);
 
   const save = async (manual = false) => {
     if (savingRef.current || invalidJson.length || composing) return;
@@ -169,6 +181,7 @@ export function EntityEditor({ entity, project, referenceProject, isNew, hasUnsa
     }
     if (!dirty) return;
     const stamp = JSON.stringify(current);
+    const interactionVersion = editorInteractionVersion.current;
     if (!manual && (stamp === attemptRef.current || !current.name.trim() && !['event', 'dialogue_line'].includes(current.kind))) return;
     attemptRef.current = stamp;
     savingRef.current = true;
@@ -182,6 +195,9 @@ export function EntityEditor({ entity, project, referenceProject, isNew, hasUnsa
       setError(failure.message || '端末内に保存できませんでした。入力はこの画面に保持されています。');
       setIssues(failure.issues || []);
       if (manual) requestAnimationFrame(() => {
+        // A late failure may suggest a field, but cannot take focus from a
+        // correction or selection that the author started after this save.
+        if (editorInteractionVersion.current !== interactionVersion || JSON.stringify(draftRef.current) !== stamp) return;
         const path = failure.issues?.[0]?.path.split('.').pop();
         const field = path ? document.querySelector<HTMLElement>(`[data-field="${CSS.escape(path)}"] input, [data-field="${CSS.escape(path)}"] textarea, [data-field="${CSS.escape(path)}"] select`) : null;
         field?.focus();

@@ -1,6 +1,6 @@
 import {mergeImportConflicts} from './importWork';
 import {freezeCapturedPlainDataAsync} from '../domain/immutablePlainData';
-import {createSharedArrayJsonEncoder} from './sharedArrayJson';
+import {internImmutableRecordsAsync} from '../domain/internImmutableRecords';
 import {cloneProject as clonePrivateProject} from './clone';
 import {recordDiagnostic} from '../diagnostics';
 import {bindRecordPartsSignal,installRecordPartsDatabase} from './recordPartsDatabase';
@@ -17,7 +17,8 @@ import { addChangeReviews } from '../domain/changeReviews';
 import { validateProjectIntegrity } from '../domain/projectRecordValidation';
 import { sealAuthorAlternative } from '../domain/authorAlternativeIntegrity';
 import { appendAlternativeVersion, applyAlternativeChanges, projectContent } from '../domain/writingWorkspace';
-import { assetPath, attachmentMetadata, closureAttachmentMetadata, exportScenario, performImportWork, referencedWorlds, validateAsset, verifySnapshotHashes, verifyWorlds, worldSnapshotContents, type PreparedScenario, type ImportWorkStep } from './archive';
+import { assetPath, attachmentMetadata, closureAttachmentMetadata, exportScenario, exportNativeScenario, performImportWork, referencedWorlds, validateAsset, verifySnapshotHashes, verifyWorlds, worldSnapshotContents, type PreparedScenario, type ImportWorkStep } from './archive';
+import {createImportWorkSession} from './importWorkSession';
 import { checkCancelled, saveError, StorageError } from './errors';
 import { canonicalJson, createCanonicalJsonCache, equalJson, jsonBytes as encodeJsonBytes, sha256, validateJsonValue } from './json';
 import { recoveryImages, projectWithRecoveryHistory, type PortableRecovery } from './recovery';
@@ -719,7 +720,14 @@ export class ScenarioStore {
     const extracted = entityChanges.put.map(entity => ({ entity, ...extractBlocks(entity) }));
     const changedEntityIds = new Set([...entityChanges.put.map(entity => entity.id), ...entityChanges.remove.map(key => key[1])]);
     const oldBlocks = (previous?.entities ?? []).filter(entity => changedEntityIds.has(entity.id)).flatMap(entity => extractBlocks(entity).blocks);
-    const blockChanges = changed(oldBlocks, extracted.flatMap(row => row.blocks));
+    const newBlocks = extracted.flatMap(row => row.blocks);
+    const blockIds = [...new Set([...oldBlocks.map(block => block.id), ...newBlocks.map(block => block.id)])];
+    // Inline legacy records can be read without native block rows. When they
+    // gain markers, compare against durable rows rather than hydrated values.
+    const nativeBlocks = blockIds.length
+      ? await this.db.blocks.bulkGet(blockIds.map(id => [project.projectId, id] as [string, string]))
+      : [];
+    const blockChanges = changed(nativeBlocks.filter((block): block is StoredBlock => !!block), newBlocks);
     await Promise.all([
       this.db.entities.bulkDelete(entityChanges.remove), this.db.relations.bulkDelete(relationChanges.remove),
       this.db.blocks.bulkDelete(blockChanges.remove), this.db.snapshots.bulkDelete(snapshotChanges.remove), this.db.views.bulkDelete(viewChanges.remove),
@@ -996,7 +1004,22 @@ export class ScenarioStore {
     return this.materializeOutbox(captured.rows, new Map(captured.commands.map(row => [row.operationId, row])));
   }
   async getSaveState(projectId:string):Promise<{localSaved:boolean;pendingCount:number;recoveredPendingCount:number;pendingAssetCount:number;serverRevision:string;syncState:'pending'|'synced'|'conflict'}>{
-    return this.db.transaction('r',this.writeTables,async()=>{const [read,metadata,pendingCount,recoveredPendingCount,assets]=await Promise.all([this.readProject(projectId,false),this.db.syncMetadata.get(projectId),this.db.outbox.where('projectId').equals(projectId).count(),this.db.recoveredPending.where('projectId').equals(projectId).count(),this.db.syncAssetAcks.where('projectId').equals(projectId).toArray()]);const pendingAssetCount=read?closureAttachmentMetadata(read.project,await this.validationWorlds()).filter(m=>!assets.some(a=>a.contentHash===m.contentHash&&a.byteSize===m.byteSize&&a.mediaType===m.mediaType)).length:0;return {localSaved:!!read,pendingCount,recoveredPendingCount,pendingAssetCount,serverRevision:metadata?.serverRevision??'0',syncState:metadata?.state==='conflict'?'conflict':pendingCount||pendingAssetCount?'pending':metadata?.state??'pending'};});
+    return this.db.transaction('r',this.writeTables,async()=>{
+      const current = async () => {
+        const header = await this.db.projects.get(projectId), cached = this.cachedProjects.get(projectId);
+        if (!header) return undefined;
+        if (header.projectId !== projectId) throw new StorageError('SAVE_FAILED', '作品の保存情報が別の作品を指しています。', projectId);
+        // The same durable revision/history guard used by editing reads lets
+        // status reuse its private verified image without another manuscript
+        // hydration. Counts, acknowledgements and worlds still come from this
+        // one native snapshot; a newer edition takes the full current-row path.
+        if (cached?.revision === header.revision && sameJson(this.cachedHistoryIds.get(projectId), header.historyIds)) return {project: {...cached, history: []}};
+        return this.readProject(projectId, false, undefined, header);
+      };
+      const [read,metadata,pendingCount,recoveredPendingCount,assets]=await Promise.all([current(),this.db.syncMetadata.get(projectId),this.db.outbox.where('projectId').equals(projectId).count(),this.db.recoveredPending.where('projectId').equals(projectId).count(),this.db.syncAssetAcks.where('projectId').equals(projectId).toArray()]);
+      const pendingAssetCount=read?closureAttachmentMetadata(read.project,await this.validationWorlds()).filter(m=>!assets.some(a=>a.contentHash===m.contentHash&&a.byteSize===m.byteSize&&a.mediaType===m.mediaType)).length:0;
+      return {localSaved:!!read,pendingCount,recoveredPendingCount,pendingAssetCount,serverRevision:metadata?.serverRevision??'0',syncState:metadata?.state==='conflict'?'conflict':pendingCount||pendingAssetCount?'pending':metadata?.state??'pending'};
+    });
   }
   async getAssetSyncAck(projectId:string,contentHash:string){return copy(await this.db.syncAssetAcks.get(`${projectId}:${contentHash}`));}
   async confirmAssetUpload(projectId:string,input:{contentHash:string;bytes:number;mediaType:string}){
@@ -1184,7 +1207,17 @@ export class ScenarioStore {
     options = { ...options };
     // Content, all history and pending intents come from one database read image.
     checkCancelled(options.signal);
-    const captured = await this.db.transaction('r', this.writeTables, async () => ({ current: await this.readProject(projectId, false), commands: await this.db.commands.where('projectId').equals(projectId).toArray(), rows: await this.db.outbox.where('projectId').equals(projectId).toArray(), retained: await this.listRecoveredPending(projectId), metadata: await this.db.syncMetadata.get(projectId), syncBase:await this.db.syncBases.get(projectId),syncPrepared:await this.db.preparedSync.where('projectId').equals(projectId).toArray(),syncConflicts:await this.db.syncConflicts.where('projectId').equals(projectId).toArray(),syncAcks:await this.db.syncAckEvidence.where('projectId').equals(projectId).toArray(),syncAssetAcks:await this.db.syncAssetAcks.where('projectId').equals(projectId).toArray(),syncRetained:await this.db.retainedSyncRecovery.where('projectId').equals(projectId).toArray(), registry: await this.validationWorlds() }));
+    const captured = await this.db.transaction('r', this.writeTables, async () => {
+      // Cancellation must also reach the split-record workers and bounded
+      // current-row reads on this same native snapshot, before serialization.
+      bindRecordPartsSignal(options.signal); checkCancelled(options.signal);
+      const transaction = Dexie.currentTransaction, abort = () => transaction?.abort();
+      options.signal?.addEventListener('abort', abort, {once: true});
+      try {
+        checkCancelled(options.signal);
+        return { current: await this.readProject(projectId, false, undefined, undefined, options.signal), commands: await this.db.commands.where('projectId').equals(projectId).toArray(), rows: await this.db.outbox.where('projectId').equals(projectId).toArray(), retained: await this.listRecoveredPending(projectId), metadata: await this.db.syncMetadata.get(projectId), syncBase:await this.db.syncBases.get(projectId),syncPrepared:await this.db.preparedSync.where('projectId').equals(projectId).toArray(),syncConflicts:await this.db.syncConflicts.where('projectId').equals(projectId).toArray(),syncAcks:await this.db.syncAckEvidence.where('projectId').equals(projectId).toArray(),syncAssetAcks:await this.db.syncAssetAcks.where('projectId').equals(projectId).toArray(),syncRetained:await this.db.retainedSyncRecovery.where('projectId').equals(projectId).toArray(), registry: await this.validationWorlds() };
+      } finally { options.signal?.removeEventListener('abort', abort); }
+    }).catch(error => { checkCancelled(options.signal); throw error; });
     checkCancelled(options.signal);
     if (!captured.current) throw new StorageError('NOT_FOUND', '書き出す作品が見つかりません。');
     const commandRows = new Map(captured.commands.map(row => [row.operationId, row])), ready = new Map<string, CommandRecord>(), history: CommandRecord[] = [];
@@ -1192,6 +1225,9 @@ export class ScenarioStore {
       checkCancelled(options.signal); const row = commandRows.get(id);
       if (!row) throw new StorageError('SAVE_FAILED', '完全保存に必要な履歴が不足しています。', id);
       history.push(await this.materializeCommand(row, commandRows, ready, new Set(), false));
+      // Already decoded deltas resolve in microtasks. Let real UI tasks and
+      // cancellation run between complete command images without dropping any.
+      await new Promise<void>(resolve => setTimeout(resolve, 0)); checkCancelled(options.signal);
     }
     const content = { ...captured.current.project, history }, capturedPending = await this.materializeOutbox(captured.rows, commandRows, ready);
     const selected = options.snapshotId ? content.snapshots.find(snapshot => snapshot.id === options.snapshotId) : undefined;
@@ -1201,30 +1237,15 @@ export class ScenarioStore {
     // These graphs came from the single private read transaction above. Freeze
     // only plain own-data captures; unusual legacy language retains its old path.
     await freezeCapturedPlainDataAsync({ project, pending, retained }, options.signal);
-    const commandBytes = createSharedArrayJsonEncoder();
-    const operations = new Map(retained.map(row => [row.operation.operationId, row.operation]));
-    for (const row of pending) {
-      checkCancelled(options.signal);
-      const commandHash = await sha256(commandBytes(row.command)), previous = operations.get(row.operationId);
-      if (previous && previous.commandHash !== commandHash) throw new StorageError('OPERATION_CONFLICT', '復元した送信待ちと現在の送信待ちが同じIDで異なります。');
-      operations.set(row.operationId, { operationId: row.operationId, command: row.command, commandHash, origin: { projectId, operationId: row.operationId, serverRevision: row.baseRevision } });
-      options.onProgress?.({stage:'hashes',completed:operations.size,total:pending.length});
-    }
-    const recovery = operations.size ? { version: 1 as const, projectId, sourceRevision: project.revision, serverRevision: captured.metadata?.serverRevision ?? '0', pending: [...operations.values()] } : undefined;
+    const nativePending=pending.map(row=>({operationId:row.operationId,command:row.command,baseRevision:row.baseRevision}));
+    const nativeRetained=retained.map(row=>row.operation);
+    // The worker discovers every historical pin from this same captured
+    // registry, then runs the unchanged world and full-file validators.
     const syncRecovery:NativeSyncRecovery[]=options.snapshotId?[]:captured.syncRetained.map(r=>r.evidence);
     if(!options.snapshotId&&(captured.syncBase||captured.syncPrepared.length||captured.syncConflicts.length||captured.syncAcks.length)){const payload={format:'scenario-sync-recovery' as const,version:1 as const,state:'needs_reconnect' as const,origin:{...project,history:[]},...(captured.syncBase?{base:captured.syncBase}:{}),prepared:captured.syncPrepared,conflicts:captured.syncConflicts,acknowledgements:captured.syncAcks,assetAcknowledgements:captured.syncAssetAcks};const evidence={...payload,contentHash:await valueHash(payload)};if(!syncRecovery.some(r=>r.contentHash===evidence.contentHash))syncRecovery.push(evidence);}
-    const worlds: Record<string, ProjectData> = {};
-    let discovered = [project, ...recoveryImages(recovery),...syncRecoveryImages(syncRecovery)];
-    while (discovered.length) {
-      const next: ProjectData[] = [];
-      for (const reference of referencedWorlds(discovered,captured.registry)) {
-        if (worlds[reference.immutableSnapshotId]) continue;
-        const world = captured.registry[reference.immutableSnapshotId];
-        if (world) { worlds[reference.immutableSnapshotId] = world; next.push(world); }
-      }
-      discovered = next;
-    }
-    return exportScenario(project, { ...options, ...(recovery ? { recovery } : {}), worlds,syncRecovery, loadAsset: hash => this.getAsset(hash) });
+    const capture={project,pending:nativePending,retained:nativeRetained,serverRevision:captured.metadata?.serverRevision??'0',worlds:{},availableWorlds:captured.registry,syncRecovery};
+    await freezeCapturedPlainDataAsync(capture, options.signal);
+    return exportNativeScenario(await internImmutableRecordsAsync(capture,options.signal), { ...options, loadAsset: hash => this.getAsset(hash) });
   }
 
   async previewImport(preparedInput: PreparedScenario, optionsInput: ImportOptions): Promise<ImportPreview> {
@@ -1322,6 +1343,7 @@ export class ScenarioStore {
 
   async importScenario(preparedInput: PreparedScenario, optionsInput: ImportOptions): Promise<ImportResult> {
     const options = { ...optionsInput, idMap: optionsInput.idMap ? copy(optionsInput.idMap) : undefined, resolutions: optionsInput.resolutions ? copy(optionsInput.resolutions) : undefined };
+    const session = createImportWorkSession();
     try {
       checkCancelled(options.signal);
       if (!['new', 'clone', 'replace', 'merge', 'mapped_merge'].includes(options.mode)) throw new StorageError('FORMAT_UNSUPPORTED', '読み込みモードが未対応です。');
@@ -1329,7 +1351,7 @@ export class ScenarioStore {
       const knownWorlds = await this.validationWorlds(prepared.worlds), worldContents = worldSnapshotContents(knownWorlds);
       const work = (step: ImportWorkStep, project: ProjectData, extra: {recovery?: PortableRecovery; syncRecovery?: NativeSyncRecovery[]; idMap?: Record<string, string>; target?: ProjectData; resolutions?: Record<string, 'existing' | 'incoming'>} = {}) => {
         options.onStage?.(step);
-        return performImportWork({step, project, worlds: worldContents, ...extra}, {signal: options.signal});
+        return session.run({step, project, worlds: worldContents, ...extra}, {signal: options.signal});
       };
       prepared.project = (await work('structure', prepared.project)).project!;
       if (prepared.recovery) prepared.recovery = (await work('recovery', prepared.project, {recovery: prepared.recovery})).recovery!;
@@ -1349,7 +1371,7 @@ export class ScenarioStore {
       }
       if (options.mode === 'clone') {
         const cloned = (await work('clone', project, {recovery})).cloned!; idMap = cloned.idMap;
-        recovery = recovery ? await mappedPortableRecovery(recovery, cloned.project, idMap, options.signal) : undefined;
+        recovery = recovery ? (await session.run({step: 'map_recovery', project: cloned.project, worlds: {}, recovery, idMap}, {signal: options.signal})).recovery! : undefined;
         const historyIds = new Set(project.history.map(command => idMap![command.operationId]));
         project = { ...cloned.project, history: cloned.project.history.filter(command => historyIds.has(command.operationId)) };
       }
@@ -1444,6 +1466,7 @@ export class ScenarioStore {
       this.invalidateProjectCache(project.projectId);
       return result;
     } catch (error) { throw saveError(error); }
+    finally { session.dispose(); }
   }
 }
 

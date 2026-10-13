@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import type { Alias, Entity, EntityKind, ProjectData } from '../domain/types';
+import type { Alias, ContentAnchor, Entity, EntityKind, ProjectData, RichText } from '../domain/types';
 import { emptyValidity, newId, KIND_LABELS } from '../domain/model';
 import { previewJapaneseIndexEdit } from '../domain/catalogEdits';
 import type { JapaneseAuthorIndexEntry } from '../domain/catalog';
@@ -18,11 +18,12 @@ export interface JapaneseIndexEntryEditorProps {
   onSaveMany: (entities: Entity[], reason: string) => Promise<void>;
   /** Open the existing normal editor focused at a field path such as `data.aliases` or `data.reading`. */
   onOpenField: (entityId: string, fieldPath: string) => void;
+  onOpenTarget?: (anchor: ContentAnchor, fieldPath?: string) => void;
   onClose?: () => void;
 }
 
 /** Edits author-side index terms and category memberships while retaining their normal entity fields. */
-export function JapaneseIndexEntryEditor({ project, entry, onSaveMany, onOpenField, onClose }: JapaneseIndexEntryEditorProps) {
+export function JapaneseIndexEntryEditor({ project, entry, onSaveMany, onOpenField, onOpenTarget, onClose }: JapaneseIndexEntryEditorProps) {
   const entity = project.entities.find(candidate => candidate.id === entry.entityId && !candidate.deletedAt);
   const sourceRevision = useRef(entity?.revision);
   const categoryGroups = project.entities.filter((candidate): candidate is Entity<'group'> => candidate.kind === 'group' && !candidate.deletedAt && candidate.data.groupType === 'category');
@@ -80,11 +81,19 @@ export function JapaneseIndexEntryEditor({ project, entry, onSaveMany, onOpenFie
   };
 
   const openField = (path: string) => onOpenField(entity.id, path);
+  const body = ['body', 'text', 'description', 'summary', 'usageNotes', 'caption', 'action', 'tutorial', 'interpretation', 'targetAudience', 'experience', 'theme', 'tone', 'scope'].map(field => ({ field, value: record(entity)[field] })).find(({ value }) => Array.isArray(value) && value.length && value.every(block => block && typeof block.id === 'string' && typeof block.text === 'string' && ['paragraph', 'heading', 'list_item', 'quote'].includes(block.kind)));
+  const openBody = () => {
+    if (!body || !onOpenTarget) return;
+    const block = (body.value as RichText)[0];
+    onClose?.();
+    onOpenTarget({ entityId: entity.id, blockId: block.id, start: 0, end: Array.from(block.text).length, ...(entity.kind === 'dialogue_line' && body.field === 'text' ? { lineId: entity.id } : {}) }, `data.${body.field}`);
+  };
 
   return <section className="settings-card japanese-index-editor" aria-labelledby="index-entry-editor-heading">
     <fieldset disabled={busy} className="index-editor-controls">
     <div className="section-heading"><div><span className="eyebrow">{KIND_LABELS[entity.kind]} · {entry.source}</span><h3 id="index-entry-editor-heading">索引の表記・読み・分類</h3></div>{onClose && <button type="button" className="icon-button" aria-label="索引編集を閉じる" onClick={onClose}><Icon name="close" size={18}/></button>}</div>
     <p className="field-hint">原文の表記を保ったまま、検索に使う読み・別名・分類を編集します。変更は元の対象と分類グループへ保存されます。</p>
+    {body && onOpenTarget && <button type="button" className="reference-link" onClick={openBody}>この項目の本文を開く</button>}
     <div className="form-field" data-field="name"><label htmlFor="index-entity-name">項目名</label><input id="index-entity-name" value={name} onChange={event => setName(event.target.value)}/><button type="button" className="text-button" onClick={() => openField('name')}>通常フォームの名前欄を開く</button></div>
 
     {READING_KINDS.has(entity.kind) ? <div className="form-field" data-field="reading"><label htmlFor="index-reading">読み</label><input id="index-reading" value={reading} onChange={event => setReading(event.target.value)} placeholder="ひらがな・カタカナなど"/><button type="button" className="text-button" onClick={() => openField('data.reading')}>通常フォームの読み欄を開く</button></div> : <p className="info-notice">この種類には読みを保存する項目がありません。現在のデータ形式へ項目を追加した後に編集できます。</p>}

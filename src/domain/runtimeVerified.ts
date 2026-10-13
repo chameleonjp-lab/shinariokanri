@@ -1,15 +1,17 @@
 import type { ID, ProjectContent, ProjectData } from './types';
 import { captureRuntimeContent } from './runtimeVersions';
-import { resolvePinnedWorlds } from './pinnedWorlds';
+import { createPinnedWorldDigestCache, freezePinnedWorldRegistry } from './pinnedWorlds';
 import { analyzeFlowAsync, replaySavedTrace, startTrial } from './runtime';
 import type { AnalysisOptions, TrialStartOptions } from './runtime';
 import { resolveReuseContent } from './reuse';
+import { capturePinnedPresentationReferences } from './presentation';
 
 /** The author document and registry are captured before hashing. Borrowed records stay separate. */
 async function captured(project: ProjectData, version: ID, worldSnapshots: Record<ID, ProjectContent>) {
-  const source = structuredClone(project), registry = structuredClone(worldSnapshots);
-  const content = await captureRuntimeContent(source, version, { worldSnapshots: registry });
-  const referenceEntities = resolvePinnedWorlds(resolveReuseContent(content, content.snapshots), registry).worlds.flatMap(world => world.entities);
+  const source = structuredClone(project), digestCache = createPinnedWorldDigestCache();
+  const registry = freezePinnedWorldRegistry(worldSnapshots, digestCache);
+  const content = await captureRuntimeContent(source, version, { worldSnapshots: registry }, digestCache);
+  const referenceEntities = await capturePinnedPresentationReferences(resolveReuseContent(content, content.snapshots), registry, digestCache);
   return { source, content, registry, referenceEntities };
 }
 export async function startTrialVerified(project: ProjectData, options: TrialStartOptions = {}, worldSnapshots: Record<ID, ProjectContent> = {}) {

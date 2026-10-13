@@ -19,7 +19,7 @@ import { effectiveWorldContent } from './domain/world';
 import { resolvePinnedWorlds } from './domain/pinnedWorlds';
 import { adoptedWorldEntityIds, mergeWorldSources } from './domain/worldSources';
 import { addChangeReviews } from './domain/changeReviews';
-import { type AssetInput } from './storage';
+import { equalJson, type AssetInput } from './storage';
 import { EmptyState, Icon, Modal, normalizeSearch, downloadBytes, safeFileName, type IconName, STATUS_LABELS } from './ui/components';
 import { EntityEditor } from './ui/EntityEditor';
 import { CatalogPanel } from './ui/CatalogPanel';
@@ -35,6 +35,7 @@ import { recordAlternativeApplication } from './domain/writingWorkspace';
 import { sealAuthorAlternative } from './domain/authorAlternativeIntegrity';
 import { Reader } from './ui/Reader';
 import { BackupPanel, ExportPanel, ProjectInfo, HistoryPanel } from './ui/WorkPage';
+import { acknowledgeImportedVersions } from './ui/BackupPanel';
 import { dataOf, labelOf } from './ui/Fields';
 
 type Page = 'timeline' | 'structure' | 'materials' | 'search' | 'work';
@@ -99,6 +100,12 @@ export default function App() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
+  useEffect(() => {
+    const prefix = `${scenarioStore.accountId ?? 'guest'}:`;
+    const confirmations = acknowledgeImportedVersions(projects, prefix);
+    const selected = confirmations.find(confirmation => confirmation.projectId === activeId && confirmation.sourceScope !== `${prefix}${confirmation.projectId}`);
+    if (selected) setNotice(selected.notice);
+  }, [projects, activeId, scenarioStore.accountId]);
   useWorkspaceDraftPersistence(scenarioStore,{drafts,jsonBuffers,settingsDrafts,alternativeDrafts},setError,workspaceReady);
   const [theme, setTheme] = useState(readPreference('scenario-theme', 'system'));
   const [online, setOnline] = useState(navigator.onLine);
@@ -224,6 +231,15 @@ export default function App() {
     if (!latest || latest.projectId !== entity.projectId) throw new Error('この入力の作品を開いてから保存してください。');
     const existing = latest.entities.find(e => e.id === entity.id);
     if (existing && existing.revision !== entity.revision) throw new Error('この情報が別の操作で更新されました。入力は保持されています。現在版と比較してから再試行してください。');
+    if (existing && equalJson(existing, entity)) {
+      // Correcting an invalid draft back to its saved image is an acknowledgement,
+      // not a new edit. Verify the native version before clearing the draft.
+      const durable = await scenarioStore.getProjectForEditing(entity.projectId, { signal: saveController.current?.signal, immutableView: true });
+      const stored = durable?.entities.find(record => record.id === entity.id);
+      if (!durable || durable.revision !== latest.revision || !stored || !equalJson(stored, entity)) throw new Error('保存済みの内容が別の操作で更新されました。入力を保持し、現在版を確認して再試行してください。');
+      setDrafts(previous => reconcileSavedDrafts(previous, entity, stored));
+      return stored;
+    }
     let entities = existing ? latest.entities.map(e => e.id === entity.id ? entity : e) : [...latest.entities, entity];
     if (existing) entities = remapEditedTextReferences(entities, existing, entity);
     if (entity.kind === 'scene') {
@@ -332,7 +348,12 @@ export default function App() {
         {page === 'materials' && <div className="materials-filter"><div className="filter-pills">{[['character', '人物'], ['group', 'グループ'], ['place', '場所'], ['item', '物品'], ['lore', '設定'], ['note', 'メモ']].map(([key, label]) => <button type="button" key={key} className={kind === key ? 'active' : ''} onClick={() => { setKind(key as EntityKind); setSelectedId(null); }}>{label}<span>{activeEntities.filter(e => e.kind === key).length}</span></button>)}</div><KindPicker value={kind} onChange={value => { setKind(value as EntityKind); setSelectedId(null); }}/></div>}
         <details className="navigation-marks"><summary>最近開いた情報・お気に入り</summary>
           {selectedId && <button type="button" className="button secondary small" onClick={() => navigation.toggleFavorite(selectedId)}>{navigation.marks.favoriteIds.includes(selectedId) ? 'お気に入りから外す' : 'お気に入りに登録'}</button>}
-          {([['お気に入り', navigation.marks.favoriteIds], ['最近開いた情報', navigation.marks.recentIds]] as const).map(([title, ids]) => <section key={title}><h2>{title}</h2>{ids.map(id => project.entities.find(entity => entity.id === id && !entity.deletedAt)).filter((entity): entity is Entity => !!entity).map(entity => <button type="button" className="reference-link" key={entity.id} onClick={() => openEntity(entity.id)}>{labelOf(entity)} <small>{KIND_LABELS[entity.kind]}</small></button>)}</section>)}
+          {([['お気に入り', navigation.marks.favoriteIds], ['最近開いた情報', navigation.marks.recentIds]] as const).map(([title, ids]) => <section key={title}><h2>{title}</h2>{ids.map(id => {
+            const entity = project.entities.find(candidate => candidate.id === id);
+            if (entity && !entity.deletedAt) return <button type="button" className="reference-link" key={id} onClick={() => openEntity(id)}>{labelOf(entity)} <small>{KIND_LABELS[entity.kind]}</small></button>;
+            const label = entity ? labelOf(entity) : `対象 ${id}`;
+            return <div className="navigation-mark-stale" key={id}><p>{label} — {entity ? 'アーカイブ済みです。変更履歴で元の情報と復元方法を確認できます。' : '対象が見つかりません。削除・変更された可能性があります。変更履歴または完全保存ファイルからの復元を確認してください。'}</p><button type="button" className="reference-link" onClick={() => { navigate('work'); setWorkTab('history'); }}>{label} の履歴・復元案内を開く</button></div>;
+          })}</section>)}
         </details>
         <div className="workspace-layout"><div className="workspace-list">
           {page === 'timeline' && (timelineTab === 'timeline' ? <Timeline key={project.projectId} project={project} selectedId={selectedId} onSelect={openEntity} onAdd={() => add('event')} onSaveProject={saveProject} referenceEntities={effectiveWorldContent(project, worldSources).entities.filter(entity => entity.projectId !== project.projectId)} referenceRelations={effectiveWorldContent(project, worldSources).relations.filter(relation => relation.projectId !== project.projectId)} adoptedReferenceIds={adoptedWorldEntityIds(project)} referenceCalendars={effectiveWorldContent(project, worldSources).calendars} placeFilterId={worldPlace} worldTick={worldTick} checkpointId={worldCheckpoint} onViewPointChange={changeWorldPoint} onShowMap={(placeId, eventId) => { setWorldRequestedSection('maps'); setWorldPlace(placeId); if (eventId) setSelectedId(eventId); setTimelineTab('world'); }} onShowRelationships={(id, at) => { setSelectedId(id); setWorldTick(at); setTimelineTab('relations'); }} onShowWorldHistory={(id, at) => { setSelectedId(id); setWorldTick(at); setWorldPlace(null); setWorldRequestedSection('histories'); setTimelineTab('world'); }}/> : timelineTab === 'world' ? <WorldPanel key={project.projectId} project={project} worlds={worldSources} onSaveProject={saveProject} onOpen={openEntity} selectedPlaceId={worldPlace} selectedEntityId={selectedId} requestedSection={worldRequestedSection} worldTick={worldTick} checkpointId={worldCheckpoint} onViewPointChange={changeWorldPoint} onPinWorld={pinWorld} onShowTimeline={(placeId, eventId) => { setWorldPlace(placeId ?? null); if (eventId) setSelectedId(eventId); setTimelineTab('timeline'); }} onShowEntityTimeline={(id, at) => { setSelectedId(id); setWorldTick(at); setWorldPlace(null); setTimelineTab('timeline'); }}/> : <Relationships project={project} referenceEntities={effectiveWorldContent(project, worldSources).entities.filter(entity => entity.projectId !== project.projectId)} referenceRelations={effectiveWorldContent(project, worldSources).relations.filter(relation => relation.projectId !== project.projectId)} referenceCalendars={effectiveWorldContent(project, worldSources).calendars} onOpen={openEntity} onSave={saveRelation} onSaveProject={saveProject} selectedId={selectedId} worldTick={worldTick} checkpointId={worldCheckpoint} onViewPointChange={changeWorldPoint} onShowTimeline={(id, at) => { setSelectedId(id); setWorldTick(at); setWorldPlace(null); setTimelineTab('timeline'); }}/>)}

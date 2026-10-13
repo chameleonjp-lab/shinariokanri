@@ -6,7 +6,7 @@ import { captureRuntimeContent, capturedVersionIssue } from './runtimeVersions';
 import type { PresentationOccurrence, ReadingPath, RuntimeTraceExtensions } from './runtimeContracts';
 import { canonicalJson } from '../storage/json';
 import { validateExternalInput } from './externalInputs';
-import { resolvePinnedWorlds } from './pinnedWorlds';
+import { createPinnedWorldDigestCache, freezePinnedWorldRegistry, resolvePinnedWorlds, verifyPinnedWorlds, type PinnedWorldDigestCache } from './pinnedWorlds';
 import type { ProjectValidationOptions } from './model';
 import { adoptedRecord } from './adoption';
 import { evaluateTargetScope } from './stateRules';
@@ -17,30 +17,66 @@ import { checkPresentationForeshadows, type NarrativeOccurrence } from './narrat
 
 export interface PresentationTarget { nodeId?: ID; sceneId?: ID; worldTick?: string; externalValues?: Record<ID, TypedValue>; referenceEntities?: Entity[] }
 export type ContentPresentation = { ok: true; state: RuntimeState; observationState: RuntimeState; conditions: PresentationConditionResult[] } | { ok: false; issues: ValidationIssue[] };
-const active = <K extends Entity['kind']>(project: ProjectData, kind: K): Entity<K>[] => project.entities.filter((entity): entity is Entity<K> => entity.kind === kind && adoptedRecord(entity));
+const active = <K extends Entity['kind']>(project: ProjectData, kind: K, references: Entity[] = []): Entity<K>[] => [...project.entities, ...references].filter((entity): entity is Entity<K> => entity.kind === kind && adoptedRecord(entity));
 const problem = (path: string, message: string, code: ValidationIssue['code'] = 'REFERENCE_INVALID'): ContentPresentation => ({ ok: false, issues: [{ code, path, message }] });
+// This association belongs only to captured runtime references. It is neither
+// serialized nor supplied as a claim that a world or an anchor was verified.
+const referencePins = new WeakMap<Entity[], Map<ID, ID>>();
+function freezeCapturedReferences(references: Entity[]): Entity[] {
+  const pending: unknown[] = [references], seen = new WeakSet<object>();
+  while (pending.length) {
+    const value = pending.pop();
+    if (!value || typeof value !== 'object' || seen.has(value)) continue;
+    seen.add(value); for (const child of Object.values(value)) pending.push(child); Object.freeze(value);
+  }
+  return references;
+}
+export function capturePresentationReferences(references: Entity[]): Entity[] {
+  const captured = structuredClone(references), pins = referencePins.get(references);
+  if (pins) {freezeCapturedReferences(captured); referencePins.set(captured, new Map(pins));}
+  return captured;
+}
+export async function capturePinnedPresentationReferences(project: ProjectData, worlds: Record<ID, ProjectContent>, cache?: PinnedWorldDigestCache): Promise<Entity[]> {
+  const source = {worldReferences: structuredClone(project.worldReferences)};
+  const registry = cache?.stableRegistries.has(worlds) ? worlds : cache ? freezePinnedWorldRegistry(worlds, cache) : structuredClone(worlds);
+  const issues = await verifyPinnedWorlds(source, registry, 'worldReferences', cache);
+  if (issues.length) throw new DomainValidationError(issues);
+  const closure = resolvePinnedWorlds(source, registry), references = structuredClone(closure.worlds.flatMap(world => world.entities));
+  const pins = new Map<ID, ID>();
+  for (const reference of closure.references) for (const entity of registry[reference.immutableSnapshotId].entities) pins.set(entity.id, reference.immutableSnapshotId);
+  freezeCapturedReferences(references); referencePins.set(references, pins);
+  return references;
+}
+function anchorVersion(project: ProjectData, state: RuntimeState, anchor: ContentAnchor, target: PresentationTarget, declarationId?: ID): 'match' | 'other_version' | 'unknown' {
+  if (!anchor.sourceVersionId) return 'match';
+  if (target.referenceEntities?.some(entity => entity.id === anchor.entityId)) {
+    const pin = referencePins.get(target.referenceEntities)?.get(anchor.entityId);
+    return pin ? anchor.sourceVersionId === pin ? 'match' : 'other_version' : 'unknown';
+  }
+  const declaration = declarationId ? reuseOrigin(project, declarationId) : undefined;
+  return [project.projectId, state.contentVersionId, reuseOrigin(project, anchor.entityId)?.sourceVersionId, declaration?.sourceVersionId].includes(anchor.sourceVersionId) ? 'match' : 'other_version';
+}
 
 export function presentationRuleContext(project: ProjectData, target: PresentationTarget): NonNullable<RuntimeContext['ruleContext']> {
-  const node = active(project, 'flow_node').find(item => item.id === target.nodeId);
-  const scene = active(project, 'scene').find(item => item.id === (target.sceneId ?? node?.data.sceneId));
-  return { projectId: project.projectId, worldTick: target.worldTick, graphId: node ? active(project, 'flow_graph').find(graph => graph.data.nodeIds.includes(node.id))?.id : undefined, chapterId: scene?.data.chapterId ?? (scene ? active(project, 'chapter').find(chapter => chapter.data.sceneIds.includes(scene.id))?.id : undefined) };
+  const node = active(project, 'flow_node', target.referenceEntities).find(item => item.id === target.nodeId);
+  const scene = active(project, 'scene', target.referenceEntities).find(item => item.id === (target.sceneId ?? node?.data.sceneId));
+  return { projectId: project.projectId, worldTick: target.worldTick, graphId: node ? active(project, 'flow_graph', target.referenceEntities).find(graph => graph.data.nodeIds.includes(node.id))?.id : undefined, chapterId: scene?.data.chapterId ?? (scene ? active(project, 'chapter', target.referenceEntities).find(chapter => chapter.data.sceneIds.includes(scene.id))?.id : undefined) };
 }
 
 /** Choice text is presented only by a manual choice, including disabled candidates shown to the author. */
 export function presentationLineIds(project: ProjectData, target: PresentationTarget): ID[] {
-  const node = active(project, 'flow_node').find(item => item.id === target.nodeId);
-  const scene = active(project, 'scene').find(item => item.id === (target.sceneId ?? node?.data.sceneId));
+  const node = active(project, 'flow_node', target.referenceEntities).find(item => item.id === target.nodeId);
+  const scene = active(project, 'scene', target.referenceEntities).find(item => item.id === (target.sceneId ?? node?.data.sceneId));
   const policy = node?.data.executionPolicy ?? (node?.data.nodeType === 'automatic' ? 'first_match' : 'manual_choice');
-  return [...new Set([...(scene?.data.dialogueLineIds ?? []), ...(node && policy === 'manual_choice' ? active(project, 'flow_edge').filter(edge => edge.data.fromId === node.id).flatMap(edge => edge.data.choiceLineId ? [edge.data.choiceLineId] : []) : [])])];
+  return [...new Set([...(scene?.data.dialogueLineIds ?? []), ...(node && policy === 'manual_choice' ? active(project, 'flow_edge', target.referenceEntities).filter(edge => edge.data.fromId === node.id).flatMap(edge => edge.data.choiceLineId ? [edge.data.choiceLineId] : []) : [])])];
 }
 
 export function presentationAnchorApplies(project: ProjectData, state: RuntimeState, anchor: ContentAnchor, target: PresentationTarget, declarationId?: ID): boolean {
   if (anchor.positionStatus === 'unresolved') return false;
-  const declaration = declarationId ? reuseOrigin(project, declarationId) : undefined;
-  if (anchor.sourceVersionId && ![project.projectId, state.contentVersionId, reuseOrigin(project, anchor.entityId)?.sourceVersionId, declaration?.sourceVersionId].includes(anchor.sourceVersionId)) return false;
-  const node = active(project, 'flow_node').find(item => item.id === target.nodeId);
+  if (anchorVersion(project, state, anchor, target, declarationId) !== 'match') return false;
+  const node = active(project, 'flow_node', target.referenceEntities).find(item => item.id === target.nodeId);
   const sceneId = target.sceneId ?? node?.data.sceneId;
-  const scene = active(project, 'scene').find(item => item.id === sceneId);
+  const scene = active(project, 'scene', target.referenceEntities).find(item => item.id === sceneId);
   const lines = presentationLineIds(project, target);
   if (![target.nodeId, sceneId, ...lines].includes(anchor.entityId)) return false;
   return [anchor.entityId, anchor.blockId, anchor.lineId].filter((id): id is ID => !!id).every(id => state.seenIds.includes(id));
@@ -49,11 +85,11 @@ export function presentationAnchorApplies(project: ProjectData, state: RuntimeSt
 /** Reading order is block/line order and code-point position, never event/world-date order. */
 export function presentationAnchorOrder(project: ProjectData, left: ContentAnchor, right: ContentAnchor, target: PresentationTarget): boolean | undefined {
   if (left.positionStatus === 'unresolved' || right.positionStatus === 'unresolved') return undefined;
-  const node = active(project, 'flow_node').find(item => item.id === target.nodeId);
-  const scene = active(project, 'scene').find(item => item.id === (target.sceneId ?? node?.data.sceneId));
+  const node = active(project, 'flow_node', target.referenceEntities).find(item => item.id === target.nodeId);
+  const scene = active(project, 'scene', target.referenceEntities).find(item => item.id === (target.sceneId ?? node?.data.sceneId));
   const lineIds = presentationLineIds(project, target);
   const positions = [...(scene?.data.body ?? []).map(block => block.id)];
-  for (const lineId of lineIds) positions.push(lineId, ...(active(project, 'dialogue_line').find(line => line.id === lineId)?.data.text ?? []).map(block => block.id));
+  for (const lineId of lineIds) positions.push(lineId, ...(active(project, 'dialogue_line', target.referenceEntities).find(line => line.id === lineId)?.data.text ?? []).map(block => block.id));
   const leftBlock = left.blockId ?? left.lineId ?? (lineIds.includes(left.entityId) ? left.entityId : undefined);
   const rightBlock = right.blockId ?? right.lineId ?? (lineIds.includes(right.entityId) ? right.entityId : undefined);
   const first = positions.indexOf(leftBlock ?? ''), second = positions.indexOf(rightBlock ?? '');
@@ -68,11 +104,11 @@ export function presentContent(project: ProjectData, state: RuntimeState, target
   const checked = validateRuntimeState(state); if (!checked.ok) return { ok: false, issues: checked.issues };
   const externalIssues = validateExternalInput(project, target.externalValues ?? {}, undefined, target.referenceEntities); if (externalIssues.length) return { ok: false, issues: externalIssues };
   try {
-    const node = target.nodeId ? active(project, 'flow_node').find(item => item.id === target.nodeId) : undefined;
+    const node = target.nodeId ? active(project, 'flow_node', target.referenceEntities).find(item => item.id === target.nodeId) : undefined;
     if (target.nodeId && !node) return problem('presentation.nodeId', '提示する分岐が存在しないか、削除・不採用です。');
     const sceneId = target.sceneId ?? node?.data.sceneId ?? undefined;
     if (!node && !sceneId) return problem('presentation', '提示する場面または分岐を指定してください。');
-    const scene = sceneId ? active(project, 'scene').find(item => item.id === sceneId) : undefined;
+    const scene = sceneId ? active(project, 'scene', target.referenceEntities).find(item => item.id === sceneId) : undefined;
     if (sceneId && !scene) return problem('presentation.sceneId', '提示する場面が存在しないか、削除・不採用です。');
     const initialContext = presentationRuleContext(project, { ...target, sceneId });
     const initialIssues = runtimeExclusionIssues({ state, entities: project.entities, referenceEntities: target.referenceEntities, externalValues: target.externalValues, ruleContext: initialContext, ruleContexts: reuseRuleContexts(project, initialContext) });
@@ -85,22 +121,24 @@ export function presentContent(project: ProjectData, state: RuntimeState, target
       for (const block of scene.data.body) seen.add(block.id);
     }
     for (const lineId of presentationLineIds(project, resolved)) {
-      const line = active(project, 'dialogue_line').find(item => item.id === lineId);
+      const line = active(project, 'dialogue_line', target.referenceEntities).find(item => item.id === lineId);
       if (!line) return problem(`${node?.id ?? scene?.id}.dialogueLineIds`, '提示する台詞が存在しないか、削除・不採用です。');
       seen.add(line.id); next.visitCounts[line.id] = (next.visitCounts[line.id] ?? 0) + 1; for (const block of line.data.text) seen.add(block.id);
     }
     next.seenIds = [...seen];
-    const variables = [...active(project, 'variable'), ...(target.referenceEntities ?? []).filter((entity): entity is Entity<'variable'> => entity.kind === 'variable' && adoptedRecord(entity))], ruleContext = presentationRuleContext(project, resolved), context = { state: next, variables, entities: project.entities, referenceEntities: target.referenceEntities, externalValues: target.externalValues, ruleContext, ruleContexts: reuseRuleContexts(project, ruleContext) };
+    const variables = active(project, 'variable', target.referenceEntities), ruleContext = presentationRuleContext(project, resolved), context = { state: next, variables, entities: project.entities, referenceEntities: target.referenceEntities, externalValues: target.externalValues, ruleContext, ruleContexts: reuseRuleContexts(project, ruleContext) };
     const conditions: PresentationConditionResult[] = [], disclosures: Entity<'disclosure'>[] = [];
-    for (const disclosure of active(project, 'disclosure')) {
+    for (const disclosure of active(project, 'disclosure', target.referenceEntities)) {
       const anchor = reuseExecutionAnchor(project, disclosure.data.anchor, disclosure.id);
       const scope = disclosure.data.targetScope;
       const disclosureContext = { ...context, ruleContext: context.ruleContexts[disclosure.id] ?? context.ruleContext };
       const scopeResult = scope ? evaluateTargetScope(scope, disclosureContext) : { value: 'true' };
       if (scopeResult.value === 'false') continue;
-      if (anchor.sourceVersionId && ![project.projectId, state.contentVersionId, reuseOrigin(project, anchor.entityId)?.sourceVersionId, reuseOrigin(project, disclosure.id)?.sourceVersionId].includes(anchor.sourceVersionId)) continue;
       const lineIds = presentationLineIds(project, resolved);
       if (![node?.id, scene?.id, ...lineIds].includes(anchor.entityId)) continue;
+      const version = anchorVersion(project, state, anchor, resolved, disclosure.id);
+      if (version === 'unknown') return problem(`${disclosure.id}.anchor.sourceVersionId`, '借用した提示位置の固定世界版を確認できません。', 'CONDITION_UNKNOWN');
+      if (version === 'other_version') continue;
       if (scopeResult.value === 'unknown') return problem(`${disclosure.id}.targetScope`, '開示の対象範囲・経路を確認できません。', 'CONDITION_UNKNOWN');
       if (anchor.positionStatus === 'unresolved' && [node?.id, scene?.id, ...lineIds].includes(anchor.entityId)) return problem(`${disclosure.id}.anchor`, anchor.positionReason || '提示位置が不明です。本文へ再リンクしてください。', 'CONDITION_UNKNOWN');
       if (!presentationAnchorApplies(project, next, anchor, resolved, disclosure.id)) continue;
@@ -133,22 +171,25 @@ export interface ChapterReadingSession {
   worldTick?: string;
   status: 'ready' | 'terminal' | 'unknown' | 'error'; issues: ValidationIssue[];
 }
+const chapterReferences = new WeakMap<ProjectData, Entity[]>();
+const chapterReferenceEntities = (session: ChapterReadingSession) => chapterReferences.get(session.content) ?? session.referenceEntities;
 export function chapterNarrativeOccurrences(session: ChapterReadingSession): NarrativeOccurrence[] {
-  return session.occurrences.map(occurrence => ({ state: occurrence.after, observationState: occurrence.presentationState ?? undefined, conditions: occurrence.conditionResults, target: { sceneId: occurrence.entityId }, worldTick: session.worldTick, externalValues: occurrence.externalValues ?? session.externalValues }));
+  return session.occurrences.map(occurrence => ({ state: occurrence.after, observationState: occurrence.presentationState ?? undefined, conditions: occurrence.conditionResults, target: { sceneId: occurrence.entityId, referenceEntities: chapterReferenceEntities(session) }, worldTick: session.worldTick, externalValues: occurrence.externalValues ?? session.externalValues }));
 }
 export function checkChapterForeshadows(session: ChapterReadingSession) {
-  return checkPresentationForeshadows(session.content, chapterNarrativeOccurrences(session), session.startState, session.status === 'terminal', session.referenceEntities, session.issues);
+  return checkPresentationForeshadows(session.content, chapterNarrativeOccurrences(session), session.startState, session.status === 'terminal', chapterReferenceEntities(session), session.issues);
 }
 export async function startChapterReading(project: ProjectData, options: ChapterReadingOptions = {}): Promise<ChapterReadingSession> {
   const declarationProject = structuredClone({ ...project, history: [], snapshots: [], authorAlternatives: undefined, entities: project.entities.filter(entity => ['collection', 'trace', 'checkpoint'].includes(entity.kind)) });
   const worldTick = options.worldTick, requestedSelection = options.selection;
   if (worldTick !== undefined && !isTick(worldTick)) throw new DomainValidationError([{ code: 'VALIDATION_FAILED', path: 'worldTick', message: '提示時点には整数の世界内tickを入力してください。' }]);
-  const worldSnapshots = options.worldSnapshots ? structuredClone(options.worldSnapshots) : {};
+  const digestCache = createPinnedWorldDigestCache(), worldSnapshots = freezePinnedWorldRegistry(options.worldSnapshots ?? {}, digestCache);
   const chapterIdsOption = options.chapterIds ? [...options.chapterIds] : undefined, sceneIdsOption = options.sceneIds ? [...options.sceneIds] : undefined;
   const externalValues = structuredClone(options.externalValues ?? {}), requestedState = options.state ? structuredClone(options.state) : undefined;
-  const version = options.contentVersionId ?? project.projectId, captured = await captureRuntimeContent(project, version, { worldSnapshots }), content = resolveReuseContent(captured, captured.snapshots);
+  const version = options.contentVersionId ?? project.projectId, captured = await captureRuntimeContent(project, version, { worldSnapshots }, digestCache), content = resolveReuseContent(captured, captured.snapshots);
   const closure = resolvePinnedWorlds(content, worldSnapshots);
   if (closure.errors.length) throw new DomainValidationError([{ code: 'REFERENCE_INVALID', path: 'worldReferences', message: closure.errors[0]! }]);
+  const referenceEntities = await capturePinnedPresentationReferences(content, worldSnapshots, digestCache);
   const externalIssues = validateExternalInput(content, externalValues, undefined, closure.worlds.flatMap(world => world.entities)); if (externalIssues.length) throw new DomainValidationError(externalIssues);
   if (sceneIdsOption?.some(id => !active(content, 'scene').some(scene => scene.id === id))) throw new DomainValidationError([{ code: 'REFERENCE_INVALID', path: 'sceneIds', message: '読み通し経路に存在しない場面が指定されています。' }]);
   if (chapterIdsOption?.some(id => !active(content, 'chapter').some(chapter => chapter.id === id))) throw new DomainValidationError([{ code: 'REFERENCE_INVALID', path: 'chapterIds', message: '読み通す章が存在しません。' }]);
@@ -163,18 +204,19 @@ export async function startChapterReading(project: ProjectData, options: Chapter
     if (!variable || variable.kind !== 'variable') throw new DomainValidationError([{ code: 'REFERENCE_INVALID', path: `state.variableValues.${id}`, message: '開始状態に対象版の宣言がない状態値があります。' }]);
     const issues = validateVariableValue(variable, value, `state.variableValues.${id}`); if (issues.length) throw new DomainValidationError(issues);
   }
-  const ruleContext = presentationRuleContext(content, { sceneId: sequence[0]?.scene.id, worldTick });
+  const ruleContext = presentationRuleContext(content, { sceneId: sequence[0]?.scene.id, worldTick, referenceEntities });
   const exclusions = runtimeExclusionIssues({ state, entities: content.entities, referenceEntities: closure.worlds.flatMap(world => world.entities), externalValues, ruleContext, ruleContexts: reuseRuleContexts(content, ruleContext) });
   if (exclusions.some(issue => issue.code !== 'CONDITION_UNKNOWN')) throw new DomainValidationError(exclusions);
   const chapterIds = chapterIdsOption ? [...chapterIdsOption] : [...new Set(sequence.flatMap(entry => entry.chapterId ? [entry.chapterId] : []))];
-  return { content, declarationProject, contentVersionId: version, contentRevision: content.revision, contentHash: project.snapshots.find(item => item.id === version)?.contentHash, startState: structuredClone(state), state, worldTick, chapterIds, sceneIds: sequence.map(entry => entry.scene.id), selection: requestedSelection ?? (sceneIdsOption ? 'scenes' : 'chapters'), occurrences: [], externalValues, referenceEntities: structuredClone(closure.worlds.flatMap(world => world.entities)), status: exclusions.length ? 'unknown' : sequence.length ? 'ready' : 'terminal', issues: exclusions };
+  chapterReferences.set(content, referenceEntities);
+  return { content, declarationProject, contentVersionId: version, contentRevision: content.revision, contentHash: project.snapshots.find(item => item.id === version)?.contentHash, startState: structuredClone(state), state, worldTick, chapterIds, sceneIds: sequence.map(entry => entry.scene.id), selection: requestedSelection ?? (sceneIdsOption ? 'scenes' : 'chapters'), occurrences: [], externalValues, referenceEntities, status: exclusions.length ? 'unknown' : sequence.length ? 'ready' : 'terminal', issues: exclusions };
 }
 export function presentChapterOccurrence(content: ProjectData, state: RuntimeState, target: PresentationTarget & { previousSceneId?: ID; last?: boolean }): ContentPresentation {
   const { sceneId, previousSceneId } = target;
-  const from = presentationRuleContext(content, { sceneId: previousSceneId }), to = presentationRuleContext(content, { sceneId });
+  const from = presentationRuleContext(content, { sceneId: previousSceneId, referenceEntities: target.referenceEntities }), to = presentationRuleContext(content, { sceneId, referenceEntities: target.referenceEntities });
   const events: ('scene_end' | 'chapter_end')[] = previousSceneId && previousSceneId !== sceneId ? ['scene_end'] : [];
   if (from.chapterId && from.chapterId !== to.chapterId) events.push('chapter_end');
-  const reset = resetRuntimeLifecycle({ ...state, ...(state.resetCauses ? { resetCauses: [] } : {}) }, events, { state, entities: content.entities, referenceEntities: target.referenceEntities, externalValues: target.externalValues, ruleContext: presentationRuleContext(content, { sceneId: target.previousSceneId, worldTick: target.worldTick }), ruleContexts: reuseRuleContexts(content, presentationRuleContext(content, { sceneId: target.previousSceneId, worldTick: target.worldTick })) });
+  const reset = resetRuntimeLifecycle({ ...state, ...(state.resetCauses ? { resetCauses: [] } : {}) }, events, { state, entities: content.entities, referenceEntities: target.referenceEntities, externalValues: target.externalValues, ruleContext: presentationRuleContext(content, { sceneId: target.previousSceneId, worldTick: target.worldTick, referenceEntities: target.referenceEntities }), ruleContexts: reuseRuleContexts(content, presentationRuleContext(content, { sceneId: target.previousSceneId, worldTick: target.worldTick, referenceEntities: target.referenceEntities })) });
   if (!reset.ok) return reset;
   const result = presentContent(content, reset.state, target);
   if (!result.ok) return result;
@@ -190,7 +232,7 @@ export function presentNextChapterScene(project: ProjectData, session: ChapterRe
   const versionIssue = capturedVersionIssue(project, session.contentVersionId, session.contentRevision, session.contentHash);
   if (versionIssue) return { ...session, status: 'error', issues: [{ code: 'VALIDATION_FAILED', path: 'contentVersionId', message: versionIssue }] };
   const sceneId = session.sceneIds[session.occurrences.length]; if (!sceneId) return session;
-  const result = presentChapterOccurrence(session.content, session.state, { sceneId, worldTick: session.worldTick, previousSceneId: session.occurrences.at(-1)?.entityId, last: session.occurrences.length + 1 === session.sceneIds.length, externalValues: session.externalValues, referenceEntities: session.referenceEntities });
+  const result = presentChapterOccurrence(session.content, session.state, { sceneId, worldTick: session.worldTick, previousSceneId: session.occurrences.at(-1)?.entityId, last: session.occurrences.length + 1 === session.sceneIds.length, externalValues: session.externalValues, referenceEntities: chapterReferenceEntities(session) });
   if (!result.ok) return { ...session, status: result.issues.some(issue => issue.code === 'CONDITION_UNKNOWN') ? 'unknown' : 'error', issues: result.issues };
   const occurrence: PresentationOccurrence = { entityId: sceneId, occurrenceId: `${sceneId}:${session.occurrences.length + 1}`, before: structuredClone(session.state), after: result.state, presentationState: result.observationState, conditionResults: result.conditions, externalValues: structuredClone(session.externalValues) };
   const occurrences = [...session.occurrences, occurrence];

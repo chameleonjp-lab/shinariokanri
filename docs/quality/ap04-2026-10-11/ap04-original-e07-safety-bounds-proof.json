@@ -1,0 +1,581 @@
+{
+  "version": "1.0.0",
+  "scope": "AP04 original AT-E07 ten remaining original archive safety bounds; additive to mandatory root roundtrip/negative/field spec",
+  "created_at": "2026-10-11",
+  "original_audit": {
+    "file": "docs/review-2026-10-11/original_acceptance_audit.json",
+    "sha256": "c3f843c573007c407266c75114cdb8f8fce5f6dd9020417599f05e60755d7e00",
+    "untouched": true
+  },
+  "planning_source": {
+    "head": "b62a12550d378e26993ea84534a660a993447a84",
+    "working_tree_not_frozen": true,
+    "files": [
+      {
+        "file": "tests/e2e/ap04-original-e07-safety-bounds.spec.ts",
+        "sha256": "e50f5ce7f2600474d39869f04ee1f3cab6fa1a9c6b21b61e938538ce11ec8715",
+        "bytes": 5602
+      },
+      {
+        "file": "tests/e2e/ap04-original-e07-safety-bounds-helpers.ts",
+        "sha256": "2962096e1aa83689538b96dc7350e01aa00fd0feceacfd6e77f0ec1215d14fcb",
+        "bytes": 31001
+      },
+      {
+        "file": "tests/e2e/ap04-original-root-restoration-output.spec.ts",
+        "sha256": "9d95c65bc293cd59a59ea1a1d7cead427847c169394af288c64a9b3f8c39aabc",
+        "bytes": 19363
+      },
+      {
+        "file": "tests/e2e/ap04-original-helpers.ts",
+        "sha256": "2c14faffcdb10f9592d03db73d8acb5416a270bfa07f4016a92fc1d43a23faaa",
+        "bytes": 4505
+      },
+      {
+        "file": "src/storage/json.ts",
+        "sha256": "32bce0b75c5f79934c1896785cf646cd0cfedc61b5125cefefc40d3cd0b175ad",
+        "bytes": 12306
+      },
+      {
+        "file": "src/storage/archiveData.ts",
+        "sha256": "c8a1a9fdc874ff8dd4500702f689a56d44bf60d6f383f10e79021b3e8ea48d10",
+        "bytes": 45519
+      },
+      {
+        "file": "src/domain/model.ts",
+        "sha256": "37b8490a6aff646cea21ad95f159759e959196fc5dc96d6d1e3ebcac0fb70402",
+        "bytes": 154954
+      },
+      {
+        "file": "src/storage/store.ts",
+        "sha256": "f5ed8543ac88164688e82837f977b4bce88d29379a7314b0c613926c0253263c",
+        "bytes": 146868
+      },
+      {
+        "file": "src/ui/BackupPanel.tsx",
+        "sha256": "dbf4bb0ae4779f6295c5d445ab12e9e1666b3c362ef681f8652b3cbae15ed163",
+        "bytes": 23979
+      },
+      {
+        "file": "docs/quality/ap04-2026-10-11/ap04-original-e07-safety-bounds-plan.md",
+        "sha256": "b9ee50bea21d1a1e2e3d0c2c4c3089f18689cd5deeb78496cf77c6db5e61df5e",
+        "bytes": 3559
+      },
+      {
+        "file": "src/storage/recordPartsCore.ts",
+        "bytes": 8353,
+        "sha256": "b4b131f2b88b63e4ceace8efa33046e0832a92406640eadaf277fa6efa97f223"
+      },
+      {
+        "file": "src/storage/recordPartsDatabase.ts",
+        "bytes": 7239,
+        "sha256": "b717a52e1b422a9858557d0f3aea3f0806326d965bfb5edc317368f0b8a6ec0c"
+      }
+    ],
+    "current_root_source_binding": {
+      "base_head": "bf6362b098b608174b947d4a3dc15bd1e8b63ddc",
+      "working_tree_dirty": true,
+      "binding_kind": "current_authored_source_only",
+      "candidate_commit_not_created": true,
+      "candidate_tree_not_created": true,
+      "candidate_build_not_created": true,
+      "execution": "not_run",
+      "note": "Actual current file bytes/SHA; historical authorship heads remain context only. A future exact candidate and execution must be bound independently."
+    }
+  },
+  "original_case": {
+    "id": "AT-E07",
+    "requirement_ids": [
+      "REQ-B12",
+      "REQ-F35",
+      "REQ-F55",
+      "REQ-F56",
+      "REQ-N09",
+      "REQ-N14"
+    ],
+    "package_id": "WP23",
+    "given": "全entity種・未知日時・巨大tick・素材を含む作品",
+    "when": "空環境へ全情報往復し、別途ハッシュ不一致/参照切れ/危険パス/未対応版を投入する",
+    "then": "正規化した保存情報が一致し、不正ファイルは既存作品を一切変えない",
+    "negative_or_edge": "安全上限直前・直後、添付重複、ID衝突を確認する"
+  },
+  "result": "not_run",
+  "clauses": [
+    {
+      "name": "given",
+      "original": "全entity種・未知日時・巨大tick・素材を含む作品",
+      "result": "not_run",
+      "sources": [
+        {
+          "file": "tests/e2e/ap04-original-e07-safety-bounds.spec.ts",
+          "line": 21,
+          "end_line": 34,
+          "callback_source": "  await test.step(`AT-E07 given: ${original.given}`, async () => {\n    expect(new Set(prepared.project.entities.map(entity => entity.kind))).toEqual(new Set(Object.keys(KIND_LABELS)));\n    expect(prepared.project.entities).toEqual(expect.arrayContaining([\n      expect.objectContaining({ kind: 'event', data: expect.objectContaining({ time: expect.objectContaining({ mode: 'unknown' }) }) }),\n      expect.objectContaining({ kind: 'event', data: expect.objectContaining({ time: expect.objectContaining({ at: '900719925474099312345' }) }) }),\n    ]));\n    expect(prepared.assets).toHaveLength(2);\n    await attachGiven(info, `AT-E07-${bound}`, source.bytes, { immutableOriginal: source.path, bound, originalClauses: original });\n    await seed(page, source.bytes);\n    await navigate(page, /^作品・保存/);\n    await page.getByRole('tab', { name: '完全保存・復元', exact: true }).click();\n  });\n\n  const below = await buildBoundaryFile(bound, -1, info.outputPath(`e07-${bound}-minus-one.scenario`));",
+          "callback_sha256": "512ffd69b413f7e706505a1de69056c184b8311bbeb513c41f214fe8a37380ab"
+        }
+      ],
+      "planned_direct_check": "Immutable all-kind original SHA, unknown time, huge tick and both real original assets directly checked; unchanged original is restored through UI before each boundary."
+    },
+    {
+      "name": "when",
+      "original": "空環境へ全情報往復し、別途ハッシュ不一致/参照切れ/危険パス/未対応版を投入する",
+      "result": "not_run",
+      "sources": [
+        {
+          "file": "tests/e2e/ap04-original-root-restoration-output.spec.ts",
+          "line": 92,
+          "end_line": 105,
+          "callback_source": "  await test.step('when/then: 実downloadだけを空contextへ持ち込み正規化情報と全素材を一致させる', async () => {\n    const context = await browser.newContext({ baseURL });\n    try {\n      const empty = await context.newPage();\n      await seed(empty, exported.bytes);\n      const restored = await backup(empty);\n      expect(canonicalJson(restored.project)).toBe(canonicalJson(exported.project));\n      expect(restored.worlds).toEqual(exported.worlds); expect(restored.assets).toEqual(exported.assets);\n      await empty.reload();\n      const cold = await backup(empty);\n      expect(canonicalJson(cold.project)).toBe(canonicalJson(exported.project));\n      expect(cold.worlds).toEqual(exported.worlds); expect(cold.assets).toEqual(exported.assets);\n    } finally { await context.close(); }\n  });",
+          "callback_sha256": "d36e6c173f2fe1b3f672013b199be8000f804c094f87e7ea4519aa1d721df303"
+        }
+      ],
+      "planned_direct_check": "Mandatory companion actual download to empty context and cold restore; original seven corrupt files remain immutable. This boundary spec does not independently discharge the whole original when."
+    },
+    {
+      "name": "then",
+      "original": "正規化した保存情報が一致し、不正ファイルは既存作品を一切変えない",
+      "result": "not_run",
+      "sources": [
+        {
+          "file": "tests/e2e/ap04-original-e07-safety-bounds.spec.ts",
+          "line": 57,
+          "end_line": 68,
+          "callback_source": "  await test.step(`AT-E07 then: ${original.then} [${bound} L+1: exact quota reason; all author/sync tables unchanged]`, async () => {\n    const before = await durableE07(page);\n    await page.getByLabel('保存ファイルを選ぶ', { exact: true }).setInputFiles(above.path);\n    const error = page.locator('.backup-page').getByRole('alert');\n    await expect(error).toContainText(above.expectedReason, { timeout: 300_000 });\n    if (above.expectedPath) await expect(error).toContainText(above.expectedPath);\n    await expect(page.locator('.backup-page .import-preview')).toHaveCount(0);\n    const after = await durableE07(page);\n    expect(after).toEqual(before);\n    await attachObservation(info, `AT-E07-${bound}-above-rejected`, { fixture: above, uiError: await error.innerText(), before, after });\n  });\n  await attachObservation(info, `AT-E07-${bound}-scope`, {",
+          "callback_sha256": "7ff01802b14ec5f6bc93770f57cd5a4ea4f82b27d476b233150686212d08dc96"
+        },
+        {
+          "file": "tests/e2e/ap04-original-root-restoration-output.spec.ts",
+          "line": 89,
+          "end_line": 105,
+          "callback_source": "  const exported = await backup(page);\n  expect(canonicalJson(exported.project)).toBe(canonicalJson(original.project));\n  expect(exported.worlds).toEqual(original.worlds); expect(exported.assets).toEqual(original.assets);\n  await test.step('when/then: 実downloadだけを空contextへ持ち込み正規化情報と全素材を一致させる', async () => {\n    const context = await browser.newContext({ baseURL });\n    try {\n      const empty = await context.newPage();\n      await seed(empty, exported.bytes);\n      const restored = await backup(empty);\n      expect(canonicalJson(restored.project)).toBe(canonicalJson(exported.project));\n      expect(restored.worlds).toEqual(exported.worlds); expect(restored.assets).toEqual(exported.assets);\n      await empty.reload();\n      const cold = await backup(empty);\n      expect(canonicalJson(cold.project)).toBe(canonicalJson(exported.project));\n      expect(cold.worlds).toEqual(exported.worlds); expect(cold.assets).toEqual(exported.assets);\n    } finally { await context.close(); }\n  });",
+          "callback_sha256": "7df2681d68f65beef29d56d8f991ca5d95f8f977fbf5db1feeb9a38e45bf6f76"
+        }
+      ],
+      "planned_direct_check": "Whole normalized roundtrip belongs to mandatory companion. Each boundary upper compares all author/sync native tables and binary bytes, including recordParts, excluding only retained inputs/navigation."
+    },
+    {
+      "name": "negative_or_edge",
+      "original": "安全上限直前・直後、添付重複、ID衝突を確認する",
+      "result": "not_run",
+      "sources": [
+        {
+          "file": "tests/e2e/ap04-original-e07-safety-bounds.spec.ts",
+          "line": 34,
+          "end_line": 68,
+          "callback_source": "  const below = await buildBoundaryFile(bound, -1, info.outputPath(`e07-${bound}-minus-one.scenario`));\n  const empty = await browser.newContext({ baseURL });\n  let lowerObservation: Awaited<ReturnType<typeof committedBoundary>> | undefined;\n  try {\n    await test.step(`AT-E07 negative_or_edge: ${original.negative_or_edge} [${bound} L-1: actual complete normal restoration]`, async () => {\n      const restored = await empty.newPage();\n      await restoreBoundaryFile(restored, below);\n      lowerObservation = await committedBoundary(restored, below);\n      expect(lowerObservation.header).toEqual({ id: below.project.id, name: below.project.name, entities: below.project.entities, relations: below.project.relations });\n      expect(lowerObservation.entities).toBe(below.project.entities);\n      expect(lowerObservation.relations).toBe(below.project.relations);\n      expect(lowerObservation.snapshots).toBe(below.project.snapshots);\n      expect(lowerObservation.views).toBe(below.project.views);\n      expect(lowerObservation.worldIds).toEqual([...below.worldIds].sort());\n      expect(lowerObservation.noteBlocks).toEqual(below.addedNoteBlocks.map(note => note.count));\n      expect(lowerObservation.assets).toEqual(below.assets.map(asset => ({ ...asset, actualHash: asset.contentHash })));\n      if (below.addedGroups.lastId) expect(lowerObservation.lastGroup).toEqual({ id: below.addedGroups.lastId, name: below.addedGroups.lastName, kind: 'group', groupType: 'category' });\n      // The first normal restore must commit; a mere inspected heading is insufficient.\n      await attachObservation(info, `AT-E07-${bound}-below-committed`, { fixture: below, committed: lowerObservation });\n    });\n  } finally { await empty.close(); }\n\n  const above = await buildBoundaryFile(bound, 1, info.outputPath(`e07-${bound}-plus-one.scenario`));\n  await test.step(`AT-E07 then: ${original.then} [${bound} L+1: exact quota reason; all author/sync tables unchanged]`, async () => {\n    const before = await durableE07(page);\n    await page.getByLabel('保存ファイルを選ぶ', { exact: true }).setInputFiles(above.path);\n    const error = page.locator('.backup-page').getByRole('alert');\n    await expect(error).toContainText(above.expectedReason, { timeout: 300_000 });\n    if (above.expectedPath) await expect(error).toContainText(above.expectedPath);\n    await expect(page.locator('.backup-page .import-preview')).toHaveCount(0);\n    const after = await durableE07(page);\n    expect(after).toEqual(before);\n    await attachObservation(info, `AT-E07-${bound}-above-rejected`, { fixture: above, uiError: await error.innerText(), before, after });\n  });\n  await attachObservation(info, `AT-E07-${bound}-scope`, {",
+          "callback_sha256": "2ffbbb75cb224a1d1289472aa668053667c711d9443f37af2beff6c93ee10b42"
+        },
+        {
+          "file": "tests/e2e/ap04-original-root-restoration-output.spec.ts",
+          "line": 106,
+          "end_line": 137,
+          "callback_source": "  await test.step('negative_or_edge: hash・参照・危険path・未対応版・添付重複・ID衝突でも既存正本と素材bytesは不変', async () => {\n    for (const row of manifest.negative) {\n      const bad = await readFile(fixtureRoot + row.path); expect(hash(bad)).toBe(row.sha256);\n      const before = await durable(page);\n      await page.getByLabel('保存ファイルを選ぶ', { exact: true }).setInputFiles({ name: row.path, mimeType: 'application/zip', buffer: bad });\n      await expect(page.locator('.backup-page').getByRole('alert')).toContainText(new RegExp(row.expected_reason));\n      await expect(page.locator('.backup-page').getByRole('alert')).toContainText(row.expected_path);\n      expect(await durable(page)).toBe(before);\n    }\n    const below = withFieldBytes(bytes, ARCHIVE_LIMITS.fieldBytes - 1);\n    await page.getByLabel('保存ファイルを選ぶ', { exact: true }).setInputFiles({ name: 'field-limit-minus-one.scenario', mimeType: 'application/zip', buffer: Buffer.from(below) });\n    await expect(page.getByRole('heading', { name: `検査済みの作品 · ${original.project.name}`, exact: true })).toBeVisible();\n    const lowerExpected = await inspectScenario(below, { worker: false });\n    const lowerContext = await browser.newContext({ baseURL });\n    try {\n      const lowerPage = await lowerContext.newPage();\n      await seed(lowerPage, below);\n      const committed = await backup(lowerPage);\n      expect(canonicalJson(committed.project)).toBe(canonicalJson(lowerExpected.project));\n      expect(committed.worlds).toEqual(lowerExpected.worlds); expect(committed.assets).toEqual(lowerExpected.assets);\n      await lowerPage.reload();\n      const cold = await backup(lowerPage);\n      expect(canonicalJson(cold.project)).toBe(canonicalJson(lowerExpected.project));\n      expect(cold.worlds).toEqual(lowerExpected.worlds); expect(cold.assets).toEqual(lowerExpected.assets);\n      await attachObservation(info, 'AT-E07-field-below-committed-cold', { originalInputSha256: hash(bytes), belowSha256: hash(below), committedSha256: hash(committed.bytes), coldSha256: hash(cold.bytes), fullNormalizedProjectMatches: true, allWorldsAndAssetsMatch: true });\n    } finally { await lowerContext.close(); }\n    const before = await durable(page), above = withFieldBytes(bytes, ARCHIVE_LIMITS.fieldBytes + 1);\n    await page.getByLabel('保存ファイルを選ぶ', { exact: true }).setInputFiles({ name: 'field-limit-plus-one.scenario', mimeType: 'application/zip', buffer: Buffer.from(above) });\n    await expect(page.locator('.backup-page').getByRole('alert')).toContainText(/1 MiB|上限/);\n    expect(await durable(page)).toBe(before);\n    await attachObservation(info, 'AT-E07-boundaries', { testedOriginalNegativeFiles: manifest.negative, fieldLimitBytes: ARCHIVE_LIMITS.fieldBytes, below: { bytes: below.length, sha256: hash(below) }, above: { bytes: above.length, sha256: hash(above) }, requiredCompanion: 'ap04-original-e07-safety-bounds.spec.ts: original ten remaining L±1 safety bounds', remaining: ['actual OS Files/device handoff', 'companion bounds require their own execution on this fixed candidate'] });\n  });",
+          "callback_sha256": "f1f271830a9bbde30cff6e69057196414fe52a2f1a55917eb9bc64ef429283ed"
+        }
+      ],
+      "planned_direct_check": "Ten authentic exact original L±1 bounds supplement companion fieldBytes L±1 and original duplicate/ID collision files. Lower must commit via normal UI; upper must show exact target reason/path and leave durable records unchanged."
+    }
+  ],
+  "bound_test_entrances": [
+    {
+      "bound": "compressedBytes",
+      "limit": 67108864,
+      "below": 67108863,
+      "above": 67108865,
+      "fixture_generation": "runtime_only_not_generated",
+      "test_title": "AT-E07 original safety compressedBytes: genuine L-1 committed; L+1 refused without author/sync mutation",
+      "source": {
+        "file": "tests/e2e/ap04-original-e07-safety-bounds.spec.ts",
+        "line": 17,
+        "helper": "tests/e2e/ap04-original-e07-safety-bounds-helpers.ts"
+      },
+      "strategy": "Four listed and referenced UTF-8 text/plain assets in a genuine method-0 ZIP; real total including exact headers is fitted to L±1; no trailing padding.",
+      "target_guard": "BackupPanel actual file.size original 64 MiB guard",
+      "below_required": "Normal UI selects new, commits, closes import dialog, app shell visible; native header/current entity/relation/snapshot/view counts, world IDs, added block counts/last category and every actual stored asset SHA match fixture.",
+      "above_required": "Exact target reason/path, no import preview, SHA of every author/sync native table and all binary bytes equals baseline.",
+      "result": "not_run",
+      "observations": [],
+      "source_oracle": {
+        "function": "committedBoundary",
+        "execution": "not_run",
+        "file": "tests/e2e/ap04-original-e07-safety-bounds-helpers.ts",
+        "line": 300,
+        "end_line": 417,
+        "excerpt_sha256": "744ace8a8d1896355e3f2c1dd0574a79df108d183a5e809b3cecdccc5b4eb22a"
+      }
+    },
+    {
+      "bound": "expandedBytes",
+      "limit": 268435456,
+      "below": 268435455,
+      "above": 268435457,
+      "fixture_generation": "runtime_only_not_generated",
+      "test_title": "AT-E07 original safety expandedBytes: genuine L-1 committed; L+1 refused without author/sync mutation",
+      "source": {
+        "file": "tests/e2e/ap04-original-e07-safety-bounds.spec.ts",
+        "line": 17,
+        "helper": "tests/e2e/ap04-original-e07-safety-bounds-helpers.ts"
+      },
+      "strategy": "Eight distinct real repetitive UTF-8 text assets, each below 32 MiB; real expanded sum includes project/worlds/assets/manifest; manifest emitted last and crosses total only.",
+      "target_guard": "archiveData actual central expanded total; manifest.json",
+      "below_required": "Normal UI selects new, commits, closes import dialog, app shell visible; native header/current entity/relation/snapshot/view counts, world IDs, added block counts/last category and every actual stored asset SHA match fixture.",
+      "above_required": "Exact target reason/path, no import preview, SHA of every author/sync native table and all binary bytes equals baseline.",
+      "result": "not_run",
+      "observations": [],
+      "source_oracle": {
+        "function": "committedBoundary",
+        "execution": "not_run",
+        "file": "tests/e2e/ap04-original-e07-safety-bounds-helpers.ts",
+        "line": 300,
+        "end_line": 417,
+        "excerpt_sha256": "744ace8a8d1896355e3f2c1dd0574a79df108d183a5e809b3cecdccc5b4eb22a"
+      }
+    },
+    {
+      "bound": "jsonBytes",
+      "limit": 67108864,
+      "below": 67108863,
+      "above": 67108865,
+      "fixture_generation": "runtime_only_not_generated",
+      "test_title": "AT-E07 original safety jsonBytes: genuine L-1 committed; L+1 refused without author/sync mutation",
+      "source": {
+        "file": "tests/e2e/ap04-original-e07-safety-bounds.spec.ts",
+        "line": 17,
+        "helper": "tests/e2e/ap04-original-e07-safety-bounds-helpers.ts"
+      },
+      "strategy": "Original semantic project plus legal trailing whitespace to exact JSON bytes; unchanged individual fields, real SHA/size/CRC.",
+      "target_guard": "archiveData actual per-JSON expanded size; data/project.json",
+      "below_required": "Normal UI selects new, commits, closes import dialog, app shell visible; native header/current entity/relation/snapshot/view counts, world IDs, added block counts/last category and every actual stored asset SHA match fixture.",
+      "above_required": "Exact target reason/path, no import preview, SHA of every author/sync native table and all binary bytes equals baseline.",
+      "result": "not_run",
+      "observations": [],
+      "source_oracle": {
+        "function": "committedBoundary",
+        "execution": "not_run",
+        "file": "tests/e2e/ap04-original-e07-safety-bounds-helpers.ts",
+        "line": 300,
+        "end_line": 417,
+        "excerpt_sha256": "744ace8a8d1896355e3f2c1dd0574a79df108d183a5e809b3cecdccc5b4eb22a"
+      }
+    },
+    {
+      "bound": "assetBytes",
+      "limit": 33554432,
+      "below": 33554431,
+      "above": 33554433,
+      "fixture_generation": "runtime_only_not_generated",
+      "test_title": "AT-E07 original safety assetBytes: genuine L-1 committed; L+1 refused without author/sync mutation",
+      "source": {
+        "file": "tests/e2e/ap04-original-e07-safety-bounds.spec.ts",
+        "line": 17,
+        "helper": "tests/e2e/ap04-original-e07-safety-bounds-helpers.ts"
+      },
+      "strategy": "One genuine UTF-8 text/plain asset of exact L±1 bytes with matching attachment and listed hash/path.",
+      "target_guard": "archiveData actual per-asset expanded size; real asset hash path",
+      "below_required": "Normal UI selects new, commits, closes import dialog, app shell visible; native header/current entity/relation/snapshot/view counts, world IDs, added block counts/last category and every actual stored asset SHA match fixture.",
+      "above_required": "Exact target reason/path, no import preview, SHA of every author/sync native table and all binary bytes equals baseline.",
+      "result": "not_run",
+      "observations": [],
+      "source_oracle": {
+        "function": "committedBoundary",
+        "execution": "not_run",
+        "file": "tests/e2e/ap04-original-e07-safety-bounds-helpers.ts",
+        "line": 300,
+        "end_line": 417,
+        "excerpt_sha256": "744ace8a8d1896355e3f2c1dd0574a79df108d183a5e809b3cecdccc5b4eb22a"
+      }
+    },
+    {
+      "bound": "files",
+      "limit": 5000,
+      "below": 4999,
+      "above": 5001,
+      "fixture_generation": "runtime_only_not_generated",
+      "test_title": "AT-E07 original safety files: genuine L-1 committed; L+1 refused without author/sync mutation",
+      "source": {
+        "file": "tests/e2e/ap04-original-e07-safety-bounds.spec.ts",
+        "line": 17,
+        "helper": "tests/e2e/ap04-original-e07-safety-bounds-helpers.ts"
+      },
+      "strategy": "Add tiny distinct real text assets and valid current attachment entities until real ZIP entries including manifest are 4999/5001.",
+      "target_guard": "archiveData actual ZIP entry count",
+      "below_required": "Normal UI selects new, commits, closes import dialog, app shell visible; native header/current entity/relation/snapshot/view counts, world IDs, added block counts/last category and every actual stored asset SHA match fixture.",
+      "above_required": "Exact target reason/path, no import preview, SHA of every author/sync native table and all binary bytes equals baseline.",
+      "result": "not_run",
+      "observations": [],
+      "source_oracle": {
+        "function": "committedBoundary",
+        "execution": "not_run",
+        "file": "tests/e2e/ap04-original-e07-safety-bounds-helpers.ts",
+        "line": 300,
+        "end_line": 417,
+        "excerpt_sha256": "744ace8a8d1896355e3f2c1dd0574a79df108d183a5e809b3cecdccc5b4eb22a"
+      }
+    },
+    {
+      "bound": "records",
+      "limit": 100000,
+      "below": 99999,
+      "above": 100001,
+      "fixture_generation": "runtime_only_not_generated",
+      "test_title": "AT-E07 original safety records: genuine L-1 committed; L+1 refused without author/sync mutation",
+      "source": {
+        "file": "tests/e2e/ap04-original-e07-safety-bounds.spec.ts",
+        "line": 17,
+        "helper": "tests/e2e/ap04-original-e07-safety-bounds-helpers.ts"
+      },
+      "strategy": "Add minimum valid category records to 99999/100001 aggregate entity+relation records including original worlds; main project remains below its native 100000-record guard.",
+      "target_guard": "archiveData aggregate original record quota; final original world path",
+      "below_required": "Normal UI selects new, commits, closes import dialog, app shell visible; native header/current entity/relation/snapshot/view counts, world IDs, added block counts/last category and every actual stored asset SHA match fixture.",
+      "above_required": "Exact target reason/path, no import preview, SHA of every author/sync native table and all binary bytes equals baseline.",
+      "result": "not_run",
+      "observations": [],
+      "source_oracle": {
+        "function": "committedBoundary",
+        "execution": "not_run",
+        "file": "tests/e2e/ap04-original-e07-safety-bounds-helpers.ts",
+        "line": 300,
+        "end_line": 417,
+        "excerpt_sha256": "744ace8a8d1896355e3f2c1dd0574a79df108d183a5e809b3cecdccc5b4eb22a"
+      }
+    },
+    {
+      "bound": "depth",
+      "limit": 32,
+      "below": 31,
+      "above": 33,
+      "fixture_generation": "runtime_only_not_generated",
+      "test_title": "AT-E07 original safety depth: genuine L-1 committed; L+1 refused without author/sync mutation",
+      "source": {
+        "file": "tests/e2e/ap04-original-e07-safety-bounds.spec.ts",
+        "line": 17,
+        "helper": "tests/e2e/ap04-original-e07-safety-bounds-helpers.ts"
+      },
+      "strategy": "Terminal gate at JSON container depth5, 13/14 nested all wrappers plus constant reaches depth31/33 while AST depth14/15 stays legal.",
+      "target_guard": "parseStrictJson real container nesting; data/project.json",
+      "below_required": "Normal UI selects new, commits, closes import dialog, app shell visible; native header/current entity/relation/snapshot/view counts, world IDs, added block counts/last category and every actual stored asset SHA match fixture.",
+      "above_required": "Exact target reason/path, no import preview, SHA of every author/sync native table and all binary bytes equals baseline.",
+      "result": "not_run",
+      "observations": [],
+      "source_oracle": {
+        "function": "committedBoundary",
+        "execution": "not_run",
+        "file": "tests/e2e/ap04-original-e07-safety-bounds-helpers.ts",
+        "line": 300,
+        "end_line": 417,
+        "excerpt_sha256": "744ace8a8d1896355e3f2c1dd0574a79df108d183a5e809b3cecdccc5b4eb22a"
+      }
+    },
+    {
+      "bound": "objects",
+      "limit": 500000,
+      "below": 499999,
+      "above": 500001,
+      "fixture_generation": "runtime_only_not_generated",
+      "test_title": "AT-E07 original safety objects: genuine L-1 committed; L+1 refused without author/sync mutation",
+      "source": {
+        "file": "tests/e2e/ap04-original-e07-safety-bounds.spec.ts",
+        "line": 17,
+        "helper": "tests/e2e/ap04-original-e07-safety-bounds-helpers.ts"
+      },
+      "strategy": "Six new note bodies contain unique valid empty paragraph blocks; compute all manifest/project/world containers and fill to499999/500001, with each array below100000 and aggregate body text0bytes.",
+      "target_guard": "parseStrictJson shared real container budget; data/project.json",
+      "below_required": "Normal UI selects new, commits, closes import dialog, app shell visible; native header/current entity/relation/snapshot/view counts, world IDs, added block counts/last category and every actual stored asset SHA match fixture.",
+      "above_required": "Exact target reason/path, no import preview, SHA of every author/sync native table and all binary bytes equals baseline.",
+      "result": "not_run",
+      "observations": [],
+      "source_oracle": {
+        "function": "committedBoundary",
+        "execution": "not_run",
+        "file": "tests/e2e/ap04-original-e07-safety-bounds-helpers.ts",
+        "line": 300,
+        "end_line": 417,
+        "excerpt_sha256": "744ace8a8d1896355e3f2c1dd0574a79df108d183a5e809b3cecdccc5b4eb22a"
+      }
+    },
+    {
+      "bound": "conditionDepth",
+      "limit": 16,
+      "below": 15,
+      "above": 17,
+      "fixture_generation": "runtime_only_not_generated",
+      "test_title": "AT-E07 original safety conditionDepth: genuine L-1 committed; L+1 refused without author/sync mutation",
+      "source": {
+        "file": "tests/e2e/ap04-original-e07-safety-bounds.spec.ts",
+        "line": 17,
+        "helper": "tests/e2e/ap04-original-e07-safety-bounds-helpers.ts"
+      },
+      "strategy": "15/17 total not-chain AST levels, actual generic JSON depth remains below32; native shared condition validator is unchanged.",
+      "target_guard": "model original condition depth16 guard; data/project.json",
+      "below_required": "Normal UI selects new, commits, closes import dialog, app shell visible; native header/current entity/relation/snapshot/view counts, world IDs, added block counts/last category and every actual stored asset SHA match fixture.",
+      "above_required": "Exact target reason/path, no import preview, SHA of every author/sync native table and all binary bytes equals baseline.",
+      "result": "not_run",
+      "observations": [],
+      "source_oracle": {
+        "function": "committedBoundary",
+        "execution": "not_run",
+        "file": "tests/e2e/ap04-original-e07-safety-bounds-helpers.ts",
+        "line": 300,
+        "end_line": 417,
+        "excerpt_sha256": "744ace8a8d1896355e3f2c1dd0574a79df108d183a5e809b3cecdccc5b4eb22a"
+      }
+    },
+    {
+      "bound": "conditionNodes",
+      "limit": 256,
+      "below": 255,
+      "above": 257,
+      "fixture_generation": "runtime_only_not_generated",
+      "test_title": "AT-E07 original safety conditionNodes: genuine L-1 committed; L+1 refused without author/sync mutation",
+      "source": {
+        "file": "tests/e2e/ap04-original-e07-safety-bounds.spec.ts",
+        "line": 17,
+        "helper": "tests/e2e/ap04-original-e07-safety-bounds-helpers.ts"
+      },
+      "strategy": "One all root plus254/256 constant children gives255/257 actual AST nodes; child-array max256 and AST depth2 stay legal.",
+      "target_guard": "model original condition nodes256 guard; data/project.json",
+      "below_required": "Normal UI selects new, commits, closes import dialog, app shell visible; native header/current entity/relation/snapshot/view counts, world IDs, added block counts/last category and every actual stored asset SHA match fixture.",
+      "above_required": "Exact target reason/path, no import preview, SHA of every author/sync native table and all binary bytes equals baseline.",
+      "result": "not_run",
+      "observations": [],
+      "source_oracle": {
+        "function": "committedBoundary",
+        "execution": "not_run",
+        "file": "tests/e2e/ap04-original-e07-safety-bounds-helpers.ts",
+        "line": 300,
+        "end_line": 417,
+        "excerpt_sha256": "744ace8a8d1896355e3f2c1dd0574a79df108d183a5e809b3cecdccc5b4eb22a"
+      }
+    }
+  ],
+  "mandatory_companion": {
+    "file": "tests/e2e/ap04-original-root-restoration-output.spec.ts",
+    "same_fixed_candidate_required": true,
+    "original_field_bytes": 1048576,
+    "original_negative_fixture_manifest": "tests/fixtures/rb10-import-errors/MANIFEST.json",
+    "negative_files": [
+      {
+        "path": "project-hash-mismatch.scenario",
+        "bytes": 12866,
+        "sha256": "d29eaf524888cf9355e3ce92b22569dd92da38efbf68c82c88a1d061c28fb09e",
+        "expected_reason": "hash|ハッシュ|一致|破損",
+        "explanation": "One private project byte changes; manifest SHA remains original.",
+        "expected_path": "data/project.json"
+      },
+      {
+        "path": "unknown-major-format.scenario",
+        "bytes": 12867,
+        "sha256": "1aa359b6566139d9b8fc56c3b8974876762f7b9832956022454e87fb2b48ecab",
+        "expected_reason": "版|未対応|形式",
+        "explanation": "Unsupported major version is not migrated or partially imported.",
+        "expected_path": "manifest.json"
+      },
+      {
+        "path": "dangerous-path.scenario",
+        "bytes": 12974,
+        "sha256": "59f4ea500669586957993644e86238f9f45e59083aedf6ccbb2aff0fe7a5d8fe",
+        "expected_reason": "パス|path|危険|禁止",
+        "explanation": "Explicit traversal path in the ZIP container.",
+        "expected_path": "../project.json"
+      },
+      {
+        "path": "broken-typed-reference.scenario",
+        "bytes": 12880,
+        "sha256": "f15e70d2a6c8a2328a2d8abf1a539279445f359cab4e3283c2aeef9f04086699",
+        "expected_reason": "参照|REFERENCE|見つか|存在",
+        "explanation": "Correct file SHA but a nonexistent typed event.locationId.",
+        "expected_path": "data/project.json"
+      },
+      {
+        "path": "owned-ID-collision.scenario",
+        "bytes": 12873,
+        "sha256": "03b1eb184ae72f51f52e84c3b1376b5369aa38f6fb0f8b0966aa1b82d083e975",
+        "expected_reason": "ID|重複|衝突",
+        "explanation": "Correct SHA but duplicate owned entity ID.",
+        "expected_path": "data/project.json"
+      },
+      {
+        "path": "understated-compressed-payload.scenario",
+        "bytes": 18978,
+        "sha256": "a1518d4c781b2a7009a332d4b7e4886dcc892035ad618f34dd4fbca607600d0d",
+        "expected_reason": "上限|LIMIT|展開|宣言",
+        "explanation": "Compressed text is bounded at100KB but central/local expanded sizes understate100B; reject before partial import.",
+        "expected_path": "data/project.json"
+      },
+      {
+        "path": "duplicate-attachment-ZIP-path.scenario",
+        "bytes": 12864,
+        "sha256": "ed62c26e0f8b2fae9ed51faba4ee3a8b03b82dd22156ed073793e5ca508c9f04",
+        "expected_reason": "重複|ファイル名",
+        "explanation": "Both central and local names of the second attachment become the first attachment name.",
+        "expected_path": "assets/bceafcd9fef027847ebaa65b17642b488167e06c4a7b6413b9b3ac2147f1fab4.png"
+      }
+    ]
+  },
+  "policy": {
+    "limits_are_original": true,
+    "no_limits_overrides": true,
+    "genuine_format_and_metadata": true,
+    "strict_nearest_boundary_values": true,
+    "all_other_measured_quotas_within_original_limits": true,
+    "below_must_complete_normal_restoration": true,
+    "readonly_native_observations_only": true,
+    "negative_originals_immutable": true,
+    "testnames_not_proof": true,
+    "no_acceptance_credit_from_authorship": true,
+    "same_fixed_candidate_four_clauses_required": true,
+    "fixtures_generated": false,
+    "browser_run": false,
+    "heavy_tests_run": false,
+    "source_hashes_need_root_freeze_refresh": true
+  },
+  "totals": {
+    "original_cases": 1,
+    "original_clauses": 4,
+    "boundary_entrances": 10,
+    "planned_runtime_fixtures": 20,
+    "passed": 0,
+    "not_run": 4
+  },
+  "remaining_environment": [
+    "Actual operating-system Files/device handoff must be observed in the original required environment; browser uploads alone do not prove it."
+  ],
+  "supporting_helper_spans": [
+    {
+      "function": "nativeObject",
+      "purpose": "Source-only native split-record observation: actual captured parts, real decoder, complete indexes and actual fixture ID arrays; no execution or acceptance inferred.",
+      "file": "tests/e2e/ap04-original-e07-safety-bounds-helpers.ts",
+      "line": 260,
+      "end_line": 260,
+      "excerpt_sha256": "5e2703e5c09c1a8e07e306beeb631dcfbd1af23a356e87bdde2342195fa431a0",
+      "source_excerpt": "const nativeObject = (value: unknown): value is Record<string, unknown> => !!value && typeof value === 'object' && !Array.isArray(value);\n"
+    },
+    {
+      "function": "requirePackedRecord",
+      "purpose": "Source-only native split-record observation: actual captured parts, real decoder, complete indexes and actual fixture ID arrays; no execution or acceptance inferred.",
+      "file": "tests/e2e/ap04-original-e07-safety-bounds-helpers.ts",
+      "line": 261,
+      "end_line": 271,
+      "excerpt_sha256": "f586595a6625266c062d473331683b3c688b66b19b9d9058704e46e0a3d6c27e",
+      "source_excerpt": "function requirePackedRecord(value: unknown): asserts value is PackedRecord {\n  const atom = (entry: unknown) => entry === null || typeof entry === 'boolean' || typeof entry === 'number' && Number.isSafeInteger(entry)\n    || nativeObject(entry) && Object.keys(entry).length === 1 && (Object.hasOwn(entry, 'undefined') && entry.undefined === true || Object.hasOwn(entry, 'number') && typeof entry.number === 'number' && Number.isFinite(entry.number));\n  if (!nativeObject(value) || value.version !== 1 || typeof value.scope !== 'string' || !value.scope\n    || typeof value.nodes !== 'number' || !Number.isSafeInteger(value.nodes) || value.nodes < 0 || typeof value.strings !== 'number' || !Number.isSafeInteger(value.strings) || value.strings < 0\n    || !Object.hasOwn(value, 'root') || !atom(value.root) || !Array.isArray(value.parts)\n    || value.parts.some(part => !nativeObject(part) || typeof part.key !== 'string' || !part.key || part.kind !== 'strings' && part.kind !== 'nodes'\n      || typeof part.bytes !== 'number' || !Number.isSafeInteger(part.bytes) || part.bytes < 0 || typeof part.sha256 !== 'string' || !/^[a-f0-9]{64}$/.test(part.sha256))) {\n    throw Error('Committed split-record descriptor is malformed');\n  }\n}\n"
+    },
+    {
+      "function": "decodeCommittedNative",
+      "purpose": "Source-only native split-record observation: actual captured parts, real decoder, complete indexes and actual fixture ID arrays; no execution or acceptance inferred.",
+      "file": "tests/e2e/ap04-original-e07-safety-bounds-helpers.ts",
+      "line": 274,
+      "end_line": 297,
+      "excerpt_sha256": "93f3d7134da41d8a274c411e83ebb980a21133c082e6cc4d27eb98054420b90d",
+      "source_excerpt": "async function decodeCommittedNative(capture: CapturedNativeRecord, label: string) {\n  const marker = '__scenarioRecordParts';\n  if (!Object.hasOwn(capture.row, marker)) {\n    if (capture.parts.length) throw Error(`${label}: legacy row unexpectedly has split parts`);\n    return capture.row;\n  }\n  const packed = capture.row[marker];\n  requirePackedRecord(packed);\n  // Uint8Array construction happens after capture, outside IndexedDB. The real\n  // decoder checks every part's key/scope/order/size/hash and the whole graph.\n  const parts: RecordPart[] = capture.parts.map(part => {\n    if (!Array.isArray(part.bytes) || part.bytes.some(byte => !Number.isInteger(byte) || byte < 0 || byte > 255)) throw Error(`${label}: malformed captured bytes`);\n    return { ...part, bytes: new Uint8Array(part.bytes) };\n  });\n  const decoded = await unpackRecordData(packed, parts);\n  if (!nativeObject(decoded) || Object.hasOwn(decoded, marker)) throw Error(`${label}: invalid decoded native row`);\n  const indexed: Record<string, unknown> = { [marker]: packed };\n  for (const path of capture.indexPaths) {\n    if (!path || path.includes('.')) throw Error(`${label}: unsupported native index path`);\n    if (Object.hasOwn(decoded, path)) indexed[path] = decoded[path];\n  }\n  if (!equalJson(indexed, capture.row)) throw Error(`${label}: split record and native indexes differ`);\n  return decoded;\n}\n"
+    },
+    {
+      "function": "committedBoundary",
+      "purpose": "Source-only native split-record observation: actual captured parts, real decoder, complete indexes and actual fixture ID arrays; no execution or acceptance inferred.",
+      "file": "tests/e2e/ap04-original-e07-safety-bounds-helpers.ts",
+      "line": 300,
+      "end_line": 417,
+      "excerpt_sha256": "744ace8a8d1896355e3f2c1dd0574a79df108d183a5e809b3cecdccc5b4eb22a",
+      "source_excerpt": "export async function committedBoundary(page: Page, file: BoundaryFile) {\n  const captured = await page.evaluate(async input => {\n    const db = await new Promise<IDBDatabase>((resolve, reject) => {\n      const request = indexedDB.open('scenario-manager-local-v1'); request.onsuccess = () => resolve(request.result); request.onerror = () => reject(request.error);\n    });\n    const read = <T>(request: IDBRequest<T>) => new Promise<T>((resolve, reject) => { request.onsuccess = () => resolve(request.result); request.onerror = () => reject(request.error); });\n    const object = (value: unknown): value is Record<string, unknown> => !!value && typeof value === 'object' && !Array.isArray(value);\n    try {\n      const tables = ['projects', 'entities', 'relations', 'snapshots', 'views', 'worlds', 'blocks'];\n      if (db.objectStoreNames.contains('recordParts')) tables.push('recordParts');\n      const tx = db.transaction(tables, 'readonly');\n      const complete = new Promise<void>((resolve, reject) => {\n        tx.oncomplete = () => resolve(); tx.onabort = () => reject(tx.error ?? Error('Native observation transaction aborted'));\n        tx.onerror = () => reject(tx.error ?? Error('Native observation transaction failed'));\n      });\n      // Schedule part GETs directly inside the native row's success callback.\n      // No asynchronous digest or worker can let this read snapshot expire.\n      const capture = (table: 'projects' | 'entities', key: IDBValidKey) => new Promise<CapturedNativeRecord>((resolve, reject) => {\n        const store = tx.objectStore(table), request = store.get(key);\n        request.onerror = () => reject(request.error);\n        request.onsuccess = () => {\n          const row: unknown = request.result;\n          if (!object(row)) { reject(Error(`Committed ${table} row is missing or malformed`)); return; }\n          const paths: string[] = [];\n          for (const keyPath of [store.keyPath, ...[...store.indexNames].map(name => store.index(name).keyPath)]) {\n            if (typeof keyPath === 'string') paths.push(keyPath);\n            else if (Array.isArray(keyPath) && keyPath.every(path => typeof path === 'string')) paths.push(...keyPath);\n            else { reject(Error(`Committed ${table} has an unsupported native index`)); return; }\n          }\n          const indexPaths = [...new Set(paths)], descriptor = row.__scenarioRecordParts;\n          if (!Object.hasOwn(row, '__scenarioRecordParts')) { resolve({ row, indexPaths, parts: [] }); return; }\n          if (!object(descriptor) || !Array.isArray(descriptor.parts) || !db.objectStoreNames.contains('recordParts')) { reject(Error('Committed split-record descriptor or table is missing')); return; }\n          const keys: string[] = [];\n          for (const part of descriptor.parts) {\n            if (!object(part) || typeof part.key !== 'string' || !part.key) { reject(Error('Committed split-record reference is malformed')); return; }\n            keys.push(part.key);\n          }\n          if (new Set(keys).size !== keys.length) { reject(Error('Committed split-record references are duplicated')); return; }\n          const reads = keys.map(partKey => new Promise<SerializedNativePart>((resolvePart, rejectPart) => {\n            const partRequest = tx.objectStore('recordParts').get(partKey);\n            partRequest.onerror = () => rejectPart(partRequest.error);\n            partRequest.onsuccess = () => {\n              const part: unknown = partRequest.result;\n              if (!object(part) || part.key !== partKey || typeof part.scope !== 'string' || typeof part.sequence !== 'number'\n                || !Number.isSafeInteger(part.sequence) || part.sequence < 0 || part.kind !== 'strings' && part.kind !== 'nodes'\n                || typeof part.sha256 !== 'string' || !(part.bytes instanceof Uint8Array)) { rejectPart(Error(`Committed split-record part missing or malformed: ${partKey}`)); return; }\n              resolvePart({ ...part, key: part.key, scope: part.scope, sequence: part.sequence, kind: part.kind, sha256: part.sha256, bytes: [...part.bytes] });\n            };\n          }));\n          void Promise.all(reads).then(parts => resolve({ row, indexPaths, parts }), reject);\n        };\n      });\n      const observation = Promise.all([\n        capture('projects', input.project.id),\n        Promise.all(['entities', 'relations', 'snapshots', 'views'].map(name => read(tx.objectStore(name).index('projectId').count(input.project.id)))),\n        read(tx.objectStore('worlds').getAllKeys()),\n        Promise.all(input.addedNoteBlocks.map(note => read(tx.objectStore('blocks').index('[projectId+entityId]').count([input.project.id, note.entityId])))),\n        input.addedGroups.lastId ? capture('entities', [input.project.id, input.addedGroups.lastId]) : Promise.resolve(undefined),\n      ] as const);\n      const [[nativeHeader, counts, worldIds, noteBlocks, nativeGroup]] = await Promise.all([observation, complete]);\n      const assets: { contentHash: string; bytes: number; mediaType: string; actualHash: string }[] = [];\n      for (const asset of input.assets) {\n        const stored = await read(db.transaction('assets', 'readonly').objectStore('assets').get(asset.contentHash)) as { contentHash: string; bytes: Uint8Array; mediaType: string } | undefined;\n        if (!stored) throw Error(`Committed asset missing: ${asset.contentHash}`);\n        const digest = await crypto.subtle.digest('SHA-256', new Uint8Array(stored.bytes));\n        assets.push({ contentHash: stored.contentHash, bytes: stored.bytes.byteLength, mediaType: stored.mediaType, actualHash: [...new Uint8Array(digest)].map(byte => byte.toString(16).padStart(2, '0')).join('') });\n      }\n      return { header: nativeHeader,\n        entities: counts[0], relations: counts[1], snapshots: counts[2], views: counts[3], worldIds,\n        noteBlocks, assets, group: nativeGroup };\n    } finally { db.close(); }\n  }, file);\n  // Bind the complete committed header ID sequences to the actual retained\n  // fixture ZIP. Inflate only project.json, not any large asset or world.\n  const sourceBytes = new Uint8Array(await readFile(file.path));\n  expect(sourceBytes.byteLength, 'actual boundary archive size').toBe(file.bytes);\n  const sourceArchiveHash = sha256(sourceBytes);\n  expect(sourceArchiveHash, 'actual boundary archive SHA').toBe(file.sha256);\n  const sourceData = unzipSync(sourceBytes, { filter: entry => entry.name === 'data/project.json' })['data/project.json'];\n  if (!sourceData) throw Error('Actual boundary archive lacks project.json');\n  const sourceProject: unknown = JSON.parse(strFromU8(sourceData));\n  if (!nativeObject(sourceProject) || sourceProject.projectId !== file.project.id || sourceProject.name !== file.project.name) throw Error('Actual boundary project identity differs from its fixture metadata');\n  // Keep exactly the original native counts/keys; never derive a fallback count.\n  const header = await decodeCommittedNative(captured.header, 'projects');\n  if (header.projectId !== file.project.id || header.name !== file.project.name) throw Error('Committed project identity differs from its actual fixture');\n  const lists: Record<'entities' | 'relations' | 'snapshots' | 'views', string[]> = { entities: [], relations: [], snapshots: [], views: [] };\n  for (const [key, field] of [['entities', 'entityIds'], ['relations', 'relationIds'], ['snapshots', 'snapshotIds'], ['views', 'viewIds']] as const) {\n    const ids = header[field];\n    if (!Array.isArray(ids) || ids.some(id => typeof id !== 'string' || !id) || new Set(ids).size !== ids.length) throw Error(`Committed ${field} are missing, malformed or duplicated`);\n    if (ids.length !== file.project[key] || typeof captured[key] !== 'number' || captured[key] !== ids.length) throw Error(`Committed ${field} do not match all native records`);\n    const records = sourceProject[key];\n    if (!Array.isArray(records)) throw Error(`Actual boundary archive lacks ${key}`);\n    const expectedIds = records.map(record => {\n      if (!nativeObject(record) || typeof record.id !== 'string' || !record.id) throw Error(`Actual boundary ${key} record ID is malformed`);\n      return record.id;\n    });\n    if (new Set(expectedIds).size !== expectedIds.length) throw Error(`Actual boundary ${key} IDs are duplicated`);\n    expect(ids, `complete ${field} sequence from actual fixture ZIP`).toEqual(expectedIds);\n    lists[key] = ids;\n  }\n  let group: Record<string, unknown> | undefined;\n  if (file.addedGroups.lastId) {\n    if (!captured.group) throw Error('Committed final group capture is missing');\n    group = await decodeCommittedNative(captured.group, 'entities final group');\n    if (group.id !== file.addedGroups.lastId || group.projectId !== file.project.id || group.kind !== 'group' || !nativeObject(group.record)\n      || group.record.id !== group.id || group.record.projectId !== group.projectId || group.record.kind !== group.kind\n      || group.record.name !== file.addedGroups.lastName || !nativeObject(group.record.data) || group.record.data.groupType !== 'category') throw Error('Committed final group differs from its actual fixture');\n  }\n  const groupRecord = group && nativeObject(group.record) ? group.record : undefined;\n  const groupData = groupRecord && nativeObject(groupRecord.data) ? groupRecord.data : undefined;\n  return { header: { id: header.projectId, name: header.name, entities: lists.entities.length, relations: lists.relations.length },\n    entities: captured.entities, relations: captured.relations, snapshots: captured.snapshots, views: captured.views, worldIds: captured.worldIds,\n    noteBlocks: captured.noteBlocks, assets: captured.assets,\n    lastGroup: group && { id: group.id, kind: group.kind, name: groupRecord!.name, groupType: groupData!.groupType },\n    nativeRecords: { header: captured.header, lastGroup: captured.group,\n      sourceArchive: { path: file.path, bytes: sourceBytes.byteLength, sha256: sourceArchiveHash, projectJsonSha256: sha256(sourceData) },\n      idSequencesSha256: Object.fromEntries(Object.entries(lists).map(([key, ids]) => [key, sha256(strToU8(JSON.stringify(ids)))])) } };\n}\n"
+    }
+  ]
+}
