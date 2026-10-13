@@ -1,11 +1,13 @@
 // Controlled-worker transport and fake IndexedDB evidence, not real browser or device evidence.
 import 'fake-indexeddb/auto';
 import Dexie from 'dexie';
+import {createHash} from 'node:crypto';
 import {afterEach, describe, expect, it, vi} from 'vitest';
 import {createEntity, createProject, newId, textToRichText} from '../domain/model';
+import type {CommandRecord, ContentState} from '../domain/types';
 import {createWorldSnapshot} from '../domain/world';
 import {inspectScenario, performImportWork} from './archive';
-import {FORMAT_VERSION} from './json';
+import {FORMAT_VERSION, jsonBytes, sha256} from './json';
 import {StorageError} from './errors';
 import {runImportWork, type ImportWork} from './importWork';
 import {createImportWorkSession} from './importWorkSession';
@@ -47,6 +49,44 @@ function browser(automatic = false) {
 function request() {
   const project = createProject('受領した作品😀'), world = createProject('受領した世界😀');
   return {step: 'structure', project, worlds: {[world.projectId]: world}} satisfies ImportWork;
+}
+function recoveryFixture(count = 113) {
+  const project = createProject('復元hashの作品');
+  project.entities.push(...Array.from({length: 65}, (_, index) => createEntity(project.projectId, 'note', `保存メモ${index}`, {body: textToRichText(`本文${index}😀`)})));
+  const {history: _history, ...base} = project;
+  const states: ContentState[] = Array.from({length: count + 1}, (_, index) => {
+    const state = structuredClone(base); state.revision = String(index); state.name = `復元版${index}`;
+    if (index === count) {
+      const changed = state.entities[0]!;
+      if (changed.kind !== 'note') throw new Error('Expected note fixture');
+      changed.name = '最終版の同ID記録😀'; changed.data.body = textToRichText('順序とUnicodeを変えた最終記録😀');
+      state.entities = [...state.entities.slice(1), changed];
+    }
+    return state;
+  });
+  const commands: CommandRecord[] = Array.from({length: count}, (_, index) => ({operationId: newId(), projectId: project.projectId,
+    baseRevision: String(index), revision: String(index + 1), targetIds: [project.projectId], reason: `復元保存${index}`,
+    createdAt: '2026-10-13T00:00:00.000Z', before: structuredClone(states[index]!), after: structuredClone(states[index + 1]!)}));
+  Object.assign(project, structuredClone(states[count]!)); project.history = commands;
+  return {project, commands};
+}
+async function captureImportDigests(work: ImportWork, afterFirstDigest?: () => void | Promise<void>, signal?: AbortSignal) {
+  const calls: Uint8Array[] = [];
+  let entered!: () => void, release!: () => void, released = false;
+  const firstDigest = new Promise<void>(resolve => { entered = resolve; }), gate = new Promise<void>(resolve => { release = resolve; });
+  const spy = vi.spyOn(crypto.subtle, 'digest').mockImplementation(async (...args) => {
+    const data = args[1], view = data instanceof ArrayBuffer ? new Uint8Array(data) : new Uint8Array(data.buffer, data.byteOffset, data.byteLength);
+    calls.push(view.slice());
+    if (!released) { entered(); await gate; }
+    const result = createHash('sha256').update(view).digest();
+    return result.buffer.slice(result.byteOffset, result.byteOffset + result.byteLength) as ArrayBuffer;
+  });
+  try {
+    const pending = runImportWork(work, signal);
+    if (afterFirstDigest) { await firstDigest; await afterFirstDigest(); }
+    release(); released = true;
+    return {result: await pending, calls};
+  } finally { release(); released = true; spy.mockRestore(); }
 }
 const stores: ScenarioStore[] = [];
 function open(databaseName = `import-work-${newId()}`) {
@@ -142,6 +182,19 @@ describe('cancellable import worker transport', () => {
 });
 
 describe('operation-owned import worker', () => {
+  it('keeps the direct Node structure result mutable and detached from caller input', async () => {
+    const work = request();
+    work.project = Object.assign(Object.create(null), work.project);
+    const original = structuredClone(work.project);
+    const result = await runImportWork(work);
+    expect(result.project).toEqual(original);
+    expect(result.project).not.toBe(work.project);
+    expect(Object.getPrototypeOf(result.project)).toBe(null);
+    expect(Object.isFrozen(result.project)).toBe(false);
+    result.project!.name = '編集できるNode検査結果';
+    expect(work.project).toEqual(original);
+  });
+
   it('runs the real checks again on changed input rather than reusing the previous proof', async () => {
     browser(true); const session = createImportWorkSession(), first = request();
     try {
@@ -177,6 +230,158 @@ describe('operation-owned import worker', () => {
     controller.abort(); release(new Uint8Array([1, 2, 3])); await rejected; await Promise.resolve();
     await expect(session.run(request())).rejects.toMatchObject({code: 'CANCELLED'}); session.dispose();
     expect(worker.messages).toHaveLength(1); expect(worker.terminated).toBe(1);
+  });
+});
+
+describe('owned recovery rehash work', () => {
+  it('recomputes the 113 exact canonical command hashes in both mapping paths', async () => {
+    const {project, commands} = recoveryFixture(), sourceOperationIds = commands.map(() => newId());
+    const recovery = {version: 1 as const, projectId: newId(), sourceRevision: project.revision, serverRevision: '12',
+      pending: commands.map((command, index) => ({operationId: sourceOperationIds[index]!, command: structuredClone(command), commandHash: '0'.repeat(64)}))};
+    const idMap = Object.fromEntries(sourceOperationIds.map((id, index) => [id, commands[index]!.operationId]));
+    const mapWork: ImportWork = {step: 'map_recovery', project, recovery, idMap, worlds: {}};
+    const expectedMapped = structuredClone(commands), mapped = await captureImportDigests(mapWork);
+    expect(mapped.calls).toEqual(expectedMapped.map(command => jsonBytes(command)));
+    expect(mapped.result.recovery!.pending.map(item => item.commandHash)).toEqual(await Promise.all(expectedMapped.map(command => sha256(jsonBytes(command)))));
+    expect(mapped.result.recovery!.pending.map(item => item.command)).toEqual(expectedMapped);
+    expect(mapped.result.recovery!.pending[0]!.commandHash).not.toBe(recovery.pending[0]!.commandHash);
+    expect(Object.isFrozen(mapped.result.recovery!.pending[0]!.command.after.entities)).toBe(false);
+    const adjacentAfter = mapped.result.recovery!.pending[0]!.command.after.entities[0]!;
+    const nextBefore = mapped.result.recovery!.pending[1]!.command.before.entities.find(entity => entity.id === adjacentAfter.id)!;
+    expect(adjacentAfter).not.toBe(nextBefore);
+    const nextBeforeName = nextBefore.name;
+    adjacentAfter.name = '隣接する履歴は別の編集対象';
+    expect(nextBefore.name).toBe(nextBeforeName);
+    const sourceName = project.history[0]!.after.entities[0]!.name;
+    mapped.result.recovery!.pending[0]!.command.after.entities[0]!.name = '編集可能な復元結果';
+    expect(project.history[0]!.after.entities[0]!.name).toBe(sourceName);
+
+    const fallback = structuredClone(commands[0]!); fallback.operationId = newId(); fallback.reason = '履歴にない送信待ち操作';
+    const rehashRecovery = {version: 1 as const, projectId: project.projectId, sourceRevision: project.revision, serverRevision: '19',
+      pending: [...commands.map(command => ({operationId: command.operationId, command: {...structuredClone(command), reason: '改ざん入力'}, commandHash: 'f'.repeat(64)})),
+        {operationId: fallback.operationId, command: fallback, commandHash: 'a'.repeat(64)}]};
+    const rehashWork: ImportWork = {step: 'rehash_recovery', project, recovery: rehashRecovery, worlds: {}};
+    const expectedRehashed = [...structuredClone(commands), structuredClone(fallback)], rehashed = await captureImportDigests(rehashWork);
+    expect(rehashed.calls).toEqual(expectedRehashed.map(command => jsonBytes(command)));
+    expect(rehashed.result.recovery!.pending.map(item => item.commandHash)).toEqual(await Promise.all(expectedRehashed.map(command => sha256(jsonBytes(command)))));
+    expect(rehashed.result.recovery!.pending.map(item => item.command)).toEqual(expectedRehashed);
+    expect(rehashed.result.recovery!.pending.slice(0, commands.length).every(item => item.commandHash !== 'f'.repeat(64))).toBe(true);
+    expect(Object.isFrozen(rehashed.result.recovery!.pending[0]!.command.after.entities)).toBe(false);
+    const beforeResultEdit = project.history[0]!.after.entities[0]!.name;
+    rehashed.result.recovery!.pending[0]!.command.after.entities[0]!.name = '編集可能な再hash結果';
+    expect(project.history[0]!.after.entities[0]!.name).toBe(beforeResultEdit);
+  }, 60_000);
+
+  it('maps only the captured project, pending list and id map after the first digest yields', async () => {
+    const {project, commands} = recoveryFixture(2), sourceOperationIds = [newId(), newId()];
+    const recovery = {version: 1 as const, projectId: newId(), sourceRevision: project.revision, serverRevision: '0',
+      pending: commands.map((command, index) => ({operationId: sourceOperationIds[index]!, command: structuredClone(command), commandHash: '0'.repeat(64)}))};
+    const idMap = Object.fromEntries(sourceOperationIds.map((id, index) => [id, commands[index]!.operationId]));
+    const work: ImportWork = {step: 'map_recovery', project, recovery, idMap, worlds: {}}, initialCommands = structuredClone(commands);
+    const captured = await captureImportDigests(work, () => {
+      project.history[1]!.after.name = 'SHA開始後に変更';
+      recovery.serverRevision = '9'; recovery.pending[0]!.commandHash = 'f'.repeat(64);
+      delete idMap[sourceOperationIds[1]!];
+    });
+    expect(captured.calls).toEqual(initialCommands.map(command => jsonBytes(command)));
+    expect(captured.result.recovery!.sourceRevision).toBe('2');
+    expect(captured.result.recovery!.pending.map(item => item.command)).toEqual(initialCommands);
+    expect(captured.result.recovery!.pending[0]!.origin?.serverRevision).toBe('0');
+    await expect(runImportWork(work)).rejects.toMatchObject({code: 'IMPORT_CONFLICT', path: sourceOperationIds[1]});
+
+    idMap[sourceOperationIds[1]!] = commands[1]!.operationId;
+    const fresh = await runImportWork(work);
+    expect(fresh.recovery!.pending[1]!.command.after.name).toBe('SHA開始後に変更');
+    expect(fresh.recovery!.pending[0]!.origin?.serverRevision).toBe('9');
+  });
+
+  it('rehashes the captured project and pending command before using a later fallback', async () => {
+    const {project, commands} = recoveryFixture(1), recovery = {version: 1 as const, projectId: project.projectId, sourceRevision: project.revision, serverRevision: '2',
+      pending: [{operationId: commands[0]!.operationId, command: {...structuredClone(commands[0]!), reason: '偽造したfallback'}, commandHash: '0'.repeat(64)}]};
+    const work: ImportWork = {step: 'rehash_recovery', project, recovery, worlds: {}}, originalCommand = structuredClone(commands[0]!);
+    const captured = await captureImportDigests(work, () => {
+      project.revision = '8'; recovery.pending[0]!.operationId = newId();
+      recovery.pending[0]!.command.reason = '後から採用するfallback'; recovery.pending[0]!.commandHash = 'f'.repeat(64);
+    });
+    expect(captured.calls).toEqual([jsonBytes(originalCommand)]);
+    expect(captured.result.recovery!.sourceRevision).toBe('1');
+    expect(captured.result.recovery!.pending[0]!.command).toEqual(originalCommand);
+    expect(captured.result.recovery!.pending[0]!.commandHash).toBe(await sha256(jsonBytes(originalCommand)));
+
+    const fallback = await runImportWork(work);
+    expect(fallback.recovery!.sourceRevision).toBe('8');
+    expect(fallback.recovery!.pending[0]!.command.reason).toBe('後から採用するfallback');
+    expect(fallback.recovery!.pending[0]!.commandHash).toBe(await sha256(jsonBytes(fallback.recovery!.pending[0]!.command)));
+  });
+
+  it('validates the captured recovery and returns its original editable graph', async () => {
+    const {project, commands} = recoveryFixture(2), recovery = {version: 1 as const, projectId: project.projectId, sourceRevision: project.revision, serverRevision: '4',
+      pending: await Promise.all(commands.map(async command => ({operationId: command.operationId, command: structuredClone(command), commandHash: await sha256(jsonBytes(command))})))};
+    const work: ImportWork = {step: 'recovery', project, recovery, worlds: {}}, expected = structuredClone(recovery);
+    const captured = await captureImportDigests(work, () => {
+      project.history[1]!.after.name = '検査開始後に変わった正本履歴';
+      recovery.pending[0]!.command.reason = '検査開始後に変わった送信待ち';
+    });
+    expect(captured.calls).toEqual(expected.pending.map(item => jsonBytes(item.command)));
+    expect(captured.result.recovery).toEqual(expected);
+    expect(Object.isFrozen(captured.result.recovery!.pending[0]!.command.after.entities)).toBe(false);
+    const after = captured.result.recovery!.pending[0]!.command.after.entities[0]!;
+    const nextBefore = captured.result.recovery!.pending[1]!.command.before.entities.find(entity => entity.id === after.id)!;
+    expect(after).not.toBe(nextBefore);
+    const nextName = nextBefore.name;
+    after.name = '復元結果だけを編集';
+    expect(nextBefore.name).toBe(nextName);
+    await expect(runImportWork(work)).rejects.toMatchObject({code: 'VALIDATION_FAILED'});
+  });
+
+  it('keeps recovery operation conflicts and owner-specific historical ID checks', async () => {
+    const {project, commands} = recoveryFixture(1), command = {...structuredClone(commands[0]!), reason: '同じIDに別の有効な内容'};
+    const conflicting = {version: 1 as const, projectId: project.projectId, sourceRevision: project.revision, serverRevision: '5',
+      pending: [{operationId: command.operationId, command, commandHash: await sha256(jsonBytes(command))}]};
+    for (const step of ['recovery', 'ids'] as const) await expect(runImportWork({step, project, recovery: conflicting, worlds: {}})).rejects.toMatchObject({
+      code: 'OPERATION_CONFLICT', path: command.operationId,
+    });
+
+    const ownerProject = createProject('所有者別の旧block ID'), ownerA = createEntity(ownerProject.projectId, 'note', '現在稿の所有者');
+    ownerA.data.body = textToRichText('共有される固定ID');
+    const ownerB = createEntity(ownerProject.projectId, 'note', '復元履歴の所有者');
+    ownerB.data.body = structuredClone(ownerA.data.body);
+    ownerProject.entities.push(ownerA); ownerProject.revision = '1';
+    const {history: _history, ...base} = ownerProject, before = structuredClone(base), after = structuredClone(base);
+    after.entities = [ownerB]; after.revision = '1';
+    const pendingCommand: CommandRecord = {operationId: newId(), projectId: ownerProject.projectId, baseRevision: '0', revision: '1',
+      targetIds: [ownerProject.projectId], reason: '保存する過去の所有者', createdAt: '2026-10-13T00:00:00.000Z', before, after};
+    const pendingOnly = {version: 1 as const, projectId: ownerProject.projectId, sourceRevision: ownerProject.revision, serverRevision: '5',
+      pending: [{operationId: pendingCommand.operationId, command: pendingCommand, commandHash: '0'.repeat(64)}]};
+    await expect(runImportWork({step: 'ids', project: ownerProject, recovery: pendingOnly, worlds: {}})).rejects.toMatchObject({
+      code: 'IMPORT_CONFLICT', path: ownerA.data.body![0]!.id,
+    });
+  });
+
+  it.each(['map_recovery', 'rehash_recovery'] as const)('cancels %s after an awaited command digest', async step => {
+    const {project, commands} = recoveryFixture(2), controller = new AbortController();
+    const recovery = {version: 1 as const, projectId: project.projectId, sourceRevision: project.revision, serverRevision: '3',
+      pending: commands.map(command => ({operationId: command.operationId, command: structuredClone(command), commandHash: '0'.repeat(64)}))};
+    const work: ImportWork = step === 'map_recovery'
+      ? {step, project, recovery: {...recovery, projectId: newId()}, idMap: Object.fromEntries(recovery.pending.map(item => [item.operationId, item.operationId])), worlds: {}}
+      : {step, project, recovery, worlds: {}};
+    await expect(captureImportDigests(work, () => controller.abort(), controller.signal)).rejects.toMatchObject({code: 'CANCELLED'});
+  });
+
+  it.each(['map_recovery', 'rehash_recovery'] as const)('retains the legacy encoder for unsupported %s graphs', async step => {
+    const {project, commands} = recoveryFixture(1), command = commands[0]!;
+    let reads = 0;
+    Object.defineProperty(command.after, 'legacyExtension', {enumerable: true, configurable: true, get: () => { reads++; return 'legacy value'; }});
+    const expectedHash = await sha256(jsonBytes(command)), expectedReads = reads;
+    reads = 0;
+    const sourceOperationId = newId(), pending = [{operationId: sourceOperationId, command, commandHash: '0'.repeat(64)}];
+    const recovery = {version: 1 as const, projectId: project.projectId, sourceRevision: project.revision, serverRevision: '7', pending};
+    const work: ImportWork = step === 'map_recovery'
+      ? {step, project, recovery: {...recovery, projectId: newId()}, idMap: {[sourceOperationId]: command.operationId}, worlds: {}}
+      : {step, project, recovery, worlds: {}};
+    const result = await runImportWork(work);
+    expect(result.recovery!.pending[0]!.commandHash).toBe(expectedHash);
+    expect(reads).toBe(expectedReads);
   });
 });
 

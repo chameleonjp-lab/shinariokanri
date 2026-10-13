@@ -9,6 +9,7 @@ import {collectImportIds, planCrossProjectImport, type CrossProjectImportPlan, t
 import type {ImportConflict} from './store';
 import {projectWithRecoveryHistory, validateRecovery, type PortableRecovery} from './recovery';
 import {validateSyncRecovery, type NativeSyncRecovery} from './syncRecovery';
+import {createSharedArrayJsonEncoder} from './sharedArrayJson';
 import {equalJson, jsonBytes, sha256, validateJsonValue} from './json';
 import {checkCancelled, StorageError} from './errors';
 
@@ -24,6 +25,25 @@ export interface ImportWorkResult {
   project?: ProjectData; recovery?: PortableRecovery; syncRecovery?: NativeSyncRecovery[];
   ids?: ImportId[]; cloned?: {project: ProjectData; idMap: Record<string, string>};
   mappedPlan?: CrossProjectImportPlan; conflicts?: ImportConflict[]; history?: ProjectData['history'];
+}
+
+/** Return a mutable copy without exposing aliases introduced only for private validation/encoding. */
+function cloneMutableCaptured<T>(input: T): T {
+  const copies = new WeakMap<object, object>();
+  const copy = (value: unknown): unknown => {
+    if (!value || typeof value !== 'object') return value;
+    const existing = copies.get(value); if (existing) return existing;
+    const array = Array.isArray(value), output: unknown[] | Record<string, unknown> = array ? new Array((value as unknown[]).length) : Object.create(Object.getPrototypeOf(value));
+    copies.set(value, output);
+    for (const key of Reflect.ownKeys(value)) {
+      if (array && key === 'length') continue;
+      const descriptor = Object.getOwnPropertyDescriptor(value, key);
+      if (typeof key !== 'string' || !descriptor || !Object.hasOwn(descriptor, 'value')) throw new TypeError('Captured plain data changed shape before mutable clone');
+      Object.defineProperty(output, key, {value: copy(descriptor.value), enumerable: descriptor.enumerable, writable: true, configurable: true});
+    }
+    return output;
+  };
+  return copy(input) as T;
 }
 
 /** The same pure checks and transformations run in Node or the browser worker.
@@ -54,22 +74,58 @@ export async function runImportWork(work: ImportWork, signal?: AbortSignal, load
       break;
     }
     case 'structure': {
-      const validation = validateProject(project, {worldSnapshots: worlds});
-      if (!validation.ok) throw Object.assign(new StorageError('VALIDATION_FAILED', validation.issues.map(issue => `${issue.path}: ${issue.message}`).join('\n')), {issues: validation.issues});
-      validateJsonValue(validation.value);
-      result.project = validation.value;
+      const captured = captureImmutablePlainData(project);
+      if (captured.captured) {
+        // Each imported image owns a fresh full validation scope. Worker input
+        // is an untrusted mutable DTO; only the private capture can share
+        // record/content checks across its current, snapshots, and history.
+        const owned = internImmutableRecords(captured.value);
+        const validation = createProjectValidationSession({worldSnapshots: worlds});
+        const structural = validation.validate(owned);
+        if (!structural.ok) throw Object.assign(new StorageError('VALIDATION_FAILED', structural.issues.map(issue => `${issue.path}: ${issue.message}`).join('\n')), {issues: structural.issues});
+        validateJsonValue(structural.value);
+        // Keep the existing mutable result contract and never expose the
+        // private frozen graph or mutate the caller's input.
+        result.project = cloneMutableCaptured(captured.value);
+      } else {
+        // Unsupported own-data graphs retain the complete uncached validator.
+        const validation = validateProject(project, {worldSnapshots: worlds});
+        if (!validation.ok) throw Object.assign(new StorageError('VALIDATION_FAILED', validation.issues.map(issue => `${issue.path}: ${issue.message}`).join('\n')), {issues: validation.issues});
+        validateJsonValue(validation.value);
+        result.project = validation.value;
+      }
       break;
     }
     case 'worlds': verifyWorlds([project], work.knownWorlds ?? {}); break;
     case 'hashes': await verifySnapshotHashes([project]); break;
     case 'integrity': {
-      const issues = await validateProjectIntegrity(project, {worldSnapshots: worlds}, project.history.length > 0);
+      const captured = captureImmutablePlainData({project, worlds});
+      let issues: Awaited<ReturnType<typeof validateProjectIntegrity>>;
+      if (captured.captured) {
+        const owned = internImmutableRecords(captured.value);
+        issues = await createProjectValidationSession({worldSnapshots: owned.worlds}).integrity(owned.project, owned.project.history.length > 0);
+      } else issues = await validateProjectIntegrity(project, {worldSnapshots: worlds}, project.history.length > 0);
       if (issues.length) throw Object.assign(new StorageError('VALIDATION_FAILED', issues.map(issue => `${issue.path}: ${issue.message}`).join('\n')), {issues});
       break;
     }
-    case 'recovery': result.recovery = await validateRecovery(recovery, project, worlds, signal); break;
+    case 'recovery': {
+      const captured = captureImmutablePlainData({project, recovery, worlds});
+      if (captured.captured) {
+        const owned = internImmutableRecords(captured.value);
+        await validateRecovery(owned.recovery, owned.project, owned.worlds, signal);
+        result.recovery = cloneMutableCaptured(captured.value.recovery!);
+      } else result.recovery = await validateRecovery(recovery, project, worlds, signal);
+      break;
+    }
     case 'sync_recovery': result.syncRecovery = await validateSyncRecovery(work.syncRecovery, worlds, signal); break;
-    case 'ids': result.ids = collectImportIds(projectWithRecoveryHistory(project, recovery)); break;
+    case 'ids': {
+      const captured = captureImmutablePlainData({project, recovery});
+      if (captured.captured) {
+        const owned = internImmutableRecords(captured.value);
+        result.ids = collectImportIds(projectWithRecoveryHistory(owned.project, owned.recovery));
+      } else result.ids = collectImportIds(projectWithRecoveryHistory(project, recovery));
+      break;
+    }
     case 'clone': result.cloned = await cloneProject(projectWithRecoveryHistory(project, recovery)); break;
     case 'mapped_plan': {
       if (!work.mapped || !work.target || !work.idMap) throw new StorageError('IMPORT_CONFLICT', '別作品の統合候補と全IDの明示対応が必要です。');
@@ -97,27 +153,55 @@ export async function runImportWork(work: ImportWork, signal?: AbortSignal, load
     }
     case 'map_recovery': {
       if (!recovery || !work.idMap) throw new StorageError('IMPORT_CONFLICT', '復元する送信待ち操作の明示ID対応が不足しています。');
-      const history = new Map(project.history.map(record => [record.operationId, record]));
-      const pending: PortableRecovery['pending'] = [];
-      for (const item of recovery.pending) {
-        checkCancelled(signal);
-        const operationId = work.idMap[item.operationId], command = history.get(operationId);
-        if (!operationId || !command) throw new StorageError('IMPORT_CONFLICT', '復元する送信待ち操作の明示ID対応が不足しています。', item.operationId);
-        pending.push({operationId, command, commandHash: await sha256(jsonBytes(command)), origin: item.origin ?? {projectId: recovery.projectId, operationId: item.operationId, serverRevision: recovery.serverRevision}});
+      const captured = captureImmutablePlainData({project, recovery, idMap: work.idMap});
+      if (captured.captured) {
+        const owned = internImmutableRecords(captured.value), history = new Map(captured.value.project.history.map(record => [record.operationId, record]));
+        const hashHistory = new Map(owned.project.history.map(record => [record.operationId, record]));
+        const pending: PortableRecovery['pending'] = [], encodeCommand = createSharedArrayJsonEncoder();
+        for (const item of captured.value.recovery.pending) {
+          checkCancelled(signal);
+          const operationId = captured.value.idMap[item.operationId], command = history.get(operationId), hashCommand = hashHistory.get(operationId);
+          if (!operationId || !command || !hashCommand) throw new StorageError('IMPORT_CONFLICT', '復元する送信待ち操作の明示ID対応が不足しています。', item.operationId);
+          pending.push({operationId, command, commandHash: await sha256(encodeCommand(hashCommand)), origin: item.origin ?? {projectId: captured.value.recovery.projectId, operationId: item.operationId, serverRevision: captured.value.recovery.serverRevision}});
+        }
+        result.recovery = cloneMutableCaptured({...captured.value.recovery, projectId: captured.value.project.projectId, sourceRevision: captured.value.project.revision, pending});
+      } else {
+        const history = new Map(project.history.map(record => [record.operationId, record]));
+        const pending: PortableRecovery['pending'] = [];
+        for (const item of recovery.pending) {
+          checkCancelled(signal);
+          const operationId = work.idMap[item.operationId], command = history.get(operationId);
+          if (!operationId || !command) throw new StorageError('IMPORT_CONFLICT', '復元する送信待ち操作の明示ID対応が不足しています。', item.operationId);
+          pending.push({operationId, command, commandHash: await sha256(jsonBytes(command)), origin: item.origin ?? {projectId: recovery.projectId, operationId: item.operationId, serverRevision: recovery.serverRevision}});
+        }
+        result.recovery = {...recovery, projectId: project.projectId, sourceRevision: project.revision, pending};
       }
-      result.recovery = {...recovery, projectId: project.projectId, sourceRevision: project.revision, pending};
       break;
     }
     case 'rehash_recovery': {
       if (!recovery) throw new StorageError('VALIDATION_FAILED', '送信待ち復元情報がありません。');
-      const history = new Map(project.history.map(record => [record.operationId, record]));
-      const pending: PortableRecovery['pending'] = [];
-      for (const item of recovery.pending) {
-        checkCancelled(signal);
-        const command = history.get(item.operationId) ?? item.command;
-        pending.push({...item, command, commandHash: await sha256(jsonBytes(command))});
+      const captured = captureImmutablePlainData({project, recovery});
+      if (captured.captured) {
+        const owned = internImmutableRecords(captured.value), history = new Map(captured.value.project.history.map(record => [record.operationId, record]));
+        const hashHistory = new Map(owned.project.history.map(record => [record.operationId, record]));
+        const pending: PortableRecovery['pending'] = [], encodeCommand = createSharedArrayJsonEncoder();
+        for (const [index, item] of captured.value.recovery.pending.entries()) {
+          checkCancelled(signal);
+          const hashItem = owned.recovery.pending[index]!;
+          const command = history.get(item.operationId) ?? item.command, hashCommand = hashHistory.get(hashItem.operationId) ?? hashItem.command;
+          pending.push({...item, command, commandHash: await sha256(encodeCommand(hashCommand))});
+        }
+        result.recovery = cloneMutableCaptured({...captured.value.recovery, projectId: captured.value.project.projectId, sourceRevision: captured.value.project.revision, pending});
+      } else {
+        const history = new Map(project.history.map(record => [record.operationId, record]));
+        const pending: PortableRecovery['pending'] = [];
+        for (const item of recovery.pending) {
+          checkCancelled(signal);
+          const command = history.get(item.operationId) ?? item.command;
+          pending.push({...item, command, commandHash: await sha256(jsonBytes(command))});
+        }
+        result.recovery = {...recovery, projectId: project.projectId, sourceRevision: project.revision, pending};
       }
-      result.recovery = {...recovery, projectId: project.projectId, sourceRevision: project.revision, pending};
       break;
     }
     default: throw new StorageError('FORMAT_UNSUPPORTED', '読み込みの検査工程が未対応です。');

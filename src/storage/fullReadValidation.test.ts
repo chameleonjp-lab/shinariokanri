@@ -100,6 +100,80 @@ describe('one private full-history read validation', () => {
     expect(project.history[0].before.name).toBe('作者が引き続き編集できる旧版');
   });
 
+  it('fully checks each structure image and returns a mutable detached result', async () => {
+    const project = retainedProject(); project.entities = structuredClone(project.entities);
+    const original = structuredClone(project), work: ImportWork = {step: 'structure', project, worlds: {}};
+    expect(project.entities[0]).not.toBe(project.history[112]!.after.entities[0]);
+    const result = await runImportWork(work);
+    expect(result.project).toEqual(original);
+    expect(result.project).not.toBe(project);
+    expect(Object.isFrozen(result.project)).toBe(false);
+    expect(Object.isFrozen(result.project!.history[112]!.after.entities)).toBe(false);
+    const current = result.project!.entities[0]!, historical = result.project!.history[112]!.after.entities[0]!;
+    expect(current).not.toBe(historical);
+    const historicalName = historical.name;
+    current.name = '現在稿だけの変更';
+    expect(historical.name).toBe(historicalName);
+    result.project!.name = '編集できる検査結果';
+    expect(project).toEqual(original);
+
+    Object.assign(result.project!.history[112]!.after, {unexpectedApproval: true});
+    await expect(runImportWork({...work, project: result.project!})).rejects.toMatchObject({
+      code: 'VALIDATION_FAILED', message: expect.stringContaining('project.history[112].after.unexpectedApproval'),
+    });
+    expect(project).toEqual(original);
+
+    Object.assign(project.history[112]!.after, {unexpectedApproval: true});
+    await expect(runImportWork(work)).rejects.toMatchObject({
+      code: 'VALIDATION_FAILED', message: expect.stringContaining('project.history[112].after.unexpectedApproval'),
+    });
+  });
+
+  it('creates fresh integrity scopes for changed schema and pinned-world dependencies', async () => {
+    const project = retainedProject(1), note = createEntity(project.projectId, 'note', '検査するメモ');
+    project.entities.push(note);
+    const work: ImportWork = {step: 'integrity', project, worlds: {}};
+    await expect(runImportWork(work)).resolves.toEqual({});
+    const previousSchema = ENTITY_SCHEMAS.note;
+    try {
+      ENTITY_SCHEMAS.note = {type: 'object', fields: {newlyRequired: {required: true, schema: {type: 'text'}}}} as typeof previousSchema;
+      await expect(runImportWork(work)).rejects.toMatchObject({code: 'VALIDATION_FAILED'});
+    } finally { ENTITY_SCHEMAS.note = previousSchema; }
+
+    const world = await createWorldSnapshot(createProject('検査する固定世界'), '参照する世界版');
+    const pin = world.snapshots.at(-1)!;
+    project.worldReferences.push({projectId: world.projectId, immutableSnapshotId: pin.id, contentHash: pin.contentHash});
+    const worlds = archive.worldSnapshotContents({[pin.id]: world});
+    const pinned: ImportWork = {step: 'integrity', project, worlds};
+    await expect(runImportWork(pinned)).resolves.toEqual({});
+    const changedWorlds = structuredClone(worlds);
+    changedWorlds[pin.id]!.name = '確認後に変わった世界';
+    await expect(runImportWork({...pinned, worlds: changedWorlds})).rejects.toMatchObject({code: 'VALIDATION_FAILED'});
+  });
+
+  it('integrity checks the project and pinned worlds captured before async verification yields', async () => {
+    const world = await createWorldSnapshot(createProject('非同期検査の固定世界'), '参照する世界版');
+    const pin = world.snapshots.at(-1)!;
+    const project = retainedProject(1);
+    project.worldReferences.push({projectId: world.projectId, immutableSnapshotId: pin.id, contentHash: pin.contentHash});
+    const worlds = archive.worldSnapshotContents({[pin.id]: world});
+    const work: ImportWork = {step: 'integrity', project, worlds};
+
+    const pending = runImportWork(work);
+    Object.assign(project.history[0]!.after, {unexpectedApproval: true});
+    worlds[pin.id]!.name = '非同期検査開始後に変わった世界';
+    await expect(pending).resolves.toEqual({});
+
+    await expect(runImportWork(work)).rejects.toMatchObject({
+      code: 'VALIDATION_FAILED', message: expect.stringContaining('project.history[0].after.unexpectedApproval'),
+    });
+    const invalidHistory = project.history[0]!.after as ContentState & {unexpectedApproval?: boolean};
+    delete invalidHistory.unexpectedApproval;
+    await expect(runImportWork(work)).rejects.toMatchObject({
+      code: 'VALIDATION_FAILED', message: expect.stringContaining('contentHash'),
+    });
+  });
+
   it.each([{index: 0, side: 'before'}, {index: 112, side: 'after'}] as const)(
     'refuses a missing typed target in command $index $side even when current content is valid', async ({index, side}) => {
       const project = retainedProject(), state = project.history[index][side];
