@@ -7,6 +7,49 @@ import {jsonBytes,sha256} from '../storage/json';
 
 const own=<T>(v:T)=>captureImmutablePlainData(v).value;
 describe('scope-owned full-value record sharing',()=>{
+ it('preserves identity of a fully shared frozen graph with no record substitutions',()=>{
+  const project=createProject('同じ記録とcalendarを参照する複数画像'),entity=createEntity(project.projectId,'note','共通の記録',{body:textToRichText('同じidentity')}),calendar=project.calendars[0]!;
+  project.entities.push(entity);
+  const input=own({project,images:[{entities:[entity],calendars:[calendar]},{entities:[entity],calendars:[calendar]}]}),shared=internImmutableRecords(input);
+  deepStrictEqual(shared,input);expect(shared).toBe(input);expect(shared.project).toBe(input.project);expect(shared.images).toBe(input.images);
+  expect(shared.project.entities[0]).toBe(shared.images[0]!.entities[0]);expect(shared.images[0]!.entities[0]).toBe(shared.images[1]!.entities[0]);
+  expect(shared.project.calendars[0]).toBe(shared.images[0]!.calendars[0]);expect(shared.images[0]!.calendars[0]).toBe(shared.images[1]!.calendars[0]);
+ });
+ it('copies only containers on a late replacement path and reuses the final alias copy',async()=>{
+  const projectId=newId(),candidate=createEntity(projectId,'note','共有する候補',{body:textToRichText('同じ全値')}),duplicate=structuredClone(candidate);
+  const branch={record:duplicate,untouched:{label:'同じidentityを維持'}};
+  const input=own({candidate,left:branch,right:branch,untouched:{label:'外側の未変更枝'}}),before=jsonBytes(input),beforeHash=await sha256(before);
+  expect(input.left).toBe(input.right);expect(input.left.record).not.toBe(input.candidate);
+  const shared=internImmutableRecords(input);
+  expect(shared).not.toBe(input);expect(shared.left).toBe(shared.right);expect(shared.left).not.toBe(input.left);
+  expect(shared.left.record).toBe(shared.candidate);expect(shared.left.untouched).toBe(input.left.untouched);expect(shared.untouched).toBe(input.untouched);
+  expect(input.left.record).not.toBe(input.candidate);expect(jsonBytes(input)).toEqual(before);
+  expect(jsonBytes(shared)).toEqual(before);expect(await sha256(jsonBytes(shared))).toBe(beforeHash);
+ });
+ it('preserves null prototypes, own undefined, signed zero, key and array order, bytes, hash, and validation',async()=>{
+  const project=createProject('COW値とvalidation'),candidate=createEntity(project.projectId,'note','共有候補',{body:textToRichText('保持する本文')}),duplicate=structuredClone(candidate);
+  project.entities.push(duplicate);
+  const custom=Object.create(null) as Record<string,unknown>;
+  custom.zeta=undefined;custom.negativeZero=-0;custom.records=[duplicate,'middle',candidate];custom.alpha='最後に追加した値';
+  const input=own({candidate,project,custom}),before=jsonBytes(input),beforeHash=await sha256(before),beforeValidation=validateProject(input.project);
+  expect(beforeValidation.ok).toBe(true);
+  const shared=internImmutableRecords(input),afterValidation=validateProject(shared.project),sharedRecords=shared.custom.records as unknown[];
+  expect(Object.getPrototypeOf(shared.custom)).toBe(null);expect(Object.keys(shared.custom)).toEqual(['zeta','negativeZero','records','alpha']);
+  expect(Object.hasOwn(shared.custom,'zeta')).toBe(true);expect(shared.custom.zeta).toBeUndefined();expect(Object.is(shared.custom.negativeZero,-0)).toBe(true);
+  expect(sharedRecords).not.toBe(input.custom.records);expect(sharedRecords[0]).toBe(shared.candidate);
+  expect(sharedRecords[1]).toBe('middle');expect(sharedRecords[2]).toBe(shared.candidate);
+  expect(shared.project.entities[0]).toBe(shared.candidate);expect(shared.project.entities[0]).not.toBe(input.project.entities[0]);
+  expect(afterValidation).toEqual(beforeValidation);expect(jsonBytes(input)).toEqual(before);expect(jsonBytes(shared)).toEqual(before);
+  expect(await sha256(jsonBytes(shared))).toBe(beforeHash);
+ });
+ it('starts exact candidate comparison in a fresh scope after the 100000-reference boundary',()=>{
+  const projectId=newId(),record=(index:number)=>({id:`record-${index}`,projectId,kind:'note',data:{marker:index}});
+  const first=record(0),candidates=Array.from({length:99_999},(_,index)=>record(index+1)),afterClear=record(100_000);
+  const input=own([first,...candidates,afterClear,structuredClone(afterClear),structuredClone(first),structuredClone(first)]),shared=internImmutableRecords(input);
+  deepStrictEqual(shared,input);expect(shared).not.toBe(input);expect(shared[100_000]).toBe(shared[100_001]);
+  expect(shared[0]).not.toBe(shared[100_002]);expect(shared[0]).toBe(input[0]);expect(shared[100_002]).toBe(input[100_002]);
+  expect(shared[100_002]).toBe(shared[100_003]);expect(shared[100_003]).not.toBe(shared[0]);
+ });
  it('keeps every field and byte while sharing separately captured equal checkpoints',async()=>{
   const p=createProject('別々に読まれた同じ記録');p.entities.push(createEntity(p.projectId,'note','原文',{body:textToRichText('😀全値を残す')}));
   const original=own({current:p,older:structuredClone(p),pending:structuredClone(p)}),shared=internImmutableRecords(original);
