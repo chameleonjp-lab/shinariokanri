@@ -2,7 +2,7 @@ import {validateSyncRecovery,syncRecoveryImages,type NativeSyncRecovery} from '.
 import {captureImmutablePlainData,freezeCapturedPlainData,isImmutablePlainData} from '../domain/immutablePlainData';
 import {RECORD_DICTIONARY_FEATURE,RECORD_DELTA_FEATURE,CALENDAR_RECORD_FEATURE,RecordDictionaryWriter,RecordDictionaryReader} from './recordDictionary';
 import { Inflate, zipSync } from 'fflate';
-import { createRecoveryValidationSession, validateRecovery, recoveryImages, type PortableRecovery } from './recovery';
+import { createRecoveryValidationSession, recoveryImages, type PortableRecovery } from './recovery';
 import { projectWithRecoveryHistory } from './recovery';
 import { collectImportIds } from './importMapping';
 import type { Entity,Relation,ProjectContent, ProjectData, WorldReference } from '../domain/types';
@@ -422,19 +422,29 @@ export async function inspectScenarioData(bytes: Uint8Array, options: InspectOpt
   const rawWorlds: Record<string, unknown> = Object.create(null) as Record<string, unknown>;
   for (const file of manifest.files.filter(item => item.role === 'world')) rawWorlds[file.path.slice(7, -5)] = read(file.path);
   const worldContents = worldSnapshotContents(rawWorlds);
-  const project = checkedProject(read('data/project.json'), 'data/project.json', limits, worldContents);
+  // Decoded roots are mutable even when their dictionary records are frozen.
+  // Capture their complete own-data graphs before opening a validation scope;
+  // metadata and every distinct image/reference still use the full contract.
+  // Keep the original decoded roots for the existing public inspection result.
+  const validation = createRecoveryValidationSession(worldContents);
+  const rawProject = read('data/project.json');
+  const projectCapture = captureImmutablePlainData(rawProject);
+  const project = checkedProject(projectCapture.value, 'data/project.json', limits, worldContents, validation);
   if (project.projectId !== manifest.projectId) throw new StorageError('VALIDATION_FAILED', 'manifestと作品のprojectIdが一致しません。', 'data/project.json/projectId');
   const worlds: Record<string, ProjectData> = Object.create(null) as Record<string, ProjectData>;
+  const inspectedWorlds: Record<string, ProjectData> = Object.create(null) as Record<string, ProjectData>;
   let records = project.entities.length + project.relations.length;
   for (const file of manifest.files.filter(item => item.role === 'world')) {
-    const world = checkedProject(rawWorlds[file.path.slice(7, -5)], file.path, limits, worldContents);
-    worlds[file.path.slice(7, -5)] = world;
+    const id = file.path.slice(7, -5), captured = captureImmutablePlainData(rawWorlds[id]);
+    const world = checkedProject(captured.value, file.path, limits, worldContents, validation);
+    worlds[id] = world;
+    inspectedWorlds[id] = captured.captured ? rawWorlds[id] as ProjectData : world;
     records += world.entities.length + world.relations.length;
     if (records > limits.records) throw new StorageError('LIMIT_EXCEEDED', '参照世界を含むentityとrelationの件数が上限を超えています。', file.path);
   }
   const declaredRecovery = manifest.requiredFeatures?.includes('portable-recovery-v1') ?? false;
   if (declaredRecovery !== files.has('data/recovery.json')) throw new StorageError('FORMAT_UNSUPPORTED', '送信待ち復元情報には対応する必須機能の宣言が必要です。');
-  const recovery = declaredRecovery ? await validateRecovery(read('data/recovery.json'), project, worldContents, options.signal) : undefined;
+  const recovery = declaredRecovery ? await validation.recoveryForInspection(read('data/recovery.json'), project, options.signal) : undefined;
   const declaredSync=manifest.requiredFeatures?.includes('native-sync-recovery-v1')??false;
   if(declaredSync!==files.has('data/sync-recovery.json'))throw new StorageError('FORMAT_UNSUPPORTED','同期復元証跡には必須機能宣言が必要です。');
   const syncRecovery=declaredSync?await validateSyncRecovery(read('data/sync-recovery.json'),worldContents,options.signal):undefined;
@@ -444,8 +454,8 @@ export async function inspectScenarioData(bytes: Uint8Array, options: InspectOpt
   if(sharedReviews!==(manifest.requiredFeatures?.includes('shared-review-source-v1')??false))throw new StorageError('FORMAT_UNSUPPORTED','共有指摘の出所には対応する必須機能宣言が必要です。');
   verifyWorlds([project, ...operationalImages, ...Object.values(worlds)], worlds);
   await verifySnapshotHashes([project, ...operationalImages, ...Object.values(worlds)]);
-  await checkedProjectIntegrity(project, 'data/project.json', worldContents);
-  for (const [id, world] of Object.entries(worlds)) await checkedProjectIntegrity(world, `worlds/${id}.json`, worldContents);
+  await checkedProjectIntegrity(project, 'data/project.json', worldContents, validation);
+  for (const [id, world] of Object.entries(worlds)) await checkedProjectIntegrity(world, `worlds/${id}.json`, worldContents, validation);
   const attachments = new Map(allAttachmentMetadata([project, ...operationalImages, ...Object.values(worlds)]).map(item => [item.assetPath, item]));
   const assets: ArchiveAsset[] = [];
   for (const file of manifest.files.filter(item => item.role === 'asset')) {
@@ -461,7 +471,7 @@ export async function inspectScenarioData(bytes: Uint8Array, options: InspectOpt
   collectImportIds(projectWithRecoveryHistory(project, recovery));
   checkCancelled(options.signal);
   options.onProgress?.({ stage: 'validating', completed: 1, total: 1 });
-  return { manifest, project, worlds, assets, ...(recovery ? { recovery } : {}),...(syncRecovery?{syncRecovery}:{}),
+  return { manifest, project: projectCapture.captured ? rawProject as ProjectData : project, worlds: inspectedWorlds, assets, ...(recovery ? { recovery: structuredClone(recovery) } : {}),...(syncRecovery?{syncRecovery}:{}),
     warnings: [...(manifest.assetMode === 'metadata_only' ? [`軽量保存です。${missing.length}件の添付bytesを含まず、完全バックアップとして復元できません。`] : []), ...(recovery?.pending.length ? [`${recovery.pending.length}件の送信待ち意図を保持します。接続先・権限・サーバー共通元を確認するまで自動送信しません。`] : [])],
     summary: { name: project.name, entities: project.entities.length, relations: project.relations.length, assetBytes: assets.reduce((sum, item) => sum + item.bytes.byteLength, 0), missingAssets: missing.length, history: project.history.length } };
 }

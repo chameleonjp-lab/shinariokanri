@@ -13,6 +13,47 @@ const refused = (result: ValidationResult<ProjectData>, path: string) => {
   if (!result.ok) expect(result.issues.some(issue => issue.path.includes(path)), result.issues.map(issue => `${issue.path}: ${issue.message}`).join('\n')).toBe(true);
 };
 
+it('rechecks unchanged conditions when a same-ID dependency changes after a successful captured image', () => {
+  const source = createProject('参照先の型が変わる履歴');
+  const variable = createEntity(source.projectId, 'variable', '許可', {
+    key: 'permit', valueType: 'boolean', initial: {type: 'boolean', value: false}, allowed: {values: [false, true]},
+  });
+  const character = createEntity(source.projectId, 'character', '人物', {aliases: [{
+    id: newId(), text: '条件付きの別名', reading: '', audienceHolderIds: [], isPublicDefault: false,
+    validity: {...emptyValidity(), routeCondition: {op: 'compare', variableId: variable.id, comparator: 'eq', value: {type: 'boolean', value: true}}},
+  }]});
+  source.entities.push(variable, character);
+  const captured = own(source), validate = createProjectValidator();
+  expect(validate(captured).ok).toBe(true);
+  const renamed = own({...captured, name: '名前だけの変更', revision: '1'});
+  expect(validate(renamed).ok).toBe(true);
+  const integer = {...variable, data: {...variable.data, valueType: 'integer' as const, initial: {type: 'integer' as const, value: 1}, allowed: {min: 0, max: 10}}};
+  const changed = own({...captured, revision: '2', entities: [integer, captured.entities[1]]});
+  refused(validate(changed), '.aliases[0].validity.routeCondition.value');
+  expect(validate(changed)).toEqual(validateProject(changed));
+  expect(validate(captured).ok).toBe(true);
+});
+
+it('rechecks block collisions and changed target text after immutable content IDs were observed', () => {
+  const source = createProject('履歴間の本文位置と重複');
+  const first = createEntity(source.projectId, 'note', '本文', {body: textToRichText('😀門の前')});
+  const anchor = createEntity(source.projectId, 'note', '本文へのリンク', {body: [{id: newId(), kind: 'paragraph', text: '参照', links: [{
+    start: 0, end: 2, target: {entityId: first.id, blockId: first.data.body[0].id, start: 0, end: 3},
+  }]}]});
+  source.entities.push(first, anchor);
+  const captured = own(source), validate = createProjectValidator();
+  expect(validate(captured).ok).toBe(true);
+  const shared = createEntity(source.projectId, 'note', '同じ段落ID', {body: captured.entities[0].kind === 'note' ? captured.entities[0].data.body : []});
+  const duplicate = own({...captured, entities: [...captured.entities, shared]});
+  refused(validate(duplicate), '.body[0].id');
+  expect(validate(duplicate)).toEqual(validateProject(duplicate));
+  const short = {...first, data: {...first.data, body: [{...first.data.body[0], text: '😀'}]}};
+  const changed = own({...captured, entities: [short, captured.entities[1]]});
+  refused(validate(changed), '.links[0].target.end');
+  expect(validate(changed)).toEqual(validateProject(changed));
+  expect(validate(captured).ok).toBe(true);
+});
+
 async function citationFixture() {
   let project = createProject('固定本文を参照する作品');
   const scene = createEntity(project.projectId, 'scene', '旧本文', { body: textToRichText('😀e\u0301門') });
