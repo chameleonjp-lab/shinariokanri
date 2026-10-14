@@ -50,7 +50,7 @@ it('keeps every packed byte, root, count and SHA identical to the 3288e4e baseli
   order: {z: '末尾', a: '先頭'}, present: undefined, negativeZero: -0,
  };
  await expectBaselineParity(ordinaryInput, 'fixed-baseline-scope:ordinary');
- await expectBaselineParity(['並び', '😀', -0, undefined, {z: 1, a: 2}], 'fixed-baseline-scope:array-order');
+ await expectBaselineParity(['並び', '😀', null, true, false, -0, Number.MIN_VALUE, Number.MAX_VALUE, 1e-7, 1e-6, 1e20, 1e21, undefined, {z: 1, a: 2, tagLike: {number: -0, undefined: true}}], 'fixed-baseline-scope:array-order');
 
  const stringsAtThreshold = [
   'a'.repeat(699_047), 'b'.repeat(699_047), 'c'.repeat(699_048), 'd'.repeat(13),
@@ -74,6 +74,60 @@ it('keeps every packed byte, root, count and SHA identical to the 3288e4e baseli
  expect(nodeParts).toHaveLength(2);
  expect(nodeParts[0]!.bytes.byteLength).toBeLessThan(2 * 1024 * 1024);
  expect(nodeParts[1]!.bytes.byteLength).toBeGreaterThan(2 * 1024 * 1024);
+});
+
+it('does not call inherited native JSON hooks while packing generated node arrays and numeric tags', async () => {
+ const input = {
+  values: [1234567890123456, -0, Number.MIN_VALUE, Number.MAX_VALUE, 1e-7, 1e21, null, true, false],
+  tagLike: {number: -0, undefined: true, text: '😀'},
+  explicit: undefined,
+  negativeZero: -0,
+  nullValue: null,
+  trueValue: true,
+  falseValue: false,
+ };
+ const hooks = [Object.prototype, Array.prototype, Number.prototype] as const;
+ const saved = hooks.map(prototype => Object.getOwnPropertyDescriptor(prototype, 'toJSON'));
+ let calls = 0;
+ const toJSON = () => { calls++; throw new Error('native JSON hook must not run'); };
+ try {
+  for (const prototype of hooks) Object.defineProperty(prototype, 'toJSON', {configurable: true, writable: true, value: toJSON});
+  await expectBaselineParity(input, 'fixed-baseline-scope:generated-node-hooks');
+  expect(calls).toBe(0);
+ } finally {
+  hooks.forEach((prototype, index) => {
+   const descriptor = saved[index];
+   if (descriptor) Object.defineProperty(prototype, 'toJSON', descriptor);
+   else Reflect.deleteProperty(prototype, 'toJSON');
+  });
+ }
+});
+
+async function packFailure(pack: typeof packCurrent, value: unknown, scope: string) {
+ try { await pack(value, scope); return null; }
+ catch (error) {
+  const value = error as {name?: unknown; code?: unknown; message?: unknown; path?: unknown};
+  return {name: value.name, code: value.code, message: value.message, path: value.path};
+ }
+}
+
+it('preserves baseline errors for unsupported author graphs before generated-node encoding', async () => {
+ const cycle: {child?: unknown} = {};
+ cycle.child = cycle;
+ const invalidCases: Array<[string, unknown]> = [
+  ['nonfinite', {value: Number.NaN}],
+  ['function', {value: () => undefined}],
+  ['sparse', new Array(2)],
+  ['class-instance', {value: new Date(0)}],
+  ['cycle', cycle],
+ ];
+ for (const [label, value] of invalidCases) {
+  const scope = `fixed-baseline-scope:error:${label}`;
+  const baselineError = await packFailure(pack3288Baseline, value, scope);
+  const candidateError = await packFailure(packCurrent, value, scope);
+  expect(baselineError).not.toBeNull();
+  expect(candidateError).toEqual(baselineError);
+ }
 });
 
 it('keeps caller graphs mutable and packs the captured value while a digest is pending', async () => {

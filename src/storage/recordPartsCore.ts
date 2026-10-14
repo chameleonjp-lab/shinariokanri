@@ -8,6 +8,23 @@ export interface RecordPart{key:string;scope:string;sequence:number;kind:'string
 export interface PackedRecord{version:1;scope:string;root:Atom;nodes:number;strings:number;parts:{key:string;kind:RecordPart['kind'];bytes:number;sha256:string}[]}
 const MAX_PART=8*1024*1024,MAX_TOTAL=256*1024*1024,MAX_NODES=4_000_000;
 const invalid=():never=>{throw new StorageError('SAVE_FAILED','大きな履歴の分割記録が破損しています。既存データを保持しています。');};
+/** Serialize only the private nodes emitted by atom(). Raw author strings live in the separate strings table. */
+const canonicalGeneratedNode=(node:Node):string=>{
+ const atomText=(value:Atom|number):string=>{
+  if(value===null)return'null';
+  if(typeof value==='boolean')return value?'true':'false';
+  if(typeof value==='number')return Number.isFinite(value)?JSON.stringify(value)!:canonicalJson(value);
+  if(value&&typeof value==='object'&&!Array.isArray(value)){
+   const keys=Object.keys(value),tag=value as {number?:unknown;undefined?:unknown};
+   if(keys.length===1&&keys[0]==='undefined'&&Object.hasOwn(value,'undefined')&&tag.undefined===true)return'{"undefined":true}';
+   if(keys.length===1&&keys[0]==='number'&&Object.hasOwn(value,'number')&&typeof tag.number==='number'&&Number.isFinite(tag.number))return'{"number":'+JSON.stringify(tag.number)!+'}';
+  }
+  return canonicalJson(value);
+ };
+ const values:string[]=[];
+ for(let index=0;index<node.length;index++)values.push(atomText(node[index]!));
+ return'['+values.join(',')+']';
+};
 /** Local clone graph with shared strings. Complete values, identity aliases,
  * array order and present undefined are retained; no history is summarized. */
 export async function packRecordData(value:unknown,scope:string,signal?:AbortSignal):Promise<{packed:PackedRecord;parts:RecordPart[]}>{
@@ -15,7 +32,7 @@ export async function packRecordData(value:unknown,scope:string,signal?:AbortSig
  const string=(v:string)=>{let id=stringIds.get(v);if(id===undefined){id=strings.length;strings.push(v);stringIds.set(v,id);}return id;};
  const atom=(v:unknown):Atom=>{if(v===undefined)return{undefined:true};if(typeof v==='string')return-string(v)-1;if(typeof v==='number'){if(!Number.isFinite(v))return invalid();return{number:v};}if(v===null||typeof v==='boolean')return v;if(!v||typeof v!=='object'||!Array.isArray(v)&&Object.getPrototypeOf(v)!==Object.prototype&&Object.getPrototypeOf(v)!==null)return invalid();const known=ids.get(v);if(known!==undefined){if(active.has(v))return invalid();return known;}const id=nodes.length;if(id>=MAX_NODES)return invalid();ids.set(v,id);active.add(v);const node:Node=[Array.isArray(v)?0:1];nodes.push(node);if(Array.isArray(v)){if(Object.keys(v).length!==v.length)return invalid();for(const item of v)node.push(atom(item));}else for(const [key,item]of Object.entries(v))node.push(string(key),atom(item));active.delete(v);return id;};
  const root=atom(value),parts:RecordPart[]=[];let total=0;const encoder=new TextEncoder();
- for(const [kind,items]of [['strings',strings],['nodes',nodes]] as const){let itemTexts:string[]=[],size=0;const emit=async()=>{if(!itemTexts.length)return;checkCancelled(signal);const bytes=encoder.encode(`[${itemTexts.join(',')}]`);total+=bytes.byteLength;if(bytes.byteLength>MAX_PART||total>MAX_TOTAL)throw new StorageError('LIMIT_EXCEEDED','履歴の分割記録が端末の安全上限を超えています。');const sequence=parts.length;parts.push({key:`${scope}:${sequence}`,scope,sequence,kind,bytes,sha256:await sha256(bytes)});checkCancelled(signal);itemTexts=[];size=0;};for(const item of items){const text=canonicalJson(item),length=kind==='nodes'?text.length:encoder.encode(text).byteLength;if(length>MAX_PART)return invalid();if(itemTexts.length&&size+length+itemTexts.length+2>MAX_PART/4)await emit();itemTexts.push(text);size+=length;}await emit();}
+ for(const [kind,items]of [['strings',strings],['nodes',nodes]] as const){let itemTexts:string[]=[],size=0;const emit=async()=>{if(!itemTexts.length)return;checkCancelled(signal);const bytes=encoder.encode(`[${itemTexts.join(',')}]`);total+=bytes.byteLength;if(bytes.byteLength>MAX_PART||total>MAX_TOTAL)throw new StorageError('LIMIT_EXCEEDED','履歴の分割記録が端末の安全上限を超えています。');const sequence=parts.length;parts.push({key:`${scope}:${sequence}`,scope,sequence,kind,bytes,sha256:await sha256(bytes)});checkCancelled(signal);itemTexts=[];size=0;};for(const item of items){const text=kind==='nodes'?canonicalGeneratedNode(item as Node):canonicalJson(item),length=kind==='nodes'?text.length:encoder.encode(text).byteLength;if(length>MAX_PART)return invalid();if(itemTexts.length&&size+length+itemTexts.length+2>MAX_PART/4)await emit();itemTexts.push(text);size+=length;}await emit();}
  checkCancelled(signal);return{packed:{version:1,scope,root,nodes:nodes.length,strings:strings.length,parts:parts.map(p=>({key:p.key,kind:p.kind,bytes:p.bytes.byteLength,sha256:p.sha256}))},parts};
 }
 export async function unpackRecordData(packed:PackedRecord,parts:RecordPart[],signal?:AbortSignal):Promise<unknown>{
