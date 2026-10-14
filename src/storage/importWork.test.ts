@@ -4,7 +4,7 @@ import Dexie from 'dexie';
 import {createHash} from 'node:crypto';
 import {afterEach, describe, expect, it, vi} from 'vitest';
 import {createEntity, createProject, newId, RELATION_TYPES, textToRichText} from '../domain/model';
-import type {CommandRecord, ContentState} from '../domain/types';
+import type {CommandRecord, ContentState, Entity} from '../domain/types';
 import {createWorldSnapshot} from '../domain/world';
 import {inspectScenario, performImportWork} from './archive';
 import {FORMAT_VERSION, jsonBytes, sha256} from './json';
@@ -12,7 +12,10 @@ import {StorageError} from './errors';
 import {createImportWorkWorkerRunner, freezeCapturedImportWork, runImportWork, runImportWorkForWorker, type ImportWork} from './importWork';
 import {createImportWorkSession} from './importWorkSession';
 import {ScenarioStore} from './store';
-import {isImmutablePlainData} from '../domain/immutablePlainData';
+import {captureImmutablePlainData, freezeCapturedPlainData, isImmutablePlainData} from '../domain/immutablePlainData';
+import {internImmutableRecords} from '../domain/internImmutableRecords';
+import {collectImportIds, createNativeWorkerImportIdCollector} from './importMapping';
+import {projectWithRecoveryHistory} from './recovery';
 
 class ControlledWorker {
   static instances: ControlledWorker[] = [];
@@ -286,12 +289,169 @@ describe('private import validation DTO boundary', () => {
 });
 
 describe('archive worker private validation boundary', () => {
+  it('keeps direct runner entry points on the uncached legacy ID walk', async () => {
+    const makeWork = (freeze: boolean) => {
+      const project = createProject('Direct Proxy ID route'), note = createEntity(project.projectId, 'note', 'same root');
+      let idReads = 0;
+      const data = new Proxy(note.data, {get(target, key, receiver) {
+        if (key === 'id' && ++idReads === 2) throw new Error('second direct Proxy ID read');
+        return Reflect.get(target, key, receiver);
+      }});
+      note.data = data;
+      project.entities = [note, {...note}];
+      if (freeze) expect(freezeCapturedPlainData(project)).toBe(true);
+      return {work: {step: 'ids' as const, project, worlds: {}}, reads: () => idReads, resetReads: () => { idReads = 0; }};
+    };
+    const legacyIds = (work: ImportWork) => {
+      const captured = captureImmutablePlainData({project: work.project, recovery: work.recovery});
+      if (captured.captured) {
+        const owned = internImmutableRecords(captured.value);
+        return collectImportIds(projectWithRecoveryHistory(owned.project, owned.recovery));
+      }
+      return collectImportIds(projectWithRecoveryHistory(work.project, work.recovery));
+    };
+    const runner = createImportWorkWorkerRunner();
+    for (const invoke of [
+      (work: ImportWork) => runImportWork(work),
+      (work: ImportWork) => runImportWorkForWorker(work),
+      (work: ImportWork) => runner.run(work),
+    ]) {
+      const mutable = makeWork(false), expectedIds = legacyIds(mutable.work);
+      expect((await invoke(mutable.work)).ids).toEqual(expectedIds);
+      expect(mutable.reads()).toBe(0);
+
+      const frozen = makeWork(true);
+      let expectedMessage = '';
+      try { legacyIds(frozen.work); } catch (error) { expectedMessage = (error as Error).message; }
+      expect(expectedMessage).toBe('second direct Proxy ID read');
+      frozen.resetReads();
+      await expect(invoke(frozen.work)).rejects.toThrow(expectedMessage);
+      expect(frozen.reads()).toBe(2);
+    }
+  });
+
+  it('runs memoized ID collection only through native structured-clone worker messages', async () => {
+    const {project} = recoveryFixture(2), caller = {step: 'ids' as const, project, worlds: {}}, workerWork = structuredClone(caller);
+    const expected = collectImportIds(project), posted: unknown[] = [];
+    const workerScope: {onmessage: ((event: MessageEvent) => void) | null; postMessage: (message: unknown) => void} = {
+      onmessage: null, postMessage: message => { posted.push(structuredClone(message)); },
+    };
+    vi.stubGlobal('self', workerScope); vi.resetModules();
+    await import('./archive.worker');
+    workerScope.onmessage!({data: {type: 'import-work', requestId: 42, work: workerWork}} as MessageEvent);
+    await vi.waitFor(() => expect(posted).toHaveLength(1));
+    expect(posted[0]).toMatchObject({type: 'done', requestId: 42, result: {ids: expected}});
+    expect(Object.isFrozen(workerWork)).toBe(true);
+    expect(Object.isFrozen(caller.project)).toBe(false);
+  });
+
+  it('falls back before merging inherited pending and command accessors into the worker memo graph', async () => {
+    const {project, commands} = recoveryFixture(1), externalCommand = structuredClone(commands[0]!);
+    externalCommand.operationId = newId();
+    let idReads = 0, pendingReads = 0, commandReads = 0;
+    const beforeEntity = externalCommand.before.entities[0]!;
+    const afterEntity = externalCommand.after.entities.find(entity => entity.id === beforeEntity.id)!;
+    const data = new Proxy(beforeEntity.data, {get(target, key, receiver) {
+      if (key === 'id' && ++idReads === 2) throw new Error('second inherited Proxy ID read');
+      return Reflect.get(target, key, receiver);
+    }});
+    beforeEntity.data = data; afterEntity.data = data;
+    expect(freezeCapturedPlainData(externalCommand)).toBe(true);
+    expect(isImmutablePlainData(externalCommand)).toBe(true);
+    const injectedItem = {operationId: externalCommand.operationId};
+    const injectedPending = [injectedItem];
+    const recovery = {version: 1 as const, projectId: project.projectId, sourceRevision: project.revision, serverRevision: '8'} as unknown as NonNullable<ImportWork['recovery']>;
+    const callerWork = {step: 'ids' as const, project, recovery, worlds: {}}, workerWork = structuredClone(callerWork), posted: unknown[] = [];
+    const workerRecovery = workerWork.recovery!;
+    const workerScope: {onmessage: ((event: MessageEvent) => void) | null; postMessage: (message: unknown) => void} = {
+      onmessage: null, postMessage: message => { posted.push(structuredClone(message)); },
+    };
+    const oldPending = Object.getOwnPropertyDescriptor(Object.prototype, 'pending');
+    const oldCommand = Object.getOwnPropertyDescriptor(Object.prototype, 'command');
+    Object.defineProperty(Object.prototype, 'pending', {configurable: true, get() {
+      if (this === workerRecovery) {
+        pendingReads++;
+        delete (Object.prototype as {pending?: unknown}).pending;
+        return injectedPending;
+      }
+      return undefined;
+    }});
+    Object.defineProperty(Object.prototype, 'command', {configurable: true, get() {
+      if (this === injectedItem) {
+        commandReads++;
+        delete (Object.prototype as {command?: unknown}).command;
+        return externalCommand;
+      }
+      return undefined;
+    }});
+    try {
+      vi.stubGlobal('self', workerScope); vi.resetModules();
+      await import('./archive.worker');
+      workerScope.onmessage!({data: {type: 'import-work', requestId: 43, work: workerWork}} as MessageEvent);
+      await vi.waitFor(() => expect(posted).toHaveLength(1));
+      expect(posted[0]).toMatchObject({type: 'error', requestId: 43, error: {code: 'SAVE_FAILED'}});
+      expect(pendingReads).toBe(1);
+      expect(commandReads).toBe(1);
+      expect(idReads).toBe(2);
+      expect(Object.isFrozen(externalCommand)).toBe(true);
+    } finally {
+      if (oldPending) Object.defineProperty(Object.prototype, 'pending', oldPending);
+      else delete (Object.prototype as {pending?: unknown}).pending;
+      if (oldCommand) Object.defineProperty(Object.prototype, 'command', oldCommand);
+      else delete (Object.prototype as {command?: unknown}).command;
+    }
+  });
+
+  it('checks an inherited command getter before merging an otherwise native pending DTO', async () => {
+    const {project, commands} = recoveryFixture(1), externalCommand = structuredClone(commands[0]!);
+    externalCommand.operationId = newId();
+    let idReads = 0, commandReads = 0;
+    const beforeEntity = externalCommand.before.entities[0]!;
+    const afterEntity = externalCommand.after.entities.find(entity => entity.id === beforeEntity.id)!;
+    const data = new Proxy(beforeEntity.data, {get(target, key, receiver) {
+      if (key === 'id' && ++idReads === 2) throw new Error('second inherited command Proxy ID read');
+      return Reflect.get(target, key, receiver);
+    }});
+    beforeEntity.data = data; afterEntity.data = data;
+    expect(freezeCapturedPlainData(externalCommand)).toBe(true);
+    const item = {operationId: externalCommand.operationId};
+    const recovery = {version: 1 as const, projectId: project.projectId, sourceRevision: project.revision, serverRevision: '9',
+      pending: [item]} as unknown as NonNullable<ImportWork['recovery']>;
+    const callerWork = {step: 'ids' as const, project, recovery, worlds: {}}, workerWork = structuredClone(callerWork), posted: unknown[] = [];
+    const workerItem = workerWork.recovery!.pending[0] as unknown as object;
+    const workerScope: {onmessage: ((event: MessageEvent) => void) | null; postMessage: (message: unknown) => void} = {
+      onmessage: null, postMessage: message => { posted.push(structuredClone(message)); },
+    };
+    const oldCommand = Object.getOwnPropertyDescriptor(Object.prototype, 'command');
+    Object.defineProperty(Object.prototype, 'command', {configurable: true, get() {
+      if (this === workerItem) {
+        commandReads++;
+        delete (Object.prototype as {command?: unknown}).command;
+        return externalCommand;
+      }
+      return undefined;
+    }});
+    try {
+      vi.stubGlobal('self', workerScope); vi.resetModules();
+      await import('./archive.worker');
+      workerScope.onmessage!({data: {type: 'import-work', requestId: 44, work: workerWork}} as MessageEvent);
+      await vi.waitFor(() => expect(posted).toHaveLength(1));
+      expect(posted[0]).toMatchObject({type: 'error', requestId: 44, error: {code: 'SAVE_FAILED'}});
+      expect(commandReads).toBe(1);
+      expect(idReads).toBe(2);
+    } finally {
+      if (oldCommand) Object.defineProperty(Object.prototype, 'command', oldCommand);
+      else delete (Object.prototype as {command?: unknown}).command;
+    }
+  });
+
   it('freezes the worker-owned validation message while keeping author input and result editable', async () => {
     const caller = {...request(), project: recoveryFixture(2).project}, workerWork = structuredClone(caller), posted: unknown[] = [];
     const workerScope: {onmessage: ((event: MessageEvent) => void) | null; postMessage: (message: unknown) => void} = {
       onmessage: null, postMessage: message => { posted.push(structuredClone(message)); },
     };
     vi.stubGlobal('self', workerScope);
+    vi.resetModules();
     await import('./archive.worker');
     workerScope.onmessage!({data: {type: 'import-work', requestId: 41, work: workerWork}} as MessageEvent);
     await vi.waitFor(() => expect(posted).toHaveLength(1));
@@ -312,6 +472,88 @@ describe('archive worker private validation boundary', () => {
     expect(historical.name).toBe(historicalName);
     expect(workerWork.project.entities.find(entity => entity.id === entityId)!.name).toBe(historicalName);
     expect(caller.project.entities.find(entity => entity.id === entityId)!.name).toBe(historicalName);
+  });
+
+  it('keeps the ID result editable and the caller project unfrozen on the captured ids path', async () => {
+    const {project, commands} = recoveryFixture(2);
+    const recovery = {version: 1 as const, projectId: project.projectId, sourceRevision: project.revision, serverRevision: project.revision,
+      pending: await Promise.all(commands.map(async command => ({operationId: command.operationId, command: structuredClone(command), commandHash: await sha256(jsonBytes(command))}))) };
+    const original = structuredClone(project), expected = collectImportIds(project);
+    const result = await runImportWork({step: 'ids', project, recovery, worlds: {}});
+    expect(result.ids).toEqual(expected);
+    expect(project).toEqual(original);
+    expect(Object.isFrozen(project)).toBe(false);
+    expect(Object.isFrozen(project.history[0]!.after.entities[0])).toBe(false);
+    expect(Object.isFrozen(result.ids)).toBe(false);
+    expect(Object.isFrozen(result.ids![0])).toBe(false);
+    result.ids![0]!.id = 'editable result only';
+    expect(project).toEqual(original);
+  });
+
+  it('detaches an inherited pending-only command before freezing the captured ID enumeration image', async () => {
+    const {project, commands} = recoveryFixture(1), externalCommand = structuredClone(commands[0]!);
+    externalCommand.operationId = newId();
+    const externalNote = externalCommand.after.entities[0] as Entity<'note'>;
+    externalNote.data.body = textToRichText('外部pending本文😀');
+    const externalBlockId = externalNote.data.body[0]!.id, operationId = externalCommand.operationId;
+    const injectedPending = [{operationId, command: externalCommand, commandHash: '0'.repeat(64)}];
+    const recovery = {version: 1 as const, projectId: project.projectId, sourceRevision: project.revision, serverRevision: '3'} as unknown as NonNullable<ImportWork['recovery']>;
+    let reads = 0;
+    const previous = Object.getOwnPropertyDescriptor(Object.prototype, 'pending');
+    Object.defineProperty(Object.prototype, 'pending', {configurable: true, get() {
+      if ((this as {version?: unknown; projectId?: unknown} | null)?.version === 1
+        && (this as {projectId?: unknown}).projectId === project.projectId) {
+        reads++;
+        return injectedPending;
+      }
+      return undefined;
+    }});
+    try {
+      const result = await runImportWork({step: 'ids', project, recovery, worlds: {}});
+      expect(reads).toBe(1);
+      expect(result.ids).toContainEqual({id: externalBlockId, role: 'block', ownerId: externalNote.id});
+      expect(result.ids).toContainEqual({id: operationId, role: 'operation'});
+      expect(Object.isFrozen(externalCommand)).toBe(false);
+      expect(Object.isFrozen(externalCommand.after)).toBe(false);
+      expect(Object.isFrozen(externalNote.data)).toBe(false);
+      externalNote.data.body[0]!.text = 'author still owns this command';
+      expect(externalNote.data.body[0]!.text).toBe('author still owns this command');
+    } finally {
+      if (previous) Object.defineProperty(Object.prototype, 'pending', previous);
+      else delete (Object.prototype as {pending?: unknown}).pending;
+    }
+  });
+
+  it('retains one merge read and leaves injected unsupported command data mutable on the fallback path', async () => {
+    const {project, commands} = recoveryFixture(1), externalCommand = structuredClone(commands[0]!);
+    externalCommand.operationId = newId();
+    const externalNote = externalCommand.after.entities[0] as Entity<'note'>;
+    Object.defineProperty(externalNote.data, 'legacyDate', {value: new Date('2026-10-14T00:00:00.000Z'), enumerable: true});
+    const operationId = externalCommand.operationId, injectedPending = [{operationId, command: externalCommand, commandHash: '0'.repeat(64)}];
+    const recovery = {version: 1 as const, projectId: project.projectId, sourceRevision: project.revision, serverRevision: '3'} as unknown as NonNullable<ImportWork['recovery']>;
+    let reads = 0;
+    const previous = Object.getOwnPropertyDescriptor(Object.prototype, 'pending');
+    Object.defineProperty(Object.prototype, 'pending', {configurable: true, get() {
+      if ((this as {version?: unknown; projectId?: unknown} | null)?.version === 1
+        && (this as {projectId?: unknown}).projectId === project.projectId) {
+        reads++;
+        if (reads > 1) throw new Error('merged fallback reread inherited pending');
+        return injectedPending;
+      }
+      return undefined;
+    }});
+    try {
+      const result = await runImportWork({step: 'ids', project, recovery, worlds: {}});
+      expect(reads).toBe(1);
+      expect(result.ids).toContainEqual({id: operationId, role: 'operation'});
+      expect(Object.isFrozen(externalCommand)).toBe(false);
+      expect(Object.isFrozen(externalNote.data)).toBe(false);
+      const legacyDate = Object.getOwnPropertyDescriptor(externalNote.data, 'legacyDate')!.value;
+      expect(Object.isFrozen(legacyDate)).toBe(false);
+    } finally {
+      if (previous) Object.defineProperty(Object.prototype, 'pending', previous);
+      else delete (Object.prototype as {pending?: unknown}).pending;
+    }
   });
 });
 
@@ -399,6 +641,121 @@ describe('cancellable import worker transport', () => {
 });
 
 describe('operation-owned import worker', () => {
+  it('enables the private ID memo gate in the standard worker realm', () => {
+    expect(createNativeWorkerImportIdCollector()).toBeTypeOf('function');
+  });
+
+  it('disables the private ID memo gate when trusted array or iterator methods change', () => {
+    const everyDescriptor = Object.getOwnPropertyDescriptor(Array.prototype, 'every')!;
+    const mapIteratorPrototype = Object.getPrototypeOf(new Map().values());
+    const mapNextDescriptor = Object.getOwnPropertyDescriptor(mapIteratorPrototype, 'next')!;
+    const iteratorPrototype = Object.getPrototypeOf(mapIteratorPrototype);
+    const iteratorDescriptor = Object.getOwnPropertyDescriptor(iteratorPrototype, Symbol.iterator)!;
+    const invokeOriginal = (descriptor: PropertyDescriptor) => function(this: unknown, ...args: unknown[]) {
+      return Reflect.apply(descriptor.value as (...values: unknown[]) => unknown, this, args);
+    };
+    try {
+      Object.defineProperty(Array.prototype, 'every', {...everyDescriptor, value: invokeOriginal(everyDescriptor)});
+      expect(createNativeWorkerImportIdCollector()).toBeUndefined();
+    } finally { Object.defineProperty(Array.prototype, 'every', everyDescriptor); }
+    try {
+      Object.defineProperty(mapIteratorPrototype, 'next', {...mapNextDescriptor, value: invokeOriginal(mapNextDescriptor)});
+      expect(createNativeWorkerImportIdCollector()).toBeUndefined();
+    } finally { Object.defineProperty(mapIteratorPrototype, 'next', mapNextDescriptor); }
+    try {
+      Object.defineProperty(iteratorPrototype, Symbol.iterator, {...iteratorDescriptor, value: invokeOriginal(iteratorDescriptor)});
+      expect(createNativeWorkerImportIdCollector()).toBeUndefined();
+    } finally { Object.defineProperty(iteratorPrototype, Symbol.iterator, iteratorDescriptor); }
+    try {
+      Object.defineProperty(mapIteratorPrototype, Symbol.iterator, {configurable: true, value() { return this; }});
+      expect(createNativeWorkerImportIdCollector()).toBeUndefined();
+    } finally { delete (mapIteratorPrototype as {[Symbol.iterator]?: unknown})[Symbol.iterator]; }
+    expect(createNativeWorkerImportIdCollector()).toBeTypeOf('function');
+  });
+
+  it('disables the private ID memo gate when concrete collection callbacks change', () => {
+    const selected = [
+      [Map.prototype, 'has'], [Set.prototype, 'add'], [WeakMap.prototype, 'get'], [WeakMap.prototype, 'set'],
+    ] as const;
+    const invokeOriginal = (descriptor: PropertyDescriptor) => function(this: unknown, ...args: unknown[]) {
+      return Reflect.apply(descriptor.value as (...values: unknown[]) => unknown, this, args);
+    };
+    for (const [prototype, key] of selected) {
+      const descriptor = Object.getOwnPropertyDescriptor(prototype, key)!;
+      try {
+        Object.defineProperty(prototype, key, {...descriptor, value: invokeOriginal(descriptor)});
+        expect(createNativeWorkerImportIdCollector()).toBeUndefined();
+      } finally { Object.defineProperty(prototype, key, descriptor); }
+    }
+
+    const constructors = ['Map', 'Set', 'WeakMap'] as const;
+    for (const key of constructors) {
+      const descriptor = Object.getOwnPropertyDescriptor(globalThis, key)!;
+      let disabled = false;
+      try {
+        const replacement = function ReplacementCollectionConstructor() {};
+        Object.defineProperty(globalThis, key, {...descriptor, value: replacement});
+        disabled = createNativeWorkerImportIdCollector() === undefined;
+      } finally { Object.defineProperty(globalThis, key, descriptor); }
+      expect(disabled).toBe(true);
+    }
+    expect(createNativeWorkerImportIdCollector()).toBeTypeOf('function');
+  });
+
+  it('still reports a late owner conflict when native ID memoization sees a shared data root', async () => {
+    const project = createProject('後から現れる所有者競合'), first = createEntity(project.projectId, 'note', 'first owner', {body: textToRichText('共有する埋込ID😀')}),
+      second = createEntity(project.projectId, 'note', 'second owner');
+    const sameOwner = {...first};
+    second.data = first.data;
+    project.entities.push(first, sameOwner, second);
+    const runner = createImportWorkWorkerRunner(), work = structuredClone({step: 'ids' as const, project, worlds: {}});
+    await expect(runner.runNativeClonedInput(work)).rejects.toMatchObject({code: 'IMPORT_CONFLICT'});
+    runner.reset();
+  });
+
+  it('still rejects a runtime-item ID declared later with another role on the native route', async () => {
+    const project = createProject('後から現れるruntime role競合'), root = createEntity(project.projectId, 'note', 'runtime carrier');
+    const runtimeId = newId();
+    root.data = {...root.data, runtimeEvidence: {instanceId: runtimeId, quantity: 2, consumed: 1}} as typeof root.data;
+    const repeatedRoot = {...root}, laterNote = createEntity(project.projectId, 'note', 'later declaration');
+    laterNote.id = runtimeId;
+    project.entities.push(root, repeatedRoot, laterNote);
+
+    const work = structuredClone({step: 'ids' as const, project, worlds: {}}), runner = createImportWorkWorkerRunner();
+    await expect(runner.runNativeClonedInput(work)).rejects.toMatchObject({code: 'IMPORT_CONFLICT'});
+    runner.reset();
+  });
+
+  it('still finds a shared rich-text owner conflict introduced by a later history image', async () => {
+    const project = createProject('履歴末尾の共有段落競合');
+    const current = createEntity(project.projectId, 'note', 'current owner', {body: textToRichText('後段の共有本文😀')});
+    project.entities = [current];
+    const {history: _history, ...baseContent} = project;
+    const laterOwner = {...current, id: newId(), name: 'history owner', data: current.data};
+    project.history = [{
+      operationId: newId(), projectId: project.projectId, baseRevision: project.revision, revision: '1',
+      targetIds: [current.id, laterOwner.id], reason: '共有段落の所有者確認', createdAt: '2026-10-14T00:00:00.000Z',
+      before: structuredClone(baseContent),
+      after: {...structuredClone(baseContent), revision: '1', entities: [laterOwner]},
+    }];
+
+    const runner = createImportWorkWorkerRunner();
+    await expect(runner.runNativeClonedInput(structuredClone({step: 'ids' as const, project, worlds: {}})))
+      .rejects.toMatchObject({code: 'IMPORT_CONFLICT'});
+    runner.reset();
+  });
+
+  it('continues the native ID declaration walk after its 100,000-root memo cap', async () => {
+    const project = createProject('native ID memo上限後'), template = createEntity(project.projectId, 'note', 'memo root');
+    const uuid = (value: number) => `00000000-0000-4000-8000-${value.toString(16).padStart(12, '0')}`;
+    project.entities = Array.from({length: 100_001}, (_, index) => ({...template, id: uuid(index + 1),
+      data: index === 100_000 ? {id: 'unsupported-after-native-cap'} as unknown as typeof template.data : structuredClone(template.data)}));
+    const runner = createImportWorkWorkerRunner();
+    await expect(runner.runNativeClonedInput(structuredClone({step: 'ids' as const, project, worlds: {}})))
+      .rejects.toMatchObject({code: 'IMPORT_CONFLICT', message: expect.stringContaining('未対応の埋込IDです')});
+    runner.reset();
+  });
+
   it('reuses one private validation session only for unchanged worker images and clears it on corruption', async () => {
     const source = await capturedOutputWork('recovery'), runner = createImportWorkWorkerRunner();
     const structure = await runner.run({step: 'structure', project: source.project, worlds: source.worlds});
