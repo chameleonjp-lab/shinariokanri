@@ -1,5 +1,5 @@
 import type {ProjectContent, ProjectData} from '../domain/types';
-import {validateProject} from '../domain/model';
+import {ENTITY_KINDS, ENTITY_SCHEMAS, RELATION_TYPES, SCOPES, STATUSES, validateProject} from '../domain/model';
 import {createProjectValidationSession, validateProjectIntegrity} from '../domain/projectRecordValidation';
 import {captureImmutablePlainData, freezeCapturedPlainData} from '../domain/immutablePlainData';
 import {internImmutableRecords} from '../domain/internImmutableRecords';
@@ -7,10 +7,10 @@ import {verifySnapshotHashes, verifyWorlds, type PreparedScenario} from './archi
 import {cloneProject} from './clone';
 import {collectImportIds, planCrossProjectImport, type CrossProjectImportPlan, type ImportId} from './importMapping';
 import type {ImportConflict} from './store';
-import {projectWithRecoveryHistory, validateRecovery, type PortableRecovery} from './recovery';
+import {createRecoveryValidationSession, projectWithRecoveryHistory, validateRecovery, type PortableRecovery} from './recovery';
 import {validateSyncRecovery, type NativeSyncRecovery} from './syncRecovery';
 import {createSharedArrayJsonEncoder} from './sharedArrayJson';
-import {equalJson, jsonBytes, sha256, validateJsonValue} from './json';
+import {equalJson, isValidUnicode, jsonBytes, sha256, validateJsonValue} from './json';
 import {checkCancelled, StorageError} from './errors';
 
 export type ImportWorkStep = 'full_read' | 'structure' | 'worlds' | 'hashes' | 'integrity' | 'recovery' | 'sync_recovery' | 'ids' | 'clone' | 'map_recovery' | 'rehash_recovery' | 'mapped_plan' | 'merge_conflicts' | 'merge' | 'combine_history';
@@ -30,6 +30,171 @@ export interface ImportWorkResult {
 const immutableImportValidationSteps: ReadonlySet<ImportWorkStep> = new Set([
   'full_read', 'structure', 'integrity', 'recovery', 'ids', 'hashes', 'map_recovery', 'rehash_recovery',
 ]);
+
+const maximumGuardRecordPairs = 100_000, maximumGuardArrayPairs = 128;
+type RecoveryValidationSession = ReturnType<typeof createRecoveryValidationSession>;
+
+function isTypedValidationRecord(value: object): boolean {
+  const row = value as Record<string, unknown>;
+  return typeof row.id === 'string' && typeof row.projectId === 'string'
+    && (typeof row.kind === 'string' && !!row.data && typeof row.data === 'object'
+      || typeof row.relationType === 'string' && typeof row.fromId === 'string' && typeof row.toId === 'string');
+}
+
+type CapturedGraphArrayEdge = 'other' | 'entities' | 'relations' | 'calendars';
+
+/** Compare only already-owned immutable graphs. Cache completed typed-record
+ * pairs and at most 128 arrays first compared through entity, relation, or
+ * calendar edges; unselected edges do not add arrays to the memo. */
+function createCapturedGraphComparer(): (left: unknown, right: unknown) => boolean {
+  const completedPairs = new WeakMap<object, WeakSet<object>>();
+  let recordPairs = 0, arrayPairs = 0;
+  const hasPair = (left: object, right: object) => completedPairs.get(left)?.has(right) ?? false;
+  const rememberPair = (left: object, right: object, array: boolean, record: boolean, cacheArray: boolean) => {
+    if (record ? recordPairs >= maximumGuardRecordPairs : array ? !cacheArray || arrayPairs >= maximumGuardArrayPairs : true) return;
+    let rights = completedPairs.get(left);
+    if (!rights) { rights = new WeakSet<object>(); completedPairs.set(left, rights); }
+    rights.add(right);
+    if (record) recordPairs++; else if (array) arrayPairs++;
+  };
+  const same = (left: unknown, right: unknown, depth = 0, arrayEdge: CapturedGraphArrayEdge = 'other'): boolean => {
+    if (Object.is(left, right)) return true;
+    if (!left || !right || typeof left !== 'object' || typeof right !== 'object' || depth > 128) return false;
+    const leftArray = Array.isArray(left), rightArray = Array.isArray(right);
+    if (leftArray !== rightArray || Object.getPrototypeOf(left) !== Object.getPrototypeOf(right)) return false;
+    if (hasPair(left, right)) return true;
+    const leftKeys = Reflect.ownKeys(left), rightKeys = Reflect.ownKeys(right);
+    if (leftKeys.length !== rightKeys.length) return false;
+    for (let index = 0; index < leftKeys.length; index++) {
+      const key = leftKeys[index];
+      if (key !== rightKeys[index]) return false;
+      const leftDescriptor = Object.getOwnPropertyDescriptor(left, key), rightDescriptor = Object.getOwnPropertyDescriptor(right, key);
+      if (!leftDescriptor || !rightDescriptor || leftDescriptor.enumerable !== rightDescriptor.enumerable
+        || !Object.hasOwn(leftDescriptor, 'value') || !Object.hasOwn(rightDescriptor, 'value')
+        || !same(leftDescriptor.value, rightDescriptor.value, depth + 1,
+          key === 'entities' || key === 'relations' || key === 'calendars' ? key : 'other')) return false;
+    }
+    const cacheArray = leftArray && (arrayEdge === 'entities' || arrayEdge === 'relations' || arrayEdge === 'calendars');
+    rememberPair(left, right, leftArray, isTypedValidationRecord(left), cacheArray);
+    return true;
+  };
+  return same;
+}
+
+type WorkerValidationContext = {
+  worldSnapshots: Record<string, ProjectContent>;
+  schemas: typeof ENTITY_SCHEMAS;
+  kinds: typeof ENTITY_KINDS;
+  statuses: typeof STATUSES;
+  scopes: typeof SCOPES;
+  relationTypes: typeof RELATION_TYPES;
+};
+
+function isReusableContextGraph(input: unknown, active = new WeakSet<object>(), complete = new WeakSet<object>(), depth = 0): boolean {
+  if (depth > 128) return false;
+  if (input === undefined || input === null || typeof input === 'boolean') return true;
+  if (typeof input === 'string') return isValidUnicode(input);
+  if (typeof input === 'number') return Number.isFinite(input);
+  if (typeof input !== 'object') return false;
+  if (active.has(input)) return false;
+  if (complete.has(input)) return true;
+  const array = Array.isArray(input), prototype = Object.getPrototypeOf(input);
+  if (array ? prototype !== Array.prototype : prototype !== Object.prototype && prototype !== null) return false;
+  const keys = Reflect.ownKeys(input);
+  if (keys.some(key => typeof key !== 'string' || !isValidUnicode(key) || ['__proto__', 'constructor', 'prototype'].includes(key))) return false;
+  if (array && (keys.length !== input.length + 1 || keys.some(key => key !== 'length' && (!/^(0|[1-9]\d*)$/.test(String(key)) || Number(key) >= input.length)))) return false;
+  active.add(input);
+  for (const key of keys as string[]) {
+    if (array && key === 'length') continue;
+    const descriptor = Object.getOwnPropertyDescriptor(input, key);
+    if (!descriptor?.enumerable || !Object.hasOwn(descriptor, 'value') || !isReusableContextGraph(descriptor.value, active, complete, depth + 1)) {
+      active.delete(input); return false;
+    }
+  }
+  active.delete(input); complete.add(input); return true;
+}
+
+function captureWorkerValidationContext(worlds: Record<string, ProjectContent>): WorkerValidationContext | undefined {
+  const captured = captureImmutablePlainData({worldSnapshots: worlds, schemas: ENTITY_SCHEMAS, kinds: ENTITY_KINDS,
+    statuses: STATUSES, scopes: SCOPES, relationTypes: RELATION_TYPES});
+  return captured.captured && isReusableContextGraph(captured.value) ? captured.value : undefined;
+}
+
+type WorkerValidationSlot = {
+  project: ProjectData;
+  validationProject: ProjectData;
+  context: WorkerValidationContext;
+  session: RecoveryValidationSession;
+};
+type WorkerValidationTicket = {
+  readonly validationProject?: ProjectData;
+  session(worlds?: Record<string, ProjectContent>): RecoveryValidationSession;
+  commit(validationProject: ProjectData): void;
+};
+
+function createWorkerValidationReuse(): {
+  acquire(project: ProjectData, worlds: Record<string, ProjectContent>): WorkerValidationTicket | undefined;
+  clear(): void;
+} {
+  let slot: WorkerValidationSlot | undefined, generation = 0;
+  const clear = () => { slot = undefined; generation++; };
+  const acquire = (project: ProjectData, worlds: Record<string, ProjectContent>): WorkerValidationTicket | undefined => {
+    const context = captureWorkerValidationContext(worlds);
+    if (!context) { clear(); return undefined; }
+    if (slot) {
+      const equal = createCapturedGraphComparer();
+      if (equal(slot.project, project) && equal(slot.context, context)) {
+        const current = slot;
+        return {validationProject: current.validationProject, session: () => current.session, commit: (_validationProject: ProjectData) => undefined};
+      }
+      clear();
+    }
+    const ticketGeneration = generation;
+    let candidateSession: RecoveryValidationSession | undefined;
+    return {
+      session: sessionWorlds => {
+        candidateSession ??= createRecoveryValidationSession(sessionWorlds ?? context.worldSnapshots);
+        return candidateSession;
+      },
+      commit: validationProject => {
+        if (candidateSession && generation === ticketGeneration) slot = {project, validationProject, context, session: candidateSession};
+      },
+    };
+  };
+  return {acquire, clear};
+}
+
+function replaceCapturedDataField<T extends object>(source: T, field: string, replacement: unknown): T | undefined {
+  const array = Array.isArray(source);
+  const copy: object = array ? new Array((source as unknown[]).length) : Object.create(Object.getPrototypeOf(source));
+  let replaced = false;
+  for (const key of Reflect.ownKeys(source)) {
+    if (array && key === 'length') continue;
+    const descriptor = Object.getOwnPropertyDescriptor(source, key);
+    if (typeof key !== 'string' || !descriptor || !Object.hasOwn(descriptor, 'value')) return undefined;
+    const value = key === field ? (replaced = true, replacement) : descriptor.value;
+    Object.defineProperty(copy, key, {value, enumerable: descriptor.enumerable, writable: false, configurable: false});
+  }
+  if (!replaced) return undefined;
+  return Object.freeze(copy) as T;
+}
+
+function recoveryWithCanonicalHistory(input: unknown, project: ProjectData): PortableRecovery | undefined {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) return undefined;
+  const recovery = input as PortableRecovery;
+  if (!Array.isArray(recovery.pending)) return undefined;
+  const history = new Map(project.history.map(command => [command.operationId, command]));
+  const same = createCapturedGraphComparer(), pending: PortableRecovery['pending'] = [];
+  for (const item of recovery.pending) {
+    if (!item || typeof item !== 'object' || Array.isArray(item)) return undefined;
+    const command = history.get(item.operationId);
+    if (!command || !same(item.command, command)) return undefined;
+    const canonicalItem = replaceCapturedDataField(item, 'command', command);
+    if (!canonicalItem) return undefined;
+    pending.push(canonicalItem);
+  }
+  return replaceCapturedDataField(recovery, 'pending', Object.freeze(pending));
+}
 
 /** Freeze only private transport copies whose work is read-only validation.
  * Result-bearing transformations retain their existing mutable/frozen output
@@ -66,10 +231,11 @@ function publishWorkerCaptured<T>(value: T): T { return value; }
  * No database, account authority or mutable target is available here. */
 async function runImportWorkCore(work: ImportWork, signal: AbortSignal | undefined,
   loadAsset: ((hash: string) => Promise<Uint8Array | undefined> | Uint8Array | undefined) | undefined,
-  publishCaptured: CapturedPublisher): Promise<ImportWorkResult> {
+  publishCaptured: CapturedPublisher, workerReuse?: ReturnType<typeof createWorkerValidationReuse>): Promise<ImportWorkResult> {
   checkCancelled(signal);
   const {project, worlds, recovery} = work;
   let result: ImportWorkResult = {};
+  let commitValidation: (() => void) | undefined;
   switch (work.step) {
     case 'full_read': {
       // One read owns the complete manuscript and exact fixed dependencies.
@@ -97,16 +263,20 @@ async function runImportWorkCore(work: ImportWork, signal: AbortSignal | undefin
         // Each imported image owns a fresh full validation scope. Worker input
         // is an untrusted mutable DTO; only the private capture can share
         // record/content checks across its current, snapshots, and history.
-        const owned = internImmutableRecords(captured.value);
-        const validation = createProjectValidationSession({worldSnapshots: worlds});
-        const structural = validation.validate(owned);
+        const ticket = workerReuse?.acquire(captured.value, worlds);
+        if (workerReuse && !ticket) workerReuse.clear();
+        const validationProject = ticket?.validationProject ?? internImmutableRecords(captured.value);
+        const validation = ticket?.session() ?? createProjectValidationSession({worldSnapshots: worlds});
+        const structural = validation.validate(validationProject);
         if (!structural.ok) throw Object.assign(new StorageError('VALIDATION_FAILED', structural.issues.map(issue => `${issue.path}: ${issue.message}`).join('\n')), {issues: structural.issues});
         validateJsonValue(structural.value);
+        if (ticket) commitValidation = () => ticket.commit(validationProject);
         // Publish the pre-intern capture: the public runner clones it to keep
         // its mutable contract; the worker runner lets postMessage clone it.
         result.project = publishCaptured(captured.value);
       } else {
         // Unsupported own-data graphs retain the complete uncached validator.
+        workerReuse?.clear();
         const validation = validateProject(project, {worldSnapshots: worlds});
         if (!validation.ok) throw Object.assign(new StorageError('VALIDATION_FAILED', validation.issues.map(issue => `${issue.path}: ${issue.message}`).join('\n')), {issues: validation.issues});
         validateJsonValue(validation.value);
@@ -120,19 +290,47 @@ async function runImportWorkCore(work: ImportWork, signal: AbortSignal | undefin
       const captured = captureImmutablePlainData({project, worlds});
       let issues: Awaited<ReturnType<typeof validateProjectIntegrity>>;
       if (captured.captured) {
-        const owned = internImmutableRecords(captured.value);
-        issues = await createProjectValidationSession({worldSnapshots: owned.worlds}).integrity(owned.project, owned.project.history.length > 0);
-      } else issues = await validateProjectIntegrity(project, {worldSnapshots: worlds}, project.history.length > 0);
+        const ticket = workerReuse?.acquire(captured.value.project, captured.value.worlds);
+        if (workerReuse && !ticket) workerReuse.clear();
+        const owned = ticket?.validationProject ? undefined : internImmutableRecords(captured.value);
+        const validationProject = ticket?.validationProject ?? owned!.project;
+        const validation = ticket?.session(owned?.worlds) ?? createProjectValidationSession({worldSnapshots: owned!.worlds});
+        issues = await validation.integrity(validationProject, validationProject.history.length > 0);
+        if (!issues.length && ticket) commitValidation = () => ticket.commit(validationProject);
+      } else {
+        workerReuse?.clear();
+        issues = await validateProjectIntegrity(project, {worldSnapshots: worlds}, project.history.length > 0);
+      }
       if (issues.length) throw Object.assign(new StorageError('VALIDATION_FAILED', issues.map(issue => `${issue.path}: ${issue.message}`).join('\n')), {issues});
       break;
     }
     case 'recovery': {
       const captured = captureImmutablePlainData({project, recovery, worlds});
       if (captured.captured) {
-        const owned = internImmutableRecords(captured.value);
-        await validateRecovery(owned.recovery, owned.project, owned.worlds, signal);
+        const ticket = workerReuse?.acquire(captured.value.project, captured.value.worlds);
+        if (workerReuse && !ticket) workerReuse.clear();
+        if (ticket?.validationProject) {
+          const reusableRecovery = captured.value.recovery
+            ? recoveryWithCanonicalHistory(captured.value.recovery, ticket.validationProject) : undefined;
+          if (reusableRecovery) {
+            await ticket.session().recoveryForInspection(reusableRecovery, ticket.validationProject, signal);
+          } else {
+            // A pending-only command or any command difference follows the
+            // existing fresh validation path. The old proof scope is discarded.
+            workerReuse?.clear();
+            const owned = internImmutableRecords(captured.value);
+            await validateRecovery(owned.recovery, owned.project, owned.worlds, signal);
+          }
+        } else {
+          if (ticket) workerReuse?.clear();
+          const owned = internImmutableRecords(captured.value);
+          await validateRecovery(owned.recovery, owned.project, owned.worlds, signal);
+        }
         result.recovery = publishCaptured(captured.value.recovery!);
-      } else result.recovery = await validateRecovery(recovery, project, worlds, signal);
+      } else {
+        workerReuse?.clear();
+        result.recovery = await validateRecovery(recovery, project, worlds, signal);
+      }
       break;
     }
     case 'sync_recovery': result.syncRecovery = await validateSyncRecovery(work.syncRecovery, worlds, signal); break;
@@ -225,6 +423,7 @@ async function runImportWorkCore(work: ImportWork, signal: AbortSignal | undefin
     default: throw new StorageError('FORMAT_UNSUPPORTED', '読み込みの検査工程が未対応です。');
   }
   checkCancelled(signal);
+  commitValidation?.();
   return result;
 }
 
@@ -237,6 +436,24 @@ export function runImportWork(work: ImportWork, signal?: AbortSignal, loadAsset?
  * the worker message clone is the mutable, detached publication boundary. */
 export function runImportWorkForWorker(work: ImportWork, signal?: AbortSignal, loadAsset?: (hash: string) => Promise<Uint8Array | undefined> | Uint8Array | undefined): Promise<ImportWorkResult> {
   return runImportWorkCore(work, signal, loadAsset, publishWorkerCaptured);
+}
+
+/** A worker-owned scope for sequential import-work steps from one parsed archive.
+ * Public/Node and one-off worker entry points deliberately keep fresh sessions. */
+export function createImportWorkWorkerRunner() {
+  const reuse = createWorkerValidationReuse();
+  let active = 0;
+  return {
+    reset: () => reuse.clear(),
+    run(work: ImportWork, signal?: AbortSignal, loadAsset?: (hash: string) => Promise<Uint8Array | undefined> | Uint8Array | undefined): Promise<ImportWorkResult> {
+      const overlapping = active > 0;
+      active++;
+      if (overlapping) reuse.clear();
+      return runImportWorkCore(work, signal, loadAsset, publishWorkerCaptured, overlapping ? undefined : reuse)
+        .catch(error => { reuse.clear(); throw error; })
+        .finally(() => { active--; });
+    },
+  };
 }
 
 export function mergeImportConflicts(existing: ProjectData, incoming: ProjectData): ImportConflict[] {
