@@ -41,20 +41,23 @@ function isTypedValidationRecord(value: object): boolean {
       || typeof row.relationType === 'string' && typeof row.fromId === 'string' && typeof row.toId === 'string');
 }
 
+type CapturedGraphArrayEdge = 'other' | 'entities' | 'relations' | 'calendars';
+
 /** Compare only already-owned immutable graphs. Cache completed typed-record
- * pairs and at most 128 arrays; overflow stops caching, never comparison. */
+ * pairs and at most 128 arrays first compared through entity, relation, or
+ * calendar edges; unselected edges do not add arrays to the memo. */
 function createCapturedGraphComparer(): (left: unknown, right: unknown) => boolean {
   const completedPairs = new WeakMap<object, WeakSet<object>>();
   let recordPairs = 0, arrayPairs = 0;
   const hasPair = (left: object, right: object) => completedPairs.get(left)?.has(right) ?? false;
-  const rememberPair = (left: object, right: object, array: boolean, record: boolean) => {
-    if (record ? recordPairs >= maximumGuardRecordPairs : array ? arrayPairs >= maximumGuardArrayPairs : true) return;
+  const rememberPair = (left: object, right: object, array: boolean, record: boolean, cacheArray: boolean) => {
+    if (record ? recordPairs >= maximumGuardRecordPairs : array ? !cacheArray || arrayPairs >= maximumGuardArrayPairs : true) return;
     let rights = completedPairs.get(left);
     if (!rights) { rights = new WeakSet<object>(); completedPairs.set(left, rights); }
     rights.add(right);
     if (record) recordPairs++; else if (array) arrayPairs++;
   };
-  const same = (left: unknown, right: unknown, depth = 0): boolean => {
+  const same = (left: unknown, right: unknown, depth = 0, arrayEdge: CapturedGraphArrayEdge = 'other'): boolean => {
     if (Object.is(left, right)) return true;
     if (!left || !right || typeof left !== 'object' || typeof right !== 'object' || depth > 128) return false;
     const leftArray = Array.isArray(left), rightArray = Array.isArray(right);
@@ -68,9 +71,11 @@ function createCapturedGraphComparer(): (left: unknown, right: unknown) => boole
       const leftDescriptor = Object.getOwnPropertyDescriptor(left, key), rightDescriptor = Object.getOwnPropertyDescriptor(right, key);
       if (!leftDescriptor || !rightDescriptor || leftDescriptor.enumerable !== rightDescriptor.enumerable
         || !Object.hasOwn(leftDescriptor, 'value') || !Object.hasOwn(rightDescriptor, 'value')
-        || !same(leftDescriptor.value, rightDescriptor.value, depth + 1)) return false;
+        || !same(leftDescriptor.value, rightDescriptor.value, depth + 1,
+          key === 'entities' || key === 'relations' || key === 'calendars' ? key : 'other')) return false;
     }
-    rememberPair(left, right, leftArray, isTypedValidationRecord(left));
+    const cacheArray = leftArray && (arrayEdge === 'entities' || arrayEdge === 'relations' || arrayEdge === 'calendars');
+    rememberPair(left, right, leftArray, isTypedValidationRecord(left), cacheArray);
     return true;
   };
   return same;

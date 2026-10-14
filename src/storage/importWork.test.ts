@@ -427,6 +427,36 @@ describe('operation-owned import worker', () => {
     runner.reset();
   });
 
+  it('keeps comparing late history values after the selected-array memo reaches its limit', async () => {
+    const project = createProject('上限後も履歴を照合する');
+    project.entities.push(createEntity(project.projectId, 'note', '履歴記録', {body: textToRichText('保持する本文😀')}));
+    const {history: _history, ...base} = project;
+    // The 44 before/after images contribute 132 selected collection arrays, exceeding the 128-pair cache limit.
+    project.history = Array.from({length: 22}, (_, index) => ({
+      operationId: newId(), projectId: project.projectId,
+      baseRevision: String(index * 2), revision: String(index * 2 + 1), targetIds: [project.projectId],
+      reason: `履歴${index}`, createdAt: '2026-10-14T00:00:00.000Z',
+      before: {...structuredClone(base), revision: String(index * 2), name: `変更前${index}`},
+      after: {...structuredClone(base), revision: String(index * 2 + 1), name: `変更後${index}`},
+    }));
+    const runner = createImportWorkWorkerRunner();
+    await runner.run({step: 'structure', project: structuredClone(project), worlds: {}});
+
+    const changed = structuredClone(project);
+    changed.history.at(-1)!.after.entities[0]!.projectId = newId();
+    expect(Object.isFrozen(changed.history.at(-1)!.after)).toBe(false);
+    const changedWork: ImportWork = {step: 'structure', project: changed, worlds: {}};
+    const details = async (promise: Promise<unknown>) => {
+      try { await promise; } catch (error) {
+        const value = error as StorageError & {issues?: unknown};
+        return {code: value.code, message: value.message, path: value.path, issues: value.issues};
+      }
+      throw new Error('Expected the late malformed history image to reject');
+    };
+    expect(await details(runner.run(changedWork))).toEqual(await details(runImportWork(structuredClone(changedWork))));
+    runner.reset();
+  });
+
   it('invalidates the session when a same-ID world snapshot or relation registry changes', async () => {
     const fixedWorld = await createWorldSnapshot(createProject('固定世界'), '参照版'), pin = fixedWorld.snapshots[0]!;
     const project = createProject('参照作品');
