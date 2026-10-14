@@ -1,4 +1,5 @@
 import { collectReferences, ID_PATTERN, isContentCopyField, rewriteEntityReferences, rewriteRelationReferences, validateCurrentProject, validateProject } from '../domain/model';
+import { isImmutablePlainData } from '../domain/immutablePlainData';
 import { dialogueContentHash } from '../domain/production';
 import { sealAuthorAlternative } from '../domain/authorAlternativeIntegrity';
 import type { AuthorAlternative, ContentState, Entity, EntityKind, ProjectContent, ProjectData, ProjectSnapshot, Relation, SavedView } from '../domain/types';
@@ -28,12 +29,110 @@ export interface CrossProjectImportPlan {
   warnings: string[];
 }
 
+const rootMemoSemanticNames = [
+  'id', 'kind', 'text', 'audienceHolderIds', 'eventKey', 'x', 'y', 'instanceId', 'quantity', 'consumed',
+  'sourceVersionId', 'profileId', 'publicVersionId', 'mode', 'publicId', 'ownerId', 'projectId', 'entities',
+  'relations', 'views', 'authorAlternatives', 'snapshots', 'history', 'operationId', 'deletionOperationId',
+  'data', 'versions', 'applyReceipts', 'baseContent', 'content', 'before', 'after', 'pending', 'command',
+] as const;
+const rootMemoGetOwnDescriptor = Object.getOwnPropertyDescriptor;
+const rootMemoGetPrototypeOf = Object.getPrototypeOf;
+const rootMemoHasOwn = Object.hasOwn;
+const rootMemoTrustedArrayForEach = rootMemoGetOwnDescriptor(Array.prototype, 'forEach');
+const rootMemoTrustedArrayIterator = rootMemoGetOwnDescriptor(Array.prototype, Symbol.iterator);
+const rootMemoTrustedArrayMap = rootMemoGetOwnDescriptor(Array.prototype, 'map');
+const rootMemoTrustedArrayEvery = rootMemoGetOwnDescriptor(Array.prototype, 'every');
+const rootMemoTrustedObjectEntries = rootMemoGetOwnDescriptor(Object, 'entries');
+const rootMemoTrustedObjectValues = rootMemoGetOwnDescriptor(Object, 'values');
+const rootMemoTrustedObjectHasOwn = rootMemoGetOwnDescriptor(Object, 'hasOwn');
+const rootMemoTrustedObjectGetPrototypeOf = rootMemoGetOwnDescriptor(Object, 'getPrototypeOf');
+const rootMemoTrustedArrayIsArray = rootMemoGetOwnDescriptor(Array, 'isArray');
+const rootMemoTrustedReflectOwnKeys = rootMemoGetOwnDescriptor(Reflect, 'ownKeys');
+const rootMemoTrustedMap = Map;
+const rootMemoTrustedMapPrototype = Map.prototype;
+const rootMemoTrustedMapHas = rootMemoGetOwnDescriptor(Map.prototype, 'has');
+const rootMemoTrustedMapGet = rootMemoGetOwnDescriptor(Map.prototype, 'get');
+const rootMemoTrustedMapSet = rootMemoGetOwnDescriptor(Map.prototype, 'set');
+const rootMemoTrustedMapValues = rootMemoGetOwnDescriptor(Map.prototype, 'values');
+const rootMemoTrustedSet = Set;
+const rootMemoTrustedSetPrototype = Set.prototype;
+const rootMemoTrustedSetAdd = rootMemoGetOwnDescriptor(Set.prototype, 'add');
+const rootMemoTrustedWeakMap = WeakMap;
+const rootMemoTrustedWeakMapPrototype = WeakMap.prototype;
+const rootMemoTrustedWeakMapGet = rootMemoGetOwnDescriptor(WeakMap.prototype, 'get');
+const rootMemoTrustedWeakMapSet = rootMemoGetOwnDescriptor(WeakMap.prototype, 'set');
+const rootMemoTrustedMapIteratorPrototype = rootMemoGetPrototypeOf(new Map().values());
+const rootMemoTrustedMapIteratorNext = rootMemoGetOwnDescriptor(rootMemoTrustedMapIteratorPrototype, 'next');
+const rootMemoTrustedIteratorPrototype = rootMemoGetPrototypeOf(rootMemoTrustedMapIteratorPrototype);
+// V8 and the browser engines place the iterable method on the parent iterator
+// prototype; the map-iterator prototype itself owns `next` but not this symbol.
+const rootMemoTrustedIteratorMethod = rootMemoGetOwnDescriptor(rootMemoTrustedIteratorPrototype, Symbol.iterator);
+const maximumEntityDataRootMemoEntries = 100_000;
+
+function sameTrustedDataMethod(target: object, key: PropertyKey, expected: PropertyDescriptor | undefined): boolean {
+  const current = rootMemoGetOwnDescriptor(target, key);
+  return !!expected && rootMemoHasOwn(expected, 'value') && typeof expected.value === 'function'
+    && !!current && rootMemoHasOwn(current, 'value') && current.value === expected.value
+    && current.enumerable === expected.enumerable && current.configurable === expected.configurable && current.writable === expected.writable;
+}
+
+/** A narrow compatibility gate for native Worker DTO traversal, not a schema
+ * or provenance claim. It checks the inherited reads and selected intrinsics
+ * whose behavior can affect the recovery merge and ID walk. */
+function rootMemoEnvironmentIsSafe(): boolean {
+  for (let index = 0; index < rootMemoSemanticNames.length; index++) {
+    const name = rootMemoSemanticNames[index]!;
+    if (rootMemoGetOwnDescriptor(Object.prototype, name) !== undefined
+      || rootMemoGetOwnDescriptor(Array.prototype, name) !== undefined) return false;
+  }
+  if (rootMemoGetOwnDescriptor(Object.prototype, Symbol.iterator) !== undefined) return false;
+  if (Map !== rootMemoTrustedMap || Map.prototype !== rootMemoTrustedMapPrototype
+    || Set !== rootMemoTrustedSet || Set.prototype !== rootMemoTrustedSetPrototype
+    || WeakMap !== rootMemoTrustedWeakMap || WeakMap.prototype !== rootMemoTrustedWeakMapPrototype) return false;
+  if (rootMemoGetPrototypeOf(Object.prototype) !== null
+    || rootMemoGetPrototypeOf(Array.prototype) !== Object.prototype
+    || rootMemoGetPrototypeOf(rootMemoTrustedMapPrototype) !== Object.prototype
+    || rootMemoGetPrototypeOf(rootMemoTrustedSetPrototype) !== Object.prototype
+    || rootMemoGetPrototypeOf(rootMemoTrustedWeakMapPrototype) !== Object.prototype
+    || rootMemoGetPrototypeOf(rootMemoTrustedIteratorPrototype) !== Object.prototype) return false;
+  return sameTrustedDataMethod(Array.prototype, 'forEach', rootMemoTrustedArrayForEach)
+    && sameTrustedDataMethod(Array.prototype, Symbol.iterator, rootMemoTrustedArrayIterator)
+    && sameTrustedDataMethod(Array.prototype, 'map', rootMemoTrustedArrayMap)
+    && sameTrustedDataMethod(Array.prototype, 'every', rootMemoTrustedArrayEvery)
+    && sameTrustedDataMethod(Object, 'entries', rootMemoTrustedObjectEntries)
+    && sameTrustedDataMethod(Object, 'values', rootMemoTrustedObjectValues)
+    && sameTrustedDataMethod(Object, 'hasOwn', rootMemoTrustedObjectHasOwn)
+    && sameTrustedDataMethod(Object, 'getPrototypeOf', rootMemoTrustedObjectGetPrototypeOf)
+    && sameTrustedDataMethod(Array, 'isArray', rootMemoTrustedArrayIsArray)
+    && sameTrustedDataMethod(Reflect, 'ownKeys', rootMemoTrustedReflectOwnKeys)
+    && sameTrustedDataMethod(rootMemoTrustedMapPrototype, 'has', rootMemoTrustedMapHas)
+    && sameTrustedDataMethod(rootMemoTrustedMapPrototype, 'get', rootMemoTrustedMapGet)
+    && sameTrustedDataMethod(rootMemoTrustedMapPrototype, 'set', rootMemoTrustedMapSet)
+    && sameTrustedDataMethod(rootMemoTrustedMapPrototype, 'values', rootMemoTrustedMapValues)
+    && sameTrustedDataMethod(rootMemoTrustedSetPrototype, 'add', rootMemoTrustedSetAdd)
+    && sameTrustedDataMethod(rootMemoTrustedWeakMapPrototype, 'get', rootMemoTrustedWeakMapGet)
+    && sameTrustedDataMethod(rootMemoTrustedWeakMapPrototype, 'set', rootMemoTrustedWeakMapSet)
+    && sameTrustedDataMethod(rootMemoTrustedMapIteratorPrototype, 'next', rootMemoTrustedMapIteratorNext)
+    && rootMemoGetOwnDescriptor(rootMemoTrustedMapIteratorPrototype, Symbol.iterator) === undefined
+    && rootMemoGetPrototypeOf(rootMemoTrustedMapIteratorPrototype) === rootMemoTrustedIteratorPrototype
+    && sameTrustedDataMethod(rootMemoTrustedIteratorPrototype, Symbol.iterator, rootMemoTrustedIteratorMethod);
+}
+
 /** Enumerates owned IDs in current content, immutable editions and restoration history, never prose. */
-export function collectImportIds(project: ProjectData): ImportId[] {
+function collectImportIdsInternal(project: ProjectData, workerTransport: boolean): ImportId[] {
   const found = new Map<string, ImportId>();
   const bindings: { id: string; ownerId: string }[] = [];
   const copiedBlocks: { id: string; ownerId: string }[] = [];
   const runtimeItems = new Set<string>();
+  let entityDataRoots: WeakMap<object, string> | undefined;
+  let entityDataRootCount = 0;
+  let rootMemoEligible = false;
+  if (workerTransport) {
+    try {
+      rootMemoEligible = rootMemoEnvironmentIsSafe() && isImmutablePlainData(project);
+      if (rootMemoEligible) entityDataRoots = new WeakMap<object, string>();
+    } catch { rootMemoEligible = false; entityDataRoots = undefined; }
+  }
   const add = (id: string, role: ImportIdRole, ownerId?: string) => {
     const old = found.get(id);
     if (old && (old.role !== role || old.ownerId !== ownerId)) throw new StorageError('IMPORT_CONFLICT', '同じIDが別の種別・所有者で使われています。', id);
@@ -57,12 +156,31 @@ export function collectImportIds(project: ProjectData): ImportId[] {
       declarations(item, ownerId, contentCopy || isContentCopyField(key));
     }
   };
+  const declareEntityData = (value: unknown, ownerId: string) => {
+    if (!rootMemoEligible || !entityDataRoots || !value || typeof value !== 'object' || typeof ownerId !== 'string' || !ID_PATTERN.test(ownerId)) {
+      declarations(value, ownerId);
+      return;
+    }
+    const firstOwner = entityDataRoots.get(value);
+    if (firstOwner !== undefined) {
+      if (firstOwner === ownerId) return;
+      declarations(value, ownerId);
+      return;
+    }
+    if (entityDataRootCount >= maximumEntityDataRootMemoEntries) {
+      declarations(value, ownerId);
+      return;
+    }
+    declarations(value, ownerId);
+    entityDataRoots.set(value, ownerId);
+    entityDataRootCount++;
+  };
   const state = (content: ProjectContent | ContentState) => {
     add(content.projectId, 'project');
     for (const entity of content.entities) {
       add(entity.id, entity.kind === 'snapshot' ? 'snapshot' : `entity:${entity.kind}`);
       if (entity.deletionOperationId) add(entity.deletionOperationId, 'operation');
-      declarations(entity.data, entity.id);
+      declareEntityData(entity.data, entity.id);
     }
     for (const relation of content.relations) { add(relation.id, 'relation'); if (relation.deletionOperationId) add(relation.deletionOperationId, 'operation'); }
     for (const view of content.views) add(view.id, 'view');
@@ -87,6 +205,17 @@ export function collectImportIds(project: ProjectData): ImportId[] {
   for (const id of runtimeItems) if (found.get(id)?.role !== 'entity:item') add(id, 'runtime_item');
   for (const binding of bindings) if (!found.has(binding.id)) add(binding.id, 'reuse_binding', binding.ownerId);
   return [...found.values()];
+}
+
+/** Public/direct calls retain the legacy fresh declaration walk and observable accessor/Proxy behavior. */
+export function collectImportIds(project: ProjectData): ImportId[] {
+  return collectImportIdsInternal(project, false);
+}
+
+/** @internal Called only by the worker import pipeline, before merging native MessageEvent data. */
+export function createNativeWorkerImportIdCollector(): ((project: ProjectData) => ImportId[]) | undefined {
+  if (!rootMemoEnvironmentIsSafe()) return undefined;
+  return project => collectImportIdsInternal(project, true);
 }
 
 function validationError(issues: { path: string; message: string }[]): StorageError {

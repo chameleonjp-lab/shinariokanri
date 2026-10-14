@@ -9,7 +9,8 @@ import { appendAlternativeVersion, applyAlternativeChanges, diffAuthorAlternativ
 import { sealAuthorAlternative } from '../domain/authorAlternativeIntegrity';
 import { pinTrialRecord, startTrial } from '../domain/runtime';
 import { replaySavedTraceVerified } from '../domain/runtimeVerified';
-import type { Entity, ProjectData } from '../domain/types';
+import type { CommandRecord, ContentState, Entity, ProjectData } from '../domain/types';
+import { freezeCapturedPlainData, isImmutablePlainData } from '../domain/immutablePlainData';
 import { allKindsFixture } from '../testing/allKindsFixture';
 import { ScenarioStore, type FaultStage } from './store';
 import { exportScenario, inspectScenario } from './archive';
@@ -23,6 +24,30 @@ afterEach(async () => { for (const db of stores.splice(0)) await db.deleteDataba
 function record(name: string, data: unknown) { const dir = '/tmp/shinariokanri-rb06-fixtures'; mkdirSync(dir, { recursive: true }); writeFileSync(`${dir}/${name}.json`, JSON.stringify(data, null, 2) + '\n'); }
 async function basic(db: ScenarioStore, name = '復元元') { const p = createProject(name); p.entities.push(createEntity(p.projectId, 'scene', '原場面', { body: textToRichText('😀原段落を保持') })); return (await db.saveProject(p, { reason: '原作品を保存' })).project; }
 function mapping(source: ProjectData, target: ProjectData) { return Object.fromEntries(collectImportIds(source).map(item => [item.id, item.id === source.projectId ? target.projectId : newId()])); }
+
+function repeatedDataFixture() {
+  const project = createProject('同一の履歴入力'), note = createEntity(project.projectId, 'note', '共有する原稿', { body: textToRichText('共有段落😀') });
+  project.entities = [note];
+  const {history: _history, ...state} = project;
+  const command: CommandRecord = {operationId: newId(), projectId: project.projectId, baseRevision: '0', revision: '1',
+    targetIds: [project.projectId], reason: '同一画像を履歴に保持', createdAt: '2026-10-14T00:00:00.000Z', before: state, after: state};
+  project.history = [command];
+  return {project, note};
+}
+
+function frozenPrivate<T>(value: T): T {
+  const copy = structuredClone(value);
+  if (!freezeCapturedPlainData(copy)) throw new Error('Expected a supported private plain-data copy');
+  return copy;
+}
+
+function idCollectionError(project: ProjectData) {
+  try { collectImportIds(project); return undefined; }
+  catch (error) {
+    const value = error as {code?: unknown; message?: unknown; path?: unknown};
+    return {code: value.code, message: value.message, path: value.path};
+  }
+}
 
 async function publicCopyFixture() {
   let project = createProject('公開コピーの明示ID対応');
@@ -45,6 +70,115 @@ async function publicCopyFixture() {
 }
 
 describe('RB06 complete recovery and arbitrary historical selection', () => {
+  it('keeps public ID collection legacy behavior for frozen Proxy graphs', () => {
+    const {project, note} = repeatedDataFixture();
+    let idReads = 0;
+    note.data = new Proxy(note.data, {get(target, key, receiver) {
+      if (key === 'id' && ++idReads === 2) throw new Error('second Proxy ID read');
+      return Reflect.get(target, key, receiver);
+    }});
+    expect(freezeCapturedPlainData(project)).toBe(true);
+    expect(isImmutablePlainData(project)).toBe(true);
+    expect(() => structuredClone(project)).toThrow();
+    expect(idReads).toBe(0);
+    expect(() => collectImportIds(project)).toThrow('second Proxy ID read');
+    expect(idReads).toBe(2);
+  });
+
+  it('preserves full ID declarations when immutable current, before and after images share data roots', () => {
+    const {project} = repeatedDataFixture(), expected = collectImportIds(project), privatelyFrozen = frozenPrivate(project);
+    expect(privatelyFrozen.history[0]!.before.entities[0]!.data).toBe(privatelyFrozen.entities[0]!.data);
+    expect(privatelyFrozen.history[0]!.after.entities[0]!.data).toBe(privatelyFrozen.entities[0]!.data);
+    expect(collectImportIds(privatelyFrozen)).toEqual(expected);
+    expect(Object.isFrozen(project)).toBe(false);
+    expect(Object.isFrozen(project.entities[0]!.data)).toBe(false);
+  });
+
+  it('still rejects a late historical alias conflict after earlier same-owner roots repeat', () => {
+    const baseline = repeatedDataFixture(), {project, note} = baseline;
+    const rogue = createEntity(project.projectId, 'note', '遅れて現れる別所有者', {body: structuredClone(note.data.body)});
+    const after = {...project.history[0]!.after, entities: [...project.entities, rogue]} satisfies ContentState;
+    project.history[0]!.after = after;
+    const mutableError = idCollectionError(project), frozenError = idCollectionError(frozenPrivate(project));
+    expect(mutableError).toMatchObject({code: 'IMPORT_CONFLICT', message: expect.stringContaining('同じIDが別の種別・所有者')});
+    expect(frozenError).toEqual(mutableError);
+  });
+
+  it('does not memoize one data root across different owners and preserves runtime-role conflicts', () => {
+    const {project, note} = repeatedDataFixture();
+    project.entities.push({...note, id: newId(), name: '別所有者', data: note.data});
+    expect(idCollectionError(project)?.code).toBe('IMPORT_CONFLICT');
+    expect(idCollectionError(frozenPrivate(project))).toEqual(idCollectionError(project));
+
+    const runtime = repeatedDataFixture(), blockId = runtime.note.data.body[0]!.id;
+    (runtime.note.data as unknown as Record<string, unknown>).memoRuntime = {instanceId: blockId, quantity: 1, consumed: false};
+    const mutableError = idCollectionError(runtime.project), frozenError = idCollectionError(frozenPrivate(runtime.project));
+    expect(mutableError).toMatchObject({code: 'IMPORT_CONFLICT', message: expect.stringContaining('同じIDが別の種別・所有者')});
+    expect(frozenError).toEqual(mutableError);
+  });
+
+  it('keeps invalid empty owners on the complete declaration path', () => {
+    const repeated = repeatedDataFixture();
+    repeated.note.id = '';
+    repeated.project.entities.push({...repeated.note, name: '空ownerの同一root再訪'});
+    const repeatedMutableError = idCollectionError(repeated.project), repeatedFrozenError = idCollectionError(frozenPrivate(repeated.project));
+    expect(repeatedMutableError).toMatchObject({code: 'IMPORT_CONFLICT', message: expect.stringContaining('同じIDが別の種別・所有者')});
+    expect(repeatedFrozenError).toEqual(repeatedMutableError);
+
+    const conflict = repeatedDataFixture();
+    conflict.note.id = '';
+    conflict.project.entities.push({...conflict.note, id: newId(), name: '正規owner'});
+    const mutableError = idCollectionError(conflict.project), frozenError = idCollectionError(frozenPrivate(conflict.project));
+    expect(mutableError).toMatchObject({code: 'IMPORT_CONFLICT', message: expect.stringContaining('同じIDが別の種別・所有者')});
+    expect(frozenError).toEqual(mutableError);
+  });
+
+  it('keeps mutable own and inherited accessor behavior outside the immutable memo path', () => {
+    const own = repeatedDataFixture(); let ownReads = 0;
+    Object.defineProperty(own.note.data, 'lateMemoProbe', {enumerable: true, configurable: true, get() {
+      ownReads++;
+      if (ownReads === 2) throw new Error('second own getter read');
+      return 'first read';
+    }});
+    own.project.entities.push({...own.note, name: '同じownerの再訪'});
+    expect(() => collectImportIds(own.project)).toThrow('second own getter read');
+    expect(ownReads).toBe(2);
+
+    const inherited = repeatedDataFixture();
+    inherited.note.data = {mode: 'anonymize', publicId: newId()} as unknown as typeof inherited.note.data;
+    inherited.project.entities.push({...inherited.note, name: '同じownerの再訪'});
+    const privateProject = frozenPrivate(inherited.project);
+    expect(Object.isFrozen(privateProject)).toBe(true);
+    expect(Object.isFrozen(inherited.project)).toBe(false);
+    let inheritedReads = 0;
+    // The current, before and after images revisit one public ID; duplicate add() calls read old.ownerId.
+    Object.defineProperty(Object.prototype, 'ownerId', {configurable: true, get() {
+      if ((this as {role?: unknown} | null)?.role === 'public_id') {
+        inheritedReads++;
+        if (inheritedReads === 2) throw new Error('second inherited getter read');
+      }
+      return undefined;
+    }});
+    try {
+      expect(() => collectImportIds(inherited.project)).toThrow('second inherited getter read');
+      expect(inheritedReads).toBe(2);
+      inheritedReads = 0;
+      expect(() => collectImportIds(privateProject)).toThrow('second inherited getter read');
+      expect(inheritedReads).toBe(2);
+    } finally { delete (Object.prototype as {ownerId?: unknown}).ownerId; }
+  });
+
+  it('continues declaring IDs after the bounded 100,000-root memo fills', () => {
+    const project = createProject('有界memo後の宣言'), template = createEntity(project.projectId, 'note', 'memo root');
+    const uuid = (value: number) => `00000000-0000-4000-8000-${value.toString(16).padStart(12, '0')}`;
+    project.entities = Array.from({length: 100_001}, (_, index) => ({...template, id: uuid(index + 1),
+      data: index === 100_000 ? {id: 'unsupported-after-cap'} as unknown as typeof template.data : {...template.data}}));
+    const privateProject = frozenPrivate(project);
+    expect(() => collectImportIds(privateProject)).toThrow('未対応の埋込IDです');
+    expect(Object.isFrozen(project)).toBe(false);
+    expect(Object.isFrozen(project.entities[0]!.data)).toBe(false);
+  });
+
   it('enumerates canonical paragraph ownership once while keeping independent public blocks, runtime instances and public IDs', async () => {
     const f = await publicCopyFixture(), ids = collectImportIds(f.project);
     expect(ids.filter(row => row.id === f.note.data.body[0].id)).toEqual([{ id: f.note.data.body[0].id, role: 'block', ownerId: f.note.id }]);

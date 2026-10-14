@@ -21,7 +21,7 @@ scope.onmessage = event => {
   if (event.data.type === 'import-work') {
     const requestId = event.data.requestId;
     const work = freezeCapturedImportWork(event.data.work as ImportWork);
-    void importWorkRunner.run(work, undefined, hash => new Promise((resolve, reject) => {
+    void importWorkRunner.runNativeClonedInput(work, undefined, hash => new Promise((resolve, reject) => {
       const id = ++nextAsset; assets.set(id, {resolve, reject}); scope.postMessage({type: 'asset', requestId, id, hash});
     }))
       .then(result => scope.postMessage({type: 'done', requestId, result}))

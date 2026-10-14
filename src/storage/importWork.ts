@@ -5,7 +5,7 @@ import {captureImmutablePlainData, freezeCapturedPlainData} from '../domain/immu
 import {internImmutableRecords} from '../domain/internImmutableRecords';
 import {verifySnapshotHashes, verifyWorlds, type PreparedScenario} from './archiveData';
 import {cloneProject} from './clone';
-import {collectImportIds, planCrossProjectImport, type CrossProjectImportPlan, type ImportId} from './importMapping';
+import {collectImportIds, createNativeWorkerImportIdCollector, planCrossProjectImport, type CrossProjectImportPlan, type ImportId} from './importMapping';
 import type {ImportConflict} from './store';
 import {createRecoveryValidationSession, projectWithRecoveryHistory, validateRecovery, type PortableRecovery} from './recovery';
 import {validateSyncRecovery, type NativeSyncRecovery} from './syncRecovery';
@@ -231,7 +231,8 @@ function publishWorkerCaptured<T>(value: T): T { return value; }
  * No database, account authority or mutable target is available here. */
 async function runImportWorkCore(work: ImportWork, signal: AbortSignal | undefined,
   loadAsset: ((hash: string) => Promise<Uint8Array | undefined> | Uint8Array | undefined) | undefined,
-  publishCaptured: CapturedPublisher, workerReuse?: ReturnType<typeof createWorkerValidationReuse>): Promise<ImportWorkResult> {
+  publishCaptured: CapturedPublisher, workerReuse?: ReturnType<typeof createWorkerValidationReuse>,
+  nativeWorkerMessage = false): Promise<ImportWorkResult> {
   checkCancelled(signal);
   const {project, worlds, recovery} = work;
   let result: ImportWorkResult = {};
@@ -335,11 +336,38 @@ async function runImportWorkCore(work: ImportWork, signal: AbortSignal | undefin
     }
     case 'sync_recovery': result.syncRecovery = await validateSyncRecovery(work.syncRecovery, worlds, signal); break;
     case 'ids': {
+      if (!nativeWorkerMessage) {
+        // Preserve the original direct/Node capture path, but never use the
+        // native Worker memo collector for callers outside MessageEvent data.
+        const captured = captureImmutablePlainData({project, recovery});
+        if (captured.captured) {
+          const owned = internImmutableRecords(captured.value);
+          result.ids = collectImportIds(projectWithRecoveryHistory(owned.project, owned.recovery));
+        } else result.ids = collectImportIds(projectWithRecoveryHistory(project, recovery));
+        break;
+      }
+      // Check the inherited reads and intrinsics used by projectWithRecoveryHistory
+      // before that merge can inject values outside the native message graph.
+      const collectNativeIds = createNativeWorkerImportIdCollector();
+      if (!collectNativeIds) {
+        const legacyCapture = captureImmutablePlainData({project, recovery});
+        if (legacyCapture.captured) {
+          const legacyOwned = internImmutableRecords(legacyCapture.value);
+          result.ids = collectImportIds(projectWithRecoveryHistory(legacyOwned.project, legacyOwned.recovery));
+        } else result.ids = collectImportIds(projectWithRecoveryHistory(project, recovery));
+        break;
+      }
       const captured = captureImmutablePlainData({project, recovery});
-      if (captured.captured) {
-        const owned = internImmutableRecords(captured.value);
-        result.ids = collectImportIds(projectWithRecoveryHistory(owned.project, owned.recovery));
-      } else result.ids = collectImportIds(projectWithRecoveryHistory(project, recovery));
+      if (!captured.captured) {
+        result.ids = collectImportIds(projectWithRecoveryHistory(project, recovery));
+        break;
+      }
+      const owned = internImmutableRecords(captured.value);
+      // Capture the one merge for the memo collector; if proof fails, traverse
+      // that same merge through the legacy path without repeating inherited reads.
+      const merged = projectWithRecoveryHistory(owned.project, owned.recovery);
+      const mergedCaptured = captureImmutablePlainData(merged);
+      result.ids = mergedCaptured.captured ? collectNativeIds(mergedCaptured.value) : collectImportIds(merged);
       break;
     }
     case 'clone': result.cloned = await cloneProject(projectWithRecoveryHistory(project, recovery)); break;
@@ -443,15 +471,25 @@ export function runImportWorkForWorker(work: ImportWork, signal?: AbortSignal, l
 export function createImportWorkWorkerRunner() {
   const reuse = createWorkerValidationReuse();
   let active = 0;
+  const runScoped = (work: ImportWork, signal: AbortSignal | undefined,
+    loadAsset: ((hash: string) => Promise<Uint8Array | undefined> | Uint8Array | undefined) | undefined,
+    nativeWorkerMessage: boolean): Promise<ImportWorkResult> => {
+    const overlapping = active > 0;
+    active++;
+    if (overlapping) reuse.clear();
+    return runImportWorkCore(work, signal, loadAsset, publishWorkerCaptured,
+      overlapping ? undefined : reuse, nativeWorkerMessage)
+      .catch(error => { reuse.clear(); throw error; })
+      .finally(() => { active--; });
+  };
   return {
     reset: () => reuse.clear(),
     run(work: ImportWork, signal?: AbortSignal, loadAsset?: (hash: string) => Promise<Uint8Array | undefined> | Uint8Array | undefined): Promise<ImportWorkResult> {
-      const overlapping = active > 0;
-      active++;
-      if (overlapping) reuse.clear();
-      return runImportWorkCore(work, signal, loadAsset, publishWorkerCaptured, overlapping ? undefined : reuse)
-        .catch(error => { reuse.clear(); throw error; })
-        .finally(() => { active--; });
+      return runScoped(work, signal, loadAsset, false);
+    },
+    /** @internal Only archive.worker.ts may call this for native MessageEvent.data. */
+    runNativeClonedInput(work: ImportWork, signal?: AbortSignal, loadAsset?: (hash: string) => Promise<Uint8Array | undefined> | Uint8Array | undefined): Promise<ImportWorkResult> {
+      return runScoped(work, signal, loadAsset, true);
     },
   };
 }
