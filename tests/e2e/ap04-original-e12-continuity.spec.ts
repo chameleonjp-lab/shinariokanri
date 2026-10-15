@@ -1,4 +1,4 @@
-import { expect, test, type Browser, type Page } from '@playwright/test';
+import { expect, test, type Browser, type Page, type TestInfo } from '@playwright/test';
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
@@ -40,7 +40,7 @@ function durableImage(image: Awaited<ReturnType<typeof nativeImage>>) {
   return Object.fromEntries(durableNames.map(name => [name, image.tables[name]]));
 }
 
-async function fullNewClone(browser: Browser, url: string, bytes: Uint8Array, original: ProjectData) {
+async function fullNewClone(browser: Browser, url: string, bytes: Uint8Array, original: ProjectData, info: TestInfo) {
   const results: Record<string, unknown> = {};
   for (const mode of ['new', 'clone'] as const) {
     const context = await browser.newContext();
@@ -87,7 +87,9 @@ async function fullNewClone(browser: Browser, url: string, bytes: Uint8Array, or
         expect(cloneCommand.after.entities.map(e => [e.id, e.kind, e.name])).toEqual(original.entities.map(e => [idMap[e.id], e.kind, e.name]));
         expect(cloneCommand.before.entities).toHaveLength(0);
       }
-      results[mode] = { projectId: complete.project.projectId, fileSHA256: sha256(complete.bytes), historyCount: complete.project.history.length,
+      const fileName = `AT-E12-${mode}-cold-complete.scenario`;
+      await info.attach(fileName, { body: Buffer.from(complete.bytes), contentType: 'application/zip' });
+      results[mode] = { fileName, projectId: complete.project.projectId, fileBytes: complete.bytes.length, fileSHA256: sha256(complete.bytes), historyCount: complete.project.history.length,
         pendingCount: complete.recovery?.pending.length ?? 0, oldTraceReplayedAfterCold: true };
     } finally { await context.close(); }
   }
@@ -258,7 +260,7 @@ test('AT-E12 キャッシュ済み未送信作品をoffline・容量拒否・実
       const rejected = await uncachedPage.goto(url).then(() => false, () => true);
       expect(rejected).toBe(true);
     } finally { await uncachedContext.close(); }
-    const recovery = await fullNewClone(browser, url, saved.bytes, saved.project);
+    const recovery = await fullNewClone(browser, url, saved.bytes, saved.project, info);
 
     const migrationContext = await browser.newContext();
     try {

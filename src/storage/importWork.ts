@@ -2,12 +2,12 @@ import type {ProjectContent, ProjectData} from '../domain/types';
 import {ENTITY_KINDS, ENTITY_SCHEMAS, RELATION_TYPES, SCOPES, STATUSES, validateProject} from '../domain/model';
 import {createProjectValidationSession, validateProjectIntegrity} from '../domain/projectRecordValidation';
 import {captureImmutablePlainData, freezeCapturedPlainData} from '../domain/immutablePlainData';
-import {internImmutableRecords} from '../domain/internImmutableRecords';
+import {createImmutableRecordInterningSession, internImmutableRecords} from '../domain/internImmutableRecords';
 import {verifySnapshotHashes, verifyWorlds, type PreparedScenario} from './archiveData';
 import {cloneProject} from './clone';
 import {collectImportIds, createNativeWorkerImportIdCollector, planCrossProjectImport, type CrossProjectImportPlan, type ImportId} from './importMapping';
 import type {ImportConflict} from './store';
-import {createRecoveryValidationSession, projectWithRecoveryHistory, validateRecovery, type PortableRecovery} from './recovery';
+import {createRecoveryValidationSession, createRecoveryWorkSession, projectWithRecoveryHistory, validateRecovery, type PortableRecovery} from './recovery';
 import {validateSyncRecovery, type NativeSyncRecovery} from './syncRecovery';
 import {createSharedArrayJsonEncoder} from './sharedArrayJson';
 import {equalJson, isValidUnicode, jsonBytes, sha256, validateJsonValue} from './json';
@@ -46,7 +46,7 @@ type CapturedGraphArrayEdge = 'other' | 'entities' | 'relations' | 'calendars';
 /** Compare only already-owned immutable graphs. Cache completed typed-record
  * pairs and at most 128 arrays first compared through entity, relation, or
  * calendar edges; unselected edges do not add arrays to the memo. */
-function createCapturedGraphComparer(): (left: unknown, right: unknown) => boolean {
+export function createCapturedGraphComparer(): (left: unknown, right: unknown) => boolean {
   const completedPairs = new WeakMap<object, WeakSet<object>>();
   let recordPairs = 0, arrayPairs = 0;
   const hasPair = (left: object, right: object) => completedPairs.get(left)?.has(right) ?? false;
@@ -121,18 +121,19 @@ function captureWorkerValidationContext(worlds: Record<string, ProjectContent>):
 }
 
 type WorkerValidationSlot = {
-  project: ProjectData;
   validationProject: ProjectData;
   context: WorkerValidationContext;
   session: RecoveryValidationSession;
+  same: ReturnType<typeof createCapturedGraphComparer>;
 };
 type WorkerValidationTicket = {
   readonly validationProject?: ProjectData;
+  readonly same?: ReturnType<typeof createCapturedGraphComparer>;
   session(worlds?: Record<string, ProjectContent>): RecoveryValidationSession;
   commit(validationProject: ProjectData): void;
 };
 
-function createWorkerValidationReuse(): {
+function createWorkerValidationReuse(createSession = createRecoveryValidationSession): {
   acquire(project: ProjectData, worlds: Record<string, ProjectContent>): WorkerValidationTicket | undefined;
   clear(): void;
 } {
@@ -142,10 +143,41 @@ function createWorkerValidationReuse(): {
     const context = captureWorkerValidationContext(worlds);
     if (!context) { clear(); return undefined; }
     if (slot) {
-      const equal = createCapturedGraphComparer();
-      if (equal(slot.project, project) && equal(slot.context, context)) {
+      const equal = slot.same;
+      if (equal(slot.context, context)) {
         const current = slot;
-        return {validationProject: current.validationProject, session: () => current.session, commit: (_validationProject: ProjectData) => undefined};
+        const previousHistory = Object.getOwnPropertyDescriptor(current.validationProject, 'history')?.value;
+        const incomingHistory = Object.getOwnPropertyDescriptor(project, 'history')?.value;
+        const projectId = Object.getOwnPropertyDescriptor(project, 'projectId')?.value;
+        const sameProject = projectId === current.validationProject.projectId;
+        let matchedHistory = sameProject && Array.isArray(previousHistory) && Array.isArray(incomingHistory)
+          && previousHistory.length > 0 && incomingHistory.length >= previousHistory.length;
+        // Populate bounded proofs from recurring history before the separately
+        // editable current image. IDs alone never establish correspondence.
+        if (matchedHistory) for (let index = 0; index < previousHistory.length; index++) {
+          if (!equal(previousHistory[index], incomingHistory[index])) { matchedHistory = false; break; }
+        }
+        const sameRevision = Object.getOwnPropertyDescriptor(project, 'revision')?.value === current.validationProject.revision;
+        if (sameProject && sameRevision && Array.isArray(incomingHistory) && incomingHistory.length === current.validationProject.history.length
+          && equal(current.validationProject, project)) {
+          return {validationProject: current.validationProject, same: equal, session: () => current.session, commit: (_validationProject: ProjectData) => undefined};
+        }
+        if (matchedHistory) {
+          // Borrow only a completely equal immutable prefix for private
+          // validation. Every command and the new current image still enter
+          // the same full validator; publications keep the incoming topology.
+          const history: ProjectData['history'] = [];
+          for (let index = 0; index < incomingHistory.length; index++) Object.defineProperty(history, index, {
+            value: index < previousHistory.length ? previousHistory[index] : incomingHistory[index], enumerable: true,
+          });
+          const validationProject = replaceCapturedDataField(project, 'history', Object.freeze(history));
+          if (validationProject) {
+            const ticketGeneration = generation;
+            return {validationProject, same: equal, session: () => current.session, commit: validated => {
+              if (generation === ticketGeneration && slot === current) slot = {validationProject: validated, context, session: current.session, same: equal};
+            }};
+          }
+        }
       }
       clear();
     }
@@ -153,11 +185,11 @@ function createWorkerValidationReuse(): {
     let candidateSession: RecoveryValidationSession | undefined;
     return {
       session: sessionWorlds => {
-        candidateSession ??= createRecoveryValidationSession(sessionWorlds ?? context.worldSnapshots);
+        candidateSession ??= createSession(sessionWorlds ?? context.worldSnapshots);
         return candidateSession;
       },
       commit: validationProject => {
-        if (candidateSession && generation === ticketGeneration) slot = {project, validationProject, context, session: candidateSession};
+        if (candidateSession && generation === ticketGeneration) slot = {validationProject, context, session: candidateSession, same: createCapturedGraphComparer()};
       },
     };
   };
@@ -179,16 +211,16 @@ function replaceCapturedDataField<T extends object>(source: T, field: string, re
   return Object.freeze(copy) as T;
 }
 
-function recoveryWithCanonicalHistory(input: unknown, project: ProjectData): PortableRecovery | undefined {
+function recoveryWithCanonicalHistory(input: unknown, project: ProjectData, same = createCapturedGraphComparer()): PortableRecovery | undefined {
   if (!input || typeof input !== 'object' || Array.isArray(input)) return undefined;
   const recovery = input as PortableRecovery;
   if (!Array.isArray(recovery.pending)) return undefined;
   const history = new Map(project.history.map(command => [command.operationId, command]));
-  const same = createCapturedGraphComparer(), pending: PortableRecovery['pending'] = [];
+  const pending: PortableRecovery['pending'] = [];
   for (const item of recovery.pending) {
     if (!item || typeof item !== 'object' || Array.isArray(item)) return undefined;
     const command = history.get(item.operationId);
-    if (!command || !same(item.command, command)) return undefined;
+    if (!command || !same(command, item.command)) return undefined;
     const canonicalItem = replaceCapturedDataField(item, 'command', command);
     if (!canonicalItem) return undefined;
     pending.push(canonicalItem);
@@ -232,7 +264,8 @@ function publishWorkerCaptured<T>(value: T): T { return value; }
 async function runImportWorkCore(work: ImportWork, signal: AbortSignal | undefined,
   loadAsset: ((hash: string) => Promise<Uint8Array | undefined> | Uint8Array | undefined) | undefined,
   publishCaptured: CapturedPublisher, workerReuse?: ReturnType<typeof createWorkerValidationReuse>,
-  nativeWorkerMessage = false): Promise<ImportWorkResult> {
+  nativeWorkerMessage = false, intern = internImmutableRecords,
+  commandHash?: ReturnType<typeof createRecoveryWorkSession>['commandHash']): Promise<ImportWorkResult> {
   checkCancelled(signal);
   const {project, worlds, recovery} = work;
   let result: ImportWorkResult = {};
@@ -242,7 +275,7 @@ async function runImportWorkCore(work: ImportWork, signal: AbortSignal | undefin
       // One read owns the complete manuscript and exact fixed dependencies.
       // Only successful proofs over this private immutable capture can share
       // structural work; unsupported graphs retain the uncached checks.
-      const owned = internImmutableRecords(captureImmutablePlainData({project, worlds, knownWorlds: work.knownWorlds ?? {}}).value);
+      const owned = intern(captureImmutablePlainData({project, worlds, knownWorlds: work.knownWorlds ?? {}}).value);
       const validation = createProjectValidationSession({worldSnapshots: owned.worlds});
       const structural = validation.validate(owned.project);
       if (!structural.ok) throw Object.assign(new StorageError('VALIDATION_FAILED', structural.issues.map(issue => `${issue.path}: ${issue.message}`).join('\n')), {issues: structural.issues});
@@ -266,7 +299,7 @@ async function runImportWorkCore(work: ImportWork, signal: AbortSignal | undefin
         // record/content checks across its current, snapshots, and history.
         const ticket = workerReuse?.acquire(captured.value, worlds);
         if (workerReuse && !ticket) workerReuse.clear();
-        const validationProject = ticket?.validationProject ?? internImmutableRecords(captured.value);
+        const validationProject = ticket?.validationProject ?? intern(captured.value);
         const validation = ticket?.session() ?? createProjectValidationSession({worldSnapshots: worlds});
         const structural = validation.validate(validationProject);
         if (!structural.ok) throw Object.assign(new StorageError('VALIDATION_FAILED', structural.issues.map(issue => `${issue.path}: ${issue.message}`).join('\n')), {issues: structural.issues});
@@ -293,7 +326,7 @@ async function runImportWorkCore(work: ImportWork, signal: AbortSignal | undefin
       if (captured.captured) {
         const ticket = workerReuse?.acquire(captured.value.project, captured.value.worlds);
         if (workerReuse && !ticket) workerReuse.clear();
-        const owned = ticket?.validationProject ? undefined : internImmutableRecords(captured.value);
+        const owned = ticket?.validationProject ? undefined : intern(captured.value);
         const validationProject = ticket?.validationProject ?? owned!.project;
         const validation = ticket?.session(owned?.worlds) ?? createProjectValidationSession({worldSnapshots: owned!.worlds});
         issues = await validation.integrity(validationProject, validationProject.history.length > 0);
@@ -312,19 +345,19 @@ async function runImportWorkCore(work: ImportWork, signal: AbortSignal | undefin
         if (workerReuse && !ticket) workerReuse.clear();
         if (ticket?.validationProject) {
           const reusableRecovery = captured.value.recovery
-            ? recoveryWithCanonicalHistory(captured.value.recovery, ticket.validationProject) : undefined;
+            ? recoveryWithCanonicalHistory(captured.value.recovery, ticket.validationProject, ticket.same) : undefined;
           if (reusableRecovery) {
             await ticket.session().recoveryForInspection(reusableRecovery, ticket.validationProject, signal);
           } else {
             // A pending-only command or any command difference follows the
             // existing fresh validation path. The old proof scope is discarded.
             workerReuse?.clear();
-            const owned = internImmutableRecords(captured.value);
+            const owned = intern(captured.value);
             await validateRecovery(owned.recovery, owned.project, owned.worlds, signal);
           }
         } else {
           if (ticket) workerReuse?.clear();
-          const owned = internImmutableRecords(captured.value);
+          const owned = intern(captured.value);
           await validateRecovery(owned.recovery, owned.project, owned.worlds, signal);
         }
         result.recovery = publishCaptured(captured.value.recovery!);
@@ -341,7 +374,7 @@ async function runImportWorkCore(work: ImportWork, signal: AbortSignal | undefin
         // native Worker memo collector for callers outside MessageEvent data.
         const captured = captureImmutablePlainData({project, recovery});
         if (captured.captured) {
-          const owned = internImmutableRecords(captured.value);
+          const owned = intern(captured.value);
           result.ids = collectImportIds(projectWithRecoveryHistory(owned.project, owned.recovery));
         } else result.ids = collectImportIds(projectWithRecoveryHistory(project, recovery));
         break;
@@ -352,7 +385,7 @@ async function runImportWorkCore(work: ImportWork, signal: AbortSignal | undefin
       if (!collectNativeIds) {
         const legacyCapture = captureImmutablePlainData({project, recovery});
         if (legacyCapture.captured) {
-          const legacyOwned = internImmutableRecords(legacyCapture.value);
+          const legacyOwned = intern(legacyCapture.value);
           result.ids = collectImportIds(projectWithRecoveryHistory(legacyOwned.project, legacyOwned.recovery));
         } else result.ids = collectImportIds(projectWithRecoveryHistory(project, recovery));
         break;
@@ -362,7 +395,7 @@ async function runImportWorkCore(work: ImportWork, signal: AbortSignal | undefin
         result.ids = collectImportIds(projectWithRecoveryHistory(project, recovery));
         break;
       }
-      const owned = internImmutableRecords(captured.value);
+      const owned = intern(captured.value);
       // Capture the one merge for the memo collector; if proof fails, traverse
       // that same merge through the legacy path without repeating inherited reads.
       const merged = projectWithRecoveryHistory(owned.project, owned.recovery);
@@ -399,14 +432,14 @@ async function runImportWorkCore(work: ImportWork, signal: AbortSignal | undefin
       if (!recovery || !work.idMap) throw new StorageError('IMPORT_CONFLICT', '復元する送信待ち操作の明示ID対応が不足しています。');
       const captured = captureImmutablePlainData({project, recovery, idMap: work.idMap});
       if (captured.captured) {
-        const owned = internImmutableRecords(captured.value), history = new Map(captured.value.project.history.map(record => [record.operationId, record]));
+        const owned = intern(captured.value), history = new Map(captured.value.project.history.map(record => [record.operationId, record]));
         const hashHistory = new Map(owned.project.history.map(record => [record.operationId, record]));
         const pending: PortableRecovery['pending'] = [], encodeCommand = createSharedArrayJsonEncoder();
         for (const item of captured.value.recovery.pending) {
           checkCancelled(signal);
           const operationId = captured.value.idMap[item.operationId], command = history.get(operationId), hashCommand = hashHistory.get(operationId);
           if (!operationId || !command || !hashCommand) throw new StorageError('IMPORT_CONFLICT', '復元する送信待ち操作の明示ID対応が不足しています。', item.operationId);
-          pending.push({operationId, command, commandHash: await sha256(encodeCommand(hashCommand)), origin: item.origin ?? {projectId: captured.value.recovery.projectId, operationId: item.operationId, serverRevision: captured.value.recovery.serverRevision}});
+          pending.push({operationId, command, commandHash: commandHash ? await commandHash(hashCommand) : await sha256(encodeCommand(hashCommand)), origin: item.origin ?? {projectId: captured.value.recovery.projectId, operationId: item.operationId, serverRevision: captured.value.recovery.serverRevision}});
         }
         result.recovery = publishCaptured({...captured.value.recovery, projectId: captured.value.project.projectId, sourceRevision: captured.value.project.revision, pending});
       } else {
@@ -426,14 +459,14 @@ async function runImportWorkCore(work: ImportWork, signal: AbortSignal | undefin
       if (!recovery) throw new StorageError('VALIDATION_FAILED', '送信待ち復元情報がありません。');
       const captured = captureImmutablePlainData({project, recovery});
       if (captured.captured) {
-        const owned = internImmutableRecords(captured.value), history = new Map(captured.value.project.history.map(record => [record.operationId, record]));
+        const owned = intern(captured.value), history = new Map(captured.value.project.history.map(record => [record.operationId, record]));
         const hashHistory = new Map(owned.project.history.map(record => [record.operationId, record]));
         const pending: PortableRecovery['pending'] = [], encodeCommand = createSharedArrayJsonEncoder();
         for (const [index, item] of captured.value.recovery.pending.entries()) {
           checkCancelled(signal);
           const hashItem = owned.recovery.pending[index]!;
           const command = history.get(item.operationId) ?? item.command, hashCommand = hashHistory.get(hashItem.operationId) ?? hashItem.command;
-          pending.push({...item, command, commandHash: await sha256(encodeCommand(hashCommand))});
+          pending.push({...item, command, commandHash: commandHash ? await commandHash(hashCommand) : await sha256(encodeCommand(hashCommand))});
         }
         result.recovery = publishCaptured({...captured.value.recovery, projectId: captured.value.project.projectId, sourceRevision: captured.value.project.revision, pending});
       } else {
@@ -469,21 +502,24 @@ export function runImportWorkForWorker(work: ImportWork, signal?: AbortSignal, l
 /** A worker-owned scope for sequential import-work steps from one parsed archive.
  * Public/Node and one-off worker entry points deliberately keep fresh sessions. */
 export function createImportWorkWorkerRunner() {
-  const reuse = createWorkerValidationReuse();
+  let recoveryScope = createRecoveryWorkSession();
+  const reuse = createWorkerValidationReuse(worlds => recoveryScope.validation(worlds));
+  let interning = createImmutableRecordInterningSession();
   let active = 0;
   const runScoped = (work: ImportWork, signal: AbortSignal | undefined,
     loadAsset: ((hash: string) => Promise<Uint8Array | undefined> | Uint8Array | undefined) | undefined,
     nativeWorkerMessage: boolean): Promise<ImportWorkResult> => {
     const overlapping = active > 0;
     active++;
-    if (overlapping) reuse.clear();
+    if (overlapping) { reuse.clear(); interning = createImmutableRecordInterningSession(); recoveryScope = createRecoveryWorkSession(); }
+    const currentInterning = interning, currentRecovery = recoveryScope;
     return runImportWorkCore(work, signal, loadAsset, publishWorkerCaptured,
-      overlapping ? undefined : reuse, nativeWorkerMessage)
-      .catch(error => { reuse.clear(); throw error; })
+      overlapping ? undefined : reuse, nativeWorkerMessage, overlapping ? internImmutableRecords : currentInterning.intern, overlapping ? undefined : currentRecovery.commandHash)
+      .catch(error => { reuse.clear(); if (interning === currentInterning) { interning = createImmutableRecordInterningSession(); recoveryScope = createRecoveryWorkSession(); } throw error; })
       .finally(() => { active--; });
   };
   return {
-    reset: () => reuse.clear(),
+    reset: () => { reuse.clear(); interning = createImmutableRecordInterningSession(); recoveryScope = createRecoveryWorkSession(); },
     run(work: ImportWork, signal?: AbortSignal, loadAsset?: (hash: string) => Promise<Uint8Array | undefined> | Uint8Array | undefined): Promise<ImportWorkResult> {
       return runScoped(work, signal, loadAsset, false);
     },

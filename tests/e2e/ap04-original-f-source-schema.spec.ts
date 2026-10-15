@@ -9,6 +9,7 @@ import { createSharedCommentReview } from '../../src/domain/sharedReviews';
 import { sharedReviewFixture } from '../../src/testing/sharedReviewFixture';
 import { exportScenario } from '../../src/storage/archive';
 import { attachGiven, attachObservation, authorFingerprint, backup, editData, navigate, openEntity, seed } from './ap04-original-helpers';
+import {exerciseF35Replacement} from './ap04-original-f35-replace-helper';
 
 // Budget for repeated normal UI/cold/full-file operations only. Original
 // acceptance performance limits, exploration limits and assertions are intact.
@@ -256,6 +257,7 @@ test('AT-F56 同名人物と参照 ID を保って改名し、必須・空欄・
 
   const beforeImport = await backup(page);
   const invalidBytes = await archiveWithInvalidCustomValue(beforeImport.bytes, a.id);
+  await info.attach('AT-F56-input-invalid-enum-number.scenario', {body: Buffer.from(invalidBytes), contentType: 'application/zip'});
   const fingerprint = await authorFingerprint(page);
   await page.getByLabel('保存ファイルを選ぶ', { exact: true }).setInputFiles({ name: 'invalid-enum-number.scenario', mimeType: 'application/zip', buffer: Buffer.from(invalidBytes) });
   await expect(page.locator('.backup-page').getByRole('alert')).toContainText('affiliation');
@@ -509,6 +511,7 @@ test('AT-F35 条件・線・実素材・巨大 tick・通常保存履歴を完�
   expect(merged.assets[0].contentHash).toBe(prepared.contentHash);
   expect(merged.assets[0].bytes).toEqual(assetBytes);
   await attachObservation(info, 'AT-F35-unit-merge-observed', { unitOperationId: unitOperation.operationId, retainedHistoryIds: unitSaved.project.history.map(command => command.operationId), mergedHistoryIds: merged.project.history.map(command => command.operationId), unitRollback: true, mergeRollback: true, hugeTick: record(merged.project, event.id, 'event').data.time, finalCondition: record(merged.project, edge.id, 'flow_edge').data.condition, finalRelationId: merged.project.relations[0].id, assetHash: merged.assets[0].contentHash, successfulReplacement: 'not_run: pending operations require real synchronization first' });
+  await exerciseF35Replacement(browser,info,given);
 });
 
 async function expectOriginalReviewQuote(page: Page, originalBody: string, quote: string) {

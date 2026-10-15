@@ -2,7 +2,7 @@ import {createHash} from 'node:crypto';
 import {readFileSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
 import {afterEach,expect,it,vi} from 'vitest';
-import {packRecordData as packCurrent,unpackRecordData} from './recordPartsCore';
+import {packRecordData as packCurrent,packWorkerRecordData,unpackRecordData} from './recordPartsCore';
 import {packRecordData as pack3288Baseline} from './recordPartsCore.baseline-3288.fixture';
 
 const baseline = {
@@ -16,18 +16,22 @@ afterEach(() => vi.restoreAllMocks());
 
 async function expectBaselineParity(value: unknown, scope: string) {
  const expected = await pack3288Baseline(value, scope);
- const actual = await packCurrent(value, scope);
+ const actual = await packCurrent(value, scope),worker = await packWorkerRecordData(value,scope);
  expect(actual.packed.root).toEqual(expected.packed.root);
  expect(actual.packed.nodes).toBe(expected.packed.nodes);
  expect(actual.packed.strings).toBe(expected.packed.strings);
  expect(actual.packed).toEqual(expected.packed);
  expect(actual.parts).toHaveLength(expected.parts.length);
+ expect(worker.packed).toEqual(expected.packed);
+ expect(worker.parts).toHaveLength(expected.parts.length);
  for (const [index, part] of actual.parts.entries()) {
   const reference = expected.parts[index]!;
   expect({key: part.key, scope: part.scope, sequence: part.sequence, kind: part.kind, bytes: part.bytes.byteLength, sha256: part.sha256})
    .toEqual({key: reference.key, scope: reference.scope, sequence: reference.sequence, kind: reference.kind, bytes: reference.bytes.byteLength, sha256: reference.sha256});
   expect(Buffer.from(part.bytes.buffer, part.bytes.byteOffset, part.bytes.byteLength)
    .equals(Buffer.from(reference.bytes.buffer, reference.bytes.byteOffset, reference.bytes.byteLength))).toBe(true);
+  expect({...worker.parts[index],bytes:worker.parts[index]!.bytes.byteLength}).toEqual({...reference,bytes:reference.bytes.byteLength});
+  expect(Buffer.from(worker.parts[index]!.bytes).equals(Buffer.from(reference.bytes))).toBe(true);
  }
  return actual;
 }

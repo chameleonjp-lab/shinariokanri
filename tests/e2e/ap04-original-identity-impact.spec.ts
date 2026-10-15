@@ -94,9 +94,12 @@ test('AT-F26 原givenの台詞・伏線・翻訳と意味関連場面につい�
   for (const original of [line, foreshadow, translation, related]) expect(renamed.project.entities.find(e => e.id === original.id)?.data).toEqual(original.data);
 
   await openEntity(page, 'character', '改名後の人物A');
-  await editData(page, { ...person.data, body: textToRichText('人物Aは死亡している。帰還しない。') });
+  const death = { mode: 'instant' as const, at: '100', calendarId: p.calendarId };
+  await editData(page, { ...person.data, death });
   await page.reload();
   const changed = await backup(page);
+  expect(changed.project.entities.find(e => e.id === person.id)).toMatchObject({ data: { death } });
+  expect(renamed.project.entities.find(e => e.id === person.id)?.data).toEqual(person.data);
   const reviews = changed.project.entities.filter(e => e.kind === 'review' && e.customValues['changeReview.generatedBy'] === 'semantic-change-review/v1');
   for (const target of [line, foreshadow, translation, related]) {
     const review = reviews.find(e => e.kind === 'review' && e.data.target === target.id);

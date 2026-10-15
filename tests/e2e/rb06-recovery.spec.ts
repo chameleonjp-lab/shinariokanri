@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { readFile } from 'node:fs/promises';
+import {readFile} from './downloadEvidence';
 import { createEntity, createProject, textToRichText } from '../../src/domain/model';
 import { exportScenario, inspectScenario } from '../../src/storage/archive';
 async function navigate(page: Page, name: RegExp) { const menu = page.getByRole('button', { name: 'メニューを開く' }); if (await menu.isVisible()) await menu.click(); await page.locator('.sidebar').getByRole('button', { name }).first().click(); }

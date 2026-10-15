@@ -7,7 +7,19 @@ type Node=(Atom|number)[];
 export interface RecordPart{key:string;scope:string;sequence:number;kind:'strings'|'nodes';bytes:Uint8Array;sha256:string}
 export interface PackedRecord{version:1;scope:string;root:Atom;nodes:number;strings:number;parts:{key:string;kind:RecordPart['kind'];bytes:number;sha256:string}[]}
 const MAX_PART=8*1024*1024,MAX_TOTAL=256*1024*1024,MAX_NODES=4_000_000;
+/** @internal The existing v1 total, also checked when repartitioning imports. */
+export const RECORD_PART_TOTAL_LIMIT=MAX_TOTAL;
 const invalid=():never=>{throw new StorageError('SAVE_FAILED','大きな履歴の分割記録が破損しています。既存データを保持しています。');};
+const generatedStringify=JSON.stringify,generatedDescriptor=Object.getOwnPropertyDescriptor,generatedPrototype=Object.getPrototypeOf;
+const generatedObjectPrototype=Object.prototype,generatedArrayPrototype=Array.prototype,generatedNumberPrototype=Number.prototype;
+function nativeGeneratedJsonIsSafe():boolean{
+ return JSON.stringify===generatedStringify
+  && generatedPrototype(generatedObjectPrototype)===null
+  && generatedPrototype(generatedArrayPrototype)===generatedObjectPrototype
+  && generatedDescriptor(generatedObjectPrototype,'toJSON')===undefined
+  && generatedDescriptor(generatedArrayPrototype,'toJSON')===undefined
+  && generatedDescriptor(generatedNumberPrototype,'toJSON')===undefined;
+}
 /** Serialize only the private nodes emitted by atom(). Raw author strings live in the separate strings table. */
 const canonicalGeneratedNode=(node:Node):string=>{
  const atomText=(value:Atom|number):string=>{
@@ -27,14 +39,36 @@ const canonicalGeneratedNode=(node:Node):string=>{
 };
 /** Local clone graph with shared strings. Complete values, identity aliases,
  * array order and present undefined are retained; no history is summarized. */
-export async function packRecordData(value:unknown,scope:string,signal?:AbortSignal):Promise<{packed:PackedRecord;parts:RecordPart[]}>{
+async function packRecordDataInternal(value:unknown,scope:string,signal:AbortSignal|undefined,workerPlainData:boolean):Promise<{packed:PackedRecord;parts:RecordPart[]}>{
  checkCancelled(signal);const nodes:Node[]=[],ids=new WeakMap<object,number>(),active=new WeakSet<object>(),strings:string[]=[],stringIds=new Map<string,number>();
  const string=(v:string)=>{let id=stringIds.get(v);if(id===undefined){id=strings.length;strings.push(v);stringIds.set(v,id);}return id;};
- const atom=(v:unknown):Atom=>{if(v===undefined)return{undefined:true};if(typeof v==='string')return-string(v)-1;if(typeof v==='number'){if(!Number.isFinite(v))return invalid();return{number:v};}if(v===null||typeof v==='boolean')return v;if(!v||typeof v!=='object'||!Array.isArray(v)&&Object.getPrototypeOf(v)!==Object.prototype&&Object.getPrototypeOf(v)!==null)return invalid();const known=ids.get(v);if(known!==undefined){if(active.has(v))return invalid();return known;}const id=nodes.length;if(id>=MAX_NODES)return invalid();ids.set(v,id);active.add(v);const node:Node=[Array.isArray(v)?0:1];nodes.push(node);if(Array.isArray(v)){if(Object.keys(v).length!==v.length)return invalid();for(const item of v)node.push(atom(item));}else for(const [key,item]of Object.entries(v))node.push(string(key),atom(item));active.delete(v);return id;};
+ const atom=(v:unknown):Atom=>{if(v===undefined)return{undefined:true};if(typeof v==='string')return-string(v)-1;if(typeof v==='number'){if(!Number.isFinite(v))return invalid();return{number:v};}if(v===null||typeof v==='boolean')return v;if(!v||typeof v!=='object'||!Array.isArray(v)&&Object.getPrototypeOf(v)!==Object.prototype&&Object.getPrototypeOf(v)!==null)return invalid();const known=ids.get(v);if(known!==undefined){if(active.has(v))return invalid();return known;}const id=nodes.length;if(id>=MAX_NODES)return invalid();ids.set(v,id);active.add(v);const node:Node=[Array.isArray(v)?0:1];nodes.push(node);if(Array.isArray(v)){if(Object.keys(v).length!==v.length)return invalid();if(workerPlainData){for(let index=0;index<v.length;index++)node.push(atom(v[index]));}else for(const item of v)node.push(atom(item));}else if(workerPlainData){for(const key of Object.keys(v))node.push(string(key),atom((v as Record<string,unknown>)[key]));}else for(const [key,item]of Object.entries(v))node.push(string(key),atom(item));active.delete(v);return id;};
  const root=atom(value),parts:RecordPart[]=[];let total=0;const encoder=new TextEncoder();
- for(const [kind,items]of [['strings',strings],['nodes',nodes]] as const){let itemTexts:string[]=[],size=0;const emit=async()=>{if(!itemTexts.length)return;checkCancelled(signal);const bytes=encoder.encode(`[${itemTexts.join(',')}]`);total+=bytes.byteLength;if(bytes.byteLength>MAX_PART||total>MAX_TOTAL)throw new StorageError('LIMIT_EXCEEDED','履歴の分割記録が端末の安全上限を超えています。');const sequence=parts.length;parts.push({key:`${scope}:${sequence}`,scope,sequence,kind,bytes,sha256:await sha256(bytes)});checkCancelled(signal);itemTexts=[];size=0;};for(const item of items){const text=kind==='nodes'?canonicalGeneratedNode(item as Node):canonicalJson(item),length=kind==='nodes'?text.length:encoder.encode(text).byteLength;if(length>MAX_PART)return invalid();if(itemTexts.length&&size+length+itemTexts.length+2>MAX_PART/4)await emit();itemTexts.push(text);size+=length;}await emit();}
+ // Generated nodes contain only indices, booleans, null and our one-key
+ // numeric/undefined tags. Raw author strings still use canonicalJson. Check
+ // inherited hooks and the intrinsic again after every asynchronous digest.
+ let nativeGeneratedJson=workerPlainData&&nativeGeneratedJsonIsSafe();
+ for(const [kind,items]of [['strings',strings],['nodes',nodes]] as const){let itemTexts:string[]=[],size=0;const emit=async()=>{if(!itemTexts.length)return;checkCancelled(signal);const bytes=encoder.encode(`[${itemTexts.join(',')}]`);total+=bytes.byteLength;if(bytes.byteLength>MAX_PART||total>MAX_TOTAL)throw new StorageError('LIMIT_EXCEEDED','履歴の分割記録が端末の安全上限を超えています。');const sequence=parts.length;parts.push({key:`${scope}:${sequence}`,scope,sequence,kind,bytes,sha256:await sha256(bytes)});checkCancelled(signal);nativeGeneratedJson=workerPlainData&&nativeGeneratedJsonIsSafe();itemTexts=[];size=0;};for(const item of items){const text=kind==='nodes'?(nativeGeneratedJson?generatedStringify(item)!:canonicalGeneratedNode(item as Node)):canonicalJson(item),length=kind==='nodes'?text.length:workerPlainData?utf8Length(text):encoder.encode(text).byteLength;if(length>MAX_PART)return invalid();if(itemTexts.length&&size+length+itemTexts.length+2>MAX_PART/4)await emit();itemTexts.push(text);size+=length;}await emit();}
  checkCancelled(signal);return{packed:{version:1,scope,root,nodes:nodes.length,strings:strings.length,parts:parts.map(p=>({key:p.key,kind:p.kind,bytes:p.bytes.byteLength,sha256:p.sha256}))},parts};
 }
+
+// canonicalJson has already rejected isolated surrogates. Count the exact
+// UTF-8 bytes without allocating one temporary Uint8Array per table string.
+function utf8Length(text:string):number{
+ let bytes=0;for(let index=0;index<text.length;index++){
+  const unit=text.charCodeAt(index);
+  if(unit<0x80)bytes++;else if(unit<0x800)bytes+=2;
+  else if(unit>=0xd800&&unit<=0xdbff){bytes+=4;index++;}else bytes+=3;
+ }return bytes;
+}
+/** Preserve public getter/iterator evaluation order on uncaptured inputs. */
+export function packRecordData(value:unknown,scope:string,signal?:AbortSignal){return packRecordDataInternal(value,scope,signal,false);}
+/** Internal: only a dedicated worker's structured-cloned message. No caller
+ * getters, Proxy or custom iterators can cross that transport. Read each own
+ * value in key order without allocating an entries pair per property. All
+ * tags, node/string order, exact part boundaries, guards and v1 bytes stay the
+ * same. This path is never selected for direct public/Node callers. */
+export function packWorkerRecordData(value:unknown,scope:string,signal?:AbortSignal){return packRecordDataInternal(value,scope,signal,true);}
 export async function unpackRecordData(packed:PackedRecord,parts:RecordPart[],signal?:AbortSignal):Promise<unknown>{
  checkCancelled(signal);if(packed.version!==1||typeof packed.scope!=='string'||!Number.isSafeInteger(packed.nodes)||packed.nodes<0||packed.nodes>MAX_NODES||!Number.isSafeInteger(packed.strings)||packed.strings<0||packed.strings>MAX_NODES||!Array.isArray(packed.parts)||packed.parts.length!==parts.length||new Set(parts.map(p=>p.key)).size!==parts.length)return invalid();
  // Hash and parse the same private bytes. Callers can retain and mutate their

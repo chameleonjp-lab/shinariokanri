@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { createHash } from 'node:crypto';
-import { readFile } from 'node:fs/promises';
+import {readFile} from './downloadEvidence';
 import { createEntity, createProject, textToRichText } from '../../src/domain/model';
 import { exportScenario } from '../../src/storage/archive';
 import { canonicalJson } from '../../src/storage/json';

@@ -92,6 +92,24 @@ describe('recovery comparator canonical language only; not domain acceptance', (
     right.at(-1)!.text = '末尾の変更😀';
     expect(equalJson(left, right)).toBe(false); expect(comparison(left, right)).toBe(false);
   });
+  it('fully compares later record branches after the bounded proof cache fills', () => {
+    const rows = Array.from({ length: 65_540 }, (_, index) => ({ id: `record-${index}`, projectId: 'same-project', data: { text: '原文😀', index } }));
+    const incomingRows = structuredClone(rows), nextOperation = '2468c347-01e3-4ae1-84d6-46884c7bfbc8';
+    const first = { operationId, rows }, next = { operationId: nextOperation, rows: [...rows] };
+    const incomingFirst = { operationId, rows: incomingRows };
+    const pending = (values: typeof incomingRows) => ({ pending: [
+      { operationId, command: incomingFirst }, { operationId: nextOperation, command: { operationId: nextOperation, rows: values } },
+    ] }) as unknown as PortableRecovery;
+    const project = { history: [first, next] } as unknown as ProjectData;
+    expect(projectWithRecoveryHistory(project, pending([...incomingRows])).history).toHaveLength(2);
+    for (const index of [0, rows.length - 1]) {
+      const changed = [...incomingRows]; changed[index] = { ...changed[index], data: { ...changed[index].data, text: '同じIDの別内容😀' } };
+      expect(equalJson(next, { operationId: nextOperation, rows: changed })).toBe(false);
+      expect(() => projectWithRecoveryHistory(project, pending(changed))).toThrowError(expect.objectContaining({ code: 'OPERATION_CONFLICT' }));
+    }
+    const invalid = [...incomingRows]; invalid[invalid.length - 1] = { ...invalid.at(-1)!, data: { ...invalid.at(-1)!.data, text: '\ud800' } };
+    expect(() => projectWithRecoveryHistory(project, pending(invalid))).toThrowError(expect.objectContaining({ code: 'VALIDATION_FAILED' }));
+  });
 });
 
 const stores: ScenarioStore[] = [];

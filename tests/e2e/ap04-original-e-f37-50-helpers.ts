@@ -4,6 +4,7 @@ import { createEntity, createProject, KIND_LABELS, newId, textToRichText } from 
 import type { AnalysisResult } from '../../src/domain/runtime';
 import type { Entity, EntityDataMap, EntityKind, NamePolicy, ProjectData } from '../../src/domain/types';
 import { authorFingerprint, backup, editData, entity, findEntity, navigate, reader } from './ap04-original-bm-helpers';
+import { retainGeneratedOutput } from './ap04-original-helpers';
 export * from './ap04-original-bm-helpers';
 
 export async function start(page: Page, entryId: string) {
@@ -19,7 +20,9 @@ export async function analyze(page: Page): Promise<AnalysisResult> {
   await page.getByRole('button', { name: '到達性と行き止まりを検査', exact: true }).click();
   await expect(page.locator('.analysis-result-heading')).toBeVisible({ timeout: 35000 });
   const download = page.waitForEvent('download'); await page.getByRole('button', { name: '検査結果を保存', exact: true }).click();
-  return JSON.parse(await readFile((await (await download).path())!, 'utf8'));
+  const file = await download, bytes = new Uint8Array(await readFile((await file.path())!));
+  await retainGeneratedOutput(bytes, file.suggestedFilename(), 'application/json');
+  return JSON.parse(new TextDecoder().decode(bytes));
 }
 export async function production(page: Page) {
   await navigate(page, /^構成/); await page.getByRole('tab', { name: '制作', exact: true }).click();

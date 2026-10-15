@@ -1,7 +1,7 @@
 import { test, expect, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { createServer } from 'node:http';
-import { readFile } from 'node:fs/promises';
+import {readFile} from './downloadEvidence';
 import { resolve, extname } from 'node:path';
 
 async function navigate(page: Page, name: RegExp) {
@@ -113,6 +113,7 @@ test('配信サーバー停止後にキャッシュ取得済みの作品を再�
   await page.getByRole('button', { name: '完全保存ファイルを作成', exact: true }).click();
   const download = await downloadPromise;
   expect(await download.failure()).toBeNull();
+  await readFile((await download.path())!);
   } finally {
     if (server.listening) { server.closeAllConnections(); await new Promise<void>(done => server.close(() => done())); }
   }

@@ -1,9 +1,9 @@
-import {mergeImportConflicts} from './importWork';
+import {createCapturedGraphComparer,mergeImportConflicts} from './importWork';
 import {freezeCapturedPlainDataAsync} from '../domain/immutablePlainData';
 import {internImmutableRecordsAsync} from '../domain/internImmutableRecords';
 import {cloneProject as clonePrivateProject} from './clone';
 import {recordDiagnostic} from '../diagnostics';
-import {bindRecordPartsSignal,installRecordPartsDatabase} from './recordPartsDatabase';
+import {bindRecordPartsImport,bindRecordPartsSignal,installRecordPartsDatabase} from './recordPartsDatabase';
 import {validateColdRead,type ReadStage} from './readValidation';
 import {commandCommitted,commandMeasurementStart,readMeasured} from '../performance';
 import {validateSyncRecovery,syncRecoveryImages,type NativeSyncRecovery,type RetainedSyncRecovery} from './syncRecovery';
@@ -19,6 +19,7 @@ import { sealAuthorAlternative } from '../domain/authorAlternativeIntegrity';
 import { appendAlternativeVersion, applyAlternativeChanges, projectContent } from '../domain/writingWorkspace';
 import { assetPath, attachmentMetadata, closureAttachmentMetadata, exportScenario, exportNativeScenario, performImportWork, referencedWorlds, validateAsset, verifySnapshotHashes, verifyWorlds, worldSnapshotContents, type PreparedScenario, type ImportWorkStep } from './archive';
 import {createImportWorkSession} from './importWorkSession';
+import {prepareNewImport} from './newImportSession';
 import { checkCancelled, saveError, StorageError } from './errors';
 import { canonicalJson, createCanonicalJsonCache, equalJson, jsonBytes as encodeJsonBytes, sha256, validateJsonValue } from './json';
 import { recoveryImages, projectWithRecoveryHistory, type PortableRecovery } from './recovery';
@@ -35,7 +36,7 @@ type StoredProject = Omit<ProjectData, 'entities' | 'relations' | 'snapshots' | 
 };
 interface StoredEntity { id: string; projectId: string; kind: Entity['kind']; record: unknown }
 interface StoredBlock { id: string; projectId: string; entityId: string; block: Block }
-type CommandMetadata = Omit<CommandRecord, 'before' | 'after'>;
+type CommandMetadata = Omit<CommandRecord, 'before' | 'after'> & { before?: undefined; after?: undefined };
 type ContentHeader = Omit<ContentState, 'entities' | 'relations'>;
 interface ContentDelta {
   header: Partial<ContentHeader>;
@@ -190,6 +191,45 @@ function applyContentDelta(before: ContentState, patch: ContentDelta): ContentSt
     });
   };
   return { ...before, ...patch.header, entities: apply(before.entities, patch.entities, patch.entityIds), relations: apply(before.relations, patch.relations, patch.relationIds) };
+}
+
+/** Prepare the existing native delta format on a separate immutable history.
+ * Every own value and ordered key must reconstruct exactly; otherwise retain
+ * the full original row. Public import results keep their existing aliases
+ * and mutability. Portable pending rows remain independent full commands. */
+async function importedCommandStorage(input: CommandRecord[], signal?: AbortSignal): Promise<{record: CommandRecord; stored: StoredCommand}[]> {
+  checkCancelled(signal);
+  const history = copy(input), prepared: {record: CommandRecord; stored: StoredCommand}[] = [];
+  const reusable = await freezeCapturedPlainDataAsync(history, signal), same = createCapturedGraphComparer();
+  let previous: CommandRecord | undefined;
+  for (const [index, record] of history.entries()) {
+    checkCancelled(signal);
+    const header = {operationId: record.operationId, projectId: record.projectId, revision: record.revision};
+    let stored: StoredCommand = {...header, record};
+    if (reusable && record.before.projectId === record.projectId && record.after.projectId === record.projectId
+      && record.before.revision === record.baseRevision && record.after.revision === record.revision) {
+      // Own undefined placeholders retain the original command's key order
+      // when materializeCommand fills before/after. Native v1 already supports
+      // these values; no new row or portable format is introduced.
+      const metadata = Object.fromEntries(Object.entries(record).map(([key, value]) => [key,
+        key === 'before' || key === 'after' ? undefined : value])) as CommandMetadata;
+      const patch = contentDelta(record.before, record.after);
+      const after = applyContentDelta(record.before, patch);
+      // The only new nodes in this reconstruction are these containers. All
+      // their members come from the proved, frozen private history above.
+      Object.freeze(after.entities); Object.freeze(after.relations); Object.freeze(after);
+      const reconstructed: CommandRecord = Object.freeze({...metadata, before: record.before, after});
+      if (same(record, reconstructed)) {
+        const parent = index % 64 !== 0 && previous && same(previous.after, record.before) ? previous.operationId : undefined;
+        stored = {...header, delta: {metadata, ...(parent ? {parentOperationId: parent} : {checkpoint: record.before}), patch}};
+      }
+    }
+    prepared.push({record, stored}); previous = record;
+    // Complete each command before yielding; cancellation never publishes a
+    // partial history or starts the native write transaction.
+    await new Promise<void>(resolve => setTimeout(resolve, 0));
+  }
+  checkCancelled(signal); return prepared;
 }
 const increment = (revision: string): string => (BigInt(revision) + 1n).toString();
 const withoutHistory = ({ history: _history, ...content }: ProjectData): ContentState => content;
@@ -1349,75 +1389,101 @@ export class ScenarioStore {
       if (!['new', 'clone', 'replace', 'merge', 'mapped_merge'].includes(options.mode)) throw new StorageError('FORMAT_UNSUPPORTED', '読み込みモードが未対応です。');
       const prepared = copy(preparedInput), operationId = options.operationId ?? newId();
       const knownWorlds = await this.validationWorlds(prepared.worlds), worldContents = worldSnapshotContents(knownWorlds);
-      const work = (step: ImportWorkStep, project: ProjectData, extra: {recovery?: PortableRecovery; syncRecovery?: NativeSyncRecovery[]; idMap?: Record<string, string>; target?: ProjectData; resolutions?: Record<string, 'existing' | 'incoming'>} = {}) => {
-        options.onStage?.(step);
-        return session.run({step, project, worlds: worldContents, ...extra}, {signal: options.signal});
-      };
-      prepared.project = (await work('structure', prepared.project)).project!;
-      if (prepared.recovery) prepared.recovery = (await work('recovery', prepared.project, {recovery: prepared.recovery})).recovery!;
-      await work('ids', prepared.project, {recovery: prepared.recovery});
-      verifyWorlds([prepared.project, ...Object.values(prepared.worlds)], knownWorlds);
-      if (prepared.manifest.projectId !== prepared.project.projectId) throw new StorageError('VALIDATION_FAILED', '読み込み候補とmanifestの作品IDが一致しません。');
-      const preview = await this.previewImport(prepared, options);
-      if (options.mode === 'new' && preview.target) throw new StorageError('IMPORT_CONFLICT', '同じ作品IDが既にあります。複製・置換・統合を選んでください。');
-      if (options.mode === 'replace' && preview.pendingChanges) throw new StorageError('PENDING_CHANGES', '未送信の変更があります。同期・競合解決を済ませるか、複製して復元してください。');
-      if (preview.target && options.baseRevision !== preview.target.revision) throw new StorageError('REVISION_CONFLICT', '確認した対象版と現在版が一致しません。読み込みの影響を確認し直してください。');
-      let project = prepared.project, recovery = prepared.recovery, idMap: Record<string, string> | undefined;
-      if (options.mode === 'mapped_merge') {
-        if (!preview.mappedPlan?.candidate || preview.mappedPlan.unresolved.length) throw new StorageError('IMPORT_CONFLICT', '全IDの対応とすべての採用差分を確認してください。');
-        if (!options.confirmationHash || options.confirmationHash !== preview.confirmationHash) throw new StorageError('REVISION_CONFLICT', '確認したID対応・採用差分・素材が変わりました。入力を保持して再確認してください。');
-        project = preview.mappedPlan.candidate; idMap = preview.mappedPlan.idMap;
-        recovery = preview.mappedRecovery;
-      }
-      if (options.mode === 'clone') {
-        const cloned = (await work('clone', project, {recovery})).cloned!; idMap = cloned.idMap;
-        recovery = recovery ? (await session.run({step: 'map_recovery', project: cloned.project, worlds: {}, recovery, idMap}, {signal: options.signal})).recovery! : undefined;
-        const historyIds = new Set(project.history.map(command => idMap![command.operationId]));
-        project = { ...cloned.project, history: cloned.project.history.filter(command => historyIds.has(command.operationId)) };
-      }
-      if (options.mode === 'merge') project = (await work('merge', project, {target: preview.target!, resolutions: options.resolutions})).project!;
-      if (options.mode === 'replace') {
-        const snapshots = new Map(project.snapshots.map(item => [item.id, item]));
-        for (const existing of preview.target!.snapshots) {
-          const incoming = snapshots.get(existing.id);
-          if (incoming && !equalJson(existing, incoming)) throw new StorageError('IMMUTABLE_SNAPSHOT', '同じsnapshot IDに異なる内容があります。', existing.id);
-          snapshots.set(existing.id, existing);
+      let project: ProjectData, recovery: PortableRecovery | undefined, idMap: Record<string, string> | undefined;
+      let preview: ImportPreview = {conflicts: [], pendingChanges: 0, additions: 0};
+      let assets: AssetRecord[] = [], worlds: {id: string; project: ProjectData}[] = [];
+      let now: string, command!: CommandRecord, changes!: TargetChange[], syncRecovery: NativeSyncRecovery[];
+      if ((options.mode === 'new' || options.mode === 'clone') && typeof window !== 'undefined' && typeof Worker !== 'undefined') {
+        const result = await prepareNewImport({project: prepared.project, recovery: prepared.recovery, syncRecovery: prepared.syncRecovery,
+          worlds: prepared.worlds, knownWorlds, manifestProjectId: prepared.manifest.projectId, mode: options.mode}, {
+          stage: step => options.onStage?.(step),
+          preview: async () => {
+            preview = await this.previewImport(prepared, options);
+            if (options.mode === 'new' && preview.target) throw new StorageError('IMPORT_CONFLICT', '同じ作品IDが既にあります。複製・置換・統合を選んでください。');
+          },
+          assets: async () => {
+            assets = await this.checkedAssets(prepared.assets.map(asset => ({contentHash: asset.contentHash, bytes: asset.bytes, mediaType: asset.mediaType, assetPath: asset.path})));
+          },
+          finalize: async input => {
+            changes = await targetChanges(input.before, input.after, true);
+            command = {operationId, projectId: input.after.projectId, baseRevision: '0', revision: input.after.revision,
+              targetIds: changes.map(change => change.targetId), createdAt: input.now, reason: `専用ファイルを${options.mode}で復元`,
+              before: copy(input.before), after: copy(input.after), ...(input.idMap ? {idMap: input.idMap} : {})};
+            return command;
+          },
+        }, options.signal);
+        ({project, recovery, idMap, worlds, now, syncRecovery} = result);
+      } else {
+        const work = (step: ImportWorkStep, project: ProjectData, extra: {recovery?: PortableRecovery; syncRecovery?: NativeSyncRecovery[]; idMap?: Record<string, string>; target?: ProjectData; resolutions?: Record<string, 'existing' | 'incoming'>} = {}) => {
+          options.onStage?.(step);
+          return session.run({step, project, worlds: worldContents, ...extra}, {signal: options.signal});
+        };
+        prepared.project = (await work('structure', prepared.project)).project!;
+        if (prepared.recovery) prepared.recovery = (await work('recovery', prepared.project, {recovery: prepared.recovery})).recovery!;
+        await work('ids', prepared.project, {recovery: prepared.recovery});
+        verifyWorlds([prepared.project, ...Object.values(prepared.worlds)], knownWorlds);
+        if (prepared.manifest.projectId !== prepared.project.projectId) throw new StorageError('VALIDATION_FAILED', '読み込み候補とmanifestの作品IDが一致しません。');
+        preview = await this.previewImport(prepared, options);
+        if (options.mode === 'new' && preview.target) throw new StorageError('IMPORT_CONFLICT', '同じ作品IDが既にあります。複製・置換・統合を選んでください。');
+        if (options.mode === 'replace' && preview.pendingChanges) throw new StorageError('PENDING_CHANGES', '未送信の変更があります。同期・競合解決を済ませるか、複製して復元してください。');
+        if (preview.target && options.baseRevision !== preview.target.revision) throw new StorageError('REVISION_CONFLICT', '確認した対象版と現在版が一致しません。読み込みの影響を確認し直してください。');
+        project = prepared.project; recovery = prepared.recovery;
+        if (options.mode === 'mapped_merge') {
+          if (!preview.mappedPlan?.candidate || preview.mappedPlan.unresolved.length) throw new StorageError('IMPORT_CONFLICT', '全IDの対応とすべての採用差分を確認してください。');
+          if (!options.confirmationHash || options.confirmationHash !== preview.confirmationHash) throw new StorageError('REVISION_CONFLICT', '確認したID対応・採用差分・素材が変わりました。入力を保持して再確認してください。');
+          project = preview.mappedPlan.candidate; idMap = preview.mappedPlan.idMap;
+          recovery = preview.mappedRecovery;
         }
-        project.snapshots = [...snapshots.values()];
-        const ids = new Set(project.entities.map(entity => entity.id));
-        project.entities.push(...preview.target!.entities.filter(entity => entity.kind === 'snapshot' && !ids.has(entity.id)));
+        if (options.mode === 'clone') {
+          const cloned = (await work('clone', project, {recovery})).cloned!; idMap = cloned.idMap;
+          recovery = recovery ? (await session.run({step: 'map_recovery', project: cloned.project, worlds: {}, recovery, idMap}, {signal: options.signal})).recovery! : undefined;
+          const historyIds = new Set(project.history.map(command => idMap![command.operationId]));
+          project = { ...cloned.project, history: cloned.project.history.filter(command => historyIds.has(command.operationId)) };
+        }
+        if (options.mode === 'merge') project = (await work('merge', project, {target: preview.target!, resolutions: options.resolutions})).project!;
+        if (options.mode === 'replace') {
+          const snapshots = new Map(project.snapshots.map(item => [item.id, item]));
+          for (const existing of preview.target!.snapshots) {
+            const incoming = snapshots.get(existing.id);
+            if (incoming && !equalJson(existing, incoming)) throw new StorageError('IMMUTABLE_SNAPSHOT', '同じsnapshot IDに異なる内容があります。', existing.id);
+            snapshots.set(existing.id, existing);
+          }
+          project.snapshots = [...snapshots.values()];
+          const ids = new Set(project.entities.map(entity => entity.id));
+          project.entities.push(...preview.target!.entities.filter(entity => entity.kind === 'snapshot' && !ids.has(entity.id)));
+        }
+        const assetInputs = prepared.assets.map(asset => ({ contentHash: asset.contentHash, bytes: asset.bytes, mediaType: asset.mediaType, assetPath: asset.path }));
+        assets = await this.checkedAssets(assetInputs);
+        await work('hashes', project);
+        await work('integrity', project);
+        worlds = [];
+        for (const [id, world] of Object.entries(prepared.worlds)) worlds.push({id, project: (await work('structure', world)).project!});
+        now = new Date().toISOString();
+        const before = preview.target ? withoutHistory(preview.target) : blankBefore(project);
+        if (preview.target) {
+          const incomingHistory = (preview.mappedPlan?.mappedProject.history ?? prepared.project.history).map((record, index) => options.mode === 'mapped_merge' ? { ...record, importOrigin: record.importOrigin ?? { sourceProjectId: prepared.project.projectId, sourceOperationId: prepared.project.history[index].operationId, importOperationId: operationId } } : record);
+          const history = (await work('combine_history', {...project, history: incomingHistory}, {target: preview.target})).history!;
+          project = { ...project, revision: increment(preview.target.revision), history };
+          project.entities = normalizeRecords(preview.target.entities, project.entities, operationId, now);
+          project.relations = normalizeRecords(preview.target.relations, project.relations, operationId, now);
+          protectSnapshots(preview.target, project);
+          project = await reconcileDeliverables(preview.target, project);
+          project.entities = normalizeRecords(preview.target.entities, project.entities, operationId, now);
+        } else if (options.mode === 'clone') {
+          project = { ...project, revision: increment(project.revision) };
+        }
+        project = (await work('structure', project)).project!;
+        changes = await targetChanges(before, withoutHistory(project), !preview.target);
+        command = { operationId, projectId: project.projectId, baseRevision: preview.target?.revision ?? '0', revision: project.revision, targetIds: changes.map(change => change.targetId), createdAt: now, reason: `専用ファイルを${options.mode}で復元`, before: copy(before), after: copy(withoutHistory(project)), ...(idMap ? { idMap } : {}) };
+        if (preview.target || options.mode === 'clone') project.history = [...project.history, command];
+        if (recovery) {
+          recovery = (await work('rehash_recovery', project, {recovery})).recovery!;
+        }
+        project = (await work('structure', project)).project!;
+        await work('integrity', project);
+        if (recovery) recovery = (await work('recovery', project, {recovery: {...recovery, projectId: project.projectId, sourceRevision: project.revision}})).recovery!;
+        syncRecovery=prepared.syncRecovery?(await work('sync_recovery', project, {syncRecovery: prepared.syncRecovery})).syncRecovery!:[];
       }
-      const assetInputs = prepared.assets.map(asset => ({ contentHash: asset.contentHash, bytes: asset.bytes, mediaType: asset.mediaType, assetPath: asset.path }));
-      const assets = await this.checkedAssets(assetInputs);
-      await work('hashes', project);
-      await work('integrity', project);
-      const worlds: {id: string; project: ProjectData}[] = [];
-      for (const [id, world] of Object.entries(prepared.worlds)) worlds.push({id, project: (await work('structure', world)).project!});
-      const now = new Date().toISOString(), before = preview.target ? withoutHistory(preview.target) : blankBefore(project);
-      let command: CommandRecord;
-      if (preview.target) {
-        const incomingHistory = (preview.mappedPlan?.mappedProject.history ?? prepared.project.history).map((record, index) => options.mode === 'mapped_merge' ? { ...record, importOrigin: record.importOrigin ?? { sourceProjectId: prepared.project.projectId, sourceOperationId: prepared.project.history[index].operationId, importOperationId: operationId } } : record);
-        const history = (await work('combine_history', {...project, history: incomingHistory}, {target: preview.target})).history!;
-        project = { ...project, revision: increment(preview.target.revision), history };
-        project.entities = normalizeRecords(preview.target.entities, project.entities, operationId, now);
-        project.relations = normalizeRecords(preview.target.relations, project.relations, operationId, now);
-        protectSnapshots(preview.target, project);
-        project = await reconcileDeliverables(preview.target, project);
-        project.entities = normalizeRecords(preview.target.entities, project.entities, operationId, now);
-      } else if (options.mode === 'clone') {
-        project = { ...project, revision: increment(project.revision) };
-      }
-      project = (await work('structure', project)).project!;
-      const changes = await targetChanges(before, withoutHistory(project), !preview.target);
-      command = { operationId, projectId: project.projectId, baseRevision: preview.target?.revision ?? '0', revision: project.revision, targetIds: changes.map(change => change.targetId), createdAt: now, reason: `専用ファイルを${options.mode}で復元`, before: copy(before), after: copy(withoutHistory(project)), ...(idMap ? { idMap } : {}) };
-      if (preview.target || options.mode === 'clone') project.history = [...project.history, command];
-      if (recovery) {
-        recovery = (await work('rehash_recovery', project, {recovery})).recovery!;
-      }
-      project = (await work('structure', project)).project!;
-      await work('integrity', project);
-      if (recovery) recovery = (await work('recovery', project, {recovery: {...recovery, projectId: project.projectId, sourceRevision: project.revision}})).recovery!;
-      const syncRecovery=prepared.syncRecovery?(await work('sync_recovery', project, {syncRecovery: prepared.syncRecovery})).syncRecovery!:[];
       // Worker messages preserve graph identity but not freeze/realm-local
       // registration. Clone already separates its editable current image.
       if (options.mode === 'clone') {
@@ -1426,9 +1492,10 @@ export class ScenarioStore {
       }
       // New recovery retains the original content revisions/history; the local import audit is separate.
       const point: RestorePoint | undefined = preview.target ? { id: newId(), projectId: preview.target.projectId, createdAt: now, reason: `専用ファイル${options.mode}の前の復元点`, project: preview.target, assetHashes: attachmentMetadata(preview.target).map(item => item.contentHash) } : undefined;
+      const historyStorage = await importedCommandStorage(project.history, options.signal);
       options.onStage?.('commit');
       const result = await this.db.transaction('rw', this.writeTables, async () => {
-        bindRecordPartsSignal(options.signal);
+        bindRecordPartsImport(options.signal);
         checkCancelled(options.signal);
         if (await this.db.importLogs.get(operationId) || await this.db.outbox.get(operationId) || await this.db.commands.get(operationId)) throw new StorageError('OPERATION_CONFLICT', 'この読み込み操作IDは既に使われています。');
         const header = await this.db.projects.get(project.projectId);
@@ -1443,20 +1510,35 @@ export class ScenarioStore {
           await this.db.worlds.put(world);
         }
         await this.writeContent(project, preview.target); this.faultInjector?.('after-content');
-        for (const record of project.history) {
+        let historyBatch: StoredCommand[] = [];
+        const importedHistoryIds = new Set<string>();
+        for (const [index, record] of project.history.entries()) {
           const old = await this.db.commands.get(record.operationId);
           if (old && !sameJson(await this.materializeCommand(old), record)) throw new StorageError('OPERATION_CONFLICT', '読み込む履歴の操作IDが既存履歴と衝突しています。', record.operationId);
-          if (!old) await this.db.commands.add({ operationId: record.operationId, projectId: project.projectId, revision: record.revision, record });
+          if (!old) {
+            const planned = historyStorage[index]!, delta = planned.stored.delta;
+            // An equal JSON collision may still have different own values.
+            // Never derive a new row from a pre-existing command's image.
+            historyBatch.push(delta?.parentOperationId && !importedHistoryIds.has(delta.parentOperationId)
+              ? {...planned.stored, delta: {metadata: delta.metadata, checkpoint: planned.record.before, patch: delta.patch}}
+              : planned.stored);
+            importedHistoryIds.add(record.operationId);
+          }
+          if (historyBatch.length === 2) { await this.db.commands.bulkAdd(historyBatch); historyBatch = []; }
         }
+        if (historyBatch.length) await this.db.commands.bulkAdd(historyBatch);
         this.faultInjector?.('after-history');
         const metadata = await this.db.syncMetadata.get(project.projectId);
         await this.db.outbox.add({ operationId, projectId: project.projectId, accountId: this.accountId, baseRevision: metadata?.serverRevision ?? '0', localRevision: project.revision, createdAt: now, targetIds: command.targetIds, changes, command });
         let recoveredSequence = (await this.listRecoveredPending(project.projectId)).reduce((maximum, row) => Math.max(maximum, row.sequence), -1) + 1;
+        let pendingBatch: RecoveredPendingIntent[] = [];
         for (const retained of recovery?.pending ?? []) {
           const row: RecoveredPendingIntent = { key: `${project.projectId}:${retained.operationId}`, projectId: project.projectId, importOperationId: operationId, sequence: recoveredSequence++, operation: retained, status: 'needs_reconnect' }, previous = await this.db.recoveredPending.get(row.key);
           if (previous && !equalJson(previous.operation, retained)) throw new StorageError('OPERATION_CONFLICT', '同じ送信待ち操作の復元内容が異なります。');
-          if (!previous) await this.db.recoveredPending.add(row);
+          if (!previous) pendingBatch.push(row);
+          if (pendingBatch.length === 2) { await this.db.recoveredPending.bulkAdd(pendingBatch); pendingBatch = []; }
         }
+        if (pendingBatch.length) await this.db.recoveredPending.bulkAdd(pendingBatch);
         for(const evidence of syncRecovery)await this.db.retainedSyncRecovery.put({key:`${project.projectId}:${evidence.contentHash}`,projectId:project.projectId,evidence,status:'needs_reconnect'});
         await this.db.syncMetadata.put({ projectId: project.projectId, serverRevision: metadata?.serverRevision ?? '0', state: 'pending' });
         await this.db.importLogs.add({ operationId, projectId: project.projectId, mode: options.mode, createdAt: now, ...(idMap ? { idMap } : {}) });

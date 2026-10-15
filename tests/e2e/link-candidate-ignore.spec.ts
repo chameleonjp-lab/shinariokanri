@@ -54,7 +54,12 @@ test('通常本文で同名人物と一般語を選び分け、候補の除外�
   const second = createEntity(project.projectId, 'character', '葵', { reading: 'あおい', summary: textToRichText('旅人の葵') });
   const body = textToRichText('😀葵が葵の花を持ち、青い子と会う。');
   const scene = createEntity(project.projectId, 'scene', '葵と普通の葵を選び分ける本文', { body });
-  project.entities.push(first, second, scene); project.entities.forEach(entity => { entity.status = 'confirmed'; });
+  const quotation = createEntity(project.projectId, 'source', '引用資料の原文', {
+    sourceType: 'book', locator: '引用元の書籍・第1章', excerptLocation: '12頁「葵の花と青い子」',
+    interpretation: textToRichText('引用「葵の花を持つ青い子」。原文の表記を置き換えない。'), redistributionAllowed: false,
+  });
+  scene.customValues.citation = { type: 'ref', value: quotation.id };
+  project.entities.push(first, second, scene, quotation); project.entities.forEach(entity => { entity.status = 'confirmed'; });
   project = await createWorldSnapshot(project, 'リンク前の固定版');
   const pin = project.snapshots.at(-1)!, input = await exportScenario(project);
   await test.info().attach('candidate-ignore-fixture.scenario', { body: Buffer.from(input), contentType: 'application/zip' });
@@ -91,6 +96,8 @@ test('通常本文で同名人物と一般語を選び分け、候補の除外�
   const cold = await backup(page), saved = cold.project.entities.find((entity): entity is Entity<'scene'> => entity.id === scene.id && entity.kind === 'scene')!;
   expect(saved.data.body[0].id).toBe(body[0].id); expect(saved.data.body[0].text).toBe(body[0].text);
   expect(saved.data.body[0].links?.map(link => ({ start: link.start, end: link.end, entityId: link.target.entityId }))).toEqual([{ start: 1, end: 2, entityId: first.id }, { start: 10, end: 13, entityId: first.id }]);
+  expect(cold.project.entities.find(entity => entity.id === quotation.id)?.data).toEqual(quotation.data);
+  expect(saved.customValues.citation).toEqual({ type: 'ref', value: quotation.id });
   expect(cold.project.snapshots.find(snapshot => snapshot.id === pin.id)).toEqual(pin);
   expect(await fresh(browser, cold.bytes, 'new')).toEqual(cold.project);
   const clone = await fresh(browser, cold.bytes, 'clone'), people = clone.entities.filter((entity): entity is Entity<'character'> => entity.kind === 'character');
@@ -98,7 +105,14 @@ test('通常本文で同名人物と一般語を選び分け、候補の除外�
   const clonedFirst = people.find(person => person.data.summary?.[0].text === '門番の葵')!, clonedScene = clone.entities.find((entity): entity is Entity<'scene'> => entity.kind === 'scene')!;
   expect(clonedFirst.id).not.toBe(first.id); expect(clonedScene.data.body[0].text).toBe(body[0].text);
   expect(clonedScene.data.body[0].links?.map(link => link.target.entityId)).toEqual([clonedFirst.id, clonedFirst.id]);
-  await test.info().attach('candidate-ignore-observations.json', { body: JSON.stringify({ initialCandidates: initial, coldCandidates: coldOptions, selectedID: first.id, blockID: body[0].id, authoredLinks: saved.data.body[0].links, oldPinID: pin.id, preferenceScope: 'Same local account/project/source on this device. No transfer of local preferences through the complete file or actual Auth claim.' }), contentType: 'application/json' });
+  const clonedQuotation = clone.entities.find((entity): entity is Entity<'source'> => entity.kind === 'source' && entity.name === quotation.name)!;
+  expect(clonedQuotation.id).not.toBe(quotation.id);
+  expect(clonedQuotation.data).toMatchObject({ sourceType: quotation.data.sourceType, locator: quotation.data.locator,
+    excerptLocation: quotation.data.excerptLocation, redistributionAllowed: false });
+  expect(clonedQuotation.data.interpretation?.map(block => block.text)).toEqual(quotation.data.interpretation?.map(block => block.text));
+  expect(clonedQuotation.data.interpretation?.every(block => !(block.links?.length))).toBe(true);
+  expect(clonedScene.customValues.citation).toEqual({ type: 'ref', value: clonedQuotation.id });
+  await test.info().attach('candidate-ignore-observations.json', { body: JSON.stringify({ initialCandidates: initial, coldCandidates: coldOptions, selectedID: first.id, blockID: body[0].id, authoredLinks: saved.data.body[0].links, oldPinID: pin.id, quotation: { sourceId: quotation.id, clonedSourceId: clonedQuotation.id, original: quotation.data, cold: cold.project.entities.find(entity => entity.id === quotation.id)?.data, cloned: clonedQuotation.data }, preferenceScope: 'Same local account/project/source on this device. No transfer of local preferences through the complete file or actual Auth claim.' }), contentType: 'application/json' });
 });
 
 test('同名の二人への確定リンクを保ち、候補除外を別本文・別作品へ漏らさず通常画面から解除して完全復元する', async ({ page, browser, browserName }) => {

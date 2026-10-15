@@ -1,4 +1,6 @@
 import 'fake-indexeddb/auto';
+import Dexie from 'dexie';
+import type {ContentState} from '../domain/types';
 import { afterEach, expect, it } from 'vitest';
 import { createEntity, createProject, newId, textToRichText } from '../domain/model';
 import { createWorldSnapshot } from '../domain/world';
@@ -55,7 +57,13 @@ it('keeps every historical image and pending hash across checkpoint 64 and cold 
   const cold = open(databaseName);
   for (const index of [0, 62, 63, 64, 65, 66]) expect(await cold.historyCommand(project.projectId, expected.history[index].operationId)).toEqual(expected.history[index]);
   const emptyName = `outbox-empty-${newId()}`, empty = open(emptyName);
-  await empty.importScenario(prepared, { mode: 'new' }); empty.close();
+  await empty.importScenario(prepared, { mode: 'new' });
+  const importedRows = await (empty as unknown as {db:Dexie}).db.table<{operationId:string;record?:unknown;delta?:{checkpoint?:ContentState;parentOperationId?:string}}>('commands').toArray();
+  expect(importedRows).toHaveLength(67);
+  expect(importedRows.filter(row => row.delta && !row.record).length).toBeGreaterThanOrEqual(64);
+  for (const index of [0, 64]) expect(importedRows.find(row => row.operationId === expected.history[index].operationId)?.delta?.checkpoint).toEqual(expected.history[index].before);
+  for (const index of [63, 65, 66]) expect(importedRows.find(row => row.operationId === expected.history[index].operationId)?.delta?.parentOperationId).toBe(expected.history[index - 1].operationId);
+  empty.close();
   const recovered = open(emptyName);
   expect(await recovered.getProject(project.projectId)).toEqual(expected);
   expect(await recovered.listRecoveredPending(project.projectId)).toHaveLength(67);

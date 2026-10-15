@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { readFile } from 'node:fs/promises';
+import {readFile} from './downloadEvidence';
 import { createEntity, createProject, emptyValidity, newId, textToRichText } from '../../src/domain/model';
 import { initializeRuntimeState } from '../../src/domain/conditions';
 import { exportScenario } from '../../src/storage/archive';

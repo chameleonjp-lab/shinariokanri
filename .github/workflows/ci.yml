@@ -79,6 +79,8 @@ jobs:
         run: npm run test:e2e -- --project="$SCENARIO_CI_ENGINE" --reporter=list,html,json
         env:
           PLAYWRIGHT_JSON_OUTPUT_NAME: ci-browser-evidence/results.json
+      - name: Verify and retain recovery originals
+        run: python3 scripts/ci/verify_recovery_artifacts.py --results ci-browser-evidence/results.json --source ci-browser-evidence/source.json --engine "$SCENARIO_CI_ENGINE" --output ci-browser-evidence/recovery-originals
       - if: matrix.engine == 'chromium'
         run: npx playwright test -c tests/rb10/playwright.config.ts --project=chromium --output=test-results/rb10-large-analysis-chromium
       - run: RB03_ENGINES="$SCENARIO_CI_ENGINE" node tests/browser/run-rb03-components.mjs

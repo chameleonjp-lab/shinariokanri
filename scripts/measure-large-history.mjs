@@ -17,6 +17,11 @@ const arg = (name, fallback) => { const index = process.argv.indexOf('--' + name
 const root = process.cwd(), output = resolve(arg('output', 'artifacts/large-history-113.json'));
 const soakSeconds = Number(arg('soak-seconds', '0'));
 if (![0, 7200].includes(soakSeconds)) throw Error('Only 0 (diagnostic) or the original actual 7200 seconds is supported');
+// Default keeps the original environment, including its real quota refusal.
+// A fresh normal profile measures disk-backed empty restoration without a
+// DevTools quota override or a change to any fixture, oracle or deadline.
+const restoreStorage=arg('restore-storage','incognito');
+if(!['incognito','persistent'].includes(restoreStorage))throw Error('Unknown empty restoration storage environment');
 const temporary = await mkdtemp('/tmp/scenario-large-history-'), helperDist = join(temporary, 'helper');
 const git = (...args) => execFileSync('git', args, { cwd: root, encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 }).trim();
 const digest = bytes => createHash('sha256').update(bytes).digest('hex');
@@ -28,7 +33,7 @@ const result = { recordedAt: new Date().toISOString(), sourceCommit: git('rev-pa
   status: 'running', completed: false, fullInputRecoveryCompleted: false,
   runKind: soakSeconds ? 'actual_7200_second_soak' : 'diagnostic_full_input',
   contract: { seed: 'large-material-rb10-v1', records: 88003, actualAssetBytes: 72 * 1024 * 1024, normalEdits: 112, completeHistory: 113, portablePending: 113, downloadLimitMs: 600000, progressLimitMs: 2000, minimumActualSoakSeconds: soakSeconds },
-  environment: { os: 'Linux managed cloud', osVersion: release(), physicalDevice: false, assistiveTechnology: false, realAPI: false },
+  environment: { os: 'Linux managed cloud', osVersion: release(), physicalDevice: false, assistiveTechnology: false, realAPI: false, sourceStorage:'incognito',restoreStorage,quotaOverride:false },
   scope: 'Production App, actual IndexedDB, normal UI edits, actual downloaded file and complete cold native correspondence. Fixture setup excluded. ' + (soakSeconds ? 'Original actual 7200-second workload; no physical/API/AT certification.' : 'Fast full-input diagnostic; actual 7200-second soak not run and not certified.'),
   sourceFiles: [], edits: [], checkpoints: [], soakChecks: [], activities: [], errors: [], restoration: {}, stages: [], workerEvents: [], uiHistory: [], consoleMessages: [],
   cancelTiming: { status: 'unmeasured', reason: 'Pointer-to-painted-alert interval has not been collected', limitMs: 2000 },
@@ -66,7 +71,8 @@ const verifyHelperRetention = async () => {
 const sourcePaths = [...new Set([...git('ls-files', '--', 'src', 'scripts', 'tests', 'package.json', 'package-lock.json', 'vite.config.ts').split('\n'),
   ...git('ls-files', '--others', '--exclude-standard', '--', 'src', 'scripts', 'tests', 'package.json', 'package-lock.json', 'vite.config.ts').split('\n')])].filter(Boolean).sort();
 for (const path of sourcePaths) { const bytes = await readFile(path); result.sourceFiles.push({ path, bytes: bytes.length, sha256: digest(bytes) }); }
-let browser, server, actualFile, page;
+let browser, server, actualFile, page,activeRestorePage,activeRestoreMode;
+const restoreContexts=new Set();
 // A failed or frozen page must not add another default 120-second wait, and
 // partial observations never establish a passing response-time interval.
 const collectFailureObservation = async () => {
@@ -347,8 +353,13 @@ try {
   await persist();
   for (const mode of ['new', 'clone']) {
     stage(mode + '_empty_native_restore');
-    const fresh = await browser.newContext({ viewport: { width: 1440, height: 1000 } }), restored = await fresh.newPage(); restored.setDefaultTimeout(600000);
+    const fresh = restoreStorage==='persistent'
+      ? await chromium.launchPersistentContext(join(temporary,mode+'-empty-profile'),{executablePath:process.env.CHROMIUM_PATH,args:['--no-sandbox','--disable-background-timer-throttling','--disable-renderer-backgrounding'],viewport:{width:1440,height:1000}})
+      : await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+    restoreContexts.add(fresh);
+    const restored = await fresh.newPage();activeRestorePage=restored;activeRestoreMode=mode;restored.setDefaultTimeout(600000);
     restored.on('pageerror', error => result.errors.push({ type: 'restore-pageerror', mode, message: error.message }));
+    restored.on('worker',worker=>{const record=state=>result.workerEvents.push({...timestamp(),mode,state,url:worker.url(),stage:result.currentStage});record('created');worker.on('close',()=>record('closed'));});
     await restored.goto(url); await restored.getByRole('button', { name: '保存ファイルを読み込む', exact: true }).click();
     await restored.locator('input[type=file][accept*=".scenario"]').setInputFiles({ name: 'original-large113.scenario', mimeType: 'application/zip', buffer: actualFile });
     await restored.locator('.import-preview h3').filter({ hasText: '検査済みの作品' }).waitFor();
@@ -357,16 +368,22 @@ try {
     stage(mode + '_cold_native_full_correspondence');
     await restored.reload(); await restored.locator('.app-shell').waitFor();
     result.restoration[mode] = await restored.evaluate(async ({ expected, mode }) => { await import('/__large-history/entry.js'); return inspectNative(expected, mode); }, { expected: result.expected, mode });
-    await persist(); await fresh.close(); console.log('full native cold correspondence passed', mode);
+    await persist(); await fresh.close();restoreContexts.delete(fresh);activeRestorePage=undefined; console.log('full native cold correspondence passed', mode);
   }
   require(result.errors.length === 0, 'Browser reported errors'); result.fullInputRecoveryCompleted = true; result.completed = soakSeconds === 7200;
   result.status = soakSeconds ? 'completed' : 'diagnostic_full_input_recovery_completed'; stage(result.status); result.finishedAt = new Date().toISOString(); await persist();
 } catch (error) {
   result.status = 'failed'; result.completed = false; result.finishedAt = new Date().toISOString();
   result.errors.push({ type: 'measurement', stage: result.currentStage, ...timestamp(), ...errorDetails(error) });
+  if(activeRestorePage&&!activeRestorePage.isClosed()){
+    let timer;
+    const read=activeRestorePage.evaluate(()=>({statuses:[...document.querySelectorAll('[role=status]')].map(node=>node.textContent),alerts:[...document.querySelectorAll('[role=alert]')].map(node=>node.textContent),body:(document.body?.innerText??'').slice(0,3500)})).then(value=>({status:'collected',value}),cause=>({status:'failed',error:errorDetails(cause)}));
+    result.restoreFailureObservation={...timestamp(),mode:activeRestoreMode,...await Promise.race([read,new Promise(done=>{timer=setTimeout(()=>done({status:'timed_out',budgetMs:2000}),2000);})])};clearTimeout(timer);
+  }
   await collectFailureObservation(); await persist(); throw error;
 } finally {
   result.cleanup = { started: timestamp(), status: 'running', errors: [] };
+  for(const context of restoreContexts){try{await context.close();}catch(error){result.cleanup.errors.push({resource:'empty_restore_context',...errorDetails(error)});}}
   for (const [name, available, action] of [
     ['browser', !!browser, () => browser.close()],
     ['server', !!server, async () => { server.closeAllConnections(); await new Promise(done => server.close(done)); }],

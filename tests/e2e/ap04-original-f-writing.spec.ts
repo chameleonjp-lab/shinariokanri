@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import { createEntity, createProject, ID_PATTERN, textToRichText } from '../../src/domain/model';
 import { exportScenario } from '../../src/storage/archive';
-import { attachGiven, attachObservation, authorFingerprint, backup, navigate, openEntity, seed } from './ap04-original-helpers';
+import { attachGiven, attachObservation, authorFingerprint, backup, navigate, openEntity, retainGeneratedOutput, seed } from './ap04-original-helpers';
 
 // Budget for multi-step UI/cold/file checks; original acceptance limits stay unchanged.
 test.setTimeout(180_000);
@@ -190,7 +190,9 @@ test('AT-F06 要約・本文・秘密メモを分けた場面をカードから�
   await expect(page.locator('.export-artifact')).toHaveCount(1);
   const pending = page.waitForEvent('download');
   await page.locator('.export-artifact').getByRole('button', { name: 'この内容を保存', exact: true }).click();
-  const html = await readFile((await (await pending).path())!, 'utf8');
+  const file = await pending, htmlBytes = new Uint8Array(await readFile((await file.path())!));
+  await retainGeneratedOutput(htmlBytes, file.suggestedFilename(), 'text/html');
+  const html = new TextDecoder().decode(htmlBytes);
   expect(html).toContain('門番'); expect(html).toContain('<rt>もんばん</rt>'); expect(html).toContain('門は開かない。');
   expect(html).not.toContain('秘密の作者メモ: 鳥は黒幕');
   for (const block of scene.data.authorNotes) expect(html).not.toContain(block.id);

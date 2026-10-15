@@ -2,6 +2,7 @@ export * from './recordPartsCore';
 import {packRecordData,unpackRecordData,type PackedRecord,type RecordPart} from './recordPartsCore';
 import {StorageError,checkCancelled} from './errors';
 import {WorkerGraphReceiver} from './workerGraph';
+import {partitionImportRecord} from './importRecordParts';
 function work<T>(message:unknown,signal?:AbortSignal):Promise<T>{
  checkCancelled(signal);
  return new Promise((resolve,reject)=>{
@@ -24,4 +25,6 @@ function work<T>(message:unknown,signal?:AbortSignal):Promise<T>{
 }
 const browserWorker=()=>typeof window!=='undefined'&&typeof Worker!=='undefined';
 export function packRecord(value:unknown,scope:string,signal?:AbortSignal){return browserWorker()?work<Awaited<ReturnType<typeof packRecordData>>>({action:'pack',value,scope},signal):packRecordData(value,scope,signal);}
+/** Import-only native partitioning; complete independent v1 rows remain atomic. */
+export function packImportRecord(value:unknown,scope:string,signal?:AbortSignal){return browserWorker()?work<Awaited<ReturnType<typeof packRecordData>>>({action:'pack-import',value,scope},signal):packRecordData(value,scope,signal).then(encoded=>partitionImportRecord(encoded,signal));}
 export function unpackRecord(packed:PackedRecord,parts:RecordPart[],signal?:AbortSignal){return browserWorker()?work<unknown>({action:'unpack',packed,parts},signal):unpackRecordData(packed,parts,signal);}

@@ -1,11 +1,13 @@
-import {packRecordData,unpackRecordData} from './recordPartsCore';
+import {packWorkerRecordData,unpackRecordData} from './recordPartsCore';
 import {freezeCapturedPlainData} from '../domain/immutablePlainData';
 import {sendWorkerGraph} from './workerGraph';
+import {partitionImportRecord} from './importRecordParts';
 const scope=self as unknown as {onmessage:((event:MessageEvent)=>void)|null;postMessage:(value:unknown,transfer?:Transferable[])=>void};
 scope.onmessage=async event=>{
  try{
-  if(event.data.action==='pack'){
-   const value=await packRecordData(event.data.value,event.data.scope);
+  if(event.data.action==='pack'||event.data.action==='pack-import'){
+   const encoded=await packWorkerRecordData(event.data.value,event.data.scope);
+   const value=event.data.action==='pack-import'?await partitionImportRecord(encoded):encoded;
    // These newly encoded buffers are owned by this worker.
    scope.postMessage({ok:true,value},[...new Set(value.parts.map(part=>part.bytes.buffer as ArrayBuffer))]);
   }else{

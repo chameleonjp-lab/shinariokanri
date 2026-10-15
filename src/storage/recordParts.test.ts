@@ -1,11 +1,41 @@
 import 'fake-indexeddb/auto';
 import Dexie from 'dexie';
 import {afterEach,expect,it,vi} from 'vitest';
-import {installRecordPartsDatabase} from './recordPartsDatabase';
+import {bindRecordPartsImport,installRecordPartsDatabase} from './recordPartsDatabase';
 import {packRecordData,unpackRecordData} from './recordPartsCore';
 import {newId} from '../domain/model';
 const databases:Dexie[]=[];afterEach(async()=>{vi.restoreAllMocks();for(const db of databases.splice(0))await db.delete();});
 function database(name='parts-'+newId()){const db=new Dexie(name);db.version(1).stores({commands:'operationId,projectId',recordParts:'key,scope'});installRecordPartsDatabase(db,512);databases.push(db);return db;}
+it('packs at most two import rows together, writes only completed parts and reads every complete original in order',async()=>{
+ const db=database(),records=Array.from({length:5},(_,i)=>({operationId:String(i),projectId:'work',body:'😀原文'.repeat(300)+i,present:undefined}));
+ let release!:()=>void,active=0,maximum=0,arrivals=0,writesAtPairStart:number|undefined,missedPair=false;
+ const gate=new Promise<void>(resolve=>{release=resolve;});
+ const digest=crypto.subtle.digest.bind(crypto.subtle),nativeAdds=vi.spyOn(IDBObjectStore.prototype,'add');
+ const spy=vi.spyOn(crypto.subtle,'digest').mockImplementation(async(...args)=>{
+  active++;maximum=Math.max(maximum,active);
+  try{if(++arrivals<=2){if(arrivals===2){writesAtPairStart=(nativeAdds.mock.contexts as IDBObjectStore[]).filter(store=>['commands','recordParts'].includes(store.name)).length;release();}await gate;}return await digest(...args);}finally{active--;}
+ });
+ const timer=setTimeout(()=>{missedPair=true;release();},1000);
+ try{
+  await db.transaction('rw','commands',async()=>{bindRecordPartsImport();await db.table('commands').bulkAdd(records);});
+ }finally{clearTimeout(timer);release();spy.mockRestore();nativeAdds.mockRestore();}
+ expect(missedPair).toBe(false);expect(writesAtPairStart).toBe(0);expect(maximum).toBe(2);expect(active).toBe(0);
+ expect(await db.table('commands').where('projectId').equals('work').toArray()).toEqual(records);
+ expect(await db.table('commands').bulkGet(['4','1','0','3','2'])).toEqual([records[4],records[1],records[0],records[3],records[2]]);
+ expect(await db.table('recordParts').count()).toBeGreaterThan(0);
+});
+it('rolls back earlier complete row pairs and all parts when one later import pack fails',async()=>{
+ const db=database(),old={operationId:'old',projectId:'work',body:'保持する旧稿'.repeat(300)};
+ await db.table('commands').add(old);const parts=await db.table('recordParts').toArray();
+ const records=Array.from({length:4},(_,i)=>({operationId:'new'+i,projectId:'work',body:'並行保存する全本文'.repeat(300)+i}));
+ const digest=crypto.subtle.digest.bind(crypto.subtle);let fail=false;
+ const spy=vi.spyOn(crypto.subtle,'digest').mockImplementation(async(...args)=>{if(fail){fail=false;throw Error('parallel pack failed');}return digest(...args);});
+ try{await expect(db.transaction('rw','commands',async()=>{
+  bindRecordPartsImport();await db.table('commands').bulkAdd(records.slice(0,2));
+  fail=true;await db.table('commands').bulkAdd(records.slice(2));
+ })).rejects.toThrow('parallel pack failed');}finally{spy.mockRestore();}
+ expect(await db.table('commands').toArray()).toEqual([old]);expect(await db.table('recordParts').toArray()).toEqual(parts);
+});
 it('keeps the captured bytes and metadata when caller inputs change during a digest',async()=>{
  const original={body:'旧案'},encoded=await packRecordData(original,'captured-input'),changed=await packRecordData({body:'新案'},'captured-input');
  let hashed!:()=>void,resume!:()=>void;const ready=new Promise<void>(resolve=>{hashed=resolve;}),continueHash=new Promise<void>(resolve=>{resume=resolve;});

@@ -11,6 +11,7 @@ import {FORMAT_VERSION, jsonBytes, sha256} from './json';
 import {StorageError} from './errors';
 import {createImportWorkWorkerRunner, freezeCapturedImportWork, runImportWork, runImportWorkForWorker, type ImportWork} from './importWork';
 import {createImportWorkSession} from './importWorkSession';
+import {runNewImportWork} from './newImportWork';
 import {ScenarioStore} from './store';
 import {captureImmutablePlainData, freezeCapturedPlainData, isImmutablePlainData} from '../domain/immutablePlainData';
 import {internImmutableRecords} from '../domain/internImmutableRecords';
@@ -21,6 +22,9 @@ class ControlledWorker {
   static instances: ControlledWorker[] = [];
   static automatic = false;
   messages: any[] = [];
+  workSteps: ImportWork['step'][] = [];
+  callbacks = new Map<number, (result: any) => void>();
+  nextCallback = 0;
   assets = new Map<number, {resolve: (bytes: Uint8Array | undefined) => void; reject: (cause: unknown) => void}>();
   nextAsset = 0;
   terminated = 0;
@@ -29,13 +33,29 @@ class ControlledWorker {
   constructor() { ControlledWorker.instances.push(this); }
   postMessage(message: any) {
     const captured = structuredClone(message); this.messages.push(captured);
+    if (captured.type === 'new-import-callback-result') {
+      const resolve = this.callbacks.get(captured.id); this.callbacks.delete(captured.id); resolve?.(captured.result); return;
+    }
+    if (captured.type === 'new-import' && ControlledWorker.automatic) {
+      const runner = createImportWorkWorkerRunner();
+      const ask = (action: string, input?: unknown): Promise<any> => new Promise(resolve => {
+        const id = ++this.nextCallback; this.callbacks.set(id, resolve);
+        this.emit(structuredClone({type: 'new-import-callback', requestId: captured.requestId, id, action, input}));
+      });
+      queueMicrotask(() => { void runNewImportWork(captured.input, {
+        stage: step => ask('stage', step), preview: () => ask('preview'), assets: () => ask('assets'), finalize: input => ask('finalize', input),
+      }, work => { this.workSteps.push(work.step); return runner.run(work); })
+        .then(result => this.emit({type: 'done', requestId: captured.requestId, result: structuredClone(result)}))
+        .catch(cause => this.emit({type: 'error', requestId: captured.requestId, error: {code: cause.code, message: cause.message, path: cause.path, issues: cause.issues}})); });
+      return;
+    }
     if (captured.type === 'import-asset') {
       const pending = this.assets.get(captured.id); this.assets.delete(captured.id);
       if (captured.error) pending?.reject(Object.assign(new StorageError(captured.error.code, captured.error.message, captured.error.path), {issues: captured.error.issues ?? []}));
       else pending?.resolve(captured.bytes);
       return;
     }
-    if (ControlledWorker.automatic) queueMicrotask(() => { void runImportWork(captured.work, undefined, hash => new Promise((resolve, reject) => {
+    if (ControlledWorker.automatic) queueMicrotask(() => { this.workSteps.push(captured.work.step); void runImportWork(captured.work, undefined, hash => new Promise((resolve, reject) => {
       const id = ++this.nextAsset; this.assets.set(id, {resolve, reject}); this.emit({type: 'asset', requestId: captured.requestId, id, hash});
     }))
       .then(result => this.emit({type: 'done', requestId: captured.requestId, result: structuredClone(result)}))
@@ -784,6 +804,59 @@ describe('operation-owned import worker', () => {
     runner.reset();
   });
 
+  it('keeps complete public history and editable topology across a revision and an appended command', async () => {
+    const {project} = recoveryFixture(2), runner = createImportWorkWorkerRunner();
+    await runner.run({step: 'structure', project: structuredClone(project), worlds: {}});
+    const next = structuredClone(project), {history: _history, ...before} = structuredClone(project);
+    next.revision = String(BigInt(next.revision) + 1n); next.entities[0]!.name = '現在稿だけの更新😀';
+    expect((await runner.run({step: 'structure', project: next, worlds: {}})).project).toEqual(next);
+    const {history: _nextHistory, ...after} = structuredClone(next);
+    next.history.push({operationId: newId(), projectId: next.projectId, baseRevision: before.revision, revision: next.revision,
+      targetIds: [next.entities[0]!.id], createdAt: '2026-10-15T00:00:00.000Z', reason: '完全な追加操作', before, after});
+    const input = structuredClone(next), returned = structuredClone((await runner.run({step: 'structure', project: next, worlds: {}})).project!);
+    expect(returned).toEqual(input); expect(returned.history.slice(0, 2)).toEqual(project.history);
+    await expect(runner.run({step: 'integrity', project: structuredClone(next), worlds: {}})).resolves.toEqual({});
+    expect(Object.isFrozen(returned.history)).toBe(false); expect(returned.entities[0]).not.toBe(returned.history.at(-1)!.after.entities[0]);
+    const oldName = returned.history.at(-1)!.after.entities[0]!.name;
+    returned.entities[0]!.name = '返却後だけの編集'; expect(returned.history.at(-1)!.after.entities[0]!.name).toBe(oldName);
+    expect(next).toEqual(input); expect(Object.isFrozen(next)).toBe(false); runner.reset();
+  });
+
+  it.each(['structure', 'integrity'] as const)('rechecks current and appended-history owners during warm %s validation', async step => {
+    const {project} = recoveryFixture(2);
+    const details = async (promise: Promise<unknown>) => {
+      try { await promise; } catch (error) { const value = error as StorageError & {issues?: unknown}; return {code: value.code, message: value.message, path: value.path, issues: value.issues}; }
+      throw new Error('Expected the changed record owner to reject');
+    };
+    for (const location of ['current', 'appended'] as const) {
+      const runner = createImportWorkWorkerRunner(); await runner.run({step: 'structure', project: structuredClone(project), worlds: {}});
+      const next = structuredClone(project), {history: _history, ...before} = structuredClone(project);
+      next.revision = String(BigInt(next.revision) + 1n);
+      if (location === 'current') next.entities[0]!.projectId = newId();
+      else {
+        const after = structuredClone(before); after.revision = next.revision; after.entities[0]!.projectId = newId();
+        next.history.push({operationId: newId(), projectId: next.projectId, baseRevision: before.revision, revision: next.revision,
+          targetIds: [next.entities[0]!.id], createdAt: '2026-10-15T00:00:00.000Z', reason: '末尾の不正所有者', before, after});
+      }
+      const work = {step, project: next, worlds: {}};
+      expect(await details(runner.run(work))).toEqual(await details(runImportWork(structuredClone(work)))); runner.reset();
+    }
+  });
+
+  it('does not borrow a JSON-equal history prefix with a new own undefined field', async () => {
+    const {project} = recoveryFixture(2), runner = createImportWorkWorkerRunner();
+    await runner.run({step: 'structure', project: structuredClone(project), worlds: {}});
+    const next = structuredClone(project); next.revision = String(BigInt(next.revision) + 1n);
+    Object.defineProperty(next.history[0]!.after.entities[0]!, 'unknownHistoryField', {value: undefined, enumerable: true});
+    expect(JSON.stringify(next.history)).toBe(JSON.stringify(project.history));
+    const work: ImportWork = {step: 'structure', project: next, worlds: {}};
+    const details = async (promise: Promise<unknown>) => {
+      try { await promise; } catch (error) { const value = error as StorageError & {issues?: unknown}; return {code: value.code, message: value.message, issues: value.issues}; }
+      throw new Error('Expected the unknown own history field to reject');
+    };
+    expect(await details(runner.run(work))).toEqual(await details(runImportWork(structuredClone(work)))); runner.reset();
+  });
+
   it('keeps comparing late history values after the selected-array memo reaches its limit', async () => {
     const project = createProject('上限後も履歴を照合する');
     project.entities.push(createEntity(project.projectId, 'note', '履歴記録', {body: textToRichText('保持する本文😀')}));
@@ -1197,7 +1270,9 @@ describe('worker checks before the unchanged atomic import transaction', () => {
   it('keeps history, pending intents and current text independent after clone and cold reload', async () => {
     const {saved, prepared} = await savedSource(), name = `worker-clone-cold-${newId()}`, destination = open(name);
     browser(true); const imported = await destination.importScenario(prepared, {mode: 'clone'});
-    const steps = ControlledWorker.instances.flatMap(worker => worker.messages.map(message => message.work.step));
+    const steps = ControlledWorker.instances.flatMap(worker => worker.workSteps);
+    expect(ControlledWorker.instances[0].messages.filter(message => message.type === 'new-import')).toHaveLength(1);
+    expect(ControlledWorker.instances[0].messages.some(message => message.type === 'import-work')).toBe(false);
     expect(steps).toEqual(['structure', 'recovery', 'ids', 'clone', 'map_recovery', 'hashes', 'integrity', 'structure', 'rehash_recovery', 'structure', 'integrity', 'recovery']);
     expect(ControlledWorker.instances.every(worker => worker.terminated === 1)).toBe(true);
     expect(Object.isFrozen(imported.project.history[0].after.entities[0])).toBe(true);
