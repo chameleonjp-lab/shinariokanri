@@ -7,7 +7,7 @@ import {verifySnapshotHashes, verifyWorlds, type PreparedScenario} from './archi
 import {cloneProject} from './clone';
 import {collectImportIds, createNativeWorkerImportIdCollector, planCrossProjectImport, type CrossProjectImportPlan, type ImportId} from './importMapping';
 import type {ImportConflict} from './store';
-import {createRecoveryValidationSession, projectWithRecoveryHistory, validateRecovery, type PortableRecovery} from './recovery';
+import {createRecoveryValidationSession, createRecoveryWorkSession, projectWithRecoveryHistory, validateRecovery, type PortableRecovery} from './recovery';
 import {validateSyncRecovery, type NativeSyncRecovery} from './syncRecovery';
 import {createSharedArrayJsonEncoder} from './sharedArrayJson';
 import {equalJson, isValidUnicode, jsonBytes, sha256, validateJsonValue} from './json';
@@ -124,14 +124,16 @@ type WorkerValidationSlot = {
   validationProject: ProjectData;
   context: WorkerValidationContext;
   session: RecoveryValidationSession;
+  same: ReturnType<typeof createCapturedGraphComparer>;
 };
 type WorkerValidationTicket = {
   readonly validationProject?: ProjectData;
+  readonly same?: ReturnType<typeof createCapturedGraphComparer>;
   session(worlds?: Record<string, ProjectContent>): RecoveryValidationSession;
   commit(validationProject: ProjectData): void;
 };
 
-function createWorkerValidationReuse(): {
+function createWorkerValidationReuse(createSession = createRecoveryValidationSession): {
   acquire(project: ProjectData, worlds: Record<string, ProjectContent>): WorkerValidationTicket | undefined;
   clear(): void;
 } {
@@ -141,7 +143,7 @@ function createWorkerValidationReuse(): {
     const context = captureWorkerValidationContext(worlds);
     if (!context) { clear(); return undefined; }
     if (slot) {
-      const equal = createCapturedGraphComparer();
+      const equal = slot.same;
       if (equal(slot.context, context)) {
         const current = slot;
         const previousHistory = Object.getOwnPropertyDescriptor(current.validationProject, 'history')?.value;
@@ -158,7 +160,7 @@ function createWorkerValidationReuse(): {
         const sameRevision = Object.getOwnPropertyDescriptor(project, 'revision')?.value === current.validationProject.revision;
         if (sameProject && sameRevision && Array.isArray(incomingHistory) && incomingHistory.length === current.validationProject.history.length
           && equal(current.validationProject, project)) {
-          return {validationProject: current.validationProject, session: () => current.session, commit: (_validationProject: ProjectData) => undefined};
+          return {validationProject: current.validationProject, same: equal, session: () => current.session, commit: (_validationProject: ProjectData) => undefined};
         }
         if (matchedHistory) {
           // Borrow only a completely equal immutable prefix for private
@@ -171,8 +173,8 @@ function createWorkerValidationReuse(): {
           const validationProject = replaceCapturedDataField(project, 'history', Object.freeze(history));
           if (validationProject) {
             const ticketGeneration = generation;
-            return {validationProject, session: () => current.session, commit: validated => {
-              if (generation === ticketGeneration && slot === current) slot = {validationProject: validated, context, session: current.session};
+            return {validationProject, same: equal, session: () => current.session, commit: validated => {
+              if (generation === ticketGeneration && slot === current) slot = {validationProject: validated, context, session: current.session, same: equal};
             }};
           }
         }
@@ -183,11 +185,11 @@ function createWorkerValidationReuse(): {
     let candidateSession: RecoveryValidationSession | undefined;
     return {
       session: sessionWorlds => {
-        candidateSession ??= createRecoveryValidationSession(sessionWorlds ?? context.worldSnapshots);
+        candidateSession ??= createSession(sessionWorlds ?? context.worldSnapshots);
         return candidateSession;
       },
       commit: validationProject => {
-        if (candidateSession && generation === ticketGeneration) slot = {validationProject, context, session: candidateSession};
+        if (candidateSession && generation === ticketGeneration) slot = {validationProject, context, session: candidateSession, same: createCapturedGraphComparer()};
       },
     };
   };
@@ -209,16 +211,16 @@ function replaceCapturedDataField<T extends object>(source: T, field: string, re
   return Object.freeze(copy) as T;
 }
 
-function recoveryWithCanonicalHistory(input: unknown, project: ProjectData): PortableRecovery | undefined {
+function recoveryWithCanonicalHistory(input: unknown, project: ProjectData, same = createCapturedGraphComparer()): PortableRecovery | undefined {
   if (!input || typeof input !== 'object' || Array.isArray(input)) return undefined;
   const recovery = input as PortableRecovery;
   if (!Array.isArray(recovery.pending)) return undefined;
   const history = new Map(project.history.map(command => [command.operationId, command]));
-  const same = createCapturedGraphComparer(), pending: PortableRecovery['pending'] = [];
+  const pending: PortableRecovery['pending'] = [];
   for (const item of recovery.pending) {
     if (!item || typeof item !== 'object' || Array.isArray(item)) return undefined;
     const command = history.get(item.operationId);
-    if (!command || !same(item.command, command)) return undefined;
+    if (!command || !same(command, item.command)) return undefined;
     const canonicalItem = replaceCapturedDataField(item, 'command', command);
     if (!canonicalItem) return undefined;
     pending.push(canonicalItem);
@@ -262,7 +264,8 @@ function publishWorkerCaptured<T>(value: T): T { return value; }
 async function runImportWorkCore(work: ImportWork, signal: AbortSignal | undefined,
   loadAsset: ((hash: string) => Promise<Uint8Array | undefined> | Uint8Array | undefined) | undefined,
   publishCaptured: CapturedPublisher, workerReuse?: ReturnType<typeof createWorkerValidationReuse>,
-  nativeWorkerMessage = false, intern = internImmutableRecords): Promise<ImportWorkResult> {
+  nativeWorkerMessage = false, intern = internImmutableRecords,
+  commandHash?: ReturnType<typeof createRecoveryWorkSession>['commandHash']): Promise<ImportWorkResult> {
   checkCancelled(signal);
   const {project, worlds, recovery} = work;
   let result: ImportWorkResult = {};
@@ -342,7 +345,7 @@ async function runImportWorkCore(work: ImportWork, signal: AbortSignal | undefin
         if (workerReuse && !ticket) workerReuse.clear();
         if (ticket?.validationProject) {
           const reusableRecovery = captured.value.recovery
-            ? recoveryWithCanonicalHistory(captured.value.recovery, ticket.validationProject) : undefined;
+            ? recoveryWithCanonicalHistory(captured.value.recovery, ticket.validationProject, ticket.same) : undefined;
           if (reusableRecovery) {
             await ticket.session().recoveryForInspection(reusableRecovery, ticket.validationProject, signal);
           } else {
@@ -436,7 +439,7 @@ async function runImportWorkCore(work: ImportWork, signal: AbortSignal | undefin
           checkCancelled(signal);
           const operationId = captured.value.idMap[item.operationId], command = history.get(operationId), hashCommand = hashHistory.get(operationId);
           if (!operationId || !command || !hashCommand) throw new StorageError('IMPORT_CONFLICT', '復元する送信待ち操作の明示ID対応が不足しています。', item.operationId);
-          pending.push({operationId, command, commandHash: await sha256(encodeCommand(hashCommand)), origin: item.origin ?? {projectId: captured.value.recovery.projectId, operationId: item.operationId, serverRevision: captured.value.recovery.serverRevision}});
+          pending.push({operationId, command, commandHash: commandHash ? await commandHash(hashCommand) : await sha256(encodeCommand(hashCommand)), origin: item.origin ?? {projectId: captured.value.recovery.projectId, operationId: item.operationId, serverRevision: captured.value.recovery.serverRevision}});
         }
         result.recovery = publishCaptured({...captured.value.recovery, projectId: captured.value.project.projectId, sourceRevision: captured.value.project.revision, pending});
       } else {
@@ -463,7 +466,7 @@ async function runImportWorkCore(work: ImportWork, signal: AbortSignal | undefin
           checkCancelled(signal);
           const hashItem = owned.recovery.pending[index]!;
           const command = history.get(item.operationId) ?? item.command, hashCommand = hashHistory.get(hashItem.operationId) ?? hashItem.command;
-          pending.push({...item, command, commandHash: await sha256(encodeCommand(hashCommand))});
+          pending.push({...item, command, commandHash: commandHash ? await commandHash(hashCommand) : await sha256(encodeCommand(hashCommand))});
         }
         result.recovery = publishCaptured({...captured.value.recovery, projectId: captured.value.project.projectId, sourceRevision: captured.value.project.revision, pending});
       } else {
@@ -499,7 +502,8 @@ export function runImportWorkForWorker(work: ImportWork, signal?: AbortSignal, l
 /** A worker-owned scope for sequential import-work steps from one parsed archive.
  * Public/Node and one-off worker entry points deliberately keep fresh sessions. */
 export function createImportWorkWorkerRunner() {
-  const reuse = createWorkerValidationReuse();
+  let recoveryScope = createRecoveryWorkSession();
+  const reuse = createWorkerValidationReuse(worlds => recoveryScope.validation(worlds));
   let interning = createImmutableRecordInterningSession();
   let active = 0;
   const runScoped = (work: ImportWork, signal: AbortSignal | undefined,
@@ -507,15 +511,15 @@ export function createImportWorkWorkerRunner() {
     nativeWorkerMessage: boolean): Promise<ImportWorkResult> => {
     const overlapping = active > 0;
     active++;
-    if (overlapping) { reuse.clear(); interning = createImmutableRecordInterningSession(); }
-    const currentInterning = interning;
+    if (overlapping) { reuse.clear(); interning = createImmutableRecordInterningSession(); recoveryScope = createRecoveryWorkSession(); }
+    const currentInterning = interning, currentRecovery = recoveryScope;
     return runImportWorkCore(work, signal, loadAsset, publishWorkerCaptured,
-      overlapping ? undefined : reuse, nativeWorkerMessage, overlapping ? internImmutableRecords : currentInterning.intern)
-      .catch(error => { reuse.clear(); if (interning === currentInterning) interning = createImmutableRecordInterningSession(); throw error; })
+      overlapping ? undefined : reuse, nativeWorkerMessage, overlapping ? internImmutableRecords : currentInterning.intern, overlapping ? undefined : currentRecovery.commandHash)
+      .catch(error => { reuse.clear(); if (interning === currentInterning) { interning = createImmutableRecordInterningSession(); recoveryScope = createRecoveryWorkSession(); } throw error; })
       .finally(() => { active--; });
   };
   return {
-    reset: () => { reuse.clear(); interning = createImmutableRecordInterningSession(); },
+    reset: () => { reuse.clear(); interning = createImmutableRecordInterningSession(); recoveryScope = createRecoveryWorkSession(); },
     run(work: ImportWork, signal?: AbortSignal, loadAsset?: (hash: string) => Promise<Uint8Array | undefined> | Uint8Array | undefined): Promise<ImportWorkResult> {
       return runScoped(work, signal, loadAsset, false);
     },

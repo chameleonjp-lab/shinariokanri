@@ -4,6 +4,7 @@ import { createProjectValidationSession } from '../domain/projectRecordValidatio
 import { captureImmutablePlainData } from '../domain/immutablePlainData';
 import { createSharedArrayJsonEncoder } from './sharedArrayJson';
 import { equalJson, isValidUnicode, sha256 } from './json';
+import {createImmutableCommandHasher} from './immutableCommandHash';
 import { checkCancelled, StorageError } from './errors';
 
 /** Portable pending intents are retained without account credentials or permission claims. */
@@ -150,10 +151,21 @@ export function projectWithRecoveryHistory(project: ProjectData, recovery?: Port
 /** One archive owns the world capture and every full structural/integrity
  * check. Callers cannot inject a validator or claim that an image is verified. */
 export function createRecoveryValidationSession(worlds: Record<string, ProjectContent>) {
+  return recoveryValidationSession(worlds, createImmutableCommandHasher());
+}
+
+/** One worker operation owns the digest producer and the complete validators.
+ * A caller can neither supply hashes nor inject a validator into this scope. */
+export function createRecoveryWorkSession() {
+  const commandHash = createImmutableCommandHasher();
+  return {commandHash, validation: (worlds: Record<string, ProjectContent>) => recoveryValidationSession(worlds, commandHash)};
+}
+
+function recoveryValidationSession(worlds: Record<string, ProjectContent>, commandHash: ReturnType<typeof createImmutableCommandHasher>) {
   const validation = createProjectValidationSession({ worldSnapshots: worlds });
   return { ...validation,
-    recovery: (input: unknown, project: ProjectData, signal?: AbortSignal) => validateRecoveryData(input, project, worlds, signal, validation),
-    recoveryForInspection: (input: unknown, project: ProjectData, signal?: AbortSignal) => validateRecoveryData(input, project, worlds, signal, validation, true),
+    recovery: (input: unknown, project: ProjectData, signal?: AbortSignal) => validateRecoveryData(input, project, worlds, signal, validation, false, commandHash),
+    recoveryForInspection: (input: unknown, project: ProjectData, signal?: AbortSignal) => validateRecoveryData(input, project, worlds, signal, validation, true, commandHash),
   };
 }
 
@@ -162,7 +174,8 @@ export async function validateRecovery(input: unknown, project: ProjectData, wor
 }
 
 async function validateRecoveryData(input: unknown, project: ProjectData, worlds: Record<string, ProjectContent>, signal?: AbortSignal,
-  session?: ReturnType<typeof createProjectValidationSession>, retainPrivateCapture = false): Promise<PortableRecovery> {
+  session?: ReturnType<typeof createProjectValidationSession>, retainPrivateCapture = false,
+  commandHash?: ReturnType<typeof createImmutableCommandHasher>): Promise<PortableRecovery> {
   const invalid = (message: string, path = 'data/recovery.json'): never => { throw new StorageError('VALIDATION_FAILED', message, path); };
   if (!input || typeof input !== 'object' || Array.isArray(input)) return invalid('送信待ち復元情報はオブジェクトです。');
   const raw = input as Record<string, unknown>;
@@ -176,7 +189,7 @@ async function validateRecoveryData(input: unknown, project: ProjectData, worlds
     if (!item || typeof item !== 'object' || Object.keys(item).some(key => !['operationId', 'command', 'commandHash', 'origin'].includes(key)) || !ID_PATTERN.test(item.operationId) || seen.has(item.operationId) || typeof item.commandHash !== 'string' || !/^[0-9a-f]{64}$/.test(item.commandHash)) return invalid('送信待ちの操作IDまたはhashが不正・重複しています。');
     if ('origin' in item && (!item.origin || typeof item.origin !== 'object' || Array.isArray(item.origin) || Object.keys(item.origin).some(key => !['projectId', 'operationId', 'serverRevision'].includes(key)) || !ID_PATTERN.test(item.origin.projectId) || !ID_PATTERN.test(item.origin.operationId) || !/^(0|[1-9]\d*)$/.test(item.origin.serverRevision))) return invalid('送信待ちの元操作の記録が不正です。');
     seen.add(item.operationId);
-    if (!item.command || item.command.operationId !== item.operationId || item.command.projectId !== project.projectId || await sha256(commandBytes(item.command)) !== item.commandHash) return invalid('送信待ち操作の内容が固定したhashと一致しません。');
+    if (!item.command || item.command.operationId !== item.operationId || item.command.projectId !== project.projectId || (commandHash ? await commandHash(item.command) : await sha256(commandBytes(item.command))) !== item.commandHash) return invalid('送信待ち操作の内容が固定したhashと一致しません。');
     const recordProject = { ...item.command.after, history: [item.command] };
     const result = validation.validate(recordProject); if (!result.ok) return invalid(result.issues.map(issue => `${issue.path}: ${issue.message}`).join('\n'));
     for (const image of recoveryImages({ ...recovery, pending: [item] })) {
