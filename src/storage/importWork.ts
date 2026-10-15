@@ -2,7 +2,7 @@ import type {ProjectContent, ProjectData} from '../domain/types';
 import {ENTITY_KINDS, ENTITY_SCHEMAS, RELATION_TYPES, SCOPES, STATUSES, validateProject} from '../domain/model';
 import {createProjectValidationSession, validateProjectIntegrity} from '../domain/projectRecordValidation';
 import {captureImmutablePlainData, freezeCapturedPlainData} from '../domain/immutablePlainData';
-import {internImmutableRecords} from '../domain/internImmutableRecords';
+import {createImmutableRecordInterningSession, internImmutableRecords} from '../domain/internImmutableRecords';
 import {verifySnapshotHashes, verifyWorlds, type PreparedScenario} from './archiveData';
 import {cloneProject} from './clone';
 import {collectImportIds, createNativeWorkerImportIdCollector, planCrossProjectImport, type CrossProjectImportPlan, type ImportId} from './importMapping';
@@ -262,7 +262,7 @@ function publishWorkerCaptured<T>(value: T): T { return value; }
 async function runImportWorkCore(work: ImportWork, signal: AbortSignal | undefined,
   loadAsset: ((hash: string) => Promise<Uint8Array | undefined> | Uint8Array | undefined) | undefined,
   publishCaptured: CapturedPublisher, workerReuse?: ReturnType<typeof createWorkerValidationReuse>,
-  nativeWorkerMessage = false): Promise<ImportWorkResult> {
+  nativeWorkerMessage = false, intern = internImmutableRecords): Promise<ImportWorkResult> {
   checkCancelled(signal);
   const {project, worlds, recovery} = work;
   let result: ImportWorkResult = {};
@@ -272,7 +272,7 @@ async function runImportWorkCore(work: ImportWork, signal: AbortSignal | undefin
       // One read owns the complete manuscript and exact fixed dependencies.
       // Only successful proofs over this private immutable capture can share
       // structural work; unsupported graphs retain the uncached checks.
-      const owned = internImmutableRecords(captureImmutablePlainData({project, worlds, knownWorlds: work.knownWorlds ?? {}}).value);
+      const owned = intern(captureImmutablePlainData({project, worlds, knownWorlds: work.knownWorlds ?? {}}).value);
       const validation = createProjectValidationSession({worldSnapshots: owned.worlds});
       const structural = validation.validate(owned.project);
       if (!structural.ok) throw Object.assign(new StorageError('VALIDATION_FAILED', structural.issues.map(issue => `${issue.path}: ${issue.message}`).join('\n')), {issues: structural.issues});
@@ -296,7 +296,7 @@ async function runImportWorkCore(work: ImportWork, signal: AbortSignal | undefin
         // record/content checks across its current, snapshots, and history.
         const ticket = workerReuse?.acquire(captured.value, worlds);
         if (workerReuse && !ticket) workerReuse.clear();
-        const validationProject = ticket?.validationProject ?? internImmutableRecords(captured.value);
+        const validationProject = ticket?.validationProject ?? intern(captured.value);
         const validation = ticket?.session() ?? createProjectValidationSession({worldSnapshots: worlds});
         const structural = validation.validate(validationProject);
         if (!structural.ok) throw Object.assign(new StorageError('VALIDATION_FAILED', structural.issues.map(issue => `${issue.path}: ${issue.message}`).join('\n')), {issues: structural.issues});
@@ -323,7 +323,7 @@ async function runImportWorkCore(work: ImportWork, signal: AbortSignal | undefin
       if (captured.captured) {
         const ticket = workerReuse?.acquire(captured.value.project, captured.value.worlds);
         if (workerReuse && !ticket) workerReuse.clear();
-        const owned = ticket?.validationProject ? undefined : internImmutableRecords(captured.value);
+        const owned = ticket?.validationProject ? undefined : intern(captured.value);
         const validationProject = ticket?.validationProject ?? owned!.project;
         const validation = ticket?.session(owned?.worlds) ?? createProjectValidationSession({worldSnapshots: owned!.worlds});
         issues = await validation.integrity(validationProject, validationProject.history.length > 0);
@@ -349,12 +349,12 @@ async function runImportWorkCore(work: ImportWork, signal: AbortSignal | undefin
             // A pending-only command or any command difference follows the
             // existing fresh validation path. The old proof scope is discarded.
             workerReuse?.clear();
-            const owned = internImmutableRecords(captured.value);
+            const owned = intern(captured.value);
             await validateRecovery(owned.recovery, owned.project, owned.worlds, signal);
           }
         } else {
           if (ticket) workerReuse?.clear();
-          const owned = internImmutableRecords(captured.value);
+          const owned = intern(captured.value);
           await validateRecovery(owned.recovery, owned.project, owned.worlds, signal);
         }
         result.recovery = publishCaptured(captured.value.recovery!);
@@ -371,7 +371,7 @@ async function runImportWorkCore(work: ImportWork, signal: AbortSignal | undefin
         // native Worker memo collector for callers outside MessageEvent data.
         const captured = captureImmutablePlainData({project, recovery});
         if (captured.captured) {
-          const owned = internImmutableRecords(captured.value);
+          const owned = intern(captured.value);
           result.ids = collectImportIds(projectWithRecoveryHistory(owned.project, owned.recovery));
         } else result.ids = collectImportIds(projectWithRecoveryHistory(project, recovery));
         break;
@@ -382,7 +382,7 @@ async function runImportWorkCore(work: ImportWork, signal: AbortSignal | undefin
       if (!collectNativeIds) {
         const legacyCapture = captureImmutablePlainData({project, recovery});
         if (legacyCapture.captured) {
-          const legacyOwned = internImmutableRecords(legacyCapture.value);
+          const legacyOwned = intern(legacyCapture.value);
           result.ids = collectImportIds(projectWithRecoveryHistory(legacyOwned.project, legacyOwned.recovery));
         } else result.ids = collectImportIds(projectWithRecoveryHistory(project, recovery));
         break;
@@ -392,7 +392,7 @@ async function runImportWorkCore(work: ImportWork, signal: AbortSignal | undefin
         result.ids = collectImportIds(projectWithRecoveryHistory(project, recovery));
         break;
       }
-      const owned = internImmutableRecords(captured.value);
+      const owned = intern(captured.value);
       // Capture the one merge for the memo collector; if proof fails, traverse
       // that same merge through the legacy path without repeating inherited reads.
       const merged = projectWithRecoveryHistory(owned.project, owned.recovery);
@@ -429,7 +429,7 @@ async function runImportWorkCore(work: ImportWork, signal: AbortSignal | undefin
       if (!recovery || !work.idMap) throw new StorageError('IMPORT_CONFLICT', '復元する送信待ち操作の明示ID対応が不足しています。');
       const captured = captureImmutablePlainData({project, recovery, idMap: work.idMap});
       if (captured.captured) {
-        const owned = internImmutableRecords(captured.value), history = new Map(captured.value.project.history.map(record => [record.operationId, record]));
+        const owned = intern(captured.value), history = new Map(captured.value.project.history.map(record => [record.operationId, record]));
         const hashHistory = new Map(owned.project.history.map(record => [record.operationId, record]));
         const pending: PortableRecovery['pending'] = [], encodeCommand = createSharedArrayJsonEncoder();
         for (const item of captured.value.recovery.pending) {
@@ -456,7 +456,7 @@ async function runImportWorkCore(work: ImportWork, signal: AbortSignal | undefin
       if (!recovery) throw new StorageError('VALIDATION_FAILED', '送信待ち復元情報がありません。');
       const captured = captureImmutablePlainData({project, recovery});
       if (captured.captured) {
-        const owned = internImmutableRecords(captured.value), history = new Map(captured.value.project.history.map(record => [record.operationId, record]));
+        const owned = intern(captured.value), history = new Map(captured.value.project.history.map(record => [record.operationId, record]));
         const hashHistory = new Map(owned.project.history.map(record => [record.operationId, record]));
         const pending: PortableRecovery['pending'] = [], encodeCommand = createSharedArrayJsonEncoder();
         for (const [index, item] of captured.value.recovery.pending.entries()) {
@@ -500,20 +500,22 @@ export function runImportWorkForWorker(work: ImportWork, signal?: AbortSignal, l
  * Public/Node and one-off worker entry points deliberately keep fresh sessions. */
 export function createImportWorkWorkerRunner() {
   const reuse = createWorkerValidationReuse();
+  let interning = createImmutableRecordInterningSession();
   let active = 0;
   const runScoped = (work: ImportWork, signal: AbortSignal | undefined,
     loadAsset: ((hash: string) => Promise<Uint8Array | undefined> | Uint8Array | undefined) | undefined,
     nativeWorkerMessage: boolean): Promise<ImportWorkResult> => {
     const overlapping = active > 0;
     active++;
-    if (overlapping) reuse.clear();
+    if (overlapping) { reuse.clear(); interning = createImmutableRecordInterningSession(); }
+    const currentInterning = interning;
     return runImportWorkCore(work, signal, loadAsset, publishWorkerCaptured,
-      overlapping ? undefined : reuse, nativeWorkerMessage)
-      .catch(error => { reuse.clear(); throw error; })
+      overlapping ? undefined : reuse, nativeWorkerMessage, overlapping ? internImmutableRecords : currentInterning.intern)
+      .catch(error => { reuse.clear(); if (interning === currentInterning) interning = createImmutableRecordInterningSession(); throw error; })
       .finally(() => { active--; });
   };
   return {
-    reset: () => reuse.clear(),
+    reset: () => { reuse.clear(); interning = createImmutableRecordInterningSession(); },
     run(work: ImportWork, signal?: AbortSignal, loadAsset?: (hash: string) => Promise<Uint8Array | undefined> | Uint8Array | undefined): Promise<ImportWorkResult> {
       return runScoped(work, signal, loadAsset, false);
     },

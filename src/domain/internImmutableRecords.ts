@@ -4,8 +4,7 @@ import {checkCancelled} from '../storage/errors';
 /** This scope owns immutable input. A typed ID only chooses candidates; every
  * own value, prototype, undefined property and signed zero must match before
  * records share identity. No digest or previous validation result is trusted. */
-export function internImmutableRecords<T>(input: T): T {
-  if (!isImmutablePlainData(input)) return input;
+function recordInterner() {
   const copied = new WeakMap<object, unknown>(), candidates = new Map<string, object[]>();
   let count = 0;
   const equal = (left: unknown, right: unknown, seen = new WeakMap<object, WeakSet<object>>()): boolean => {
@@ -48,8 +47,45 @@ export function internImmutableRecords<T>(input: T): T {
     copied.set(value, result);
     return result;
   };
-  const result = visit(input) as T;
-  return freezeCapturedPlainData(result) ? result : input;
+  return <T>(input: T): T => {
+    const result = visit(input) as T;
+    return freezeCapturedPlainData(result) ? result : input;
+  };
+}
+
+export function internImmutableRecords<T>(input: T): T {
+  if (!isImmutablePlainData(input)) return input;
+  return recordInterner()(input);
+}
+
+// A worker owns these intrinsics and its captured graphs. If another module
+// changes traversal behavior, discard the memo and retain the fresh path.
+const interningIntrinsics = () => [Object.keys, Object.getPrototypeOf, Object.hasOwn, Object.defineProperty,
+  Object.create, Object.freeze, Object.is, Reflect.ownKeys, Array.isArray,
+  Array.prototype.every, Array.prototype.some, Array.prototype.find, Array.prototype.unshift,
+  Map.prototype.get, Map.prototype.set, Map.prototype.has, Map.prototype.clear,
+  WeakMap.prototype.get, WeakMap.prototype.set, WeakMap.prototype.has,
+  WeakSet.prototype.has, WeakSet.prototype.add];
+const originalInterningIntrinsics = interningIntrinsics();
+
+/** @internal Reuse only equality/canonicalization of complete immutable own
+ * data, never a schema/reference/hash/permission result. The caller owns one
+ * sequential worker operation; unsupported graphs retain the fresh path. */
+export function createImmutableRecordInterningSession() {
+  let intern = recordInterner();
+  return {
+    clear: () => { intern = recordInterner(); },
+    intern<T>(input: T): T {
+      const current = interningIntrinsics();
+      let stable = current.length === originalInterningIntrinsics.length;
+      for (let index = 0; stable && index < current.length; index++) stable = current[index] === originalInterningIntrinsics[index];
+      if (!stable) {
+        intern = recordInterner(); return internImmutableRecords(input);
+      }
+      if (!isImmutablePlainData(input)) return internImmutableRecords(input);
+      try { return intern(input); } catch (error) { intern = recordInterner(); throw error; }
+    },
+  };
 }
 
 /** Same complete own-value comparison for a private main-thread capture, with

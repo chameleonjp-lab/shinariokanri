@@ -1,7 +1,7 @@
-import {describe,expect,it} from 'vitest';
+import {describe,expect,it,vi} from 'vitest';
 import {createEntity,createProject,newId,textToRichText,validateProject} from './model';
 import {captureImmutablePlainData} from './immutablePlainData';
-import {internImmutableRecords,internImmutableRecordsAsync} from './internImmutableRecords';
+import {createImmutableRecordInterningSession,internImmutableRecords,internImmutableRecordsAsync} from './internImmutableRecords';
 import {deepStrictEqual} from 'node:assert/strict';
 import {jsonBytes,sha256} from '../storage/json';
 
@@ -89,4 +89,39 @@ it('yields to a queued cancellation during a large private comparison and keeps 
  const input=own({before:records,after:structuredClone(records)}),before=jsonBytes(input),controller=new AbortController();
  const task=internImmutableRecordsAsync(input,controller.signal),rejected=expect(task).rejects.toMatchObject({code:'CANCELLED'});setTimeout(()=>controller.abort(),0);await rejected;
  expect(input.before).toHaveLength(20000);expect(input.after).toHaveLength(20000);expect(Buffer.from(jsonBytes(input)).equals(Buffer.from(before))).toBe(true);
+});
+
+
+describe('private sequential worker interning',()=>{
+ it('reuses only complete frozen graphs, preserving changed own values and source topology across input roots',async()=>{
+  const project=createProject('連続するprivate画像'),record=createEntity(project.projectId,'note','原文',{body:textToRichText('😀全値')});
+  const initial=own({current:[record],history:[structuredClone(record)]}),session=createImmutableRecordInterningSession();
+  const first=session.intern(initial),again=session.intern(initial);
+  expect(again).toBe(first);expect(first.current[0]).toBe(first.history[0]);expect(initial.current[0]).not.toBe(initial.history[0]);
+  const edited=structuredClone(record);edited.data.body[0].text='別の本文';
+  const undefinedOwn={...structuredClone(record),unknown:undefined},nullPrototype=Object.assign(Object.create(null),record);
+  const next=own({history:initial.history,current:[edited,undefinedOwn,nullPrototype],negativeZero:-0});
+  const before=jsonBytes(next),actual=session.intern(next);
+  deepStrictEqual(actual,next);expect(actual.history[0]).toBe(first.current[0]);expect(actual.current[0]).not.toBe(first.current[0]);
+  expect(actual.current[1]).not.toBe(first.current[0]);expect(Object.hasOwn(actual.current[1],'unknown')).toBe(true);
+  expect(Object.getPrototypeOf(actual.current[2])).toBe(null);expect(Object.is(actual.negativeZero,-0)).toBe(true);
+  expect(await sha256(jsonBytes(actual))).toBe(await sha256(before));expect(next.current[0].data.body[0].text).toBe('別の本文');expect(initial.current[0]).not.toBe(initial.history[0]);
+  const mutable=structuredClone(record);expect(session.intern(mutable)).toBe(mutable);mutable.name='後の編集';expect(first.current[0].name).toBe('原文');
+ });
+ it('discards candidate identity on reset and after changed traversal intrinsics',()=>{
+  const project=createProject('private範囲'),record=own(createEntity(project.projectId,'note','元記録')),session=createImmutableRecordInterningSession();
+  const first=session.intern(own([record])),other=own([structuredClone(record)]);
+  expect(session.intern(other)[0]).toBe(first[0]);session.clear();
+  const afterReset=own([structuredClone(record)]);expect(session.intern(afterReset)[0]).toBe(afterReset[0]);
+  const next=own([structuredClone(record)]),keys=Object.keys,spy=vi.spyOn(Object,'keys').mockImplementation(value=>keys(value));
+  try{expect(session.intern(next)[0]).toBe(next[0]);expect(spy).toHaveBeenCalled();}finally{spy.mockRestore();}
+  const final=own([structuredClone(record)]);expect(session.intern(final)[0]).toBe(final[0]);
+ });
+ it('keeps accessor, cycle and shallow-frozen inputs on their uncached path',()=>{
+  const session=createImmutableRecordInterningSession();let reads=0;const accessor=Object.freeze({get value(){reads++;return 1;}});
+  const cycle:Record<string,unknown>={};cycle.self=cycle;Object.freeze(cycle);
+  const shallow=Object.freeze({child:{text:'変更可能'}});
+  expect(session.intern(accessor)).toBe(accessor);expect(reads).toBe(0);expect(session.intern(cycle)).toBe(cycle);
+  expect(session.intern(shallow)).toBe(shallow);shallow.child.text='後の入力';expect(shallow.child.text).toBe('後の入力');
+ });
 });

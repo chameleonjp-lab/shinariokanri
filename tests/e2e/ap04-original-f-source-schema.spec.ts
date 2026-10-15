@@ -257,6 +257,7 @@ test('AT-F56 同名人物と参照 ID を保って改名し、必須・空欄・
 
   const beforeImport = await backup(page);
   const invalidBytes = await archiveWithInvalidCustomValue(beforeImport.bytes, a.id);
+  await info.attach('AT-F56-input-invalid-enum-number.scenario', {body: Buffer.from(invalidBytes), contentType: 'application/zip'});
   const fingerprint = await authorFingerprint(page);
   await page.getByLabel('保存ファイルを選ぶ', { exact: true }).setInputFiles({ name: 'invalid-enum-number.scenario', mimeType: 'application/zip', buffer: Buffer.from(invalidBytes) });
   await expect(page.locator('.backup-page').getByRole('alert')).toContainText('affiliation');
