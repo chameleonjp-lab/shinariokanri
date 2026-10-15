@@ -46,7 +46,7 @@ type CapturedGraphArrayEdge = 'other' | 'entities' | 'relations' | 'calendars';
 /** Compare only already-owned immutable graphs. Cache completed typed-record
  * pairs and at most 128 arrays first compared through entity, relation, or
  * calendar edges; unselected edges do not add arrays to the memo. */
-function createCapturedGraphComparer(): (left: unknown, right: unknown) => boolean {
+export function createCapturedGraphComparer(): (left: unknown, right: unknown) => boolean {
   const completedPairs = new WeakMap<object, WeakSet<object>>();
   let recordPairs = 0, arrayPairs = 0;
   const hasPair = (left: object, right: object) => completedPairs.get(left)?.has(right) ?? false;

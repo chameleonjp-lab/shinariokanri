@@ -2,9 +2,10 @@ import {expect,test,type Page} from '@playwright/test';
 import {createHash} from 'node:crypto';
 import {readFile} from 'node:fs/promises';
 import {inspectScenario} from '../../src/storage/archive';
+import {retainCompleteBackup} from './ap04-original-helpers';
 
 async function nav(page:Page,name:RegExp){await expect(page.locator('.app-shell')).toBeVisible();const menu=page.getByRole('button',{name:'メニューを開く',exact:true});if(await menu.isVisible())await menu.click();await page.locator('.sidebar').getByRole('button',{name}).first().click();}
-async function backup(page:Page){await nav(page,/^作品・保存/);await page.getByRole('tab',{name:'完全保存・復元',exact:true}).click();const pending=page.waitForEvent('download');await page.getByRole('button',{name:'完全保存ファイルを作成',exact:true}).click();const file=await pending;expect(await file.failure()).toBeNull();const bytes=new Uint8Array(await readFile((await file.path())!));return {bytes,prepared:await inspectScenario(bytes,{worker:false})};}
+async function backup(page:Page){await nav(page,/^作品・保存/);await page.getByRole('tab',{name:'完全保存・復元',exact:true}).click();const pending=page.waitForEvent('download');await page.getByRole('button',{name:'完全保存ファイルを作成',exact:true}).click();const file=await pending;expect(await file.failure()).toBeNull();const bytes=new Uint8Array(await readFile((await file.path())!));await retainCompleteBackup(bytes,file.suggestedFilename());return {bytes,prepared:await inspectScenario(bytes,{worker:false})};}
 async function save(page:Page){await page.locator('.editor-footer').getByRole('button',{name:/^(保存する|保存を再試行)$/}).click();await expect(page.locator('.editor-save-state')).toContainText('端末内保存済み');}
 async function eventEditor(page:Page,summary:string){await nav(page,/^資料/);await page.getByLabel('情報の種類',{exact:true}).selectOption('event');await page.locator('.entity-card').filter({hasText:summary}).click();}
 async function durable(page:Page){return page.evaluate(async()=>{

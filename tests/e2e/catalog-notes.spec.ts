@@ -3,7 +3,7 @@ import { exportScenario, inspectScenario } from '../../src/storage/archive';
 import { createEntity, createProject, textToRichText } from '../../src/domain/model';
 import { prepareAsset } from '../../src/domain/attachments';
 import { test, expect, type Page } from '@playwright/test';
-import { attachGiven, attachObservation, backup, openEntity, seed } from './ap04-original-helpers';
+import { attachGiven, attachObservation, backup, openEntity, retainCompleteBackup, seed } from './ap04-original-helpers';
 async function navigate(page: Page, name: RegExp) {
   const menu = page.getByRole('button', { name: 'メニューを開く' });
   if (await menu.isVisible()) await menu.click();
@@ -193,7 +193,9 @@ test('録音許可の拒否を説明し、文章と画像メモを保存ファ�
   const pending = page.waitForEvent('download');
   await page.getByRole('button', { name: '完全保存ファイルを作成', exact: true }).click();
   const download = await pending; expect(await download.failure()).toBeNull();
-  const saved = await inspectScenario(new Uint8Array(await readFile((await download.path())!)), { worker: false });
+  const bytes = new Uint8Array(await readFile((await download.path())!));
+  await retainCompleteBackup(bytes, download.suggestedFilename());
+  const saved = await inspectScenario(bytes, { worker: false });
   const note = saved.project.entities.find(entity => entity.kind === 'note')!;
   expect(note.kind === 'note' && note.data.body.map(block => block.text).join('')).toBe('マイクがなくても文章を残す。');
   expect(saved.assets).toHaveLength(1); expect(Buffer.from(saved.assets[0].bytes)).toEqual(png);

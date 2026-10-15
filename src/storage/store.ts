@@ -1,4 +1,4 @@
-import {mergeImportConflicts} from './importWork';
+import {createCapturedGraphComparer,mergeImportConflicts} from './importWork';
 import {freezeCapturedPlainDataAsync} from '../domain/immutablePlainData';
 import {internImmutableRecordsAsync} from '../domain/internImmutableRecords';
 import {cloneProject as clonePrivateProject} from './clone';
@@ -35,7 +35,7 @@ type StoredProject = Omit<ProjectData, 'entities' | 'relations' | 'snapshots' | 
 };
 interface StoredEntity { id: string; projectId: string; kind: Entity['kind']; record: unknown }
 interface StoredBlock { id: string; projectId: string; entityId: string; block: Block }
-type CommandMetadata = Omit<CommandRecord, 'before' | 'after'>;
+type CommandMetadata = Omit<CommandRecord, 'before' | 'after'> & { before?: undefined; after?: undefined };
 type ContentHeader = Omit<ContentState, 'entities' | 'relations'>;
 interface ContentDelta {
   header: Partial<ContentHeader>;
@@ -190,6 +190,45 @@ function applyContentDelta(before: ContentState, patch: ContentDelta): ContentSt
     });
   };
   return { ...before, ...patch.header, entities: apply(before.entities, patch.entities, patch.entityIds), relations: apply(before.relations, patch.relations, patch.relationIds) };
+}
+
+/** Prepare the existing native delta format on a separate immutable history.
+ * Every own value and ordered key must reconstruct exactly; otherwise retain
+ * the full original row. Public import results keep their existing aliases
+ * and mutability. Portable pending rows remain independent full commands. */
+async function importedCommandStorage(input: CommandRecord[], signal?: AbortSignal): Promise<{record: CommandRecord; stored: StoredCommand}[]> {
+  checkCancelled(signal);
+  const history = copy(input), prepared: {record: CommandRecord; stored: StoredCommand}[] = [];
+  const reusable = await freezeCapturedPlainDataAsync(history, signal), same = createCapturedGraphComparer();
+  let previous: CommandRecord | undefined;
+  for (const [index, record] of history.entries()) {
+    checkCancelled(signal);
+    const header = {operationId: record.operationId, projectId: record.projectId, revision: record.revision};
+    let stored: StoredCommand = {...header, record};
+    if (reusable && record.before.projectId === record.projectId && record.after.projectId === record.projectId
+      && record.before.revision === record.baseRevision && record.after.revision === record.revision) {
+      // Own undefined placeholders retain the original command's key order
+      // when materializeCommand fills before/after. Native v1 already supports
+      // these values; no new row or portable format is introduced.
+      const metadata = Object.fromEntries(Object.entries(record).map(([key, value]) => [key,
+        key === 'before' || key === 'after' ? undefined : value])) as CommandMetadata;
+      const patch = contentDelta(record.before, record.after);
+      const after = applyContentDelta(record.before, patch);
+      // The only new nodes in this reconstruction are these containers. All
+      // their members come from the proved, frozen private history above.
+      Object.freeze(after.entities); Object.freeze(after.relations); Object.freeze(after);
+      const reconstructed: CommandRecord = Object.freeze({...metadata, before: record.before, after});
+      if (same(record, reconstructed)) {
+        const parent = index % 64 !== 0 && previous && same(previous.after, record.before) ? previous.operationId : undefined;
+        stored = {...header, delta: {metadata, ...(parent ? {parentOperationId: parent} : {checkpoint: record.before}), patch}};
+      }
+    }
+    prepared.push({record, stored}); previous = record;
+    // Complete each command before yielding; cancellation never publishes a
+    // partial history or starts the native write transaction.
+    await new Promise<void>(resolve => setTimeout(resolve, 0));
+  }
+  checkCancelled(signal); return prepared;
 }
 const increment = (revision: string): string => (BigInt(revision) + 1n).toString();
 const withoutHistory = ({ history: _history, ...content }: ProjectData): ContentState => content;
@@ -1426,6 +1465,7 @@ export class ScenarioStore {
       }
       // New recovery retains the original content revisions/history; the local import audit is separate.
       const point: RestorePoint | undefined = preview.target ? { id: newId(), projectId: preview.target.projectId, createdAt: now, reason: `専用ファイル${options.mode}の前の復元点`, project: preview.target, assetHashes: attachmentMetadata(preview.target).map(item => item.contentHash) } : undefined;
+      const historyStorage = await importedCommandStorage(project.history, options.signal);
       options.onStage?.('commit');
       const result = await this.db.transaction('rw', this.writeTables, async () => {
         bindRecordPartsImport(options.signal);
@@ -1444,10 +1484,19 @@ export class ScenarioStore {
         }
         await this.writeContent(project, preview.target); this.faultInjector?.('after-content');
         let historyBatch: StoredCommand[] = [];
-        for (const record of project.history) {
+        const importedHistoryIds = new Set<string>();
+        for (const [index, record] of project.history.entries()) {
           const old = await this.db.commands.get(record.operationId);
           if (old && !sameJson(await this.materializeCommand(old), record)) throw new StorageError('OPERATION_CONFLICT', '読み込む履歴の操作IDが既存履歴と衝突しています。', record.operationId);
-          if (!old) historyBatch.push({ operationId: record.operationId, projectId: project.projectId, revision: record.revision, record });
+          if (!old) {
+            const planned = historyStorage[index]!, delta = planned.stored.delta;
+            // An equal JSON collision may still have different own values.
+            // Never derive a new row from a pre-existing command's image.
+            historyBatch.push(delta?.parentOperationId && !importedHistoryIds.has(delta.parentOperationId)
+              ? {...planned.stored, delta: {metadata: delta.metadata, checkpoint: planned.record.before, patch: delta.patch}}
+              : planned.stored);
+            importedHistoryIds.add(record.operationId);
+          }
           if (historyBatch.length === 2) { await this.db.commands.bulkAdd(historyBatch); historyBatch = []; }
         }
         if (historyBatch.length) await this.db.commands.bulkAdd(historyBatch);

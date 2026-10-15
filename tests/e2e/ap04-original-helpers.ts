@@ -5,6 +5,18 @@ import { inspectScenario } from '../../src/storage/archive';
 
 const backupSequences = new WeakMap<TestInfo, number>();
 
+/** Also used by original cases with their own navigation/backup procedure. */
+export async function retainCompleteBackup(bytes: Uint8Array, suggestedFileName: string) {
+  const info = test.info(), sequence = (backupSequences.get(info) ?? 0) + 1;
+  backupSequences.set(info, sequence);
+  const name = `complete-backup-${String(sequence).padStart(3, '0')}.scenario`;
+  await info.attach(name, { body: Buffer.from(bytes), contentType: 'application/zip' });
+  await attachObservation(info, name, {
+    sequence, fileName: name, suggestedFileName,
+    fileBytes: bytes.length, fileSHA256: createHash('sha256').update(bytes).digest('hex'),
+  });
+}
+
 export async function navigate(page: Page, name: RegExp) {
   await expect(page.locator('.app-shell')).toBeVisible();
   const menu = page.getByRole('button', { name: 'メニューを開く' });
@@ -54,14 +66,7 @@ export async function backup(page: Page) {
   const bytes = new Uint8Array(await readFile((await download.path())!));
   // Retain every actual output before inspection, including outputs produced
   // before a later assertion fails. A digest alone cannot recover its bytes.
-  const info = test.info(), sequence = (backupSequences.get(info) ?? 0) + 1;
-  backupSequences.set(info, sequence);
-  const name = `complete-backup-${String(sequence).padStart(3, '0')}.scenario`;
-  await info.attach(name, { body: Buffer.from(bytes), contentType: 'application/zip' });
-  await attachObservation(info, name, {
-    sequence, fileName: name, suggestedFileName: download.suggestedFilename(),
-    fileBytes: bytes.length, fileSHA256: createHash('sha256').update(bytes).digest('hex'),
-  });
+  await retainCompleteBackup(bytes, download.suggestedFilename());
   return { bytes, ...(await inspectScenario(bytes, { worker: false })) };
 }
 
