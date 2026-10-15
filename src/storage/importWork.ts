@@ -121,7 +121,6 @@ function captureWorkerValidationContext(worlds: Record<string, ProjectContent>):
 }
 
 type WorkerValidationSlot = {
-  project: ProjectData;
   validationProject: ProjectData;
   context: WorkerValidationContext;
   session: RecoveryValidationSession;
@@ -143,9 +142,40 @@ function createWorkerValidationReuse(): {
     if (!context) { clear(); return undefined; }
     if (slot) {
       const equal = createCapturedGraphComparer();
-      if (equal(slot.project, project) && equal(slot.context, context)) {
+      if (equal(slot.context, context)) {
         const current = slot;
-        return {validationProject: current.validationProject, session: () => current.session, commit: (_validationProject: ProjectData) => undefined};
+        const previousHistory = Object.getOwnPropertyDescriptor(current.validationProject, 'history')?.value;
+        const incomingHistory = Object.getOwnPropertyDescriptor(project, 'history')?.value;
+        const projectId = Object.getOwnPropertyDescriptor(project, 'projectId')?.value;
+        const sameProject = projectId === current.validationProject.projectId;
+        let matchedHistory = sameProject && Array.isArray(previousHistory) && Array.isArray(incomingHistory)
+          && previousHistory.length > 0 && incomingHistory.length >= previousHistory.length;
+        // Populate bounded proofs from recurring history before the separately
+        // editable current image. IDs alone never establish correspondence.
+        if (matchedHistory) for (let index = 0; index < previousHistory.length; index++) {
+          if (!equal(previousHistory[index], incomingHistory[index])) { matchedHistory = false; break; }
+        }
+        const sameRevision = Object.getOwnPropertyDescriptor(project, 'revision')?.value === current.validationProject.revision;
+        if (sameProject && sameRevision && Array.isArray(incomingHistory) && incomingHistory.length === current.validationProject.history.length
+          && equal(current.validationProject, project)) {
+          return {validationProject: current.validationProject, session: () => current.session, commit: (_validationProject: ProjectData) => undefined};
+        }
+        if (matchedHistory) {
+          // Borrow only a completely equal immutable prefix for private
+          // validation. Every command and the new current image still enter
+          // the same full validator; publications keep the incoming topology.
+          const history: ProjectData['history'] = [];
+          for (let index = 0; index < incomingHistory.length; index++) Object.defineProperty(history, index, {
+            value: index < previousHistory.length ? previousHistory[index] : incomingHistory[index], enumerable: true,
+          });
+          const validationProject = replaceCapturedDataField(project, 'history', Object.freeze(history));
+          if (validationProject) {
+            const ticketGeneration = generation;
+            return {validationProject, session: () => current.session, commit: validated => {
+              if (generation === ticketGeneration && slot === current) slot = {validationProject: validated, context, session: current.session};
+            }};
+          }
+        }
       }
       clear();
     }
@@ -157,7 +187,7 @@ function createWorkerValidationReuse(): {
         return candidateSession;
       },
       commit: validationProject => {
-        if (candidateSession && generation === ticketGeneration) slot = {project, validationProject, context, session: candidateSession};
+        if (candidateSession && generation === ticketGeneration) slot = {validationProject, context, session: candidateSession};
       },
     };
   };

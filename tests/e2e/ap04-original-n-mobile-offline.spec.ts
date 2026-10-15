@@ -4,6 +4,7 @@ import { createEntity, createProject, emptyValidity, newId, textToRichText } fro
 import { prepareAsset } from '../../src/domain/attachments';
 import { exportScenario } from '../../src/storage/archive';
 import { attachGiven, attachObservation, authorFingerprint, backup, navigate, openEntity, seed } from './ap04-original-helpers';
+import {exerciseF31SameWork} from './ap04-original-f31-same-work-helper';
 
 // Browser viewport/touch/offline observations are supporting evidence. They do
 // not establish physical target-device or actual airplane-mode acceptance.
@@ -126,6 +127,7 @@ for (const width of [320, 390]) test(`AT-N01 幅${width} CSS pxの縦画面で�
       const restoredDimensions = await noPageWideScroll(restored);
       await attachObservation(info, 'AT-N01-observation', { width, edgeId: unfinished.id, destinationId: end.id, afterEditDimensions, afterTableDimensions, restoredDimensions, touchTargetsReached: true, dragOrHoverNeeded: false, currentAndRestoredProjectId: saved.project.projectId, actualPhysicalDevice: 'not_run' });
     } finally { await restoredContext.close(); }
+    await exerciseF31SameWork(page,browser,info,{given:saved,width,personId:a.id,personName:a.name,otherId:b.id,edgeId:unfinished.id,edgeName:unfinished.name,relationId});
   } finally { await context.close(); }
 });
 

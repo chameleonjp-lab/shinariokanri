@@ -51,8 +51,9 @@ function recoveryCommandEquality(): (left: unknown, right: unknown) => boolean {
   let validated = new WeakSet<object>();
   let fields = new WeakMap<object, string[]>();
   let equalPairs = new WeakMap<object, WeakSet<object>>();
-  let pairCount = 0;
-  const maximumMemoPairs = 65_536; // Cache eviction policy, not a data limit.
+  let recordPairCount = 0, arrayPairCount = 0;
+  const maximumMemoPairs = 65_536; // Cache retention only; never a data limit.
+  const maximumArrayPairs = 128, maximumRecordPairs = maximumMemoPairs - maximumArrayPairs;
 
   function inspect(input: unknown, active: Set<object>): boolean {
     if (input === null || typeof input === 'boolean') return true;
@@ -107,11 +108,18 @@ function recoveryCommandEquality(): (left: unknown, right: unknown) => boolean {
         if (key !== rightKeys[index] || !same((left as Record<string, unknown>)[key], (right as Record<string, unknown>)[key])) return false;
       }
     }
-    if (pairCount >= maximumMemoPairs) { equalPairs = new WeakMap<object, WeakSet<object>>(); pairCount = 0; }
-    let rights = equalPairs.get(left);
-    if (!rights) { rights = new WeakSet<object>(); equalPairs.set(left, rights); }
-    rights.add(right); // Publish only a fully completed equality proof.
-    pairCount++;
+    // Retain completed proofs for broad collections and their owning records.
+    // Generic child nodes cannot evict the proofs which cover whole records.
+    // All overflow values still receive the complete comparison above.
+    const array = Array.isArray(left), retain = array
+      ? left.length >= 32 && arrayPairCount < maximumArrayPairs
+      : Object.hasOwn(left, 'id') && Object.hasOwn(left, 'projectId') && recordPairCount < maximumRecordPairs;
+    if (retain) {
+      let rights = equalPairs.get(left);
+      if (!rights) { rights = new WeakSet<object>(); equalPairs.set(left, rights); }
+      rights.add(right); // Publish only a fully completed equality proof.
+      if (array) arrayPairCount++; else recordPairCount++;
+    }
     return true;
   }
 
@@ -122,7 +130,7 @@ function recoveryCommandEquality(): (left: unknown, right: unknown) => boolean {
       // side effects. Drop proofs and never memoize again in this invocation.
       canonicalOnly = true;
       validated = new WeakSet<object>(); fields = new WeakMap<object, string[]>(); equalPairs = new WeakMap<object, WeakSet<object>>();
-      pairCount = 0;
+      recordPairCount = 0; arrayPairCount = 0;
       return equalJson(left, right);
     }
     return same(left, right);
