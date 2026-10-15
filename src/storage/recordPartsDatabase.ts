@@ -1,6 +1,6 @@
 import Dexie,{type DBCore,type DBCoreCursor,type DBCoreTransaction} from 'dexie';
 import {newId} from '../domain/model';
-import {packRecord,unpackRecord,needsRecordParts,type PackedRecord,type RecordPart} from './recordParts';
+import {packRecord,packImportRecord,unpackRecord,needsRecordParts,type PackedRecord,type RecordPart} from './recordParts';
 import {StorageError} from './errors';
 import {equalJson} from './json';
 
@@ -43,6 +43,7 @@ export function installRecordPartsDatabase(db:Dexie,threshold?:number){
      if(req.type==='deleteRange')previous=(await table.query({trans:req.trans,values:true,query:{index:table.schema.primaryKey,range:req.range}})).result;
      if(req.type==='add'||req.type==='put'){
       const values:unknown[]=[],newParts:RecordPart[]=[];
+      const pack=importPacking.has(req.trans)&&(name==='commands'||name==='recoveredPending')?packImportRecord:packRecord;
       if(importPacking.has(req.trans)&&(name==='commands'||name==='recoveredPending')&&req.values.length>1){
        // The importer submits row pairs, bounding additional live captures.
        // Larger direct bulk requests still start at most two workers at once.
@@ -50,7 +51,7 @@ export function installRecordPartsDatabase(db:Dexie,threshold?:number){
         const batch=await wait(req.trans,()=>Promise.allSettled(req.values.slice(index,index+2).map(async value=>{
          if(envelope(value))throw new StorageError('SAVE_FAILED','内部の分割記録を入力値として保存できません。');
          if(!needsRecordParts(value,threshold))return{value,parts:[] as RecordPart[]};
-         const packed=await packRecord(value,`${name}:${newId()}`,signals.get(req.trans));
+         const packed=await pack(value,`${name}:${newId()}`,signals.get(req.trans));
          return{value:header(value,packed.packed),parts:packed.parts};
         })));
         // Settle the bounded pair before propagating a failure. No packing
@@ -58,7 +59,7 @@ export function installRecordPartsDatabase(db:Dexie,threshold?:number){
         for(const item of batch)if(item.status==='rejected')throw item.reason;
         for(const item of batch)if(item.status==='fulfilled'){values.push(item.value.value);newParts.push(...item.value.parts);}
        }
-      }else for(const value of req.values){if(envelope(value))throw new StorageError('SAVE_FAILED','内部の分割記録を入力値として保存できません。');if(needsRecordParts(value,threshold)){const packed=await wait(req.trans,()=>packRecord(value,`${name}:${newId()}`,signals.get(req.trans)));values.push(header(value,packed.packed));newParts.push(...packed.parts);}else values.push(value);}
+      }else for(const value of req.values){if(envelope(value))throw new StorageError('SAVE_FAILED','内部の分割記録を入力値として保存できません。');if(needsRecordParts(value,threshold)){const packed=await wait(req.trans,()=>pack(value,`${name}:${newId()}`,signals.get(req.trans)));values.push(header(value,packed.packed));newParts.push(...packed.parts);}else values.push(value);}
       const finalRows=new Map<string,unknown>();values.forEach((value,index)=>{const key=req.keys?.[index]??table.schema.primaryKey.extractKey?.(value);finalRows.set(JSON.stringify(key),value);});const retainedScopes=new Set([...finalRows.values()].flatMap(value=>envelope(value)?[value[marker].scope]:[]));const retainedParts=newParts.filter(part=>retainedScopes.has(part.scope));
       if(retainedParts.length){const result=await parts.mutate({type:'add',trans:req.trans,values:retainedParts});if(result.numFailures)throw Object.values(result.failures)[0];}
       const result=await table.mutate({...req,values});if(result.numFailures){req.trans.abort();return result;}await discard(previous,req.trans);return result;

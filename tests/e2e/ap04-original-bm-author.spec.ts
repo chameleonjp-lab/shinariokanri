@@ -20,6 +20,32 @@ test('AT-B08 参加者未設定から二人の異なる役割とメモを登録�
   await clause('AT-B08', 'negative_or_edge', async () => {
     await expect(page.getByLabel('参加者1の役割', { exact: true })).toHaveValue('actor'); await expect(page.getByLabel('参加者2の役割', { exact: true })).toHaveValue('witness');
     await expect(page.getByLabel('参加者1の役割', { exact: true }).locator('option')).toContainText(['当事者', '目撃者', '言及される', '情報を得る', '独自の役割']);
+    // Exercise the distinct saved relationships on the same two-person given.
+    // An event role, including an author's hearsay note, never creates a
+    // knowledge assertion or acquisition effect on the author's behalf.
+    const roleObservations = [];
+    for (const role of ['mentioned', 'informed', 'custom'] as const) {
+      await page.getByLabel('参加者1の役割', { exact: true }).selectOption(role);
+      await page.locator('.editor-footer').getByRole('button', { name: '保存する', exact: true }).click();
+      await expect(page.locator('.editor-save-state')).toContainText('端末内保存済み');
+      let changed = await backup(page);
+      await openEntity(page, 'event', event.name);
+      if (role === 'custom') {
+        await editData(page, { ...findEntity(changed.project, event.id, 'event').data, authorNotes: textToRichText('伝聞だけで真相の知識を取得したとはしない。') });
+        changed = await backup(page); await openEntity(page, 'event', event.name);
+      }
+      const participants = findEntity(changed.project, event.id, 'event').data.participants;
+      expect(participants).toEqual([{ characterId: a.id, role }, { characterId: b.id, role: 'witness' }]);
+      expect(changed.project.entities.filter(entity => entity.kind === 'assertion' || entity.kind === 'effect')).toHaveLength(0);
+      await expect(page.getByLabel('参加者1の役割', { exact: true })).toHaveValue(role);
+      roleObservations.push({ role, participants, revision: changed.project.revision, inferredKnowledgeIds: [] });
+    }
+    await page.getByLabel('参加者1の役割', { exact: true }).selectOption('actor');
+    await page.locator('.editor-footer').getByRole('button', { name: '保存する', exact: true }).click();
+    await expect(page.locator('.editor-save-state')).toContainText('端末内保存済み');
+    const restoredRoles = await backup(page); await openEntity(page, 'event', event.name);
+    await editData(page, { ...findEntity(restoredRoles.project, event.id, 'event').data, authorNotes: textToRichText('目撃だけで真相を知ったとはしない。') });
+    await attachObservation(info, 'AT-B08-distinct-roles', { eventId: event.id, roleObservations, hearsay: 'explicit author note with custom role; not inferred knowledge' });
     await page.reload(); const saved = await backup(page), registered = findEntity(saved.project, event.id, 'event'); expect(registered.data.participants).toEqual([{ characterId: a.id, role: 'actor' }, { characterId: b.id, role: 'witness' }]); expect(registered.data.authorNotes?.[0].text).toBe('目撃だけで真相を知ったとはしない。'); expect(saved.project.entities.filter(e => e.kind === 'assertion')).toHaveLength(0); await attachObservation(info, 'AT-B08-observed', { eventId: event.id, participants: registered.data.participants, inferredKnowledgeIds: [] });
   });
 });

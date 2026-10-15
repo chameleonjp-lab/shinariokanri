@@ -7,6 +7,8 @@ type Node=(Atom|number)[];
 export interface RecordPart{key:string;scope:string;sequence:number;kind:'strings'|'nodes';bytes:Uint8Array;sha256:string}
 export interface PackedRecord{version:1;scope:string;root:Atom;nodes:number;strings:number;parts:{key:string;kind:RecordPart['kind'];bytes:number;sha256:string}[]}
 const MAX_PART=8*1024*1024,MAX_TOTAL=256*1024*1024,MAX_NODES=4_000_000;
+/** @internal The existing v1 total, also checked when repartitioning imports. */
+export const RECORD_PART_TOTAL_LIMIT=MAX_TOTAL;
 const invalid=():never=>{throw new StorageError('SAVE_FAILED','大きな履歴の分割記録が破損しています。既存データを保持しています。');};
 const generatedStringify=JSON.stringify,generatedDescriptor=Object.getOwnPropertyDescriptor,generatedPrototype=Object.getPrototypeOf;
 const generatedObjectPrototype=Object.prototype,generatedArrayPrototype=Array.prototype,generatedNumberPrototype=Number.prototype;
