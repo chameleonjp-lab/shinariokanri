@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { readFile } from 'node:fs/promises';
+import {readFile} from './downloadEvidence';
 import { createHash } from 'node:crypto';
 import { inspectScenario } from '../../src/storage/archive';
 import type { ProjectData } from '../../src/domain/types';

@@ -449,7 +449,9 @@ export async function inspectScenarioData(bytes: Uint8Array, options: InspectOpt
   if(declaredSync!==files.has('data/sync-recovery.json'))throw new StorageError('FORMAT_UNSUPPORTED','同期復元証跡には必須機能宣言が必要です。');
   const syncRecovery=declaredSync?await validateSyncRecovery(read('data/sync-recovery.json'),worldContents,options.signal):undefined;
   dictionary?.assertComplete();
-  const operationalImages = [...recoveryImages(recovery),...syncRecoveryImages(syncRecovery)];
+  // These wrappers are private. Capture their complete graphs so the metadata
+  // walker can share visits across already-frozen historic children as well.
+  const operationalImages = captureImmutablePlainData([...recoveryImages(recovery),...syncRecoveryImages(syncRecovery)]).value;
   const sharedReviews=hasSharedReviewSource([project,...operationalImages,...Object.values(worlds)]);
   if(sharedReviews!==(manifest.requiredFeatures?.includes('shared-review-source-v1')??false))throw new StorageError('FORMAT_UNSUPPORTED','共有指摘の出所には対応する必須機能宣言が必要です。');
   verifyWorlds([project, ...operationalImages, ...Object.values(worlds)], worlds);

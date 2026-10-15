@@ -1,4 +1,4 @@
-import { readFile } from 'node:fs/promises';
+import {readFile} from './downloadEvidence';
 import { exportScenario, inspectScenario } from '../../src/storage/archive';
 import { createEntity, createProject, textToRichText } from '../../src/domain/model';
 import { prepareAsset } from '../../src/domain/attachments';

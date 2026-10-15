@@ -1,5 +1,6 @@
 import {expect, test} from '@playwright/test';
-import {mkdir, readFile, writeFile} from 'node:fs/promises';
+import {mkdir, writeFile} from 'node:fs/promises';
+import {readFile} from './downloadEvidence';
 import {dirname} from 'node:path';
 import {platform, release} from 'node:os';
 import {createEntity, createProject, textToRichText} from '../../src/domain/model';
@@ -62,6 +63,11 @@ test('実Workerで復元検査中も画面が応答し、取消で既存デー�
     const post = Worker.prototype.postMessage, terminate = Worker.prototype.terminate;
     Worker.prototype.postMessage = function (message: any, transferOrOptions?: Transferable[] | StructuredSerializeOptions) {
       if (message?.type === 'import-work') observation.steps.push({step: message.work.step, at: performance.now()});
+      // The batched preparation keeps its graph in the native worker. Observe
+      // its real stage requests instead of requiring discarded graph transfers.
+      if (message?.type === 'new-import') this.addEventListener('message', event => {
+        if (event.data?.type === 'new-import-callback' && event.data.action === 'stage') observation.steps.push({step: event.data.input, at: performance.now()});
+      });
       return Reflect.apply(post, this, [message, transferOrOptions]);
     };
     Worker.prototype.terminate = function () { observation.terminations++; return terminate.call(this); };

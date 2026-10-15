@@ -2,7 +2,7 @@ import {expect, test} from '@playwright/test';
 import {createEntity, createProject, textToRichText} from '../../src/domain/model';
 import {exportScenario, inspectScenario} from '../../src/storage/archive';
 import {editorStateKey, editorTextFingerprint} from '../../src/ui/editorState';
-import {readFile} from 'node:fs/promises';
+import {readFile} from './downloadEvidence';
 
 test('a delayed saved cursor yields to a new text selection; invalid replacement stays atomic and can be corrected and cold-read', async ({page}) => {
   const project = createProject('カーソル復元中の新しい入力');

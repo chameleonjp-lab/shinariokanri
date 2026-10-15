@@ -1,4 +1,4 @@
-import { readFile } from 'node:fs/promises';
+import {readFile} from './downloadEvidence';
 import { expect, test, type Page } from '@playwright/test';
 import { createEntity, createProject, newId, textToRichText } from '../../src/domain/model';
 import { projectContent } from '../../src/domain/writingWorkspace';

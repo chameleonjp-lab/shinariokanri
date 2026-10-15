@@ -4,7 +4,7 @@ import { preparePartialCheckpoint } from '../../src/domain/checkpoints';
 import { pinTrialRecord, startTrial, stepTrial } from '../../src/domain/runtime';
 import { exportScenario, inspectScenario } from '../../src/storage/archive';
 import { pinChapterReadingRecord, presentNextChapterScene, startChapterReading } from '../../src/domain/presentation';
-import { readFile } from 'node:fs/promises';
+import {readFile} from './downloadEvidence';
 import { jsonBytes, sha256 } from '../../src/storage/json';
 async function navigate(page: Page, name: RegExp) { const menu = page.getByRole('button', { name: 'メニューを開く' }); if (await menu.isVisible()) await menu.click(); await page.locator('.sidebar').getByRole('button', { name }).first().click(); }
 async function fixture() {

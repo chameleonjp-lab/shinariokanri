@@ -11,6 +11,7 @@ import {FORMAT_VERSION, jsonBytes, sha256} from './json';
 import {StorageError} from './errors';
 import {createImportWorkWorkerRunner, freezeCapturedImportWork, runImportWork, runImportWorkForWorker, type ImportWork} from './importWork';
 import {createImportWorkSession} from './importWorkSession';
+import {runNewImportWork} from './newImportWork';
 import {ScenarioStore} from './store';
 import {captureImmutablePlainData, freezeCapturedPlainData, isImmutablePlainData} from '../domain/immutablePlainData';
 import {internImmutableRecords} from '../domain/internImmutableRecords';
@@ -21,6 +22,9 @@ class ControlledWorker {
   static instances: ControlledWorker[] = [];
   static automatic = false;
   messages: any[] = [];
+  workSteps: ImportWork['step'][] = [];
+  callbacks = new Map<number, (result: any) => void>();
+  nextCallback = 0;
   assets = new Map<number, {resolve: (bytes: Uint8Array | undefined) => void; reject: (cause: unknown) => void}>();
   nextAsset = 0;
   terminated = 0;
@@ -29,13 +33,29 @@ class ControlledWorker {
   constructor() { ControlledWorker.instances.push(this); }
   postMessage(message: any) {
     const captured = structuredClone(message); this.messages.push(captured);
+    if (captured.type === 'new-import-callback-result') {
+      const resolve = this.callbacks.get(captured.id); this.callbacks.delete(captured.id); resolve?.(captured.result); return;
+    }
+    if (captured.type === 'new-import' && ControlledWorker.automatic) {
+      const runner = createImportWorkWorkerRunner();
+      const ask = (action: string, input?: unknown): Promise<any> => new Promise(resolve => {
+        const id = ++this.nextCallback; this.callbacks.set(id, resolve);
+        this.emit(structuredClone({type: 'new-import-callback', requestId: captured.requestId, id, action, input}));
+      });
+      queueMicrotask(() => { void runNewImportWork(captured.input, {
+        stage: step => ask('stage', step), preview: () => ask('preview'), assets: () => ask('assets'), finalize: input => ask('finalize', input),
+      }, work => { this.workSteps.push(work.step); return runner.run(work); })
+        .then(result => this.emit({type: 'done', requestId: captured.requestId, result: structuredClone(result)}))
+        .catch(cause => this.emit({type: 'error', requestId: captured.requestId, error: {code: cause.code, message: cause.message, path: cause.path, issues: cause.issues}})); });
+      return;
+    }
     if (captured.type === 'import-asset') {
       const pending = this.assets.get(captured.id); this.assets.delete(captured.id);
       if (captured.error) pending?.reject(Object.assign(new StorageError(captured.error.code, captured.error.message, captured.error.path), {issues: captured.error.issues ?? []}));
       else pending?.resolve(captured.bytes);
       return;
     }
-    if (ControlledWorker.automatic) queueMicrotask(() => { void runImportWork(captured.work, undefined, hash => new Promise((resolve, reject) => {
+    if (ControlledWorker.automatic) queueMicrotask(() => { this.workSteps.push(captured.work.step); void runImportWork(captured.work, undefined, hash => new Promise((resolve, reject) => {
       const id = ++this.nextAsset; this.assets.set(id, {resolve, reject}); this.emit({type: 'asset', requestId: captured.requestId, id, hash});
     }))
       .then(result => this.emit({type: 'done', requestId: captured.requestId, result: structuredClone(result)}))
@@ -1250,7 +1270,9 @@ describe('worker checks before the unchanged atomic import transaction', () => {
   it('keeps history, pending intents and current text independent after clone and cold reload', async () => {
     const {saved, prepared} = await savedSource(), name = `worker-clone-cold-${newId()}`, destination = open(name);
     browser(true); const imported = await destination.importScenario(prepared, {mode: 'clone'});
-    const steps = ControlledWorker.instances.flatMap(worker => worker.messages.map(message => message.work.step));
+    const steps = ControlledWorker.instances.flatMap(worker => worker.workSteps);
+    expect(ControlledWorker.instances[0].messages.filter(message => message.type === 'new-import')).toHaveLength(1);
+    expect(ControlledWorker.instances[0].messages.some(message => message.type === 'import-work')).toBe(false);
     expect(steps).toEqual(['structure', 'recovery', 'ids', 'clone', 'map_recovery', 'hashes', 'integrity', 'structure', 'rehash_recovery', 'structure', 'integrity', 'recovery']);
     expect(ControlledWorker.instances.every(worker => worker.terminated === 1)).toBe(true);
     expect(Object.isFrozen(imported.project.history[0].after.entities[0])).toBe(true);

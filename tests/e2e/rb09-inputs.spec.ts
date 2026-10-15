@@ -1,5 +1,5 @@
 import {test,expect,type Page} from '@playwright/test';
-import {readFile} from 'node:fs/promises';
+import {readFile} from './downloadEvidence';
 import {readFileSync} from 'node:fs';
 import {createHttpContract,type HttpContract} from './httpContract';
 let endpoint='',contract:HttpContract|undefined;

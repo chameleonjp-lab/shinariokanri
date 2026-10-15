@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { createHash } from 'node:crypto';
-import { readFile } from 'node:fs/promises';
+import {readFile} from './downloadEvidence';
 import { inspectScenario, type PreparedScenario } from '../../src/storage/archive';
 
 const fixtureRoot = 'tests/fixtures/rb10-import-errors/';
