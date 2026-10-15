@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { createEntity, createProject, validateProject } from '../../src/domain/model';
 import { exportScenario } from '../../src/storage/archive';
+import { backup as completeBackup } from './ap04-original-helpers';
 
 async function navigate(page: Page, name: RegExp) {
   const menu = page.getByRole('button', { name: 'メニューを開く' });
@@ -128,6 +129,9 @@ test('AT-F02/F56 雛形の通常フォームを差分確認して適用し、非
   }
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
   await page.screenshot({ path: 'test-results/templates-normal-forms-390.png', fullPage: true });
+  const saved = await completeBackup(page), savedCharacter = saved.project.entities.find(entity => entity.kind === 'character' && entity.name === '名前だけの人物A');
+  expect(savedCharacter?.customValues.affiliation).toBe(0.001);
+  expect(saved.project.entities.find(entity => entity.kind === 'template' && entity.name === '人物の入力項目')).toMatchObject({ data: { fields: [expect.objectContaining({ key: 'affiliation', type: 'number', required: true, help: '人物の所属を選択してください。' })] } });
 });
 
 test('雛形の保存キーが一時的に重複しても各項目の初期値を保ち、再表示・改名・差分適用後も両方の値を保持する', async ({ page }) => {

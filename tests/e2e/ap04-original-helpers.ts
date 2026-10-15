@@ -4,6 +4,17 @@ import { createHash } from 'node:crypto';
 import { inspectScenario } from '../../src/storage/archive';
 
 const backupSequences = new WeakMap<TestInfo, number>();
+const outputSequences = new WeakMap<TestInfo, number>();
+
+/** Retain the actual purpose output, including its suggested filename. */
+export async function retainGeneratedOutput(bytes: Uint8Array, suggestedFileName: string, contentType = 'application/octet-stream') {
+  const info = test.info(), sequence = (outputSequences.get(info) ?? 0) + 1;
+  outputSequences.set(info, sequence);
+  const name = `output-${String(sequence).padStart(3, '0')}-${suggestedFileName.replace(/[\\/]/g, '_')}`;
+  await info.attach(name, { body: Buffer.from(bytes), contentType });
+  await attachObservation(info, name, { sequence, fileName: name, suggestedFileName,
+    fileBytes: bytes.length, fileSHA256: createHash('sha256').update(bytes).digest('hex') });
+}
 
 /** Also used by original cases with their own navigation/backup procedure. */
 export async function retainCompleteBackup(bytes: Uint8Array, suggestedFileName: string) {

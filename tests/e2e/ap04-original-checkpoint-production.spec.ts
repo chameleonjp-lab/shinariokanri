@@ -6,7 +6,7 @@ import { dialogueContentHash } from '../../src/domain/production';
 import { prepareAsset } from '../../src/domain/attachments';
 import { createWorldSnapshot } from '../../src/domain/world';
 import { exportScenario } from '../../src/storage/archive';
-import { attachGiven, attachObservation, authorFingerprint, backup, editData, navigate, openEntity, seed } from './ap04-original-helpers';
+import { attachGiven, attachObservation, authorFingerprint, backup, editData, navigate, openEntity, retainGeneratedOutput, seed } from './ap04-original-helpers';
 
 async function reader(page: Page) {
   await navigate(page, /^構成/);
@@ -124,7 +124,9 @@ async function assignedOutput(page: Page, profileId: string, assigneeId: string)
   await expect(artifact).toBeVisible();
   const pending = page.waitForEvent('download');
   await artifact.getByRole('button', { name: 'この内容を保存', exact: true }).click();
-  return JSON.parse(await readFile((await (await pending).path())!, 'utf8'));
+  const file = await pending, bytes = new Uint8Array(await readFile((await file.path())!));
+  await retainGeneratedOutput(bytes, file.suggestedFilename(), 'application/json');
+  return JSON.parse(new TextDecoder().decode(bytes));
 }
 
 test('AT-F23 確認済み翻訳と実音声を持つ原givenから、並替えのみと本文変更の担当別出力を比較する', async ({ page }, info) => {

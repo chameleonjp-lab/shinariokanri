@@ -8,7 +8,7 @@ import { forkAuthorAlternative } from '../../src/domain/writingWorkspace';
 import { sealAuthorAlternative } from '../../src/domain/authorAlternativeIntegrity';
 import { inspectScenario, exportScenario } from '../../src/storage/archive';
 import { ARCHIVE_LIMITS, canonicalJson } from '../../src/storage/json';
-import { attachGiven, attachObservation, backup, editData, navigate, openEntity, seed } from './ap04-original-helpers';
+import { attachGiven, attachObservation, backup, editData, navigate, openEntity, retainGeneratedOutput, seed } from './ap04-original-helpers';
 
 // Authored procedures have no acceptance credit. Physical Files and other
 // engines remain separate; the ten other safety bounds have companion entries.
@@ -26,7 +26,8 @@ async function outputFile(page: Page, filename: string) {
   await expect(artifact).toBeVisible();
   const pending = page.waitForEvent('download');
   await artifact.getByRole('button', { name: 'この内容を保存', exact: true }).click();
-  const bytes = await readFile((await (await pending).path())!);
+  const file = await pending, bytes = await readFile((await file.path())!);
+  await retainGeneratedOutput(bytes, file.suggestedFilename());
   return { bytes, content: bytes.toString('utf8'), sha256: hash(bytes) };
 }
 

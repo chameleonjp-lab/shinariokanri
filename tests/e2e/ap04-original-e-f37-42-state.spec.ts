@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import { createEntity, createProject, emptyValidity, newId, textToRichText } from '../../src/domain/model';
 import { attachObservation, authorFingerprint, backup, clause, editData, entity, findEntity, given, navigate, openEntity, production, publicProfile, reader, record, rejectData, runtimeFixture, start, stub } from './ap04-original-e-f37-50-helpers';
+import { retainGeneratedOutput } from './ap04-original-helpers';
 
 test('AT-F37 新しい作品の下書きから一つの生存enum・integer好感度・未設定booleanを宣言し、不正代入を拒否する', async ({ page }, info) => {
   const { p, entry, end } = runtimeFixture('AT-F37 新しい作品と下書き状態');
@@ -205,10 +206,10 @@ test('AT-F42 戦闘enum契約のstub経路とLinux受取例のactual証跡をID�
   await clause('AT-F42', 'when', async () => {
     await stub(page, contract.name, 'enum', '勝利'); await page.getByRole('button', { name: '進行規則に従って次へ', exact: true }).click(); await record(page);
     await navigate(page, /^作品・保存/); await page.getByRole('tab', { name: '目的別出力', exact: true }).click(); await page.getByLabel('出力する公開範囲', { exact: true }).selectOption(profile.id); await page.getByLabel('出力目的', { exact: true }).selectOption('runtime_json'); await page.getByRole('button', { name: '内容を検査・プレビュー', exact: true }).click(); await expect(page.locator('.export-result')).toContainText('runtime.json');
-    const download = page.waitForEvent('download'); await page.locator('.export-artifact').getByRole('button', { name: 'この内容を保存', exact: true }).click(); runtime = await readFile((await (await download).path())!);
+    const download = page.waitForEvent('download'); await page.locator('.export-artifact').getByRole('button', { name: 'この内容を保存', exact: true }).click(); const runtimeFile = await download; runtime = await readFile((await runtimeFile.path())!); await retainGeneratedOutput(runtime, runtimeFile.suggestedFilename(), 'application/json');
     const pkg = JSON.parse(runtime.toString()), game = await context.newPage(); await game.goto(new URL('examples/browser-game/index.html', page.url()).href); await game.getByLabel('ゲームが受け取るruntime.json', { exact: true }).setInputFiles({ name: 'runtime.json', mimeType: 'application/json', buffer: runtime });
     await game.getByLabel('ゲーム開始入口', { exact: true }).selectOption(pkg.publicToRuntime[entry.id]); await game.getByRole('button', { name: `ゲームで勝利 (${contract.id})`, exact: true }).click(); await game.getByRole('button', { name: '測定結果でゲームの物語を開始', exact: true }).click(); await game.getByRole('button', { name: 'ゲームの規則で次へ', exact: true }).click();
-    const actual = game.waitForEvent('download'); await game.getByRole('button', { name: '受領hash・実結果の証跡を保存', exact: true }).click(); receipt = await readFile((await (await actual).path())!); await game.close();
+    const actual = game.waitForEvent('download'); await game.getByRole('button', { name: '受領hash・実結果の証跡を保存', exact: true }).click(); const receiptFile = await actual; receipt = await readFile((await receiptFile.path())!); await retainGeneratedOutput(receipt, receiptFile.suggestedFilename(), 'application/json'); await game.close();
     await navigate(page, /^作品・保存/); await page.getByRole('tab', { name: '目的別出力', exact: true }).click();
     const handoff = page.locator('.game-handoff'); await handoff.locator('summary').click(); await handoff.getByLabel('受渡しの公開範囲', { exact: true }).selectOption(profile.id); await handoff.getByLabel('ゲームの受領証跡', { exact: true }).setInputFiles({ name: 'receipt.json', mimeType: 'application/json', buffer: receipt }); await handoff.getByRole('button', { name: '受領hash・ID対応・実結果を検証', exact: true }).click(); await expect(handoff).toContainText('実行証跡による分類 actual'); await handoff.getByRole('button', { name: '検証したゲーム受領を保存', exact: true }).click();
   });

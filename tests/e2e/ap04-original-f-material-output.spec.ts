@@ -6,7 +6,7 @@ import { prepareAsset } from '../../src/domain/attachments';
 import { createWorldSnapshot } from '../../src/domain/world';
 import { exportScenario, inspectScenario } from '../../src/storage/archive';
 import type { Entity, ProjectData } from '../../src/domain/types';
-import { attachGiven, attachObservation, authorFingerprint, backup, editData, navigate, openEntity, seed } from './ap04-original-helpers';
+import { attachGiven, attachObservation, authorFingerprint, backup, editData, navigate, openEntity, retainGeneratedOutput, seed } from './ap04-original-helpers';
 import { onePixelPng } from './ap04-original-f-assets';
 
 // Budget for multi-step UI/cold/file checks; original acceptance limits stay unchanged.
@@ -19,7 +19,8 @@ async function lightBackup(page: Page) {
   await page.getByRole('tab', { name: '完全保存・復元', exact: true }).click();
   const pending = page.waitForEvent('download');
   await page.getByRole('button', { name: '素材bytesを除いて保存', exact: true }).click();
-  const bytes = new Uint8Array(await readFile((await (await pending).path())!));
+  const file = await pending, bytes = new Uint8Array(await readFile((await file.path())!));
+  await retainGeneratedOutput(bytes, file.suggestedFilename(), 'application/zip');
   return { bytes, ...(await inspectScenario(bytes, { worker: false })) };
 }
 
@@ -39,7 +40,9 @@ async function outputBytes(page: Page, profile: 'reader' | 'playable_preview' | 
   await expect(artifact).toHaveCount(1);
   const pending = page.waitForEvent('download');
   await artifact.getByRole('button', { name: 'この内容を保存', exact: true }).click();
-  return new Uint8Array(await readFile((await (await pending).path())!));
+  const file = await pending, bytes = new Uint8Array(await readFile((await file.path())!));
+  await retainGeneratedOutput(bytes, file.suggestedFilename());
+  return bytes;
 }
 
 test('AT-F22 本文だけ/演出込みを切り替え、仮背景と欠落音楽を別表示し、素材差替えでも台詞IDを維持する', async ({ page }, info) => {
@@ -177,7 +180,13 @@ test('AT-F24 完全保存は作者メモ・没案・実添付を保ち、reader/
   const reader = strFromU8(await outputBytes(page, 'reader'));
   const playableFiles = unzipSync(await outputBytes(page, 'playable_preview'));
   const runtime = JSON.parse(strFromU8(await outputBytes(page, 'runtime_json')));
-  for (const outputText of [reader, ...Object.values(playableFiles).filter((_value, index) => !Object.keys(playableFiles)[index].startsWith('assets/')).map(bytes => strFromU8(bytes)), JSON.stringify(runtime)]) {
+  const production = JSON.parse(strFromU8(await outputBytes(page, 'production')));
+  expect(production.format).toBe('scenario-production');
+  expect(production.scenes.map((row: { id: string }) => row.id)).toEqual([scene.id]);
+  expect(production.assetBytesIncluded).toBe(true);
+  expect(new Uint8Array(Buffer.from(production.assetData[image.id].base64, 'base64'))).toEqual(imageBytes);
+  expect(new Uint8Array(Buffer.from(production.assetData[sound.id].base64, 'base64'))).toEqual(soundBytes);
+  for (const outputText of [reader, ...Object.values(playableFiles).filter((_value, index) => !Object.keys(playableFiles)[index].startsWith('assets/')).map(bytes => strFromU8(bytes)), JSON.stringify(runtime), JSON.stringify(production)]) {
     expect(outputText).not.toContain('作者だけの秘密メモ: 隠れた黒幕');
     expect(outputText).not.toContain('没案にだけある別結末。');
     expect(outputText).not.toContain(rejected.id);
@@ -384,7 +393,10 @@ test('AT-F25 公開版1から作者別案の新場面を作って没にし、別
   await expect(productionMarkdownArtifact).toHaveCount(1);
   const productionMarkdownDownload = page.waitForEvent('download');
   await productionMarkdownArtifact.getByRole('button', { name: 'この内容を保存', exact: true }).click();
-  const productionMarkdown = strFromU8(new Uint8Array(await readFile((await (await productionMarkdownDownload).path())!)));
+  const productionMarkdownFile = await productionMarkdownDownload;
+  const productionMarkdownBytes = new Uint8Array(await readFile((await productionMarkdownFile.path())!));
+  await retainGeneratedOutput(productionMarkdownBytes, productionMarkdownFile.suggestedFilename(), 'text/markdown');
+  const productionMarkdown = strFromU8(productionMarkdownBytes);
   const runtime = JSON.parse(strFromU8(await outputBytes(page, 'runtime_json')));
   expect(production.format).toBe('scenario-production');
   expect(JSON.stringify(production)).toContain('正本だけの制作本文。');
