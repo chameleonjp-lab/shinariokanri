@@ -1,0 +1,38 @@
+name: Retain candidate review evidence
+on:
+  pull_request:
+    paths:
+      - 'docs/quality/pr49-followup-2026-10-15/**'
+      - 'scripts/ci/retain_release_review.py'
+      - 'scripts/ci/test_retain_release_review.py'
+      - '.github/workflows/retain-release-review.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  retain-review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the review delivery
+        uses: actions/checkout@v4
+        with:
+          path: review
+          persist-credentials: false
+      - name: Read the immutable product target
+        id: select
+        run: python3 review/scripts/ci/retain_release_review.py select --review-root review >> "$GITHUB_OUTPUT"
+      - name: Check out the actual reviewed product
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.select.outputs.target }}
+          path: product
+          persist-credentials: false
+      - name: Verify source and retain the original release-checker result
+        run: python3 review/scripts/ci/retain_release_review.py retain --review-root review --product-root product --output review-artifact
+      - name: Retain the review record and provenance
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-evidence
+          path: review-artifact/
+          if-no-files-found: error
