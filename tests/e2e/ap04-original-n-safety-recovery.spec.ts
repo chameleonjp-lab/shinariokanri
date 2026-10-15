@@ -282,6 +282,8 @@ test('AT-N14 実完全保存を端末内正本も履歴もない空 context に�
     expect(cold.project.entities.find(entity => entity.id === variable.id)?.data).toEqual(variable.data);
     expect(cold.project.entities.find(entity => entity.id === asset.id)?.data).toEqual(asset.data);
     expect(cold.assets).toEqual(resumed.assets);
+    await info.attach('AT-N14-resumed-complete.scenario', { body: Buffer.from(resumed.bytes), contentType: 'application/zip' });
+    await info.attach('AT-N14-cold-complete.scenario', { body: Buffer.from(cold.bytes), contentType: 'application/zip' });
     // negative_or_edge: the recovery source is a downloaded file, not history
     // in the lost context. Separate-device/off-device retention remains blocked.
     await attachObservation(info, 'AT-N14-observation', { initialDurableRows: [[], [], [], [], [], []], externalFileSha256: sha256(external.bytes), resumedFileSha256: sha256(resumed.bytes), coldFileSha256: sha256(cold.bytes), coldRevision: cold.project.revision, originalGivenIds: p.entities.map(entity => entity.id).sort(), importedExternalIds: [...externalIds].sort(), importedParagraphId: externalBodyId, originalParagraphId: scene.data.body[0].id, editOperations: [externalEdit?.operationId, resumedEdit.operationId], resumedBaselineIds: resumed.project.entities.map(entity => entity.id).sort(), resumedReview: review, fullResumedBaselineEntities: resumed.project.entities, canonicalColdUnchanged: true, preservedEntityIds: cold.project.entities.map(entity => entity.id), preservedBlockId: actual.data.body[0].id, preservedAssetSha256: sha256(cold.assets[0].bytes), sourceWasDownloadedFile: true, physicalDeviceLossObserved: false, separateDeviceFileRetention: 'blocked_external_condition' });

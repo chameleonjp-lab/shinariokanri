@@ -1,6 +1,9 @@
 import { readFile } from 'node:fs/promises';
-import { inspectScenario } from '../../src/storage/archive';
+import { exportScenario, inspectScenario } from '../../src/storage/archive';
+import { createEntity, createProject, textToRichText } from '../../src/domain/model';
+import { prepareAsset } from '../../src/domain/attachments';
 import { test, expect, type Page } from '@playwright/test';
+import { attachGiven, attachObservation, backup, openEntity, seed } from './ap04-original-helpers';
 async function navigate(page: Page, name: RegExp) {
   const menu = page.getByRole('button', { name: 'メニューを開く' });
   if (await menu.isVisible()) await menu.click();
@@ -59,6 +62,102 @@ test('狭い画面で文章メモを場面へ変換し元メモと履歴を保�
   await navigate(page, /^資料/); await page.getByLabel('情報の種類', { exact: true }).selectOption('note');
   await expect(page.locator('.workspace-list')).toContainText('駅の思いつき');
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
+});
+
+test('AT-F01 文章・画像・音声の元メモと変換先のID・履歴・送信待ちを完全保存と空環境復元で保持する', async ({ page, browser, baseURL }, info) => {
+  // Local browser/file counterpart of the original given. Physical smartphone,
+  // PC and live two-device synchronization remain external acceptance conditions.
+  const project = createProject('AT-F01 文章・画像・音声メモ');
+  const imageBytes = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jN1kAAAAASUVORK5CYII=', 'base64');
+  const inputs = [await prepareAsset(imageBytes, '思いつき.png'),
+    await prepareAsset(new Uint8Array(await readFile('tests/fixtures/media/fixture-tone.wav')), '思いつき.wav')];
+  const attachments = inputs.map(({ bytes: _bytes, preview: _preview, ...metadata }) => createEntity(project.projectId, 'attachment', metadata.displayName, metadata));
+  const note = createEntity(project.projectId, 'note', '塔の鍵の思いつき', {
+    body: textToRichText('塔の鍵は鳥が持つ'), attachmentIds: attachments.map(attachment => attachment.id),
+  });
+  project.entities.push(note, ...attachments);
+  const fixture = await exportScenario(project, { loadAsset: hash => inputs.find(input => input.contentHash === hash)?.bytes });
+  await attachGiven(info, 'AT-F01', fixture, { noteId: note.id, attachmentIds: note.data.attachmentIds,
+    assets: inputs.map(input => ({ sha256: input.contentHash, bytes: input.bytes.length })),
+    physicalDevice: false, liveSynchronization: false });
+  await page.setViewportSize({ width: 390, height: 900 });
+  await seed(page, fixture);
+  const before = await backup(page);
+  await info.attach('AT-F01-before-conversion.scenario', { body: Buffer.from(before.bytes), contentType: 'application/zip' });
+  expect(before.project.entities).toEqual(project.entities);
+  expect(before.assets).toHaveLength(2);
+  for (const input of inputs) expect(before.assets.find(asset => asset.contentHash === input.contentHash)?.bytes).toEqual(input.bytes);
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await openEntity(page, 'note', note.name);
+  await page.getByLabel('変換先', { exact: true }).selectOption('scene');
+  await page.getByLabel('変換先の名前', { exact: true }).fill('塔の鍵を探す場面');
+  await page.getByRole('button', { name: '場面を作成して元メモを残す', exact: true }).click();
+  await expect(page.getByRole('complementary', { name: '場面の詳細' })).toBeVisible();
+  await page.getByRole('tab', { name: '本文', exact: true }).click();
+  await expect(page.getByLabel('本文', { exact: true })).toHaveValue('塔の鍵は鳥が持つ');
+  const converted = await backup(page);
+  await info.attach('AT-F01-converted-complete.scenario', { body: Buffer.from(converted.bytes), contentType: 'application/zip' });
+  const source = converted.project.entities.find(entity => entity.id === note.id);
+  const target = converted.project.entities.find(entity => entity.kind === 'scene' && entity.name === '塔の鍵を探す場面');
+  if (!source || source.kind !== 'note' || !target || target.kind !== 'scene') throw new Error('変換元または変換先がありません');
+  expect(source.data).toEqual({ ...note.data, convertedToIds: [target.id] });
+  expect(source.deletedAt).toBeUndefined();
+  expect(target.data.body.map(block => block.text)).toEqual(note.data.body.map(block => block.text));
+  expect(target.data.body.every(block => !note.data.body.some(original => original.id === block.id))).toBe(true);
+  const references = converted.project.relations.filter(relation => relation.fromId === note.id && relation.toId === target.id);
+  expect(references).toHaveLength(1);
+  expect(references[0]).toMatchObject({ relationType: 'reference', direction: 'forward' });
+  expect(converted.project.entities.filter(entity => entity.kind === 'attachment')).toEqual(attachments);
+  expect(converted.assets).toEqual(before.assets);
+  expect(converted.project.history.slice(0, before.project.history.length)).toEqual(before.project.history);
+  expect(converted.project.history).toHaveLength(before.project.history.length + 1);
+  const command = converted.project.history.at(-1)!;
+  expect(command.before.entities).toEqual(before.project.entities);
+  expect(command.before.relations).toEqual(before.project.relations);
+  expect(command.after.entities).toEqual(converted.project.entities);
+  expect(command.after.relations).toEqual(converted.project.relations);
+  expect(converted.recovery?.pending.map(item => item.operationId)).toContain(command.operationId);
+
+  await page.reload();
+  const cold = await backup(page);
+  await info.attach('AT-F01-cold-complete.scenario', { body: Buffer.from(cold.bytes), contentType: 'application/zip' });
+  expect(cold.project).toEqual(converted.project);
+  expect(cold.recovery).toEqual(converted.recovery);
+  expect(cold.assets).toEqual(converted.assets);
+  const context = await browser.newContext({ baseURL });
+  try {
+    const restoredPage = await context.newPage();
+    await seed(restoredPage, converted.bytes);
+    await restoredPage.reload();
+    const restored = await backup(restoredPage);
+    await info.attach('AT-F01-new-cold-complete.scenario', { body: Buffer.from(restored.bytes), contentType: 'application/zip' });
+    expect(restored.project).toEqual(converted.project);
+    expect(restored.recovery).toMatchObject({ version: 1, projectId: converted.project.projectId,
+      sourceRevision: converted.project.revision, serverRevision: converted.recovery!.serverRevision });
+    // A new import adds its own local pending audit. Every original pending
+    // command and its hash/origin must survive unchanged alongside that audit.
+    const originalPending = converted.recovery!.pending;
+    expect(restored.recovery!.pending.slice(0, originalPending.length)).toEqual(originalPending);
+    expect(restored.recovery!.pending).toHaveLength(originalPending.length + 1);
+    const importAudit = restored.recovery!.pending.at(-1)!;
+    expect(originalPending.some(item => item.operationId === importAudit.operationId)).toBe(false);
+    expect(importAudit.command).toMatchObject({ operationId: importAudit.operationId,
+      projectId: converted.project.projectId, reason: '専用ファイルをnewで復元',
+      before: { entities: [], relations: [] },
+      after: { entities: converted.project.entities, relations: converted.project.relations } });
+    expect(restored.assets).toEqual(converted.assets);
+    await openEntity(restoredPage, 'note', note.name);
+    await expect(restoredPage.locator('.notes-tools')).toContainText('思いつき.png');
+    await expect(restoredPage.locator('.notes-tools')).toContainText('思いつき.wav');
+    await openEntity(restoredPage, 'scene', target.name);
+    await restoredPage.getByRole('tab', { name: '本文', exact: true }).click();
+    await expect(restoredPage.getByLabel('本文', { exact: true })).toHaveValue('塔の鍵は鳥が持つ');
+    await attachObservation(info, 'AT-F01-local-observed', { noteId: note.id, targetId: target.id,
+      relationId: references[0].id, operationId: command.operationId,
+      originalBodyIds: note.data.body.map(block => block.id), convertedBodyIds: target.data.body.map(block => block.id),
+      pendingOperationIds: restored.recovery?.pending.map(item => item.operationId),
+      blockedConditions: ['physical smartphone and PC', 'live two-device synchronization'], originalWholeAcceptancePromotion: false });
+  } finally { await context.close(); }
 });
 
 test('短い文章メモの未保存入力を詳細パネルの閉じ直し後も保持する', async ({ page }) => {
