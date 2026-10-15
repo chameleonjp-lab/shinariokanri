@@ -9,7 +9,11 @@ const tables=new Set(['commands','outbox','recoveredPending','restorePoints','wo
 type Envelope=Record<string,unknown>&{__scenarioRecordParts:PackedRecord};
 const envelope=(value:unknown):value is Envelope=>!!value&&typeof value==='object'&&Object.hasOwn(value,marker);
 const signals=new WeakMap<object,AbortSignal>();
+const importPacking=new WeakSet<object>();
 export function bindRecordPartsSignal(signal?:AbortSignal){const transaction=Dexie.currentTransaction?.idbtrans;if(transaction&&signal)signals.set(transaction,signal);}
+/** Only an import's full command/pending rows share two packing workers.
+ * Each row still owns its complete v1 parts and the same native transaction. */
+export function bindRecordPartsImport(signal?:AbortSignal){bindRecordPartsSignal(signal);const transaction=Dexie.currentTransaction?.idbtrans;if(transaction)importPacking.add(transaction);}
 /** Native row limits are independent of the portable archive quotas. Every
  * part and its row share one IndexedDB transaction, including rollback and
  * legacy rows. Callers always receive the original complete value. */
@@ -39,7 +43,22 @@ export function installRecordPartsDatabase(db:Dexie,threshold?:number){
      if(req.type==='deleteRange')previous=(await table.query({trans:req.trans,values:true,query:{index:table.schema.primaryKey,range:req.range}})).result;
      if(req.type==='add'||req.type==='put'){
       const values:unknown[]=[],newParts:RecordPart[]=[];
-      for(const value of req.values){if(envelope(value))throw new StorageError('SAVE_FAILED','内部の分割記録を入力値として保存できません。');if(needsRecordParts(value,threshold)){const packed=await wait(req.trans,()=>packRecord(value,`${name}:${newId()}`,signals.get(req.trans)));values.push(header(value,packed.packed));newParts.push(...packed.parts);}else values.push(value);}
+      if(importPacking.has(req.trans)&&(name==='commands'||name==='recoveredPending')&&req.values.length>1){
+       // The importer submits row pairs, bounding additional live captures.
+       // Larger direct bulk requests still start at most two workers at once.
+       for(let index=0;index<req.values.length;index+=2){
+        const batch=await wait(req.trans,()=>Promise.allSettled(req.values.slice(index,index+2).map(async value=>{
+         if(envelope(value))throw new StorageError('SAVE_FAILED','内部の分割記録を入力値として保存できません。');
+         if(!needsRecordParts(value,threshold))return{value,parts:[] as RecordPart[]};
+         const packed=await packRecord(value,`${name}:${newId()}`,signals.get(req.trans));
+         return{value:header(value,packed.packed),parts:packed.parts};
+        })));
+        // Settle the bounded pair before propagating a failure. No packing
+        // worker outlives this request, including cancellation and rollback.
+        for(const item of batch)if(item.status==='rejected')throw item.reason;
+        for(const item of batch)if(item.status==='fulfilled'){values.push(item.value.value);newParts.push(...item.value.parts);}
+       }
+      }else for(const value of req.values){if(envelope(value))throw new StorageError('SAVE_FAILED','内部の分割記録を入力値として保存できません。');if(needsRecordParts(value,threshold)){const packed=await wait(req.trans,()=>packRecord(value,`${name}:${newId()}`,signals.get(req.trans)));values.push(header(value,packed.packed));newParts.push(...packed.parts);}else values.push(value);}
       const finalRows=new Map<string,unknown>();values.forEach((value,index)=>{const key=req.keys?.[index]??table.schema.primaryKey.extractKey?.(value);finalRows.set(JSON.stringify(key),value);});const retainedScopes=new Set([...finalRows.values()].flatMap(value=>envelope(value)?[value[marker].scope]:[]));const retainedParts=newParts.filter(part=>retainedScopes.has(part.scope));
       if(retainedParts.length){const result=await parts.mutate({type:'add',trans:req.trans,values:retainedParts});if(result.numFailures)throw Object.values(result.failures)[0];}
       const result=await table.mutate({...req,values});if(result.numFailures){req.trans.abort();return result;}await discard(previous,req.trans);return result;

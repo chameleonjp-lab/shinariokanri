@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { freezeCapturedPlainDataAsync, isImmutablePlainData } from './immutablePlainData';
+import { freezeCapturedPlainData, freezeCapturedPlainDataAsync, isImmutablePlainData } from './immutablePlainData';
 
 const privateGraph = () => {
   const shared = { text: '😀共有本文', values: [null, -0, true] };
@@ -33,7 +33,10 @@ describe('responsive immutability proof for private native export captures', () 
     expect(Object.isFrozen(untouched.child)).toBe(false);
   });
 
-  it('rejects unsafe language, active cycles and excess depth without reading accessors or partially freezing a safe prefix', async () => {
+  it.each([
+    ['synchronous private capture', freezeCapturedPlainData],
+    ['responsive private capture', freezeCapturedPlainDataAsync],
+  ] as const)('%s rejects unsafe language, active cycles and excess depth without reading accessors or partially freezing a safe prefix', async (_name, freeze) => {
     let reads = 0; const accessor = { get value() { reads++; return '作者のlive値'; } };
     const cyclic: { next?: unknown } = {}; cyclic.next = cyclic;
     const deep: Record<string, unknown> = {}; let cursor = deep;
@@ -41,11 +44,36 @@ describe('responsive immutability proof for private native export captures', () 
     const symbol = { [Symbol('unsupported')]: true }, nonEnumerable = Object.defineProperty({}, 'hidden', { value: 1 });
     for (const unsafe of [accessor, cyclic, deep, new Array(3), Object.assign([1], { extra: true }), new Date(), Object.create({ inherited: true }), symbol, nonEnumerable, { constructor: 'opaque' }]) {
       const safe = { child: { value: '😀未変更' } }, captured = { safe, unsafe };
-      expect(await freezeCapturedPlainDataAsync(captured)).toBe(false);
+      expect(await freeze(captured)).toBe(false);
       expect(Object.isFrozen(captured)).toBe(false); expect(Object.isFrozen(safe)).toBe(false); expect(Object.isFrozen(safe.child)).toBe(false);
     }
     expect(reads).toBe(0);
     const shared = { value: '共有するだけの非循環' };
-    expect(await freezeCapturedPlainDataAsync({ first: shared, second: shared })).toBe(true);
+    expect(await freeze({ first: shared, second: shared })).toBe(true);
+  });
+
+  it('preserves every own value, ordered image and shared identity when freezing a wide native capture', () => {
+    const metadata = Object.assign(Object.create(null), { present: undefined, zero: -0, label: '😀原文' });
+    const records = Array.from({ length: 20_000 }, (_, id) => ({ id, metadata }));
+    const later = records.slice(); later[19_999] = { id: 20_000, metadata };
+    const captured = { before: records, after: later, retained: records, metadata };
+    const keys = Object.keys(metadata);
+    expect(freezeCapturedPlainData(captured)).toBe(true);
+    expect(isImmutablePlainData(captured)).toBe(true);
+    expect(captured.before).toBe(captured.retained);
+    expect(captured.after).not.toBe(captured.before);
+    expect(captured.before.map(row => row.id)).toEqual(Array.from({ length: 20_000 }, (_, id) => id));
+    expect(captured.after.map(row => row.id)).toEqual([...Array.from({ length: 19_999 }, (_, id) => id), 20_000]);
+    expect(captured.after[0]).toBe(captured.before[0]);
+    expect(captured.after.at(-1)).not.toBe(captured.before.at(-1));
+    expect(captured.after.at(-1)!.metadata).toBe(captured.metadata);
+    expect(Object.getPrototypeOf(captured.metadata)).toBe(null);
+    expect(Object.keys(captured.metadata)).toEqual(keys);
+    expect(Object.hasOwn(captured.metadata, 'present')).toBe(true);
+    expect(captured.metadata.present).toBeUndefined();
+    expect(Object.is(captured.metadata.zero, -0)).toBe(true);
+    expect(captured.metadata.label).toBe('😀原文');
+    expect(Object.isFrozen(captured.before.at(-1))).toBe(true);
+    expect(Object.isFrozen(captured.after)).toBe(true);
   });
 });

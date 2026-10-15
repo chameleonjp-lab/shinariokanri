@@ -3,7 +3,7 @@ import {freezeCapturedPlainDataAsync} from '../domain/immutablePlainData';
 import {internImmutableRecordsAsync} from '../domain/internImmutableRecords';
 import {cloneProject as clonePrivateProject} from './clone';
 import {recordDiagnostic} from '../diagnostics';
-import {bindRecordPartsSignal,installRecordPartsDatabase} from './recordPartsDatabase';
+import {bindRecordPartsImport,bindRecordPartsSignal,installRecordPartsDatabase} from './recordPartsDatabase';
 import {validateColdRead,type ReadStage} from './readValidation';
 import {commandCommitted,commandMeasurementStart,readMeasured} from '../performance';
 import {validateSyncRecovery,syncRecoveryImages,type NativeSyncRecovery,type RetainedSyncRecovery} from './syncRecovery';
@@ -1428,7 +1428,7 @@ export class ScenarioStore {
       const point: RestorePoint | undefined = preview.target ? { id: newId(), projectId: preview.target.projectId, createdAt: now, reason: `専用ファイル${options.mode}の前の復元点`, project: preview.target, assetHashes: attachmentMetadata(preview.target).map(item => item.contentHash) } : undefined;
       options.onStage?.('commit');
       const result = await this.db.transaction('rw', this.writeTables, async () => {
-        bindRecordPartsSignal(options.signal);
+        bindRecordPartsImport(options.signal);
         checkCancelled(options.signal);
         if (await this.db.importLogs.get(operationId) || await this.db.outbox.get(operationId) || await this.db.commands.get(operationId)) throw new StorageError('OPERATION_CONFLICT', 'この読み込み操作IDは既に使われています。');
         const header = await this.db.projects.get(project.projectId);
@@ -1443,20 +1443,26 @@ export class ScenarioStore {
           await this.db.worlds.put(world);
         }
         await this.writeContent(project, preview.target); this.faultInjector?.('after-content');
+        let historyBatch: StoredCommand[] = [];
         for (const record of project.history) {
           const old = await this.db.commands.get(record.operationId);
           if (old && !sameJson(await this.materializeCommand(old), record)) throw new StorageError('OPERATION_CONFLICT', '読み込む履歴の操作IDが既存履歴と衝突しています。', record.operationId);
-          if (!old) await this.db.commands.add({ operationId: record.operationId, projectId: project.projectId, revision: record.revision, record });
+          if (!old) historyBatch.push({ operationId: record.operationId, projectId: project.projectId, revision: record.revision, record });
+          if (historyBatch.length === 2) { await this.db.commands.bulkAdd(historyBatch); historyBatch = []; }
         }
+        if (historyBatch.length) await this.db.commands.bulkAdd(historyBatch);
         this.faultInjector?.('after-history');
         const metadata = await this.db.syncMetadata.get(project.projectId);
         await this.db.outbox.add({ operationId, projectId: project.projectId, accountId: this.accountId, baseRevision: metadata?.serverRevision ?? '0', localRevision: project.revision, createdAt: now, targetIds: command.targetIds, changes, command });
         let recoveredSequence = (await this.listRecoveredPending(project.projectId)).reduce((maximum, row) => Math.max(maximum, row.sequence), -1) + 1;
+        let pendingBatch: RecoveredPendingIntent[] = [];
         for (const retained of recovery?.pending ?? []) {
           const row: RecoveredPendingIntent = { key: `${project.projectId}:${retained.operationId}`, projectId: project.projectId, importOperationId: operationId, sequence: recoveredSequence++, operation: retained, status: 'needs_reconnect' }, previous = await this.db.recoveredPending.get(row.key);
           if (previous && !equalJson(previous.operation, retained)) throw new StorageError('OPERATION_CONFLICT', '同じ送信待ち操作の復元内容が異なります。');
-          if (!previous) await this.db.recoveredPending.add(row);
+          if (!previous) pendingBatch.push(row);
+          if (pendingBatch.length === 2) { await this.db.recoveredPending.bulkAdd(pendingBatch); pendingBatch = []; }
         }
+        if (pendingBatch.length) await this.db.recoveredPending.bulkAdd(pendingBatch);
         for(const evidence of syncRecovery)await this.db.retainedSyncRecovery.put({key:`${project.projectId}:${evidence.contentHash}`,projectId:project.projectId,evidence,status:'needs_reconnect'});
         await this.db.syncMetadata.put({ projectId: project.projectId, serverRevision: metadata?.serverRevision ?? '0', state: 'pending' });
         await this.db.importLogs.add({ operationId, projectId: project.projectId, mode: options.mode, createdAt: now, ...(idMap ? { idMap } : {}) });

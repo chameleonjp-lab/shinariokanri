@@ -35,16 +35,41 @@ export function isImmutablePlainData(value: unknown): boolean {
 
 /** Call only on an already privately captured graph, never the author's input. */
 export function freezeCapturedPlainData<T>(value: T): boolean {
-  if (!plainGraph(value, false)) return false;
-  const freeze = (item: unknown): void => {
-    if (!item || typeof item !== 'object' || proven.has(item)) return;
-    for (const [key, descriptor] of Object.entries(Object.getOwnPropertyDescriptors(item))) {
-      if (Array.isArray(item) && key === 'length') continue;
-      freeze(descriptor.value);
-    }
-    Object.freeze(item); proven.add(item);
+  type Frame = { value: object; keys: (string | symbol)[]; index: number; depth: number; array: boolean };
+  const active = new WeakSet<object>(), complete = new WeakSet<object>(), frames: Frame[] = [], ordered: object[] = [];
+  const enter = (input: unknown, depth: number): boolean => {
+    if (depth > 128) return false;
+    if (input === null || typeof input !== 'object') return !['function', 'symbol', 'bigint'].includes(typeof input);
+    if (proven.has(input)) return true;
+    if (active.has(input)) return false;
+    if (complete.has(input)) return true;
+    const array = Array.isArray(input), prototype = Object.getPrototypeOf(input);
+    if (array ? prototype !== Array.prototype : prototype !== Object.prototype && prototype !== null) return false;
+    const keys = Reflect.ownKeys(input);
+    if (array && keys.length !== input.length + 1) return false;
+    active.add(input); frames.push({ value: input, keys, index: 0, depth, array });
+    return true;
   };
-  freeze(value); return true;
+  if (!enter(value, 0)) return false;
+  // Native worker messages contain many wide, shared historic arrays. Read
+  // each descriptor once instead of allocating a full descriptor map and a
+  // second entries array for every image. Keep the complete proof separate
+  // from freezing, so a late unsupported value leaves the safe prefix alone.
+  while (frames.length) {
+    const frame = frames.at(-1)!;
+    if (frame.index === frame.keys.length) {
+      frames.pop(); active.delete(frame.value); complete.add(frame.value); ordered.push(frame.value);
+    } else {
+      const key = frame.keys[frame.index++]!;
+      if (typeof key !== 'string' || ['__proto__', 'constructor', 'prototype'].includes(key)) return false;
+      if (frame.array && key === 'length') continue;
+      if (frame.array && (!/^(0|[1-9]\d*)$/.test(key) || Number(key) >= (frame.value as unknown[]).length)) return false;
+      const descriptor = Object.getOwnPropertyDescriptor(frame.value, key);
+      if (!descriptor?.enumerable || !Object.hasOwn(descriptor, 'value') || !enter(descriptor.value, frame.depth + 1)) return false;
+    }
+  }
+  for (const item of ordered) { Object.freeze(item); proven.add(item); }
+  return true;
 }
 
 /** The main thread owns a private database read image. Prove its entire
