@@ -5,33 +5,36 @@ export interface RelationLabelObstacle { left: number; top: number; right: numbe
 // Display geometry only. The original nodes, lines, and stored layout are inputs.
 export function layoutRelationLabels(inputs: readonly RelationLabelInput[], nodes: readonly RelationLabelObstacle[]) {
   const gap = 4, cellWidth = 128, cellHeight = 32, nearbyAttempts = 9, nearbyStep = 36;
-  const buckets = new Map<string, RelationLabelObstacle[]>();
+  const buckets = new Map<number, Map<number, RelationLabelObstacle[]>>();
   const labels = new Map<string, RelationLabelPosition>();
   let width = 0, height = 0, overflowBottom = 0;
-  const visitCells = (box: RelationLabelObstacle, visit: (key: string) => boolean) => {
-    for (let row = Math.floor(box.top / cellHeight); row <= Math.floor(box.bottom / cellHeight); row++) {
-      for (let column = Math.floor(box.left / cellWidth); column <= Math.floor(box.right / cellWidth); column++) {
-        if (visit(`${column}:${row}`)) return true;
-      }
-    }
-    return false;
-  };
   const padded = (box: RelationLabelObstacle): RelationLabelObstacle => ({ left: box.left - gap, top: box.top - gap, right: box.right + gap, bottom: box.bottom + gap });
   const reserve = (box: RelationLabelObstacle) => {
     width = Math.max(width, box.right + gap); height = Math.max(height, box.bottom + gap);
     const obstacle = padded(box);
-    visitCells(obstacle, key => { const items = buckets.get(key) ?? []; items.push(obstacle); buckets.set(key, items); return false; });
+    for (let row = Math.floor(obstacle.top / cellHeight); row <= Math.floor(obstacle.bottom / cellHeight); row++) {
+      let columns = buckets.get(row);
+      if (!columns) { columns = new Map(); buckets.set(row, columns); }
+      for (let column = Math.floor(obstacle.left / cellWidth); column <= Math.floor(obstacle.right / cellWidth); column++) {
+        const items = columns.get(column);
+        if (items) items.push(obstacle); else columns.set(column, [obstacle]);
+      }
+    }
   };
   const collides = (box: RelationLabelObstacle) => {
-    const candidate = padded(box), checked = new Set<RelationLabelObstacle>();
-    return visitCells(candidate, key => {
-      for (const obstacle of buckets.get(key) ?? []) {
-        if (checked.has(obstacle)) continue;
-        checked.add(obstacle);
-        if (candidate.left <= obstacle.right && candidate.right >= obstacle.left && candidate.top <= obstacle.bottom && candidate.bottom >= obstacle.top) return true;
+    const candidate = padded(box);
+    for (let row = Math.floor(candidate.top / cellHeight); row <= Math.floor(candidate.bottom / cellHeight); row++) {
+      const columns = buckets.get(row);
+      if (!columns) continue;
+      for (let column = Math.floor(candidate.left / cellWidth); column <= Math.floor(candidate.right / cellWidth); column++) {
+        // An obstacle may occur in several cells. Repeating its pure numeric
+        // overlap check avoids allocating a Set for every nearby candidate.
+        for (const obstacle of columns.get(column) ?? []) {
+          if (candidate.left <= obstacle.right && candidate.right >= obstacle.left && candidate.top <= obstacle.bottom && candidate.bottom >= obstacle.top) return true;
+        }
       }
-      return false;
-    });
+    }
+    return false;
   };
   for (const node of nodes) { reserve(node); overflowBottom = Math.max(overflowBottom, node.bottom); }
   // Every overflow slot lies below all nodes and every bounded nearby candidate.
