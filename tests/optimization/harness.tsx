@@ -18,7 +18,7 @@ const require=(condition:unknown)=>{if(!condition)throw new Error('Independent p
 const store=(name:string,onSaveMetrics?:(metrics:SaveMetrics)=>void)=>new ScenarioStore({databaseName:name,onSaveMetrics});
 async function observe<T>(task:()=>Promise<T>|T){
   const probe=startProbe(),started=performance.now();
-  try {const result=await task();return {result,milliseconds:performance.now()-started,probe:probe.stop()};}
+  try {const result=await task(),milliseconds=performance.now()-started;await probe.settle();return {result,milliseconds,probe:probe.stop()};}
   finally {probe.stop();}
 }
 const heap=()=>{const memory=(performance as unknown as {memory?:{usedJSHeapSize:number;totalJSHeapSize:number;jsHeapSizeLimit:number}}).memory;return memory?{used:memory.usedJSHeapSize,total:memory.totalJSHeapSize,limit:memory.jsHeapSizeLimit}:null;};
@@ -72,7 +72,7 @@ async function profile(size:'standard'|'large'){
           require(current!.entities.length===before.entities.length&&reader.getHistoryCount(current!)===reader.getHistoryCount(before)+1);
           require(current!.entities.find(e=>e.id===changed.id)!.id===changed.id);
           return {changedEntities:current!.entities.filter((e,i)=>e!==before.entities[i]).length,records:current!.entities.length+current!.relations.length};
-        });operations.push({operation,...measured,metrics:metrics.at(-1)});
+        });require((measured.probe.counters['db.write.committed.entities']??0)===1);require((measured.probe.counters['db.write.committed.commands']??0)===1);require((measured.probe.counters['db.write.committed.outbox']??0)===1);operations.push({operation,...measured,metrics:metrics.at(-1)});
       }
       const search=await observe(()=>{
         const character=current!.entities.find(e=>e.kind==='character')!;
@@ -113,9 +113,9 @@ const api={growth,profile,calibration,
     localStorage.setItem('scenario-last-project:guest',initial.projectId);
     createRoot(document.getElementById('root')!).render(<ScenarioStoreProvider store={uiStore}><App/></ScenarioStoreProvider>);
   },
-  uiReady(){const milliseconds=performance.now()-uiStart;probeDuration('ui.startup',milliseconds);return {milliseconds,probe:uiProbe!.stop()};},
+  async uiReady(){const milliseconds=performance.now()-uiStart;probeDuration('ui.startup',milliseconds);await uiProbe!.settle();return {milliseconds,probe:uiProbe!.stop()};},
   beginSave(){uiProbe=startProbe();uiStart=performance.now();},
-  saveVisible(){const milliseconds=performance.now()-uiStart;probeDuration('ui.save',milliseconds);return {milliseconds,probe:uiProbe!.stop()};},
+  async saveVisible(){const milliseconds=performance.now()-uiStart;probeDuration('ui.save',milliseconds);await uiProbe!.settle();return {milliseconds,probe:uiProbe!.stop()};},
   async cleanup(){uiProbe?.stop();await uiStore?.deleteDatabase();},
 };
 window.phase1=api;

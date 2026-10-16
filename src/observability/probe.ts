@@ -26,8 +26,8 @@ export type ProbeMetric = typeof metrics[number];
 export const PROBE_TABLES = ['projects', 'entities', 'relations', 'blocks', 'snapshots', 'commands', 'outbox', 'assets', 'views', 'viewStates', 'syncMetadata', 'acks', 'restorePoints', 'worlds', 'importLogs', 'importDrafts', 'authorToolDrafts', 'workspaceInputs', 'recoveredPending', 'retainedSyncRecovery', 'syncAssetAcks', 'syncBases', 'preparedSync', 'syncConflicts', 'syncAckEvidence', 'sharedSnapshots', 'recordParts'] as const;
 export type ProbeTable = typeof PROBE_TABLES[number];
 export interface ProbeEvent { sequence: number; phase: ProbePhase; milliseconds: number; outcome: 'ok' | 'error' }
-export interface ProbeSnapshot { version: 1; counters: Record<string, number>; events: ProbeEvent[]; droppedEvents: number }
-interface Capture { counters: Record<string, number>; events: ProbeEvent[]; droppedEvents: number; sequence: number }
+export interface ProbeSnapshot { version: 1; counters: Record<string, number>; events: ProbeEvent[]; droppedEvents: number; pendingTransactions: number }
+interface Capture { counters: Record<string, number>; events: ProbeEvent[]; droppedEvents: number; sequence: number; pending: Set<Promise<void>> }
 let active: Capture | undefined;
 const phaseSet = new Set<string>(PHASES), metricSet = new Set<string>(metrics), tableSet = new Set<string>(PROBE_TABLES);
 const clock = () => { try { return performance.now(); } catch { return 0; } };
@@ -36,10 +36,18 @@ export const probeEnabled = () => active !== undefined;
 /** A capture must be stopped explicitly; it never retains input objects or caller strings. */
 export function startProbe() {
   if (active) throw new Error('A numeric capture is already active');
-  const capture: Capture = { counters: Object.create(null), events: [], droppedEvents: 0, sequence: 0 };
+  const capture: Capture = { counters: Object.create(null), events: [], droppedEvents: 0, sequence: 0, pending: new Set() };
   active = capture;
-  const snapshot = (): ProbeSnapshot => ({ version: 1, counters: { ...capture.counters }, events: capture.events.map(row => ({ ...row })), droppedEvents: capture.droppedEvents });
-  return { snapshot, stop() { if (active === capture) active = undefined; return snapshot(); } };
+  const snapshot = (): ProbeSnapshot => ({ version: 1, counters: { ...capture.counters }, events: capture.events.map(row => ({ ...row })), droppedEvents: capture.droppedEvents, pendingTransactions: capture.pending.size });
+  return { snapshot, async settle() { while (capture.pending.size) await Promise.all([...capture.pending]); }, stop() { if (active === capture) active = undefined; return snapshot(); } };
+}
+/** Observation barriers wait only in the research caller, never inside a store transaction. */
+export function probeTransaction() {
+  const capture = active, count = probeCounter();
+  let resolve: (() => void) | undefined;
+  const pending = new Promise<void>(done => { resolve = done; });
+  capture?.pending.add(pending);
+  return { count, finish() { capture?.pending.delete(pending); resolve?.(); } };
 }
 function increment(capture: Capture | undefined, metric: ProbeMetric, value: number, table?: ProbeTable) {
   if (!capture || !metricSet.has(metric) || table !== undefined && !tableSet.has(table) || !Number.isFinite(value) || value < 0) return;

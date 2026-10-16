@@ -1,6 +1,6 @@
 import type Dexie from 'dexie';
 import type { DBCore } from 'dexie';
-import { PROBE_TABLES, probeEnabled, probeCount, probeCounter, probePayload, type ProbeTable } from './probe';
+import { PROBE_TABLES, probeEnabled, probeCount, probeCounter, probePayload, probeTransaction, type ProbeTable } from './probe';
 
 /** Below record-parts decoding. Counts native DBCore rows, including parts and
  * internal reads; direct IDB keep-alive requests and physical disk bytes are excluded. */
@@ -30,9 +30,12 @@ export function installDatabaseProbe(db: Dexie) {
           let transaction = transactions.get(req.trans);
           if (!transaction) {
             transaction = { writes: new Map() }; transactions.set(req.trans, transaction);
-            const writes = transaction.writes, native = req.trans as IDBTransaction;
-            native.addEventListener('complete', () => { count('db.transaction.committed'); for (const [table, rows] of writes) count('db.write.committed', rows, table); }, { once: true });
-            native.addEventListener('abort', () => { count('db.transaction.aborted'); for (const [table, rows] of writes) count('db.write.aborted', rows, table); }, { once: true });
+            const writes = transaction.writes, native = req.trans as IDBTransaction, barrier = probeTransaction();
+            // Browser microtask checkpoints may resolve Dexie's public promise
+            // before later native listeners. The research caller can settle the
+            // observation without adding any await to application persistence.
+            native.addEventListener('complete', () => { count('db.transaction.committed'); for (const [table, rows] of writes) count('db.write.committed', rows, table); barrier.finish(); }, { once: true });
+            native.addEventListener('abort', () => { count('db.transaction.aborted'); for (const [table, rows] of writes) count('db.write.aborted', rows, table); barrier.finish(); }, { once: true });
           }
           const writes = transaction.writes;
           return table.mutate(req).then(result => {

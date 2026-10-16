@@ -40,7 +40,7 @@ it('allows only fixed numeric dimensions, does not invoke accessors, and bounds 
 
 it('does not attribute a late operation or transaction callback to the next capture',()=>{
   capture=startProbe();const count=probeCounter(),finish=probeSpan('copy'),worker=probeWorkerStart('worker.read'),messages=probeWorkerMessages();capture.stop();capture=startProbe();
-  count('hash.calls');finish();worker();messages('received','private');expect(capture.stop()).toEqual({version:1,counters:{},events:[],droppedEvents:0});
+  count('hash.calls');finish();worker();messages('received','private');expect(capture.stop()).toEqual({version:1,counters:{},events:[],droppedEvents:0,pendingTransactions:0});
 });
 
 it('counts successful native writes separately from a rolled back transaction',async()=>{
@@ -51,7 +51,7 @@ it('counts successful native writes separately from a rolled back transaction',a
   const aborted=capture.stop();expect(await raw.table('syncMetadata').count()).toBe(0);
   expect(aborted.counters['db.write.succeeded.syncMetadata']).toBe(1);expect(aborted.counters['db.write.aborted.syncMetadata']).toBe(1);expect(sum(aborted,'db.write.committed.')).toBe(0);
   capture=startProbe();await raw.table('syncMetadata').put({projectId:'synthetic',serverRevision:'0',state:'pending'});
-  expect(capture.stop().counters['db.write.committed.syncMetadata']).toBe(1);
+  await capture.settle();expect(capture.stop().counters['db.write.committed.syncMetadata']).toBe(1);
 });
 
 it('preserves complete values, history, outbox and archives with capture on/off for one rename and dialogue edit',async()=>{
