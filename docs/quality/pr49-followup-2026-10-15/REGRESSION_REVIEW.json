@@ -1,0 +1,1044 @@
+{
+  "scope": "All6 original regression groups preserved verbatim. Component/UI evidence and unavailable actual OS/device conditions are distinguished; titles/counts are not full acceptance.",
+  "originalSource": {
+    "path": "docs/data/completion_acceptance.json",
+    "bytes": 139849,
+    "sha256": "f0d955342d5c130705481a751a0d84b2487c456ce4d7aea3f1aa169d37c6a18f"
+  },
+  "product": {
+    "commit": "1fcadcca703863873a57d297e83b1b184e63e778",
+    "tree": "8ac6e33a98455204aa265be5ce86ee5be168a97b",
+    "dirty": false,
+    "base": "/shinariokanri/",
+    "builtAt": "2026-10-15T19:13:47.594Z",
+    "versionHashScope": "sorted paths and bytes plus build info before version",
+    "version": "8ec3a03810bb0cf1b1b4"
+  },
+  "groups": [
+    {
+      "id": "RG-R01",
+      "original": {
+        "id": "RG-R01",
+        "finding_id": "R01",
+        "title": "本文注記の位置を保つ",
+        "batch_id": "RB01",
+        "requirements": [
+          "REQ-B10",
+          "REQ-F06",
+          "REQ-F21",
+          "REQ-N13"
+        ],
+        "given": "「アオが歩く。」のアオに人物リンク・ルビと伏線提示位置を設定した本文。",
+        "steps": [
+          "本文の先頭へ「昨日、」を追加し、保存→再読込→人物リンク→戻るを操作する。",
+          "前方削除、注記内部の置換、絵文字追加、段落分割/統合/移動、取消、入力変換途中を順に試す。"
+        ],
+        "expected": "リンクとルビはアオを指す。追跡不能な重なる変更は再リンク待ちとして明示し、別の文字へ黙って付かない。伏線/指摘位置、Block/Line対応も維持または理由付きの位置不明になる。",
+        "environments": [
+          "部品",
+          "通常本文フォーム",
+          "Chromium/Firefox/WebKit",
+          "実iPhone日本語入力はRB10で最終確認"
+        ],
+        "result": "not_run",
+        "evidence": [],
+        "status": "planned",
+        "depends_on": []
+      },
+      "reviewResult": "partial_local_passed_real_IME_not_run",
+      "authorSourceObservation": "元「アオが歩く。」のUnicode前方挿入・link/ruby/提示位置の通常UI。部品では前方削除・重なる置換のunresolved/元quote/target/read保持・split/merge/move/空段落/cue/固定参照/公開拒否まで全sourceを確認。同じ元seed関数と元first procedureをそのまま使う追加通常UIを準備。実iPhone日本語IMEは未提供。",
+      "procedureSources": [
+        {
+          "path": "tests/textEditing.test.ts",
+          "bytes": 23634,
+          "sha256": "3826ae3cc054d0d2dc5fdffe8b0f559cda2f24cdf0cc400d463ada0aa8381d2d",
+          "gitBlob": "cc80ff4ab5681dc65a97f4990934d23020a1ec89"
+        },
+        {
+          "path": "tests/e2e/editor-regressions.spec.ts",
+          "bytes": 8251,
+          "sha256": "51e36c326bf15964ed26f039a69b689a516e1b4d7fb7a548632297b8a4c09f6d",
+          "gitBlob": "51a00b6984758174bf7638acb2118e751368ad01"
+        },
+        {
+          "path": "tests/e2e/rb10-paged-editing.spec.ts",
+          "bytes": 47053,
+          "sha256": "5558ebd6de6ba5045abc502806e523b25cbffb957bb3f21fc4ddfa3468013c5b",
+          "gitBlob": "696eac629056a54ff3e06437bde9a9979ffd0bef"
+        },
+        {
+          "path": "src/ui/Fields.test.ts",
+          "bytes": 3342,
+          "sha256": "6faff6817a22b89854ecff28530abe60c8519a9abe7e1efd4cd8053eb3fb5e8a",
+          "gitBlob": "69d10f4bba685c720c8c3d09dc9a6335abd42321"
+        },
+        {
+          "path": "src/ui/TextAnnotations.test.ts",
+          "bytes": 2084,
+          "sha256": "ad04e135bda336197b8aa290a24528db8be3cd2b4d723ae09ef018c83a2d5fb5",
+          "gitBlob": "25a8921abb22004ea4bd5a326bcb00a7ae0fcbc2"
+        }
+      ],
+      "actualEvidence": [
+        {
+          "adjudication": "/workspace/pr49-checks/rg01-same-given-3ab6f40-attempt1/adjudicated-actual-attachments-attempt2/ADJUDICATION.json",
+          "changeImpact": "evidence/unaffected-local-3ab6-carry.json",
+          "testedProduct": {
+            "commit": "3ab6f40080754c4dec92ca8fc88c8049b278eede",
+            "tree": "dfaf863f32132f6137ce5c23e8b1141ea5d4772c",
+            "dirty": false,
+            "base": "/shinariokanri/",
+            "builtAt": "2026-10-15T15:58:45.723Z",
+            "versionHashScope": "sorted paths and bytes plus build info before version",
+            "version": "5476ab952776d316c609"
+          },
+          "checkpoints": 8,
+          "actualCompleteFiles": 8
+        },
+        {
+          "bundleManifest": "evidence/bundles/product-ci-1fcadcca.manifest.json",
+          "engine": "chromium",
+          "index": "ci-1fcadcca/case-evidence-chromium/index.json",
+          "source": {
+            "engine": "chromium",
+            "commit": "819b178f8d47048d3bc5aaa6988b67c220a71947",
+            "tree": "8ac6e33a98455204aa265be5ce86ee5be168a97b",
+            "pr_head": "1fcadcca703863873a57d297e83b1b184e63e778",
+            "run_id": "38792131626",
+            "attempt": 1
+          },
+          "tests": [
+            "d84feff4d703593b7d80-e9b180dc72b7ad840940",
+            "7d135221a3e7d99102b1-1d60e6f5e5aca8beed03",
+            "1e8f94a575be567f7ddd-65abd3227a81c2e6d9ea",
+            "0ea17ada973f851de7b4-e5f603fe4eaad0d257b8",
+            "0ea17ada973f851de7b4-8f28d5164df6dc5bda1f"
+          ]
+        },
+        {
+          "bundleManifest": "evidence/bundles/product-ci-1fcadcca.manifest.json",
+          "engine": "firefox",
+          "index": "ci-1fcadcca/case-evidence-firefox/index.json",
+          "source": {
+            "engine": "firefox",
+            "commit": "819b178f8d47048d3bc5aaa6988b67c220a71947",
+            "tree": "8ac6e33a98455204aa265be5ce86ee5be168a97b",
+            "pr_head": "1fcadcca703863873a57d297e83b1b184e63e778",
+            "run_id": "38792131626",
+            "attempt": 1
+          },
+          "tests": [
+            "d84feff4d703593b7d80-5c81fa077552445c340c",
+            "7d135221a3e7d99102b1-e6accedfb4c133f8a1a4",
+            "1e8f94a575be567f7ddd-b9db1d1a24cc6c49f8d6",
+            "0ea17ada973f851de7b4-623f26084166e89137cb",
+            "0ea17ada973f851de7b4-75c6ce6240488f83ea0d"
+          ]
+        },
+        {
+          "bundleManifest": "evidence/bundles/product-ci-1fcadcca.manifest.json",
+          "engine": "webkit",
+          "index": "ci-1fcadcca/case-evidence-webkit/index.json",
+          "source": {
+            "engine": "webkit",
+            "commit": "819b178f8d47048d3bc5aaa6988b67c220a71947",
+            "tree": "8ac6e33a98455204aa265be5ce86ee5be168a97b",
+            "pr_head": "1fcadcca703863873a57d297e83b1b184e63e778",
+            "run_id": "38792131626",
+            "attempt": 1
+          },
+          "tests": [
+            "d84feff4d703593b7d80-5d5cfb16863ed850b629",
+            "7d135221a3e7d99102b1-7337c942472d31cb0457",
+            "1e8f94a575be567f7ddd-76998a79be0abb9f0a46",
+            "0ea17ada973f851de7b4-c8278a26942fb6e524c9",
+            "0ea17ada973f851de7b4-02c09a675884e8039f9a"
+          ]
+        }
+      ],
+      "limitation": "実iPhone日本語IME未実施",
+      "authorCurrentObservation": {
+        "at": "2026-10-15T23:50:16.479456+00:00",
+        "observation": "現行3engineの原UIとunit、旧3ab6の同Given追加8実ファイルを明示した無影響引継ぎで確認。アオ/昨日、/CP4..6/前削除/重なりunresolved/split/merge/move/undoとlink/ruby/cueを保持。実iPhone日本語IMEは未実施。",
+        "scope": "Original exact unit fixtures plus ordinary UI/actual outputs composed explicitly; current execution identities remain separate from local product build and named historical carry."
+      }
+    },
+    {
+      "id": "RG-R02",
+      "original": {
+        "id": "RG-R02",
+        "finding_id": "R02",
+        "title": "提示済み回収の手掛かり不足を見逃さない",
+        "batch_id": "RB01",
+        "requirements": [
+          "REQ-B19",
+          "REQ-F44",
+          "REQ-F45"
+        ],
+        "given": "開示可能=trueで提示する回収が、提示後に開示可能=falseへ変更される。必須手掛かりを飛ばす経路と見る経路がある。",
+        "steps": [
+          "手掛かりを飛ばして回収を提示し、経路の伏線確認を行う。",
+          "条件を変える効果なし、初期提示、巻戻、経路保存/再生でも実行し、RB05では全経路探索に同じ検査を接続する。"
+        ],
+        "expected": "提示された事実とその時の条件結果から不足と根拠経路を示す。後の値で回収を検査対象から外さない。任意手掛かり/代替情報は作者指定に沿って扱う。",
+        "environments": [
+          "部品",
+          "試読フォーム",
+          "全経路探索はRB05"
+        ],
+        "result": "not_run",
+        "evidence": [],
+        "status": "planned",
+        "depends_on": []
+      },
+      "reviewResult": "passed_local_original_conditions",
+      "authorSourceObservation": "元condition=trueの回収がknowledgeEffectsでfalseになる同じ構造のwith/without effect・initial・Back/replay/完全archive/旧optional field・改変presentation拒否をfull sourceで確認。有限探索と任意/代替手掛かりは関連sourceも照合。全CI unitとUI実結果への対応待ち。",
+      "procedureSources": [
+        {
+          "path": "tests/runtime-regressions.test.ts",
+          "bytes": 20734,
+          "sha256": "0155a55e0d7c3a82632f2d95d116c0b537afe92787a7936e0ff34e59334d01b3",
+          "gitBlob": "60e84606bd3d19682a9b762b7b213529b4850775"
+        },
+        {
+          "path": "tests/rb05-state-exploration.test.ts",
+          "bytes": 7892,
+          "sha256": "c9420d6513df02794684d581f0b3d1269b5422ee9d8ce7e966d7ee0a8b6b7cbd",
+          "gitBlob": "3157ccdafd565f444307e2104c31b6f9ca0bdfbd"
+        },
+        {
+          "path": "tests/rb05-narrative.test.ts",
+          "bytes": 20316,
+          "sha256": "80f6ffc56bd5272bf91c212011c7be6251c83a7434c23d740f76410c42f638de",
+          "gitBlob": "35150deb51b2636aa230f188d655b41d6bf679c9"
+        },
+        {
+          "path": "tests/e2e/ap04-original-e-f43-47-narrative.spec.ts",
+          "bytes": 26227,
+          "sha256": "9a6e3ad36bc91b0c73971fae542a999c4fe8523daafd2ec3fe941746d3526bd9",
+          "gitBlob": "56ffa9582823bc7576584674b41be3a7b1ff800d"
+        }
+      ],
+      "actualEvidence": [
+        {
+          "bundleManifest": "evidence/bundles/product-ci-1fcadcca.manifest.json",
+          "engine": "chromium",
+          "index": "ci-1fcadcca/case-evidence-chromium/index.json",
+          "source": {
+            "engine": "chromium",
+            "commit": "819b178f8d47048d3bc5aaa6988b67c220a71947",
+            "tree": "8ac6e33a98455204aa265be5ce86ee5be168a97b",
+            "pr_head": "1fcadcca703863873a57d297e83b1b184e63e778",
+            "run_id": "38792131626",
+            "attempt": 1
+          },
+          "tests": [
+            "d90085545e2512d4b041-1ee2169f6b719a952fec",
+            "d90085545e2512d4b041-f413311be32212190e20",
+            "d90085545e2512d4b041-8f788872354e6f55bc98",
+            "82540d3fe02693e171d3-887c9301662d3bdeb45d",
+            "82540d3fe02693e171d3-7ab9486c1f9757680290",
+            "82540d3fe02693e171d3-709c3889946c6e0b5afd",
+            "82540d3fe02693e171d3-03dc040ab2eea43cea06",
+            "82540d3fe02693e171d3-a860331d3e5e45a1af64"
+          ]
+        },
+        {
+          "bundleManifest": "evidence/bundles/product-ci-1fcadcca.manifest.json",
+          "engine": "firefox",
+          "index": "ci-1fcadcca/case-evidence-firefox/index.json",
+          "source": {
+            "engine": "firefox",
+            "commit": "819b178f8d47048d3bc5aaa6988b67c220a71947",
+            "tree": "8ac6e33a98455204aa265be5ce86ee5be168a97b",
+            "pr_head": "1fcadcca703863873a57d297e83b1b184e63e778",
+            "run_id": "38792131626",
+            "attempt": 1
+          },
+          "tests": [
+            "d90085545e2512d4b041-ffebd8f20be89f55634a",
+            "d90085545e2512d4b041-5895ab8f73eab9991390",
+            "d90085545e2512d4b041-91254427439316a22fe6",
+            "82540d3fe02693e171d3-5a992d65d5bc57cea1a5",
+            "82540d3fe02693e171d3-71a2d82110e7556ddd29",
+            "82540d3fe02693e171d3-a512754983293df358a1",
+            "82540d3fe02693e171d3-6b4764bcdd2a10cfb942",
+            "82540d3fe02693e171d3-59e0f4e1edd7bf073c5a"
+          ]
+        },
+        {
+          "bundleManifest": "evidence/bundles/product-ci-1fcadcca.manifest.json",
+          "engine": "webkit",
+          "index": "ci-1fcadcca/case-evidence-webkit/index.json",
+          "source": {
+            "engine": "webkit",
+            "commit": "819b178f8d47048d3bc5aaa6988b67c220a71947",
+            "tree": "8ac6e33a98455204aa265be5ce86ee5be168a97b",
+            "pr_head": "1fcadcca703863873a57d297e83b1b184e63e778",
+            "run_id": "38792131626",
+            "attempt": 1
+          },
+          "tests": [
+            "d90085545e2512d4b041-8db93349fa3d69f8611e",
+            "d90085545e2512d4b041-320ae7f99212be602959",
+            "d90085545e2512d4b041-9e83ea9beef36f3e0064",
+            "82540d3fe02693e171d3-a6b94c7e0a1f82c4e583",
+            "82540d3fe02693e171d3-d4509595a49c75994dc5",
+            "82540d3fe02693e171d3-94dbc641ab9685bc0fe6",
+            "82540d3fe02693e171d3-69a5625412fff9f600e4",
+            "82540d3fe02693e171d3-c94088d385d1a392e3f6"
+          ]
+        },
+        {
+          "bundleManifest": "evidence/bundles/product-ci-1fcadcca.manifest.json",
+          "unitWitness": "ci-1fcadcca/unit-execution-index-attempt2.json",
+          "originalFileBindings": "authorActualUnitObservation.files"
+        },
+        {
+          "bundleManifest": "evidence/bundles/additional-original-regressions-1fcadcca.manifest.json",
+          "actualAdjudication": "rg02-rg03-same-given-1fcadcca-attempt1/ADJUDICATION.json",
+          "scope": "Exact original function bytes produce unchanged given; additional ordinary UI six cases each, actual30 complete archive inputs/outputs retained."
+        }
+      ],
+      "limitation": null,
+      "authorActualUnitObservation": {
+        "at": "2026-10-15T20:58:54.896942+00:00",
+        "testedProduct": {
+          "commit": "1fcadcca703863873a57d297e83b1b184e63e778",
+          "tree": "8ac6e33a98455204aa265be5ce86ee5be168a97b",
+          "dirty": false,
+          "base": "/shinariokanri/",
+          "builtAt": "2026-10-15T19:13:47.594Z",
+          "versionHashScope": "sorted paths and bytes plus build info before version",
+          "version": "8ec3a03810bb0cf1b1b4"
+        },
+        "actualCI": {
+          "commit": "819b178f8d47048d3bc5aaa6988b67c220a71947",
+          "tree": "8ac6e33a98455204aa265be5ce86ee5be168a97b",
+          "pr_head": "1fcadcca703863873a57d297e83b1b184e63e778",
+          "run_id": "38792131626",
+          "attempt": 1
+        },
+        "witness": "/workspace/pr49-checks/ci-1fcadcca/unit-execution-index-attempt2.json",
+        "actualDecodedLog": {
+          "path": "unit.log",
+          "bytes": 217833,
+          "sha256": "30b88418fd9dd786a44ce2b32b5ab8f0ccb6a8dc06b438bc4019f584f9572b7b"
+        },
+        "files": [
+          {
+            "path": "tests/runtime-regressions.test.ts",
+            "passedFileTests": 26,
+            "actualLogLineNumber": 1592,
+            "actualLogLine": "2026-10-15T19:19:17.6776527Z  \u001b[32m✓\u001b[39m tests/runtime-regressions.test.ts \u001b[2m(\u001b[22m\u001b[2m26 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 354\u001b[2mms\u001b[22m\u001b[39m",
+            "sealedProcedure": {
+              "path": "tests/runtime-regressions.test.ts",
+              "bytes": 20734,
+              "sha256": "0155a55e0d7c3a82632f2d95d116c0b537afe92787a7936e0ff34e59334d01b3",
+              "gitBlob": "60e84606bd3d19682a9b762b7b213529b4850775"
+            }
+          },
+          {
+            "path": "tests/rb05-state-exploration.test.ts",
+            "passedFileTests": 5,
+            "actualLogLineNumber": 1790,
+            "actualLogLine": "2026-10-15T19:24:38.1099216Z  \u001b[32m✓\u001b[39m tests/rb05-state-exploration.test.ts \u001b[2m(\u001b[22m\u001b[2m5 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 93\u001b[2mms\u001b[22m\u001b[39m",
+            "sealedProcedure": {
+              "path": "tests/rb05-state-exploration.test.ts",
+              "bytes": 7892,
+              "sha256": "c9420d6513df02794684d581f0b3d1269b5422ee9d8ce7e966d7ee0a8b6b7cbd",
+              "gitBlob": "3157ccdafd565f444307e2104c31b6f9ca0bdfbd"
+            }
+          },
+          {
+            "path": "tests/rb05-narrative.test.ts",
+            "passedFileTests": 12,
+            "actualLogLineNumber": 1593,
+            "actualLogLine": "2026-10-15T19:19:17.9737848Z  \u001b[32m✓\u001b[39m tests/rb05-narrative.test.ts \u001b[2m(\u001b[22m\u001b[2m12 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 128\u001b[2mms\u001b[22m\u001b[39m",
+            "sealedProcedure": {
+              "path": "tests/rb05-narrative.test.ts",
+              "bytes": 20316,
+              "sha256": "80f6ffc56bd5272bf91c212011c7be6251c83a7434c23d740f76410c42f638de",
+              "gitBlob": "35150deb51b2636aa230f188d655b41d6bf679c9"
+            }
+          }
+        ],
+        "authoredObservation": "原sourceの提示時条件true→提示後false、効果なし、初期提示、Back/replay、任意/代替、全入口有限探索を確認したunitファイルが実CIで全assert完了。後値で提示済み回収を除外しない条件を保持。今回の通常UI実結果とraw添付の照合は別途完了させる。",
+        "wholeGroupPromotion": false
+      },
+      "authorCurrentObservation": {
+        "at": "2026-10-15T23:50:16.479456+00:00",
+        "observation": "原runtime-regressions fixtureの提示時true→効果後false、効果なし、手掛かり有無・初期提示/Back/replay/旧optional fields/改変拒否を実unit26件内で確認。有限探索5件と元rb05-narrative12件が成功。現行B19/F45の通常試読・保存trace/実解析JSONと照合し、任意/代替を必須へ換算せず後値で提示済回収を除外しない。 追加通常UIでは元fixture関数を一字も変えず、R02の条件変更有無×skip/via/initial6件とR03の3policy×単独/混合6件を実行。実30archiveと正常UI結果を別途保持。",
+        "scope": "Original exact unit fixtures plus ordinary UI/actual outputs composed explicitly; current execution identities remain separate from local product build and named historical carry."
+      }
+    },
+    {
+      "id": "RG-R03",
+      "original": {
+        "id": "RG-R03",
+        "finding_id": "R03",
+        "title": "不採用効果を原子的に拒否する",
+        "batch_id": "RB01",
+        "requirements": [
+          "REQ-B14",
+          "REQ-F25",
+          "REQ-N19"
+        ],
+        "given": "有効な分岐が不採用効果を参照し、同じ操作内に別の正しい効果もある。",
+        "steps": [
+          "単独/複数効果、manual_choice/first_match/all_match、開示/再利用から実行する。",
+          "巻戻・保存経路再生・公開/簡易体験出力からも同じ採用状態規則を確認する。"
+        ],
+        "expected": "不採用参照を説明付きで拒否し、変数・物品・知識・既読・once・乱数・履歴・進行位置を部分更新しない。出力は除外または未対応参照として説明付き停止する。",
+        "environments": [
+          "部品",
+          "試読フォーム",
+          "出力"
+        ],
+        "result": "not_run",
+        "evidence": [],
+        "status": "planned",
+        "depends_on": []
+      },
+      "reviewResult": "passed_local_original_conditions",
+      "authorSourceObservation": "manual_choice/first_match/all_match各単独/混合で変数・物品・知識・once・rng・履歴・trace・位置のidentity不変。再利用/開示/固定経路replayとruntime/playable生成前拒否までfull source確認。局所runtimeと外部実ゲームを混同しない。",
+      "procedureSources": [
+        {
+          "path": "tests/runtime-regressions.test.ts",
+          "bytes": 20734,
+          "sha256": "0155a55e0d7c3a82632f2d95d116c0b537afe92787a7936e0ff34e59334d01b3",
+          "gitBlob": "60e84606bd3d19682a9b762b7b213529b4850775"
+        },
+        {
+          "path": "tests/e2e/ap04-original-bm-runtime.spec.ts",
+          "bytes": 13712,
+          "sha256": "33b4c6fae1ce35c7af2d9d17422409783a441f83ab2e447c5c060dd148e45c31",
+          "gitBlob": "0ea077d2b76879f30f1f86cd711e380e42908454"
+        }
+      ],
+      "actualEvidence": [
+        {
+          "bundleManifest": "evidence/bundles/product-ci-1fcadcca.manifest.json",
+          "engine": "chromium",
+          "index": "ci-1fcadcca/case-evidence-chromium/index.json",
+          "source": {
+            "engine": "chromium",
+            "commit": "819b178f8d47048d3bc5aaa6988b67c220a71947",
+            "tree": "8ac6e33a98455204aa265be5ce86ee5be168a97b",
+            "pr_head": "1fcadcca703863873a57d297e83b1b184e63e778",
+            "run_id": "38792131626",
+            "attempt": 1
+          },
+          "tests": [
+            "6aee588f67dda7685314-57c1d23c0ce6e275ecc7",
+            "6aee588f67dda7685314-f8ef72d157fb7598c3c9",
+            "6aee588f67dda7685314-cea086d4e43274ffc749",
+            "beae254e6c5eb39e4bd3-4aea132981ec0a5ceb5e",
+            "beae254e6c5eb39e4bd3-cf26d6d355f98ab30b4a",
+            "06bfa53201fc6d884cac-b0baea7a4c14be302529",
+            "06bfa53201fc6d884cac-b7b782d6c5d000297821",
+            "56ccbfbaeb4b5e45ed6d-ba263e53a049b13b7399"
+          ]
+        },
+        {
+          "bundleManifest": "evidence/bundles/product-ci-1fcadcca.manifest.json",
+          "engine": "firefox",
+          "index": "ci-1fcadcca/case-evidence-firefox/index.json",
+          "source": {
+            "engine": "firefox",
+            "commit": "819b178f8d47048d3bc5aaa6988b67c220a71947",
+            "tree": "8ac6e33a98455204aa265be5ce86ee5be168a97b",
+            "pr_head": "1fcadcca703863873a57d297e83b1b184e63e778",
+            "run_id": "38792131626",
+            "attempt": 1
+          },
+          "tests": [
+            "6aee588f67dda7685314-3bd5b4423480a5178b31",
+            "6aee588f67dda7685314-ab39fe0237f99f38252b",
+            "6aee588f67dda7685314-f170aa734955ef076ce1",
+            "beae254e6c5eb39e4bd3-81622ede3eda7a37fd94",
+            "beae254e6c5eb39e4bd3-62886fdead305d78fcec",
+            "06bfa53201fc6d884cac-6a9cb81593b41cb26efe",
+            "06bfa53201fc6d884cac-56d998e2ba50d30a5b1d",
+            "56ccbfbaeb4b5e45ed6d-723ea1473d84c564c7a2"
+          ]
+        },
+        {
+          "bundleManifest": "evidence/bundles/product-ci-1fcadcca.manifest.json",
+          "engine": "webkit",
+          "index": "ci-1fcadcca/case-evidence-webkit/index.json",
+          "source": {
+            "engine": "webkit",
+            "commit": "819b178f8d47048d3bc5aaa6988b67c220a71947",
+            "tree": "8ac6e33a98455204aa265be5ce86ee5be168a97b",
+            "pr_head": "1fcadcca703863873a57d297e83b1b184e63e778",
+            "run_id": "38792131626",
+            "attempt": 1
+          },
+          "tests": [
+            "6aee588f67dda7685314-3b5aa3ed4292b506aa55",
+            "6aee588f67dda7685314-4dd501623a1d5c574654",
+            "6aee588f67dda7685314-53ae6cc208f703b8480e",
+            "beae254e6c5eb39e4bd3-9d3a3dbf8e5b0a062248",
+            "beae254e6c5eb39e4bd3-d79eac2863ccaa16a107",
+            "06bfa53201fc6d884cac-a991b4f1000e4c608cf2",
+            "06bfa53201fc6d884cac-5f22b87ee9dca40318bf",
+            "56ccbfbaeb4b5e45ed6d-c3411c8f93b94b44889e"
+          ]
+        },
+        {
+          "bundleManifest": "evidence/bundles/product-ci-1fcadcca.manifest.json",
+          "unitWitness": "ci-1fcadcca/unit-execution-index-attempt2.json",
+          "originalFileBindings": "authorActualUnitObservation.files"
+        },
+        {
+          "bundleManifest": "evidence/bundles/additional-original-regressions-1fcadcca.manifest.json",
+          "actualAdjudication": "rg02-rg03-same-given-1fcadcca-attempt1/ADJUDICATION.json",
+          "scope": "Exact original function bytes produce unchanged given; additional ordinary UI six cases each, actual30 complete archive inputs/outputs retained."
+        }
+      ],
+      "limitation": null,
+      "authorActualUnitObservation": {
+        "at": "2026-10-15T20:58:54.896956+00:00",
+        "testedProduct": {
+          "commit": "1fcadcca703863873a57d297e83b1b184e63e778",
+          "tree": "8ac6e33a98455204aa265be5ce86ee5be168a97b",
+          "dirty": false,
+          "base": "/shinariokanri/",
+          "builtAt": "2026-10-15T19:13:47.594Z",
+          "versionHashScope": "sorted paths and bytes plus build info before version",
+          "version": "8ec3a03810bb0cf1b1b4"
+        },
+        "actualCI": {
+          "commit": "819b178f8d47048d3bc5aaa6988b67c220a71947",
+          "tree": "8ac6e33a98455204aa265be5ce86ee5be168a97b",
+          "pr_head": "1fcadcca703863873a57d297e83b1b184e63e778",
+          "run_id": "38792131626",
+          "attempt": 1
+        },
+        "witness": "/workspace/pr49-checks/ci-1fcadcca/unit-execution-index-attempt2.json",
+        "actualDecodedLog": {
+          "path": "unit.log",
+          "bytes": 217833,
+          "sha256": "30b88418fd9dd786a44ce2b32b5ab8f0ccb6a8dc06b438bc4019f584f9572b7b"
+        },
+        "files": [
+          {
+            "path": "tests/runtime-regressions.test.ts",
+            "passedFileTests": 26,
+            "actualLogLineNumber": 1592,
+            "actualLogLine": "2026-10-15T19:19:17.6776527Z  \u001b[32m✓\u001b[39m tests/runtime-regressions.test.ts \u001b[2m(\u001b[22m\u001b[2m26 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 354\u001b[2mms\u001b[22m\u001b[39m",
+            "sealedProcedure": {
+              "path": "tests/runtime-regressions.test.ts",
+              "bytes": 20734,
+              "sha256": "0155a55e0d7c3a82632f2d95d116c0b537afe92787a7936e0ff34e59334d01b3",
+              "gitBlob": "60e84606bd3d19682a9b762b7b213529b4850775"
+            }
+          }
+        ],
+        "authoredObservation": "原sourceの不採用参照を単独/複数×manual_choice/first_match/all_match、再利用/開示/replay/出力で拒否する26件ファイルが実成功。変数/物品/知識/既読/once/RNG/履歴/位置の原子不変をsourceで照合。今回の元UIと実出力添付の照合は別途。",
+        "wholeGroupPromotion": false
+      },
+      "authorCurrentObservation": {
+        "at": "2026-10-15T23:50:16.479456+00:00",
+        "observation": "元fixtureの単独/混合×manual_choice/first_match/all_match、不採用effect、再利用/開示/Back/replay、runtime/playable出力拒否の全assertが同一sourceの実unit26件内で成功。通常B14の原子拒否とF25の没案非混入、F24/N20の実出力/説明付き拒否を照合。変数/物品/知識/既読/once/RNG/履歴/進行を部分更新しない。 追加通常UIでは元fixture関数を一字も変えず、R02の条件変更有無×skip/via/initial6件とR03の3policy×単独/混合6件を実行。実30archiveと正常UI結果を別途保持。",
+        "scope": "Original exact unit fixtures plus ordinary UI/actual outputs composed explicitly; current execution identities remain separate from local product build and named historical carry."
+      }
+    },
+    {
+      "id": "RG-R04",
+      "original": {
+        "id": "RG-R04",
+        "finding_id": "R04",
+        "title": "代替進行と停止を画面から操作する",
+        "batch_id": "RB01",
+        "requirements": [
+          "REQ-B14",
+          "REQ-B16",
+          "REQ-F40",
+          "REQ-N01"
+        ],
+        "given": "手動選択の全候補がfalseで、有効なfallbackがある。",
+        "steps": [
+          "幅390pxの試読画面から代替進行を実行し、戻る→経路保存/再生を行う。",
+          "gate=false、fallbackなし、unknown混在、真候補あり、trigger付きの組合せを試す。"
+        ],
+        "expected": "進行規則に従う有効操作が表示され、経路と状態が記録される。代替先なしは進行不可、unknownは理由付き停止とし、意図した終端と区別する。",
+        "environments": [
+          "部品",
+          "幅320/390pxの通常試読",
+          "全自動ブラウザー"
+        ],
+        "result": "not_run",
+        "evidence": [],
+        "status": "planned",
+        "depends_on": []
+      },
+      "reviewResult": "passed_local_original_conditions",
+      "authorSourceObservation": "同builderのall-false+fallback/unknown+fallback/false+no-fallback/gate=false+trueedge/truechoiceと、原390px UIの明示trigger/戻る/経路保存/再生をfull source確認。全自動browser結果のcontent確認待ち。",
+      "procedureSources": [
+        {
+          "path": "tests/reader-fallback.test.ts",
+          "bytes": 4323,
+          "sha256": "b2405b4a214e9a550373f04b96be10e58ce4b5d0d806dfaef71ffcdbfaf8e70f",
+          "gitBlob": "9d0630e5163a4310cc98e238b5984c4c65d45122"
+        },
+        {
+          "path": "tests/runtime.test.ts",
+          "bytes": 45705,
+          "sha256": "2c204aaa94cb5609cc484c9fcc4333dfb0fb534c30a6eabb13cc963cc94ca07c",
+          "gitBlob": "c1f615d95519ea24db49190d0bbe245065c1688b"
+        },
+        {
+          "path": "tests/e2e/reader-fallback.spec.ts",
+          "bytes": 4396,
+          "sha256": "af1c90c5b843116fe7d23044986e03ad3b3772bf57e3fceaea9fce8b3f92fd94",
+          "gitBlob": "1e38da6f931d2541f4f9cfa220aae7160f6d1948"
+        }
+      ],
+      "actualEvidence": [
+        {
+          "bundleManifest": "evidence/bundles/product-ci-1fcadcca.manifest.json",
+          "engine": "chromium",
+          "index": "ci-1fcadcca/case-evidence-chromium/index.json",
+          "source": {
+            "engine": "chromium",
+            "commit": "819b178f8d47048d3bc5aaa6988b67c220a71947",
+            "tree": "8ac6e33a98455204aa265be5ce86ee5be168a97b",
+            "pr_head": "1fcadcca703863873a57d297e83b1b184e63e778",
+            "run_id": "38792131626",
+            "attempt": 1
+          },
+          "tests": [
+            "081710c5a42c14f4caba-e0e6769f9d97b24f290d"
+          ]
+        },
+        {
+          "bundleManifest": "evidence/bundles/product-ci-1fcadcca.manifest.json",
+          "engine": "firefox",
+          "index": "ci-1fcadcca/case-evidence-firefox/index.json",
+          "source": {
+            "engine": "firefox",
+            "commit": "819b178f8d47048d3bc5aaa6988b67c220a71947",
+            "tree": "8ac6e33a98455204aa265be5ce86ee5be168a97b",
+            "pr_head": "1fcadcca703863873a57d297e83b1b184e63e778",
+            "run_id": "38792131626",
+            "attempt": 1
+          },
+          "tests": [
+            "081710c5a42c14f4caba-4caea54fa77c82ae1769"
+          ]
+        },
+        {
+          "bundleManifest": "evidence/bundles/product-ci-1fcadcca.manifest.json",
+          "engine": "webkit",
+          "index": "ci-1fcadcca/case-evidence-webkit/index.json",
+          "source": {
+            "engine": "webkit",
+            "commit": "819b178f8d47048d3bc5aaa6988b67c220a71947",
+            "tree": "8ac6e33a98455204aa265be5ce86ee5be168a97b",
+            "pr_head": "1fcadcca703863873a57d297e83b1b184e63e778",
+            "run_id": "38792131626",
+            "attempt": 1
+          },
+          "tests": [
+            "081710c5a42c14f4caba-7184332e63ee01d0f23c"
+          ]
+        },
+        {
+          "bundleManifest": "evidence/bundles/product-ci-1fcadcca.manifest.json",
+          "unitWitness": "ci-1fcadcca/unit-execution-index-attempt2.json",
+          "originalFileBindings": "authorActualUnitObservation.files"
+        }
+      ],
+      "limitation": null,
+      "authorActualUnitObservation": {
+        "at": "2026-10-15T20:58:54.896961+00:00",
+        "testedProduct": {
+          "commit": "1fcadcca703863873a57d297e83b1b184e63e778",
+          "tree": "8ac6e33a98455204aa265be5ce86ee5be168a97b",
+          "dirty": false,
+          "base": "/shinariokanri/",
+          "builtAt": "2026-10-15T19:13:47.594Z",
+          "versionHashScope": "sorted paths and bytes plus build info before version",
+          "version": "8ec3a03810bb0cf1b1b4"
+        },
+        "actualCI": {
+          "commit": "819b178f8d47048d3bc5aaa6988b67c220a71947",
+          "tree": "8ac6e33a98455204aa265be5ce86ee5be168a97b",
+          "pr_head": "1fcadcca703863873a57d297e83b1b184e63e778",
+          "run_id": "38792131626",
+          "attempt": 1
+        },
+        "witness": "/workspace/pr49-checks/ci-1fcadcca/unit-execution-index-attempt2.json",
+        "actualDecodedLog": {
+          "path": "unit.log",
+          "bytes": 217833,
+          "sha256": "30b88418fd9dd786a44ce2b32b5ab8f0ccb6a8dc06b438bc4019f584f9572b7b"
+        },
+        "files": [
+          {
+            "path": "tests/reader-fallback.test.ts",
+            "passedFileTests": 5,
+            "actualLogLineNumber": 1872,
+            "actualLogLine": "2026-10-15T19:25:23.1412185Z  \u001b[32m✓\u001b[39m tests/reader-fallback.test.ts \u001b[2m(\u001b[22m\u001b[2m5 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 20\u001b[2mms\u001b[22m\u001b[39m",
+            "sealedProcedure": {
+              "path": "tests/reader-fallback.test.ts",
+              "bytes": 4323,
+              "sha256": "b2405b4a214e9a550373f04b96be10e58ce4b5d0d806dfaef71ffcdbfaf8e70f",
+              "gitBlob": "9d0630e5163a4310cc98e238b5984c4c65d45122"
+            }
+          },
+          {
+            "path": "tests/runtime.test.ts",
+            "passedFileTests": 35,
+            "actualLogLineNumber": 1526,
+            "actualLogLine": "2026-10-15T19:18:37.7007743Z  \u001b[32m✓\u001b[39m tests/runtime.test.ts \u001b[2m(\u001b[22m\u001b[2m35 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 431\u001b[2mms\u001b[22m\u001b[39m",
+            "sealedProcedure": {
+              "path": "tests/runtime.test.ts",
+              "bytes": 45705,
+              "sha256": "2c204aaa94cb5609cc484c9fcc4333dfb0fb534c30a6eabb13cc963cc94ca07c",
+              "gitBlob": "c1f615d95519ea24db49190d0bbe245065c1688b"
+            }
+          }
+        ],
+        "authoredObservation": "原all-false/fallback、unknown理由停止、gatefalse、fallbackなし、真choice/trigger条件を保持したreader-fallback5件/runtime35件が実成功。390pxのBack/保存/再生は今回実CI報告へ別に結び付ける。",
+        "wholeGroupPromotion": false
+      },
+      "authorCurrentObservation": {
+        "at": "2026-10-15T23:50:16.479456+00:00",
+        "observation": "元390px通常UIでall-false+fallback、明示trigger確認→進行、Back→再進行→保存経路再生、issue0/横scrollなしを3engineの実retry0結果へ結合。添付はないため実出力ファイルを捏造せず、source4396 bytes/SHAaf1c…の全assertと実reportを証拠にする。unit5+runtime35件でgatefalse/no-fallback/unknown/真候補の組合せと意図終端区別を確認。",
+        "scope": "Original exact unit fixtures plus ordinary UI/actual outputs composed explicitly; current execution identities remain separate from local product build and named historical carry."
+      }
+    },
+    {
+      "id": "RG-R05",
+      "original": {
+        "id": "RG-R05",
+        "finding_id": "R05",
+        "title": "含まれる条件を通常フォームで保存する",
+        "batch_id": "RB01",
+        "requirements": [
+          "REQ-B14",
+          "REQ-B15",
+          "REQ-F40",
+          "REQ-N18"
+        ],
+        "given": "boolean/integer/enumの状態と、単値比較の条件がある。",
+        "steps": [
+          "単値↔含まれるへ切り替え、型付きの複数値を追加/削除し自然文を確認する。",
+          "保存→再読込→試読と、未知値・異なる型・空入力・演算切替取消を通常フォームだけで行う。"
+        ],
+        "expected": "正しい配列として保存され、括弧付き自然文・式・試読結果が一致する。単値の暗黙破棄や型違いを避け、修正できる欄と入力を保つ。",
+        "environments": [
+          "部品",
+          "条件編集フォーム",
+          "全自動ブラウザー"
+        ],
+        "result": "not_run",
+        "evidence": [],
+        "status": "planned",
+        "depends_on": []
+      },
+      "reviewResult": "passed_local_original_conditions",
+      "authorSourceObservation": "boolean/integer/enumの同fixture値をscalar↔inで保持し、survivor明示・unknown≠false・型不正/空draftを保持。三通常UIは配列追加/自然文/演算取消/cold/試読と空入力拒否。実添付とsource対応待ち。",
+      "procedureSources": [
+        {
+          "path": "tests/conditionEditing.test.ts",
+          "bytes": 5170,
+          "sha256": "4f2f2039d3d17e15595e045d9701bb2704263668d6928b5dd1ae26a0594b4666",
+          "gitBlob": "89ae6a1c5ea06b0ec108d26d77272508ec3f2b18"
+        },
+        {
+          "path": "tests/conditionInputIssue.test.ts",
+          "bytes": 6440,
+          "sha256": "303f1e04531d05adb67e0bee4c04fc063154eaa5477374c4db1893c9c434283d",
+          "gitBlob": "7cbce3bd3ccc169f9031dd41c7a9ed42ba8d3d22"
+        },
+        {
+          "path": "tests/e2e/editor-regressions.spec.ts",
+          "bytes": 8251,
+          "sha256": "51e36c326bf15964ed26f039a69b689a516e1b4d7fb7a548632297b8a4c09f6d",
+          "gitBlob": "51a00b6984758174bf7638acb2118e751368ad01"
+        }
+      ],
+      "actualEvidence": [
+        {
+          "bundleManifest": "evidence/bundles/product-ci-1fcadcca.manifest.json",
+          "engine": "chromium",
+          "index": "ci-1fcadcca/case-evidence-chromium/index.json",
+          "source": {
+            "engine": "chromium",
+            "commit": "819b178f8d47048d3bc5aaa6988b67c220a71947",
+            "tree": "8ac6e33a98455204aa265be5ce86ee5be168a97b",
+            "pr_head": "1fcadcca703863873a57d297e83b1b184e63e778",
+            "run_id": "38792131626",
+            "attempt": 1
+          },
+          "tests": [
+            "1e8f94a575be567f7ddd-edc568ba23bea9c074fd",
+            "1e8f94a575be567f7ddd-7815c5172df94daa68b6",
+            "1e8f94a575be567f7ddd-47d1a7643f1858282d9b"
+          ]
+        },
+        {
+          "bundleManifest": "evidence/bundles/product-ci-1fcadcca.manifest.json",
+          "engine": "firefox",
+          "index": "ci-1fcadcca/case-evidence-firefox/index.json",
+          "source": {
+            "engine": "firefox",
+            "commit": "819b178f8d47048d3bc5aaa6988b67c220a71947",
+            "tree": "8ac6e33a98455204aa265be5ce86ee5be168a97b",
+            "pr_head": "1fcadcca703863873a57d297e83b1b184e63e778",
+            "run_id": "38792131626",
+            "attempt": 1
+          },
+          "tests": [
+            "1e8f94a575be567f7ddd-b2b651af640d85abfcfe",
+            "1e8f94a575be567f7ddd-15d6bb64fff9cf49619d",
+            "1e8f94a575be567f7ddd-7b74440d48977b61a246"
+          ]
+        },
+        {
+          "bundleManifest": "evidence/bundles/product-ci-1fcadcca.manifest.json",
+          "engine": "webkit",
+          "index": "ci-1fcadcca/case-evidence-webkit/index.json",
+          "source": {
+            "engine": "webkit",
+            "commit": "819b178f8d47048d3bc5aaa6988b67c220a71947",
+            "tree": "8ac6e33a98455204aa265be5ce86ee5be168a97b",
+            "pr_head": "1fcadcca703863873a57d297e83b1b184e63e778",
+            "run_id": "38792131626",
+            "attempt": 1
+          },
+          "tests": [
+            "1e8f94a575be567f7ddd-b1fe17db459b54250213",
+            "1e8f94a575be567f7ddd-7603a049617f602dd96e",
+            "1e8f94a575be567f7ddd-3f7186d85ee0df53060a"
+          ]
+        },
+        {
+          "bundleManifest": "evidence/bundles/product-ci-1fcadcca.manifest.json",
+          "unitWitness": "ci-1fcadcca/unit-execution-index-attempt2.json",
+          "originalFileBindings": "authorActualUnitObservation.files"
+        }
+      ],
+      "limitation": null,
+      "authorActualUnitObservation": {
+        "at": "2026-10-15T20:58:54.896965+00:00",
+        "testedProduct": {
+          "commit": "1fcadcca703863873a57d297e83b1b184e63e778",
+          "tree": "8ac6e33a98455204aa265be5ce86ee5be168a97b",
+          "dirty": false,
+          "base": "/shinariokanri/",
+          "builtAt": "2026-10-15T19:13:47.594Z",
+          "versionHashScope": "sorted paths and bytes plus build info before version",
+          "version": "8ec3a03810bb0cf1b1b4"
+        },
+        "actualCI": {
+          "commit": "819b178f8d47048d3bc5aaa6988b67c220a71947",
+          "tree": "8ac6e33a98455204aa265be5ce86ee5be168a97b",
+          "pr_head": "1fcadcca703863873a57d297e83b1b184e63e778",
+          "run_id": "38792131626",
+          "attempt": 1
+        },
+        "witness": "/workspace/pr49-checks/ci-1fcadcca/unit-execution-index-attempt2.json",
+        "actualDecodedLog": {
+          "path": "unit.log",
+          "bytes": 217833,
+          "sha256": "30b88418fd9dd786a44ce2b32b5ab8f0ccb6a8dc06b438bc4019f584f9572b7b"
+        },
+        "files": [
+          {
+            "path": "tests/conditionEditing.test.ts",
+            "passedFileTests": 6,
+            "actualLogLineNumber": 1849,
+            "actualLogLine": "2026-10-15T19:25:18.7682739Z  \u001b[32m✓\u001b[39m tests/conditionEditing.test.ts \u001b[2m(\u001b[22m\u001b[2m6 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 155\u001b[2mms\u001b[22m\u001b[39m",
+            "sealedProcedure": {
+              "path": "tests/conditionEditing.test.ts",
+              "bytes": 5170,
+              "sha256": "4f2f2039d3d17e15595e045d9701bb2704263668d6928b5dd1ae26a0594b4666",
+              "gitBlob": "89ae6a1c5ea06b0ec108d26d77272508ec3f2b18"
+            }
+          },
+          {
+            "path": "tests/conditionInputIssue.test.ts",
+            "passedFileTests": 6,
+            "actualLogLineNumber": 1814,
+            "actualLogLine": "2026-10-15T19:24:43.3263957Z  \u001b[32m✓\u001b[39m tests/conditionInputIssue.test.ts \u001b[2m(\u001b[22m\u001b[2m6 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 15\u001b[2mms\u001b[22m\u001b[39m",
+            "sealedProcedure": {
+              "path": "tests/conditionInputIssue.test.ts",
+              "bytes": 6440,
+              "sha256": "303f1e04531d05adb67e0bee4c04fc063154eaa5477374c4db1893c9c434283d",
+              "gitBlob": "7cbce3bd3ccc169f9031dd41c7a9ed42ba8d3d22"
+            }
+          }
+        ],
+        "authoredObservation": "原boolean/integer/enumの単値↔in、値追加/削除/明示survivor、未知/型違い/空draft/演算取消を保持したconditionEditing6件とconditionInputIssue6件が実成功。通常フォーム3実行の保存/cold/試読/自然文との照合は別途。",
+        "wholeGroupPromotion": false
+      },
+      "authorCurrentObservation": {
+        "at": "2026-10-15T23:50:16.479456+00:00",
+        "observation": "原boolean/integer/enumの3通常UIで単値↔in、複数値追加/演算切替取消、括弧自然文と式、保存/cold/試読、integer/enum空欄拒否と入力修正を3engine実結果へ結合。添付なしは元source8251 bytes/SHA51e3…と実reportが証拠。unit6+6件で値削除/明示survivor/unknown≠false/型不一致/不正draft保持を補完。",
+        "scope": "Original exact unit fixtures plus ordinary UI/actual outputs composed explicitly; current execution identities remain separate from local product build and named historical carry."
+      }
+    },
+    {
+      "id": "RG-R06",
+      "original": {
+        "id": "RG-R06",
+        "finding_id": "R06",
+        "title": "変更単位保存の速度と復元性を保つ",
+        "batch_id": "RB01",
+        "requirements": [
+          "REQ-B23",
+          "REQ-N04",
+          "REQ-N05",
+          "REQ-N06",
+          "REQ-N14"
+        ],
+        "given": "レビューStandard 8,800件と、添付付きStandard/Large。履歴が少ない状態と2時間編集後を用意する。",
+        "steps": [
+          "作品名一項目、本文一台詞、複合変更を区間別に計測し、全件再保存/全履歴読込/全台詞hashが少量変更で再発しないことを確認する。",
+          "DB書込各段階の失敗・容量不足・取消・undo・単体復元・完全保存空環境復元を実行する。",
+          "RB10で指定実端末・30回p95と原仕様の標準/大規模の目標を判定する。"
+        ],
+        "expected": "原子性・履歴・ID・素材が維持される。コマンド検査開始から端末commitまでのStandard保存p95≤1,000msを最終目標とし、UI開始→成功通知も別計測する。前回の二観測はp95にしない。",
+        "environments": [
+          "部品/障害注入",
+          "実IndexedDBのproduction build",
+          "指定実端末の最終判定はRB10"
+        ],
+        "result": "not_run",
+        "evidence": [],
+        "status": "planned",
+        "depends_on": []
+      },
+      "reviewResult": "partial_local_original_passed_physical_measurements_not_run",
+      "authorSourceObservation": "原全30指標・原三形式180・実7200と113履歴全復元を同じ候補で直列実行。原検査→commitの起終点、実素材、p95上限を保持。実端末最終判定は別未実行。",
+      "procedureSources": [
+        {
+          "path": "scripts/measure-app.mjs",
+          "bytes": 33826,
+          "sha256": "db97227213466828fe3100d19835524a0740416f8fb58a8139e21742883f2c1f",
+          "gitBlob": "f4a1815e32eff5c9428024582ce49e2f1c6e07a0"
+        },
+        {
+          "path": "scripts/measure-large-history.mjs",
+          "bytes": 34461,
+          "sha256": "bb97c32fc953140cbf02f1124158a6b521cc3fabd1d9df3ca7cf4a6b52cc6d3b",
+          "gitBlob": "d2d99de422c428305465ec48d6d1500f7cd10e18"
+        },
+        {
+          "path": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
+          "bytes": 13730,
+          "sha256": "3c2857ad62360f29a56dd15c0e265cead2bf05cad4424eae4211700e4838c2ad",
+          "gitBlob": "1841ed893f391d763bcb8faa066ede9fe2a358cf"
+        },
+        {
+          "path": "tests/e2e/ap04-original-n-failure-retry.spec.ts",
+          "bytes": 11242,
+          "sha256": "9a1d29b77392e58f6fce7a65c6997cf55440de71514cc65331f1bc1074dae76f",
+          "gitBlob": "12dd304da88dd2d62951e2877a43089f928677c5"
+        },
+        {
+          "path": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+          "bytes": 31131,
+          "sha256": "58688c977fc412225d0ff8df96957aa2a28250e15122253c32374bfb7082079f",
+          "gitBlob": "5ec5985ec1a611f0abfc2878d37aed9357a86fd1"
+        }
+      ],
+      "actualEvidence": [
+        {
+          "bundleManifest": "evidence/bundles/product-ci-1fcadcca.manifest.json",
+          "engine": "chromium",
+          "index": "ci-1fcadcca/case-evidence-chromium/index.json",
+          "source": {
+            "engine": "chromium",
+            "commit": "819b178f8d47048d3bc5aaa6988b67c220a71947",
+            "tree": "8ac6e33a98455204aa265be5ce86ee5be168a97b",
+            "pr_head": "1fcadcca703863873a57d297e83b1b184e63e778",
+            "run_id": "38792131626",
+            "attempt": 1
+          },
+          "tests": [
+            "9286ffccd24aa59f87e0-a88ee4e574782eca7ced",
+            "5df79162a59346c7899a-3121f07f05fe1e50cfb7",
+            "d1d20af4b7277756706d-a3cf607821ccec188da3"
+          ]
+        },
+        {
+          "bundleManifest": "evidence/bundles/product-ci-1fcadcca.manifest.json",
+          "engine": "firefox",
+          "index": "ci-1fcadcca/case-evidence-firefox/index.json",
+          "source": {
+            "engine": "firefox",
+            "commit": "819b178f8d47048d3bc5aaa6988b67c220a71947",
+            "tree": "8ac6e33a98455204aa265be5ce86ee5be168a97b",
+            "pr_head": "1fcadcca703863873a57d297e83b1b184e63e778",
+            "run_id": "38792131626",
+            "attempt": 1
+          },
+          "tests": [
+            "9286ffccd24aa59f87e0-dacc7bd33a374a8a5459",
+            "5df79162a59346c7899a-792f6bc1a188a3266dfd",
+            "d1d20af4b7277756706d-fdf028fb76124ca6eb52"
+          ]
+        },
+        {
+          "bundleManifest": "evidence/bundles/product-ci-1fcadcca.manifest.json",
+          "engine": "webkit",
+          "index": "ci-1fcadcca/case-evidence-webkit/index.json",
+          "source": {
+            "engine": "webkit",
+            "commit": "819b178f8d47048d3bc5aaa6988b67c220a71947",
+            "tree": "8ac6e33a98455204aa265be5ce86ee5be168a97b",
+            "pr_head": "1fcadcca703863873a57d297e83b1b184e63e778",
+            "run_id": "38792131626",
+            "attempt": 1
+          },
+          "tests": [
+            "9286ffccd24aa59f87e0-8afb2bf79ad929739eaf",
+            "5df79162a59346c7899a-7197fb0657cb4374ef5a",
+            "d1d20af4b7277756706d-3da4d657359e2687eedf"
+          ]
+        },
+        {
+          "bundleManifest": "evidence/bundles/formal-1fcadcca.manifest.json"
+        },
+        {
+          "bundleManifest": "evidence/bundles/full-large-exceptions-1fcadcca.manifest.json"
+        }
+      ],
+      "limitation": "指定実端末の原性能最終判定未実施",
+      "authorCurrentObservation": {
+        "at": "2026-10-15T23:50:16.479456+00:00",
+        "observation": "clean1fcで元Standard/Large各8×30、6形式180、実7200.018523761秒/112編集、全113履歴pending/72MiB素材new/clone/coldが実exit0。追加同全量のlate generic/quota拒否→正常retry/cold原oracleも実exit0。Standard command p95全6≤1000ms、UI通知区間は別。少量編集でもv1必須hash3回6259174 bytesの実測は残り、hashゼロとはしない。指定実端末N04/E11最終判定は未実施。",
+        "scope": "Original exact unit fixtures plus ordinary UI/actual outputs composed explicitly; current execution identities remain separate from local product build and named historical carry."
+      }
+    }
+  ],
+  "priorPreparationTarget": {
+    "commit": "3ab6f40080754c4dec92ca8fc88c8049b278eede",
+    "tree": "dfaf863f32132f6137ce5c23e8b1141ea5d4772c",
+    "dirty": false,
+    "base": "/shinariokanri/",
+    "builtAt": "2026-10-15T15:58:45.723Z",
+    "versionHashScope": "sorted paths and bytes plus build info before version",
+    "version": "5476ab952776d316c609"
+  },
+  "targetTransitionScope": "Only target identity updated while authored final candidate evidence review remains pending. No old observations or source review notes promoted to passed.",
+  "recordedAt": "2026-10-15T23:50:16.479456+00:00",
+  "finalDeliveryObservation": {
+    "at": "2026-10-16T06:20Z",
+    "main": "1f642457fab18bd545e8422b1b92988e11538266",
+    "predecessorPR57": "externally merged2026-10-16T06:07:44Z; no merge by this task",
+    "reviewPR": 58,
+    "evidenceCommit": "d5e132ef6f4db6a0f3fbe888228ffd1007d653f9",
+    "actualAnonymousDownloadedFiles": 59,
+    "actualFreshVerifiedBundles": 8,
+    "actualVerifiedFiles": 7296,
+    "originalConditionsUnchanged": true,
+    "scope": "Later delivery/ref observation, not a relabeling of earlier source/build executions or original plan text."
+  }
+}
