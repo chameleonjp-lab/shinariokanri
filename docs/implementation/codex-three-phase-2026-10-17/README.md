@@ -33,6 +33,6 @@
 
 **第3段階**：前段階の製品PRのmergeを確認して、この計画登録PR番号と `PHASE_3_ACCEPTANCE.md`、前段の成果PR番号群を指定する。非実機で実行できる原受入を完了し、正式検証・BLOCKEDの明示・最終Draft PRを求める。
 
-参照資料：[Google Drive総合調査](https://drive.google.com/drive/folders/1BSdXfmdGUV1tFr-dg8a7drJv4yMDiytb) / [2026-10-16最新監査](https://drive.google.com/drive/folders/13BcAq-OxDUFmlmeIJqLz2tJ0K_ZR7c_k) / [原CP01–19計画](../completion-replan-2026-10-12/IMPLEMENTATION_PLAN.md)。
+参照資料：[Google Drive総合調査](https://drive.google.com/drive/folders/1BSdXfmdGUV1tFr-dg8a7drJv4yMDiytb) / [2026-10-16最新監査](https://drive.google.com/drive/folders/13BcAq-OxDUFmlmeIJqLz2tJ0K_ZR7c_k) / [原CP01–19計画](../../completion-replan-2026-10-12/IMPLEMENTATION_PLAN.md)。
 
 **重要**：このPRは計画書を登録するものだけです。製品コード、実行中の作業、原仕様、原受入、CI定義は変更しません。
