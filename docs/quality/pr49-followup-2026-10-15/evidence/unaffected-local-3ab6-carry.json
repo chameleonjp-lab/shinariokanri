@@ -1,0 +1,73 @@
+{
+  "recordedAt": "2026-10-15T19:46:03.365597+00:00",
+  "originalPlan": "docs/plan/COMPLETION_ACCEPTANCE.md",
+  "originalRule": "新しいソース変更があれば影響する証拠を取り直す。無関係な証拠を引き継ぐ場合は旧検証commitと変更影響を記録し、候補commitで該当条件が変わらない根拠を残す。",
+  "testedProduct": {
+    "commit": "3ab6f40080754c4dec92ca8fc88c8049b278eede",
+    "tree": "dfaf863f32132f6137ce5c23e8b1141ea5d4772c",
+    "dirty": false,
+    "base": "/shinariokanri/",
+    "builtAt": "2026-10-15T15:58:45.723Z",
+    "versionHashScope": "sorted paths and bytes plus build info before version",
+    "version": "5476ab952776d316c609"
+  },
+  "targetProduct": {
+    "commit": "1fcadcca703863873a57d297e83b1b184e63e778",
+    "tree": "8ac6e33a98455204aa265be5ce86ee5be168a97b",
+    "dirty": false,
+    "base": "/shinariokanri/",
+    "builtAt": "2026-10-15T19:13:47.594Z",
+    "versionHashScope": "sorted paths and bytes plus build info before version",
+    "version": "8ec3a03810bb0cf1b1b4"
+  },
+  "changedProductPaths": [
+    "src/ui/Relationships.tsx",
+    "src/ui/World.css",
+    "src/ui/relationGraphLabels.ts"
+  ],
+  "newTest": "tests/relation-label-layout.test.ts",
+  "unchangedConditions": [
+    {
+      "path": "tests/rb10/large-analysis.spec.ts",
+      "bytes": 9712,
+      "sha256": "4b8eff5530a2925557a4491c6bdb22061bc16e33d239bc8cb003578dab66456e"
+    },
+    {
+      "path": "tests/fixtures/rb10-large-analysis/metadata.json",
+      "bytes": 735,
+      "sha256": "4bce4331003c6c00ead1565a5c79965beda13ddd714e1c877729e67a5c2d3158"
+    },
+    {
+      "path": "tests/e2e/editor-regressions.spec.ts",
+      "bytes": 8251,
+      "sha256": "51e36c326bf15964ed26f039a69b689a516e1b4d7fb7a548632297b8a4c09f6d"
+    },
+    {
+      "path": "src/ui/Reader.tsx",
+      "bytes": 41217,
+      "sha256": "25e51addb64d60f19ef51199940b03849f38df6ee77cf08437b2507ddf606406"
+    },
+    {
+      "path": "src/ui/Fields.tsx",
+      "bytes": 42616,
+      "sha256": "1b61e659a73b6d20068e4e380306ef1893e1584103fb904deb83eae57898fda1"
+    },
+    {
+      "path": "src/ui/useRelationView.ts",
+      "bytes": 5953,
+      "sha256": "4eb3fc4a6055cdb9ae7f12325f57ea7b8302f44636fdd54e34d91f50d1d39a40"
+    }
+  ],
+  "unchanged509SourcesAnd5ActualWorkerBytes": "/workspace/pr49-checks/candidate-1fcadcca/cp05-change-impact.json",
+  "N05": {
+    "adjudication": "/workspace/pr49-checks/n05-original-3ab6f40-attempt2/ADJUDICATION.json",
+    "reason": "Large analysis, unfinished workspace input and its native database verification use unchanged Reader/storage/analysis code and fixture. The relation graph is not mounted. New CSS targets only world-relation-canvas, absent from this procedure.",
+    "result": "carry_original_local_observation_with_original_tested_build"
+  },
+  "RG01": {
+    "adjudication": "/workspace/pr49-checks/rg01-same-given-3ab6f40-attempt1/adjudicated-actual-attachments-attempt2/ADJUDICATION.json",
+    "reason": "Original-given text/annotation editing uses unchanged Fields/RichText/storage code and original seed/test bodies. Relationship graph is absent. All8 actual complete files retained; real Japanese IME remains not_run.",
+    "result": "carry_local_supplement_only;wholeRG01not_passed"
+  },
+  "noExecutionRelabeled": true
+}

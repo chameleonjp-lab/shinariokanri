@@ -1,0 +1,7 @@
+export * from './recordPartsCore';
+import {packRecordData,unpackRecordData,type PackedRecord,type RecordPart} from './recordPartsCore';
+import {StorageError,checkCancelled} from './errors';
+function work<T>(message:unknown,signal?:AbortSignal):Promise<T>{checkCancelled(signal);return new Promise((resolve,reject)=>{const worker=new Worker(new URL('./recordParts.worker.ts',import.meta.url),{type:'module'});let live=true;const finish=(error?:unknown,value?:T)=>{if(!live)return;live=false;signal?.removeEventListener('abort',abort);worker.terminate();error?reject(error):resolve(value!);};const abort=()=>finish(new StorageError('CANCELLED','履歴の分割処理を取り消しました。既存データを保持しています。'));signal?.addEventListener('abort',abort,{once:true});worker.onmessage=event=>event.data.ok?finish(undefined,event.data.value):finish(new StorageError(event.data.code,'大きな履歴を処理できません。既存データを保持しています。'));worker.onerror=()=>finish(new StorageError('SAVE_FAILED','履歴の処理作業領域を開けません。'));try{checkCancelled(signal);worker.postMessage(message);}catch(error){finish(error);}});}
+const browserWorker=()=>typeof window!=='undefined'&&typeof Worker!=='undefined';
+export function packRecord(value:unknown,scope:string,signal?:AbortSignal){return browserWorker()?work<Awaited<ReturnType<typeof packRecordData>>>({action:'pack',value,scope},signal):packRecordData(value,scope,signal);}
+export function unpackRecord(packed:PackedRecord,parts:RecordPart[],signal?:AbortSignal){return browserWorker()?work<unknown>({action:'unpack',packed,parts},signal):unpackRecordData(packed,parts,signal);}
