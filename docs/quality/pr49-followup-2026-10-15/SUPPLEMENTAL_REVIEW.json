@@ -1,0 +1,2250 @@
+{
+  "scope": "All original68 supplemental checks preserved. Original32 G checks are remediation/verification, not extra acceptance cases;36 X checks remain unadopted. Current observations distinguish local scope from missing original real environments.",
+  "original": {
+    "path": "docs/review-2026-10-11/supplemental_acceptance.json",
+    "bytes": 65955,
+    "sha256": "765c4cdaee9f7295e28466f0e8c6075459d7cb674637b29d4f73707f60ea94d7"
+  },
+  "product": {
+    "commit": "1fcadcca703863873a57d297e83b1b184e63e778",
+    "tree": "8ac6e33a98455204aa265be5ce86ee5be168a97b",
+    "dirty": false,
+    "base": "/shinariokanri/",
+    "builtAt": "2026-10-15T19:13:47.594Z",
+    "versionHashScope": "sorted paths and bytes plus build info before version",
+    "version": "8ec3a03810bb0cf1b1b4"
+  },
+  "checks": [
+    {
+      "id": "AC-G01-N",
+      "original": {
+        "id": "AC-G01-N",
+        "owner_id": "G01",
+        "type": "existing_gap_remediation_or_verification",
+        "given": "PR #38〜#42は2026-10-11 09:31〜09:32 JSTにfix/rb10-read-batchesへ統合された。mainはその直前の#37までであり、22個の製品・検査・CIファイルが異なる。",
+        "when": "各PRの差分と競合を確認し、main向けの一つの統合候補を作る。製品コード・元検査・文書を保持し、同じ候補を再検査する。",
+        "then": "統合候補に#38/#39/#40/#41の製品修正と#42の版別記録があり、主要回帰検査が同じ製品版で成功する。",
+        "result": "not_run",
+        "required_evidence": [
+          "target_commit",
+          "product_tree",
+          "build_hash",
+          "base",
+          "fixture_hash",
+          "environment",
+          "procedure",
+          "actual_result",
+          "evidence_path",
+          "checked_at"
+        ]
+      },
+      "reviewResult": "passed_local_original_conditions",
+      "authorObservation": "確認main a6a6c97はPR56が外部merge済み。統合済み修正に関係図3appファイル/幾何testを加えた製品1fc/tree8acを封印し、実CI7job/unit1132/3engine各228、正式30/180/実7200と同全量異常系が完了。元検査・文書・契約を保持。",
+      "actualEvidence": [
+        {
+          "bundleManifest": "evidence/bundles/product-ci-1fcadcca.manifest.json"
+        },
+        {
+          "bundleManifest": "evidence/bundles/formal-1fcadcca.manifest.json"
+        },
+        {
+          "bundleManifest": "evidence/bundles/additional-original-regressions-1fcadcca.manifest.json"
+        }
+      ],
+      "historicalPreparationObservation": "確認main a6a6c97に#56が外部取り込み済み。追加の製品1fcadccaは関係図3ファイル/幾何testに限定し、実製品CI7job成功。旧main状態は歴史givenとして保持。実artifact独立照合は元7200run終了後。",
+      "authorCurrentObservation": {
+        "at": "2026-10-15T23:50:24.925180+00:00",
+        "scope": "Original given/when/then preserved; current result authored from the actual bound evidence or named missing original environment.",
+        "observation": "確認main a6a6c97はPR56が外部merge済み。統合済み修正に関係図3appファイル/幾何testを加えた製品1fc/tree8acを封印し、実CI7job/unit1132/3engine各228、正式30/180/実7200と同全量異常系が完了。元検査・文書・契約を保持。"
+      }
+    },
+    {
+      "id": "AC-G01-E",
+      "original": {
+        "id": "AC-G01-E",
+        "owner_id": "G01",
+        "type": "existing_gap_remediation_or_verification",
+        "given": "PR #38〜#42は2026-10-11 09:31〜09:32 JSTにfix/rb10-read-batchesへ統合された。mainはその直前の#37までであり、22個の製品・検査・CIファイルが異なる。",
+        "when": "各PRの差分と競合を確認し、main向けの一つの統合候補を作る。製品コード・元検査・文書を保持し、同じ候補を再検査する。",
+        "then": "mainや元の作業ブランチを書き換えない。古い結果を新しい候補へコピーしない。競合では両方の修正意図を確認し、同一候補で失敗を記録する。",
+        "result": "not_run",
+        "required_evidence": [
+          "target_commit",
+          "product_tree",
+          "build_hash",
+          "base",
+          "fixture_hash",
+          "environment",
+          "procedure",
+          "actual_result",
+          "evidence_path",
+          "checked_at"
+        ]
+      },
+      "reviewResult": "passed_local_original_conditions",
+      "authorObservation": "mainや元作業branchを本作業から書換えず専用Draft PR57へ提出。旧3ab6不合格と途中失敗の実ソース/rawを保持し、旧結果を1fcへretagしない。明示したN05/RG01無影響carryだけ原規則で別記。",
+      "actualEvidence": [
+        {
+          "bundleManifest": "evidence/bundles/product-ci-1fcadcca.manifest.json"
+        },
+        {
+          "bundleManifest": "evidence/bundles/formal-1fcadcca.manifest.json"
+        },
+        {
+          "bundleManifest": "evidence/bundles/additional-original-regressions-1fcadcca.manifest.json"
+        }
+      ],
+      "historicalPreparationObservation": "確認main a6a6c97に#56が外部取り込み済み。追加の製品1fcadccaは関係図3ファイル/幾何testに限定し、実製品CI7job成功。旧main状態は歴史givenとして保持。実artifact独立照合は元7200run終了後。",
+      "authorCurrentObservation": {
+        "at": "2026-10-15T23:50:24.925180+00:00",
+        "scope": "Original given/when/then preserved; current result authored from the actual bound evidence or named missing original environment.",
+        "observation": "mainや元作業branchを本作業から書換えず専用Draft PR57へ提出。旧3ab6不合格と途中失敗の実ソース/rawを保持し、旧結果を1fcへretagしない。明示したN05/RG01無影響carryだけ原規則で別記。"
+      }
+    },
+    {
+      "id": "AC-G02-N",
+      "original": {
+        "id": "AC-G02-N",
+        "owner_id": "G02",
+        "type": "existing_gap_remediation_or_verification",
+        "given": "mainの表示条件は候補除外用callbackを要求する。C29証拠資料も、通常本文でボタンが表示されず時間切れになったことを記録している。#38に修正がある。",
+        "when": "#38の修正を統合候補へ取り込み、一般語・同名・複数出現・Unicodeとアカウント/作品/本文ごとの除外を通常操作で確認する。",
+        "then": "二つの名前を異なる人物へリンクし、一般語を除外して再読込後も候補と逆参照が正しい。",
+        "result": "not_run",
+        "required_evidence": [
+          "target_commit",
+          "product_tree",
+          "build_hash",
+          "base",
+          "fixture_hash",
+          "environment",
+          "procedure",
+          "actual_result",
+          "evidence_path",
+          "checked_at"
+        ]
+      },
+      "reviewResult": "partial_local_support_original_conditions_remain",
+      "authorObservation": "現行B10/F27実出力で同名2人・一般語・別名・複数出現・Unicode/引用不変、cold後除外・逆参照、解除失敗の入力保持とnew/clone復元を確認。原whenに含む別実アカウントの通常ログイン切替は未実施。",
+      "actualEvidence": [
+        {
+          "bundleManifest": "evidence/bundles/product-ci-1fcadcca.manifest.json"
+        }
+      ],
+      "limitation": "別アカウントによる通常操作の原条件は未実行。MANUAL_REVIEW.mdへ引継ぎ。",
+      "historicalPreparationObservation": "元link-candidate-ignore2件は実製品CI3engineで成功。作品/本文scope、同名/Unicode/確定リンク保持/解除は実添付の最終照合待ち。別accountはutilityの局所scope検査であり、実Authの別アカウント通常操作は未実行。AC-G02全体を完了にしない。",
+      "authorCurrentObservation": {
+        "at": "2026-10-15T23:50:24.925180+00:00",
+        "scope": "Original given/when/then preserved; current result authored from the actual bound evidence or named missing original environment.",
+        "observation": "現行B10/F27実出力で同名2人・一般語・別名・複数出現・Unicode/引用不変、cold後除外・逆参照、解除失敗の入力保持とnew/clone復元を確認。原whenに含む別実アカウントの通常ログイン切替は未実施。"
+      }
+    },
+    {
+      "id": "AC-G02-E",
+      "original": {
+        "id": "AC-G02-E",
+        "owner_id": "G02",
+        "type": "existing_gap_remediation_or_verification",
+        "given": "mainの表示条件は候補除外用callbackを要求する。C29証拠資料も、通常本文でボタンが表示されず時間切れになったことを記録している。#38に修正がある。",
+        "when": "#38の修正を統合候補へ取り込み、一般語・同名・複数出現・Unicodeとアカウント/作品/本文ごとの除外を通常操作で確認する。",
+        "then": "除外は別アカウントや別作品へ漏れない。確定リンクは消えず、除外解除と再保存を確認できる。",
+        "result": "not_run",
+        "required_evidence": [
+          "target_commit",
+          "product_tree",
+          "build_hash",
+          "base",
+          "fixture_hash",
+          "environment",
+          "procedure",
+          "actual_result",
+          "evidence_path",
+          "checked_at"
+        ]
+      },
+      "reviewResult": "partial_local_support_original_conditions_remain",
+      "authorObservation": "作品/本文間の分離、確定リンク保持、解除・再保存/coldは実操作で確認。account utility試験を実ログアウト/別accountの通常操作へ換算しない。原N/Eとも実account条件が残る。",
+      "actualEvidence": [
+        {
+          "bundleManifest": "evidence/bundles/product-ci-1fcadcca.manifest.json"
+        }
+      ],
+      "limitation": "別アカウントによる通常操作の原条件は未実行。MANUAL_REVIEW.mdへ引継ぎ。",
+      "historicalPreparationObservation": "元link-candidate-ignore2件は実製品CI3engineで成功。作品/本文scope、同名/Unicode/確定リンク保持/解除は実添付の最終照合待ち。別accountはutilityの局所scope検査であり、実Authの別アカウント通常操作は未実行。AC-G02全体を完了にしない。",
+      "authorCurrentObservation": {
+        "at": "2026-10-15T23:50:24.925180+00:00",
+        "scope": "Original given/when/then preserved; current result authored from the actual bound evidence or named missing original environment.",
+        "observation": "作品/本文間の分離、確定リンク保持、解除・再保存/coldは実操作で確認。account utility試験を実ログアウト/別accountの通常操作へ換算しない。原N/Eとも実account条件が残る。"
+      }
+    },
+    {
+      "id": "AC-G03-N",
+      "original": {
+        "id": "AC-G03-N",
+        "owner_id": "G03",
+        "type": "existing_gap_remediation_or_verification",
+        "given": "mainの出力画面は相談対象の前後状態を指定しない。C29の実ファイルには前後の状態が未指定となった記録がある。#39に入力と保持の修正がある。",
+        "when": "対象場面・開始/終了状態・公開範囲・対象版を通常フォームへ接続し、原設定と未確定事項を持つ相談文を出す。",
+        "then": "同一場面の前後状態を選び、公開範囲を確認して実ファイルへ出し、出所付き提案を別案として読み込める。",
+        "result": "not_run",
+        "required_evidence": [
+          "target_commit",
+          "product_tree",
+          "build_hash",
+          "base",
+          "fixture_hash",
+          "environment",
+          "procedure",
+          "actual_result",
+          "evidence_path",
+          "checked_at"
+        ]
+      },
+      "reviewResult": "passed_local_original_conditions",
+      "authorObservation": "同一場面Sの前後boolean/integer、公開policy/対象pin版を選び実相談MD1730/1735/1721/1734 bytesを取得。前後状態と確定/仮設定を含み、出所/対象版付き提案を作者別案へ読み込む現行4手順が3engineで成功。",
+      "actualEvidence": [
+        {
+          "bundleManifest": "evidence/bundles/product-ci-1fcadcca.manifest.json"
+        }
+      ],
+      "historicalPreparationObservation": "元consultation4件。実MD/秘密除外/自動送信なし・前後値・版確認・失敗後最新入力・別案を元givenで照合。",
+      "authorCurrentObservation": {
+        "at": "2026-10-15T23:50:24.925180+00:00",
+        "scope": "Original given/when/then preserved; current result authored from the actual bound evidence or named missing original environment.",
+        "observation": "同一場面Sの前後boolean/integer、公開policy/対象pin版を選び実相談MD1730/1735/1721/1734 bytesを取得。前後状態と確定/仮設定を含み、出所/対象版付き提案を作者別案へ読み込む現行4手順が3engineで成功。"
+      }
+    },
+    {
+      "id": "AC-G03-E",
+      "original": {
+        "id": "AC-G03-E",
+        "owner_id": "G03",
+        "type": "existing_gap_remediation_or_verification",
+        "given": "mainの出力画面は相談対象の前後状態を指定しない。C29の実ファイルには前後の状態が未指定となった記録がある。#39に入力と保持の修正がある。",
+        "when": "対象場面・開始/終了状態・公開範囲・対象版を通常フォームへ接続し、原設定と未確定事項を持つ相談文を出す。",
+        "then": "秘密と作者メモを出さない。出力/保存失敗後も入力を保持し、版変更後は再確認する。AIサービスへ自動送信しない。",
+        "result": "not_run",
+        "required_evidence": [
+          "target_commit",
+          "product_tree",
+          "build_hash",
+          "base",
+          "fixture_hash",
+          "environment",
+          "procedure",
+          "actual_result",
+          "evidence_path",
+          "checked_at"
+        ]
+      },
+      "reviewResult": "passed_local_original_conditions",
+      "authorObservation": "実MDはSECRET・作者メモを含まず外部request=[]。保存失敗でも最新入力/coldを保持、版変更で再確認、整数途中/範囲外拒否と修正値出力、cache失敗案内を確認。正本/旧pinと別案applyReceipts0を保持。",
+      "actualEvidence": [
+        {
+          "bundleManifest": "evidence/bundles/product-ci-1fcadcca.manifest.json"
+        }
+      ],
+      "historicalPreparationObservation": "元consultation4件。実MD/秘密除外/自動送信なし・前後値・版確認・失敗後最新入力・別案を元givenで照合。",
+      "authorCurrentObservation": {
+        "at": "2026-10-15T23:50:24.925180+00:00",
+        "scope": "Original given/when/then preserved; current result authored from the actual bound evidence or named missing original environment.",
+        "observation": "実MDはSECRET・作者メモを含まず外部request=[]。保存失敗でも最新入力/coldを保持、版変更で再確認、整数途中/範囲外拒否と修正値出力、cache失敗案内を確認。正本/旧pinと別案applyReceipts0を保持。"
+      }
+    },
+    {
+      "id": "AC-G04-N",
+      "original": {
+        "id": "AC-G04-N",
+        "owner_id": "G04",
+        "type": "existing_gap_remediation_or_verification",
+        "given": "C29では旧保存領域の移行を容量不足で拒否した後、元の保存内容は残るが通常再試行で同じ失敗状態に留まった。#41に再試行と取消の修正がある。",
+        "when": "旧DBの原子拒否後に同じアカウントで開き直し、下書き/固定世界を再読込する。取消と遅延通知を区別する。",
+        "then": "一度容量不足で失敗させ、通常の再試行だけで旧作品を開き、cold再読込・完全出力・空環境復元できる。",
+        "result": "not_run",
+        "required_evidence": [
+          "target_commit",
+          "product_tree",
+          "build_hash",
+          "base",
+          "fixture_hash",
+          "environment",
+          "procedure",
+          "actual_result",
+          "evidence_path",
+          "checked_at"
+        ]
+      },
+      "reviewResult": "passed_local_original_conditions",
+      "authorObservation": "実genuine legacy SHAab5b…のnative10移行を1回/2回quota拒否し、通常retryだけでnative70へ。現行3engineの実観測は全表拒否時不変、完全project同一、cold/空環境replay=true。",
+      "actualEvidence": [
+        {
+          "bundleManifest": "evidence/bundles/product-ci-1fcadcca.manifest.json"
+        }
+      ],
+      "historicalPreparationObservation": "元startup migration3件。v10全表原子拒否1/2回→通常再試行v70→cold/実file/new/clone、遅延成功→取消→再試行。",
+      "authorCurrentObservation": {
+        "at": "2026-10-15T23:50:24.925180+00:00",
+        "scope": "Original given/when/then preserved; current result authored from the actual bound evidence or named missing original environment.",
+        "observation": "実genuine legacy SHAab5b…のnative10移行を1回/2回quota拒否し、通常retryだけでnative70へ。現行3engineの実観測は全表拒否時不変、完全project同一、cold/空環境replay=true。"
+      }
+    },
+    {
+      "id": "AC-G04-E",
+      "original": {
+        "id": "AC-G04-E",
+        "owner_id": "G04",
+        "type": "existing_gap_remediation_or_verification",
+        "given": "C29では旧保存領域の移行を容量不足で拒否した後、元の保存内容は残るが通常再試行で同じ失敗状態に留まった。#41に再試行と取消の修正がある。",
+        "when": "旧DBの原子拒否後に同じアカウントで開き直し、下書き/固定世界を再読込する。取消と遅延通知を区別する。",
+        "then": "二度失敗・取消・遅れて届く成功でも元DBと作品を壊さない。保存済み移行を取消で戻したとは表示しない。",
+        "result": "not_run",
+        "required_evidence": [
+          "target_commit",
+          "product_tree",
+          "build_hash",
+          "base",
+          "fixture_hash",
+          "environment",
+          "procedure",
+          "actual_result",
+          "evidence_path",
+          "checked_at"
+        ]
+      },
+      "reviewResult": "passed_local_original_conditions",
+      "authorObservation": "遅延native success1000ms中の通常取消と新retryを実行。schema commit後取消はv70のまま、原表は不変で完了済移行を戻したとは表示しない。実3手順の完全ファイルと元sourceを保持。",
+      "actualEvidence": [
+        {
+          "bundleManifest": "evidence/bundles/product-ci-1fcadcca.manifest.json"
+        }
+      ],
+      "historicalPreparationObservation": "元startup migration3件。v10全表原子拒否1/2回→通常再試行v70→cold/実file/new/clone、遅延成功→取消→再試行。",
+      "authorCurrentObservation": {
+        "at": "2026-10-15T23:50:24.925180+00:00",
+        "scope": "Original given/when/then preserved; current result authored from the actual bound evidence or named missing original environment.",
+        "observation": "遅延native success1000ms中の通常取消と新retryを実行。schema commit後取消はv70のまま、原表は不変で完了済移行を戻したとは表示しない。実3手順の完全ファイルと元sourceを保持。"
+      }
+    },
+    {
+      "id": "AC-G05-N",
+      "original": {
+        "id": "AC-G05-N",
+        "owner_id": "G05",
+        "type": "existing_gap_remediation_or_verification",
+        "given": "元88,003記録・72MiB素材・113履歴/送信待ちの完全出力は、C29と後続製品修正4232966で600,000ms以内にファイルを得られなかったと閉鎖記録にある。#40統合済みだけでは解消といえない。原因は未確定。",
+        "when": "履歴読込・記録検証・共有解除・圧縮・ダウンロードの区間を測る。全履歴と全検証を維持し、限定した不変内容の再利用と分割処理を検討する。",
+        "then": "同じLarge入力と113操作を使用し、元600,000ms以内に完全ファイルを得て、空環境new/clone/coldで全記録・全素材hash・履歴・送信待ち・順序が一致する。",
+        "result": "not_run",
+        "required_evidence": [
+          "target_commit",
+          "product_tree",
+          "build_hash",
+          "base",
+          "fixture_hash",
+          "environment",
+          "procedure",
+          "actual_result",
+          "evidence_path",
+          "checked_at"
+        ]
+      },
+      "reviewResult": "passed_local_original_conditions",
+      "authorObservation": "実7200.018523761秒/112通常編集後、元88003記録・72MiB実素材・113履歴/pendingを235817msで実完全ファイルへ出力。全before/after連続性・162117 typed owned IDs・順序/全素材hashを元oracleでnew/clone/cold照合し、cleanup/actual exit0まで確認。",
+      "actualEvidence": [
+        {
+          "bundleManifest": "evidence/bundles/formal-1fcadcca.manifest.json"
+        },
+        {
+          "bundleManifest": "evidence/bundles/full-large-exceptions-1fcadcca.manifest.json"
+        }
+      ],
+      "historicalPreparationObservation": "製品1fcadccaで実7200.018523761秒/112通常編集/22offlinecold/14native照合後、元全量ファイルを235817msで実取得。進捗37.6ms/取消42.4msは元条件内。全113独立oracle/newclonecoldと同じ実ファイルの破損/未知版/最終段例外/容量不足/通常再試行は継続・準備中。実終了0未観測の段階で成功にしない。",
+      "authorCurrentObservation": {
+        "at": "2026-10-15T23:50:24.925180+00:00",
+        "scope": "Original given/when/then preserved; current result authored from the actual bound evidence or named missing original environment.",
+        "observation": "実7200.018523761秒/112通常編集後、元88003記録・72MiB実素材・113履歴/pendingを235817msで実完全ファイルへ出力。全before/after連続性・162117 typed owned IDs・順序/全素材hashを元oracleでnew/clone/cold照合し、cleanup/actual exit0まで確認。"
+      }
+    },
+    {
+      "id": "AC-G05-E",
+      "original": {
+        "id": "AC-G05-E",
+        "owner_id": "G05",
+        "type": "existing_gap_remediation_or_verification",
+        "given": "元88,003記録・72MiB素材・113履歴/送信待ちの完全出力は、C29と後続製品修正4232966で600,000ms以内にファイルを得られなかったと閉鎖記録にある。#40統合済みだけでは解消といえない。原因は未確定。",
+        "when": "履歴読込・記録検証・共有解除・圧縮・ダウンロードの区間を測る。全履歴と全検証を維持し、限定した不変内容の再利用と分割処理を検討する。",
+        "then": "進捗2秒以降・取消・容量不足・最終段破損・未知形式を確認する。履歴削減、素材除外、検査省略、上限延長を合格手段にしない。",
+        "result": "not_run",
+        "required_evidence": [
+          "target_commit",
+          "product_tree",
+          "build_hash",
+          "base",
+          "fixture_hash",
+          "environment",
+          "procedure",
+          "actual_result",
+          "evidence_path",
+          "checked_at"
+        ]
+      },
+      "reviewResult": "passed_local_original_conditions",
+      "authorObservation": "進捗37.600000001490116ms/取消42.399999998509884ms、max UIgap1124.8000000044703msを原2秒条件で確認。同じ実全量の1byte project破損/unknown major/最終24MiB素材末尾1byte破損、全書込み後generic/quota abort、21critical表0/入力保持、正常retryと元cold113照合が実exit0。履歴/素材/検査/上限を減らさない。",
+      "actualEvidence": [
+        {
+          "bundleManifest": "evidence/bundles/formal-1fcadcca.manifest.json"
+        },
+        {
+          "bundleManifest": "evidence/bundles/full-large-exceptions-1fcadcca.manifest.json"
+        }
+      ],
+      "historicalPreparationObservation": "製品1fcadccaで実7200.018523761秒/112通常編集/22offlinecold/14native照合後、元全量ファイルを235817msで実取得。進捗37.6ms/取消42.4msは元条件内。全113独立oracle/newclonecoldと同じ実ファイルの破損/未知版/最終段例外/容量不足/通常再試行は継続・準備中。実終了0未観測の段階で成功にしない。",
+      "authorCurrentObservation": {
+        "at": "2026-10-15T23:50:24.925180+00:00",
+        "scope": "Original given/when/then preserved; current result authored from the actual bound evidence or named missing original environment.",
+        "observation": "進捗37.600000001490116ms/取消42.399999998509884ms、max UIgap1124.8000000044703msを原2秒条件で確認。同じ実全量の1byte project破損/unknown major/最終24MiB素材末尾1byte破損、全書込み後generic/quota abort、21critical表0/入力保持、正常retryと元cold113照合が実exit0。履歴/素材/検査/上限を減らさない。"
+      }
+    },
+    {
+      "id": "AC-G06-N",
+      "original": {
+        "id": "AC-G06-N",
+        "owner_id": "G06",
+        "type": "existing_gap_remediation_or_verification",
+        "given": "設計レジストリとC29監査では原116ケースの最終結果が全てnot_run。局所の28ケース全節・29部分・59未判定と、464節の166直接/40部分/258未判定は最終完成数ではない。",
+        "when": "同一完成候補を固定して原条件の正常/境界/失敗を全件記録する。原条件、元24工程、6回帰群を保持して不足証拠を埋める。",
+        "then": "116ケースそれぞれに原4節、入力・手順・正常/失敗の実結果・環境・対象版・実証拠があり、24工程と6回帰群の完了条件も満たす。",
+        "result": "not_run",
+        "required_evidence": [
+          "target_commit",
+          "product_tree",
+          "build_hash",
+          "base",
+          "fixture_hash",
+          "environment",
+          "procedure",
+          "actual_result",
+          "evidence_path",
+          "checked_at"
+        ]
+      },
+      "reviewResult": "blocked_original_external_conditions",
+      "authorObservation": "原116×4の内容を個別照合し94ケースのローカル合格、22ケースの具体的実条件未実行を記録。個別local gate18件と工程全体は区別し、依存/owned-case閉包ではWP01だけ完了。回帰R01実IMEとR06実機性能が残り、全116/24/6の原thenは未充足。",
+      "actualEvidence": [
+        {
+          "bundleManifest": "evidence/bundles/product-ci-1fcadcca.manifest.json"
+        },
+        {
+          "bundleManifest": "evidence/bundles/formal-1fcadcca.manifest.json"
+        },
+        {
+          "authorReview": "CLAUSE_REVIEW.json",
+          "workPackages": "WORK_PACKAGE_REVIEW.json",
+          "regressions": "REGRESSION_REVIEW.json"
+        }
+      ],
+      "historicalPreparationObservation": "原116/464の逐条source記録を作成し、最終actual fixture/result/output確認待ち。全24工程・6回帰群・原release checkerを維持。",
+      "authorCurrentObservation": {
+        "at": "2026-10-15T23:50:24.925180+00:00",
+        "scope": "Original given/when/then preserved; current result authored from the actual bound evidence or named missing original environment.",
+        "observation": "原116×4の内容を個別照合し94ケースのローカル合格、22ケースの具体的実条件未実行を記録。個別local gate18件と工程全体は区別し、依存/owned-case閉包ではWP01だけ完了。回帰R01実IMEとR06実機性能が残り、全116/24/6の原thenは未充足。"
+      }
+    },
+    {
+      "id": "AC-G06-E",
+      "original": {
+        "id": "AC-G06-E",
+        "owner_id": "G06",
+        "type": "existing_gap_remediation_or_verification",
+        "given": "設計レジストリとC29監査では原116ケースの最終結果が全てnot_run。局所の28ケース全節・29部分・59未判定と、464節の166直接/40部分/258未判定は最終完成数ではない。",
+        "when": "同一完成候補を固定して原条件の正常/境界/失敗を全件記録する。原条件、元24工程、6回帰群を保持して不足証拠を埋める。",
+        "then": "部品/CI/局所の成功、別版の結果、未実行を最終合格へ変換しない。失敗または未確認が残れば公開gateは拒否する。",
+        "result": "not_run",
+        "required_evidence": [
+          "target_commit",
+          "product_tree",
+          "build_hash",
+          "base",
+          "fixture_hash",
+          "environment",
+          "procedure",
+          "actual_result",
+          "evidence_path",
+          "checked_at"
+        ]
+      },
+      "reviewResult": "passed_local_original_conditions",
+      "authorObservation": "部品/CI/旧版/未実行を一括合格にしない。元公開checkerを製品1fcの別checkoutで最終recordへ実行し、未充足の全条件をexit1/RELEASE BLOCKEDとして保持する。最終実checkerログはevidence/release-checker-localを参照。",
+      "actualEvidence": [
+        {
+          "bundleManifest": "evidence/bundles/product-ci-1fcadcca.manifest.json"
+        },
+        {
+          "bundleManifest": "evidence/bundles/formal-1fcadcca.manifest.json"
+        },
+        {
+          "authorReview": "CLAUSE_REVIEW.json",
+          "workPackages": "WORK_PACKAGE_REVIEW.json",
+          "regressions": "REGRESSION_REVIEW.json"
+        }
+      ],
+      "historicalPreparationObservation": "原116/464の逐条source記録を作成し、最終actual fixture/result/output確認待ち。全24工程・6回帰群・原release checkerを維持。",
+      "authorCurrentObservation": {
+        "at": "2026-10-15T23:50:24.925180+00:00",
+        "scope": "Original given/when/then preserved; current result authored from the actual bound evidence or named missing original environment.",
+        "observation": "部品/CI/旧版/未実行を一括合格にしない。元公開checkerを製品1fcの別checkoutで最終recordへ実行し、未充足の全条件をexit1/RELEASE BLOCKEDとして保持する。最終実checkerログはevidence/release-checker-localを参照。"
+      }
+    },
+    {
+      "id": "AC-G07-N",
+      "original": {
+        "id": "AC-G07-N",
+        "owner_id": "G07",
+        "type": "existing_gap_remediation_or_verification",
+        "given": "C29資料は約1.85GBの閉鎖証拠が一時作業場所にあり、GitHubから全binaryを取れるとは認定していないと記載する。今回その全bytesは取得・再照合していない。",
+        "when": "全証拠を一つの巨大PRに再複製せず、固定manifest・hash・取得先・保存期間・不足時の復帰手順を持つ引渡しを作る。携帯で読める要約を添える。",
+        "then": "新しい空の作業環境で必要な証拠を取得し、保存されたmanifestのhashと対象版を確認できる。",
+        "result": "not_run",
+        "required_evidence": [
+          "target_commit",
+          "product_tree",
+          "build_hash",
+          "base",
+          "fixture_hash",
+          "environment",
+          "procedure",
+          "actual_result",
+          "evidence_path",
+          "checked_at"
+        ]
+      },
+      "reviewResult": "partial_local_support_original_conditions_remain",
+      "authorObservation": "新しい証拠を個別manifest/hash/分割part/自己完結verifierと保持期間付きで用意し、空領域へ実展開照合する。公開後のimmutable SHAからの実ダウンロード照合はPR57/Drive報告に実結果を記録する。原C29の約1.85GB/37part/MANIFESTと旧不足18宣言は未取得であり、現証拠を旧原本回収としない。",
+      "actualEvidence": [
+        {
+          "bundleManifest": "evidence/bundles/formal-1fcadcca.manifest.json"
+        },
+        {
+          "bundleManifest": "evidence/bundles/product-ci-1fcadcca.manifest.json"
+        },
+        {
+          "bundleManifest": "evidence/bundles/historical-and-failed-checks.manifest.json"
+        },
+        {
+          "bundleManifest": "evidence/bundles/historical-ci-3ab6.manifest.json"
+        }
+      ],
+      "historicalPreparationObservation": "旧C29の37part/元MANIFEST未取得。旧不足32宣言の14宣言/10hashだけ実旧C13から回収。新候補の証拠へ旧実行を付け替えない。",
+      "authorCurrentObservation": {
+        "at": "2026-10-15T23:50:24.925180+00:00",
+        "scope": "Original given/when/then preserved; current result authored from the actual bound evidence or named missing original environment.",
+        "observation": "新しい証拠を個別manifest/hash/分割part/自己完結verifierと保持期間付きで用意し、空領域へ実展開照合する。公開後のimmutable SHAからの実ダウンロード照合はPR57/Drive報告に実結果を記録する。原C29の約1.85GB/37part/MANIFESTと旧不足18宣言は未取得であり、現証拠を旧原本回収としない。"
+      }
+    },
+    {
+      "id": "AC-G07-E",
+      "original": {
+        "id": "AC-G07-E",
+        "owner_id": "G07",
+        "type": "existing_gap_remediation_or_verification",
+        "given": "C29資料は約1.85GBの閉鎖証拠が一時作業場所にあり、GitHubから全binaryを取れるとは認定していないと記載する。今回その全bytesは取得・再照合していない。",
+        "when": "全証拠を一つの巨大PRに再複製せず、固定manifest・hash・取得先・保存期間・不足時の復帰手順を持つ引渡しを作る。携帯で読める要約を添える。",
+        "then": "一時パス、metadataのみ、リンク切れは証拠引渡し成功にしない。本文/秘密/認証情報を公開証拠へ混ぜない。",
+        "result": "not_run",
+        "required_evidence": [
+          "target_commit",
+          "product_tree",
+          "build_hash",
+          "base",
+          "fixture_hash",
+          "environment",
+          "procedure",
+          "actual_result",
+          "evidence_path",
+          "checked_at"
+        ]
+      },
+      "reviewResult": "passed_local_original_conditions",
+      "authorObservation": "一時path/metadataだけを成功証拠とせずraw実bytesと手順/実exitを保持し、旧不足を明示。素材/本文は公開repo由来または隔離fixtureの合成データ、実作品/認証情報/無関係project情報を同梱しない。実機配布ZIPは別の許可未回答として本証拠束に含めない。",
+      "actualEvidence": [
+        {
+          "bundleManifest": "evidence/bundles/formal-1fcadcca.manifest.json"
+        },
+        {
+          "bundleManifest": "evidence/bundles/product-ci-1fcadcca.manifest.json"
+        },
+        {
+          "bundleManifest": "evidence/bundles/historical-and-failed-checks.manifest.json"
+        },
+        {
+          "bundleManifest": "evidence/bundles/historical-ci-3ab6.manifest.json"
+        }
+      ],
+      "historicalPreparationObservation": "旧C29の37part/元MANIFEST未取得。旧不足32宣言の14宣言/10hashだけ実旧C13から回収。新候補の証拠へ旧実行を付け替えない。",
+      "authorCurrentObservation": {
+        "at": "2026-10-15T23:50:24.925180+00:00",
+        "scope": "Original given/when/then preserved; current result authored from the actual bound evidence or named missing original environment.",
+        "observation": "一時path/metadataだけを成功証拠とせずraw実bytesと手順/実exitを保持し、旧不足を明示。素材/本文は公開repo由来または隔離fixtureの合成データ、実作品/認証情報/無関係project情報を同梱しない。実機配布ZIPは別の許可未回答として本証拠束に含めない。"
+      }
+    },
+    {
+      "id": "AC-G08-N",
+      "original": {
+        "id": "AC-G08-N",
+        "owner_id": "G08",
+        "type": "existing_gap_remediation_or_verification",
+        "given": "mainの現在照合表とJSONはC15が先頭の対象で、製品treeはC29と同じ。#42の最新照合は作業ブランチ側にある。設計時のplanned/not_runも現在合否とは別である。",
+        "when": "最新の対象版と確認日時を明示する入口を追加し、設計資料・歴史結果・現在の結果を参照で結ぶ。旧原文を上書きしない。",
+        "then": "入口からmain基準、作業ブランチ、各実行対象の製品hashと未完了条件へたどれる。",
+        "result": "not_run",
+        "required_evidence": [
+          "target_commit",
+          "product_tree",
+          "build_hash",
+          "base",
+          "fixture_hash",
+          "environment",
+          "procedure",
+          "actual_result",
+          "evidence_path",
+          "checked_at"
+        ]
+      },
+      "reviewResult": "passed_local_original_conditions",
+      "authorObservation": "root README/docs README/PROGRESSと本記録からmain基準a6・製品1fc/tree8ac/build8ec・実CI merge819/tree8ac/engine固有build・別delivery履歴・未完条件へリンクする。元計画/原文と旧記録を別保持。",
+      "actualEvidence": [
+        {
+          "bundleManifest": "evidence/bundles/retention-delivery-1e77.manifest.json"
+        },
+        {
+          "authorReview": "CLAUSE_REVIEW.json",
+          "workPackages": "WORK_PACKAGE_REVIEW.json",
+          "regressions": "REGRESSION_REVIEW.json"
+        }
+      ],
+      "historicalPreparationObservation": "root README/docs README/PROGRESSから製品1fcadcca・配布1e77・原計画・現在の不足へ接続。現在入口を整理し、旧記録の原本文はHISTORY.mdへ保持した。過去3ab6等を今回実行へ付け替えない。",
+      "authorCurrentObservation": {
+        "at": "2026-10-15T23:50:24.925180+00:00",
+        "scope": "Original given/when/then preserved; current result authored from the actual bound evidence or named missing original environment.",
+        "observation": "root README/docs README/PROGRESSと本記録からmain基準a6・製品1fc/tree8ac/build8ec・実CI merge819/tree8ac/engine固有build・別delivery履歴・未完条件へリンクする。元計画/原文と旧記録を別保持。"
+      }
+    },
+    {
+      "id": "AC-G08-E",
+      "original": {
+        "id": "AC-G08-E",
+        "owner_id": "G08",
+        "type": "existing_gap_remediation_or_verification",
+        "given": "mainの現在照合表とJSONはC15が先頭の対象で、製品treeはC29と同じ。#42の最新照合は作業ブランチ側にある。設計時のplanned/not_runも現在合否とは別である。",
+        "when": "最新の対象版と確認日時を明示する入口を追加し、設計資料・歴史結果・現在の結果を参照で結ぶ。旧原文を上書きしない。",
+        "then": "過去のnot_runや古い不具合を現在合否として再計上しない。文書commitを検査した製品commitに置き換えない。",
+        "result": "not_run",
+        "required_evidence": [
+          "target_commit",
+          "product_tree",
+          "build_hash",
+          "base",
+          "fixture_hash",
+          "environment",
+          "procedure",
+          "actual_result",
+          "evidence_path",
+          "checked_at"
+        ]
+      },
+      "reviewResult": "passed_local_original_conditions",
+      "authorObservation": "元not_runは設計時originalとして保持し、現在authorResult/authorCurrentObservationと区別。旧失敗を現在の不合格へ再計上せず、document/delivery commitを製品実測commitへ読み替えない。",
+      "actualEvidence": [
+        {
+          "bundleManifest": "evidence/bundles/retention-delivery-1e77.manifest.json"
+        },
+        {
+          "authorReview": "CLAUSE_REVIEW.json",
+          "workPackages": "WORK_PACKAGE_REVIEW.json",
+          "regressions": "REGRESSION_REVIEW.json"
+        }
+      ],
+      "historicalPreparationObservation": "root README/docs README/PROGRESSから製品1fcadcca・配布1e77・原計画・現在の不足へ接続。現在入口を整理し、旧記録の原本文はHISTORY.mdへ保持した。過去3ab6等を今回実行へ付け替えない。",
+      "authorCurrentObservation": {
+        "at": "2026-10-15T23:50:24.925180+00:00",
+        "scope": "Original given/when/then preserved; current result authored from the actual bound evidence or named missing original environment.",
+        "observation": "元not_runは設計時originalとして保持し、現在authorResult/authorCurrentObservationと区別。旧失敗を現在の不合格へ再計上せず、document/delivery commitを製品実測commitへ読み替えない。"
+      }
+    },
+    {
+      "id": "AC-G09-N",
+      "original": {
+        "id": "AC-G09-N",
+        "owner_id": "G09",
+        "type": "existing_gap_remediation_or_verification",
+        "given": "既存記録は実iPhone/iPad、実OS/ブラウザー、入力変換、Files、録音、回転/分割の総合受入を未実行としている。Linux WebKit成功から実Safari合格は判断できない。",
+        "when": "本人のiPhone 17 Proを主端末とした短い手順を用意する。PCの開発画面を使わず登録→編集→試読→保存→Files→空環境復元を行う。",
+        "then": "実版を記録し、縦横/文字拡大/下側入力/画面キーボード/通信なしで同じIDと入力を保持できる。",
+        "result": "not_run",
+        "required_evidence": [
+          "target_commit",
+          "product_tree",
+          "build_hash",
+          "base",
+          "fixture_hash",
+          "environment",
+          "procedure",
+          "actual_result",
+          "evidence_path",
+          "checked_at"
+        ]
+      },
+      "reviewResult": "blocked_original_external_conditions",
+      "authorObservation": "iPhone17Proを主とする実iPhone/iPad/PCの短い分割手順・実fixture・13配信bytes/manifest・記録欄を用意したが、実OS版/縦横/文字拡大/IME/キーボード/機内モードの原受入は未実施。",
+      "actualEvidence": [],
+      "historicalPreparationObservation": "現候補の13配信/25memberの実機ZIP・隔離fixture/短い手順と未実行欄をローカル準備。実機未提供。ZIP Drive uploadは先行payloadのauto-review拒否により保留。",
+      "authorCurrentObservation": {
+        "at": "2026-10-15T23:50:24.925180+00:00",
+        "scope": "Original given/when/then preserved; current result authored from the actual bound evidence or named missing original environment.",
+        "observation": "iPhone17Proを主とする実iPhone/iPad/PCの短い分割手順・実fixture・13配信bytes/manifest・記録欄を用意したが、実OS版/縦横/文字拡大/IME/キーボード/機内モードの原受入は未実施。"
+      }
+    },
+    {
+      "id": "AC-G09-E",
+      "original": {
+        "id": "AC-G09-E",
+        "owner_id": "G09",
+        "type": "existing_gap_remediation_or_verification",
+        "given": "既存記録は実iPhone/iPad、実OS/ブラウザー、入力変換、Files、録音、回転/分割の総合受入を未実行としている。Linux WebKit成功から実Safari合格は判断できない。",
+        "when": "本人のiPhone 17 Proを主端末とした短い手順を用意する。PCの開発画面を使わず登録→編集→試読→保存→Files→空環境復元を行う。",
+        "then": "マイク拒否、Files取消、容量不足、通信断、未取得素材でも保存済み作品を残し、失敗箇所と再開方法を示す。",
+        "result": "not_run",
+        "required_evidence": [
+          "target_commit",
+          "product_tree",
+          "build_hash",
+          "base",
+          "fixture_hash",
+          "environment",
+          "procedure",
+          "actual_result",
+          "evidence_path",
+          "checked_at"
+        ]
+      },
+      "reviewResult": "blocked_original_external_conditions",
+      "authorObservation": "実マイク拒否/Files取消/実容量不足/断線/未取得素材の総合結果は未実施。ローカル注入の入力/正本保持を実機成功に流用せず、手順と再開欄を残す。",
+      "actualEvidence": [],
+      "historicalPreparationObservation": "現候補の13配信/25memberの実機ZIP・隔離fixture/短い手順と未実行欄をローカル準備。実機未提供。ZIP Drive uploadは先行payloadのauto-review拒否により保留。",
+      "authorCurrentObservation": {
+        "at": "2026-10-15T23:50:24.925180+00:00",
+        "scope": "Original given/when/then preserved; current result authored from the actual bound evidence or named missing original environment.",
+        "observation": "実マイク拒否/Files取消/実容量不足/断線/未取得素材の総合結果は未実施。ローカル注入の入力/正本保持を実機成功に流用せず、手順と再開欄を残す。"
+      }
+    },
+    {
+      "id": "AC-G10-N",
+      "original": {
+        "id": "AC-G10-N",
+        "owner_id": "G10",
+        "type": "existing_gap_remediation_or_verification",
+        "given": "VoiceOver/NVDA、実OSキーボード、200%表示、図の代替の最終手動受入は未実行。自動検査だけでは全条件を確定できない。",
+        "when": "追加/修正画面も含めフォーカス順・読み上げ名称・図の表代替・取消後復帰・仮想一覧の末尾まで確認する。",
+        "then": "主操作をキーボード/読み上げで完了し、選択先が隠れず、拡大でも本文と警告を読める。",
+        "result": "not_run",
+        "required_evidence": [
+          "target_commit",
+          "product_tree",
+          "build_hash",
+          "base",
+          "fixture_hash",
+          "environment",
+          "procedure",
+          "actual_result",
+          "evidence_path",
+          "checked_at"
+        ]
+      },
+      "reviewResult": "blocked_original_external_conditions",
+      "authorObservation": "実VoiceOver/NVDA、実OSキーボードと200%文字表示の最終操作は未実施。ローカル常時ボタン/表代替/焦点/sourceとCSS幅の補助結果は別保持。",
+      "actualEvidence": [
+        {
+          "bundleManifest": "evidence/bundles/product-ci-1fcadcca.manifest.json"
+        }
+      ],
+      "historicalPreparationObservation": "keyboard/list/ariaの自動補助と、実VoiceOver/NVDA/OS200%/IMEを区別。実支援技術・実端末なし。",
+      "authorCurrentObservation": {
+        "at": "2026-10-15T23:50:24.925180+00:00",
+        "scope": "Original given/when/then preserved; current result authored from the actual bound evidence or named missing original environment.",
+        "observation": "実VoiceOver/NVDA、実OSキーボードと200%文字表示の最終操作は未実施。ローカル常時ボタン/表代替/焦点/sourceとCSS幅の補助結果は別保持。"
+      }
+    },
+    {
+      "id": "AC-G10-E",
+      "original": {
+        "id": "AC-G10-E",
+        "owner_id": "G10",
+        "type": "existing_gap_remediation_or_verification",
+        "given": "VoiceOver/NVDA、実OSキーボード、200%表示、図の代替の最終手動受入は未実行。自動検査だけでは全条件を確定できない。",
+        "when": "追加/修正画面も含めフォーカス順・読み上げ名称・図の表代替・取消後復帰・仮想一覧の末尾まで確認する。",
+        "then": "色だけで結果を区別せず、モーダルで移動不能にしない。ピンチ無効化等を理由に200%の文字表示確認を省かない。",
+        "result": "not_run",
+        "required_evidence": [
+          "target_commit",
+          "product_tree",
+          "build_hash",
+          "base",
+          "fixture_hash",
+          "environment",
+          "procedure",
+          "actual_result",
+          "evidence_path",
+          "checked_at"
+        ]
+      },
+      "reviewResult": "blocked_original_external_conditions",
+      "authorObservation": "色以外の凡例/線種とmodal取消のローカル結果を保持するが、実読み上げ/文字200%の焦点・末尾到達・本文/警告の可読性は未判定。pinch無効化で省略しない。",
+      "actualEvidence": [
+        {
+          "bundleManifest": "evidence/bundles/product-ci-1fcadcca.manifest.json"
+        }
+      ],
+      "historicalPreparationObservation": "keyboard/list/ariaの自動補助と、実VoiceOver/NVDA/OS200%/IMEを区別。実支援技術・実端末なし。",
+      "authorCurrentObservation": {
+        "at": "2026-10-15T23:50:24.925180+00:00",
+        "scope": "Original given/when/then preserved; current result authored from the actual bound evidence or named missing original environment.",
+        "observation": "色以外の凡例/線種とmodal取消のローカル結果を保持するが、実読み上げ/文字200%の焦点・末尾到達・本文/警告の可読性は未判定。pinch無効化で省略しない。"
+      }
+    },
+    {
+      "id": "AC-G11-N",
+      "original": {
+        "id": "AC-G11-N",
+        "owner_id": "G11",
+        "type": "existing_gap_remediation_or_verification",
+        "given": "画面・送信待ち・競合・9 migration・API準備はある。専用HTTPS/Auth/private Storage、5役割、実二端末と直接APIの受入が未実施。実験場のキーを流用しない。",
+        "when": "専用構成を具体化し、送信確認/再送/同じ本文の競合/削除対編集/権限撤回/アカウント切替を通常操作と直接APIで確認する。",
+        "then": "owner/editor/reviewer/reader/nonmemberの5実アカウントで許可表どおりに取得・編集・指摘・素材取得でき、実二端末で競合を解決する。",
+        "result": "not_run",
+        "required_evidence": [
+          "target_commit",
+          "product_tree",
+          "build_hash",
+          "base",
+          "fixture_hash",
+          "environment",
+          "procedure",
+          "actual_result",
+          "evidence_path",
+          "checked_at"
+        ]
+      },
+      "reviewResult": "blocked_original_external_conditions",
+      "authorObservation": "専用HTTPS/Auth/DataAPI/private Storageと5実役割・二つの実端末が未指定。別用途projectはread-only確認だけで、既存9migration/SQL/HTTP protocolを実RLS/同期成功へ換算しない。",
+      "actualEvidence": [],
+      "historicalPreparationObservation": "専用HTTPS/Auth/private Storage/5実役割/二端末の指定待ち。別用途Supabaseを使用せず、変更/課金/他者通知なし。",
+      "authorCurrentObservation": {
+        "at": "2026-10-15T23:50:24.925180+00:00",
+        "scope": "Original given/when/then preserved; current result authored from the actual bound evidence or named missing original environment.",
+        "observation": "専用HTTPS/Auth/DataAPI/private Storageと5実役割・二つの実端末が未指定。別用途projectはread-only確認だけで、既存9migration/SQL/HTTP protocolを実RLS/同期成功へ換算しない。"
+      }
+    },
+    {
+      "id": "AC-G11-E",
+      "original": {
+        "id": "AC-G11-E",
+        "owner_id": "G11",
+        "type": "existing_gap_remediation_or_verification",
+        "given": "画面・送信待ち・競合・9 migration・API準備はある。専用HTTPS/Auth/private Storage、5役割、実二端末と直接APIの受入が未実施。実験場のキーを流用しない。",
+        "when": "専用構成を具体化し、送信確認/再送/同じ本文の競合/削除対編集/権限撤回/アカウント切替を通常操作と直接APIで確認する。",
+        "then": "非メンバー、失効、撤回、重複再送、古い権限、公開索引/件数/素材URLから秘密が取得できない。無許可の外部DB変更・課金をしない。",
+        "result": "not_run",
+        "required_evidence": [
+          "target_commit",
+          "product_tree",
+          "build_hash",
+          "base",
+          "fixture_hash",
+          "environment",
+          "procedure",
+          "actual_result",
+          "evidence_path",
+          "checked_at"
+        ]
+      },
+      "reviewResult": "blocked_original_external_conditions",
+      "authorObservation": "実nonmember/失効/撤回/再送/古い権限/公開索引・件数・素材URLの横断拒否は未実施。外部DB/課金変更を行わず、専用環境の具体的隔離fixture計画を渡す。",
+      "actualEvidence": [],
+      "historicalPreparationObservation": "専用HTTPS/Auth/private Storage/5実役割/二端末の指定待ち。別用途Supabaseを使用せず、変更/課金/他者通知なし。",
+      "authorCurrentObservation": {
+        "at": "2026-10-15T23:50:24.925180+00:00",
+        "scope": "Original given/when/then preserved; current result authored from the actual bound evidence or named missing original environment.",
+        "observation": "実nonmember/失効/撤回/再送/古い権限/公開索引・件数・素材URLの横断拒否は未実施。外部DB/課金変更を行わず、専用環境の具体的隔離fixture計画を渡す。"
+      }
+    },
+    {
+      "id": "AC-G12-N",
+      "original": {
+        "id": "AC-G12-N",
+        "owner_id": "G12",
+        "type": "existing_gap_remediation_or_verification",
+        "given": "公表値の過去確認と専用tenantの現設定は別。アプリの完全ファイル上限、単一素材上限、配信先/素材サービスの上限と残量を同じ値とはみなせない。",
+        "when": "接続先が決まった時点で現行の無料範囲、1ファイル/通信/DB/認証/配信の上限と実使用量を記録し、超過時のローカル継続を確認する。",
+        "then": "実構成と対象日を添えた容量/費用表と上限直前・直後の試験があり、新しい課金を前提にしない。",
+        "result": "not_run",
+        "required_evidence": [
+          "target_commit",
+          "product_tree",
+          "build_hash",
+          "base",
+          "fixture_hash",
+          "environment",
+          "procedure",
+          "actual_result",
+          "evidence_path",
+          "checked_at"
+        ]
+      },
+      "reviewResult": "blocked_original_external_conditions",
+      "authorObservation": "公開公式上限の読取りとアプリnative/素材限界の元L±1実行は保持。専用実tier/region/使用量/残枠/費用が未指定で、現契約の容量費用表と実枠境界を確認できない。",
+      "actualEvidence": [
+        {
+          "bundleManifest": "evidence/bundles/full-large-exceptions-1fcadcca.manifest.json"
+        }
+      ],
+      "historicalPreparationObservation": "現公式のStorage/Edge制限を再取得したが実tenant/tier/region/usage/残枠/費用未確認。local容量境界とhost上限を別に扱う。",
+      "authorCurrentObservation": {
+        "at": "2026-10-15T23:50:24.925180+00:00",
+        "scope": "Original given/when/then preserved; current result authored from the actual bound evidence or named missing original environment.",
+        "observation": "公開公式上限の読取りとアプリnative/素材限界の元L±1実行は保持。専用実tier/region/使用量/残枠/費用が未指定で、現契約の容量費用表と実枠境界を確認できない。"
+      }
+    },
+    {
+      "id": "AC-G12-E",
+      "original": {
+        "id": "AC-G12-E",
+        "owner_id": "G12",
+        "type": "existing_gap_remediation_or_verification",
+        "given": "公表値の過去確認と専用tenantの現設定は別。アプリの完全ファイル上限、単一素材上限、配信先/素材サービスの上限と残量を同じ値とはみなせない。",
+        "when": "接続先が決まった時点で現行の無料範囲、1ファイル/通信/DB/認証/配信の上限と実使用量を記録し、超過時のローカル継続を確認する。",
+        "then": "枠不足・upload拒否・通信制限でも元作品/素材/送信待ちを保つ。文書だけで費用ゼロやアップロード可能と断定しない。",
+        "result": "not_run",
+        "required_evidence": [
+          "target_commit",
+          "product_tree",
+          "build_hash",
+          "base",
+          "fixture_hash",
+          "environment",
+          "procedure",
+          "actual_result",
+          "evidence_path",
+          "checked_at"
+        ]
+      },
+      "reviewResult": "blocked_original_external_conditions",
+      "authorObservation": "ローカル同全量quota拒否で素材/未送信保持は確認。実bucket upload拒否/通信枠不足の原環境は未実施で、費用ゼロやupload可能と断定しない。",
+      "actualEvidence": [
+        {
+          "bundleManifest": "evidence/bundles/full-large-exceptions-1fcadcca.manifest.json"
+        }
+      ],
+      "historicalPreparationObservation": "現公式のStorage/Edge制限を再取得したが実tenant/tier/region/usage/残枠/費用未確認。local容量境界とhost上限を別に扱う。",
+      "authorCurrentObservation": {
+        "at": "2026-10-15T23:50:24.925180+00:00",
+        "scope": "Original given/when/then preserved; current result authored from the actual bound evidence or named missing original environment.",
+        "observation": "ローカル同全量quota拒否で素材/未送信保持は確認。実bucket upload拒否/通信枠不足の原環境は未実施で、費用ゼロやupload可能と断定しない。"
+      }
+    },
+    {
+      "id": "AC-G13-N",
+      "original": {
+        "id": "AC-G13-N",
+        "owner_id": "G13",
+        "type": "existing_gap_remediation_or_verification",
+        "given": "Standard/Largeの局所30回成功は保持するが、2時間112編集後の完全保存失敗が残る。実端末と最終統合候補の全性能を満たした証拠は揃っていない。",
+        "when": "元のseed/平均文字数/関連データ/素材量で全指標を30回測る。2時間の編集後に外部ファイルの空環境復元まで実行する。",
+        "then": "Standard 200ms/検索500ms/保存1000ms/起動3秒/図33.4msとLarge検索2秒/初回10秒の各p95を満たし、2時間後も全内容を復元する。",
+        "result": "not_run",
+        "required_evidence": [
+          "target_commit",
+          "product_tree",
+          "build_hash",
+          "base",
+          "fixture_hash",
+          "environment",
+          "procedure",
+          "actual_result",
+          "evidence_path",
+          "checked_at"
+        ]
+      },
+      "reviewResult": "partial_local_support_original_conditions_remain",
+      "authorObservation": "同clean1fcで原Standard/Large各8×30、原6形式×30保存と実7200/full113/72MiB new/clone/coldを完了。Standard全目標とLarge明示起動/検索上限は満たすが指定実機の最終測定は未実施。",
+      "actualEvidence": [
+        {
+          "bundleManifest": "evidence/bundles/formal-1fcadcca.manifest.json"
+        }
+      ],
+      "historicalPreparationObservation": "製品1fcadccaの正式Standard/Large全8指標各30と元180保存が成功。Largeは明示2上限と他6観測を分ける。実7200秒の112編集は完了し、全量書き出し235817ms。最終113履歴/newclonecold/実exit0は未完了。実対象端末の性能は別未実行。",
+      "authorCurrentObservation": {
+        "at": "2026-10-15T23:50:24.925180+00:00",
+        "scope": "Original given/when/then preserved; current result authored from the actual bound evidence or named missing original environment.",
+        "observation": "同clean1fcで原Standard/Large各8×30、原6形式×30保存と実7200/full113/72MiB new/clone/coldを完了。Standard全目標とLarge明示起動/検索上限は満たすが指定実機の最終測定は未実施。"
+      }
+    },
+    {
+      "id": "AC-G13-E",
+      "original": {
+        "id": "AC-G13-E",
+        "owner_id": "G13",
+        "type": "existing_gap_remediation_or_verification",
+        "given": "Standard/Largeの局所30回成功は保持するが、2時間112編集後の完全保存失敗が残る。実端末と最終統合候補の全性能を満たした証拠は揃っていない。",
+        "when": "元のseed/平均文字数/関連データ/素材量で全指標を30回測る。2時間の編集後に外部ファイルの空環境復元まで実行する。",
+        "then": "入力待ち500msを保存時間から外す規則、元終点、実素材、元件数、元上限を維持する。診断数回・異なる候補・仮想端末から実端末の合格を作らない。",
+        "result": "not_run",
+        "required_evidence": [
+          "target_commit",
+          "product_tree",
+          "build_hash",
+          "base",
+          "fixture_hash",
+          "environment",
+          "procedure",
+          "actual_result",
+          "evidence_path",
+          "checked_at"
+        ]
+      },
+      "reviewResult": "passed_local_original_conditions",
+      "authorObservation": "500ms入力待ちを除く元command始終点/全30生値/nearest-rankを保持。UI成功通知区間は別、6Large未規定指標へ独自上限を作らない。診断/旧build/仮想幅を実機合格にせず、失敗試行も保持。",
+      "actualEvidence": [
+        {
+          "bundleManifest": "evidence/bundles/formal-1fcadcca.manifest.json"
+        }
+      ],
+      "historicalPreparationObservation": "製品1fcadccaの正式Standard/Large全8指標各30と元180保存が成功。Largeは明示2上限と他6観測を分ける。実7200秒の112編集は完了し、全量書き出し235817ms。最終113履歴/newclonecold/実exit0は未完了。実対象端末の性能は別未実行。",
+      "authorCurrentObservation": {
+        "at": "2026-10-15T23:50:24.925180+00:00",
+        "scope": "Original given/when/then preserved; current result authored from the actual bound evidence or named missing original environment.",
+        "observation": "500ms入力待ちを除く元command始終点/全30生値/nearest-rankを保持。UI成功通知区間は別、6Large未規定指標へ独自上限を作らない。診断/旧build/仮想幅を実機合格にせず、失敗試行も保持。"
+      }
+    },
+    {
+      "id": "AC-G14-N",
+      "original": {
+        "id": "AC-G14-N",
+        "owner_id": "G14",
+        "type": "existing_gap_remediation_or_verification",
+        "given": "再利用の解決・公開投影・汎用ブラウザー受取例は接続済み。昔の未対応メッセージだけでは現在不足といえない。全原ケースの最終結果は未確定。",
+        "when": "宣言した実対応の条件・効果・ID・固定世界・部分上書き・公開範囲・台詞/素材を出力先ごとに確認し、実受領結果を同じ対象版へ戻す。",
+        "then": "各対応プロファイルが実ファイルと受領版/hashを持ち、原条件に沿って未対応を明示する。旧公開版の内容を保持する。",
+        "result": "not_run",
+        "required_evidence": [
+          "target_commit",
+          "product_tree",
+          "build_hash",
+          "base",
+          "fixture_hash",
+          "environment",
+          "procedure",
+          "actual_result",
+          "evidence_path",
+          "checked_at"
+        ]
+      },
+      "reviewResult": "passed_local_original_conditions",
+      "authorObservation": "宣言したnative/runtime1.0、profile1.1/browser-game1.0を保持。reader/playable/runtime/production/相談の実bytesと版/hash、固定世界/部分override/台詞素材/ID対応、generic browser受取receiptの照合を現行CIで確認。対象ゲームはF42/E10別未実施と明示。",
+      "actualEvidence": [
+        {
+          "bundleManifest": "evidence/bundles/product-ci-1fcadcca.manifest.json"
+        }
+      ],
+      "historicalPreparationObservation": "native1.0.0/runtime1.0.0/profile1.1.0/browser-game1.0.0を維持。全出力実bytes/未対応拒否/旧pin/受信receiptの現在照合待ち。実ゲームは未観測。",
+      "authorCurrentObservation": {
+        "at": "2026-10-15T23:50:24.925180+00:00",
+        "scope": "Original given/when/then preserved; current result authored from the actual bound evidence or named missing original environment.",
+        "observation": "宣言したnative/runtime1.0、profile1.1/browser-game1.0を保持。reader/playable/runtime/production/相談の実bytesと版/hash、固定世界/部分override/台詞素材/ID対応、generic browser受取receiptの照合を現行CIで確認。対象ゲームはF42/E10別未実施と明示。"
+      }
+    },
+    {
+      "id": "AC-G14-E",
+      "original": {
+        "id": "AC-G14-E",
+        "owner_id": "G14",
+        "type": "existing_gap_remediation_or_verification",
+        "given": "再利用の解決・公開投影・汎用ブラウザー受取例は接続済み。昔の未対応メッセージだけでは現在不足といえない。全原ケースの最終結果は未確定。",
+        "when": "宣言した実対応の条件・効果・ID・固定世界・部分上書き・公開範囲・台詞/素材を出力先ごとに確認し、実受領結果を同じ対象版へ戻す。",
+        "then": "作者メモ/秘密/私有素材を出さず、未対応engine/commandや版/hash不一致を拒否する。全engine対応と表記しない。",
+        "result": "not_run",
+        "required_evidence": [
+          "target_commit",
+          "product_tree",
+          "build_hash",
+          "base",
+          "fixture_hash",
+          "environment",
+          "procedure",
+          "actual_result",
+          "evidence_path",
+          "checked_at"
+        ]
+      },
+      "reviewResult": "passed_local_original_conditions",
+      "authorObservation": "作者メモ/秘密名/私有素材を公開投影から除き、未対応engine/command/inputTypeと版/hash不一致を拒否。Unity/Unreal/ink/Yarnへの全対応を主張せず、旧公開版本文を保持。",
+      "actualEvidence": [
+        {
+          "bundleManifest": "evidence/bundles/product-ci-1fcadcca.manifest.json"
+        }
+      ],
+      "historicalPreparationObservation": "native1.0.0/runtime1.0.0/profile1.1.0/browser-game1.0.0を維持。全出力実bytes/未対応拒否/旧pin/受信receiptの現在照合待ち。実ゲームは未観測。",
+      "authorCurrentObservation": {
+        "at": "2026-10-15T23:50:24.925180+00:00",
+        "scope": "Original given/when/then preserved; current result authored from the actual bound evidence or named missing original environment.",
+        "observation": "作者メモ/秘密名/私有素材を公開投影から除き、未対応engine/command/inputTypeと版/hash不一致を拒否。Unity/Unreal/ink/Yarnへの全対応を主張せず、旧公開版本文を保持。"
+      }
+    },
+    {
+      "id": "AC-G15-N",
+      "original": {
+        "id": "AC-G15-N",
+        "owner_id": "G15",
+        "type": "existing_gap_remediation_or_verification",
+        "given": "更新待ちの配信処理、版付き保存形式、履歴・復元処理はある。旧アプリから更新し、入力/送信待ち/世界/素材を保った実端末の総合受入は未確認。",
+        "when": "旧build・旧完全ファイルを固定してコピー上の移行、拒否、取消、更新待ち、複数タブ、再試行、再起動を確認する。",
+        "then": "更新の前後で同じ全ID/内容/履歴/送信待ちを確認でき、実完全ファイルを空環境へ復元できる。",
+        "result": "not_run",
+        "required_evidence": [
+          "target_commit",
+          "product_tree",
+          "build_hash",
+          "base",
+          "fixture_hash",
+          "environment",
+          "procedure",
+          "actual_result",
+          "evidence_path",
+          "checked_at"
+        ]
+      },
+      "reviewResult": "partial_local_support_original_conditions_remain",
+      "authorObservation": "genuine legacy・native移行拒否/retry/取消・複数tab waiting worker、実全体new/clone/coldを現行3engineで確認。SW変更はcache identityだけで実旧app buildからの更新とは別。実旧アプリ/実端末/OS Filesの原総合条件は未実施。",
+      "actualEvidence": [
+        {
+          "bundleManifest": "evidence/bundles/product-ci-1fcadcca.manifest.json"
+        }
+      ],
+      "historicalPreparationObservation": "元旧fixture/SW待機/複数tab/移行拒否/通常再試行/実完全fileを同候補CIで検査。実旧app/実OS更新/Files取消は残る。",
+      "authorCurrentObservation": {
+        "at": "2026-10-15T23:50:24.925180+00:00",
+        "scope": "Original given/when/then preserved; current result authored from the actual bound evidence or named missing original environment.",
+        "observation": "genuine legacy・native移行拒否/retry/取消・複数tab waiting worker、実全体new/clone/coldを現行3engineで確認。SW変更はcache identityだけで実旧app buildからの更新とは別。実旧アプリ/実端末/OS Filesの原総合条件は未実施。"
+      }
+    },
+    {
+      "id": "AC-G15-E",
+      "original": {
+        "id": "AC-G15-E",
+        "owner_id": "G15",
+        "type": "existing_gap_remediation_or_verification",
+        "given": "更新待ちの配信処理、版付き保存形式、履歴・復元処理はある。旧アプリから更新し、入力/送信待ち/世界/素材を保った実端末の総合受入は未確認。",
+        "when": "旧build・旧完全ファイルを固定してコピー上の移行、拒否、取消、更新待ち、複数タブ、再試行、再起動を確認する。",
+        "then": "未知版・破損・容量不足・遅延完了・途中取消で現在作品を壊さない。更新で未保存入力を消さず、未取得アプリを通信なしで利用可能と偽表示しない。",
+        "result": "not_run",
+        "required_evidence": [
+          "target_commit",
+          "product_tree",
+          "build_hash",
+          "base",
+          "fixture_hash",
+          "environment",
+          "procedure",
+          "actual_result",
+          "evidence_path",
+          "checked_at"
+        ]
+      },
+      "reviewResult": "partial_local_support_original_conditions_remain",
+      "authorObservation": "不正major/破損/late quota/遅延通知/取消・未cache起動拒否をローカルで確認。実old-build更新の未保存入力/未取得素材と実OS保存先取消の条件は未実施として保持。",
+      "actualEvidence": [
+        {
+          "bundleManifest": "evidence/bundles/product-ci-1fcadcca.manifest.json"
+        }
+      ],
+      "historicalPreparationObservation": "元旧fixture/SW待機/複数tab/移行拒否/通常再試行/実完全fileを同候補CIで検査。実旧app/実OS更新/Files取消は残る。",
+      "authorCurrentObservation": {
+        "at": "2026-10-15T23:50:24.925180+00:00",
+        "scope": "Original given/when/then preserved; current result authored from the actual bound evidence or named missing original environment.",
+        "observation": "不正major/破損/late quota/遅延通知/取消・未cache起動拒否をローカルで確認。実old-build更新の未保存入力/未取得素材と実OS保存先取消の条件は未実施として保持。"
+      }
+    },
+    {
+      "id": "AC-G16-N",
+      "original": {
+        "id": "AC-G16-N",
+        "owner_id": "G16",
+        "type": "existing_gap_remediation_or_verification",
+        "given": "C29の原句表には、人物の改名/復元、同じ発火ID再送、旧版開始状態の選択、素材だけの差替え、同fixtureの逆順二案等の追加観測が残る。全てを実端末待ちにはできない。",
+        "when": "原116ケース表の未観測/部分観測を各操作のまま試す。別対象の似た操作で代用せず、明確な不一致だけを修正候補にする。",
+        "then": "同じgivenで本人の通常操作からwhenを実行し、thenとnegative_or_edgeを確定した原文どおりに観測する。",
+        "result": "not_run",
+        "required_evidence": [
+          "target_commit",
+          "product_tree",
+          "build_hash",
+          "base",
+          "fixture_hash",
+          "environment",
+          "procedure",
+          "actual_result",
+          "evidence_path",
+          "checked_at"
+        ]
+      },
+      "reviewResult": "partial_local_support_original_conditions_remain",
+      "authorObservation": "原全116×4を確認し、人物自体の改名/単体復元、同一trigger再送、旧版開始選択、素材のみ差替え、同fixture逆順二案など実行可能な原given/whenを元UIで観測。94ケースのlocal完了と22ケースの外部不足を個別に記録し、全件成功とはしない。",
+      "actualEvidence": [
+        {
+          "bundleManifest": "evidence/bundles/product-ci-1fcadcca.manifest.json"
+        },
+        {
+          "bundleManifest": "evidence/bundles/unaffected-local-3ab6.manifest.json"
+        },
+        {
+          "authorReview": "CLAUSE_REVIEW.json",
+          "workPackages": "WORK_PACKAGE_REVIEW.json",
+          "regressions": "REGRESSION_REVIEW.json"
+        }
+      ],
+      "historicalPreparationObservation": "原same-givenのF01/F27/F31/F35等を補強。人物改名・同trigger ID・旧checkpoint・素材だけ差替え等の原sourceを全116条項へ記述。actual全件判定待ち。",
+      "authorCurrentObservation": {
+        "at": "2026-10-15T23:50:24.925180+00:00",
+        "scope": "Original given/when/then preserved; current result authored from the actual bound evidence or named missing original environment.",
+        "observation": "原全116×4を確認し、人物自体の改名/単体復元、同一trigger再送、旧版開始選択、素材のみ差替え、同fixture逆順二案など実行可能な原given/whenを元UIで観測。94ケースのlocal完了と22ケースの外部不足を個別に記録し、全件成功とはしない。"
+      }
+    },
+    {
+      "id": "AC-G16-E",
+      "original": {
+        "id": "AC-G16-E",
+        "owner_id": "G16",
+        "type": "existing_gap_remediation_or_verification",
+        "given": "C29の原句表には、人物の改名/復元、同じ発火ID再送、旧版開始状態の選択、素材だけの差替え、同fixtureの逆順二案等の追加観測が残る。全てを実端末待ちにはできない。",
+        "when": "原116ケース表の未観測/部分観測を各操作のまま試す。別対象の似た操作で代用せず、明確な不一致だけを修正候補にする。",
+        "then": "台詞の改名を人物の改名に換算しない。初期条件・対象版・未定義状態・素材欠落を都合のよいfixtureへ置換しない。外部条件が要る部分は理由付き未実行として残す。",
+        "result": "not_run",
+        "required_evidence": [
+          "target_commit",
+          "product_tree",
+          "build_hash",
+          "base",
+          "fixture_hash",
+          "environment",
+          "procedure",
+          "actual_result",
+          "evidence_path",
+          "checked_at"
+        ]
+      },
+      "reviewResult": "passed_local_original_conditions",
+      "authorObservation": "台詞改名を人物改名へ換算せず、元fixture・対象版・未定義/素材欠落を保持。F02最小入力とB01の横断原則は根拠を明記。N05だけ旧版無影響carryを明示。外部条件は理由付き未実行で、別対象の似た操作で穴を埋めない。",
+      "actualEvidence": [
+        {
+          "bundleManifest": "evidence/bundles/product-ci-1fcadcca.manifest.json"
+        },
+        {
+          "bundleManifest": "evidence/bundles/unaffected-local-3ab6.manifest.json"
+        },
+        {
+          "authorReview": "CLAUSE_REVIEW.json",
+          "workPackages": "WORK_PACKAGE_REVIEW.json",
+          "regressions": "REGRESSION_REVIEW.json"
+        }
+      ],
+      "historicalPreparationObservation": "原same-givenのF01/F27/F31/F35等を補強。人物改名・同trigger ID・旧checkpoint・素材だけ差替え等の原sourceを全116条項へ記述。actual全件判定待ち。",
+      "authorCurrentObservation": {
+        "at": "2026-10-15T23:50:24.925180+00:00",
+        "scope": "Original given/when/then preserved; current result authored from the actual bound evidence or named missing original environment.",
+        "observation": "台詞改名を人物改名へ換算せず、元fixture・対象版・未定義/素材欠落を保持。F02最小入力とB01の横断原則は根拠を明記。N05だけ旧版無影響carryを明示。外部条件は理由付き未実行で、別対象の似た操作で穴を埋めない。"
+      }
+    },
+    {
+      "id": "AC-X01-N",
+      "original": {
+        "id": "AC-X01-N",
+        "owner_id": "X01",
+        "type": "proposed_extension_acceptance",
+        "given": "端末設定: accountScope/projectId/preset(game|novel|video|all)/guideVersion/step(0..5)/dismissed。作品内容の正本は複製しない。",
+        "when": "新規作品で用途を選ぶと、人物登録・最初の場面・本文・試読・完全保存への5段階以下の案内を表示する。全機能への入口、案内を閉じる/再開する操作を常に残す。",
+        "then": "空作品から用途を選び、人物・場面・本文・試読・完全保存を案内だけで完了する。閉じて再開できる。",
+        "result": "not_run",
+        "required_evidence": [
+          "target_commit",
+          "product_tree",
+          "build_hash",
+          "base",
+          "fixture_hash",
+          "environment",
+          "procedure",
+          "actual_result",
+          "evidence_path",
+          "checked_at"
+        ]
+      },
+      "reviewResult": "not_adopted",
+      "authorObservation": "追加X01-X12は未採用。原条件を保持し、実装/実行済みへ換算しない。",
+      "actualEvidence": []
+    },
+    {
+      "id": "AC-X01-E",
+      "original": {
+        "id": "AC-X01-E",
+        "owner_id": "X01",
+        "type": "proposed_extension_acceptance",
+        "given": "端末設定: accountScope/projectId/preset(game|novel|video|all)/guideVersion/step(0..5)/dismissed。作品内容の正本は複製しない。",
+        "when": "新規作品で用途を選ぶと、人物登録・最初の場面・本文・試読・完全保存への5段階以下の案内を表示する。全機能への入口、案内を閉じる/再開する操作を常に残す。",
+        "then": "途中入力、保存失敗、用途変更、別アカウント、縦横/200%/VoiceOverでも主操作を失わない。",
+        "result": "not_run",
+        "required_evidence": [
+          "target_commit",
+          "product_tree",
+          "build_hash",
+          "base",
+          "fixture_hash",
+          "environment",
+          "procedure",
+          "actual_result",
+          "evidence_path",
+          "checked_at"
+        ]
+      },
+      "reviewResult": "not_adopted",
+      "authorObservation": "追加X01-X12は未採用。原条件を保持し、実装/実行済みへ換算しない。",
+      "actualEvidence": []
+    },
+    {
+      "id": "AC-X01-B",
+      "original": {
+        "id": "AC-X01-B",
+        "owner_id": "X01",
+        "type": "proposed_extension_acceptance",
+        "given": "端末設定: accountScope/projectId/preset(game|novel|video|all)/guideVersion/step(0..5)/dismissed。作品内容の正本は複製しない。",
+        "when": "新規作品で用途を選ぶと、人物登録・最初の場面・本文・試読・完全保存への5段階以下の案内を表示する。全機能への入口、案内を閉じる/再開する操作を常に残す。",
+        "then": "既存作品はall相当から開始し、全画面へ戻れる。案内を終了済みでも再表示できる。",
+        "result": "not_run",
+        "required_evidence": [
+          "target_commit",
+          "product_tree",
+          "build_hash",
+          "base",
+          "fixture_hash",
+          "environment",
+          "procedure",
+          "actual_result",
+          "evidence_path",
+          "checked_at"
+        ]
+      },
+      "reviewResult": "not_adopted",
+      "authorObservation": "追加X01-X12は未採用。原条件を保持し、実装/実行済みへ換算しない。",
+      "actualEvidence": []
+    },
+    {
+      "id": "AC-X02-N",
+      "original": {
+        "id": "AC-X02-N",
+        "owner_id": "X02",
+        "type": "proposed_extension_acceptance",
+        "given": "端末設定: workspaceSearchScope(projectIds,worldSnapshotIds)、query、page。索引はaccount/project/snapshot/profileごとの派生物で、正本/検索対象権限を代替しない。",
+        "when": "利用者が選んだローカル作品と許可済み固定世界だけを横断し、作品名・版・項目種類・安定IDを付けて結果を分割表示する。秘密を除く範囲で検索し、元位置へ戻れる。",
+        "then": "同名人物が二作品にある状態で、作品/版を区別し元本文へ移動して検索位置へ戻る。",
+        "result": "not_run",
+        "required_evidence": [
+          "target_commit",
+          "product_tree",
+          "build_hash",
+          "base",
+          "fixture_hash",
+          "environment",
+          "procedure",
+          "actual_result",
+          "evidence_path",
+          "checked_at"
+        ]
+      },
+      "reviewResult": "not_adopted",
+      "authorObservation": "追加X01-X12は未採用。原条件を保持し、実装/実行済みへ換算しない。",
+      "actualEvidence": []
+    },
+    {
+      "id": "AC-X02-E",
+      "original": {
+        "id": "AC-X02-E",
+        "owner_id": "X02",
+        "type": "proposed_extension_acceptance",
+        "given": "端末設定: workspaceSearchScope(projectIds,worldSnapshotIds)、query、page。索引はaccount/project/snapshot/profileごとの派生物で、正本/検索対象権限を代替しない。",
+        "when": "利用者が選んだローカル作品と許可済み固定世界だけを横断し、作品名・版・項目種類・安定IDを付けて結果を分割表示する。秘密を除く範囲で検索し、元位置へ戻れる。",
+        "then": "権限撤回・公開範囲変更・世界版未取得・不正なリンクでは本文/件数を出さない。",
+        "result": "not_run",
+        "required_evidence": [
+          "target_commit",
+          "product_tree",
+          "build_hash",
+          "base",
+          "fixture_hash",
+          "environment",
+          "procedure",
+          "actual_result",
+          "evidence_path",
+          "checked_at"
+        ]
+      },
+      "reviewResult": "not_adopted",
+      "authorObservation": "追加X01-X12は未採用。原条件を保持し、実装/実行済みへ換算しない。",
+      "actualEvidence": []
+    },
+    {
+      "id": "AC-X02-B",
+      "original": {
+        "id": "AC-X02-B",
+        "owner_id": "X02",
+        "type": "proposed_extension_acceptance",
+        "given": "端末設定: workspaceSearchScope(projectIds,worldSnapshotIds)、query、page。索引はaccount/project/snapshot/profileごとの派生物で、正本/検索対象権限を代替しない。",
+        "when": "利用者が選んだローカル作品と許可済み固定世界だけを横断し、作品名・版・項目種類・安定IDを付けて結果を分割表示する。秘密を除く範囲で検索し、元位置へ戻れる。",
+        "then": "Large作品を複数選んでも2秒以降に進捗/取消を出し、分割した結果から末尾へ到達できる。",
+        "result": "not_run",
+        "required_evidence": [
+          "target_commit",
+          "product_tree",
+          "build_hash",
+          "base",
+          "fixture_hash",
+          "environment",
+          "procedure",
+          "actual_result",
+          "evidence_path",
+          "checked_at"
+        ]
+      },
+      "reviewResult": "not_adopted",
+      "authorObservation": "追加X01-X12は未採用。原条件を保持し、実装/実行済みへ換算しない。",
+      "actualEvidence": []
+    },
+    {
+      "id": "AC-X03-N",
+      "original": {
+        "id": "AC-X03-N",
+        "owner_id": "X03",
+        "type": "proposed_extension_acceptance",
+        "given": "置換確認: planId/projectId/baseRevision/query/replacement/targets(entityId,blockId,start,end,beforeHash)/confirmationHash。範囲は既存のUnicode文字位置規則を使う。",
+        "when": "作品内の現在採用本文を対象に、文字列の完全一致を検索する。対象作品/項目/段落/範囲/前後文を表示し、選んだ非重複箇所だけを一操作として置換する。台詞IDは維持する。",
+        "then": "同名と一般語のある本文で一部の箇所だけ置換し、リンク/ルビ/提示位置/台詞IDを確認して保存・cold・取消・完全復元する。",
+        "result": "not_run",
+        "required_evidence": [
+          "target_commit",
+          "product_tree",
+          "build_hash",
+          "base",
+          "fixture_hash",
+          "environment",
+          "procedure",
+          "actual_result",
+          "evidence_path",
+          "checked_at"
+        ]
+      },
+      "reviewResult": "not_adopted",
+      "authorObservation": "追加X01-X12は未採用。原条件を保持し、実装/実行済みへ換算しない。",
+      "actualEvidence": []
+    },
+    {
+      "id": "AC-X03-E",
+      "original": {
+        "id": "AC-X03-E",
+        "owner_id": "X03",
+        "type": "proposed_extension_acceptance",
+        "given": "置換確認: planId/projectId/baseRevision/query/replacement/targets(entityId,blockId,start,end,beforeHash)/confirmationHash。範囲は既存のUnicode文字位置規則を使う。",
+        "when": "作品内の現在採用本文を対象に、文字列の完全一致を検索する。対象作品/項目/段落/範囲/前後文を表示し、選んだ非重複箇所だけを一操作として置換する。台詞IDは維持する。",
+        "then": "途中更新、絵文字、重なる注記、取消、容量不足で全体が原子的に不変か明示した追従待ちになる。",
+        "result": "not_run",
+        "required_evidence": [
+          "target_commit",
+          "product_tree",
+          "build_hash",
+          "base",
+          "fixture_hash",
+          "environment",
+          "procedure",
+          "actual_result",
+          "evidence_path",
+          "checked_at"
+        ]
+      },
+      "reviewResult": "not_adopted",
+      "authorObservation": "追加X01-X12は未採用。原条件を保持し、実装/実行済みへ換算しない。",
+      "actualEvidence": []
+    },
+    {
+      "id": "AC-X03-B",
+      "original": {
+        "id": "AC-X03-B",
+        "owner_id": "X03",
+        "type": "proposed_extension_acceptance",
+        "given": "置換確認: planId/projectId/baseRevision/query/replacement/targets(entityId,blockId,start,end,beforeHash)/confirmationHash。範囲は既存のUnicode文字位置規則を使う。",
+        "when": "作品内の現在採用本文を対象に、文字列の完全一致を検索する。対象作品/項目/段落/範囲/前後文を表示し、選んだ非重複箇所だけを一操作として置換する。台詞IDは維持する。",
+        "then": "空検索・同じ検索/置換は拒否/変更なし。最初の版は正規表現非対応。結果はページ化し、上限超過時に無言で途中切断しない。",
+        "result": "not_run",
+        "required_evidence": [
+          "target_commit",
+          "product_tree",
+          "build_hash",
+          "base",
+          "fixture_hash",
+          "environment",
+          "procedure",
+          "actual_result",
+          "evidence_path",
+          "checked_at"
+        ]
+      },
+      "reviewResult": "not_adopted",
+      "authorObservation": "追加X01-X12は未採用。原条件を保持し、実装/実行済みへ換算しない。",
+      "actualEvidence": []
+    },
+    {
+      "id": "AC-X04-N",
+      "original": {
+        "id": "AC-X04-N",
+        "owner_id": "X04",
+        "type": "proposed_extension_acceptance",
+        "given": "manifest + CSV。キーはlineIdとlocaleの組。snapshot/profileへの対応を保持し、訳文の新規/更新/変更なし/競合/削除候補を確認表に出す。欠行は削除要求にしない。",
+        "when": "独自形式scenario-localization-table 1.0.0のUTF-8 CSVを出力/取り込みする。lineId/locale/sourceHash/targetTextを必須、commentを任意とし、別manifestへprojectId/snapshotId/profileHash/schema/行数/内容hashを付ける。",
+        "then": "複数言語、改行/引用符/カンマ/絵文字を含む表を出し、iPhone上の編集後に取り込み、元IDと原文hash/状態を保ってcold/完全復元する。",
+        "result": "not_run",
+        "required_evidence": [
+          "target_commit",
+          "product_tree",
+          "build_hash",
+          "base",
+          "fixture_hash",
+          "environment",
+          "procedure",
+          "actual_result",
+          "evidence_path",
+          "checked_at"
+        ]
+      },
+      "reviewResult": "not_adopted",
+      "authorObservation": "追加X01-X12は未採用。原条件を保持し、実装/実行済みへ換算しない。",
+      "actualEvidence": []
+    },
+    {
+      "id": "AC-X04-E",
+      "original": {
+        "id": "AC-X04-E",
+        "owner_id": "X04",
+        "type": "proposed_extension_acceptance",
+        "given": "manifest + CSV。キーはlineIdとlocaleの組。snapshot/profileへの対応を保持し、訳文の新規/更新/変更なし/競合/削除候補を確認表に出す。欠行は削除要求にしない。",
+        "when": "独自形式scenario-localization-table 1.0.0のUTF-8 CSVを出力/取り込みする。lineId/locale/sourceHash/targetTextを必須、commentを任意とし、別manifestへprojectId/snapshotId/profileHash/schema/行数/内容hashを付ける。",
+        "then": "出力後に原文変更、ID変更、重複、壊れた引用符、=から始まる台詞、保存失敗を検出し元内容を残す。",
+        "result": "not_run",
+        "required_evidence": [
+          "target_commit",
+          "product_tree",
+          "build_hash",
+          "base",
+          "fixture_hash",
+          "environment",
+          "procedure",
+          "actual_result",
+          "evidence_path",
+          "checked_at"
+        ]
+      },
+      "reviewResult": "not_adopted",
+      "authorObservation": "追加X01-X12は未採用。原条件を保持し、実装/実行済みへ換算しない。",
+      "actualEvidence": []
+    },
+    {
+      "id": "AC-X04-B",
+      "original": {
+        "id": "AC-X04-B",
+        "owner_id": "X04",
+        "type": "proposed_extension_acceptance",
+        "given": "manifest + CSV。キーはlineIdとlocaleの組。snapshot/profileへの対応を保持し、訳文の新規/更新/変更なし/競合/削除候補を確認表に出す。欠行は削除要求にしない。",
+        "when": "独自形式scenario-localization-table 1.0.0のUTF-8 CSVを出力/取り込みする。lineId/locale/sourceHash/targetTextを必須、commentを任意とし、別manifestへprojectId/snapshotId/profileHash/schema/行数/内容hashを付ける。",
+        "then": "最大50,000行、ファイル32MiBまで。行数/bytesを超えたら処理前に拒否。サイズは既存作品上限も満たす。式対策の変換はmanifestに可逆符号化を宣言し、往復で元文字列を厳密復元する。",
+        "result": "not_run",
+        "required_evidence": [
+          "target_commit",
+          "product_tree",
+          "build_hash",
+          "base",
+          "fixture_hash",
+          "environment",
+          "procedure",
+          "actual_result",
+          "evidence_path",
+          "checked_at"
+        ]
+      },
+      "reviewResult": "not_adopted",
+      "authorObservation": "追加X01-X12は未採用。原条件を保持し、実装/実行済みへ換算しない。",
+      "actualEvidence": []
+    },
+    {
+      "id": "AC-X05-N",
+      "original": {
+        "id": "AC-X05-N",
+        "owner_id": "X05",
+        "type": "proposed_extension_acceptance",
+        "given": "localeRule(id,locale,tokenPolicy=multiset,termId,acceptedForms[],scope,exceptionReason)、finding(lineId,locale,sourceHash,ruleVersion,ranges,status)。不正文法はunknown相当の未確認にする。",
+        "when": "本製品用の埋込み語{name}、文字としての波括弧{{と}}を文法として登録する。原文/訳文の名前付き埋込み語の種類と出現数を比較し、言語別用語規則/明示例外も検査する。",
+        "then": "{name}を二度含む原文と一度の訳文で欠落を示し、同数で順序が違う訳文は許可する。表記の明示例外は理由付きで残る。",
+        "result": "not_run",
+        "required_evidence": [
+          "target_commit",
+          "product_tree",
+          "build_hash",
+          "base",
+          "fixture_hash",
+          "environment",
+          "procedure",
+          "actual_result",
+          "evidence_path",
+          "checked_at"
+        ]
+      },
+      "reviewResult": "not_adopted",
+      "authorObservation": "追加X01-X12は未採用。原条件を保持し、実装/実行済みへ換算しない。",
+      "actualEvidence": []
+    },
+    {
+      "id": "AC-X05-E",
+      "original": {
+        "id": "AC-X05-E",
+        "owner_id": "X05",
+        "type": "proposed_extension_acceptance",
+        "given": "localeRule(id,locale,tokenPolicy=multiset,termId,acceptedForms[],scope,exceptionReason)、finding(lineId,locale,sourceHash,ruleVersion,ranges,status)。不正文法はunknown相当の未確認にする。",
+        "when": "本製品用の埋込み語{name}、文字としての波括弧{{と}}を文法として登録する。原文/訳文の名前付き埋込み語の種類と出現数を比較し、言語別用語規則/明示例外も検査する。",
+        "then": "未閉鎖括弧・不明規則・原文更新・多言語・悪意の式で勝手な実行や自動承認をしない。",
+        "result": "not_run",
+        "required_evidence": [
+          "target_commit",
+          "product_tree",
+          "build_hash",
+          "base",
+          "fixture_hash",
+          "environment",
+          "procedure",
+          "actual_result",
+          "evidence_path",
+          "checked_at"
+        ]
+      },
+      "reviewResult": "not_adopted",
+      "authorObservation": "追加X01-X12は未採用。原条件を保持し、実装/実行済みへ換算しない。",
+      "actualEvidence": []
+    },
+    {
+      "id": "AC-X05-B",
+      "original": {
+        "id": "AC-X05-B",
+        "owner_id": "X05",
+        "type": "proposed_extension_acceptance",
+        "given": "localeRule(id,locale,tokenPolicy=multiset,termId,acceptedForms[],scope,exceptionReason)、finding(lineId,locale,sourceHash,ruleVersion,ranges,status)。不正文法はunknown相当の未確認にする。",
+        "when": "本製品用の埋込み語{name}、文字としての波括弧{{と}}を文法として登録する。原文/訳文の名前付き埋込み語の種類と出現数を比較し、言語別用語規則/明示例外も検査する。",
+        "then": "全角括弧や通常の括弧表現は勝手に埋込み語へ変換しない。既存作品はtokenPolicy未設定から移行し、文字表示を変えない。",
+        "result": "not_run",
+        "required_evidence": [
+          "target_commit",
+          "product_tree",
+          "build_hash",
+          "base",
+          "fixture_hash",
+          "environment",
+          "procedure",
+          "actual_result",
+          "evidence_path",
+          "checked_at"
+        ]
+      },
+      "reviewResult": "not_adopted",
+      "authorObservation": "追加X01-X12は未採用。原条件を保持し、実装/実行済みへ換算しない。",
+      "actualEvidence": []
+    },
+    {
+      "id": "AC-X06-N",
+      "original": {
+        "id": "AC-X06-N",
+        "owner_id": "X06",
+        "type": "proposed_extension_acceptance",
+        "given": "RegressionSuite(id,versionId,testIds[]), NarrativeTest(id,checkpointId,traceId,seed,assertions[]), TestRun(targetHash,suiteHash,actuals,results,environment)。任意式を実行せず、既存条件評価を使う。",
+        "when": "固定開始状態/入力seed/版/経路から実行し、到達終端、条件結果、状態値、所持品、開示済みIDの許可集合を型付き期待値と比較する。成功/不一致/未確認/未実行/取消を別状態で保存する。",
+        "then": "二経路で別の終端/鍵/開示を期待し、一括再実行の正しい値と、一箇所を壊した不一致を対象位置付きで表示する。",
+        "result": "not_run",
+        "required_evidence": [
+          "target_commit",
+          "product_tree",
+          "build_hash",
+          "base",
+          "fixture_hash",
+          "environment",
+          "procedure",
+          "actual_result",
+          "evidence_path",
+          "checked_at"
+        ]
+      },
+      "reviewResult": "not_adopted",
+      "authorObservation": "追加X01-X12は未採用。原条件を保持し、実装/実行済みへ換算しない。",
+      "actualEvidence": []
+    },
+    {
+      "id": "AC-X06-E",
+      "original": {
+        "id": "AC-X06-E",
+        "owner_id": "X06",
+        "type": "proposed_extension_acceptance",
+        "given": "RegressionSuite(id,versionId,testIds[]), NarrativeTest(id,checkpointId,traceId,seed,assertions[]), TestRun(targetHash,suiteHash,actuals,results,environment)。任意式を実行せず、既存条件評価を使う。",
+        "when": "固定開始状態/入力seed/版/経路から実行し、到達終端、条件結果、状態値、所持品、開示済みIDの許可集合を型付き期待値と比較する。成功/不一致/未確認/未実行/取消を別状態で保存する。",
+        "then": "分岐変更・外部値欠落・unknown・ループ上限・取消で成功数を増やさず、同じseed/版で再現する。",
+        "result": "not_run",
+        "required_evidence": [
+          "target_commit",
+          "product_tree",
+          "build_hash",
+          "base",
+          "fixture_hash",
+          "environment",
+          "procedure",
+          "actual_result",
+          "evidence_path",
+          "checked_at"
+        ]
+      },
+      "reviewResult": "not_adopted",
+      "authorObservation": "追加X01-X12は未採用。原条件を保持し、実装/実行済みへ換算しない。",
+      "actualEvidence": []
+    },
+    {
+      "id": "AC-X06-B",
+      "original": {
+        "id": "AC-X06-B",
+        "owner_id": "X06",
+        "type": "proposed_extension_acceptance",
+        "given": "RegressionSuite(id,versionId,testIds[]), NarrativeTest(id,checkpointId,traceId,seed,assertions[]), TestRun(targetHash,suiteHash,actuals,results,environment)。任意式を実行せず、既存条件評価を使う。",
+        "when": "固定開始状態/入力seed/版/経路から実行し、到達終端、条件結果、状態値、所持品、開示済みIDの許可集合を型付き期待値と比較する。成功/不一致/未確認/未実行/取消を別状態で保存する。",
+        "then": "元探索/実行上限を維持し、全UIと無画面実行で同じ契約を使う。coverageは宣言した対象集合を分母にする。ゲームの実受領結果は別に保持する。",
+        "result": "not_run",
+        "required_evidence": [
+          "target_commit",
+          "product_tree",
+          "build_hash",
+          "base",
+          "fixture_hash",
+          "environment",
+          "procedure",
+          "actual_result",
+          "evidence_path",
+          "checked_at"
+        ]
+      },
+      "reviewResult": "not_adopted",
+      "authorObservation": "追加X01-X12は未採用。原条件を保持し、実装/実行済みへ換算しない。",
+      "actualEvidence": []
+    },
+    {
+      "id": "AC-X07-N",
+      "original": {
+        "id": "AC-X07-N",
+        "owner_id": "X07",
+        "type": "proposed_extension_acceptance",
+        "given": "端末限定BackupReceipt(projectId,revision,contentHash,fileHash,createdAt,receiptState=generated|file_verified|restore_verified)。estimateは未保証の推定。生成時点だけでfile_verifiedにしない。",
+        "when": "使用量/容量の推定、永続保存の許可状態、最後の完全ファイル検査の版/hash/日時、最後の空環境復元確認を別々に表示する。取得不能は不明と書く。",
+        "then": "完全保存を開始した段階と、Filesから実ファイルを選び直して検査した段階を区別し、版変更後の古いbackupを表示する。",
+        "result": "not_run",
+        "required_evidence": [
+          "target_commit",
+          "product_tree",
+          "build_hash",
+          "base",
+          "fixture_hash",
+          "environment",
+          "procedure",
+          "actual_result",
+          "evidence_path",
+          "checked_at"
+        ]
+      },
+      "reviewResult": "not_adopted",
+      "authorObservation": "追加X01-X12は未採用。原条件を保持し、実装/実行済みへ換算しない。",
+      "actualEvidence": []
+    },
+    {
+      "id": "AC-X07-E",
+      "original": {
+        "id": "AC-X07-E",
+        "owner_id": "X07",
+        "type": "proposed_extension_acceptance",
+        "given": "端末限定BackupReceipt(projectId,revision,contentHash,fileHash,createdAt,receiptState=generated|file_verified|restore_verified)。estimateは未保証の推定。生成時点だけでfile_verifiedにしない。",
+        "when": "使用量/容量の推定、永続保存の許可状態、最後の完全ファイル検査の版/hash/日時、最後の空環境復元確認を別々に表示する。取得不能は不明と書く。",
+        "then": "取消・容量取得不可・許可拒否・異版/破損ファイル・失敗でも健康状態を成功にしない。",
+        "result": "not_run",
+        "required_evidence": [
+          "target_commit",
+          "product_tree",
+          "build_hash",
+          "base",
+          "fixture_hash",
+          "environment",
+          "procedure",
+          "actual_result",
+          "evidence_path",
+          "checked_at"
+        ]
+      },
+      "reviewResult": "not_adopted",
+      "authorObservation": "追加X01-X12は未採用。原条件を保持し、実装/実行済みへ換算しない。",
+      "actualEvidence": []
+    },
+    {
+      "id": "AC-X07-B",
+      "original": {
+        "id": "AC-X07-B",
+        "owner_id": "X07",
+        "type": "proposed_extension_acceptance",
+        "given": "端末限定BackupReceipt(projectId,revision,contentHash,fileHash,createdAt,receiptState=generated|file_verified|restore_verified)。estimateは未保証の推定。生成時点だけでfile_verifiedにしない。",
+        "when": "使用量/容量の推定、永続保存の許可状態、最後の完全ファイル検査の版/hash/日時、最後の空環境復元確認を別々に表示する。取得不能は不明と書く。",
+        "then": "同じ配信元の容量は他作品/キャッシュを含む推定であると表示する。復元検証の対象版が違う場合は同じ版の確認にしない。通知はアプリ内で任意。外部の定期通知を勝手に作らない。",
+        "result": "not_run",
+        "required_evidence": [
+          "target_commit",
+          "product_tree",
+          "build_hash",
+          "base",
+          "fixture_hash",
+          "environment",
+          "procedure",
+          "actual_result",
+          "evidence_path",
+          "checked_at"
+        ]
+      },
+      "reviewResult": "not_adopted",
+      "authorObservation": "追加X01-X12は未採用。原条件を保持し、実装/実行済みへ換算しない。",
+      "actualEvidence": []
+    },
+    {
+      "id": "AC-X08-N",
+      "original": {
+        "id": "AC-X08-N",
+        "owner_id": "X08",
+        "type": "proposed_extension_acceptance",
+        "given": "ReviewEditContext(traceId,sourceVersionId,sourceAnchor,targetRevision,draftKey,replayStatus)。原稿編集は既存作者操作/履歴を使う。",
+        "when": "作者の試読から元の版/項目/段落/範囲を開き、現在稿への修正候補を保存する。元trace/旧snapshotは変更せず、採用後に同じ開始条件の新しい経路を再確認する。",
+        "then": "試読の台詞から修正し、旧経路を残して新版を同じ条件で再実行し変更点を見る。",
+        "result": "not_run",
+        "required_evidence": [
+          "target_commit",
+          "product_tree",
+          "build_hash",
+          "base",
+          "fixture_hash",
+          "environment",
+          "procedure",
+          "actual_result",
+          "evidence_path",
+          "checked_at"
+        ]
+      },
+      "reviewResult": "not_adopted",
+      "authorObservation": "追加X01-X12は未採用。原条件を保持し、実装/実行済みへ換算しない。",
+      "actualEvidence": []
+    },
+    {
+      "id": "AC-X08-E",
+      "original": {
+        "id": "AC-X08-E",
+        "owner_id": "X08",
+        "type": "proposed_extension_acceptance",
+        "given": "ReviewEditContext(traceId,sourceVersionId,sourceAnchor,targetRevision,draftKey,replayStatus)。原稿編集は既存作者操作/履歴を使う。",
+        "when": "作者の試読から元の版/項目/段落/範囲を開き、現在稿への修正候補を保存する。元trace/旧snapshotは変更せず、採用後に同じ開始条件の新しい経路を再確認する。",
+        "then": "公開閲覧・旧版位置不明・編集競合・保存失敗・再実行取消でtrace/現稿を壊さない。",
+        "result": "not_run",
+        "required_evidence": [
+          "target_commit",
+          "product_tree",
+          "build_hash",
+          "base",
+          "fixture_hash",
+          "environment",
+          "procedure",
+          "actual_result",
+          "evidence_path",
+          "checked_at"
+        ]
+      },
+      "reviewResult": "not_adopted",
+      "authorObservation": "追加X01-X12は未採用。原条件を保持し、実装/実行済みへ換算しない。",
+      "actualEvidence": []
+    },
+    {
+      "id": "AC-X08-B",
+      "original": {
+        "id": "AC-X08-B",
+        "owner_id": "X08",
+        "type": "proposed_extension_acceptance",
+        "given": "ReviewEditContext(traceId,sourceVersionId,sourceAnchor,targetRevision,draftKey,replayStatus)。原稿編集は既存作者操作/履歴を使う。",
+        "when": "作者の試読から元の版/項目/段落/範囲を開き、現在稿への修正候補を保存する。元trace/旧snapshotは変更せず、採用後に同じ開始条件の新しい経路を再確認する。",
+        "then": "本文だけの変更でも対象版が変わるので再確認を必要とする。途中状態を新版へ無検査で注入しない。",
+        "result": "not_run",
+        "required_evidence": [
+          "target_commit",
+          "product_tree",
+          "build_hash",
+          "base",
+          "fixture_hash",
+          "environment",
+          "procedure",
+          "actual_result",
+          "evidence_path",
+          "checked_at"
+        ]
+      },
+      "reviewResult": "not_adopted",
+      "authorObservation": "追加X01-X12は未採用。原条件を保持し、実装/実行済みへ換算しない。",
+      "actualEvidence": []
+    },
+    {
+      "id": "AC-X09-N",
+      "original": {
+        "id": "AC-X09-N",
+        "owner_id": "X09",
+        "type": "proposed_extension_acceptance",
+        "given": "VersionComparison(leftVersionHash,rightVersionHash,scopeIds,fieldIds,summary,annotationStatus)。表示は派生物。単体復元/採用は別の明示操作。",
+        "when": "二つの同作品の固定版、または現稿の確認時固定コピーを選び、追加/削除/変更/順序/注記位置を安定IDで比較する。本文を横または縦の二列、携帯では前後切替で読める。",
+        "then": "本文・台詞順・所持品・関係時点・素材hashの変更を二版で見分け、原ID/固定版を変えず元位置へ戻る。",
+        "result": "not_run",
+        "required_evidence": [
+          "target_commit",
+          "product_tree",
+          "build_hash",
+          "base",
+          "fixture_hash",
+          "environment",
+          "procedure",
+          "actual_result",
+          "evidence_path",
+          "checked_at"
+        ]
+      },
+      "reviewResult": "not_adopted",
+      "authorObservation": "追加X01-X12は未採用。原条件を保持し、実装/実行済みへ換算しない。",
+      "actualEvidence": []
+    },
+    {
+      "id": "AC-X09-E",
+      "original": {
+        "id": "AC-X09-E",
+        "owner_id": "X09",
+        "type": "proposed_extension_acceptance",
+        "given": "VersionComparison(leftVersionHash,rightVersionHash,scopeIds,fieldIds,summary,annotationStatus)。表示は派生物。単体復元/採用は別の明示操作。",
+        "when": "二つの同作品の固定版、または現稿の確認時固定コピーを選び、追加/削除/変更/順序/注記位置を安定IDで比較する。本文を横または縦の二列、携帯では前後切替で読める。",
+        "then": "削除・同名・引用固定世界・注記の追従不明・権限撤回でも正しい差分/未比較を示す。",
+        "result": "not_run",
+        "required_evidence": [
+          "target_commit",
+          "product_tree",
+          "build_hash",
+          "base",
+          "fixture_hash",
+          "environment",
+          "procedure",
+          "actual_result",
+          "evidence_path",
+          "checked_at"
+        ]
+      },
+      "reviewResult": "not_adopted",
+      "authorObservation": "追加X01-X12は未採用。原条件を保持し、実装/実行済みへ換算しない。",
+      "actualEvidence": []
+    },
+    {
+      "id": "AC-X09-B",
+      "original": {
+        "id": "AC-X09-B",
+        "owner_id": "X09",
+        "type": "proposed_extension_acceptance",
+        "given": "VersionComparison(leftVersionHash,rightVersionHash,scopeIds,fieldIds,summary,annotationStatus)。表示は派生物。単体復元/採用は別の明示操作。",
+        "when": "二つの同作品の固定版、または現稿の確認時固定コピーを選び、追加/削除/変更/順序/注記位置を安定IDで比較する。本文を横または縦の二列、携帯では前後切替で読める。",
+        "then": "LargeはID索引とページ表示を使い、変更ゼロを未読込から推定しない。差分の文字位置はUnicode規則に一致する。",
+        "result": "not_run",
+        "required_evidence": [
+          "target_commit",
+          "product_tree",
+          "build_hash",
+          "base",
+          "fixture_hash",
+          "environment",
+          "procedure",
+          "actual_result",
+          "evidence_path",
+          "checked_at"
+        ]
+      },
+      "reviewResult": "not_adopted",
+      "authorObservation": "追加X01-X12は未採用。原条件を保持し、実装/実行済みへ換算しない。",
+      "actualEvidence": []
+    },
+    {
+      "id": "AC-X10-N",
+      "original": {
+        "id": "AC-X10-N",
+        "owner_id": "X10",
+        "type": "proposed_extension_acceptance",
+        "given": "AssetUsagePolicy(assetHash,sourceId,creator,licenseLabel,licenseUrl,checkedAt,permissions={public,production,redistribute}:allowed|denied|unknown,creditText,reviewer,reason)。作者私有の確認記録を既定公開しない。",
+        "when": "素材版ごとに出所URL/作者名/条件名/条件URL/確認日/許可根拠/用途別許可/必要表記を記録する。公開/制作出力前に含まれる素材の確認状態を一覧し、許可済みの条件でクレジット文を生成する。",
+        "then": "許可済みと不明素材を混ぜた出力で対象hashと必要表記を示し、許可範囲だけの成果物と表記ファイルを作る。",
+        "result": "not_run",
+        "required_evidence": [
+          "target_commit",
+          "product_tree",
+          "build_hash",
+          "base",
+          "fixture_hash",
+          "environment",
+          "procedure",
+          "actual_result",
+          "evidence_path",
+          "checked_at"
+        ]
+      },
+      "reviewResult": "not_adopted",
+      "authorObservation": "追加X01-X12は未採用。原条件を保持し、実装/実行済みへ換算しない。",
+      "actualEvidence": []
+    },
+    {
+      "id": "AC-X10-E",
+      "original": {
+        "id": "AC-X10-E",
+        "owner_id": "X10",
+        "type": "proposed_extension_acceptance",
+        "given": "AssetUsagePolicy(assetHash,sourceId,creator,licenseLabel,licenseUrl,checkedAt,permissions={public,production,redistribute}:allowed|denied|unknown,creditText,reviewer,reason)。作者私有の確認記録を既定公開しない。",
+        "when": "素材版ごとに出所URL/作者名/条件名/条件URL/確認日/許可根拠/用途別許可/必要表記を記録する。公開/制作出力前に含まれる素材の確認状態を一覧し、許可済みの条件でクレジット文を生成する。",
+        "then": "素材差替え・出所更新・用途変更・期限不明・私有素材で旧許可を流用しない。URL確認不能は確認済みにしない。",
+        "result": "not_run",
+        "required_evidence": [
+          "target_commit",
+          "product_tree",
+          "build_hash",
+          "base",
+          "fixture_hash",
+          "environment",
+          "procedure",
+          "actual_result",
+          "evidence_path",
+          "checked_at"
+        ]
+      },
+      "reviewResult": "not_adopted",
+      "authorObservation": "追加X01-X12は未採用。原条件を保持し、実装/実行済みへ換算しない。",
+      "actualEvidence": []
+    },
+    {
+      "id": "AC-X10-B",
+      "original": {
+        "id": "AC-X10-B",
+        "owner_id": "X10",
+        "type": "proposed_extension_acceptance",
+        "given": "AssetUsagePolicy(assetHash,sourceId,creator,licenseLabel,licenseUrl,checkedAt,permissions={public,production,redistribute}:allowed|denied|unknown,creditText,reviewer,reason)。作者私有の確認記録を既定公開しない。",
+        "when": "素材版ごとに出所URL/作者名/条件名/条件URL/確認日/許可根拠/用途別許可/必要表記を記録する。公開/制作出力前に含まれる素材の確認状態を一覧し、許可済みの条件でクレジット文を生成する。",
+        "then": "自分の完全保存への持ち出しと他者への公開は区別する。既存licenseNoteは保存し、移行後の構造化許可はunknownから開始する。権利の法律判断を代行しない。",
+        "result": "not_run",
+        "required_evidence": [
+          "target_commit",
+          "product_tree",
+          "build_hash",
+          "base",
+          "fixture_hash",
+          "environment",
+          "procedure",
+          "actual_result",
+          "evidence_path",
+          "checked_at"
+        ]
+      },
+      "reviewResult": "not_adopted",
+      "authorObservation": "追加X01-X12は未採用。原条件を保持し、実装/実行済みへ換算しない。",
+      "actualEvidence": []
+    },
+    {
+      "id": "AC-X11-N",
+      "original": {
+        "id": "AC-X11-N",
+        "owner_id": "X11",
+        "type": "proposed_extension_acceptance",
+        "given": "WritingGoal(id,scope=work|chapter|session,scopeId,metric=codepoints|nonWhitespaceCodepoints,target>=0,baselineVersion,startedAt,endedAt)。世間の日次境界と混ぜず、初版は明示セッションに限定する。",
+        "when": "採用本文だけを対象に作品/章/明示開始終了した作業の目標を持つ。Unicodeコードポイント数と空白除外数を区別し、開始時と現在の差分を表示する。",
+        "then": "絵文字/ルビ/空白/共通場面を含む章を数え、前後の増減と目標を表示する。",
+        "result": "not_run",
+        "required_evidence": [
+          "target_commit",
+          "product_tree",
+          "build_hash",
+          "base",
+          "fixture_hash",
+          "environment",
+          "procedure",
+          "actual_result",
+          "evidence_path",
+          "checked_at"
+        ]
+      },
+      "reviewResult": "not_adopted",
+      "authorObservation": "追加X01-X12は未採用。原条件を保持し、実装/実行済みへ換算しない。",
+      "actualEvidence": []
+    },
+    {
+      "id": "AC-X11-E",
+      "original": {
+        "id": "AC-X11-E",
+        "owner_id": "X11",
+        "type": "proposed_extension_acceptance",
+        "given": "WritingGoal(id,scope=work|chapter|session,scopeId,metric=codepoints|nonWhitespaceCodepoints,target>=0,baselineVersion,startedAt,endedAt)。世間の日次境界と混ぜず、初版は明示セッションに限定する。",
+        "when": "採用本文だけを対象に作品/章/明示開始終了した作業の目標を持つ。Unicodeコードポイント数と空白除外数を区別し、開始時と現在の差分を表示する。",
+        "then": "章移動、別案採用、取消、同じ場面の複数参照、未取得世界、セッション中の版変更を正しく区別する。",
+        "result": "not_run",
+        "required_evidence": [
+          "target_commit",
+          "product_tree",
+          "build_hash",
+          "base",
+          "fixture_hash",
+          "environment",
+          "procedure",
+          "actual_result",
+          "evidence_path",
+          "checked_at"
+        ]
+      },
+      "reviewResult": "not_adopted",
+      "authorObservation": "追加X01-X12は未採用。原条件を保持し、実装/実行済みへ換算しない。",
+      "actualEvidence": []
+    },
+    {
+      "id": "AC-X11-B",
+      "original": {
+        "id": "AC-X11-B",
+        "owner_id": "X11",
+        "type": "proposed_extension_acceptance",
+        "given": "WritingGoal(id,scope=work|chapter|session,scopeId,metric=codepoints|nonWhitespaceCodepoints,target>=0,baselineVersion,startedAt,endedAt)。世間の日次境界と混ぜず、初版は明示セッションに限定する。",
+        "when": "採用本文だけを対象に作品/章/明示開始終了した作業の目標を持つ。Unicodeコードポイント数と空白除外数を区別し、開始時と現在の差分を表示する。",
+        "then": "同じ場面は物理IDごとに一度計上し、一経路の反復量と混同しない。Unicode計数を人が見る文字の数と同一と断言せず数え方を明記する。",
+        "result": "not_run",
+        "required_evidence": [
+          "target_commit",
+          "product_tree",
+          "build_hash",
+          "base",
+          "fixture_hash",
+          "environment",
+          "procedure",
+          "actual_result",
+          "evidence_path",
+          "checked_at"
+        ]
+      },
+      "reviewResult": "not_adopted",
+      "authorObservation": "追加X01-X12は未採用。原条件を保持し、実装/実行済みへ換算しない。",
+      "actualEvidence": []
+    },
+    {
+      "id": "AC-X12-N",
+      "original": {
+        "id": "AC-X12-N",
+        "owner_id": "X12",
+        "type": "proposed_extension_acceptance",
+        "given": "ImportSource(format=twee3,parserVersion,sourceHash,passageIds,idMapping,unsupportedSpans,originalText)。新規取り込みは作者別案。独自ID/参照を維持するsidecar付き往復だけをlosslessと宣言する。",
+        "when": "UTF-8のTwee 3ヘッダー、StoryTitle/StoryData、名前/タグ/位置、通常文字と明示リンク[[text->target]]だけを対応範囲として宣言する。実行コード/CSS/各形式macroを評価しない。",
+        "then": "三場面と二選択の限定fixtureを新規別案へ取り込み、ID対応を確認して出し直し、対応範囲を往復する。",
+        "result": "not_run",
+        "required_evidence": [
+          "target_commit",
+          "product_tree",
+          "build_hash",
+          "base",
+          "fixture_hash",
+          "environment",
+          "procedure",
+          "actual_result",
+          "evidence_path",
+          "checked_at"
+        ]
+      },
+      "reviewResult": "not_adopted",
+      "authorObservation": "追加X01-X12は未採用。原条件を保持し、実装/実行済みへ換算しない。",
+      "actualEvidence": []
+    },
+    {
+      "id": "AC-X12-E",
+      "original": {
+        "id": "AC-X12-E",
+        "owner_id": "X12",
+        "type": "proposed_extension_acceptance",
+        "given": "ImportSource(format=twee3,parserVersion,sourceHash,passageIds,idMapping,unsupportedSpans,originalText)。新規取り込みは作者別案。独自ID/参照を維持するsidecar付き往復だけをlosslessと宣言する。",
+        "when": "UTF-8のTwee 3ヘッダー、StoryTitle/StoryData、名前/タグ/位置、通常文字と明示リンク[[text->target]]だけを対応範囲として宣言する。実行コード/CSS/各形式macroを評価しない。",
+        "then": "任意script、macro、外部URL、巨大入力、不明target、重複名、sidecar改ざんを拒否/隔離し、現作品を不変に保つ。",
+        "result": "not_run",
+        "required_evidence": [
+          "target_commit",
+          "product_tree",
+          "build_hash",
+          "base",
+          "fixture_hash",
+          "environment",
+          "procedure",
+          "actual_result",
+          "evidence_path",
+          "checked_at"
+        ]
+      },
+      "reviewResult": "not_adopted",
+      "authorObservation": "追加X01-X12は未採用。原条件を保持し、実装/実行済みへ換算しない。",
+      "actualEvidence": []
+    },
+    {
+      "id": "AC-X12-B",
+      "original": {
+        "id": "AC-X12-B",
+        "owner_id": "X12",
+        "type": "proposed_extension_acceptance",
+        "given": "ImportSource(format=twee3,parserVersion,sourceHash,passageIds,idMapping,unsupportedSpans,originalText)。新規取り込みは作者別案。独自ID/参照を維持するsidecar付き往復だけをlosslessと宣言する。",
+        "when": "UTF-8のTwee 3ヘッダー、StoryTitle/StoryData、名前/タグ/位置、通常文字と明示リンク[[text->target]]だけを対応範囲として宣言する。実行コード/CSS/各形式macroを評価しない。",
+        "then": "最大10MiB/10,000passages。対応外の設定/伏線/独自暦/所持品はsidecar以外へ潰さない。ink/Yarn/Fountain/Unity/Unrealへの対応はこの合格から推定しない。",
+        "result": "not_run",
+        "required_evidence": [
+          "target_commit",
+          "product_tree",
+          "build_hash",
+          "base",
+          "fixture_hash",
+          "environment",
+          "procedure",
+          "actual_result",
+          "evidence_path",
+          "checked_at"
+        ]
+      },
+      "reviewResult": "not_adopted",
+      "authorObservation": "追加X01-X12は未採用。原条件を保持し、実装/実行済みへ換算しない。",
+      "actualEvidence": []
+    }
+  ],
+  "priorPreparationTarget": {
+    "commit": "3ab6f40080754c4dec92ca8fc88c8049b278eede",
+    "tree": "dfaf863f32132f6137ce5c23e8b1141ea5d4772c",
+    "dirty": false,
+    "base": "/shinariokanri/",
+    "builtAt": "2026-10-15T15:58:45.723Z",
+    "versionHashScope": "sorted paths and bytes plus build info before version",
+    "version": "5476ab952776d316c609"
+  },
+  "targetTransitionScope": "Only target identity updated while authored final candidate evidence review remains pending. No old observations or source review notes promoted to passed.",
+  "recordedAt": "2026-10-15T23:50:24.925180+00:00"
+}

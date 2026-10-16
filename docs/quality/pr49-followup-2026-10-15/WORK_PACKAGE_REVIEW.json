@@ -1,0 +1,2061 @@
+{
+  "scope": "Original24 completion gates copied verbatim; related case ownership is an index, not completion proof. Final state requires actual gate-content review and external conditions.",
+  "originalSource": {
+    "path": "docs/data/work_packages.json",
+    "bytes": 21316,
+    "sha256": "8125d35075c856c1e267b9c48a3ba610a632e60ac7d498dba32f5759a4fda95f"
+  },
+  "product": {
+    "commit": "1fcadcca703863873a57d297e83b1b184e63e778",
+    "tree": "8ac6e33a98455204aa265be5ce86ee5be168a97b",
+    "dirty": false,
+    "base": "/shinariokanri/",
+    "builtAt": "2026-10-15T19:13:47.594Z",
+    "versionHashScope": "sorted paths and bytes plus build info before version",
+    "version": "8ec3a03810bb0cf1b1b4"
+  },
+  "workPackages": [
+    {
+      "id": "WP01",
+      "original": {
+        "id": "WP01",
+        "stage": "A",
+        "title": "データ契約・固定データ・検査の基盤",
+        "depends_on": [],
+        "size": "L",
+        "deliverables": "型定義、版付きschema、整数tick・条件の三値評価・投影の純粋処理、試験固定データ、文書検査とアプリ検査のCIを用意する。",
+        "completion_gate": "必須型・参照・ID・三値評価の試験があり、文書の追跡とアプリ結果を別報告する。",
+        "primary_risk": "形式の土台が後で変わり全データを失う",
+        "requirement_ids": [
+          "REQ-N16"
+        ],
+        "acceptance_ids": [
+          "AT-N16"
+        ],
+        "status": "planned",
+        "estimate_status": "unestimated",
+        "owner_role": "実装担当（未割当）"
+      },
+      "reviewState": "completed",
+      "relatedOriginalCases": [
+        "AT-N16"
+      ],
+      "actualEvidence": [
+        {
+          "review": "CLAUSE_REVIEW.json",
+          "caseIds": [
+            "AT-N16"
+          ],
+          "scope": "Each original four-clause decision has source/build/actual bytes or a specific unmet original condition."
+        }
+      ],
+      "limitation": null,
+      "authorGateObservation": {
+        "at": "2026-10-15T23:50:16.479456+00:00",
+        "observation": "版付き型/schema・整数tick/参照/ID/三値評価・投影・固定fixtureとCI基盤を現行sourceとunit1132件/3engine実出力で確認。N16の同一条件・規則・エラーコードが一致し、文書追跡とアプリ結果は別記録。",
+        "scope": "Final authored gate/deliverables reading against actual evidence; local gate success is not whole-package completion.",
+        "wholePackagePromotion": true
+      },
+      "historicalPreparationGateObservation": {
+        "at": "2026-10-15T21:10:52.789819+00:00",
+        "observation": "型/版/schema、参照の実種別、所有ID衝突、整数tick、unknownをfalseにしない純粋評価と公開投影を原sourceで確認。今回の実unit全ファイルと封印sourceを対応させ、文書CIをアプリ結果と分けて記録。N16の三画面/純粋処理の同規則・同エラーは実添付の照合対象。",
+        "scope": "Authored original-gate content review; current unit source binding and prior actual outputs distinguished. Current candidate UI artifact adjudication and actual7200 full recovery still pending. No whole-package completion inferred.",
+        "wholePackagePromotion": false
+      },
+      "gateReviewResult": "passed_local_gate_scope",
+      "ownAcceptanceCasesPending": [],
+      "blockedDependencies": []
+    },
+    {
+      "id": "WP02",
+      "original": {
+        "id": "WP02",
+        "stage": "A",
+        "title": "PC・iPad・スマートフォンの編集基盤",
+        "depends_on": [
+          "WP01"
+        ],
+        "size": "L",
+        "deliverables": "画面幅別ナビゲーション、詳細編集、一覧代替、キーボードとタッチ、エラー表示、端末別ビュー状態、キャッシュ起動を実装する。",
+        "completion_gate": "スマートフォン単独の作成・条件・線編集・読み込み操作の導線があり、文字拡大とIMEを妨げない。",
+        "primary_risk": "図を縮小しただけで編集不能になる",
+        "requirement_ids": [
+          "REQ-F31",
+          "REQ-F32",
+          "REQ-F33",
+          "REQ-N01",
+          "REQ-N18"
+        ],
+        "acceptance_ids": [
+          "AT-F31",
+          "AT-F32",
+          "AT-F33",
+          "AT-N01",
+          "AT-N18"
+        ],
+        "status": "planned",
+        "estimate_status": "unestimated",
+        "owner_role": "実装担当（未割当）"
+      },
+      "reviewState": "pending_original_conditions_or_dependencies",
+      "relatedOriginalCases": [
+        "AT-F31",
+        "AT-F32",
+        "AT-F33",
+        "AT-N01",
+        "AT-N18"
+      ],
+      "actualEvidence": [
+        {
+          "review": "CLAUSE_REVIEW.json",
+          "caseIds": [
+            "AT-F31",
+            "AT-F32",
+            "AT-F33",
+            "AT-N01",
+            "AT-N18"
+          ],
+          "scope": "Each original four-clause decision has source/build/actual bytes or a specific unmet original condition."
+        }
+      ],
+      "limitation": {
+        "originalCasesPending": [
+          "AT-F31",
+          "AT-F33"
+        ],
+        "originalGatePending": true,
+        "originalDependenciesPending": [],
+        "rule": "docs/plan/IMPLEMENTATION_PLAN.md: dependencies must be complete before a stage starts; partial implementation does not establish full acceptance."
+      },
+      "authorGateObservation": {
+        "at": "2026-10-15T23:50:16.479456+00:00",
+        "observation": "幅別ナビ・通常編集・一覧代替・キーボード・cache/エラー表示のローカル実装を確認。スマートフォン単独の全作成/条件/線/読み込み・実文字拡大/IME・端末別復帰の原条件はF31/F33/実機確認が残る。",
+        "scope": "Final authored gate/deliverables reading against actual evidence; local gate success is not whole-package completion.",
+        "wholePackagePromotion": false
+      },
+      "historicalPreparationGateObservation": {
+        "at": "2026-10-15T21:10:52.789830+00:00",
+        "observation": "320/390を含む5幅・未保存入力・一覧代替・常時ボタン/keyboard・失敗後入力再開・幅class別表示は元UI手順にある。実スマートフォンだけの操作/ソフトキーボード/回転/SplitView/OS文字拡大/IMEは未実行で、ブラウザー幅だけでは工程完了としない。",
+        "scope": "Authored original-gate content review; current unit source binding and prior actual outputs distinguished. Current candidate UI artifact adjudication and actual7200 full recovery still pending. No whole-package completion inferred.",
+        "wholePackagePromotion": false
+      },
+      "gateReviewResult": "blocked_original_gate_conditions",
+      "ownAcceptanceCasesPending": [
+        "AT-F31",
+        "AT-F33"
+      ],
+      "blockedDependencies": []
+    },
+    {
+      "id": "WP03",
+      "original": {
+        "id": "WP03",
+        "stage": "A",
+        "title": "端末内保存・履歴・送信待ち",
+        "depends_on": [
+          "WP01",
+          "WP02"
+        ],
+        "size": "L",
+        "deliverables": "原子的コマンド、IndexedDB保存、安定ID、履歴・取消・単体復元入口、送信待ち箱、移行復元点を実装する。",
+        "completion_gate": "容量不足・再起動・重複操作・取消を含む保存試験が成功し、成功前に保存済みを出さない。",
+        "primary_risk": "偽の保存表示と移行時の一部更新",
+        "requirement_ids": [
+          "REQ-B23",
+          "REQ-N06",
+          "REQ-N11"
+        ],
+        "acceptance_ids": [
+          "AT-B23",
+          "AT-N06",
+          "AT-N11"
+        ],
+        "status": "planned",
+        "estimate_status": "unestimated",
+        "owner_role": "実装担当（未割当）"
+      },
+      "reviewState": "pending_original_conditions_or_dependencies",
+      "relatedOriginalCases": [
+        "AT-B23",
+        "AT-N06",
+        "AT-N11"
+      ],
+      "actualEvidence": [
+        {
+          "review": "CLAUSE_REVIEW.json",
+          "caseIds": [
+            "AT-B23",
+            "AT-N06",
+            "AT-N11"
+          ],
+          "scope": "Each original four-clause decision has source/build/actual bytes or a specific unmet original condition."
+        },
+        {
+          "bundleManifest": "evidence/bundles/formal-1fcadcca.manifest.json",
+          "actual7200": "soak7200-1fcadcca-attempt1/ADJUDICATION.json"
+        },
+        {
+          "bundleManifest": "evidence/bundles/full-large-exceptions-1fcadcca.manifest.json",
+          "sameFullNegativeRetry": "actual-attempt/ADJUDICATION.json"
+        }
+      ],
+      "limitation": {
+        "originalCasesPending": [
+          "AT-N11"
+        ],
+        "originalGatePending": false,
+        "originalDependenciesPending": [
+          "WP02"
+        ],
+        "rule": "docs/plan/IMPLEMENTATION_PLAN.md: dependencies must be complete before a stage starts; partial implementation does not establish full acceptance."
+      },
+      "authorGateObservation": {
+        "at": "2026-10-15T23:50:16.479456+00:00",
+        "observation": "通常操作の安定ID/原子command/IndexedDB履歴・取消・単体復元入口・outbox・移行復元点を確認。N06/N18、元180と実7200/full113、同全量の最終段generic/quota拒否と通常retryが成功。成功前の保存済み表示を出さない。N11の物理機内モードは別のowned-case未完了。",
+        "scope": "Final authored gate/deliverables reading against actual evidence; local gate success is not whole-package completion.",
+        "wholePackagePromotion": false
+      },
+      "historicalPreparationGateObservation": {
+        "at": "2026-10-15T21:10:52.789832+00:00",
+        "observation": "通常コマンドで新revision/operationを追記し、quota/移行失敗/複数対象失敗は全表rollback、正常retry後だけ保存済みを表示する原assertを確認。元180保存の91履歴/cold/空復元は今回実成功。113履歴の最終復元は継続中、機内モード実機条件は別保留。",
+        "scope": "Authored original-gate content review; current unit source binding and prior actual outputs distinguished. Current candidate UI artifact adjudication and actual7200 full recovery still pending. No whole-package completion inferred.",
+        "wholePackagePromotion": false
+      },
+      "gateReviewResult": "passed_local_gate_scope",
+      "ownAcceptanceCasesPending": [
+        "AT-N11"
+      ],
+      "blockedDependencies": [
+        "WP02"
+      ]
+    },
+    {
+      "id": "WP04",
+      "original": {
+        "id": "WP04",
+        "stage": "A",
+        "title": "共通データと入力雛形",
+        "depends_on": [
+          "WP01",
+          "WP02",
+          "WP03"
+        ],
+        "size": "M",
+        "deliverables": "人物・出来事・場所・物品・メモのCRUD、参加役割、型付き項目、追加雛形、原メモからの変換を実装する。",
+        "completion_gate": "名前または要約のみから始められ、不正な型変更を拒否し、参照のある削除は影響を示す。",
+        "primary_risk": "カスタム項目と標準項目の不整合",
+        "requirement_ids": [
+          "REQ-B01",
+          "REQ-B08",
+          "REQ-B11",
+          "REQ-F01",
+          "REQ-F02",
+          "REQ-F56"
+        ],
+        "acceptance_ids": [
+          "AT-B01",
+          "AT-B08",
+          "AT-B11",
+          "AT-F01",
+          "AT-F02",
+          "AT-F56"
+        ],
+        "status": "planned",
+        "estimate_status": "unestimated",
+        "owner_role": "実装担当（未割当）"
+      },
+      "reviewState": "pending_original_conditions_or_dependencies",
+      "relatedOriginalCases": [
+        "AT-B01",
+        "AT-B08",
+        "AT-B11",
+        "AT-F01",
+        "AT-F02",
+        "AT-F56"
+      ],
+      "actualEvidence": [
+        {
+          "review": "CLAUSE_REVIEW.json",
+          "caseIds": [
+            "AT-B01",
+            "AT-B08",
+            "AT-B11",
+            "AT-F01",
+            "AT-F02",
+            "AT-F56"
+          ],
+          "scope": "Each original four-clause decision has source/build/actual bytes or a specific unmet original condition."
+        }
+      ],
+      "limitation": {
+        "originalCasesPending": [
+          "AT-F01"
+        ],
+        "originalGatePending": false,
+        "originalDependenciesPending": [
+          "WP02",
+          "WP03"
+        ],
+        "rule": "docs/plan/IMPLEMENTATION_PLAN.md: dependencies must be complete before a stage starts; partial implementation does not establish full acceptance."
+      },
+      "authorGateObservation": {
+        "at": "2026-10-15T23:50:16.479456+00:00",
+        "observation": "人物/出来事/場所/物品/メモのCRUD、参加役割、型付き雛形と原メモ変換を現行実ファイルで確認。名前/要約だけの開始、不適合な型変更の影響付き拒否、参照を持つ削除の影響確認をB01/B08/B11/F02/F56で照合。F01の実phone連鎖は別途保留。",
+        "scope": "Final authored gate/deliverables reading against actual evidence; local gate success is not whole-package completion.",
+        "wholePackagePromotion": false
+      },
+      "historicalPreparationGateObservation": {
+        "at": "2026-10-15T21:10:52.789834+00:00",
+        "observation": "名前だけ人物/要約だけ出来事、参加役割、型付き参照/項目、雛形の任意→必須/enum→数値の影響付き拒否、参照あり削除の影響を原手順で確認。原メモ/実PNG/WAV変換の全native比較は局所補助を保持。F01の実スマホ取込/録音/PC同期は別未実行。",
+        "scope": "Authored original-gate content review; current unit source binding and prior actual outputs distinguished. Current candidate UI artifact adjudication and actual7200 full recovery still pending. No whole-package completion inferred.",
+        "wholePackagePromotion": false
+      },
+      "gateReviewResult": "passed_local_gate_scope",
+      "ownAcceptanceCasesPending": [
+        "AT-F01"
+      ],
+      "blockedDependencies": [
+        "WP02",
+        "WP03"
+      ]
+    },
+    {
+      "id": "WP05",
+      "original": {
+        "id": "WP05",
+        "stage": "B",
+        "title": "検索・索引・参照・整理",
+        "depends_on": [
+          "WP04"
+        ],
+        "size": "L",
+        "deliverables": "IDリンク・段落リンク・逆参照、日本語検索、索引、固定/動的一覧、一括変更、統合、変更影響を実装する。",
+        "completion_gate": "同名・別名・改名・削除・一般語の候補除外を検証し、統合後も全参照を追える。",
+        "primary_risk": "名前を主キーにすることと検索からの秘密漏れ",
+        "requirement_ids": [
+          "REQ-B10",
+          "REQ-B24",
+          "REQ-F26",
+          "REQ-F27",
+          "REQ-F57",
+          "REQ-F58",
+          "REQ-F60",
+          "REQ-N13"
+        ],
+        "acceptance_ids": [
+          "AT-B10",
+          "AT-B24",
+          "AT-F26",
+          "AT-F27",
+          "AT-F57",
+          "AT-F58",
+          "AT-F60",
+          "AT-N13"
+        ],
+        "status": "planned",
+        "estimate_status": "unestimated",
+        "owner_role": "実装担当（未割当）"
+      },
+      "reviewState": "pending_original_conditions_or_dependencies",
+      "relatedOriginalCases": [
+        "AT-B10",
+        "AT-B24",
+        "AT-F26",
+        "AT-F27",
+        "AT-F57",
+        "AT-F58",
+        "AT-F60",
+        "AT-N13"
+      ],
+      "actualEvidence": [
+        {
+          "review": "CLAUSE_REVIEW.json",
+          "caseIds": [
+            "AT-B10",
+            "AT-B24",
+            "AT-F26",
+            "AT-F27",
+            "AT-F57",
+            "AT-F58",
+            "AT-F60",
+            "AT-N13"
+          ],
+          "scope": "Each original four-clause decision has source/build/actual bytes or a specific unmet original condition."
+        }
+      ],
+      "limitation": {
+        "originalCasesPending": [
+          "AT-B24",
+          "AT-N13"
+        ],
+        "originalGatePending": false,
+        "originalDependenciesPending": [
+          "WP04"
+        ],
+        "rule": "docs/plan/IMPLEMENTATION_PLAN.md: dependencies must be complete before a stage starts; partial implementation does not establish full acceptance."
+      },
+      "authorGateObservation": {
+        "at": "2026-10-15T23:50:16.479456+00:00",
+        "observation": "同名2人/別名/人物の改名・削除、一般語候補の除外とcold保持、ID/段落リンク・逆参照、日本語検索/作者索引、動的固定一覧、原子一括/統合と補償を実操作で確認。B24実タッチとN13実IME、G02実アカウント切替は元条件として残す。",
+        "scope": "Final authored gate/deliverables reading against actual evidence; local gate success is not whole-package completion.",
+        "wholePackagePromotion": false
+      },
+      "historicalPreparationGateObservation": {
+        "at": "2026-10-15T21:10:52.789835+00:00",
+        "observation": "同名2人/別名/一般語除外/cold/解除/逆参照、読み正規化と作者索引、固定/動的一覧、全参照を書換える統合と補償取消を原source/先の実出力で照合。実タッチでの絞り込み・関係線/条件編集B24と実IME N13は未実行。単なる名前変更や別の似た操作へ代替しない。",
+        "scope": "Authored original-gate content review; current unit source binding and prior actual outputs distinguished. Current candidate UI artifact adjudication and actual7200 full recovery still pending. No whole-package completion inferred.",
+        "wholePackagePromotion": false
+      },
+      "gateReviewResult": "passed_local_gate_scope",
+      "ownAcceptanceCasesPending": [
+        "AT-B24",
+        "AT-N13"
+      ],
+      "blockedDependencies": [
+        "WP04"
+      ]
+    },
+    {
+      "id": "WP06",
+      "original": {
+        "id": "WP06",
+        "stage": "B",
+        "title": "暦・時点・日時の制約",
+        "depends_on": [
+          "WP04"
+        ],
+        "size": "L",
+        "deliverables": "独自暦、負tick、不確定範囲、相対制約、年齢、基準点、変更影響と取消を実装する。",
+        "completion_gate": "表示単位と基準点変更では日時が不変。循環・閏・未定・固定日時の衝突試験を通す。",
+        "primary_risk": "概算値を確定値にすることと数値精度",
+        "requirement_ids": [
+          "REQ-B05",
+          "REQ-B06",
+          "REQ-B21",
+          "REQ-F07",
+          "REQ-F08"
+        ],
+        "acceptance_ids": [
+          "AT-B05",
+          "AT-B06",
+          "AT-B21",
+          "AT-F07",
+          "AT-F08"
+        ],
+        "status": "planned",
+        "estimate_status": "unestimated",
+        "owner_role": "実装担当（未割当）"
+      },
+      "reviewState": "pending_original_conditions_or_dependencies",
+      "relatedOriginalCases": [
+        "AT-B05",
+        "AT-B06",
+        "AT-B21",
+        "AT-F07",
+        "AT-F08"
+      ],
+      "actualEvidence": [
+        {
+          "review": "CLAUSE_REVIEW.json",
+          "caseIds": [
+            "AT-B05",
+            "AT-B06",
+            "AT-B21",
+            "AT-F07",
+            "AT-F08"
+          ],
+          "scope": "Each original four-clause decision has source/build/actual bytes or a specific unmet original condition."
+        }
+      ],
+      "limitation": {
+        "originalCasesPending": [],
+        "originalGatePending": false,
+        "originalDependenciesPending": [
+          "WP04"
+        ],
+        "rule": "docs/plan/IMPLEMENTATION_PLAN.md: dependencies must be complete before a stage starts; partial implementation does not establish full acceptance."
+      },
+      "authorGateObservation": {
+        "at": "2026-10-15T23:50:16.479456+00:00",
+        "observation": "独自暦/負巨大tick/未知範囲/相対制約/年齢・基準点と取消を確認。表示単位・基準変更はtick不変、閏と不在日付・相対循環・固定日時衝突を元条件で拒否し、変更影響を確認。",
+        "scope": "Final authored gate/deliverables reading against actual evidence; local gate success is not whole-package completion.",
+        "wholePackagePromotion": false
+      },
+      "historicalPreparationGateObservation": {
+        "at": "2026-10-15T21:10:52.789836+00:00",
+        "observation": "表示単位/基準mainStartの変更で絶対tickを保ち、未知日付/未対応暦を不明、閏/不存在日・相対循環を拒否。終了100→180/連動200→230/固定500は個別承認し全取消、固定衝突では確定disabled。今回の元UI実ファイルとの対応を仕上げる。",
+        "scope": "Authored original-gate content review; current unit source binding and prior actual outputs distinguished. Current candidate UI artifact adjudication and actual7200 full recovery still pending. No whole-package completion inferred.",
+        "wholePackagePromotion": false
+      },
+      "gateReviewResult": "passed_local_gate_scope",
+      "ownAcceptanceCasesPending": [],
+      "blockedDependencies": [
+        "WP04"
+      ]
+    },
+    {
+      "id": "WP07",
+      "original": {
+        "id": "WP07",
+        "stage": "B",
+        "title": "年表とレーンの編集",
+        "depends_on": [
+          "WP02",
+          "WP05",
+          "WP06"
+        ],
+        "size": "L",
+        "deliverables": "固定ラベル、共通/人物レーン、グループ、多重参照、期間表示、選択同期、局所横移動と一覧編集を実装する。",
+        "completion_gate": "スマートフォンで横移動しながら人物を識別でき、多重表示の編集は一つの本体へ反映する。",
+        "primary_risk": "全件描画と共通出来事への全員自動参加",
+        "requirement_ids": [
+          "REQ-B02",
+          "REQ-B03",
+          "REQ-B04"
+        ],
+        "acceptance_ids": [
+          "AT-B02",
+          "AT-B03",
+          "AT-B04"
+        ],
+        "status": "planned",
+        "estimate_status": "unestimated",
+        "owner_role": "実装担当（未割当）"
+      },
+      "reviewState": "pending_original_conditions_or_dependencies",
+      "relatedOriginalCases": [
+        "AT-B02",
+        "AT-B03",
+        "AT-B04"
+      ],
+      "actualEvidence": [
+        {
+          "review": "CLAUSE_REVIEW.json",
+          "caseIds": [
+            "AT-B02",
+            "AT-B03",
+            "AT-B04"
+          ],
+          "scope": "Each original four-clause decision has source/build/actual bytes or a specific unmet original condition."
+        }
+      ],
+      "limitation": {
+        "originalCasesPending": [],
+        "originalGatePending": true,
+        "originalDependenciesPending": [
+          "WP02",
+          "WP05",
+          "WP06"
+        ],
+        "rule": "docs/plan/IMPLEMENTATION_PLAN.md: dependencies must be complete before a stage starts; partial implementation does not establish full acceptance."
+      },
+      "authorGateObservation": {
+        "at": "2026-10-15T23:50:16.479456+00:00",
+        "observation": "共通/人物lane固定名、多重参照・期間・選択同期・局所横移動/一覧をCSS幅で確認。多重表示は同一IDを編集する。gateの「スマートフォンで横移動しながら人物を識別」は実物理端末では未実施。",
+        "scope": "Final authored gate/deliverables reading against actual evidence; local gate success is not whole-package completion.",
+        "wholePackagePromotion": false
+      },
+      "historicalPreparationGateObservation": {
+        "at": "2026-10-15T21:10:52.789837+00:00",
+        "observation": "共通出来事は全員自動参加0、共通/個人レーンは同ID本体参照、group並替/畳み/archiveで人物/出来事不変。編集欄と横年表の独立scroll・固定ラベルは補助UI。原gateの実スマートフォンで横移動しながら識別する条件は未実行。",
+        "scope": "Authored original-gate content review; current unit source binding and prior actual outputs distinguished. Current candidate UI artifact adjudication and actual7200 full recovery still pending. No whole-package completion inferred.",
+        "wholePackagePromotion": false
+      },
+      "gateReviewResult": "blocked_original_gate_conditions",
+      "ownAcceptanceCasesPending": [],
+      "blockedDependencies": [
+        "WP02",
+        "WP05",
+        "WP06"
+      ]
+    },
+    {
+      "id": "WP08",
+      "original": {
+        "id": "WP08",
+        "stage": "B",
+        "title": "意味付きの関係と可視化",
+        "depends_on": [
+          "WP05",
+          "WP06",
+          "WP07"
+        ],
+        "size": "L",
+        "deliverables": "方向・時期・経路・根拠付き関係、図の種別、凡例、階層、一段/二段表示、タップによる線編集、関係表を実装する。",
+        "completion_gate": "図配置は表示状態だけを変え、色を見分けなくても関係を読み編集できる。",
+        "primary_risk": "異なる意味の線が混ざり方向を失う",
+        "requirement_ids": [
+          "REQ-B07",
+          "REQ-B09",
+          "REQ-F55",
+          "REQ-F59"
+        ],
+        "acceptance_ids": [
+          "AT-B07",
+          "AT-B09",
+          "AT-F55",
+          "AT-F59"
+        ],
+        "status": "planned",
+        "estimate_status": "unestimated",
+        "owner_role": "実装担当（未割当）"
+      },
+      "reviewState": "pending_original_conditions_or_dependencies",
+      "relatedOriginalCases": [
+        "AT-B07",
+        "AT-B09",
+        "AT-F55",
+        "AT-F59"
+      ],
+      "actualEvidence": [
+        {
+          "review": "CLAUSE_REVIEW.json",
+          "caseIds": [
+            "AT-B07",
+            "AT-B09",
+            "AT-F55",
+            "AT-F59"
+          ],
+          "scope": "Each original four-clause decision has source/build/actual bytes or a specific unmet original condition."
+        }
+      ],
+      "limitation": {
+        "originalCasesPending": [],
+        "originalGatePending": false,
+        "originalDependenciesPending": [
+          "WP05",
+          "WP06",
+          "WP07"
+        ],
+        "rule": "docs/plan/IMPLEMENTATION_PLAN.md: dependencies must be complete before a stage starts; partial implementation does not establish full acceptance."
+      },
+      "authorGateObservation": {
+        "at": "2026-10-15T23:50:16.479456+00:00",
+        "observation": "方向/期間/経路/根拠付き関係、6図種/凡例/線種/矢印/label、階層と一段/二段、常時ボタンと関係表を実行。配置・自動整列後のauthorデータ不変、非対称信頼の逆線/推移線非追加を確認。128幾何fixture一致と元graph30 p95を別途保持。",
+        "scope": "Final authored gate/deliverables reading against actual evidence; local gate success is not whole-package completion.",
+        "wholePackagePromotion": false
+      },
+      "historicalPreparationGateObservation": {
+        "at": "2026-10-15T21:10:52.789838+00:00",
+        "observation": "forward信頼/時期/経路/根拠を保持し逆向き/推移を補わない。凡例/線種/矢印/ラベル・一段二段/関係表で意味と範囲を示し配置だけでは正本不変。今回の関係図3ファイルは影響対象で、旧版証拠を付替えず元B07/B09/F55/F59の今回3engine実証拠を照合する。",
+        "scope": "Authored original-gate content review; current unit source binding and prior actual outputs distinguished. Current candidate UI artifact adjudication and actual7200 full recovery still pending. No whole-package completion inferred.",
+        "wholePackagePromotion": false
+      },
+      "gateReviewResult": "passed_local_gate_scope",
+      "ownAcceptanceCasesPending": [],
+      "blockedDependencies": [
+        "WP05",
+        "WP06",
+        "WP07"
+      ]
+    },
+    {
+      "id": "WP09",
+      "original": {
+        "id": "WP09",
+        "stage": "B",
+        "title": "共通世界・場所・移動・正体",
+        "depends_on": [
+          "WP06",
+          "WP08"
+        ],
+        "size": "L",
+        "deliverables": "共通設定の版参照、地図階層、場所変化、移動、所有履歴、家系・別名・認識者を実装する。",
+        "completion_gate": "地図なしでも使え、時期/経路で表示を切替え、共通設定更新で旧作品を壊さない。",
+        "primary_risk": "所有重複、未確定移動の断定、正体漏れ",
+        "requirement_ids": [
+          "REQ-B18",
+          "REQ-F09",
+          "REQ-F10",
+          "REQ-F11",
+          "REQ-F12"
+        ],
+        "acceptance_ids": [
+          "AT-B18",
+          "AT-F09",
+          "AT-F10",
+          "AT-F11",
+          "AT-F12"
+        ],
+        "status": "planned",
+        "estimate_status": "unestimated",
+        "owner_role": "実装担当（未割当）"
+      },
+      "reviewState": "pending_original_conditions_or_dependencies",
+      "relatedOriginalCases": [
+        "AT-B18",
+        "AT-F09",
+        "AT-F10",
+        "AT-F11",
+        "AT-F12"
+      ],
+      "actualEvidence": [
+        {
+          "review": "CLAUSE_REVIEW.json",
+          "caseIds": [
+            "AT-B18",
+            "AT-F09",
+            "AT-F10",
+            "AT-F11",
+            "AT-F12"
+          ],
+          "scope": "Each original four-clause decision has source/build/actual bytes or a specific unmet original condition."
+        }
+      ],
+      "limitation": {
+        "originalCasesPending": [],
+        "originalGatePending": false,
+        "originalDependenciesPending": [
+          "WP06",
+          "WP08"
+        ],
+        "rule": "docs/plan/IMPLEMENTATION_PLAN.md: dependencies must be complete before a stage starts; partial implementation does not establish full acceptance."
+      },
+      "authorGateObservation": {
+        "at": "2026-10-15T23:50:16.479456+00:00",
+        "observation": "共通世界の固定版参照、地図なし/場所階層・時期/経路表示・移動・所有履歴と家系/別名/認識者を確認。新版影響preview後も旧作品の公開版/world pinを保持し、現世界と固定版を区別する。",
+        "scope": "Final authored gate/deliverables reading against actual evidence; local gate success is not whole-package completion.",
+        "wholePackagePromotion": false
+      },
+      "historicalPreparationGateObservation": {
+        "at": "2026-10-15T21:10:52.789839+00:00",
+        "observation": "mapなし一覧→後追加実画像/pin/親子mapでも場所ID保持、階層循環/無効座標拒否。移動根拠なしは未確認、時点/経路付き所有/改名/支配は元設定を上書きしない。共通世界版1を旧作へ固定し続編だけ版2へ更新、公開面から本名/家系/添付名を除外する元操作を照合。",
+        "scope": "Authored original-gate content review; current unit source binding and prior actual outputs distinguished. Current candidate UI artifact adjudication and actual7200 full recovery still pending. No whole-package completion inferred.",
+        "wholePackagePromotion": false
+      },
+      "gateReviewResult": "passed_local_gate_scope",
+      "ownAcceptanceCasesPending": [],
+      "blockedDependencies": [
+        "WP06",
+        "WP08"
+      ]
+    },
+    {
+      "id": "WP10",
+      "original": {
+        "id": "WP10",
+        "stage": "C",
+        "title": "章・本文・構成・正本と別案",
+        "depends_on": [
+          "WP05",
+          "WP06"
+        ],
+        "size": "L",
+        "deliverables": "世界出来事と場面の対応、章順、筋、目標・変化、雛形・緊張値、要約/本文/メモ、ルビ/縦書き確認、正本/別案/公開版を実装する。",
+        "completion_gate": "回想を移動しても世界日付は不変。別案と公開版が独立し、未入力場面も作れる。",
+        "primary_risk": "本文を複製して図ごとに編集結果が分かれる",
+        "requirement_ids": [
+          "REQ-B13",
+          "REQ-B20",
+          "REQ-F03",
+          "REQ-F04",
+          "REQ-F05",
+          "REQ-F06",
+          "REQ-F25",
+          "REQ-N19"
+        ],
+        "acceptance_ids": [
+          "AT-B13",
+          "AT-B20",
+          "AT-F03",
+          "AT-F04",
+          "AT-F05",
+          "AT-F06",
+          "AT-F25",
+          "AT-N19"
+        ],
+        "status": "planned",
+        "estimate_status": "unestimated",
+        "owner_role": "実装担当（未割当）"
+      },
+      "reviewState": "pending_original_conditions_or_dependencies",
+      "relatedOriginalCases": [
+        "AT-B13",
+        "AT-B20",
+        "AT-F03",
+        "AT-F04",
+        "AT-F05",
+        "AT-F06",
+        "AT-F25",
+        "AT-N19"
+      ],
+      "actualEvidence": [
+        {
+          "review": "CLAUSE_REVIEW.json",
+          "caseIds": [
+            "AT-B13",
+            "AT-B20",
+            "AT-F03",
+            "AT-F04",
+            "AT-F05",
+            "AT-F06",
+            "AT-F25",
+            "AT-N19"
+          ],
+          "scope": "Each original four-clause decision has source/build/actual bytes or a specific unmet original condition."
+        }
+      ],
+      "limitation": {
+        "originalCasesPending": [],
+        "originalGatePending": false,
+        "originalDependenciesPending": [
+          "WP05",
+          "WP06"
+        ],
+        "rule": "docs/plan/IMPLEMENTATION_PLAN.md: dependencies must be complete before a stage starts; partial implementation does not establish full acceptance."
+      },
+      "authorGateObservation": {
+        "at": "2026-10-15T23:50:16.479456+00:00",
+        "observation": "章順/世界event参照、筋/目標/緊張、summary/body/メモ・ルビ/縦書き、正本/別案/公開pinを実ファイルで確認。回想順変更でworld tick不変、未入力scene可能、没別案が正本出力へ混入しない。",
+        "scope": "Final authored gate/deliverables reading against actual evidence; local gate success is not whole-package completion.",
+        "wholePackagePromotion": false
+      },
+      "historicalPreparationGateObservation": {
+        "at": "2026-10-15T21:10:52.789841+00:00",
+        "observation": "回想の章順と世界日付を独立、同sceneを複数筋で再利用して本文を複製しない。空の役割/仮場面/緊張欠落を許し、別案/没/公開snapshotは別ID/版として保持。選択章reader/ruby/縦横/summaryとbodyの分離を実出力へ結び付ける。",
+        "scope": "Authored original-gate content review; current unit source binding and prior actual outputs distinguished. Current candidate UI artifact adjudication and actual7200 full recovery still pending. No whole-package completion inferred.",
+        "wholePackagePromotion": false
+      },
+      "gateReviewResult": "passed_local_gate_scope",
+      "ownAcceptanceCasesPending": [],
+      "blockedDependencies": [
+        "WP05",
+        "WP06"
+      ]
+    },
+    {
+      "id": "WP11",
+      "original": {
+        "id": "WP11",
+        "stage": "C",
+        "title": "フラグ・条件・状態遷移",
+        "depends_on": [
+          "WP01",
+          "WP04",
+          "WP05"
+        ],
+        "size": "L",
+        "deliverables": "状態辞書、型/範囲/初期化/算出、条件AST、三値説明、遷移表、参照/書込一覧、効果の原子適用を実装する。",
+        "completion_gate": "括弧、未定義、禁止遷移、循環算出、重複トリガーを固定データで検証する。",
+        "primary_risk": "未定義=偽と任意コード評価",
+        "requirement_ids": [
+          "REQ-B15",
+          "REQ-F37",
+          "REQ-F38",
+          "REQ-F39",
+          "REQ-F40",
+          "REQ-F41"
+        ],
+        "acceptance_ids": [
+          "AT-B15",
+          "AT-F37",
+          "AT-F38",
+          "AT-F39",
+          "AT-F40",
+          "AT-F41"
+        ],
+        "status": "planned",
+        "estimate_status": "unestimated",
+        "owner_role": "実装担当（未割当）"
+      },
+      "reviewState": "pending_original_conditions_or_dependencies",
+      "relatedOriginalCases": [
+        "AT-B15",
+        "AT-F37",
+        "AT-F38",
+        "AT-F39",
+        "AT-F40",
+        "AT-F41"
+      ],
+      "actualEvidence": [
+        {
+          "review": "CLAUSE_REVIEW.json",
+          "caseIds": [
+            "AT-B15",
+            "AT-F37",
+            "AT-F38",
+            "AT-F39",
+            "AT-F40",
+            "AT-F41"
+          ],
+          "scope": "Each original four-clause decision has source/build/actual bytes or a specific unmet original condition."
+        }
+      ],
+      "limitation": {
+        "originalCasesPending": [],
+        "originalGatePending": false,
+        "originalDependenciesPending": [
+          "WP04",
+          "WP05"
+        ],
+        "rule": "docs/plan/IMPLEMENTATION_PLAN.md: dependencies must be complete before a stage starts; partial implementation does not establish full acceptance."
+      },
+      "authorGateObservation": {
+        "at": "2026-10-15T23:50:16.479456+00:00",
+        "observation": "boolean/integer/enum状態辞書・許容値/初期化/算出・条件AST/自然文・三値理由・遷移・利用/書込元を確認。括弧、未定義、算出循環/直接代入、禁止遷移の一括原子拒否、同一発火IDの非重複を元fixtureで確認。",
+        "scope": "Final authored gate/deliverables reading against actual evidence; local gate success is not whole-package completion.",
+        "wholePackagePromotion": false
+      },
+      "historicalPreparationGateObservation": {
+        "at": "2026-10-15T21:10:52.789842+00:00",
+        "observation": "bool/int/enum/未知/算出/参照書込/括弧all-any/禁止遷移の純粋評価と通常フォームを確認。未定義/型違い/範囲外/循環を拒否して入力保持、効果は全体原子、明示理由/対象経路/期間付き例外だけ許可。重複発火はF14の同occurrence実行も併せて確認する。",
+        "scope": "Authored original-gate content review; current unit source binding and prior actual outputs distinguished. Current candidate UI artifact adjudication and actual7200 full recovery still pending. No whole-package completion inferred.",
+        "wholePackagePromotion": false
+      },
+      "gateReviewResult": "passed_local_gate_scope",
+      "ownAcceptanceCasesPending": [],
+      "blockedDependencies": [
+        "WP04",
+        "WP05"
+      ]
+    },
+    {
+      "id": "WP12",
+      "original": {
+        "id": "WP12",
+        "stage": "C",
+        "title": "分岐図・クエスト・再利用",
+        "depends_on": [
+          "WP08",
+          "WP10",
+          "WP11"
+        ],
+        "size": "L",
+        "deliverables": "入口/出口のある階層分岐、選択/自動/終端、トリガー、会話/クエスト、共通場面の参照・複製・上書きを実装する。",
+        "completion_gate": "条件・効果の規則に一致し、入口不整合と選択肢ゼロを終端から分ける。",
+        "primary_risk": "折り畳みによるエラー隠蔽と再利用の意図しない伝播",
+        "requirement_ids": [
+          "REQ-B14",
+          "REQ-B22",
+          "REQ-F13",
+          "REQ-F14",
+          "REQ-F19"
+        ],
+        "acceptance_ids": [
+          "AT-B14",
+          "AT-B22",
+          "AT-F13",
+          "AT-F14",
+          "AT-F19"
+        ],
+        "status": "planned",
+        "estimate_status": "unestimated",
+        "owner_role": "実装担当（未割当）"
+      },
+      "reviewState": "pending_original_conditions_or_dependencies",
+      "relatedOriginalCases": [
+        "AT-B14",
+        "AT-B22",
+        "AT-F13",
+        "AT-F14",
+        "AT-F19"
+      ],
+      "actualEvidence": [
+        {
+          "review": "CLAUSE_REVIEW.json",
+          "caseIds": [
+            "AT-B14",
+            "AT-B22",
+            "AT-F13",
+            "AT-F14",
+            "AT-F19"
+          ],
+          "scope": "Each original four-clause decision has source/build/actual bytes or a specific unmet original condition."
+        }
+      ],
+      "limitation": {
+        "originalCasesPending": [],
+        "originalGatePending": false,
+        "originalDependenciesPending": [
+          "WP08",
+          "WP10",
+          "WP11"
+        ],
+        "rule": "docs/plan/IMPLEMENTATION_PLAN.md: dependencies must be complete before a stage starts; partial implementation does not establish full acceptance."
+      },
+      "authorGateObservation": {
+        "at": "2026-10-15T23:50:16.479456+00:00",
+        "observation": "階層flowの宣言入口出口、choice/automatic/terminal・trigger・会話/questと参照/複製/overrideを確認。条件とeffectを共通runtimeで適用し、入口不整合・選択肢ゼロ/unknownを意図終端から分離。",
+        "scope": "Final authored gate/deliverables reading against actual evidence; local gate success is not whole-package completion.",
+        "wholePackagePromotion": false
+      },
+      "historicalPreparationGateObservation": {
+        "at": "2026-10-15T21:10:52.789843+00:00",
+        "observation": "階層を畳んでも未解決入口/出口/unknown/エラー件数を上位へ反映。gateだけでは効果0、明示trigger/once/runは同occurrence再送で重複なし。選択肢0を終端と分け、参照/独立複製/指定field overrideと適用owner/版を固定する元手順を照合。",
+        "scope": "Authored original-gate content review; current unit source binding and prior actual outputs distinguished. Current candidate UI artifact adjudication and actual7200 full recovery still pending. No whole-package completion inferred.",
+        "wholePackagePromotion": false
+      },
+      "gateReviewResult": "passed_local_gate_scope",
+      "ownAcceptanceCasesPending": [],
+      "blockedDependencies": [
+        "WP08",
+        "WP10",
+        "WP11"
+      ]
+    },
+    {
+      "id": "WP13",
+      "original": {
+        "id": "WP13",
+        "stage": "C",
+        "title": "試し読み・比較・周回",
+        "depends_on": [
+          "WP11",
+          "WP12"
+        ],
+        "size": "L",
+        "deliverables": "途中開始スナップショット、選択戻し、状態差分、合流比較、既読/抽選/周回、記録付き試読を実装する。",
+        "completion_gate": "鍵有無の二経路と抽選が巻き戻せ、合流で状態を初期化しない。",
+        "primary_risk": "状態/乱数の復元漏れと途中開始の証拠誤認",
+        "requirement_ids": [
+          "REQ-B16",
+          "REQ-F15",
+          "REQ-F16",
+          "REQ-F20"
+        ],
+        "acceptance_ids": [
+          "AT-B16",
+          "AT-F15",
+          "AT-F16",
+          "AT-F20"
+        ],
+        "status": "planned",
+        "estimate_status": "unestimated",
+        "owner_role": "実装担当（未割当）"
+      },
+      "reviewState": "pending_original_conditions_or_dependencies",
+      "relatedOriginalCases": [
+        "AT-B16",
+        "AT-F15",
+        "AT-F16",
+        "AT-F20"
+      ],
+      "actualEvidence": [
+        {
+          "review": "CLAUSE_REVIEW.json",
+          "caseIds": [
+            "AT-B16",
+            "AT-F15",
+            "AT-F16",
+            "AT-F20"
+          ],
+          "scope": "Each original four-clause decision has source/build/actual bytes or a specific unmet original condition."
+        }
+      ],
+      "limitation": {
+        "originalCasesPending": [],
+        "originalGatePending": false,
+        "originalDependenciesPending": [
+          "WP11",
+          "WP12"
+        ],
+        "rule": "docs/plan/IMPLEMENTATION_PLAN.md: dependencies must be complete before a stage starts; partial implementation does not establish full acceptance."
+      },
+      "authorGateObservation": {
+        "at": "2026-10-15T23:50:16.479456+00:00",
+        "observation": "途中開始checkpoint、Backの全runtime state・state差分・二経路合流と既読/RNG/周回を確認。鍵有無の差を合流で保持し、seed/乱数位置0→1の再現、run reset/across_runs carry/fullresetを区別する。",
+        "scope": "Final authored gate/deliverables reading against actual evidence; local gate success is not whole-package completion.",
+        "wholePackagePromotion": false
+      },
+      "historicalPreparationGateObservation": {
+        "at": "2026-10-15T21:10:52.789844+00:00",
+        "observation": "鍵あり/なしの同合流で差を保持し、Backはstate/物品/知識/seen/once/rng/呼出/位置を復元。途中開始はpartialで不足/別版をunknown/移行確認としfull_playへ昇格しない。seed/抽選位置とrun/across_runs/fullresetを実保存traceへ対応させる。",
+        "scope": "Authored original-gate content review; current unit source binding and prior actual outputs distinguished. Current candidate UI artifact adjudication and actual7200 full recovery still pending. No whole-package completion inferred.",
+        "wholePackagePromotion": false
+      },
+      "gateReviewResult": "passed_local_gate_scope",
+      "ownAcceptanceCasesPending": [],
+      "blockedDependencies": [
+        "WP11",
+        "WP12"
+      ]
+    },
+    {
+      "id": "WP14",
+      "original": {
+        "id": "WP14",
+        "stage": "C",
+        "title": "経路記録・検査・網羅率",
+        "depends_on": [
+          "WP13"
+        ],
+        "size": "L",
+        "deliverables": "参照/行止まり/到達性候補、探索上限、根拠経路、複数の網羅率、回帰経路・変更後再確認を実装する。",
+        "completion_gate": "未確認・意図した終端・探索打切り・外部応答仮実が明確である。",
+        "primary_risk": "解けない条件を安全と断定する",
+        "requirement_ids": [
+          "REQ-F17",
+          "REQ-F18",
+          "REQ-N05",
+          "REQ-N12"
+        ],
+        "acceptance_ids": [
+          "AT-F17",
+          "AT-F18",
+          "AT-N05",
+          "AT-N12"
+        ],
+        "status": "planned",
+        "estimate_status": "unestimated",
+        "owner_role": "実装担当（未割当）"
+      },
+      "reviewState": "pending_original_conditions_or_dependencies",
+      "relatedOriginalCases": [
+        "AT-F17",
+        "AT-F18",
+        "AT-N05",
+        "AT-N12"
+      ],
+      "actualEvidence": [
+        {
+          "review": "CLAUSE_REVIEW.json",
+          "caseIds": [
+            "AT-F17",
+            "AT-F18",
+            "AT-N05",
+            "AT-N12"
+          ],
+          "scope": "Each original four-clause decision has source/build/actual bytes or a specific unmet original condition."
+        }
+      ],
+      "limitation": {
+        "originalCasesPending": [],
+        "originalGatePending": false,
+        "originalDependenciesPending": [
+          "WP13"
+        ],
+        "rule": "docs/plan/IMPLEMENTATION_PLAN.md: dependencies must be complete before a stage starts; partial implementation does not establish full acceptance."
+      },
+      "authorGateObservation": {
+        "at": "2026-10-15T23:50:16.479456+00:00",
+        "observation": "参照/到達/行止まり候補、証人経路、scene/line/choice/条件真偽の別分母、旧trace/新版再確認を確認。unknown/意図終端/上限打切り・stub/受取実例/対象ゲーム未実施を明示。原Large N05だけは旧3ab6の実実行と無影響根拠を明示して引継ぎ。",
+        "scope": "Final authored gate/deliverables reading against actual evidence; local gate success is not whole-package completion.",
+        "wholePackagePromotion": false
+      },
+      "historicalPreparationGateObservation": {
+        "at": "2026-10-15T21:10:52.789845+00:00",
+        "observation": "scene/line/choice/条件真偽の分母を分け、旧traceと改訂再確認を別版で保持。意図終端/行止まり/外部未知/無制限loop/上限打切りを別findingにする。原Large N05の全量・入力保持・未確認結果は明示した旧3ab6実検証と不変条件で引継ぐ。仮応答と汎用受取実例と対象ゲーム未実行を区別する。",
+        "scope": "Authored original-gate content review; current unit source binding and prior actual outputs distinguished. Current candidate UI artifact adjudication and actual7200 full recovery still pending. No whole-package completion inferred.",
+        "wholePackagePromotion": false
+      },
+      "gateReviewResult": "passed_local_gate_scope",
+      "ownAcceptanceCasesPending": [],
+      "blockedDependencies": [
+        "WP13"
+      ]
+    },
+    {
+      "id": "WP15",
+      "original": {
+        "id": "WP15",
+        "stage": "C",
+        "title": "伏線・開示・認識の管理",
+        "depends_on": [
+          "WP09",
+          "WP10",
+          "WP13",
+          "WP14"
+        ],
+        "size": "L",
+        "deliverables": "独立伏線、手掛かり/回収/段階、経路上の提示検査、真実/証言/知識、回収方針と期限を実装する。",
+        "completion_gate": "手掛かりなしで真相へ行く証人経路を示し、理解を自動判定しない。",
+        "primary_risk": "世界時間と提示順の混同、知識の自動伝播",
+        "requirement_ids": [
+          "REQ-B17",
+          "REQ-B19",
+          "REQ-F43",
+          "REQ-F44",
+          "REQ-F45",
+          "REQ-F46",
+          "REQ-F47"
+        ],
+        "acceptance_ids": [
+          "AT-B17",
+          "AT-B19",
+          "AT-F43",
+          "AT-F44",
+          "AT-F45",
+          "AT-F46",
+          "AT-F47"
+        ],
+        "status": "planned",
+        "estimate_status": "unestimated",
+        "owner_role": "実装担当（未割当）"
+      },
+      "reviewState": "pending_original_conditions_or_dependencies",
+      "relatedOriginalCases": [
+        "AT-B17",
+        "AT-B19",
+        "AT-F43",
+        "AT-F44",
+        "AT-F45",
+        "AT-F46",
+        "AT-F47"
+      ],
+      "actualEvidence": [
+        {
+          "review": "CLAUSE_REVIEW.json",
+          "caseIds": [
+            "AT-B17",
+            "AT-B19",
+            "AT-F43",
+            "AT-F44",
+            "AT-F45",
+            "AT-F46",
+            "AT-F47"
+          ],
+          "scope": "Each original four-clause decision has source/build/actual bytes or a specific unmet original condition."
+        }
+      ],
+      "limitation": {
+        "originalCasesPending": [],
+        "originalGatePending": false,
+        "originalDependenciesPending": [
+          "WP09",
+          "WP10",
+          "WP13",
+          "WP14"
+        ],
+        "rule": "docs/plan/IMPLEMENTATION_PLAN.md: dependencies must be complete before a stage starts; partial implementation does not establish full acceptance."
+      },
+      "authorGateObservation": {
+        "at": "2026-10-15T23:50:16.479456+00:00",
+        "observation": "独立伏線と複数clue/payoff/代替・段階/期限/方針、真実/証言/信念と出所/取得位置を確認。場面分割/削除で本体を残し、必須欠落の証人経路を提示、任意/代替/続編/意図未回収を区別して読者の理解を判定しない。",
+        "scope": "Final authored gate/deliverables reading against actual evidence; local gate success is not whole-package completion.",
+        "wholePackagePromotion": false
+      },
+      "historicalPreparationGateObservation": {
+        "at": "2026-10-15T21:10:52.789846+00:00",
+        "observation": "独立question本体と複数clue/payoff/代替を保持し、場面分割/削除で本体を消さない。提示位置のbefore/afterで知識を付け、提示後条件falseでも既に提示した回収を外さない。必須clue欠落witness/任意/代替/続編/意図未回収を区別し、プレイヤー理解を認定しない。",
+        "scope": "Authored original-gate content review; current unit source binding and prior actual outputs distinguished. Current candidate UI artifact adjudication and actual7200 full recovery still pending. No whole-package completion inferred.",
+        "wholePackagePromotion": false
+      },
+      "gateReviewResult": "passed_local_gate_scope",
+      "ownAcceptanceCasesPending": [],
+      "blockedDependencies": [
+        "WP09",
+        "WP10",
+        "WP13",
+        "WP14"
+      ]
+    },
+    {
+      "id": "WP16",
+      "original": {
+        "id": "WP16",
+        "stage": "D",
+        "title": "完全保存・読み込み・復元",
+        "depends_on": [
+          "WP03",
+          "WP09",
+          "WP10",
+          "WP15"
+        ],
+        "size": "L",
+        "deliverables": "版付き専用archive、manifest/ハッシュ、素材包含、事前検査、追加/置換/統合、移行、バックアップと復元を実装する。",
+        "completion_gate": "空環境への全情報往復、破損/危険パス/上限超過拒否、既存データ不変を確認する。",
+        "primary_risk": "出力にはあるが読み戻せない情報",
+        "requirement_ids": [
+          "REQ-B12",
+          "REQ-F35",
+          "REQ-N09",
+          "REQ-N14"
+        ],
+        "acceptance_ids": [
+          "AT-B12",
+          "AT-F35",
+          "AT-N09",
+          "AT-N14"
+        ],
+        "status": "planned",
+        "estimate_status": "unestimated",
+        "owner_role": "実装担当（未割当）"
+      },
+      "reviewState": "pending_original_conditions_or_dependencies",
+      "relatedOriginalCases": [
+        "AT-B12",
+        "AT-F35",
+        "AT-N09",
+        "AT-N14"
+      ],
+      "actualEvidence": [
+        {
+          "review": "CLAUSE_REVIEW.json",
+          "caseIds": [
+            "AT-B12",
+            "AT-F35",
+            "AT-N09",
+            "AT-N14"
+          ],
+          "scope": "Each original four-clause decision has source/build/actual bytes or a specific unmet original condition."
+        },
+        {
+          "bundleManifest": "evidence/bundles/formal-1fcadcca.manifest.json",
+          "actual7200": "soak7200-1fcadcca-attempt1/ADJUDICATION.json"
+        },
+        {
+          "bundleManifest": "evidence/bundles/full-large-exceptions-1fcadcca.manifest.json",
+          "sameFullNegativeRetry": "actual-attempt/ADJUDICATION.json"
+        }
+      ],
+      "limitation": {
+        "originalCasesPending": [],
+        "originalGatePending": false,
+        "originalDependenciesPending": [
+          "WP03",
+          "WP09",
+          "WP10",
+          "WP15"
+        ],
+        "rule": "docs/plan/IMPLEMENTATION_PLAN.md: dependencies must be complete before a stage starts; partial implementation does not establish full acceptance."
+      },
+      "authorGateObservation": {
+        "at": "2026-10-15T23:50:16.479456+00:00",
+        "observation": "native1.0完全archive/manifest/hash・実素材・移行/単体・追加/正常ACK後置換/統合を確認。全43種+未知日時+巨大tickのnew/cold全情報、7不正+11安全上限L±1の不変、元全88003/72MiB/113履歴pendingのnew/clone/cold、および同全量のlate拒否/retryが実成功。",
+        "scope": "Final authored gate/deliverables reading against actual evidence; local gate success is not whole-package completion.",
+        "wholePackagePromotion": false
+      },
+      "historicalPreparationGateObservation": {
+        "at": "2026-10-15T21:10:52.789847+00:00",
+        "observation": "native1.0.0の全entity/未知/巨大tick/素材/世界/履歴/送信待ちを実ファイルで空new/clone/coldへ対応。原negative7と11上限L±1で理由/path/全native不変を確認する元assertを維持。今回の元180復元は成功、全113/72MiBの最終同候補照合とCI原本bytesを仕上げる。",
+        "scope": "Authored original-gate content review; current unit source binding and prior actual outputs distinguished. Current candidate UI artifact adjudication and actual7200 full recovery still pending. No whole-package completion inferred.",
+        "wholePackagePromotion": false
+      },
+      "gateReviewResult": "passed_local_gate_scope",
+      "ownAcceptanceCasesPending": [],
+      "blockedDependencies": [
+        "WP03",
+        "WP09",
+        "WP10",
+        "WP15"
+      ]
+    },
+    {
+      "id": "WP17",
+      "original": {
+        "id": "WP17",
+        "stage": "D",
+        "title": "端末間の安全な同期",
+        "depends_on": [
+          "WP03",
+          "WP16"
+        ],
+        "size": "L",
+        "deliverables": "認証・作品membership、revision比較、冪等操作、三方向差分、削除対編集、添付同期、権限撤回を実装する。",
+        "completion_gate": "二端末同時編集/再送/通信断の試験と非メンバーRLS試験を通し、秘密キーを前面へ出さない。",
+        "primary_risk": "最終書込でデータが消えることと権限の回避",
+        "requirement_ids": [
+          "REQ-F34",
+          "REQ-N07"
+        ],
+        "acceptance_ids": [
+          "AT-F34",
+          "AT-N07"
+        ],
+        "status": "planned",
+        "estimate_status": "unestimated",
+        "owner_role": "実装担当（未割当）"
+      },
+      "reviewState": "pending_original_conditions_or_dependencies",
+      "relatedOriginalCases": [
+        "AT-F34",
+        "AT-N07"
+      ],
+      "actualEvidence": [
+        {
+          "review": "CLAUSE_REVIEW.json",
+          "caseIds": [
+            "AT-F34",
+            "AT-N07"
+          ],
+          "scope": "Each original four-clause decision has source/build/actual bytes or a specific unmet original condition."
+        }
+      ],
+      "limitation": {
+        "originalCasesPending": [
+          "AT-F34",
+          "AT-N07"
+        ],
+        "originalGatePending": true,
+        "originalDependenciesPending": [
+          "WP03",
+          "WP16"
+        ],
+        "rule": "docs/plan/IMPLEMENTATION_PLAN.md: dependencies must be complete before a stage starts; partial implementation does not establish full acceptance."
+      },
+      "authorGateObservation": {
+        "at": "2026-10-15T23:50:16.479456+00:00",
+        "observation": "ローカルprotocol/SQL/unitは保持。専用HTTPS/Auth・membership/private Storageの実二端末同時編集・再送・通信断・削除対編集と非member RLSの原gateは未実施。",
+        "scope": "Final authored gate/deliverables reading against actual evidence; local gate success is not whole-package completion.",
+        "wholePackagePromotion": false
+      },
+      "historicalPreparationGateObservation": {
+        "at": "2026-10-15T21:10:52.789848+00:00",
+        "observation": "実二端末・専用Auth/DataAPI/private Storage・5役割/非member・再送/断線/削除対編集/撤回の原gateは未実行。通常UI/ローカルHTTP/SQL部品の成功を実RLSや実同期へ転用せず、別用途projectは変更しない。",
+        "scope": "Authored original-gate content review; current unit source binding and prior actual outputs distinguished. Current candidate UI artifact adjudication and actual7200 full recovery still pending. No whole-package completion inferred.",
+        "wholePackagePromotion": false
+      },
+      "gateReviewResult": "blocked_original_gate_conditions",
+      "ownAcceptanceCasesPending": [
+        "AT-F34",
+        "AT-N07"
+      ],
+      "blockedDependencies": [
+        "WP03",
+        "WP16"
+      ]
+    },
+    {
+      "id": "WP18",
+      "original": {
+        "id": "WP18",
+        "stage": "D",
+        "title": "共有範囲・レビュー・公開投影",
+        "depends_on": [
+          "WP05",
+          "WP09",
+          "WP15",
+          "WP17"
+        ],
+        "size": "L",
+        "deliverables": "閲覧/指摘/編集/管理、限定共有snapshot、公開投影、コメント版追跡、secretデータ/素材/検索の除外を実装する。",
+        "completion_gate": "正体の本名・家系・ファイル名・参照数まで限定閲覧者から取れない。",
+        "primary_risk": "UIでは隠れていてAPIや索引に残る",
+        "requirement_ids": [
+          "REQ-F29",
+          "REQ-F30",
+          "REQ-N08"
+        ],
+        "acceptance_ids": [
+          "AT-F29",
+          "AT-F30",
+          "AT-N08"
+        ],
+        "status": "planned",
+        "estimate_status": "unestimated",
+        "owner_role": "実装担当（未割当）"
+      },
+      "reviewState": "pending_original_conditions_or_dependencies",
+      "relatedOriginalCases": [
+        "AT-F29",
+        "AT-F30",
+        "AT-N08"
+      ],
+      "actualEvidence": [
+        {
+          "review": "CLAUSE_REVIEW.json",
+          "caseIds": [
+            "AT-F29",
+            "AT-F30",
+            "AT-N08"
+          ],
+          "scope": "Each original four-clause decision has source/build/actual bytes or a specific unmet original condition."
+        }
+      ],
+      "limitation": {
+        "originalCasesPending": [
+          "AT-F29",
+          "AT-F30",
+          "AT-N08"
+        ],
+        "originalGatePending": true,
+        "originalDependenciesPending": [
+          "WP05",
+          "WP09",
+          "WP15",
+          "WP17"
+        ],
+        "rule": "docs/plan/IMPLEMENTATION_PLAN.md: dependencies must be complete before a stage starts; partial implementation does not establish full acceptance."
+      },
+      "authorGateObservation": {
+        "at": "2026-10-15T23:50:16.479456+00:00",
+        "observation": "ローカル限定snapshot/公開投影・旧review対象版/quote/削除位置とstageを確認。ただし実reader/reviewer/editorの直接API・検索/索引/図/私有素材と撤回の原gate未実施で、本名/家系/filename/countの取得不能を実server上では認定しない。",
+        "scope": "Final authored gate/deliverables reading against actual evidence; local gate success is not whole-package completion.",
+        "wholePackagePromotion": false
+      },
+      "historicalPreparationGateObservation": {
+        "at": "2026-10-15T21:10:52.789849+00:00",
+        "observation": "ローカル投影では本名/読み/家系/ID/索引/参照数/ファイル名を除き、commentの旧対象版/引用/削除後位置/修正再確認を保持する。実reviewer認証、限定閲覧者の直接API/素材取得、撤回後取得の原条件が未実行のため工程全体は保留。",
+        "scope": "Authored original-gate content review; current unit source binding and prior actual outputs distinguished. Current candidate UI artifact adjudication and actual7200 full recovery still pending. No whole-package completion inferred.",
+        "wholePackagePromotion": false
+      },
+      "gateReviewResult": "blocked_original_gate_conditions",
+      "ownAcceptanceCasesPending": [
+        "AT-F29",
+        "AT-F30",
+        "AT-N08"
+      ],
+      "blockedDependencies": [
+        "WP05",
+        "WP09",
+        "WP15",
+        "WP17"
+      ]
+    },
+    {
+      "id": "WP19",
+      "original": {
+        "id": "WP19",
+        "stage": "E",
+        "title": "台詞ID・翻訳・収録・用語",
+        "depends_on": [
+          "WP10",
+          "WP12",
+          "WP18"
+        ],
+        "size": "L",
+        "deliverables": "不変台詞/選択肢ID、分割対応、言語別原稿、内容ハッシュ、音声/収録版、口調・用語・例外と担当別出力を実装する。",
+        "completion_gate": "並替/改名で音声がずれず、原文の変更は翻訳/収録を確認待ちにする。",
+        "primary_risk": "一つの完成フラグで各成果物を完成済みにする",
+        "requirement_ids": [
+          "REQ-F21",
+          "REQ-F23",
+          "REQ-F48"
+        ],
+        "acceptance_ids": [
+          "AT-F21",
+          "AT-F23",
+          "AT-F48"
+        ],
+        "status": "planned",
+        "estimate_status": "unestimated",
+        "owner_role": "実装担当（未割当）"
+      },
+      "reviewState": "pending_original_conditions_or_dependencies",
+      "relatedOriginalCases": [
+        "AT-F21",
+        "AT-F23",
+        "AT-F48"
+      ],
+      "actualEvidence": [
+        {
+          "review": "CLAUSE_REVIEW.json",
+          "caseIds": [
+            "AT-F21",
+            "AT-F23",
+            "AT-F48"
+          ],
+          "scope": "Each original four-clause decision has source/build/actual bytes or a specific unmet original condition."
+        }
+      ],
+      "limitation": {
+        "originalCasesPending": [],
+        "originalGatePending": false,
+        "originalDependenciesPending": [
+          "WP10",
+          "WP12",
+          "WP18"
+        ],
+        "rule": "docs/plan/IMPLEMENTATION_PLAN.md: dependencies must be complete before a stage starts; partial implementation does not establish full acceptance."
+      },
+      "authorGateObservation": {
+        "at": "2026-10-15T23:50:16.479456+00:00",
+        "observation": "台詞entity IDは改名/並替/本文改訂で保持、copy/splitは新IDと対応履歴。内容hash変化時にだけ翻訳/収録needs_review、確認者と旧成果物版・実WAVを保持。時期/例外付き用語/口調は候補表示で自動修正しない。",
+        "scope": "Final authored gate/deliverables reading against actual evidence; local gate success is not whole-package completion.",
+        "wholePackagePromotion": false
+      },
+      "historicalPreparationGateObservation": {
+        "at": "2026-10-15T21:10:52.789850+00:00",
+        "observation": "台詞entityIDを改名/並替/編集で保持し、copyは新ID、splitは二新IDと履歴。本文全置換でblockIDが変わる実結果は隠さない。内容hashだけで翻訳/録音needs_review、確認者/成果物版/実WAVを保持。口調/用語は時期/例外付き候補で自動置換しない元手順を照合。",
+        "scope": "Authored original-gate content review; current unit source binding and prior actual outputs distinguished. Current candidate UI artifact adjudication and actual7200 full recovery still pending. No whole-package completion inferred.",
+        "wholePackagePromotion": false
+      },
+      "gateReviewResult": "passed_local_gate_scope",
+      "ownAcceptanceCasesPending": [],
+      "blockedDependencies": [
+        "WP10",
+        "WP12",
+        "WP18"
+      ]
+    },
+    {
+      "id": "WP20",
+      "original": {
+        "id": "WP20",
+        "stage": "E",
+        "title": "素材・資料・絵コンテ・演出",
+        "depends_on": [
+          "WP18",
+          "WP19"
+        ],
+        "size": "L",
+        "deliverables": "素材版/不足/仮完成、資料の出所、台詞演出、絵コンテ、秒単位timecode、安全な添付表示を実装する。",
+        "completion_gate": "本文だけで読め、素材変更先を追え、演出時間と世界時間を混同しない。",
+        "primary_risk": "引用資料と作者設定の混同、能動内容の実行",
+        "requirement_ids": [
+          "REQ-F22",
+          "REQ-F28",
+          "REQ-F53",
+          "REQ-N10"
+        ],
+        "acceptance_ids": [
+          "AT-F22",
+          "AT-F28",
+          "AT-F53",
+          "AT-N10"
+        ],
+        "status": "planned",
+        "estimate_status": "unestimated",
+        "owner_role": "実装担当（未割当）"
+      },
+      "reviewState": "pending_original_conditions_or_dependencies",
+      "relatedOriginalCases": [
+        "AT-F22",
+        "AT-F28",
+        "AT-F53",
+        "AT-N10"
+      ],
+      "actualEvidence": [
+        {
+          "review": "CLAUSE_REVIEW.json",
+          "caseIds": [
+            "AT-F22",
+            "AT-F28",
+            "AT-F53",
+            "AT-N10"
+          ],
+          "scope": "Each original four-clause decision has source/build/actual bytes or a specific unmet original condition."
+        }
+      ],
+      "limitation": {
+        "originalCasesPending": [],
+        "originalGatePending": false,
+        "originalDependenciesPending": [
+          "WP18",
+          "WP19"
+        ],
+        "rule": "docs/plan/IMPLEMENTATION_PLAN.md: dependencies must be complete before a stage starts; partial implementation does not establish full acceptance."
+      },
+      "authorGateObservation": {
+        "at": "2026-10-15T23:50:16.479456+00:00",
+        "observation": "本文のみ/演出込みと素材の参考/完成/欠落を分離し、差替え先と旧素材を追跡。Web/PDF/画像の出所・取得日・解釈・再配布許可、frame/cueのmsとworld tickを分離し、素材だけの変更で依存frameを確認待ちにする。",
+        "scope": "Final authored gate/deliverables reading against actual evidence; local gate success is not whole-package completion.",
+        "wholePackagePromotion": false
+      },
+      "historicalPreparationGateObservation": {
+        "at": "2026-10-15T21:10:52.789851+00:00",
+        "observation": "本文のみ/演出込みを分離し、仮素材と欠落を区別。素材差替でもlineID保持、完全出力の欠落拒否を実downloadと対応。Web/PDF/画像の出所/取得日/解釈/再配布許可と、絵コンテ・cueのms/世界tickを分け、依存frameをneeds_reviewにする。",
+        "scope": "Authored original-gate content review; current unit source binding and prior actual outputs distinguished. Current candidate UI artifact adjudication and actual7200 full recovery still pending. No whole-package completion inferred.",
+        "wholePackagePromotion": false
+      },
+      "gateReviewResult": "passed_local_gate_scope",
+      "ownAcceptanceCasesPending": [],
+      "blockedDependencies": [
+        "WP18",
+        "WP19"
+      ]
+    },
+    {
+      "id": "WP21",
+      "original": {
+        "id": "WP21",
+        "stage": "E",
+        "title": "企画・制作依存・媒体別内容",
+        "depends_on": [
+          "WP10",
+          "WP14",
+          "WP19",
+          "WP20"
+        ],
+        "size": "L",
+        "deliverables": "企画意図/判断、プレイ行動/実装対応、工程別状態、期限/依存、固有制作量と経路量、媒体版を実装する。",
+        "completion_gate": "共通場面を制作数で二重計上せず、公開済み媒体版と改訂案を比較できる。",
+        "primary_risk": "物語時刻と制作期限、執筆完了と実装完了の混同",
+        "requirement_ids": [
+          "REQ-F49",
+          "REQ-F50",
+          "REQ-F51",
+          "REQ-F52",
+          "REQ-F54"
+        ],
+        "acceptance_ids": [
+          "AT-F49",
+          "AT-F50",
+          "AT-F51",
+          "AT-F52",
+          "AT-F54"
+        ],
+        "status": "planned",
+        "estimate_status": "unestimated",
+        "owner_role": "実装担当（未割当）"
+      },
+      "reviewState": "pending_original_conditions_or_dependencies",
+      "relatedOriginalCases": [
+        "AT-F49",
+        "AT-F50",
+        "AT-F51",
+        "AT-F52",
+        "AT-F54"
+      ],
+      "actualEvidence": [
+        {
+          "review": "CLAUSE_REVIEW.json",
+          "caseIds": [
+            "AT-F49",
+            "AT-F50",
+            "AT-F51",
+            "AT-F52",
+            "AT-F54"
+          ],
+          "scope": "Each original four-clause decision has source/build/actual bytes or a specific unmet original condition."
+        }
+      ],
+      "limitation": {
+        "originalCasesPending": [],
+        "originalGatePending": false,
+        "originalDependenciesPending": [
+          "WP10",
+          "WP14",
+          "WP19",
+          "WP20"
+        ],
+        "rule": "docs/plan/IMPLEMENTATION_PLAN.md: dependencies must be complete before a stage starts; partial implementation does not establish full acceptance."
+      },
+      "authorGateObservation": {
+        "at": "2026-10-15T23:50:16.479456+00:00",
+        "observation": "企画対象/体験/主題と版別判断・却下/保留理由、遊び仕様と物語の意図付き差、6制作段階・実期限/依存循環を確認。unique scene/line/assetと経路出現数を別集計し、旧公開媒体本文を保持したまま新版候補を示す。",
+        "scope": "Final authored gate/deliverables reading against actual evidence; local gate success is not whole-package completion.",
+        "wholePackagePromotion": false
+      },
+      "historicalPreparationGateObservation": {
+        "at": "2026-10-15T21:10:52.789852+00:00",
+        "observation": "企画/判断の対象版/採用却下保留理由、物語と遊び仕様の差reviewを保持。六制作段階と現実期限を分け、依存循環/期限矛盾を示す。unique制作scene/line/assetと各route出現数を区別し速度未設定は時間不明、旧公開媒体bodyと改訂候補を独立保持する。",
+        "scope": "Authored original-gate content review; current unit source binding and prior actual outputs distinguished. Current candidate UI artifact adjudication and actual7200 full recovery still pending. No whole-package completion inferred.",
+        "wholePackagePromotion": false
+      },
+      "gateReviewResult": "passed_local_gate_scope",
+      "ownAcceptanceCasesPending": [],
+      "blockedDependencies": [
+        "WP10",
+        "WP14",
+        "WP19",
+        "WP20"
+      ]
+    },
+    {
+      "id": "WP22",
+      "original": {
+        "id": "WP22",
+        "stage": "E",
+        "title": "目的別出力と制作受け渡し",
+        "depends_on": [
+          "WP16",
+          "WP18",
+          "WP19",
+          "WP20",
+          "WP21"
+        ],
+        "size": "L",
+        "deliverables": "完全/公開/試遊/制作/相談プロファイル、汎用runtime JSON、外部値契約、対応表、AI相談用手動出力・別案取り込みを実装する。",
+        "completion_gate": "未対応機能を黙って落とさず、秘密・没案・作者メモの除外と対象版が確認できる。",
+        "primary_risk": "全ゲームエンジン互換やAI自動更新の思い込み",
+        "requirement_ids": [
+          "REQ-F24",
+          "REQ-F36",
+          "REQ-F42",
+          "REQ-N20"
+        ],
+        "acceptance_ids": [
+          "AT-F24",
+          "AT-F36",
+          "AT-F42",
+          "AT-N20"
+        ],
+        "status": "planned",
+        "estimate_status": "unestimated",
+        "owner_role": "実装担当（未割当）"
+      },
+      "reviewState": "pending_original_conditions_or_dependencies",
+      "relatedOriginalCases": [
+        "AT-F24",
+        "AT-F36",
+        "AT-F42",
+        "AT-N20"
+      ],
+      "actualEvidence": [
+        {
+          "review": "CLAUSE_REVIEW.json",
+          "caseIds": [
+            "AT-F24",
+            "AT-F36",
+            "AT-F42",
+            "AT-N20"
+          ],
+          "scope": "Each original four-clause decision has source/build/actual bytes or a specific unmet original condition."
+        }
+      ],
+      "limitation": {
+        "originalCasesPending": [
+          "AT-F42"
+        ],
+        "originalGatePending": false,
+        "originalDependenciesPending": [
+          "WP16",
+          "WP18",
+          "WP19",
+          "WP20",
+          "WP21"
+        ],
+        "rule": "docs/plan/IMPLEMENTATION_PLAN.md: dependencies must be complete before a stage starts; partial implementation does not establish full acceptance."
+      },
+      "authorGateObservation": {
+        "at": "2026-10-15T23:50:16.479456+00:00",
+        "observation": "完全/公開reader/playable/production/runtime/相談各profileを実ダウンロード。未対応型/engine・version/hash不一致を明示拒否し、秘密/没案/作者メモを除外。相談は手動出力・出所/対象版付き作者別案、外部AI自動送信なし。F42対象ゲーム実結果は別owned-case保留。",
+        "scope": "Final authored gate/deliverables reading against actual evidence; local gate success is not whole-package completion.",
+        "wholePackagePromotion": false
+      },
+      "historicalPreparationGateObservation": {
+        "at": "2026-10-15T21:10:52.789854+00:00",
+        "observation": "完全/reader/playable/runtime/production/consultationのprofile、秘密/没/作者メモ除外、明示した未対応型/engine拒否を実出力へ対応。相談は外部自動送信なし・出所/対象版付き作者別案。native/runtime1.0.0/profile1.1.0/browser-game1.0.0を保持。F42の対象ゲーム実結果は未実行。",
+        "scope": "Authored original-gate content review; current unit source binding and prior actual outputs distinguished. Current candidate UI artifact adjudication and actual7200 full recovery still pending. No whole-package completion inferred.",
+        "wholePackagePromotion": false
+      },
+      "gateReviewResult": "passed_local_gate_scope",
+      "ownAcceptanceCasesPending": [
+        "AT-F42"
+      ],
+      "blockedDependencies": [
+        "WP16",
+        "WP18",
+        "WP19",
+        "WP20",
+        "WP21"
+      ]
+    },
+    {
+      "id": "WP23",
+      "original": {
+        "id": "WP23",
+        "stage": "F",
+        "title": "全機能の実端末・性能・回帰検証",
+        "depends_on": [
+          "WP07",
+          "WP08",
+          "WP14",
+          "WP15",
+          "WP17",
+          "WP18",
+          "WP22"
+        ],
+        "size": "L",
+        "deliverables": "全受入試験の結果、iPhone/iPad/PC、アクセシビリティ、標準/大規模性能、障害注入、復元訓練を収集する。",
+        "completion_gate": "104要件と総合経路の結果に未実行・失敗が残らず、端末と版付き証拠がある。",
+        "primary_risk": "文書検査をアプリ試験の合格と取り違える",
+        "requirement_ids": [
+          "REQ-N02",
+          "REQ-N03",
+          "REQ-N04"
+        ],
+        "acceptance_ids": [
+          "AT-N02",
+          "AT-N03",
+          "AT-N04",
+          "AT-E01",
+          "AT-E02",
+          "AT-E03",
+          "AT-E04",
+          "AT-E05",
+          "AT-E06",
+          "AT-E07",
+          "AT-E08",
+          "AT-E09",
+          "AT-E10",
+          "AT-E11",
+          "AT-E12"
+        ],
+        "status": "planned",
+        "estimate_status": "unestimated",
+        "owner_role": "実装担当（未割当）"
+      },
+      "reviewState": "pending_original_conditions_or_dependencies",
+      "relatedOriginalCases": [
+        "AT-N02",
+        "AT-N03",
+        "AT-N04",
+        "AT-E01",
+        "AT-E02",
+        "AT-E03",
+        "AT-E04",
+        "AT-E05",
+        "AT-E06",
+        "AT-E07",
+        "AT-E08",
+        "AT-E09",
+        "AT-E10",
+        "AT-E11",
+        "AT-E12"
+      ],
+      "actualEvidence": [
+        {
+          "review": "CLAUSE_REVIEW.json",
+          "caseIds": [
+            "AT-N02",
+            "AT-N03",
+            "AT-N04",
+            "AT-E01",
+            "AT-E02",
+            "AT-E03",
+            "AT-E04",
+            "AT-E05",
+            "AT-E06",
+            "AT-E07",
+            "AT-E08",
+            "AT-E09",
+            "AT-E10",
+            "AT-E11",
+            "AT-E12"
+          ],
+          "scope": "Each original four-clause decision has source/build/actual bytes or a specific unmet original condition."
+        },
+        {
+          "bundleManifest": "evidence/bundles/formal-1fcadcca.manifest.json",
+          "actual7200": "soak7200-1fcadcca-attempt1/ADJUDICATION.json"
+        },
+        {
+          "bundleManifest": "evidence/bundles/full-large-exceptions-1fcadcca.manifest.json",
+          "sameFullNegativeRetry": "actual-attempt/ADJUDICATION.json"
+        }
+      ],
+      "limitation": {
+        "originalCasesPending": [
+          "AT-N02",
+          "AT-N03",
+          "AT-N04",
+          "AT-E01",
+          "AT-E05",
+          "AT-E06",
+          "AT-E10",
+          "AT-E11",
+          "AT-E12"
+        ],
+        "originalGatePending": true,
+        "originalDependenciesPending": [
+          "WP07",
+          "WP08",
+          "WP14",
+          "WP15",
+          "WP17",
+          "WP18",
+          "WP22"
+        ],
+        "rule": "docs/plan/IMPLEMENTATION_PLAN.md: dependencies must be complete before a stage starts; partial implementation does not establish full acceptance."
+      },
+      "authorGateObservation": {
+        "at": "2026-10-15T23:50:16.479456+00:00",
+        "observation": "原104/116/464/24/6を維持し、94ケースのローカル成功と22ケースの具体的外部未実行を記録。実機/支援技術/IME/Files/実権限/実二端末/対象ゲーム等が残り、「未実行・失敗なし」の原gateは未充足。",
+        "scope": "Final authored gate/deliverables reading against actual evidence; local gate success is not whole-package completion.",
+        "wholePackagePromotion": false
+      },
+      "historicalPreparationGateObservation": {
+        "at": "2026-10-15T21:10:52.789855+00:00",
+        "observation": "原104/116/464/24/6と各正常/境界/失敗を維持し、今回の全CI/全量正式測定/実7200と完全復元を同対象へ結ぶ。実機/IME/Files/支援技術/実権限/実二端末/対象ゲーム等の未実行が残り、全受入未実行0という原gateは満たしていない。",
+        "scope": "Authored original-gate content review; current unit source binding and prior actual outputs distinguished. Current candidate UI artifact adjudication and actual7200 full recovery still pending. No whole-package completion inferred.",
+        "wholePackagePromotion": false
+      },
+      "gateReviewResult": "blocked_original_gate_conditions",
+      "ownAcceptanceCasesPending": [
+        "AT-N02",
+        "AT-N03",
+        "AT-N04",
+        "AT-E01",
+        "AT-E05",
+        "AT-E06",
+        "AT-E10",
+        "AT-E11",
+        "AT-E12"
+      ],
+      "blockedDependencies": [
+        "WP07",
+        "WP08",
+        "WP14",
+        "WP15",
+        "WP17",
+        "WP18",
+        "WP22"
+      ]
+    },
+    {
+      "id": "WP24",
+      "original": {
+        "id": "WP24",
+        "stage": "F",
+        "title": "完成版の固定と運用引き継ぎ",
+        "depends_on": [
+          "WP23"
+        ],
+        "size": "M",
+        "deliverables": "利用ガイド、診断/バックアップ/移行手順、公開候補build、構成/費用/commit確認、互換表と次版規則を整理する。",
+        "completion_gate": "完成版の対象commitと試験結果を対応させ、公開前のレビューで費用と変更点を確認できる。",
+        "primary_risk": "未確認の費用や更新でデータを失う",
+        "requirement_ids": [
+          "REQ-N15",
+          "REQ-N17"
+        ],
+        "acceptance_ids": [
+          "AT-N15",
+          "AT-N17"
+        ],
+        "status": "planned",
+        "estimate_status": "unestimated",
+        "owner_role": "実装担当（未割当）"
+      },
+      "reviewState": "pending_original_conditions_or_dependencies",
+      "relatedOriginalCases": [
+        "AT-N15",
+        "AT-N17"
+      ],
+      "actualEvidence": [
+        {
+          "review": "CLAUSE_REVIEW.json",
+          "caseIds": [
+            "AT-N15",
+            "AT-N17"
+          ],
+          "scope": "Each original four-clause decision has source/build/actual bytes or a specific unmet original condition."
+        }
+      ],
+      "limitation": {
+        "originalCasesPending": [
+          "AT-N17"
+        ],
+        "originalGatePending": true,
+        "originalDependenciesPending": [
+          "WP23"
+        ],
+        "rule": "docs/plan/IMPLEMENTATION_PLAN.md: dependencies must be complete before a stage starts; partial implementation does not establish full acceptance."
+      },
+      "authorGateObservation": {
+        "at": "2026-10-15T23:50:16.479456+00:00",
+        "observation": "製品1fc/実buildと配布commitを分け、操作/診断/バックアップ/互換/移行/実機手順と証拠取得手順を整理。現契約費用/専用HTTPS版/独立公開前レビューが未実施で、文書やCI成功を完成/公開済みへ換算しない。",
+        "scope": "Final authored gate/deliverables reading against actual evidence; local gate success is not whole-package completion.",
+        "wholePackagePromotion": false
+      },
+      "historicalPreparationGateObservation": {
+        "at": "2026-10-15T21:10:52.789856+00:00",
+        "observation": "製品1fcadccaと追加配布commitを分け、実行対象/実bytes/SHA/不足条件と利用・診断・復元・実機手順を整理。原公開checkerのblocked結果もActions artifactへ保持する。専用現構成費用/対象HTTPS直リンク/独立レビューは未確認で、資料やCI成功を公開済み/完成へ転用しない。",
+        "scope": "Authored original-gate content review; current unit source binding and prior actual outputs distinguished. Current candidate UI artifact adjudication and actual7200 full recovery still pending. No whole-package completion inferred.",
+        "wholePackagePromotion": false
+      },
+      "gateReviewResult": "blocked_original_gate_conditions",
+      "ownAcceptanceCasesPending": [
+        "AT-N17"
+      ],
+      "blockedDependencies": [
+        "WP23"
+      ]
+    }
+  ],
+  "priorPreparationTarget": {
+    "commit": "3ab6f40080754c4dec92ca8fc88c8049b278eede",
+    "tree": "dfaf863f32132f6137ce5c23e8b1141ea5d4772c",
+    "dirty": false,
+    "base": "/shinariokanri/",
+    "builtAt": "2026-10-15T15:58:45.723Z",
+    "versionHashScope": "sorted paths and bytes plus build info before version",
+    "version": "5476ab952776d316c609"
+  },
+  "targetTransitionScope": "Only target identity updated while authored final candidate evidence review remains pending. No old observations or source review notes promoted to passed.",
+  "recordedAt": "2026-10-15T23:50:16.479456+00:00",
+  "originalDependencyRuleApplied": true,
+  "completionScope": "Only an independently satisfied original gate, all owned original cases and all original dependency completions permit whole-package completion."
+}
