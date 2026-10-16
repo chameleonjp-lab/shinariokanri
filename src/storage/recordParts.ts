@@ -3,10 +3,12 @@ import {packRecordData,unpackRecordData,type PackedRecord,type RecordPart} from 
 import {StorageError,checkCancelled} from './errors';
 import {WorkerGraphReceiver} from './workerGraph';
 import {partitionImportRecord} from './importRecordParts';
+import {observeWorker} from '../observability/workerProbe';
 function work<T>(message:unknown,signal?:AbortSignal):Promise<T>{
  checkCancelled(signal);
  return new Promise((resolve,reject)=>{
   const worker=new Worker(new URL('./recordParts.worker.ts',import.meta.url),{type:'module'});let live=true,graph:WorkerGraphReceiver|undefined;
+  observeWorker(worker,'worker.parts');
   const finish=(error?:unknown,value?:T)=>{if(!live)return;live=false;graph=undefined;signal?.removeEventListener('abort',abort);worker.terminate();error?reject(error):resolve(value!);};
   const abort=()=>finish(new StorageError('CANCELLED','履歴の分割処理を取り消しました。既存データを保持しています。'));
   signal?.addEventListener('abort',abort,{once:true});

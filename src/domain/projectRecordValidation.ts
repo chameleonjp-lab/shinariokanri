@@ -1,3 +1,4 @@
+import {probeCount} from '../observability/probe';
 import type { Entity, ProjectData, ProjectSnapshot, ProjectContent, ValidationIssue, ContentState, AuthorAlternative, AlternativeVersion, AlternativeApplyReceipt } from './types';
 import type { ProjectValidationOptions } from './model';
 import { validateProject,validateCurrentProject,createProjectValidator,RELATION_TYPES, type DomainReference } from './model';
@@ -149,6 +150,7 @@ export function createProjectValidationSession(options: ProjectValidationOptions
 
 async function validateProjectIntegrityData(input: ProjectData, options: ProjectValidationOptions, requireReceiptHistory: boolean,
   verifiedStorage?:{previous:ProjectData;references:WeakMap<Entity,DomainReference[]>}, scopedValidator?:ReturnType<typeof createProjectValidator>): Promise<ValidationIssue[]> {
+  probeCount('validate.integrity.calls');
   try {const {verifyStoredGameEvidence}=await import('./gameProtocol');await verifyStoredGameEvidence(input,options.worldSnapshots??{});}catch(error){return [{code:'INTEGRITY_FAILED',path:'project.entities.handoffReceipt',message:(error as Error).message}];}
   // Freeze the exact dependency images at the durable boundary. Async hash checks
   // must never validate a different world map from the one structural validation read.

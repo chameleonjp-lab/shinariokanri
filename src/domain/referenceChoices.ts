@@ -1,4 +1,5 @@
 import { KIND_LABELS, type DomainReference } from './model';
+import {probeCount,probeSpan} from '../observability/probe';
 import type { EntityKind, ProjectData } from './types';
 export type ReferenceScope = DomainReference['scope'];
 export interface ReferenceChoice { id: string; label: string }
@@ -14,6 +15,7 @@ export function referenceProject(project: ProjectData, versionId?: string): Proj
 export function referenceChoices(project: ProjectData, scope: ReferenceScope = 'entity', kinds?: readonly EntityKind[], options: ReferenceOptions = {}): ReferenceChoice[] {
   const source = scope === 'snapshot' ? project : referenceProject(project, options.versionId);
   if (!source) return [];
+  const finish=probeSpan('reference.choices');probeCount('reference.choices.rows',source.entities.length);
   const active = source.entities.filter(entity => options.includeArchived || !entity.deletedAt);
   const entities = active.filter(entity => !kinds?.length || kinds.includes(entity.kind)).map(entity => ({ id: entity.id, label: `${entity.name || '無題'} · ${KIND_LABELS[entity.kind]}` }));
   const names = new Map(active.map(entity => [entity.id, entity.name]));
@@ -48,5 +50,5 @@ export function referenceChoices(project: ProjectData, scope: ReferenceScope = '
     case 'identity': choices = []; break;
     default: choices = entities;
   }
-  return [...new Map(choices.map(choice => [choice.id, choice])).values()];
+  const result=[...new Map(choices.map(choice => [choice.id, choice])).values()];finish();return result;
 }

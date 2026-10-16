@@ -1,4 +1,5 @@
 import { StorageError } from './errors';
+import {probeCount} from '../observability/probe';
 
 export const FORMAT_VERSION = '1.0.0' as const;
 export const ARCHIVE_LIMITS = Object.freeze({
@@ -200,7 +201,7 @@ export function canonicalJson(value: unknown, cache?: CanonicalJsonCache): strin
   return encode(value);
 }
 
-export const jsonBytes = (value: unknown, cache?: CanonicalJsonCache): Uint8Array => new TextEncoder().encode(canonicalJson(value, cache));
+export const jsonBytes = (value: unknown, cache?: CanonicalJsonCache): Uint8Array => { const bytes=new TextEncoder().encode(canonicalJson(value, cache));probeCount('json.calls');probeCount('json.bytes',bytes.byteLength);return bytes; };
 export const equalJson = (left: unknown, right: unknown): boolean => canonicalJson(left) === canonicalJson(right);
 
 /** Decide whether to use the lossless dictionary before allocating a flat
@@ -237,6 +238,7 @@ export function exceedsJsonBytes(value: unknown, limit: number): boolean {
 }
 
 export async function sha256(bytes: Uint8Array): Promise<string> {
+  probeCount('hash.calls');probeCount('hash.bytes',bytes.byteLength);
   const digest = await crypto.subtle.digest('SHA-256', bytes.slice().buffer);
   return [...new Uint8Array(digest)].map(value => value.toString(16).padStart(2, '0')).join('');
 }

@@ -7,6 +7,7 @@ import {freezeCapturedImportWork, runImportWork, type ImportWork, type ImportWor
 import {captureImmutablePlainData,isImmutablePlainData} from '../domain/immutablePlainData';
 import {sendWorkerGraph} from './workerGraph';
 import {exportNativeScenarioData,type NativeExportCapture} from './nativeExport';
+import {observeWorker} from '../observability/workerProbe';
 export type {ImportWorkStep} from './importWork';
 
 /** Revalidate captured import content off the UI thread; results never bypass
@@ -17,6 +18,7 @@ export async function performImportWork(work: ImportWork, options: {signal?: Abo
   if (typeof window === 'undefined' || typeof Worker === 'undefined') return runImportWork(freezeCapturedImportWork(structuredClone(work)), signal, loadAsset);
   return new Promise((resolve, reject) => {
     const worker = new Worker(new URL('./archive.worker.ts', import.meta.url), {type: 'module'});
+    observeWorker(worker,'worker.archive');
     let live = true;
     const finish = (failure?: unknown, result?: ImportWorkResult) => {
       if (!live) return;
@@ -52,6 +54,7 @@ export async function inspectScenario(bytes: Uint8Array, options: InspectOptions
   if (bytes.byteLength > resolveLimits(options.limits).compressedBytes) throw new StorageError('LIMIT_EXCEEDED', '圧縮ファイルが安全上限を超えています。');
   return new Promise((resolve, reject) => {
     const worker = new Worker(new URL('./archive.worker.ts', import.meta.url), { type: 'module' });
+    observeWorker(worker,'worker.archive');
     const finish = (callback: () => void) => { options.signal?.removeEventListener('abort', abort); worker.terminate(); callback(); };
     const abort = () => finish(() => reject(new StorageError('CANCELLED', '読み込みを取り消しました。既存作品は変更していません。')));
     options.signal?.addEventListener('abort', abort, { once: true });
@@ -88,6 +91,7 @@ export async function exportNativeScenario(capture:NativeExportCapture,options:E
 function exportInWorker(request:{input:ProjectData;options:ExportOptions}|{native:NativeExportCapture;options:ExportOptions},options:ExportOptions):Promise<Uint8Array>{
  return new Promise((resolve,reject)=>{
   const worker=new Worker(new URL('./archiveExport.worker.ts',import.meta.url),{type:'module'});let live=true;
+  observeWorker(worker,'worker.archive');
   const finish=(error?:unknown,bytes?:Uint8Array)=>{if(!live)return;live=false;worker.terminate();options.signal?.removeEventListener('abort',abort);error?reject(error):resolve(bytes!);};
   const abort=()=>finish(new StorageError('CANCELLED','保存ファイルの作成を取り消しました。端末の作品と入力は変更していません。'));
   worker.onmessage=event=>{const message=event.data;if(message.type==='progress')options.onProgress?.(message.progress);else if(message.type==='done')finish(undefined,message.bytes);else if(message.type==='error')finish(new StorageError(message.code,message.message,message.path));else if(message.type==='asset'){

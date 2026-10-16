@@ -1,4 +1,6 @@
 import {createCapturedGraphComparer,mergeImportConflicts} from './importWork';
+import {installDatabaseProbe} from '../observability/databaseProbe';
+import {probeEnabled,probeCount,probePayload,probeGauge,probeSpan,probeSync,probeDuration,type ProbePhase} from '../observability/probe';
 import {freezeCapturedPlainDataAsync} from '../domain/immutablePlainData';
 import {internImmutableRecordsAsync} from '../domain/internImmutableRecords';
 import {cloneProject as clonePrivateProject} from './clone';
@@ -140,10 +142,11 @@ class ScenarioDatabase extends Dexie {
     this.version(6).stores({ workspaceInputs: 'key' });
     this.version(7).stores({ recordParts:'key,scope' });
     installRecordPartsDatabase(this);
+    installDatabaseProbe(this);
   }
 }
 
-const copy = <T>(value: T): T => structuredClone(value);
+const copy = <T>(value: T): T => { probeCount('copy.calls'); probePayload('copy.payloadBytes',value); return probeSync('copy',()=>structuredClone(value)); };
 const sameJson = (left: unknown, right: unknown): boolean => left === right || equalJson(left ?? null, right ?? null);
 const immutableValues=new WeakSet<object>();
 const jsonEncodingCache = createCanonicalJsonCache(value => immutableValues.has(value));
@@ -160,6 +163,7 @@ function freeze<T>(value: T): T {
 }
 function projectCopy(project:ProjectData):ProjectData{return {...copy(withoutHistory(project)),history:project.history};}
 function captureRequestProject(project: ProjectData): ProjectData {
+  probeCount('capture.calls'); probePayload('capture.payloadBytes',withoutHistory(project));
   // Only values recursively frozen by this store may be shared. User supplied
   // mutable/shallow-frozen inputs are still captured before the first await.
   const copied=new WeakMap<object,unknown>();
@@ -167,6 +171,7 @@ function captureRequestProject(project: ProjectData): ProjectData {
   return { ...capture(withoutHistory(project)) as ContentState, history: project.history };
 }
 function contentDelta(before: ContentState, after: ContentState): ContentDelta {
+  probeCount('contentDelta.rows',before.entities.length+before.relations.length+after.entities.length+after.relations.length);
   const changes = <T extends Entity | Relation>(previous: T[], next: T[]) => {
     const old = new Map(previous.map(record => [record.id, record]));
     const current = new Map(next.map(record => [record.id, record]));
@@ -249,7 +254,7 @@ function validated(input: unknown, worldSnapshots: Record<string, ProjectContent
   return result.value;
 }
 function validatedCurrent(input: ProjectData, worldSnapshots: Record<string, ProjectContent>, previous?: ProjectData, references = new WeakMap<Entity, DomainReference[]>()): ProjectData {
-  const result = validateCurrentProject(input, { worldSnapshots }, previous ? { previous, references } : undefined);
+  const result = probeSync('validate.current',()=>validateCurrentProject(input, { worldSnapshots }, previous ? { previous, references } : undefined));
   if (!result.ok) {
     const error = new StorageError('VALIDATION_FAILED', result.issues.map(issue => `${issue.path}: ${issue.message}`).join('\n'));
     Object.assign(error, { issues: result.issues });
@@ -267,6 +272,7 @@ function withoutRevision(record: TargetRecord): unknown {
 }
 
 function normalizeRecords<T extends Entity | Relation>(before: T[], incoming: T[], operationId: string, time: string): T[] {
+  probeCount('normalize.rows',before.length+incoming.length);
   const old = new Map(before.map(record => [record.id, record]));
   const result = incoming.map(record => {
     const previous = old.get(record.id);
@@ -441,6 +447,7 @@ function headerTarget(content: ContentState): ProjectTarget {
   return { ...header, id: content.projectId, kind: 'project' };
 }
 async function targetChanges(before: ContentState, after: ContentState, isNew = false): Promise<TargetChange[]> {
+  probeCount('targetChanges.rows',before.entities.length+before.relations.length+after.entities.length+after.relations.length);
   const old = new Map<string, TargetRecord>([...before.entities, ...before.relations, ...(isNew ? [] : [headerTarget(before)])].map(record => [record.id, record]));
   const current = new Map<string, TargetRecord>([...after.entities, ...after.relations, headerTarget(after)].map(record => [record.id, record]));
   const result: TargetChange[] = [];
@@ -484,6 +491,15 @@ export class ScenarioStore {
     this.onSaveMetrics = options.onSaveMetrics;
     this.db = new ScenarioDatabase(options.databaseName ?? (this.accountId ? `scenario-manager-account-${encodeURIComponent(this.accountId)}` : 'scenario-manager-local-v1'));
     for(const name of ['saveProject','importScenario','putAsset','commitPreparedAck','confirmSyncResolution','bindBootstrapBase','bindConfirmedProject','saveAuthorToolDraft','saveImportDraft','applyReceivedImage','saveWorkspaceInputs','restoreAuthorInputs','restoreAuthorToolDrafts']){const fn=(this as unknown as Record<string,(...args:unknown[])=>Promise<unknown>>)[name].bind(this);Object.defineProperty(this,name,{configurable:true,writable:true,value:async(...args:unknown[])=>{this.activeOperations++;try{return await fn(...args);}finally{this.activeOperations--;}}});}
+    const phases:Record<string,ProbePhase>={listProjectsForEditing:'store.list',getProjectForEditing:'store.read',getProject:'store.fullRead',saveProject:'store.save',historyPage:'store.history',exportProject:'store.export',importScenario:'store.import',writeContent:'writeContent'};
+    for(const [name,phase] of Object.entries(phases)){
+      const fn=(this as unknown as Record<string,(...args:unknown[])=>Promise<unknown>>)[name].bind(this);
+      Object.defineProperty(this,name,{configurable:true,writable:true,value:(...args:unknown[])=>{
+        if(!probeEnabled())return fn(...args);
+        const finish=probeSpan(phase);
+        try{return fn(...args).then(result=>{finish();return result;},error=>{finish('error');throw error;});}catch(error){finish('error');throw error;}
+      }});
+    }
   }
   // Store names avoid Dexie's recursive KeyPaths expansion on the domain's large discriminated unions.
   private get writeTables(): string[] { return ['projects', 'entities', 'relations', 'blocks', 'snapshots', 'commands', 'outbox', 'assets', 'views', 'syncMetadata', 'restorePoints', 'worlds', 'importLogs', 'recoveredPending','syncBases','preparedSync','syncConflicts','syncAckEvidence','retainedSyncRecovery','syncAssetAcks']; }
@@ -495,15 +511,22 @@ export class ScenarioStore {
       snapshots.set(snapshot.id, snapshot);
     }
   }
-  close(): void { this.cacheLifetime++; for (const id of this.cacheEpochs.keys()) this.invalidateProjectCache(id); this.db.close(); }
+  close(): void { this.cacheLifetime++; for (const id of this.cacheEpochs.keys()) this.invalidateProjectCache(id); this.db.close(); this.measureCache(); }
   /** Explicit open resets Dexie's failed-open state after an aborted native
    * migration. An already open connection stays open; no data is deleted. */
   async reopen(): Promise<void> { await this.db.open(); }
   async deleteDatabase(): Promise<void> { this.close(); await this.db.delete(); }
 
   private invalidateProjectCache(projectId: string): void {
+    probeCount('cache.invalidated');
     this.cacheEpochs.set(projectId, (this.cacheEpochs.get(projectId) ?? 0) + 1);
     this.cachedProjects.delete(projectId); this.contentHeads.delete(projectId); this.cachedHistoryIds.delete(projectId); this.completeHistories.delete(projectId);
+  }
+  private measureCache():void {
+    if(!probeEnabled())return;
+    probeGauge('cache.projects',this.cachedProjects.size);
+    probeGauge('cache.records',[...this.cachedProjects.values()].reduce((sum,p)=>sum+p.entities.length+p.relations.length,0));
+    probeGauge('cache.payloadBytes',0);for(const project of this.cachedProjects.values())probePayload('cache.payloadBytes',project);
   }
   private rememberProject(project: ProjectData, contentHeadOperationId?: string, historyIds = project.history.map(command => command.operationId), readEpoch?: { project: number; lifetime: number }): ProjectData {
     const cachedBefore = this.cachedProjects.get(project.projectId), epoch = this.cacheEpochs.get(project.projectId) ?? 0;
@@ -516,6 +539,7 @@ export class ScenarioStore {
     this.cachedHistoryIds.set(project.projectId, historyIds);
     if (sameJson(historyIds, project.history.map(command => command.operationId))) this.completeHistories.add(project.projectId); else this.completeHistories.delete(project.projectId);
     this.cacheEpochs.set(project.projectId, epoch + 1);
+    this.measureCache();
     return cached;
   }
   private editingCopy(project: ProjectData, historyIds = project.history.map(command => command.operationId),immutableView=false): ProjectData {
@@ -596,6 +620,7 @@ export class ScenarioStore {
     if(commands.length)await Dexie.waitFor((async()=>{for (const row of commands) { checkCancelled(signal); history.push(await this.materializeCommand(row!, commandRows, ready)); }})());
     const hydrateStarted=timing?performance.now():undefined;
     const consumedBlockIds = new Set<string>();
+    const hydration=probeSpan('hydrate');probeCount('hydrate.rows',entities.length);
     const hydrated=entities.map(row => {
       const record = row!.record;
       if (!record || typeof record !== 'object' || Array.isArray(record)
@@ -609,7 +634,7 @@ export class ScenarioStore {
       }
       return hydrateBlocks(record, blocks, consumedBlockIds);
     });
-    if(hydrateStarted!==undefined)timing!['database.hydrate']=performance.now()-hydrateStarted;
+    hydration();if(hydrateStarted!==undefined)timing!['database.hydrate']=performance.now()-hydrateStarted;
     return { historyIds, contentHeadOperationId, project: { ...project, entities: hydrated, relations: relations as Relation[],
       snapshots: snapshots.map(row => { const { projectId: _projectId, ...snapshot } = row!; return snapshot; }),
       history, views: views.map(row => { const { projectId: _projectId, ...view } = row!; return view; }) } };
@@ -750,6 +775,7 @@ export class ScenarioStore {
   }
 
   private async writeContent(project: ProjectData, previous?: ProjectData, contentHeadOperationId?: string, historyIds = project.history.map(command => command.operationId)): Promise<SaveMetrics['written']> {
+    probeCount('writeContent.rows',(previous?.entities.length??0)+(previous?.relations.length??0)+project.entities.length+project.relations.length);
     const { entities, relations, snapshots, history, views, ...header } = project;
     const changed = <T extends { id: string }>(old: T[], current: T[]) => {
       const oldById = new Map(old.map(record => [record.id, record])), ids = new Set(current.map(record => record.id));
@@ -810,7 +836,7 @@ export class ScenarioStore {
     const started = performance.now(),diagnosticOperationId=options.operationId??newId(), signal=options.signal;
     let mark = started;
     const milliseconds: SaveMetrics['milliseconds'] = { prepare: 0, hash: 0, read: 0, reconcile: 0, validate: 0, diff: 0, database: 0, total: 0 };
-    const measure = (stage: keyof SaveMetrics['milliseconds']) => { const time = performance.now(); milliseconds[stage] += time - mark; mark = time; };
+    const measure = (stage: keyof SaveMetrics['milliseconds']) => { const time = performance.now(); milliseconds[stage] += time - mark; if(stage!=='total')probeDuration(`save.${stage}`,time-mark); mark = time; };
     try {
       checkCancelled(signal);
       const draft = captureRequestProject(input), operationId = diagnosticOperationId, now = new Date().toISOString();

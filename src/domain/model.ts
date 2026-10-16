@@ -1,3 +1,4 @@
+import {probeCount} from '../observability/probe';
 import { resolvePinnedWorlds } from './pinnedWorlds';
 import { resolveReuseContent, reuseValidationIssues } from './reuse';
 import { FORMAT_VERSION } from './types';
@@ -1254,6 +1255,7 @@ export function createProjectValidator(options: ProjectValidationOptions = {}): 
 }
 
 function validateProjectData(input: unknown, options: ProjectValidationOptions, memo?: ContentValidationMemo): ValidationResult<ProjectData> {
+  probeCount('validate.full.calls');
   if (!isObject(input)) return { ok: false, issues: [{ code: 'VALIDATION_FAILED', path: 'project', message: '作品はオブジェクトです。' }] };
   const issues: ValidationIssue[] = [];
   for (const field of Object.keys(input)) if (![...projectKeys, 'snapshots', 'history'].includes(field)) addIssue(issues, `project.${field}`, '作品に未知の項目があります。');
@@ -1291,6 +1293,7 @@ function validateProjectData(input: unknown, options: ProjectValidationOptions, 
 }
 /** Current content for an edit of previously verified storage. Imports still use validateProject. */
 export function validateCurrentProject(input: ProjectData, options: ProjectValidationOptions = {}, reuse?: ValidationReuse): ValidationResult<ProjectData> {
+  probeCount('validate.current.calls');
   const issues: ValidationIssue[] = [];
   for (const field of Object.keys(input)) if (![...projectKeys, 'snapshots', 'history'].includes(field)) addIssue(issues, `project.${field}`, '作品に未知の項目があります。');
   if (!Array.isArray(input.snapshots) || !Array.isArray(input.history)) addIssue(issues, 'project', '公開版と履歴の配列が必要です。');

@@ -1,4 +1,5 @@
 import { KIND_LABELS, collectReferences } from './model';
+import {probeCount,probeSpan} from '../observability/probe';
 import { duplicateCandidates } from './maintenance';
 import { requiresFixedStateUsageVerification,stateUsageIndex } from './stateUsage';
 import type {StateUsage} from './stateUsage';
@@ -53,6 +54,7 @@ function collectText(value: unknown, path: string, output: CatalogTextTerm[], de
 
 /** User-authored text corpus used by text queries; IDs and hashes are deliberately excluded. */
 export function collectCatalogText(entity: Entity): CatalogTextTerm[] {
+  probeCount('query.text.rows');
   const output: CatalogTextTerm[] = [];
   if (entity.name.trim()) output.push({ path: 'name', text: entity.name.trim(), normalized: normalizeCatalogText(entity.name) });
   collectText(entity.data, 'data', output);
@@ -75,6 +77,7 @@ interface CatalogQueryIndex {
   sceneByNode: Map<ID, ID>;
 }
 function buildQueryIndex(project: ProjectData): CatalogQueryIndex {
+  const finish=probeSpan('query.index');probeCount('query.index.builds');probeCount('query.index.rows',project.entities.length);
   const index: CatalogQueryIndex = { byId: new Map(), participantEvents: new Map(), scenesByEvent: new Map(), productionTargets: new Map(), chapters: new Set(), foreshadows: new Map(), disclosures: [], sceneByNode: new Map() };
   const add = <K>(map: Map<K, Set<ID>>, key: K, id: ID) => { let ids = map.get(key); if (!ids) { ids = new Set(); map.set(key, ids); } ids.add(id); };
   // One scan serves all dependency operators in the complete compound query.
@@ -91,7 +94,7 @@ function buildQueryIndex(project: ProjectData): CatalogQueryIndex {
       case 'flow_node': if (entity.data.sceneId) index.sceneByNode.set(entity.id, entity.data.sceneId); break;
     }
   }
-  return index;
+  finish();return index;
 }
 
 /** Captures one evaluation's dependencies; rebuild after project edits rather than caching mutable drafts. */
@@ -150,9 +153,10 @@ export function matchesQuery(project: ProjectData, entity: Entity, query: Query)
 
 /** Evaluates active rows in caller order, with one compilation and dependency scan for the whole list. */
 export function filterCatalogEntities(project: ProjectData, query: Query, entities: readonly Entity[] = project.entities): Entity[] {
+  const finish=probeSpan('query.filter');probeCount('query.filter.rows',entities.length);
   const matches = compileCatalogQuery(project, query), result: Entity[] = [];
   for (const entity of entities) if (!entity.deletedAt && matches(entity)) result.push(entity);
-  return result;
+  finish();return result;
 }
 
 const collator = new Intl.Collator('ja-JP', { usage: 'sort', sensitivity: 'base', numeric: true });
