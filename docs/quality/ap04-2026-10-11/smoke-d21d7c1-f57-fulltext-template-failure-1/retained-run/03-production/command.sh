@@ -1,1 +1,0 @@
-npx --no-install playwright test tests/e2e/ap04-original-f-production.spec.ts --project=chromium --workers=1 --retries=0 --max-failures=1 --trace=on --reporter=list\,json\,html --grep AT-F5\[12\]\  --output /tmp/ap04-modal-successor-smoke-preparation/03-production/test-results 

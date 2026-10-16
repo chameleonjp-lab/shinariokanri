@@ -1,1 +1,0 @@
-npx --no-install playwright test tests/e2e/ap04-original-f-hierarchy.spec.ts --project=chromium --workers=1 --retries=0 --max-failures=1 --trace=on --reporter=list\,json\,html --grep AT-F13\  --output /tmp/ap04-76cf8a9-smoke-attempt1/02-hierarchy/test-results 

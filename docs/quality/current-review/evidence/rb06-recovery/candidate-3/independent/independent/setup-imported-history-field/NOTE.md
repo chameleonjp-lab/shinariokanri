@@ -1,1 +1,0 @@
-Review harness confused PortableRecovery.pending item with RecoveredPendingIntent.operation when reading expected source origin. Corrected to the declared source item.origin, same fixture and expected original operation IDs. Original source/log retained; no product change.
