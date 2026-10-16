@@ -1,6 +1,7 @@
 import type { Alias, Entity, ID, ProjectContent, Relation, RelationTypeDefinition } from './types';
 import type { DomainReference, ProjectValidationOptions } from './model';
 import { captureImmutablePlainData, isImmutablePlainData } from './immutablePlainData';
+import {probeCount} from '../observability/probe';
 
 export type ContentIdObservation = {kind: 'block'; id: ID; text: string; path: string}
   | {kind: 'alias'; id: ID; alias: Alias; path: string};
@@ -74,7 +75,7 @@ export function contentValidationContext(input: unknown, options: ProjectValidat
     relationReferences: relation => relations.get(relation),
     rememberEntity: (entity, references) => rememberRecord(entity, references, true),
     rememberRelation: (relation, references) => rememberRecord(relation, references, false),
-    has: (content, ids, versions) => successful.some(proof => same(proof, content, ids, versions)),
+    has: (content, ids, versions) => {const hit=successful.some(proof => same(proof, content, ids, versions));probeCount(hit?'memo.hit':'memo.miss');return hit;},
     previousContent(content, ids, versions) {
       for (let index = successful.length - 1; index >= 0; index--) {
         const proof = successful[index];

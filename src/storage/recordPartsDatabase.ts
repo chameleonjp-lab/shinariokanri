@@ -3,6 +3,7 @@ import {newId} from '../domain/model';
 import {packRecord,packImportRecord,unpackRecord,needsRecordParts,type PackedRecord,type RecordPart} from './recordParts';
 import {StorageError} from './errors';
 import {equalJson} from './json';
+import {probeCount,probePayload,probeSpan} from '../observability/probe';
 
 const marker='__scenarioRecordParts';
 const tables=new Set(['commands','outbox','recoveredPending','restorePoints','worlds','snapshots','syncBases','preparedSync','syncConflicts','syncAckEvidence','retainedSyncRecovery','projects','entities']);
@@ -28,7 +29,7 @@ export function installRecordPartsDatabase(db:Dexie,threshold?:number){
    const table=down.table(name);if(!tables.has(name))return table;
    const indexes=[table.schema.primaryKey,...table.schema.indexes];
    const header=(value:Record<string,unknown>,packed:PackedRecord)=>{const result:Record<string,unknown>={[marker]:packed};for(const index of indexes){const paths=typeof index.keyPath==='string'?[index.keyPath]:index.keyPath??[];for(const path of paths){if(path.includes('.'))throw new StorageError('SAVE_FAILED','分割保存の索引形式に対応していません。');if(Object.hasOwn(value,path))result[path]=value[path];}}return result;};
-   const decode=async(value:unknown,trans:DBCoreTransaction)=>{if(!envelope(value))return value;const rows=await parts.getMany({trans,keys:value[marker].parts.map(p=>p.key)});if(rows.some(p=>!p))throw new StorageError('SAVE_FAILED','履歴の分割記録が不足しています。');const decoded=await wait(trans,()=>unpackRecord(value[marker],rows,signals.get(trans)));if(!decoded||typeof decoded!=='object'||envelope(decoded)||!equalJson(header(decoded as Record<string,unknown>,value[marker]),value))throw new StorageError('SAVE_FAILED','履歴の分割記録と索引が一致しません。');return decoded;};
+   const decode=async(value:unknown,trans:DBCoreTransaction)=>{if(!envelope(value))return value;const rows=await parts.getMany({trans,keys:value[marker].parts.map(p=>p.key)});if(rows.some(p=>!p))throw new StorageError('SAVE_FAILED','履歴の分割記録が不足しています。');const finishDecode=probeSpan('decode');const decoded=await wait(trans,()=>unpackRecord(value[marker],rows,signals.get(trans)));finishDecode();probeCount('decode.rows');probePayload('decode.payloadBytes',decoded);if(!decoded||typeof decoded!=='object'||envelope(decoded)||!equalJson(header(decoded as Record<string,unknown>,value[marker]),value))throw new StorageError('SAVE_FAILED','履歴の分割記録と索引が一致しません。');return decoded;};
    const discard=async(values:unknown[],trans:DBCoreTransaction)=>{const keys=values.flatMap(v=>envelope(v)?v[marker].parts.map(p=>p.key):[]);if(keys.length){const result=await parts.mutate({type:'delete',trans,keys});if(result.numFailures)throw Object.values(result.failures)[0];}};
    return {...table,
     async get(req){return decode(await table.get(req),req.trans);},
