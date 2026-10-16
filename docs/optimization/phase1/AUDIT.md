@@ -1,6 +1,6 @@
 # 実装経路と監査結果
 
-対象mainと原文の固定は [sources.json](sources.json)、全104IDの個別経路・原4条項の参照は [requirements.json](requirements.json)。同JSONの `freshAcceptance=NOT_PERFORMED` は、新規に全464条項を受け入れたという誤読を防ぐ。既存手順・実装への対応と、新しい動的結果を区別する。
+対象mainと原文の固定は [sources.json](sources.json)、全104IDの個別経路・原4条項の参照は [requirements.json](requirements.json)、AUD→OPT/要件の逆引きは [trace-index.json](trace-index.json)。同JSONの `freshAcceptance=NOT_PERFORMED` は、新規に全464条項を受け入れたという誤読を防ぐ。既存手順・実装への対応と、新しい動的結果を区別する。
 
 ## 読込・更新の依存図
 
@@ -71,7 +71,7 @@ flowchart TD
 | 016 | CODE: closeでepoch更新とcache解放、persistent storage APIと実OS削除耐性は別 | `store.ts:close`、`BackupPanel`、service-worker生成 | cache.records=0はメモリGC/実端末永続性合格ではない。実ストレージ寿命はUNKNOWN。D05/D14 |
 | 017 | CODE: captured immutable入力/依存だけ再利用、100000記録/256成功証拠で上限・通常検査fallback | `contentValidationMemo.ts`、`projectValidationSession.test.ts` | 同ID別種・world/schema差替・mutable・浅いfreeze・循環の既存反例を保持。追加期待値と全件validatorを照合。D11 |
 | 018 | CODE: namespace/owned IDs、typed refs、anchors、snapshot hash、alternative、runtime証跡はglobalまたはhistory依存 | `model.ts:validateContent/validateCurrentProject`、`projectRecordValidation.ts` | unchanged recordのschema成功を、全namespace/参照/世界整合の成功へ読み替えない。D03/D11 |
-| 019 | CODE/OBS: read/parts/archive Workerの境界に開始・終了・message数とpayload推定を追加 | `readValidation.ts`、`recordParts.ts`、`archive.ts`、`workerGraph.ts` | JS structured cloneの実wire bytes/内部heapはUNKNOWN。返答後terminateまでと取消を区別。D13 |
+| 019 | CODE/OBS: read/parts/archive Workerの境界に開始・終了・message数とpayload推定を追加 | `readValidation.ts`、`recordParts.ts`、`archive.ts`、`workerGraph.ts`。`ui/flowAnalysis.ts`、`newImportSession.ts`、`importWorkSession.ts` の別の起動入口も静的追跡 | 後者3入口の動的転送量、JS structured cloneの実wire bytes/内部heapはUNKNOWN。返答後terminateまでと取消を区別。D13 |
 | 020 | CODE: Writing/Timeline/Relationships/Readerは同一ProjectDataを参照。pinと現在稿・世界時間と提示順は別 | `App.tsx`、各ui、`runtimeVersions.ts` | 隠れた画面の全前処理の時間寄与はUNKNOWN。元Large30全8指標と区別。D02/D07 |
 | 021 | CODE: nativeBridge→prepared operation→server validation→atomic repository→ACK再検査→ローカル確定 | `sync/outbox/nativeBridge/server/validation`、`store.ts:commitPreparedAck`、supabase/migrations | 実接続は実施せず、偽ACK/別account/権限取消は既存local回帰。実二端末はBLOCKED。D14 |
 | 022 | CODE/HIST: 22外部条件とrelease54不足を維持。main保護flagfalse、詳細403。変更なし | `EXTERNAL_CASES.md`、`check_release.py`、`ci_controls.py` | 自動3engine、Linux性能、一般API仕様を実機/実Auth/費用の成功に転記しない。D14 |

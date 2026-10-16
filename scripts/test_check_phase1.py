@@ -46,6 +46,30 @@ class Phase1ContractTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'Mismatched'):
             checker.verify_trace(requirements, cases, trace)
 
+    def test_original30_cannot_drop_a_sample_or_change_the_p95(self):
+        original = checker.load(self.root, checker.FOLDER / 'evidence/baseline-standard30.json')
+        self.assertEqual(checker.assess_original30(original)['cached_startup']['samples'], 30)
+        shortened = copy.deepcopy(original)
+        shortened['measurements']['cached_startup']['milliseconds'].pop()
+        with self.assertRaisesRegex(ValueError, 'count/raw'):
+            checker.assess_original30(shortened)
+        forged = copy.deepcopy(original)
+        forged['measurements']['command_save']['p95'] = 0
+        with self.assertRaisesRegex(ValueError, 'Nearest-rank'):
+            checker.assess_original30(forged)
+
+    def test_large_has_only_the_original_two_limits_and_retains_actual_material_bytes(self):
+        original = checker.load(self.root, checker.FOLDER / 'evidence/baseline-large30.json')
+        result = checker.assess_original30(original)
+        self.assertEqual(sum(value['originalLimitMs'] is not None for value in result.values()), 2)
+        unverified = copy.deepcopy(original)
+        unverified['finalPersisted']['assets'][0]['verified'] = False
+        with self.assertRaisesRegex(ValueError, 'Actual native/material'):
+            checker.assess_original30(unverified)
+        original['fixture']['assetBytes'] -= 1
+        with self.assertRaisesRegex(ValueError, 'material bytes'):
+            checker.assess_original30(original)
+
 
 if __name__ == '__main__':
     unittest.main()

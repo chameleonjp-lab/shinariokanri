@@ -11,6 +11,7 @@
 3. [測定定義・原値・今回の実測](MEASUREMENT.md)、[生証拠](evidence/README.md)
 4. [OPT-01〜15：現行＋2案の比較と詳細設計](DESIGN.md)
 5. [第2段階のPR分割・依存・検査・戻し方](HANDOFF.md)、[外部待ち22件](EXTERNAL.md)
+6. [検査結果とCIの結合](VERIFICATION.md)：unit1144件・追加の実3engine検査、原数値・入力・配信buildの独立照合
 
 `CODE` は当該mainの静的事実、`OBS` は本PRの実観測、`HIST` は元の特定commit/buildの記録、`HYP` は因果・効果が未実証、`UNKNOWN` は未測定。全件取得や走査を確認しても、その全てが遅さの主要因とは断定しない。時刻や件数から受入を自動昇格させない。
 
