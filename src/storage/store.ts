@@ -1370,6 +1370,9 @@ export class ScenarioStore {
       const latest=await this.db.projects.get(projectId),base=await this.db.syncBases.get(projectId),prepared=await this.db.preparedSync.get(ack.operationId);if(latest?.revision!==previous.revision||base?.contentHash!==captured.base!.contentHash||base?.serverRevision!==captured.base!.serverRevision||!sameValue(prepared,captured.prepared))throw new SyncProtocolError('REVISION_CHANGED');
       if(ack.status==='conflict'){await this.db.syncConflicts.put({operationId:ack.operationId,projectId,prepared:captured.prepared!,ack,conflicts:ack.conflicts,createdAt:now});}
       else{
+        // Another project can commit a differently keyed row after the early
+        // guard. Retained snapshot IDs share this native transaction boundary.
+        if(Object.keys(receivedWorlds).length)await this.guardWorldRegistry(Object.values(receivedWorlds));
         for(const [id,world]of Object.entries(receivedWorlds)){const old=await this.db.worlds.get(id);if(old&&!equalJson(old.project,world))throw new StorageError('IMMUTABLE_SNAPSHOT','固定世界の取得内容が保存済み版と異なります。');await this.db.worlds.put({id,project:world});await this.db.worldSources.put(await Dexie.waitFor(deriveWorldSource(id,world)));}
         if(storedCommand){await this.writeContent(candidate,previous,storedCommand.operationId);this.faultInjector?.('after-content');bindCanonicalHistoryWrites();await this.db.commands.add(storedCommand);this.faultInjector?.('after-history');}
         await this.db.syncBases.put(confirmed!);await this.db.outbox.bulkDelete(captured.prepared!.outboxIds);
