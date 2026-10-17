@@ -35,7 +35,7 @@ export async function validProjectSummary(row:StoredProjectSummary|undefined,pro
   return typeof digest==='string'&&digest===await sha256(new TextEncoder().encode(canonicalJson(value)));
 }
 
-export interface WorldSourceSummary {projectId:string;name:string;revision:string;registryOnly:true;contentState:'unloaded'|'error';error?:string}
+export interface WorldSourceSummary {projectId:string;name:string;revision:string;registryOnly:true;contentState:'unloaded'|'error';sourceIdentity:'identified'|'unknown';error?:string}
 export interface StoredWorldSource {id:string;projectId:string;name:string;revision:string;version:1;digest:string}
 export async function deriveWorldSource(id:string,project:ProjectData):Promise<StoredWorldSource>{
  const row={id,projectId:project.projectId,name:project.name,revision:project.revision,version:1 as const};

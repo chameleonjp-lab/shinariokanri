@@ -115,3 +115,11 @@ captures the active owner/generation after save confirmation and rechecks after 
 world read; a late A save cannot replace B's registry, while A→B→A before save
 confirmation can still publish A's new closure. Source-picker callbacks also check
 the rendered project/revision and selection generation before publication.
+
+Catalog failures retain identified source ownership from a recognizable canonical
+row projectId separately from unknown ownership. Selected-source loading rejects
+errors belonging to that source and errors with unknown ownership, but an explicitly
+unrelated corrupt source does not turn absent retained editions into a failure.
+Per-entry errors remain separate from grouped valid entries so a valid edition
+cannot conceal a corrupt edition of the same source. This classification is for
+error routing only; it never verifies or repairs malformed canonical content.

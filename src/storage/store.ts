@@ -840,23 +840,24 @@ export class ScenarioStore {
   async listWorldSourceSummaries(options:{signal?:AbortSignal}={}):Promise<WorldSourceSummary[]> {
     const {signal}=options,access=this.accessGeneration,lifetime=this.cacheLifetime;
     const fence=()=>{checkCancelled(signal);if(access!==this.accessGeneration||lifetime!==this.cacheLifetime)throw new StorageError('CANCELLED','共通世界一覧の読み込み先が変わりました。');};
-    fence();const ids=await this.db.worlds.toCollection().primaryKeys(),sources=new Map<string,WorldSourceSummary>();
-    for(const id of ids){fence();try{
+    fence();const ids=await this.db.worlds.toCollection().primaryKeys(),sources=new Map<string,WorldSourceSummary>(),errors:WorldSourceSummary[]=[];
+    for(const id of ids){let sourceProjectId:string|undefined;fence();try{
       let row=await this.db.worldSources.get(id);
       if(!await validWorldSource(row,id)){
         const captured=await this.db.transaction('r',['worlds'],async()=>{bindRecordPartsSignal(signal);return this.db.worlds.get(id);});fence();if(!captured)continue;
+        if(typeof captured.project?.projectId==='string'&&/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(captured.project.projectId))sourceProjectId=captured.project.projectId;
         const worlds={...await this.editorWorlds(captured.project,signal),[id]:captured.project};await validateColdRead(captured.project,worlds,{signal});fence();
         row=await deriveWorldSource(id,captured.project);
         await this.db.transaction('rw',['worlds','worldSources'],async()=>{bindRecordPartsSignal(signal);fence();const latest=await this.db.worlds.get(id);if(!latest||!sameJson(latest,captured))throw new StorageError('REVISION_CONFLICT','共通世界の保存情報が変わりました。');await this.db.worldSources.put(row!);fence();this.faultInjector?.('before-commit');});
       }
-      sources.set(row!.projectId,{projectId:row!.projectId,name:row!.name,revision:row!.revision,registryOnly:true,contentState:'unloaded'});
-    }catch(error){fence();sources.set(id,{projectId:id,name:`固定世界 ${id}`,revision:'0',registryOnly:true,contentState:'error',error:saveError(error).message});}}
-    fence();return [...sources.values()];
+      sources.set(row!.projectId,{projectId:row!.projectId,name:row!.name,revision:row!.revision,registryOnly:true,contentState:'unloaded',sourceIdentity:'identified'});
+    }catch(error){fence();errors.push({projectId:sourceProjectId??id,name:`固定世界 ${id}`,revision:'0',registryOnly:true,contentState:'error',sourceIdentity:sourceProjectId?'identified':'unknown',error:saveError(error).message});}}
+    fence();return [...sources.values(),...errors];
   }
   async loadWorldSource(projectId:string,options:{signal?:AbortSignal}={}):Promise<{world:ProjectData;worlds:Record<string,ProjectData>}|undefined>{
     const {signal}=options,access=this.accessGeneration,lifetime=this.cacheLifetime;
     const fence=()=>{checkCancelled(signal);if(access!==this.accessGeneration||lifetime!==this.cacheLifetime)throw new StorageError('CANCELLED','共通世界の読み込み先または権限が変わりました。');};
-    fence();const summaries=await this.listWorldSourceSummaries({signal});fence();if(!summaries.some(row=>row.projectId===projectId&&row.contentState==='unloaded')){if(summaries.some(row=>row.contentState==='error'))throw new StorageError('VALIDATION_FAILED','共通世界の保存情報を確認できません。');return undefined;}
+    fence();const summaries=await this.listWorldSourceSummaries({signal});fence();if(summaries.some(row=>row.contentState==='error'&&(row.projectId===projectId||row.sourceIdentity==='unknown')))throw new StorageError('VALIDATION_FAILED','選択した共通世界の保存情報を確認できません。');if(!summaries.some(row=>row.projectId===projectId&&row.contentState==='unloaded'))return undefined;
     const metadata=await this.db.worldSources.where('projectId').equals(projectId).toArray(),sourceWorlds:Record<string,ProjectData>={};
     await this.db.transaction('r',['worlds'],async()=>{bindRecordPartsSignal(signal);for(const row of metadata){fence();const value=await this.db.worlds.get(row.id);if(!value||value.project.projectId!==projectId)throw new StorageError('VALIDATION_FAILED','共通世界の索引と保存情報が一致しません。');sourceWorlds[row.id]=value.project;}});
     const known={...sourceWorlds};for(const world of Object.values(sourceWorlds))Object.assign(known,await this.editorWorlds(world,signal));
