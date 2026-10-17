@@ -31,19 +31,19 @@ export function installRecordPartsDatabase(db:Dexie,threshold?:number){
    const encoded=(value:unknown)=>envelope(value)||name==='commands'&&!!value&&typeof value==='object'&&hasHistoryMetadata(value as Record<string,unknown>);
    const indexes=[table.schema.primaryKey,...table.schema.indexes];
    const header=(value:Record<string,unknown>,packed:PackedRecord)=>{const result:Record<string,unknown>={[marker]:packed};for(const index of indexes){const paths=typeof index.keyPath==='string'?[index.keyPath]:index.keyPath??[];for(const path of paths){if(path.includes('.'))throw new StorageError('SAVE_FAILED','分割保存の索引形式に対応していません。');if(Object.hasOwn(value,path))result[path]=value[path];}}return result;};
-   const decode=async(value:unknown,trans:DBCoreTransaction)=>{
+   const decode=async(value:unknown,trans:DBCoreTransaction,metadataOnly=false)=>{
     const native=value as Record<string,unknown>|undefined;
     if(!envelope(value)){
      if(name==='commands'&&native&&hasHistoryMetadata(native))throw new StorageError('SAVE_FAILED','履歴の内部表現が破損しています。');
-     if(name==='commands'&&metadataHistoryRead(trans)){probeCount('history.legacy.rows',value?1:0);probePayload('history.legacy.payloadBytes',value);}
+     if(name==='commands'&&metadataOnly){probeCount('history.legacy.rows',value?1:0);probePayload('history.legacy.payloadBytes',value);}
      return value;
     }
-    if(name==='commands'&&metadataHistoryRead(trans)&&recognizedHistoryMetadata(value)){
+    if(name==='commands'&&metadataOnly&&recognizedHistoryMetadata(value)){
      const metadata=await wait(trans,()=>verifyHistoryMetadata(value));
      await verifyHistoryPartKeys(value,trans as IDBTransaction);observeHistoryMetadata(value);
      return {operationId:value.operationId,projectId:value.projectId,revision:value.revision,delta:{metadata}};
     }
-    if(name==='commands'&&metadataHistoryRead(trans)){probeCount('history.legacy.rows');probePayload('history.legacy.payloadBytes',value);}
+    if(name==='commands'&&metadataOnly){probeCount('history.legacy.rows');probePayload('history.legacy.payloadBytes',value);}
     const rows=await parts.getMany({trans,keys:value[marker].parts.map(p=>p.key)});if(rows.some(p=>!p))throw new StorageError('SAVE_FAILED','履歴の分割記録が不足しています。');
     if(name==='commands'){probeCount('history.body.rows');probeCount('history.body.partRows',rows.length);probeCount('history.body.partBytes',rows.reduce((sum,row)=>sum+(row.bytes?.byteLength??0),0));}
     const finishDecode=probeSpan('decode');const decoded=await wait(trans,()=>unpackRecord(value[marker],rows,signals.get(trans)));finishDecode();probeCount('decode.rows');probePayload('decode.payloadBytes',decoded);
@@ -53,11 +53,16 @@ export function installRecordPartsDatabase(db:Dexie,threshold?:number){
     return decoded;
    };
    const packedHeader=(value:Record<string,unknown>,packed:PackedRecord,trans:DBCoreTransaction)=>name==='commands'&&canonicalHistoryWrite(trans)
-    ?canonicalHistoryHeader(value,header(value,packed)):Promise.resolve(header(value,packed));
+    ?canonicalHistoryHeader(value,header(value,packed)):header(value,packed);
    const discard=async(values:unknown[],trans:DBCoreTransaction)=>{const keys=values.flatMap(v=>envelope(v)?v[marker].parts.map(p=>p.key):[]);if(keys.length){const result=await parts.mutate({type:'delete',trans,keys});if(result.numFailures)throw Object.values(result.failures)[0];}};
    return {...table,
     async get(req){return decode(await table.get(req),req.trans);},
-    async getMany(req){const rows=await table.getMany(req);let values:unknown[]|undefined;for(let i=0;i<rows.length;i++)if(encoded(rows[i])){values??=rows.slice();values[i]=await decode(rows[i],req.trans);}return values??rows;},
+    async getMany(req){
+     const metadataOnly=name==='commands'&&metadataHistoryRead(req),rows=await table.getMany(req);let values:unknown[]|undefined;
+     for(let i=0;i<rows.length;i++)if(encoded(rows[i])){values??=rows.slice();values[i]=await decode(rows[i],req.trans,metadataOnly);}
+     else if(metadataOnly&&rows[i]!==undefined){probeCount('history.legacy.rows');probePayload('history.legacy.payloadBytes',rows[i]);}
+     return values??rows;
+    },
     async query(req){const result=await table.query(req);if(req.values){let rows:unknown[]|undefined;for(let i=0;i<result.result.length;i++)if(encoded(result.result[i])){rows??=result.result.slice();rows[i]=await decode(result.result[i],req.trans);}if(rows)return{...result,result:rows};}return result;},
     async openCursor(req){const cursor=await table.openCursor(req);if(!cursor||!req.values)return cursor;let value=await decode(cursor.value,req.trans);
      const wrapped:DBCoreCursor={get trans(){return cursor.trans;},get key(){return cursor.key;},get primaryKey(){return cursor.primaryKey;},get done(){return cursor.done;},get value(){return value;},continue(key){cursor.continue(key);},continuePrimaryKey(key,primary){cursor.continuePrimaryKey(key,primary);},advance(count){cursor.advance(count);},stop(result){cursor.stop(result);},fail(error){cursor.fail(error);},async next(){await cursor.next();value=await decode(cursor.value,req.trans);return wrapped;},start(onNext){return cursor.start(()=>{void decode(cursor.value,req.trans).then(decoded=>{value=decoded;onNext();},error=>cursor.fail(error));});}};return wrapped;
@@ -84,7 +89,7 @@ export function installRecordPartsDatabase(db:Dexie,threshold?:number){
         for(const item of batch)if(item.status==='rejected')throw item.reason;
         for(const item of batch)if(item.status==='fulfilled'){values.push(item.value.value);newParts.push(...item.value.parts);}
        }
-      }else for(const value of req.values){if(encoded(value))throw new StorageError('SAVE_FAILED','内部の分割記録を入力値として保存できません。');if(needsRecordParts(value,threshold)){const packed=await wait(req.trans,()=>pack(value,`${name}:${newId()}`,signals.get(req.trans)));values.push(await wait(req.trans,()=>packedHeader(value,packed.packed,req.trans)));newParts.push(...packed.parts);}else values.push(value);}
+      }else for(const value of req.values){if(encoded(value))throw new StorageError('SAVE_FAILED','内部の分割記録を入力値として保存できません。');if(needsRecordParts(value,threshold)){const packed=await wait(req.trans,()=>pack(value,`${name}:${newId()}`,signals.get(req.trans)));values.push(name==='commands'&&canonicalHistoryWrite(req.trans)?await wait(req.trans,()=>canonicalHistoryHeader(value,header(value,packed.packed))):header(value,packed.packed));newParts.push(...packed.parts);}else values.push(value);}
       const finalRows=new Map<string,unknown>();values.forEach((value,index)=>{const key=req.keys?.[index]??table.schema.primaryKey.extractKey?.(value);finalRows.set(JSON.stringify(key),value);});const retainedScopes=new Set([...finalRows.values()].flatMap(value=>envelope(value)?[value[marker].scope]:[]));const retainedParts=newParts.filter(part=>retainedScopes.has(part.scope));
       if(retainedParts.length){const result=await parts.mutate({type:'add',trans:req.trans,values:retainedParts});if(result.numFailures)throw Object.values(result.failures)[0];}
       const result=await table.mutate({...req,values});if(result.numFailures){req.trans.abort();return result;}await discard(previous,req.trans);return result;

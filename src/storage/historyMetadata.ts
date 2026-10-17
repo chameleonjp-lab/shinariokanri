@@ -1,4 +1,4 @@
-import Dexie from 'dexie';
+import Dexie,{type DBCoreGetManyRequest} from 'dexie';
 import type {CommandRecord} from '../domain/types';
 import type {PackedRecord} from './recordParts';
 import {needsRecordParts} from './recordParts';
@@ -10,13 +10,16 @@ const marker='__scenarioCommandMetadata';
 type Metadata=Omit<CommandRecord,'before'|'after'>;
 type NativeRow=Record<string,unknown>;
 interface CanonicalMetadata {version:1;metadata:Metadata;digest:string}
+interface HistoryPageCommand {operationId:string;projectId:string;revision:string;delta?:{metadata:Metadata};record?:CommandRecord}
 const writes=new WeakSet<object>(),reads=new WeakSet<object>();
 const invalid=():never=>{throw new StorageError('SAVE_FAILED','履歴の操作情報と本文の対応が破損しています。');};
 
 /** Store-owned command writers only. Direct/legacy table writes retain v1. */
 export function bindCanonicalHistoryWrites(){const tx=Dexie.currentTransaction?.idbtrans;if(tx)writes.add(tx);}
 export const canonicalHistoryWrite=(transaction:object)=>writes.has(transaction);
-export const metadataHistoryRead=(transaction:object)=>reads.has(transaction);
+/** Capability belongs to one private core request, never the native transaction
+ * (nested Dexie transactions may share it with concurrent full readers). */
+export const metadataHistoryRead=(request:object)=>reads.has(request);
 export const hasHistoryMetadata=(row:NativeRow)=>Object.hasOwn(row,marker);
 export const recognizedHistoryMetadata=(row:NativeRow)=>!!row[marker]&&typeof row[marker]==='object'&&(row[marker] as CanonicalMetadata).version===1;
 
@@ -27,21 +30,34 @@ function metadataOf(value:NativeRow):Metadata|undefined {
  return metadata;
 }
 function validMetadata(metadata:Metadata|undefined,row:NativeRow):metadata is Metadata {
- return !!metadata&&metadata.operationId===row.operationId&&metadata.projectId===row.projectId&&metadata.revision===row.revision
-  &&!Object.hasOwn(metadata,'before')&&!Object.hasOwn(metadata,'after')
-  &&['operationId','projectId','revision','baseRevision','reason','createdAt'].every(key=>typeof metadata[key as keyof Metadata]==='string')
-  &&Array.isArray(metadata.targetIds)&&metadata.targetIds.every(id=>typeof id==='string');
+ if(!metadata||typeof metadata!=='object'||Array.isArray(metadata))return false;
+ const required=['operationId','projectId','revision','baseRevision','reason','createdAt'],optional=['compensatesOperationId','idMap','importOrigin'];
+ // The accepted shape is strings, dense string arrays and string records only.
+ // No own undefined is sealable: canonical JSON omits it. Older/future shapes
+ // remain exact complete-body fallback rather than introducing a serializer.
+ if(Object.keys(metadata).some(key=>![...required,'targetIds',...optional].includes(key))
+  ||!required.every(key=>Object.hasOwn(metadata,key)&&typeof metadata[key as keyof Metadata]==='string')
+  ||metadata.operationId!==row.operationId||metadata.projectId!==row.projectId||metadata.revision!==row.revision
+  ||!Array.isArray(metadata.targetIds)||Object.keys(metadata.targetIds).length!==metadata.targetIds.length||!metadata.targetIds.every(id=>typeof id==='string'))return false;
+ if(Object.hasOwn(metadata,'compensatesOperationId')&&typeof metadata.compensatesOperationId!=='string')return false;
+ const strings=(value:unknown):value is Record<string,string>=>!!value&&typeof value==='object'&&!Array.isArray(value)&&Object.values(value).every(item=>typeof item==='string');
+ if(Object.hasOwn(metadata,'idMap')&&!strings(metadata.idMap))return false;
+ if(Object.hasOwn(metadata,'importOrigin')&&(!strings(metadata.importOrigin)||Object.keys(metadata.importOrigin).length!==3
+  ||!['sourceProjectId','sourceOperationId','importOperationId'].every(key=>Object.hasOwn(metadata.importOrigin!,key))))return false;
+ return true;
 }
 function validDescriptor(value:unknown):value is PackedRecord {
  if(!value||typeof value!=='object')return false;
  const packed=value as PackedRecord;
- if(packed.version!==1||typeof packed.scope!=='string'||!packed.scope.startsWith('commands:')||packed.root!==0
+ if(Object.keys(packed).length!==6||!['version','scope','root','nodes','strings','parts'].every(key=>Object.hasOwn(packed,key))
+  ||packed.version!==1||typeof packed.scope!=='string'||!packed.scope.startsWith('commands:')||packed.root!==0
   ||!Number.isSafeInteger(packed.nodes)||packed.nodes<1||packed.nodes>4_000_000
   ||!Number.isSafeInteger(packed.strings)||packed.strings<1||packed.strings>4_000_000
   ||!Array.isArray(packed.parts)||!packed.parts.length)return false;
  let bytes=0;
  return packed.parts.every((part,index)=>{
-  if(!part||part.key!==`${packed.scope}:${index}`||!['strings','nodes'].includes(part.kind)
+  if(!part||Object.keys(part).length!==4||!['key','kind','bytes','sha256'].every(key=>Object.hasOwn(part,key))
+   ||part.key!==`${packed.scope}:${index}`||!['strings','nodes'].includes(part.kind)
    ||!Number.isSafeInteger(part.bytes)||part.bytes<1||part.bytes>8*1024*1024||typeof part.sha256!=='string'||!/^[a-f0-9]{64}$/.test(part.sha256))return false;
   bytes+=part.bytes;return bytes<=256*1024*1024;
  });
@@ -60,7 +76,8 @@ export async function canonicalHistoryHeader(value:NativeRow,header:NativeRow):P
 export async function verifyHistoryMetadata(row:NativeRow):Promise<Metadata> {
  if(!recognizedHistoryMetadata(row))return invalid();
  const value=row[marker] as CanonicalMetadata;
- if(!validMetadata(value.metadata,row)||!validDescriptor(row.__scenarioRecordParts)||typeof value.digest!=='string'||value.digest!==await seal(row)
+ if(Object.keys(row).length!==5||!['operationId','projectId','revision','__scenarioRecordParts',marker].every(key=>Object.hasOwn(row,key))
+  ||!validMetadata(value.metadata,row)||!validDescriptor(row.__scenarioRecordParts)||typeof value.digest!=='string'||value.digest!==await seal(row)
   ||Object.keys(value).length!==3)return invalid();
  return value.metadata;
 }
@@ -70,7 +87,8 @@ export async function verifyHistoryMetadata(row:NativeRow):Promise<Metadata> {
 export async function verifyDecodedHistory(row:NativeRow,decoded:NativeRow,plainHeader:NativeRow) {
  const metadata=await verifyHistoryMetadata(row);
  const {[marker]:_metadata,...bodyHeader}=row;
- if(!equalJson(bodyHeader,plainHeader)||!equalJson(metadata,metadataOf(decoded)))return invalid();
+ const decodedMetadata=metadataOf(decoded);
+ if(!validMetadata(decodedMetadata,row)||!equalJson(bodyHeader,plainHeader)||!equalJson(metadata,decodedMetadata))return invalid();
 }
 
 /** Existence only, never a claim about unread bytes. Runs in the same native
@@ -84,12 +102,13 @@ export async function verifyHistoryPartKeys(row:NativeRow,transaction:IDBTransac
  })));
 }
 
-/** This scoped transaction is used only by historyPage. All other consumers,
- * including the frozen page oracle/rollback adapter, receive complete rows. */
-export async function readHistoryPageCommands<T>(db:Dexie,ids:string[]):Promise<T[]> {
+/** Use a private uncached core request: hooks and concurrent get/bulkGet/query
+ * consumers never receive its partial representation, even in a parent rw.
+ * Failure/unsupported middleware loses the optimization, not full-reader data. */
+export async function readHistoryPageCommands(db:Dexie,ids:string[]):Promise<Array<HistoryPageCommand|undefined>> {
  return db.transaction('r',['commands'],async()=>{
-  const transaction=Dexie.currentTransaction!.idbtrans;reads.add(transaction);
-  try{return await db.table('commands').bulkGet(ids) as T[];}finally{reads.delete(transaction);}
+  const request:DBCoreGetManyRequest={trans:Dexie.currentTransaction!.idbtrans,keys:ids.slice()};reads.add(request);
+  try{return await db.table('commands').core.getMany(request) as Array<HistoryPageCommand|undefined>;}finally{reads.delete(request);}
  });
 }
 

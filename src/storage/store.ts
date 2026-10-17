@@ -825,7 +825,7 @@ export class ScenarioStore {
     return this.db.transaction('r',['projects','commands'],async()=>{
     const header = await this.db.projects.get(projectId); if (!header) throw new StorageError('NOT_FOUND', '作品が見つかりません。');
     probePayload('history.header.payloadBytes',header);
-    const rows = await readHistoryPageCommands<StoredCommand|undefined>(this.db,header.historyIds);
+    const rows = await readHistoryPageCommands(this.db,header.historyIds);
     const entries = rows.map((row, index) => {
       const value = row?.delta?.metadata ?? row?.record;
       if (!value || value.projectId !== projectId || value.operationId !== header.historyIds[index]) throw new StorageError('SAVE_FAILED', '履歴の操作情報が不足しています。', header.historyIds[index]);

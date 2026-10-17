@@ -2,11 +2,11 @@ import 'fake-indexeddb/auto';
 import Dexie from 'dexie';
 import {afterEach,expect,it,vi} from 'vitest';
 import {ScenarioStore} from '../../src/storage/store';
-import {installRecordPartsDatabase} from '../../src/storage/recordPartsDatabase';
+import {installRecordPartsDatabase,bindRecordPartsSignal} from '../../src/storage/recordPartsDatabase';
 import {startProbe} from '../../src/observability/probe';
 import {growthProject,historySeries} from './fixtures';
 import {originalHistoryPage} from './history-page-oracle';
-import {bindCanonicalHistoryWrites} from '../../src/storage/historyMetadata';
+import {bindCanonicalHistoryWrites,readHistoryPageCommands} from '../../src/storage/historyMetadata';
 import {inspectScenario} from '../../src/storage/archive';
 import {jsonBytes,sha256} from '../../src/storage/json';
 import {packRecordData} from '../../src/storage/recordPartsCore';
@@ -28,7 +28,7 @@ it('stores canonical metadata for newly packed commands and reads all metadata w
  const bodyKeys=new Set(rows.flatMap(row=>row.__scenarioRecordParts.parts.map((part:{key:string})=>part.key))),gets=vi.spyOn(IDBObjectStore.prototype,'get');
  const capture=startProbe();let result;try{result=await store.historyPage(project.projectId,{size:1});}finally{capture.stop();}
  expect(result).toMatchObject({total:3,page:0,maximum:2,entries:[{reason:'最終稿',revision:'3'}]});
- expect(gets.mock.calls.filter(([key],i)=>gets.mock.contexts[i].name==='recordParts'&&bodyKeys.has(key))).toHaveLength(0);
+ expect(gets.mock.calls.filter(([key],i)=>(gets.mock.contexts[i] as IDBObjectStore).name==='recordParts'&&bodyKeys.has(key))).toHaveLength(0);
  // A packed PROJECT header can still require part payload reads.
  expect(capture.snapshot().counters['history.header.payloadBytes']).toBeGreaterThan(0);
  expect(capture.snapshot().counters['history.body.partRows']??0).toBe(0);
@@ -70,6 +70,7 @@ it('marks canonical body bytes unloaded until selected/full decoding; it does no
  await expect(store.historyCommand(project.projectId,row.operationId)).rejects.toMatchObject({code:'SAVE_FAILED'});
  await expect(originalHistoryPage(db,project.projectId)).rejects.toMatchObject({code:'SAVE_FAILED'});
  store.close();await db.open();await expect(store.getProject(project.projectId)).rejects.toMatchObject({code:'SAVE_FAILED'});
+ await expect(store.exportProject(project.projectId)).rejects.toMatchObject({code:'SAVE_FAILED'});
 });
 
 it('keeps exact legacy direct fixtures and full legacy packed-body failure semantics',async()=>{
@@ -117,6 +118,7 @@ it('checks actual full-body metadata against a self-consistent but stale envelop
  expect((await store.historyPage(project.projectId,{query:'altered canonical header'})).total).toBe(1);
  await expect(store.historyCommand(project.projectId,row.operationId)).rejects.toMatchObject({code:'SAVE_FAILED'});
  await expect(store.exportProject(project.projectId)).rejects.toMatchObject({code:'SAVE_FAILED'});
+ store.close();await db.open();await expect(store.getProject(project.projectId)).rejects.toMatchObject({code:'SAVE_FAILED'});
 });
 
 it.each(['interruption','quota'])('keeps legacy rows and every part when optional canonical rewriting fails by %s',async failure=>{
@@ -161,7 +163,13 @@ it.each([false,true])('keeps the production threshold and original v1 body bytes
  await db.transaction('rw',['commands'],async()=>{bindCanonicalHistoryWrites();await db.table('commands').add(row);});
  const native=(await nativeRows(db,'commands'))[0];expect(!!native.__scenarioCommandMetadata).toBe(!oversizedMetadata);
  const original=await packRecordData(row,native.__scenarioRecordParts.scope);
- expect(native.__scenarioRecordParts).toEqual(original.packed);expect(await db.table('recordParts').toArray()).toEqual(original.parts);
+ expect(native.__scenarioRecordParts).toEqual(original.packed);
+ const actual=await db.table('recordParts').toArray();expect(actual).toHaveLength(original.parts.length);
+ for(const [index,part] of actual.entries()){
+  const {bytes,...metadata}=part,{bytes:expectedBytes,...expectedMetadata}=original.parts[index];
+  expect(metadata).toEqual(expectedMetadata);expect(bytes.byteLength).toBe(expectedBytes.byteLength);
+  expect(bytes.every((byte:number,offset:number)=>byte===expectedBytes[offset])).toBe(true);
+ }
  expect(await db.table('commands').get(row.operationId)).toEqual(row);
 });
 
@@ -190,4 +198,86 @@ it('covers local ACK merge and confirmed sync resolution writers with canonical 
  const addedResolution=(await nativeRows(raw(b),'commands')).filter(row=>!beforeResolution.has(row.operationId));expect(addedResolution).toHaveLength(1);expect(addedResolution[0].__scenarioCommandMetadata.version).toBe(1);
  expect((await b.getProject(input.projectId))?.entities[0].name).toBe('競合A');
  expect(await b.historyPage(input.projectId)).toEqual(await originalHistoryPage(raw(b),input.projectId));
+});
+
+it.each(['r','rw'] as const)('keeps concurrent full readers complete inside the same parent %s transaction while a page seal is pending',async mode=>{
+ const {store: _store,db}=await saved(),originals=await db.table('commands').toArray(),ids=originals.map(row=>row.operationId);
+ let entered!:()=>void,release!:()=>void;const ready=new Promise<void>(resolve=>{entered=resolve;}),gate=new Promise<void>(resolve=>{release=resolve;});
+ const digest=crypto.subtle.digest.bind(crypto.subtle);
+ vi.spyOn(crypto.subtle,'digest').mockImplementationOnce(async(...args)=>{entered();await gate;return digest(...args);});
+ await db.transaction(mode,['commands'],async()=>{
+  const page=readHistoryPageCommands(db,ids);await ready;
+  let full:any[];
+  try{full=await Promise.all([db.table('commands').get(ids[0]),db.table('commands').bulkGet(ids),db.table('commands').where('projectId').equals(originals[0].projectId).toArray(),db.table('commands').filter(()=>true).toArray()]);}
+  finally{release();await page;}
+  expect(full![0]).toEqual(originals[0]);expect(full![1]).toEqual(originals);expect(full![2]).toEqual(originals);expect(full![3]).toEqual(originals);
+ });
+ expect(await db.table('commands').bulkGet(ids)).toEqual(originals);
+});
+
+it.each(['optional','idMap','importOrigin'] as const)('retains own undefined %s metadata on exact legacy fallback rather than sealing lossy JSON',async variant=>{
+ const store=open(),db=raw(store),row=structuredClone(historySeries(100).rows[0]) as any;
+ if(variant==='optional')row.delta.metadata.compensatesOperationId=undefined;
+ if(variant==='idMap')row.delta.metadata.idMap={source:undefined};
+ if(variant==='importOrigin')row.delta.metadata.importOrigin={sourceProjectId:row.projectId,sourceOperationId:row.operationId,importOperationId:undefined};
+ await db.transaction('rw',['commands'],async()=>{bindCanonicalHistoryWrites();await db.table('commands').add(row);});
+ expect((await nativeRows(db,'commands'))[0].__scenarioCommandMetadata).toBeUndefined();
+ expect(await db.table('commands').get(row.operationId)).toStrictEqual(row);
+ expect((await readHistoryPageCommands(db,[row.operationId]))[0]).toStrictEqual(row);
+});
+
+it('rejects an own undefined metadata mutation even when canonical JSON bytes and digest remain identical',async()=>{
+ const {store,project,db}=await saved(),row=(await nativeRows(db,'commands'))[0],before=jsonBytes(row);
+ row.__scenarioCommandMetadata.metadata.compensatesOperationId=undefined;
+ expect(jsonBytes(row)).toEqual(before);await nativePut(db,'commands',row);
+ await expect(store.historyPage(project.projectId)).rejects.toMatchObject({code:'SAVE_FAILED'});
+ await expect(store.historyCommand(project.projectId,row.operationId)).rejects.toMatchObject({code:'SAVE_FAILED'});
+});
+
+it.each([100,1000,10000] as const)('counts every unchanged direct legacy row exactly once for %i histories',async count=>{
+ const store=new ScenarioStore({databaseName:'p204-legacy-count-'+crypto.randomUUID()});stores.push(store);const db=raw(store),series=historySeries(count);
+ await db.transaction('rw',['projects','commands'],async()=>{await db.table('projects').put(series.header);await db.table('commands').bulkAdd(series.rows);});
+ const probe=startProbe();try{
+  const page=await store.historyPage(series.header.projectId);expect(page.entries[0].revision).toBe(String(count));
+  const counters=probe.snapshot().counters;expect(counters['history.legacy.rows']).toBe(count);expect(counters['db.read.rows.commands']).toBe(count);
+  expect(counters['history.legacy.payloadBytes']).toBeGreaterThan(0);expect(counters['history.metadata.rows']??0).toBe(0);expect(counters['history.body.partRows']??0).toBe(0);
+ }finally{probe.stop();}
+});
+
+it('does not expose a metadata-only row to normal reading hooks',async()=>{
+ const {store,project,db}=await saved(),read=vi.fn(value=>value);db.table('commands').hook('reading',read);
+ try{
+  await store.historyPage(project.projectId);expect(read).not.toHaveBeenCalled();
+  const commands=await db.table('commands').toArray();expect(read).toHaveBeenCalledTimes(3);
+  expect(commands.every(row=>row.delta.patch&&row.requestHash)).toBe(true);
+ }finally{db.table('commands').hook('reading').unsubscribe(read);}
+});
+
+it('matches all canonical pages and literal order for an equivalent separately encoded 100-command series',async()=>{
+ const store=open(),db=raw(store),series=historySeries(100);
+ await db.transaction('rw',['projects','commands'],async()=>{await db.table('projects').put(series.header);bindCanonicalHistoryWrites();await db.table('commands').bulkAdd(series.rows);});
+ expect((await nativeRows(db,'commands')).every(row=>row.__scenarioCommandMetadata?.version===1)).toBe(true);
+ for(const query of ['', '計測変更1', 'not-found'])for(const size of [30,60])for(let page=0;page<=Math.ceil(100/size);page++)expect(await store.historyPage(series.header.projectId,{query,page,size})).toStrictEqual(await originalHistoryPage(db,series.header.projectId,{query,page,size}));
+ expect((await store.historyPage(series.header.projectId,{page:3})).entries.map(row=>row.revision)).toEqual(['10','9','8','7','6','5','4','3','2','1']);
+});
+
+it('rolls back packed canonical command, all parts, content and outbox together at a final quota failure',async()=>{
+ let fail=false;const store=new ScenarioStore({databaseName:'p204-final-quota-'+crypto.randomUUID(),faultInjector:stage=>{if(fail&&stage==='before-commit')throw new DOMException('simulated quota','QuotaExceededError');}});stores.push(store);const db=raw(store);installRecordPartsDatabase(db,512);
+ const saved=(await store.saveProject(growthProject(),{reason:'保持する旧稿'})).project,tables=['projects','commands','recordParts','outbox'],before=await Promise.all(tables.map(table=>nativeRows(db,table)));
+ fail=true;await expect(store.saveProject({...saved,name:'失敗する新稿'},{reason:'保存失敗'})).rejects.toMatchObject({code:'QUOTA_EXCEEDED'});
+ expect(await Promise.all(tables.map(table=>nativeRows(db,table)))).toStrictEqual(before);
+ store.close();await db.open();expect(await store.getProject(saved.projectId)).toStrictEqual(saved);
+});
+
+it('retains exact accepted optional metadata including import origin and rejects a cancelled rewrite without mutation',async()=>{
+ const store=open(),db=raw(store),row=structuredClone(historySeries(100).rows[0]) as any;
+ const optional={compensatesOperationId:row.operationId,idMap:{[row.operationId]:row.projectId},importOrigin:{sourceProjectId:row.projectId,sourceOperationId:row.operationId,importOperationId:row.operationId}};
+ Object.assign(row.delta.metadata,optional);
+ await db.transaction('rw',['commands'],async()=>{bindCanonicalHistoryWrites();await db.table('commands').add(row);});
+ const native=await nativeRows(db,'commands'),parts=await nativeRows(db,'recordParts');expect(native[0].__scenarioCommandMetadata.version).toBe(1);
+ expect((await readHistoryPageCommands(db,[row.operationId]))[0]?.delta?.metadata).toStrictEqual(row.delta.metadata);
+ expect(await db.table('commands').get(row.operationId)).toStrictEqual(row);
+ const controller=new AbortController();controller.abort();
+ await expect(db.transaction('rw',['commands'],async()=>{bindCanonicalHistoryWrites();bindRecordPartsSignal(controller.signal);await db.table('commands').put(row);})).rejects.toMatchObject({code:'CANCELLED'});
+ expect(await nativeRows(db,'commands')).toStrictEqual(native);expect(await nativeRows(db,'recordParts')).toStrictEqual(parts);
 });
