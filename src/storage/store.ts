@@ -478,6 +478,14 @@ export class ScenarioStore {
   private authorAccess:Map<string,string>|null=null;
   private accessGeneration=0;
   setAuthorAccess(roles:Record<string,string>|null){this.authorAccess=roles?new Map(Object.entries(roles)):null;this.accessGeneration++;for(const id of this.cachedProjects.keys())this.invalidateProjectCache(id);}
+  /** Publish a fresh authoritative role response only in its original access/lifetime. */
+  async refreshAuthorAccess(load:()=>Promise<Record<string,string>>,options:{signal?:AbortSignal;isCurrent?:()=>boolean}={}){
+    const access=this.accessGeneration,lifetime=this.cacheLifetime,{signal,isCurrent}=options;checkCancelled(signal);
+    const roles=await load();checkCancelled(signal);
+    if(access!==this.accessGeneration||lifetime!==this.cacheLifetime||isCurrent&&!isCurrent())throw new StorageError('CANCELLED','権限の確認中に読み込み先または権限が変わりました。');
+    if(!roles||Array.isArray(roles)||Object.entries(roles).some(([id,role])=>!ID_PATTERN.test(id)||!['owner','editor'].includes(role)))throw new SyncProtocolError('PROTOCOL_INVALID');
+    this.setAuthorAccess(roles);
+  }
   private readonly db: ScenarioDatabase;
   private activeOperations=0;
   get pendingOperations(){return this.activeOperations;}
