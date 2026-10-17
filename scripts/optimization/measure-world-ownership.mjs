@@ -52,7 +52,15 @@ async function runUIProof(page,expect,runId,mode,supported,active){
   const incoming=await page.evaluate(()=>window.worldOwnershipUI.followSelectionFixture());await page.evaluate(id=>window.worldOwnershipUI.rejectNextFollowSelection(id),incoming.projectId);
   await page.locator('input[type=file]').setInputFiles({name:'p205-follow-selection.scenario',mimeType:'application/zip',buffer:Buffer.from(incoming.bytes)});
   await page.getByLabel('復元方法と対象への影響を確認しました').check();await page.getByRole('button',{name:'この内容で復元する',exact:true}).click();
+  await expect.poll(()=>page.evaluate(()=>window.worldOwnershipUI.followGateEntered())).toBe(true);
+  await versions(page);await page.evaluate(id=>window.worldOwnershipUI.holdSource(id),fixture.worlds[2].projectId);
+  await page.getByLabel('参照する共通世界',{exact:true}).selectOption(fixture.worlds[2].projectId);await expect.poll(()=>page.evaluate(()=>window.worldOwnershipUI.gateEntered())).toBe(true);
+  await page.evaluate(()=>window.worldOwnershipUI.releaseFollowGate());
   await expect(page.getByText('P205 literal follow-selection failure',{exact:true})).toBeVisible();await expect(page.locator('.project-switch')).toContainText('P205 work 0');
+  await page.evaluate(()=>window.worldOwnershipUI.releaseGate());await choose(page,expect,fixture.worlds[2]);
+  await page.getByLabel('固定する共通世界版',{exact:true}).selectOption(fixture.worlds[2].snapshotId);
+  await page.getByRole('button',{name:'共通世界の元情報を開く',exact:true}).click();await expect(page.getByRole('dialog').last()).toContainText('P205 place 2');
+  await page.getByRole('dialog').last().getByRole('button',{name:'閉じる',exact:true}).click();
   await versions(page);await choose(page,expect,fixture.worlds[3]);
   await page.evaluate(id=>window.worldOwnershipUI.holdSource(id),fixture.worlds[2].projectId);
   await page.getByLabel('参照する共通世界',{exact:true}).selectOption(fixture.worlds[2].projectId);await expect.poll(()=>page.evaluate(()=>window.worldOwnershipUI.gateEntered())).toBe(true);
@@ -61,8 +69,23 @@ async function runUIProof(page,expect,runId,mode,supported,active){
   await page.getByLabel('固定する共通世界版',{exact:true}).selectOption(fixture.worlds[2].snapshotId);
   await page.getByRole('button',{name:'共通世界の元情報を開く',exact:true}).click();await expect(page.getByRole('dialog').last()).toContainText('P205 place 2');
   await page.getByRole('dialog').last().getByRole('button',{name:'閉じる',exact:true}).click();await expect(page.getByText(`参照版：${fixture.adoptedLabel}`,{exact:true})).toBeVisible();
+  await active('pin adoption refresh preserves newer current preview');
+  await choose(page,expect,fixture.worlds[0]);await page.getByLabel('固定する共通世界版',{exact:true}).selectOption(fixture.worlds[0].snapshotIds[1]);
+  await page.getByRole('checkbox',{name:'P205 place 0',exact:true}).check();await page.getByRole('button',{name:'適用前の差分・影響を確認',exact:true}).click();
+  await page.evaluate(({projectId,sourceId})=>window.worldOwnershipUI.holdPinAdoptionRefresh(projectId,sourceId),{projectId:fixture.selected,sourceId:fixture.worlds[0].projectId});
+  await page.getByRole('button',{name:'確認した固定版・採用設定を保存',exact:true}).click();
+  await expect.poll(()=>page.evaluate(()=>window.worldOwnershipUI.adoptionGateState().entered)).toBe(true);
+  await expect.poll(()=>page.evaluate(()=>window.worldOwnershipUI.adoptionGateState().previewCompleted)).toBe(true);
+  await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+  await expect(page.getByLabel('固定する共通世界版',{exact:true}).locator(`option[value="${fixture.worlds[0].snapshotId}"]`)).toHaveCount(1);
+  const pinRefresh=await page.evaluate(()=>window.worldOwnershipUI.adoptionGateState());expect(pinRefresh.adoptedKeys).toEqual([fixture.worlds[0].snapshotIds[1]]);
+  await page.evaluate(()=>window.worldOwnershipUI.releaseAdoptionGate());await expect(page.getByRole('dialog')).toHaveCount(0);
+  await expect(page.getByText('参照版：P205 edition 0',{exact:true})).toBeVisible();
+  await page.getByLabel('固定する共通世界版',{exact:true}).selectOption(fixture.worlds[0].snapshotId);
+  await page.getByRole('button',{name:'共通世界の元情報を開く',exact:true}).first().click();await expect(page.getByRole('dialog').last()).toContainText('P205 newer-only place 0');
+  await page.getByRole('dialog').last().getByRole('button',{name:'閉じる',exact:true}).click();
   const final=await page.evaluate(()=>window.worldOwnershipUI.snapshot());if(mode==='check'){expect(final.instrumentationStarts).toBe(0);expect(final).not.toHaveProperty('probe');}
-  return{status:'ok',actualApp:true,transport:'HTTP loopback',failedPreview:{before,after},lateSequence:'source 2 -> 3 -> 2, old 2 released after new 2 is displayed; immutable detail still resolves',outerSelectionRejection:'real import succeeded, followed editor read rejected; previous editor and adopted edition remain; source 2 -> 3 -> 2 rejects the old request and current immutable source detail resolves',allSixPickerChoicesPreserved:true,adoptedEditionPreserved:true,boundaries,final,uiMetricSupport:supported?'actual ON gauges only in capture mode':'UNKNOWN: literal baseline has no UI retention gauges',latency:'NOT MEASURED: functional UI proof'};
+  return{status:'ok',actualApp:true,transport:'HTTP loopback',uiInput:fixture.uiInput,pinRefresh,failedPreview:{before,after},lateSequence:'source 2 -> 3 -> 2, old 2 released after new 2 is displayed; immutable detail still resolves',outerSelectionRejection:'real import succeeded, followed editor read rejected; previous editor and adopted edition remain; source 2 -> 3 -> 2 rejects the old request and current immutable source detail resolves',pinAdoptionRefresh:'old source0 edition committed; only its adopted-closure refresh held while revision-triggered source0 preview completes; refresh released and unadopted newer edition detail still resolves',allSixPickerChoicesPreserved:true,adoptedEditionPreserved:true,boundaries,final,uiMetricSupport:supported?'actual ON gauges only in capture mode':'UNKNOWN: literal baseline has no UI retention gauges',latency:'NOT MEASURED: functional UI proof'};
  }finally{await page.evaluate(()=>window.worldOwnershipUI.cleanup());}
 }
 async function heapDiagnostic(browser,url,runId,expect){

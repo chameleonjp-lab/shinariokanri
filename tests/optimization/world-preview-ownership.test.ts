@@ -20,3 +20,11 @@ it('rejects late preview publications from previous selection, revision and retu
  expect(sources.worldRegistryContents(state)).toEqual({a,c});
  const failed=sources.replaceWorldPreview(state,owner,{});expect(sources.worldRegistryContents(failed)).toEqual({a});
 });
+
+it('refreshes adopted dependencies without dropping a newer preview of the same committed editor',()=>{
+ const owner={projectId:'editor',revision:'8',generation:4},old=createProject('old adoption'),fresh=createProject('new adoption'),preview=createProject('newer unadopted preview');
+ const state=sources.replaceWorldPreview(sources.ownWorldRegistry(owner,{old}),owner,{preview});
+ const refreshed=sources.replaceAdoptedWorlds(state,owner,{fresh});expect(sources.worldRegistryContents(refreshed)).toEqual({fresh,preview});
+ for(const stale of [{...owner,generation:3},{...owner,revision:'7'},{...owner,projectId:'other'}])expect(sources.replaceAdoptedWorlds(refreshed,stale,{old})).toBe(refreshed);
+ expect(sources.worldRegistryContents(sources.replaceWorldPreview(refreshed,owner,{}))).toEqual({fresh});
+});

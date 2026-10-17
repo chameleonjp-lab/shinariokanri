@@ -11,6 +11,11 @@ export function replaceWorldPreview(state:OwnedWorldRegistry,owner:WorldRegistry
   if(state.owner?.projectId!==owner.projectId||state.owner.revision!==owner.revision||state.owner.generation!==owner.generation)return state;
   return {...state,preview};
 }
+/** A delayed adopted-closure refresh must keep this owner's newer preview. */
+export function replaceAdoptedWorlds(state:OwnedWorldRegistry,owner:WorldRegistryOwner,adopted:Record<string,ProjectData>):OwnedWorldRegistry {
+  if(state.owner?.projectId!==owner.projectId||state.owner.revision!==owner.revision||state.owner.generation!==owner.generation)return state;
+  return {...state,adopted};
+}
 export function worldRegistryContents(state:OwnedWorldRegistry):Record<string,ProjectData> {
   const result={...state.adopted,...state.preview};
   if(probeEnabled()){
