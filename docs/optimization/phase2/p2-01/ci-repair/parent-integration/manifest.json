@@ -1,0 +1,82 @@
+{
+  "sourceCommit": "da2068677c9d1d2d43cabc8c358bc809e77cd599",
+  "sourceTree": "703fe8b821983ca97030575397a22bee9682d60d",
+  "repairArtifactsVerified": 12,
+  "repairArchiveMembersVerified": 87,
+  "trackedCaptureSourcesVerified": 306,
+  "captureBuildMembersVerified": 12,
+  "initialFailureMembersVerified": 31,
+  "cleanProductBuildMembersVerified": 13,
+  "productionDiffFromFrozenRepair": [],
+  "files": [
+    {
+      "path": "initial-ci-failure/failure-proof.zip",
+      "bytes": 52750236,
+      "sha256": "90d79044d03c22b598416e9199bb83034c6dfde0809047e2fab3b10ea4af0a40"
+    },
+    {
+      "path": "initial-ci-failure/manifest.json",
+      "bytes": 10095,
+      "sha256": "fcef2835026cb86d927e9d7f79c07b286dfc2a5466eb1f9968fc015b80151423"
+    },
+    {
+      "path": "initial-ci-failure/log-credential-scan.json",
+      "bytes": 991,
+      "sha256": "c296295b8f4c63194e202421de2cac6d24d047fc26ec03ba32148c92e5b283d2"
+    },
+    {
+      "path": "clean-product-build.zip",
+      "bytes": 1094406,
+      "sha256": "a7b7738851e2ff899d9cbcf1989a47f26c8cfa0f92740463bc4b3f3688782ef8"
+    },
+    {
+      "path": "clean-product-build.json",
+      "bytes": 2978,
+      "sha256": "f96554f330f679c0293c795a867e957fee808c939015b967d2b20192f5c6ca80"
+    },
+    {
+      "path": "clean-product-build.log",
+      "bytes": 2832,
+      "sha256": "a13675997ebf257c234525efc91ebba5872f6c9409a089c9c2c032d6516e3c23"
+    },
+    {
+      "path": "parent-verification.log",
+      "bytes": 558,
+      "sha256": "2f847cc15f31f4e801f0217c2ea65d53dca66c690b7e5f09e22675376beb36c6"
+    },
+    {
+      "path": "parent-docs.log",
+      "bytes": 477,
+      "sha256": "85644a5f82d11ef49eb8b642236688e8736290f9dad21729bfb689cbbe1514b5"
+    },
+    {
+      "path": "parent-plan.log",
+      "bytes": 125,
+      "sha256": "8517bd65fbd7fa3f831e995faaa1725f5c7b83e0fcb4e0967f44d8d21d25b4a9"
+    },
+    {
+      "path": "parent-originals.log",
+      "bytes": 222,
+      "sha256": "316d9e346313a9d8e982c034f9db3c2ddf693f900be8972f77de585619d5f833"
+    }
+  ],
+  "scope": "Exact bytes, source/tree, ZIP CRC and every member. Initial CI remains FAILED; final hosted CI and original acceptance are separate. No timing rerun.",
+  "checks": [
+    {
+      "command": "python3 scripts/check_docs.py",
+      "actualExit": 0
+    },
+    {
+      "command": "python3 scripts/check_completion_plan.py",
+      "actualExit": 0
+    },
+    {
+      "command": "python3 scripts/check_phase1.py",
+      "actualExit": 0
+    },
+    {
+      "command": "git diff --check",
+      "actualExit": 0
+    }
+  ]
+}
