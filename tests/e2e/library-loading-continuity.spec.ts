@@ -3,6 +3,7 @@ import {createProject} from '../../src/domain/model';
 import {exportScenario,inspectScenario} from '../../src/storage/archive';
 import {seed} from './ap04-original-helpers';
 import {exerciseF35Replacement} from './ap04-original-f35-replace-helper';
+import {createHttpContract} from './httpContract';
 
 async function holdEditorHash(page:Page,afterImport=false,projectId?:string){
  await page.evaluate(({afterImport,projectId})=>{
@@ -56,4 +57,24 @@ for(const boundary of ['cancel','newer selection','error'] as const)test(`pendin
  if(boundary==='error')await expect(page.getByRole('alert')).toBeVisible();
  else{await expect.poll(()=>entered(page)).toBe(true);if(boundary==='cancel')await page.getByRole('button',{name:'作品の読み込みを中止',exact:true}).click();else{await page.locator('.project-card').filter({hasText:'最後に検査した作品B'}).click();await expect(page.locator('.project-switch')).toContainText('最後に検査した作品B');}await release(page);}
  await expect.poll(()=>page.evaluate(()=>localStorage.getItem('scenario-opening-project:guest'))).toBe('');expect(await page.evaluate(()=>localStorage.getItem('scenario-last-project:guest'))).toBe(b);await page.reload();await expect(page.locator('.project-switch')).toContainText('最後に検査した作品B');
+});
+
+
+test('confirmed logout erases only the matching account pending selection',async({page})=>{
+ const account='00000000-0000-4000-8000-000000000002',other='00000000-0000-4000-8000-000000000003';
+ const contract=await createHttpContract(async route=>{
+  const request=route.request(),url=new URL(request.url());
+  if(request.method()==='OPTIONS')return route.fulfill({status:204});
+  if(url.pathname.includes('/auth/v1/token'))return route.fulfill({json:{access_token:'logout-fixture-memory-token',user:{id:account},expires_in:3600}});
+  if(url.pathname.includes('/auth/v1/logout'))return route.fulfill({status:204});
+  if((request.postDataJSON() as {action?:string}|null)?.action==='projects')return route.fulfill({json:[]});
+  return route.fulfill({status:500,json:{code:'UNEXPECTED_CONTRACT_ACTION'}});
+ });
+ try{
+  await page.goto('');await page.getByRole('button',{name:'アカウント・専用同期',exact:true}).click();await page.getByLabel('専用Supabase URL',{exact:true}).fill(contract.url);await page.getByLabel('公開用APIキー',{exact:true}).fill('sb_publishable_logout_fixture');await page.getByRole('button',{name:'接続設定を保持',exact:true}).click();await page.getByLabel('メール',{exact:true}).fill('logout@example.invalid');await page.getByLabel('パスワード',{exact:true}).fill('fixture-only');await page.getByRole('button',{name:'認証してアカウント領域を開く',exact:true}).click();await expect(page.getByRole('status').filter({hasText:'認証したアカウントの領域を開きました。'})).toBeVisible();await expect(page.locator('.library-page')).toBeVisible();
+  const keys=[`scenario-opening-project:${account}`,`scenario-last-project:${account}`,'scenario-opening-project:guest','scenario-last-project:guest',`scenario-opening-project:${other}`,`scenario-last-project:${other}`];
+  await page.evaluate(keys=>keys.forEach((key,index)=>localStorage.setItem(key,`retained-selection-${index}`)),keys);
+  await page.getByRole('button',{name:'ログアウト前の保存待ち・入力を確認',exact:true}).click();await page.getByLabel('キャッシュ消去対象のアカウントID',{exact:true}).fill(account);await page.getByRole('button',{name:'確認した残りを破棄してログアウト',exact:true}).click();await expect(page.getByRole('status').filter({hasText:'このアカウントの認証と端末内作者キャッシュを消去しました。'})).toBeVisible();
+  expect(await page.evaluate(keys=>keys.map(key=>localStorage.getItem(key)),keys)).toEqual([null,null,'retained-selection-2','retained-selection-3','retained-selection-4','retained-selection-5']);
+ }finally{await contract.close();}
 });
