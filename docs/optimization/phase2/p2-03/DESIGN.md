@@ -1,0 +1,35 @@
+# P2-03: shared normalized save changes
+
+Reviewed base: `d3bf88c31172386fd84926a615ed060c2ee2190c` (P2-01 Draft PR62, unmerged). [Approved D03](../../phase1/DESIGN.md) and [handoff](../../phase1/HANDOFF.md) govern this unit. P2-02 is independent and is not imported.
+
+| Choice | Work and correctness boundary | Decision |
+| --- | --- | --- |
+| Current | Normalization builds previous maps twice for entities; targetChanges builds combined old/current maps; contentDelta repeats both maps; writeContent constructs previous maps and scans all old entities for changed blocks. Already differential, atomic writes. | Frozen test-only oracle; fallback for import, sync and restore previews. |
+| Shared normalized changes | Store creates previous entity/relation maps once, reuses them during both normalization passes. After reconciliation and full current validation, one private changeset records complete-record deltas in original-before/append order, put rows in final order, old changed rows in previous order, and final ordered IDs. Target changes still compare business fields and presence hashes. Command delta and writer consume this evidence only in this save call. | Adopt; never accepts caller target IDs or caches proof between requests. |
+| Patch API / localized request hash | Would accept caller changed-ID declarations and alter v2 request bytes and v1 replay semantics. | Rejected: outside approved boundary. |
+
+Final changes are computed only after reconcileDeliverables and the second entity normalization. Both passes retain their kind/createdAt guards, same-business revision behavior and omission tombstones. Global validation and integrity remain full under their existing proof conditions; no validator or contentValidationMemo changes. Entity/relation uniqueness includes tombstones and cross-kind IDs. Shared data is local, bound to the exact final arrays and previous arrays; it cannot escape through the public API. Header target always participates, revision/updatedAt exclusions and present-undefined stay unchanged. Command patch header and target field semantics remain separate.
+
+Each collection's final pass compares against the shared previous map and builds final ID order and puts. Previous-order traversal produces command deltas and changed old rows; newly appended IDs follow final order. Reorder-only saves emit ordered IDs but no entity writes. Writer block extraction uses changed old rows while still consulting durable native block rows for legacy inline migration. Snapshots/views/block differential writes retain the original path. Import/history/sync callers keep original helpers unless they hold this private save-local changeset.
+
+Request v2 still hashes the entire captured current plus history IDs; old v1 hashes entire draft. Full global checks, immutable snapshots/pins, checkpoint interval64, history-omitted editor tokens, optimistic revision checks and the single native transaction remain unchanged. P2-01 summary freshness keeps its native source read and both hashes. Its active-count traversal is deliberately retained in this unit: avoiding that scan is optional and would widen the summary helper contract. Large extra hashing remains953B, derived from the720B native envelope, not the decoded3.43MB header.
+
+Numeric-only default-OFF counters will distinguish actual map input rows and final changeset comparisons from existing `.rows` metrics (entry lengths, unchanged definition). RED will count real record-map construction via a test-only constructor observer, then verify literal target/hash/order expectations and the frozen baseline oracle for deltas/target changes/writes. Original tests cover replay, global invalidity, anchored text, production propagation, native rollback, legacy blocks, cold outbox/export and checkpoints. New tests cover shared work and literal/frozen equivalence; original assertions remain untouched.
+
+Comparisons use unchanged Standard/Large fixtures with freshly regenerated portable runtime before every source hash/build. OFF observations and ON diagnostic work are separate; no formal180-save or7200s run. Any30-sample claim requires all30. Source is committed before final builds; raw failures, actual builds, fixture/source/build hashes and limitations will be retained. Speed is UNKNOWN before OFF evidence, heap/peak are not inferred from map counts. Rollback restores the prior private save implementation; no schema/data migration is needed.
+
+## Instrumentation definitions and regression proof
+
+The constructor observer in the new test counts array-input rows to `Map` where every entry is a known entity/relation ID and the stack contains a named save-diff function. Baseline is34 rows for6 entities and1 relation. It excludes mixed maps containing the project header, empty constructors followed by `Map.set`, validation maps, Sets, and every other traversal. It is a focused duplicate-construction regression detector, not total map work or heap. The candidate builds7 prior-map input rows and inserts7 final rows incrementally; the14-row test budget therefore cannot be read as a measured14-row result.
+
+| New numeric metric | Exact definition |
+| --- | --- |
+| `save.recordIndex.rows` | Rows passed to the shared previous-ID Map constructor, including fallback normalization callers. |
+| `save.changeset.builds` | Final normalized changeset constructions. One for a new successful save; replay/validation failure can stop earlier. |
+| `save.changeset.currentVisits` | Actual final-current loop iterations: next-map insertion, final-ID append, order comparison and complete-record comparison. |
+| `save.changeset.previousVisits` | Actual prior-row loop iterations producing prior-order delta/changed-old evidence. |
+| `save.fallbackDiff.indexRows` | Input lengths to original fallback target/delta maps, or writer old-map/current-ID-Set construction (including snapshots/views/blocks). This is index-input attribution, not recursive visits or all map operations. |
+
+Existing normalize/targetChanges/contentDelta/writeContent `.rows` stay entry-length attribution, including when a consumer uses shared evidence. Request hash/global validation work is still proportional to complete content. The summary active-count filter is still an additional uninstrumented full entity traversal; source-fingerprint read/hashes are retained. New counters do not change decisions, carry strings/records, or persist anything.
+
+RED1 also exposed an invalid new test fixture (`trust` relation between notes); it was corrected to the supported `reference` relation. Corrected RED isolates the34>14 constructor assertion; frozen oracle/literal tests pass on baseline. A later optional-field test incorrectly expected `authorAlternatives:undefined` to survive existing preserveAlternativeHistory normalization (it becomes an empty array). The corrected test edits a name and retains `deletedAt:undefined` to exercise actual present-undefined semantics. Both setup failures are retained in raw logs, with no product fix or changed original assertion.

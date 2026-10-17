@@ -176,9 +176,47 @@ function captureRequestProject(project: ProjectData): ProjectData {
   const capture=(value:unknown):unknown=>{if(!value||typeof value!=='object')return typeof value==='function'?copy(value):value;if(immutableValues.has(value))return value;if(copied.has(value))return copied.get(value);if(!Array.isArray(value)&&Object.getPrototypeOf(value)!==Object.prototype&&Object.getPrototypeOf(value)!==null)return copy(value);const result:unknown[]|Record<string,unknown>=Array.isArray(value)?new Array(value.length):{};copied.set(value,result);for(const key of Object.keys(value))Object.defineProperty(result,key,{value:capture((value as Record<string,unknown>)[key]),enumerable:true,configurable:true,writable:true});return result;};
   return { ...capture(withoutHistory(project)) as ContentState, history: project.history };
 }
-function contentDelta(before: ContentState, after: ContentState): ContentDelta {
+/** Save-local evidence, produced only from final validated normalized arrays.
+ * Previous indexes also serve both normalization passes; no caller hints enter it. */
+interface NormalizedRows<T extends Entity | Relation> {
+  old: Map<string, T>;
+  put: T[]; remove: string[]; oldChanged: T[];
+  delta: { id: string; record: T | null }[]; ids: string[]; reordered: boolean;
+}
+interface NormalizedChanges {
+  before: ContentState; after: ContentState;
+  entities: NormalizedRows<Entity>; relations: NormalizedRows<Relation>;
+}
+function recordIndex<T extends Entity | Relation>(records: T[]): Map<string, T> {
+  probeCount('save.recordIndex.rows', records.length);
+  return new Map(records.map(record => [record.id, record]));
+}
+function normalizedRows<T extends Entity | Relation>(previous: T[], current: T[], old: Map<string, T>): NormalizedRows<T> {
+  const next = new Map<string, T>(), put: T[] = [], ids: string[] = [], changed = new Set<string>();
+  let reordered = previous.length !== current.length;
+  for (const [index, record] of current.entries()) {
+    probeCount('save.changeset.currentVisits');
+    next.set(record.id, record); ids.push(record.id);
+    if (previous[index]?.id !== record.id) reordered = true;
+    if (!sameJson(old.get(record.id), record)) { put.push(record); changed.add(record.id); }
+  }
+  const delta: { id: string; record: T | null }[] = [], remove: string[] = [], oldChanged: T[] = [];
+  for (const record of previous) {
+    probeCount('save.changeset.previousVisits');
+    if (!next.has(record.id)) { remove.push(record.id); oldChanged.push(record); delta.push({id: record.id, record: null}); }
+    else if (changed.has(record.id)) { oldChanged.push(record); delta.push({id: record.id, record: next.get(record.id)!}); }
+  }
+  for (const record of put) if (!old.has(record.id)) delta.push({id: record.id, record});
+  return {old, put, remove, oldChanged, delta, ids, reordered};
+}
+function normalizedChanges(before: ContentState, after: ContentState, entities: Map<string, Entity>, relations: Map<string, Relation>): NormalizedChanges {
+  probeCount('save.changeset.builds');
+  return {before, after, entities: normalizedRows(before.entities, after.entities, entities), relations: normalizedRows(before.relations, after.relations, relations)};
+}
+function contentDelta(before: ContentState, after: ContentState, normalized?: NormalizedChanges): ContentDelta {
   probeCount('contentDelta.rows',before.entities.length+before.relations.length+after.entities.length+after.relations.length);
   const changes = <T extends Entity | Relation>(previous: T[], next: T[]) => {
+    probeCount('save.fallbackDiff.indexRows', previous.length + next.length);
     const old = new Map(previous.map(record => [record.id, record]));
     const current = new Map(next.map(record => [record.id, record]));
     return [...new Set([...old.keys(), ...current.keys()])].flatMap(id => sameJson(old.get(id) ?? null, current.get(id) ?? null) ? [] : [{ id, record: current.get(id) ?? null }]);
@@ -188,7 +226,8 @@ function contentDelta(before: ContentState, after: ContentState): ContentDelta {
     (header as Record<string, unknown>)[field] = afterHeader[field];
   }
   const orderedIds = (previous: { id: string }[], next: { id: string }[]) => previous.length === next.length && previous.every((record, index) => record.id === next[index].id) ? undefined : next.map(record => record.id);
-  return { header, entities: changes(before.entities, after.entities), relations: changes(before.relations, after.relations), entityIds: orderedIds(before.entities, after.entities), relationIds: orderedIds(before.relations, after.relations) };
+  const shared = normalized?.before === before && normalized.after === after ? normalized : undefined;
+  return { header, entities: shared?.entities.delta ?? changes(before.entities, after.entities), relations: shared?.relations.delta ?? changes(before.relations, after.relations), entityIds: shared ? shared.entities.reordered ? shared.entities.ids : undefined : orderedIds(before.entities, after.entities), relationIds: shared ? shared.relations.reordered ? shared.relations.ids : undefined : orderedIds(before.relations, after.relations) };
 }
 function applyContentDelta(before: ContentState, patch: ContentDelta): ContentState {
   const apply = <T extends Entity | Relation>(records: T[], changes: { id: string; record: T | null }[], ids?: string[]): T[] => {
@@ -277,9 +316,8 @@ function withoutRevision(record: TargetRecord): unknown {
   return Object.fromEntries(Object.entries(record).filter(([field]) => !['revision', 'updatedAt'].includes(field)));
 }
 
-function normalizeRecords<T extends Entity | Relation>(before: T[], incoming: T[], operationId: string, time: string): T[] {
+function normalizeRecords<T extends Entity | Relation>(before: T[], incoming: T[], operationId: string, time: string, old = recordIndex(before)): T[] {
   probeCount('normalize.rows',before.length+incoming.length);
-  const old = new Map(before.map(record => [record.id, record]));
   const result = incoming.map(record => {
     const previous = old.get(record.id);
     if (previous && 'kind' in previous && 'kind' in record && previous.kind !== record.kind) throw new StorageError('OPERATION_CONFLICT', '既存IDを別の種類へ再利用できません。', record.id);
@@ -452,14 +490,32 @@ function headerTarget(content: ContentState): ProjectTarget {
   const { entities: _entities, relations: _relations, ...header } = content;
   return { ...header, id: content.projectId, kind: 'project' };
 }
-async function targetChanges(before: ContentState, after: ContentState, isNew = false): Promise<TargetChange[]> {
+async function targetChanges(before: ContentState, after: ContentState, isNew = false, normalized?: NormalizedChanges): Promise<TargetChange[]> {
   probeCount('targetChanges.rows',before.entities.length+before.relations.length+after.entities.length+after.relations.length);
-  const old = new Map<string, TargetRecord>([...before.entities, ...before.relations, ...(isNew ? [] : [headerTarget(before)])].map(record => [record.id, record]));
-  const current = new Map<string, TargetRecord>([...after.entities, ...after.relations, headerTarget(after)].map(record => [record.id, record]));
+  function* pairs(): Generator<{id: string; previous: TargetRecord | null; next: TargetRecord | null}> {
+    if (normalized?.before === before && normalized.after === after) {
+      // Old IDs (entities, relations, header) precede appended IDs. Initial
+      // saves instead have no old header, so it follows the new records.
+      const header = {id: after.projectId, previous: isNew ? null : headerTarget(before), next: headerTarget(after)};
+      for (const rows of [normalized.entities, normalized.relations]) for (const change of rows.delta) {
+        const previous = rows.old.get(change.id);
+        if (previous) yield {id: change.id, previous, next: change.record};
+      }
+      if (!isNew) yield header;
+      for (const rows of [normalized.entities, normalized.relations]) for (const change of rows.delta) {
+        if (!rows.old.has(change.id)) yield {id: change.id, previous: null, next: change.record};
+      }
+      if (isNew) yield header;
+    } else {
+      probeCount('save.fallbackDiff.indexRows', before.entities.length + before.relations.length + after.entities.length + after.relations.length);
+      const old = new Map<string, TargetRecord>([...before.entities, ...before.relations, ...(isNew ? [] : [headerTarget(before)])].map(record => [record.id, record]));
+      const current = new Map<string, TargetRecord>([...after.entities, ...after.relations, headerTarget(after)].map(record => [record.id, record]));
+      for (const id of new Set([...old.keys(), ...current.keys()])) yield {id, previous: old.get(id) ?? null, next: current.get(id) ?? null};
+    }
+  }
   const result: TargetChange[] = [];
   let absentHash:string|undefined;
-  for (const id of new Set([...old.keys(), ...current.keys()])) {
-    const previous = old.get(id) ?? null, next = current.get(id) ?? null;
+  for (const {id, previous, next} of pairs()) {
     if (id !== after.projectId && (previous === next || sameJson(previous ? withoutRevision(previous) : null, next ? withoutRevision(next) : null))) continue;
     const fields: FieldChange[] = [];
     for (const field of new Set([...Object.keys(previous ?? {}), ...Object.keys(next ?? {})])) {
@@ -910,18 +966,22 @@ export class ScenarioStore {
     return snapshot ? { ...copy(snapshot.content), snapshots: copy(current!.snapshots), history: current!.history.filter(item => BigInt(item.revision) <= BigInt(snapshot.content.revision)) } : undefined;
   }
 
-  private async writeContent(project: ProjectData, previous?: ProjectData, contentHeadOperationId?: string, historyIds = project.history.map(command => command.operationId)): Promise<SaveMetrics['written']> {
+  private async writeContent(project: ProjectData, previous?: ProjectData, contentHeadOperationId?: string, historyIds = project.history.map(command => command.operationId), normalized?: NormalizedChanges): Promise<SaveMetrics['written']> {
     probeCount('writeContent.rows',(previous?.entities.length??0)+(previous?.relations.length??0)+project.entities.length+project.relations.length);
     const { entities, relations, snapshots, history, views, ...header } = project;
     const changed = <T extends { id: string }>(old: T[], current: T[]) => {
+      probeCount('save.fallbackDiff.indexRows', old.length + current.length);
       const oldById = new Map(old.map(record => [record.id, record])), ids = new Set(current.map(record => record.id));
       return { put: current.filter(record => !sameJson(oldById.get(record.id), record)), remove: old.filter(record => !ids.has(record.id)).map(record => [project.projectId, record.id] as [string, string]) };
     };
-    const entityChanges = changed(previous?.entities ?? [], entities), relationChanges = changed(previous?.relations ?? [], relations);
+    const shared = normalized?.after.entities === entities && normalized.after.relations === relations
+      && (!previous || normalized.before.entities === previous.entities && normalized.before.relations === previous.relations) ? normalized : undefined;
+    const writes = <T extends Entity | Relation>(rows: NormalizedRows<T>) => ({put: rows.put, remove: rows.remove.map(id => [project.projectId, id] as [string, string])});
+    const entityChanges = shared ? writes(shared.entities) : changed(previous?.entities ?? [], entities), relationChanges = shared ? writes(shared.relations) : changed(previous?.relations ?? [], relations);
     const snapshotChanges = changed(previous?.snapshots ?? [], snapshots), viewChanges = changed(previous?.views ?? [], views);
     const extracted = entityChanges.put.map(entity => ({ entity, ...extractBlocks(entity) }));
     const changedEntityIds = new Set([...entityChanges.put.map(entity => entity.id), ...entityChanges.remove.map(key => key[1])]);
-    const oldBlocks = (previous?.entities ?? []).filter(entity => changedEntityIds.has(entity.id)).flatMap(entity => extractBlocks(entity).blocks);
+    const oldBlocks = (shared ? shared.entities.oldChanged : (previous?.entities ?? []).filter(entity => changedEntityIds.has(entity.id))).flatMap(entity => extractBlocks(entity).blocks);
     const newBlocks = extracted.flatMap(row => row.blocks);
     const blockIds = [...new Set([...oldBlocks.map(block => block.id), ...newBlocks.map(block => block.id)])];
     // Inline legacy records can be read without native block rows. When they
@@ -934,7 +994,7 @@ export class ScenarioStore {
       this.db.entities.bulkDelete(entityChanges.remove), this.db.relations.bulkDelete(relationChanges.remove),
       this.db.blocks.bulkDelete(blockChanges.remove), this.db.snapshots.bulkDelete(snapshotChanges.remove), this.db.views.bulkDelete(viewChanges.remove),
     ]);
-    await this.db.projects.put({ ...header, entityIds: entities.map(row => row.id), relationIds: relations.map(row => row.id), snapshotIds: snapshots.map(row => row.id), historyIds, viewIds: views.map(row => row.id), ...(contentHeadOperationId ? { contentHeadOperationId } : {}) });
+    await this.db.projects.put({ ...header, entityIds: shared?.entities.ids ?? entities.map(row => row.id), relationIds: shared?.relations.ids ?? relations.map(row => row.id), snapshotIds: snapshots.map(row => row.id), historyIds, viewIds: views.map(row => row.id), ...(contentHeadOperationId ? { contentHeadOperationId } : {}) });
     const sourceHash=await Dexie.waitFor(summarySourceHash((await nativeProjectHeader(project.projectId))!));
     await this.db.projectSummaries.put(await Dexie.waitFor(deriveProjectSummary(project,sourceHash)));
     await Promise.all([
@@ -1007,14 +1067,15 @@ export class ScenarioStore {
       if (!ID_PATTERN.test(operationId) || options.compensatesOperationId && !ID_PATTERN.test(options.compensatesOperationId)) throw new StorageError('VALIDATION_FAILED', '操作IDは安定したUUIDで指定してください。');
       if (typeof options.reason !== 'string' || !options.reason.trim() || new TextEncoder().encode(options.reason).byteLength > 1024 * 1024) throw new StorageError('VALIDATION_FAILED', '変更の理由を1 MiB以内で指定してください。');
       if (previous) verifyAlternativeApplicationInput(previous, draft);
-      let candidate = { ...draft, entities: normalizeRecords(previous?.entities ?? [], draft.entities, operationId, now), relations: normalizeRecords(previous?.relations ?? [], draft.relations, operationId, now), revision: increment(draft.revision) };
+      const previousEntities = recordIndex(previous?.entities ?? []), previousRelations = recordIndex(previous?.relations ?? []);
+      let candidate = { ...draft, entities: normalizeRecords(previous?.entities ?? [], draft.entities, operationId, now, previousEntities), relations: normalizeRecords(previous?.relations ?? [], draft.relations, operationId, now, previousRelations), revision: increment(draft.revision) };
       if (previous) {
         protectSnapshots(previous, candidate);
         await preserveAlternativeHistory(previous, candidate);
         const snapshots = new Map(previous.snapshots.map(snapshot => [snapshot.id, snapshot]));
         candidate.snapshots = candidate.snapshots.map(snapshot => snapshots.get(snapshot.id) ?? snapshot);
         candidate = await reconcileDeliverables(previous, candidate);
-        candidate.entities = normalizeRecords(previous.entities, candidate.entities, operationId, now);
+        candidate.entities = normalizeRecords(previous.entities, candidate.entities, operationId, now, previousEntities);
       }
       if (new Set(candidate.snapshots.map(snapshot => snapshot.id)).size !== candidate.snapshots.length) throw new StorageError('VALIDATION_FAILED', '公開版IDが重複しています。');
       measure('reconcile');
@@ -1028,7 +1089,8 @@ export class ScenarioStore {
       verifyWorlds([{ ...candidate, history: [] }], worlds);
       measure('validate');
       const before = previous ? withoutHistory(previous) : blankBefore(draft), after = withoutHistory(candidate);
-      const changes = await targetChanges(before, after, !previous);
+      const normalized = normalizedChanges(before, after, previousEntities, previousRelations);
+      const changes = await targetChanges(before, after, !previous, normalized);
       const command: CommandRecord = { operationId, projectId: candidate.projectId, baseRevision: draft.revision, revision: candidate.revision, targetIds: changes.map(change => change.targetId), reason: options.reason, createdAt: now, before, after, ...(options.compensatesOperationId ? { compensatesOperationId: options.compensatesOperationId } : {}) };
       freeze(command);
       candidate.history = freeze(editingHistory ? [] : [...(previous?.history ?? []), command]);
@@ -1037,7 +1099,7 @@ export class ScenarioStore {
       const parentOperationId = this.contentHeads.get(candidate.projectId);
       const checkpoint = !parentOperationId || previousHistoryIds.length % 64 === 0;
       const { before: _before, after: _after, ...metadata } = command;
-      const storedCommand: StoredCommand = { operationId, projectId: candidate.projectId, revision: candidate.revision, requestHash, requestHashVersion: 2, delta: { metadata, ...(checkpoint ? { checkpoint: before } : { parentOperationId }), patch: contentDelta(before, after) } };
+      const storedCommand: StoredCommand = { operationId, projectId: candidate.projectId, revision: candidate.revision, requestHash, requestHashVersion: 2, delta: { metadata, ...(checkpoint ? { checkpoint: before } : { parentOperationId }), patch: contentDelta(before, after, normalized) } };
       let written: SaveMetrics['written'] = { entities: 0, relations: 0, blocks: 0, snapshots: 0, views: 0, commands: 1, outbox: 1 };
       measure('diff');
       const committed = await this.db.transaction('rw', this.writeTables, async () => {
@@ -1061,7 +1123,7 @@ export class ScenarioStore {
           await this.db.worldSources.put(await Dexie.waitFor(deriveWorldSource(id,existingWorld?.project??world)));
         }
         await this.writeAssets(assets, candidate, false);
-        written = await this.writeContent(candidate, previous, operationId, historyIds);
+        written = await this.writeContent(candidate, previous, operationId, historyIds, normalized);
         this.faultInjector?.('after-content');
         await this.db.commands.add(storedCommand);
         this.faultInjector?.('after-history');
