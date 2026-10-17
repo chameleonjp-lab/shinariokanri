@@ -1,0 +1,24 @@
+# P2-05 dependency and retention checkpoint
+
+Implementation starts from reviewed P204 `5b3949253937f1880bd426b39706c90a1db2e343`. See [design and plan](DESIGN.md). Independent exact-head specification and quality review, the controller's exclusive capture slot, final CI and adoption remain separate gates.
+
+Inactive project graphs use an internal four-entry LRU; project/head/history/completeness collections are removed together. Unique project identities fence late reads without permanent numeric tombstones. Active saves keep their previous image and native history/head tuple from the same read image independently of cache retention. Weak editing-history tokens and author drafts remain outside the inactive budget.
+
+Known current, save and complete-read roots use complete immutable dependency rows. Explicit editions establish the owner of retained typed snapshots before typed references are resolved. Unknown shapes/owners keep full-registry fallback. Pin writers retain their original full validation/global collision checks. Complete export/recovery keeps its complete single native registry capture and original worker closure; selected history keeps P204 materialization. These retained full paths are not O(closure) claims.
+
+App separates adopted dependency graphs from one replaceable preview owned by editor ID, revision and selection generation. Preview cleanup preserves adopted graphs and does not remove picker choices or author input. This bounds that registry's obsolete previews; it does not bound author drafts, imported completion graphs, all caller-held views or the browser heap.
+
+The supplemental runner defaults to correctness-only mode:
+
+```sh
+node scripts/optimization/measure-world-ownership.mjs --suite supplemental --output /absolute/unique/output
+node scripts/optimization/measure-world-ownership.mjs --suite standard --output /absolute/unique/output
+```
+
+It verifies literal product bytes, identical driver overlays, original fixture/generator hashes and actual Vite build ZIP/member bytes. Every output directory is new; failed attempts are retained. Check mode starts no interval clocks, numeric probes or heap observations. Actual HTTP App proofs cover rejected preview input, late source 2→3→2, immutable detail resolution, all six source choices and the adopted edition. Counter/heap capture is intentionally not run before independent reviews.
+
+After review, capture mode separates OFF API elapsed from a separately seeded ON numeric run. Failed OFF calls keep actual elapsed; ON settlement failures retain partial counters and a separate observation error; interruption retains active intent and prior rows without inventing completion. Store collection/epoch counts and canonical JSON bytes are read outside intervals. UI registry gauges are available only on supporting candidate sources; unsupported baseline metrics remain UNKNOWN. Payload estimates exclude runtime/IDB overhead. Optional `--mode capture --heap true` uses a separate fresh context and actual CDP `Runtime.getHeapUsage`; instantaneous GC/JIT/transient/browser-scope values establish neither peak nor reachable retained memory nor release acceptance. No forced GC.
+
+The supplemental browser orchestration watchdog is 1,200,000 ms. Original operation conditions (including 600,000 ms and 2,000 ms), fixture sizes, retries, skips and assertions are unchanged. Original Standard and actual 72 MiB Large generators are available unchanged; unexecuted sizes remain NOT RUN. Formal 8 metrics × 2 sizes × 30 / 180 save / 7,200, and 113-history / actual72MiB new/clone/cold remain Stage 3 after human integration.
+
+Original 104 requirements, 116 cases, 464 clauses, 24 packages, 6 groups, 68 supplemental checks, 73 locked inputs, 94 local and 22 external remain unchanged. **RELEASE BLOCKED.** This checkpoint is not acceptance or a performance-benefit claim.

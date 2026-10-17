@@ -22,7 +22,9 @@ const metrics = [
   'reference.choices.rows', 'reference.index.builds', 'reference.index.rows', 'ui.filter.rows', 'ui.indices.rows',
   'worker.started', 'worker.terminated', 'worker.sent.messages', 'worker.sent.payloadBytes',
   'worker.received.messages', 'worker.received.payloadBytes',
-  'cache.projects', 'cache.records', 'cache.payloadBytes', 'cache.invalidated',
+  'cache.projects', 'cache.records', 'cache.payloadBytes', 'cache.invalidated', 'cache.heads', 'cache.histories', 'cache.completeHistories', 'cache.epochs',
+  'world.closure.fullFallback',
+  'ui.worldRegistry.entries', 'ui.worldRegistry.projects', 'ui.worldRegistry.records', 'ui.worldRegistry.payloadBytes',
   'memo.hit', 'memo.miss', 'probe.size.unknown', 'probe.size.milliseconds',
 ] as const;
 export type ProbeMetric = typeof metrics[number];

@@ -1,4 +1,5 @@
 import {bindCanonicalHistoryWrites,readHistoryPageCommands} from './historyMetadata';
+import {readWorldClosure} from './worldClosure';
 import {mergeWorldSources} from '../domain/worldSources';
 import {deriveWorldSource,validWorldSource,type StoredWorldSource,type WorldSourceSummary,nativeProjectHeader,summarySourceHash,deriveProjectSummary,validProjectSummary,type StoredProjectSummary,type ProjectSummary} from './projectSummary';
 export type {ProjectSummary} from './projectSummary';
@@ -16,14 +17,14 @@ import {validateSyncRecovery,syncRecoveryImages,type NativeSyncRecovery,type Ret
 import Dexie, { type Table } from 'dexie';
 import { prepareWorldPin, type WorldPinInput } from './worldPins';
 import type { Block, CommandRecord, ContentState, Entity, ProjectContent, ProjectData, ProjectSnapshot, Relation, SavedView, ViewState } from '../domain/types';
-import { collectReferences, collectRelationReferences, KIND_LABELS, ID_PATTERN, isContentCopyField, newId, rewriteEntityReferences, rewriteRelationReferences, validateCurrentProject, validateProject, type DomainReference } from '../domain/model';
+import { collectReferences, collectRelationReferences, ID_PATTERN, isContentCopyField, newId, rewriteEntityReferences, rewriteRelationReferences, validateCurrentProject, validateProject, type DomainReference } from '../domain/model';
 import { remapEditedTextReferences, remapEditedTextRelationReferences } from '../domain/text';
 import { reconcileDeliverables } from '../domain/production';
 import { addChangeReviews } from '../domain/changeReviews';
 import { validateProjectIntegrity } from '../domain/projectRecordValidation';
 import { sealAuthorAlternative } from '../domain/authorAlternativeIntegrity';
 import { appendAlternativeVersion, applyAlternativeChanges, projectContent } from '../domain/writingWorkspace';
-import { assetPath, attachmentMetadata, closureAttachmentMetadata, exportScenario, exportNativeScenario, performImportWork, referencedWorlds, validateAsset, verifySnapshotHashes, verifyWorlds, worldSnapshotContents, type PreparedScenario, type ImportWorkStep } from './archive';
+import { assetPath, attachmentMetadata, closureAttachmentMetadata, exportScenario, exportNativeScenario, performImportWork, validateAsset, verifySnapshotHashes, verifyWorlds, worldSnapshotContents, type PreparedScenario, type ImportWorkStep } from './archive';
 import {createImportWorkSession} from './importWorkSession';
 import {prepareNewImport} from './newImportSession';
 import { checkCancelled, saveError, StorageError } from './errors';
@@ -88,6 +89,11 @@ export interface SaveMetrics {
   historyRead: number;
 }
 export interface StoreOptions { databaseName?: string; accountId?: string; faultInjector?: (stage: FaultStage) => void; onSaveMetrics?: (metrics: SaveMetrics) => void }
+interface CacheEpoch { version: number }
+interface CacheCapture { project: CacheEpoch; version?: number; lifetime: number; access: number }
+interface ReadBaseline { historyIds: string[]; contentHeadOperationId?: string }
+// Retention policy only: author inputs and active operation captures live elsewhere.
+const PROJECT_CACHE_CAPACITY = 4;
 export type ImportMode = 'new' | 'clone' | 'replace' | 'merge' | 'mapped_merge';
 export interface ImportOptions {
   mode: ImportMode; targetProjectId?: string; baseRevision?: string; operationId?: string; signal?: AbortSignal;
@@ -478,7 +484,7 @@ async function targetChanges(before: ContentState, after: ContentState, isNew = 
 export class ScenarioStore {
   private authorAccess:Map<string,string>|null=null;
   private accessGeneration=0;
-  setAuthorAccess(roles:Record<string,string>|null){this.authorAccess=roles?new Map(Object.entries(roles)):null;this.accessGeneration++;for(const id of this.cachedProjects.keys())this.invalidateProjectCache(id);}
+  setAuthorAccess(roles:Record<string,string>|null){this.authorAccess=roles?new Map(Object.entries(roles)):null;this.accessGeneration++;for(const id of this.cacheEpochs.keys())this.invalidateProjectCache(id);}
   /** Publish a fresh authoritative role response only in its original access/lifetime. */
   async refreshAuthorAccess(load:()=>Promise<Record<string,string>>,options:{signal?:AbortSignal;isCurrent?:()=>boolean}={}){
     const access=this.accessGeneration,lifetime=this.cacheLifetime,{signal,isCurrent}=options;checkCancelled(signal);
@@ -497,11 +503,12 @@ export class ScenarioStore {
   private readonly contentHeads = new Map<string, string | undefined>();
   private readonly cachedHistoryIds = new Map<string, string[]>();
   private readonly completeHistories = new Set<string>();
-  private readonly cacheEpochs = new Map<string, number>();
+  private readonly cacheEpochs = new Map<string, CacheEpoch>();
   private cacheLifetime = 0;
   private readonly cachedEditorSources=new WeakMap<ProjectData,string>();
   private readonly editorSources=new WeakMap<ProjectData,{projectId:string;revision:string;sourceHash:string;access:number;lifetime:number}>();
   private readonly editingHistories = new WeakMap<CommandRecord[], { projectId: string; revision: string; historyIds: string[] }>();
+  private readonly readBaselines = new WeakMap<ProjectData, ReadBaseline>();
   private readonly validationReferences = new WeakMap<Entity, DomainReference[]>();
   constructor(options: StoreOptions = {}) {
     this.accountId = options.accountId ?? null;
@@ -537,26 +544,45 @@ export class ScenarioStore {
 
   private invalidateProjectCache(projectId: string): void {
     probeCount('cache.invalidated');
-    this.cacheEpochs.set(projectId, (this.cacheEpochs.get(projectId) ?? 0) + 1);
+    // A removed identity is never reused. Late reads cannot match a recreated
+    // default generation, and released IDs need no permanent tombstone.
+    this.cacheEpochs.delete(projectId);
     this.cachedProjects.delete(projectId); this.contentHeads.delete(projectId); this.cachedHistoryIds.delete(projectId); this.completeHistories.delete(projectId);
+    this.measureCache();
+  }
+  private captureCache(projectId: string, save = false): CacheCapture {
+    let project = this.cacheEpochs.get(projectId);
+    if (!project) { project = { version: 0 }; this.cacheEpochs.set(projectId, project); }
+    return { project, ...(save ? {} : { version: project.version }), lifetime: this.cacheLifetime, access: this.accessGeneration };
+  }
+  private releaseCacheCapture(projectId: string, capture: CacheCapture): void {
+    if (!this.cachedProjects.has(projectId) && this.cacheEpochs.get(projectId) === capture.project) this.cacheEpochs.delete(projectId);
+    this.measureCache();
+  }
+  private touchProject(project: ProjectData): void {
+    if (this.cachedProjects.get(project.projectId) === project) { this.cachedProjects.delete(project.projectId); this.cachedProjects.set(project.projectId, project); }
   }
   private measureCache():void {
     if(!probeEnabled())return;
     probeGauge('cache.projects',this.cachedProjects.size);
+    probeGauge('cache.heads',this.contentHeads.size);probeGauge('cache.histories',this.cachedHistoryIds.size);probeGauge('cache.completeHistories',this.completeHistories.size);probeGauge('cache.epochs',this.cacheEpochs.size);
     probeGauge('cache.records',[...this.cachedProjects.values()].reduce((sum,p)=>sum+p.entities.length+p.relations.length,0));
     probeGauge('cache.payloadBytes',0);for(const project of this.cachedProjects.values())probePayload('cache.payloadBytes',project);
   }
-  private rememberProject(project: ProjectData, contentHeadOperationId?: string, historyIds = project.history.map(command => command.operationId), readEpoch?: { project: number; lifetime: number }): ProjectData {
-    const cachedBefore = this.cachedProjects.get(project.projectId), epoch = this.cacheEpochs.get(project.projectId) ?? 0;
+  private rememberProject(project: ProjectData, contentHeadOperationId?: string, historyIds = project.history.map(command => command.operationId), readEpoch?: CacheCapture): ProjectData {
+    const cachedBefore = this.cachedProjects.get(project.projectId), epoch = this.cacheEpochs.get(project.projectId);
     // Validation continues outside the read transaction. A newer save/import
     // or completed read must not be replaced when an earlier read resumes.
-    if (readEpoch && (readEpoch.project !== epoch || readEpoch.lifetime !== this.cacheLifetime) || cachedBefore && BigInt(cachedBefore.revision) > BigInt(project.revision)) return project;
+    if (readEpoch && (readEpoch.project !== epoch || readEpoch.version !== undefined && readEpoch.version !== epoch?.version || readEpoch.lifetime !== this.cacheLifetime || readEpoch.access !== this.accessGeneration) || cachedBefore && BigInt(cachedBefore.revision) > BigInt(project.revision)) return project;
     const cached = freeze({ ...withoutHistory(project), history: freeze(project.history.map(command => freeze(command))) });
-    this.cachedProjects.set(project.projectId, cached);
+    this.cachedProjects.delete(project.projectId);this.cachedProjects.set(project.projectId, cached);
     this.contentHeads.set(project.projectId, contentHeadOperationId);
     this.cachedHistoryIds.set(project.projectId, historyIds);
     if (sameJson(historyIds, project.history.map(command => command.operationId))) this.completeHistories.add(project.projectId); else this.completeHistories.delete(project.projectId);
-    this.cacheEpochs.set(project.projectId, epoch + 1);
+    // Reads also fence on identity; keep the identity for an active save, which
+    // owns its immutable previous/head capture across ordinary cache reads.
+    const nextEpoch=epoch??{version:0};nextEpoch.version++;this.cacheEpochs.set(project.projectId,nextEpoch);
+    while (this.cachedProjects.size > PROJECT_CACHE_CAPACITY) this.invalidateProjectCache(this.cachedProjects.keys().next().value!);
     this.measureCache();
     return cached;
   }
@@ -660,9 +686,9 @@ export class ScenarioStore {
 
   async getProject(projectId: string, options: {signal?: AbortSignal} = {}): Promise<ProjectData | undefined> {
     const signal = options.signal;
+    const readEpoch = this.captureCache(projectId);
     try {
       checkCancelled(signal);
-      const readEpoch = { project: this.cacheEpochs.get(projectId) ?? 0, lifetime: this.cacheLifetime };
       const read = await this.db.transaction('r', this.writeTables, async () => {
         bindRecordPartsSignal(signal); checkCancelled(signal);
         const header = await this.db.projects.get(projectId), cached = this.cachedProjects.get(projectId);
@@ -673,7 +699,7 @@ export class ScenarioStore {
       if (!read) return undefined;
       let { project } = read;
       if (project !== this.cachedProjects.get(projectId)) {
-        const knownWorlds = await this.validationWorlds(), worlds = worldSnapshotContents(knownWorlds);
+        const knownWorlds = await this.validationWorlds({}, [project], signal), worlds = worldSnapshotContents(knownWorlds);
         // Unlike the current-only editing validator, these checks retain every
         // historical command and require its original full integrity contract.
         await performImportWork({step: 'full_read', project, worlds, knownWorlds}, {signal});
@@ -681,9 +707,11 @@ export class ScenarioStore {
         project = this.rememberProject(project, read.contentHeadOperationId, read.historyIds, readEpoch);
       }
       checkCancelled(signal);
-      return projectCopy(project);
+      this.touchProject(project);
+      const view=projectCopy(project);this.readBaselines.set(view,{historyIds:read.historyIds,contentHeadOperationId:read.contentHeadOperationId});return view;
     }
     catch (error) { checkCancelled(signal); throw saveError(error); }
+    finally { this.releaseCacheCapture(projectId, readEpoch); }
   }
   /** Editing reads current rows only. Its immutable history token lets saves retain history without loading it. */
   async getProjectForEditing(projectId: string,options:{signal?:AbortSignal;onStage?:(stage:ReadStage)=>void;immutableView?:boolean}={}): Promise<ProjectData | undefined> {
@@ -700,8 +728,8 @@ export class ScenarioStore {
     const denied=this.authorAccess&&await this.db.syncBases.get(projectId)&&this.authorAccess.get(projectId)!=='owner';
     checkCancelled(signal);
     if(denied)return undefined;
+    const readEpoch = this.captureCache(projectId);
     try {
-      const readEpoch = { project: this.cacheEpochs.get(projectId) ?? 0, lifetime: this.cacheLifetime };
       const read = await this.db.transaction('r', this.writeTables, async () => {
         bindRecordPartsSignal(signal);checkCancelled(signal);
         const headerStarted=started===undefined?undefined:performance.now();
@@ -716,7 +744,7 @@ export class ScenarioStore {
       measure('database');
       let { project } = read;
       if (project !== this.cachedProjects.get(projectId)) {
-        const worlds = selectedWorlds?await this.editorWorlds(project,signal):await this.validationWorlds();
+        const worlds = selectedWorlds?await this.editorWorlds(project,signal):await this.validationWorlds({}, [project], signal);
         measure('dependencies');let phase='transfer';
         await validateColdRead(project,worlds,{signal,onStage:stage=>{measure(phase);phase=`validation.${stage}`;onStage?.(stage);}});
         measure(phase);
@@ -728,8 +756,10 @@ export class ScenarioStore {
       checkCancelled(signal);
       fence();
       if(sourceHash&&this.cachedProjects.get(projectId)===project)this.cachedEditorSources.set(project,sourceHash);
-      const view=this.editingCopy(project,read.historyIds,immutableView);if(sourceHash)this.editorSources.set(view,{projectId,revision:project.revision,sourceHash,access:accessGeneration,lifetime});measure('view');readMeasured(started,project.projectId,milliseconds);return view;
+      this.touchProject(project);
+      const view=this.editingCopy(project,read.historyIds,immutableView);this.readBaselines.set(view,{historyIds:read.historyIds,contentHeadOperationId:read.contentHeadOperationId});if(sourceHash)this.editorSources.set(view,{projectId,revision:project.revision,sourceHash,access:accessGeneration,lifetime});measure('view');readMeasured(started,project.projectId,milliseconds);return view;
     } catch (error) { checkCancelled(signal); throw saveError(error); }
+    finally { this.releaseCacheCapture(projectId, readEpoch); }
   }
   /** Summary content is explicitly unloaded, even when its derivation is valid. */
   async listProjectSummaries(options:{signal?:AbortSignal;onProgress?:(completed:number,total:number)=>void}={}):Promise<ProjectSummary[]> {
@@ -841,7 +871,8 @@ export class ScenarioStore {
     if (!header?.historyIds.includes(operationId) || !row || row.projectId !== projectId) throw new StorageError('NOT_FOUND', 'この作品の履歴操作が見つかりません。', operationId);
     return copy(await this.materializeCommand(row));
   }
-  private async validationWorlds(extra: Record<string, ProjectData> = {}): Promise<Record<string, ProjectData>> {
+  private async validationWorlds(extra: Record<string, ProjectData> = {}, roots?:readonly ProjectData[], signal?:AbortSignal): Promise<Record<string, ProjectData>> {
+    if(roots)return this.dependencyWorlds(roots,signal);
     const rows = await this.db.worlds.toArray();
     const worlds = Object.fromEntries(rows.map(row => [row.id, row.project]));
     for (const [id, world] of Object.entries(extra)) worlds[id] = world;
@@ -877,16 +908,10 @@ export class ScenarioStore {
     const world=mergeWorldSources([],sourceWorlds)[0];fence();return world?{world,worlds:known}:undefined;
   }
   private async editorWorlds(project:ProjectData,signal?:AbortSignal):Promise<Record<string,ProjectData>> {
-    return this.db.transaction('r',['worlds'],async()=>{bindRecordPartsSignal(signal);checkCancelled(signal);const count=await this.db.worlds.count();probeCount('db.count.calls',1,'worlds');probeCount('db.count.result',count,'worlds');if(count===0){checkCancelled(signal);return {};}return this.readEditorWorlds(project,signal);});
+    return this.dependencyWorlds([project],signal);
   }
-  private async readEditorWorlds(project:ProjectData,signal?:AbortSignal):Promise<Record<string,ProjectData>> {
-    const worlds:Record<string,ProjectData>={},visited=new Set<string>(),pending=referencedWorlds([project]);
-    // Explicit and typed pinned references can occur in snapshots and alternatives.
-    const typed=new Set<string>();const seen=new WeakSet<object>();
-    const walk=(value:unknown):void=>{if(!value||typeof value!=='object'||seen.has(value))return;seen.add(value);const record=value as Record<string,unknown>;const references=typeof record.kind==='string'&&Object.hasOwn(KIND_LABELS,record.kind)&&typeof record.projectId==='string'&&record.data&&typeof record.data==='object'?collectReferences(record as unknown as Entity):typeof record.relationType==='string'&&typeof record.projectId==='string'&&typeof record.fromId==='string'?collectRelationReferences(record as unknown as Relation):[];for(const reference of references)if(reference.scope==='snapshot')typed.add(reference.id);for(const child of Object.values(record))walk(child);};
-    walk(project);for(const id of typed)pending.push({projectId:'',immutableSnapshotId:id,contentHash:''});
-    while(pending.length){checkCancelled(signal);const reference=pending.pop()!;if(reference.immutableSnapshotId===project.projectId||project.snapshots.some(snapshot=>snapshot.id===reference.immutableSnapshotId))continue;if(visited.has(reference.immutableSnapshotId))continue;visited.add(reference.immutableSnapshotId);const row=await this.db.worlds.get(reference.immutableSnapshotId);if(!row){if(project.snapshots.some(snapshot=>snapshot.id===reference.immutableSnapshotId))continue;return this.validationWorlds();}worlds[row.id]=row.project;pending.push(...referencedWorlds([row.project]));const old=new Set(typed);walk(row.project);for(const id of typed)if(!old.has(id))pending.push({projectId:'',immutableSnapshotId:id,contentHash:''});}
-    checkCancelled(signal);return worlds;
+  private async dependencyWorlds(roots:readonly ProjectData[],signal?:AbortSignal):Promise<Record<string,ProjectData>> {
+    return this.db.transaction('r',['worlds'],async()=>{bindRecordPartsSignal(signal);checkCancelled(signal);const count=await this.db.worlds.count();probeCount('db.count.calls',1,'worlds');probeCount('db.count.result',count,'worlds');if(count===0){checkCancelled(signal);return {};}return readWorldClosure(roots,id=>this.db.worlds.get(id),()=>this.validationWorlds(),signal);});
   }
   async listEditorWorldSnapshots(project:ProjectData,options:{signal?:AbortSignal}={}):Promise<Record<string,ProjectData>> {
     const {signal}=options,access=this.accessGeneration,lifetime=this.cacheLifetime;
@@ -987,9 +1012,12 @@ export class ScenarioStore {
     let mark = started;
     const milliseconds: SaveMetrics['milliseconds'] = { prepare: 0, hash: 0, read: 0, reconcile: 0, validate: 0, diff: 0, database: 0, total: 0 };
     const measure = (stage: keyof SaveMetrics['milliseconds']) => { const time = performance.now(); milliseconds[stage] += time - mark; if(stage!=='total')probeDuration(`save.${stage}`,time-mark); mark = time; };
+    let saveCapture: CacheCapture | undefined;
+    let capturedProjectId: string | undefined;
     try {
       checkCancelled(signal);
       const draft = captureRequestProject(input), operationId = diagnosticOperationId, now = new Date().toISOString();
+      capturedProjectId = draft.projectId; saveCapture = this.captureCache(draft.projectId, true);
       if(this.authorAccess&&await this.db.syncBases.get(draft.projectId)&&this.authorAccess.get(draft.projectId)!=='owner')throw new SyncProtocolError('FORBIDDEN');
       const assets = await this.checkedAssets(options.assets);
       measure('prepare');
@@ -997,17 +1025,26 @@ export class ScenarioStore {
       const editingHistory = this.editingHistories.get(draft.history);
       if (editingHistory && (editingHistory.projectId !== draft.projectId || editingHistory.revision !== draft.revision)) throw new StorageError('OPERATION_CONFLICT', '履歴の読込元と編集中の作品・版が一致しません。');
       const cachedBefore = this.cachedProjects.get(draft.projectId);
+      // Capture the whole cache tuple synchronously. Awaiting a native header
+      // must not turn later eviction into a mixed previous/head/history image.
+      let baseline:ReadBaseline|undefined=cachedBefore?{historyIds:this.cachedHistoryIds.get(draft.projectId)??[],contentHeadOperationId:this.contentHeads.get(draft.projectId)}:undefined;
+      const completeBefore=this.completeHistories.has(draft.projectId);
       const currentHeader = await this.db.projects.get(draft.projectId);
-      if (currentHeader && (cachedBefore?.revision !== currentHeader.revision || !sameJson(this.cachedHistoryIds.get(draft.projectId), currentHeader.historyIds) || !editingHistory && !this.completeHistories.has(draft.projectId))) {
-        if (editingHistory) await this.getProjectForEditing(draft.projectId, {signal}); else await this.getProject(draft.projectId, {signal});
+      let previous = currentHeader ? cachedBefore : undefined;
+      if (currentHeader && (cachedBefore?.revision !== currentHeader.revision || !sameJson(baseline?.historyIds, currentHeader.historyIds) || baseline?.contentHeadOperationId!==currentHeader.contentHeadOperationId || !editingHistory && !completeBefore)) {
+        // The validated return may intentionally not be cached after release or
+        // another read. This operation owns its previous image independently.
+        previous = editingHistory ? await this.getProjectForEditing(draft.projectId, {signal,immutableView:true}) : await this.getProject(draft.projectId, {signal});
+        // Each reader seals these metadata with its graph from the same native
+        // read image, even if rememberProject refused stale publication.
+        baseline=previous?this.readBaselines.get(previous):undefined;
       }
-      const previous = currentHeader ? this.cachedProjects.get(draft.projectId) : undefined;
-      const knownWorlds = await this.validationWorlds();
+      const knownWorlds = options.worldPin ? await this.validationWorlds() : await this.validationWorlds({}, [draft,...(previous?[previous]:[])], signal);
       const pinnedWorlds = options.worldPin ? await prepareWorldPin(draft, options.worldPin, knownWorlds) : {};
       const worlds = { ...knownWorlds, ...pinnedWorlds }, worldContents = worldSnapshotContents(worlds);
       measure('read');
       if (!duplicate && (previous && previous.revision !== draft.revision || !previous && draft.revision !== '0')) throw new StorageError('REVISION_CONFLICT', '別の編集が先に保存されています。現在版を読み直して変更を比較してください。', draft.projectId);
-      const previousHistoryIds = currentHeader?.historyIds ?? [];
+      const previousHistoryIds = baseline?.historyIds ?? currentHeader?.historyIds ?? [];
       const expectedHistoryIds = duplicate ? previousHistoryIds.slice(0, previousHistoryIds.indexOf(operationId)) : previousHistoryIds;
       const suppliedHistoryIds = editingHistory?.historyIds ?? draft.history.map(command => command.operationId);
       const expectedHistory = duplicate ? previous?.history.slice(0, previous.history.findIndex(command => command.operationId === operationId)) ?? [] : previous?.history ?? [];
@@ -1046,7 +1083,7 @@ export class ScenarioStore {
       candidate.history = freeze(editingHistory ? [] : [...(previous?.history ?? []), command]);
       await validateDurableIntegrity(candidate, worldContents, !editingHistory,previous?{previous,references:this.validationReferences}:undefined);
       const historyIds = [...previousHistoryIds, operationId];
-      const parentOperationId = this.contentHeads.get(candidate.projectId);
+      const parentOperationId = baseline?.contentHeadOperationId;
       const checkpoint = !parentOperationId || previousHistoryIds.length % 64 === 0;
       const { before: _before, after: _after, ...metadata } = command;
       const storedCommand: StoredCommand = { operationId, projectId: candidate.projectId, revision: candidate.revision, requestHash, requestHashVersion: 2, delta: { metadata, ...(checkpoint ? { checkpoint: before } : { parentOperationId }), patch: contentDelta(before, after) } };
@@ -1087,7 +1124,7 @@ export class ScenarioStore {
       const result = committed.kind === 'replay' ? await this.duplicateResult(committed.command, requestHash, candidate.projectId, signal) : committed.result;
       measure('database'); milliseconds.total = performance.now() - started;
       commandCommitted(options.measurementStartedAt, operationId,milliseconds);
-      if (result.project === candidate) this.rememberProject(candidate, operationId, historyIds);
+      if (result.project === candidate) this.rememberProject(candidate, operationId, historyIds, saveCapture);
       try { this.onSaveMetrics?.({ operationId, projectId: candidate.projectId, milliseconds, written, historyRead: previous === cachedBefore ? 0 : previous?.history.length ?? 0 }); } catch { /* Diagnostics never change a committed save's result. */ }
       if (editingHistory && options.includeHistory === true) {
         const rows = await this.db.commands.bulkGet(historyIds), byId = new Map(rows.filter((row): row is StoredCommand => !!row).map(row => [row.operationId, row])), ready = new Map<string, CommandRecord>();
@@ -1097,6 +1134,7 @@ export class ScenarioStore {
       }
       return { ...result, project: editingHistory || options.includeHistory === false ? this.editingCopy(result.project, result.project === candidate ? historyIds : result.project.history.map(command => command.operationId),options.immutableView) : projectCopy(result.project) };
     } catch (error) { const failure=saveError(error);recordDiagnostic(failure,{accountId:this.accountId,operationId:diagnosticOperationId,revision:input.revision});throw failure; }
+    finally { if (capturedProjectId && saveCapture) this.releaseCacheCapture(capturedProjectId, saveCapture); }
   }
 
   private async duplicateResult(command: StoredCommand, hash: string, projectId: string, signal?: AbortSignal): Promise<SaveResult> {
