@@ -22,6 +22,12 @@ export const canonicalHistoryWrite=(transaction:object)=>writes.has(transaction)
 export const metadataHistoryRead=(request:object)=>reads.has(request);
 export const hasHistoryMetadata=(row:NativeRow)=>Object.hasOwn(row,marker);
 export const recognizedHistoryMetadata=(row:NativeRow)=>!!row[marker]&&typeof row[marker]==='object'&&(row[marker] as CanonicalMetadata).version===1;
+const plainRecord=(value:unknown):value is NativeRow=>!!value&&typeof value==='object'&&(Object.getPrototypeOf(value)===Object.prototype||Object.getPrototypeOf(value)===null);
+function denseArray(value:unknown):value is unknown[] {
+ if(!Array.isArray(value)||Object.keys(value).length!==value.length)return false;
+ for(let index=0;index<value.length;index++)if(!Object.hasOwn(value,index))return false;
+ return true;
+}
 
 function metadataOf(value:NativeRow):Metadata|undefined {
  const command=(value.delta as {metadata?:CommandRecord}|undefined)?.metadata??value.record as CommandRecord|undefined;
@@ -30,7 +36,7 @@ function metadataOf(value:NativeRow):Metadata|undefined {
  return metadata;
 }
 function validMetadata(metadata:Metadata|undefined,row:NativeRow):metadata is Metadata {
- if(!metadata||typeof metadata!=='object'||Array.isArray(metadata))return false;
+ if(!plainRecord(metadata))return false;
  const required=['operationId','projectId','revision','baseRevision','reason','createdAt'],optional=['compensatesOperationId','idMap','importOrigin'];
  // The accepted shape is strings, dense string arrays and string records only.
  // No own undefined is sealable: canonical JSON omits it. Older/future shapes
@@ -38,39 +44,44 @@ function validMetadata(metadata:Metadata|undefined,row:NativeRow):metadata is Me
  if(Object.keys(metadata).some(key=>![...required,'targetIds',...optional].includes(key))
   ||!required.every(key=>Object.hasOwn(metadata,key)&&typeof metadata[key as keyof Metadata]==='string')
   ||metadata.operationId!==row.operationId||metadata.projectId!==row.projectId||metadata.revision!==row.revision
-  ||!Array.isArray(metadata.targetIds)||Object.keys(metadata.targetIds).length!==metadata.targetIds.length||!metadata.targetIds.every(id=>typeof id==='string'))return false;
+  ||!denseArray(metadata.targetIds)||!metadata.targetIds.every(id=>typeof id==='string'))return false;
  if(Object.hasOwn(metadata,'compensatesOperationId')&&typeof metadata.compensatesOperationId!=='string')return false;
- const strings=(value:unknown):value is Record<string,string>=>!!value&&typeof value==='object'&&!Array.isArray(value)&&Object.values(value).every(item=>typeof item==='string');
+ const strings=(value:unknown):value is Record<string,string>=>plainRecord(value)&&Object.values(value).every(item=>typeof item==='string');
  if(Object.hasOwn(metadata,'idMap')&&!strings(metadata.idMap))return false;
  if(Object.hasOwn(metadata,'importOrigin')&&(!strings(metadata.importOrigin)||Object.keys(metadata.importOrigin).length!==3
   ||!['sourceProjectId','sourceOperationId','importOperationId'].every(key=>Object.hasOwn(metadata.importOrigin!,key))))return false;
  return true;
 }
 function validDescriptor(value:unknown):value is PackedRecord {
- if(!value||typeof value!=='object')return false;
- const packed=value as PackedRecord;
+ if(!plainRecord(value))return false;
+ const packed=value as unknown as PackedRecord;
  if(Object.keys(packed).length!==6||!['version','scope','root','nodes','strings','parts'].every(key=>Object.hasOwn(packed,key))
   ||packed.version!==1||typeof packed.scope!=='string'||!packed.scope.startsWith('commands:')||packed.root!==0
   ||!Number.isSafeInteger(packed.nodes)||packed.nodes<1||packed.nodes>4_000_000
   ||!Number.isSafeInteger(packed.strings)||packed.strings<1||packed.strings>4_000_000
-  ||!Array.isArray(packed.parts)||!packed.parts.length)return false;
+  ||!denseArray(packed.parts)||!packed.parts.length)return false;
  let bytes=0;
  return packed.parts.every((part,index)=>{
-  if(!part||Object.keys(part).length!==4||!['key','kind','bytes','sha256'].every(key=>Object.hasOwn(part,key))
+  if(!plainRecord(part)||Object.keys(part).length!==4||!['key','kind','bytes','sha256'].every(key=>Object.hasOwn(part,key))
    ||part.key!==`${packed.scope}:${index}`||!['strings','nodes'].includes(part.kind)
    ||!Number.isSafeInteger(part.bytes)||part.bytes<1||part.bytes>8*1024*1024||typeof part.sha256!=='string'||!/^[a-f0-9]{64}$/.test(part.sha256))return false;
   bytes+=part.bytes;return bytes<=256*1024*1024;
  });
 }
-const seal=(row:NativeRow)=>{const value=row[marker] as CanonicalMetadata;return sha256(jsonBytes({...row,[marker]:{version:value.version,metadata:value.metadata}}));};
+const seal=(row:NativeRow,writer=false)=>{
+ const value=row[marker] as CanonicalMetadata,bytes=jsonBytes({...row,[marker]:{version:value.version,metadata:value.metadata}});
+ if(writer){probeCount('history.write.sealCalls');probeCount('history.write.sealBytes',bytes.byteLength);}
+ return sha256(bytes);
+};
 
 /** The complete original remains in unchanged v1 parts. Only the native header
  * gains metadata; large metadata itself stays on the original full-read path. */
 export async function canonicalHistoryHeader(value:NativeRow,header:NativeRow):Promise<NativeRow> {
- const metadata=metadataOf(value);if(!validMetadata(metadata,header))return header;
+ probeCount('history.write.candidates');
+ const metadata=metadataOf(value);if(!validMetadata(metadata,header)){probeCount('history.write.fallbackShape');return header;}
  const candidate={...header,[marker]:{version:1,metadata,digest:'0'.repeat(64)}};
- if(needsRecordParts(candidate))return header;
- candidate[marker].digest=await seal(candidate);return candidate;
+ if(needsRecordParts(candidate)){probeCount('history.write.fallbackSize');return header;}
+ candidate[marker].digest=await seal(candidate,true);probeCount('history.write.canonical');return candidate;
 }
 
 export async function verifyHistoryMetadata(row:NativeRow):Promise<Metadata> {

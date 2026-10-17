@@ -6,7 +6,7 @@ import {installRecordPartsDatabase,bindRecordPartsSignal} from '../../src/storag
 import {startProbe} from '../../src/observability/probe';
 import {growthProject,historySeries} from './fixtures';
 import {originalHistoryPage} from './history-page-oracle';
-import {bindCanonicalHistoryWrites,readHistoryPageCommands} from '../../src/storage/historyMetadata';
+import {bindCanonicalHistoryWrites,readHistoryPageCommands,canonicalHistoryHeader,verifyHistoryMetadata} from '../../src/storage/historyMetadata';
 import {inspectScenario} from '../../src/storage/archive';
 import {jsonBytes,sha256} from '../../src/storage/json';
 import {packRecordData} from '../../src/storage/recordPartsCore';
@@ -280,4 +280,47 @@ it('retains exact accepted optional metadata including import origin and rejects
  const controller=new AbortController();controller.abort();
  await expect(db.transaction('rw',['commands'],async()=>{bindCanonicalHistoryWrites();bindRecordPartsSignal(controller.signal);await db.table('commands').put(row);})).rejects.toMatchObject({code:'CANCELLED'});
  expect(await nativeRows(db,'commands')).toStrictEqual(native);expect(await nativeRows(db,'recordParts')).toStrictEqual(parts);
+});
+
+it('counts canonical writer attempts and seals separately from page/full-reader verification',async()=>{
+ const probe=startProbe();try{
+  const {store,project}=await saved(),writes=probe.snapshot().counters;
+  expect(writes['history.write.candidates']).toBe(3);expect(writes['history.write.canonical']).toBe(3);
+  expect(writes['history.write.sealCalls']).toBe(3);expect(writes['history.write.sealBytes']).toBeGreaterThan(0);
+  await store.historyPage(project.projectId);await originalHistoryPage(raw(store),project.projectId);
+  expect(probe.snapshot().counters['history.write.sealCalls']).toBe(3);expect(probe.snapshot().counters['history.write.sealBytes']).toBe(writes['history.write.sealBytes']);
+ }finally{probe.stop();}
+});
+
+it.each(['targetIds','parts'] as const)('rejects sparse %s with compensating extra properties even after a recomputed seal',async kind=>{
+ const {store,project,db}=await saved(),native=(await nativeRows(db,'commands'))[0],full=await db.table('commands').get(native.operationId);
+ const sparse:any[]=[kind==='targetIds'?project.projectId:native.__scenarioRecordParts.parts[0]];sparse.length=2;(sparse as any).extra='compensates for hole';
+ if(kind==='targetIds'){
+  const originalHeader={...native};delete originalHeader.__scenarioCommandMetadata;full.delta.metadata.targetIds=sparse;
+  expect(await canonicalHistoryHeader(full,originalHeader)).toStrictEqual(originalHeader);
+  native.__scenarioCommandMetadata.metadata.targetIds=sparse;
+ }else native.__scenarioRecordParts.parts=sparse;
+ native.__scenarioCommandMetadata.digest=await sha256(jsonBytes({...native,__scenarioCommandMetadata:{version:1,metadata:native.__scenarioCommandMetadata.metadata}}));await nativePut(db,'commands',native);
+ await expect(store.historyPage(project.projectId)).rejects.toMatchObject({code:'SAVE_FAILED'});
+});
+
+it.each(['map','date','set','typedarray'] as const)('rejects %s idMap state omitted by canonical JSON with the same digest',async kind=>{
+ const store=open(),db=raw(store),series=historySeries(100),full=structuredClone(series.rows[0]) as any;full.delta.metadata.idMap={};
+ await db.table('projects').put(series.header);await db.table('commands').bulkAdd(series.rows.slice(1));await db.transaction('rw',['commands'],async()=>{bindCanonicalHistoryWrites();await db.table('commands').add(full);});
+ const native=(await nativeRows(db,'commands')).find(row=>row.operationId===full.operationId),before=jsonBytes(native),plainHeader={...native};delete plainHeader.__scenarioCommandMetadata;
+ const exotic=kind==='map'?new Map([['x','y']]):kind==='date'?new Date('2020-01-01'):kind==='set'?new Set(['x']):new Uint8Array();
+ full.delta.metadata.idMap=exotic;expect(await canonicalHistoryHeader(full,plainHeader)).toStrictEqual(plainHeader);
+ native.__scenarioCommandMetadata.metadata.idMap=exotic;expect(jsonBytes(native)).toEqual(before);await nativePut(db,'commands',native);
+ await expect(store.historyPage(series.header.projectId)).rejects.toMatchObject({code:'SAVE_FAILED'});
+ await expect(store.historyCommand(series.header.projectId,full.operationId)).rejects.toMatchObject({code:'SAVE_FAILED'});
+});
+
+it('applies the same plain-record gate to importOrigin before native structured clone',async()=>{
+ const {db}=await saved(),native=(await nativeRows(db,'commands'))[0],full=await db.table('commands').get(native.operationId),header={...native};delete header.__scenarioCommandMetadata;
+ const origin={sourceProjectId:full.projectId,sourceOperationId:full.operationId,importOperationId:full.operationId};full.delta.metadata.importOrigin=origin;
+ const canonical=await canonicalHistoryHeader(full,header),before=jsonBytes(canonical);
+ const exotic=Object.assign(new Date('2020-01-01'),origin);full.delta.metadata.importOrigin=exotic;
+ expect(await canonicalHistoryHeader(full,header)).toStrictEqual(header);
+ (canonical.__scenarioCommandMetadata as any).metadata.importOrigin=exotic;expect(jsonBytes(canonical)).toEqual(before);
+ await expect(verifyHistoryMetadata(canonical)).rejects.toMatchObject({code:'SAVE_FAILED'});
 });
