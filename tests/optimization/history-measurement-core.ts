@@ -49,21 +49,47 @@ export async function nativeHistoryInventory(db:Dexie,projectId:string){
  return{representations,envelopes,bodyParts,bodyBytes:bodyParts.reduce((sum,row)=>sum+row.bytes,0),headerParts,headerBytes:headerParts.reduce((sum,row)=>sum+row.bytes,0),serializedNativeHeader:await record(header),bodyHashesComparedWithDescriptors:true,bodyContentDecodedByInventory:false,pageBodyVerification:'UNLOADED for canonical metadata; this independent inventory is outside page interval'};
 }
 
+/** Persist intent before the API clock/probe: checkpoint I/O is excluded.
+ * A process lost in that tiny gap cannot prove invocation, so its persisted
+ * pre-invocation checkpoint deliberately reports completion UNKNOWN. */
+export function createHistoryObserver(options:Pick<MeasurementOptions,'mode'|'historyCountersSupported'>,result:Row,send:()=>Promise<void>,dependencies={clock:()=>performance.now(),startProbe}) {
+ return async function observe<T>(label:string,enabled:boolean,operation:()=>Promise<T>):Promise<T>{
+  const probeEnabled=options.mode==='capture'&&enabled;
+  result.activeOperation={label,mode:options.mode,probeEnabled,phase:'pre-invocation',apiCompletion:'UNKNOWN',apiInvocation:'UNKNOWN: intent persisted before invocation',counterCompleteness:probeEnabled?'UNKNOWN: no settled snapshot':'not captured'};
+  await send();
+  const probe=probeEnabled?dependencies.startProbe():undefined,started=options.mode==='capture'&&!enabled?dependencies.clock():undefined;
+  result.activeOperation={...result.activeOperation,phase:'api-running',apiInvocation:'invoked'};
+  let output!:T,operationError:unknown,apiSucceeded=false,milliseconds:number|undefined;
+  try{output=await operation();apiSucceeded=true;}catch(error){operationError=error;}
+  finally{if(started!==undefined)milliseconds=dependencies.clock()-started;}
+  const row:Row={label,probeEnabled,status:probe?'pending-observation':apiSucceeded?'ok':'error',apiCompletion:apiSucceeded?'fulfilled':'rejected',...(milliseconds===undefined?{}:{milliseconds}),...(!apiSucceeded?{error:errorData(operationError)}:{})};
+  result.operations.push(row);
+  if(probe){
+   // Persist the actual API boundary before potentially interrupted settlement.
+   // The original rejection is retained even if observation itself also fails.
+   result.activeOperation={label,mode:options.mode,probeEnabled,phase:'probe-settling',apiCompletion:row.apiCompletion,counterCompleteness:'UNKNOWN: settlement pending'};
+   const partial=probe.snapshot();row.probe=partial;row.counterCompleteness='UNKNOWN: unsettled partial snapshot';
+   try{await send();await probe.settle();}
+   catch(error){row.observationError=errorData(error);}
+   finally{row.probe=probe.stop();}
+   const complete=!row.observationError&&row.probe.pendingTransactions===0;
+   row.counterCompleteness=complete?'settled capture':'UNKNOWN: unsettled partial snapshot';
+   row.historyCounters=Object.fromEntries(historyMetrics.map(name=>[name,!options.historyCountersSupported?'UNKNOWN: unsupported by product source':!complete?'UNKNOWN: unsettled partial snapshot':row.probe.counters[name]??0]));
+   row.status=apiSucceeded&&!row.observationError?'ok':'error';
+  }
+  delete result.activeOperation;await send();
+  if(!apiSucceeded)throw operationError;
+  if(row.observationError)throw Error(`Probe observation failed: ${row.observationError.message}`);
+  return output;
+ };
+}
+
 /** check mode never starts the interval clock or numeric probe. Product code may
  * use its own clocks internally; no timing observation is returned here. */
 export async function runHistoryMeasurement(options:MeasurementOptions,checkpoint:(value:unknown)=>Promise<void>=async()=>{}){
  const result:Row={version:1,...options,operations:[],runs:[],fixture:null,status:'running',scope:'Supplemental single API observations, not formal acceptance/distribution; ON timings are not latency; worker hash work UNKNOWN'};
  const send=()=>checkpoint(structuredClone(result));
- async function observe<T>(label:string,enabled:boolean,operation:()=>Promise<T>):Promise<T>{
-  const probe=options.mode==='capture'&&enabled?startProbe():undefined,started=options.mode==='capture'&&!enabled?performance.now():undefined;
-  let output:T;
-  try{output=await operation();const milliseconds=started===undefined?undefined:performance.now()-started;
-   await probe?.settle();const capture=probe?.stop();
-   result.operations.push({label,probeEnabled:!!probe,...(milliseconds===undefined?{}:{milliseconds}),...(capture?{probe:capture,historyCounters:Object.fromEntries(historyMetrics.map(name=>[name,options.historyCountersSupported?(capture.counters[name]??0):'UNKNOWN: unsupported by product source']))}:{}),status:'ok'});
-  }catch(error){result.operations.push({label,probeEnabled:!!probe,status:'error',error:errorData(error),...(probe?{probe:probe.stop()}:{})});throw error;}
-  finally{probe?.stop();}
-  await send();return output;
- }
+ const observe=createHistoryObserver(options,result,send);
  try{
   const direct=options.suite.startsWith('legacy')?historySeries(Number(options.suite.slice(6)) as 100|1000|10000):undefined;
   const fixture=direct?undefined:options.suite==='added-heavy'?{project:heavyHistoryFixture(),seed:'p204-heavy-history-v1',assetBytes:0,counts:{history:2,oldNotes:10,currentNotes:0},assets:[]}:options.suite==='large'?await createMaterialPerformanceFixture('large-material-rb10-v1'):await createPerformanceFixture('standard-r06-v1');

@@ -5,7 +5,14 @@ import {execFileSync} from 'node:child_process';
 import {createHash,randomUUID} from 'node:crypto';
 import {createServer} from 'node:http';
 import {release,cpus,totalmem} from 'node:os';
+import {fileURLToPath} from 'node:url';
 
+/** Outer interruption never invents an API completion duration. */
+export function interruptedOperation(observations,cause){
+ const active=observations?.activeOperation;
+ return{cause,activeOperation:active?structuredClone(active):null,apiCompletion:active?.apiCompletion??'UNKNOWN',apiMilliseconds:'UNKNOWN: outer interruption is not an API completion',counterCompleteness:active?.probeEnabled?'UNKNOWN: no final settled snapshot':'not captured',completedOperationRowsRetained:observations?.operations?.length??0};
+}
+async function main(){
 const allowed=['output','suite','mode','product-head','timeout'];
 const args={};
 for(let i=2;i<process.argv.length;i+=2){const name=process.argv[i]?.replace(/^--/,'');if(!allowed.includes(name)||!process.argv[i+1]||args[name]!==undefined)throw Error(`Invalid/duplicate argument ${process.argv[i]}`);args[name]=process.argv[i+1];}
@@ -17,15 +24,17 @@ const runId=`${new Date().toISOString().replace(/[:.]/g,'-')}-${randomUUID()}`,r
 await mkdir(dirname(output),{recursive:true});
 await mkdir(output,{recursive:false});
 const path=join(output,'result.json'),digest=bytes=>createHash('sha256').update(bytes).digest('hex');
-const overlayPaths=['scripts/optimization/measure-history-metadata.mjs','tests/optimization/history-measurement-core.ts','tests/optimization/history-measurement-fixtures.ts','tests/optimization/history-measurement-harness.ts','tests/optimization/history-measurement-harness.html','tests/optimization/history-measurement.test.ts'];
+const overlayPaths=['scripts/optimization/measure-history-metadata.mjs','tests/optimization/history-measurement-core.ts','tests/optimization/history-measurement-fixtures.ts','tests/optimization/history-measurement-harness.ts','tests/optimization/history-measurement-harness.html','tests/optimization/history-measurement.test.ts','tests/optimization/history-measurement-interruption.test.ts'];
 const result={version:1,mode,suite,runId,argv:process.argv.slice(2),root,productHead,recordedAt:new Date().toISOString(),status:'starting',errors:[],source:null,build:null,
  environment:{node:process.version,osVersion:release(),cpu:cpus()[0]?.model,logicalCPUs:cpus().length,totalMemory:totalmem(),physicalDevice:false,network:'HTTP loopback only'},
  scope:'Check mode: correctness only, no harness timers/probes. Capture mode: one OFF and one separately seeded ON per API. ON durations are not reported as latency. No original final acceptance/distribution. Worker-internal hashing/IDB keepalive UNKNOWN.'};
-const persist=()=>writeFile(path,JSON.stringify(result,null,2)+'\n');
+let pendingPersist=Promise.resolve();
+const persist=()=>{const bytes=JSON.stringify(result,null,2)+'\n';pendingPersist=pendingPersist.catch(()=>{}).then(()=>writeFile(path,bytes));return pendingPersist;};
 const git=(...command)=>execFileSync('git',command,{cwd:root,encoding:'utf8',maxBuffer:64*1024*1024}).trim();
 const file=async name=>{const bytes=await readFile(resolve(root,name));return{path:name,bytes:bytes.length,sha256:digest(bytes)};};
 async function files(directory,prefix=''){const rows=[];for(const entry of await readdir(directory,{withFileTypes:true})){const name=prefix+entry.name,p=join(directory,entry.name);if(entry.isDirectory())rows.push(...await files(p,name+'/'));else{const bytes=await readFile(p);rows.push({path:name,bytes:bytes.length,sha256:digest(bytes)});}}return rows.sort((a,b)=>a.path.localeCompare(b.path));}
-let browser,server;
+let browser,server,interruptionCause='outer failure',rejectPageError;
+let closing=false;
 await persist();
 try{
  const head=git('rev-parse','HEAD'),tree=git('rev-parse','HEAD^{tree}'),productTree=git('rev-parse',`${productHead}^{tree}`),status=git('status','--porcelain');
@@ -64,13 +73,17 @@ try{
  await new Promise((done,reject)=>{server.once('error',reject);server.listen(0,'127.0.0.1',done);});
  const {chromium}=await import('@playwright/test');browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||'/usr/bin/chromium',args:['--no-sandbox']});result.environment.browser=await browser.version();
  const page=await browser.newPage();page.setDefaultTimeout(timeout);
- page.on('pageerror',error=>{result.errors.push({name:error.name,message:error.message,kind:'pageerror'});});
- await page.exposeFunction('historyMeasurementCheckpoint',async value=>{result.observations=value;await persist();});
+ page.on('pageerror',error=>{result.errors.push({name:error.name,message:error.message,kind:'pageerror'});interruptionCause='pageerror';rejectPageError?.(error);});
+ await page.exposeFunction('historyMeasurementCheckpoint',async value=>{if(!closing){result.observations=value;await persist();}});
  await page.goto(`http://127.0.0.1:${server.address().port}/tests/optimization/history-measurement-harness.html`);await page.waitForFunction(()=>!!window.historyMeasurement);
+ const pageFailure=new Promise((_,reject)=>{rejectPageError=reject;});
  const operation=page.evaluate(options=>window.historyMeasurement.run(options),{suite,mode,historyCountersSupported,runId});
- let timer;try{await Promise.race([operation,new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error(`Harness timeout after ${timeout} ms`)),timeout);})]);}finally{clearTimeout(timer);}
+ let timer;try{await Promise.race([operation,pageFailure,new Promise((_,reject)=>{timer=setTimeout(()=>{interruptionCause='watchdog';reject(Error(`Harness timeout after ${timeout} ms`));},timeout);})]);}finally{clearTimeout(timer);}
  if(result.errors.length)throw Error('Browser page error recorded');
  result.status='ok';result.finishedAt=new Date().toISOString();
-}catch(error){result.status='error';result.errors.push({name:error.name??'Error',message:String(error.message??error),exitCode:error.status??null,stdout:error.stdout?.toString(),stderr:error.stderr?.toString()});process.exitCode=1;}
+}catch(error){closing=true;result.status='error';if(result.observations?.activeOperation)result.interruption=interruptedOperation(result.observations,interruptionCause);result.errors.push({name:error.name??'Error',message:String(error.message??error),exitCode:error.status??null,stdout:error.stdout?.toString(),stderr:error.stderr?.toString()});process.exitCode=1;}
 finally{await browser?.close();if(server){server.closeAllConnections();await new Promise(done=>server.close(done));}await persist();}
 console.log(JSON.stringify({output,mode,suite,status:result.status,errors:result.errors.length}));
+
+}
+if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url))await main();
