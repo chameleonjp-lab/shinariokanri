@@ -6,6 +6,7 @@ import {ScenarioStore} from '../../src/storage/store';
 import {runWorldOwnershipMeasurement,storeRetention} from './world-ownership-measurement-core';
 import {worldOwnershipFixtures} from './world-ownership-measurement-fixtures';
 import {startProbe} from '../../src/observability/probe';
+import {exportScenario} from '../../src/storage/archive';
 import '../../src/styles.css';
 
 let root:Root|undefined,store:ScenarioStore|undefined,probe:ReturnType<typeof startProbe>|undefined,instrumentationStarts=0;
@@ -25,6 +26,14 @@ const ui={
  },
  gateEntered:()=>gate?.entered??false,
  releaseGate(){gate?.release();},
+ async followSelectionFixture(){
+  const fixture=await worldOwnershipFixtures(),world=fixture.worlds[5],project=fixture.works[5];
+  return{projectId:project.projectId,bytes:Array.from(await exportScenario(project,{worlds:{[world.snapshots[0].id]:world}}))};
+ },
+ rejectNextFollowSelection(projectId:string){
+  if(!store)throw Error('UI not mounted');const original=store.loadEditor.bind(store);let rejected=false;
+  store.loadEditor=async(...args)=>{const result=await original(...args);if(args[0]===projectId&&!rejected){rejected=true;throw Error('P205 literal follow-selection failure');}return result;};
+ },
  failNextPreviewHash(projectId:string){
   const original=crypto.subtle.digest.bind(crypto.subtle);
   crypto.subtle.digest=async(...args)=>{
