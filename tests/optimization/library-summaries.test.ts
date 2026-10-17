@@ -148,3 +148,28 @@ it('binds a legacy packed-header summary to its native envelope without reading 
  await db(store).table('recordParts').delete(packed.parts[0].key);store.releaseEditor(saved.projectId);
  expect((await store.listProjectSummaries())[0].contentState).toBe('unloaded');await expect(store.loadEditor(saved.projectId)).rejects.toMatchObject({code:'SAVE_FAILED'});
 });
+it('never reports fully synced while asset acknowledgement detail is unloaded',async()=>{
+ const store=open(),saved=(await store.saveProject(createProject('Asset unknown'),{reason:'seed'})).project;
+ await db(store).table('outbox').clear();await db(store).table('syncMetadata').put({projectId:saved.projectId,serverRevision:saved.revision,state:'synced'});
+ expect((await store.listProjectSummaries())[0].saveState).toMatchObject({pendingCount:0,pendingAssetCount:'unloaded',syncState:'unloaded'});
+});
+it('offers registry-only world sources to unrelated works without reading their bodies in a steady catalog',async()=>{
+ const store=open(),world=await createWorldSnapshot(createProject('Registry only'),'Pinned');
+ const owner=createProject('A owns imported reference');owner.worldReferences=[{projectId:world.projectId,immutableSnapshotId:world.snapshots[0].id,contentHash:world.snapshots[0].contentHash}];
+ await store.importScenario(await inspectScenario(await exportScenario(owner,{worlds:{[world.snapshots[0].id]:world}}),{worker:false}),{mode:'new'});
+ await store.saveProject(createProject('Independent B'),{reason:'seed'});store.close();await store.reopen();
+ const probe=startProbe();const choices=await store.listWorldSourceSummaries();const measured=probe.stop();
+ expect(choices).toMatchObject([{projectId:world.projectId,name:'Registry only',registryOnly:true}]);expect(measured.counters['db.read.rows.worlds']??0).toBe(0);expect(measured.counters['db.read.rows.recordParts']??0).toBe(0);
+ const loaded=await store.loadWorldSource(world.projectId);expect(loaded?.world.snapshots).toEqual(world.snapshots);
+ expect(await db(store).table('projects').get(world.projectId)).toBeUndefined();
+});
+
+it('rebuilds catalog corruption atomically and surfaces native source corruption without rewriting worlds',async()=>{
+ let fail=false;const store=new ScenarioStore({databaseName:`catalog-fault-${crypto.randomUUID()}`,faultInjector:()=>{if(fail)throw new DOMException('Quota','QuotaExceededError');}});stores.push(store);const world=await createWorldSnapshot(createProject('Catalog legacy'),'Pinned'),id=world.snapshots[0].id;await db(store).table('worlds').put({id,project:world});
+ const canonical=await db(store).table('worlds').get(id);fail=true;
+ expect((await store.listWorldSourceSummaries())[0].contentState).toBe('error');expect(await db(store).table('worldSources').count()).toBe(0);expect(await db(store).table('worlds').get(id)).toEqual(canonical);fail=false;
+ expect((await store.listWorldSourceSummaries())[0].name).toBe(world.name);await db(store).table('worldSources').update(id,{name:'Tampered'});expect((await store.listWorldSourceSummaries())[0].name).toBe(world.name);
+ const cancelled=new AbortController();cancelled.abort();await expect(store.loadWorldSource(world.projectId,{signal:cancelled.signal})).rejects.toMatchObject({code:'CANCELLED'});
+ await db(store).table('worlds').put({id,project:{...world,schemaVersion:'999.0'}});await expect(store.loadWorldSource(world.projectId)).rejects.toBeDefined();expect((await db(store).table('worlds').get(id)).project.schemaVersion).toBe('999.0');
+ await db(store).table('worldSources').clear();expect((await store.listWorldSourceSummaries())[0].contentState).toBe('error');await expect(store.loadWorldSource(world.projectId)).rejects.toMatchObject({code:'VALIDATION_FAILED'});expect((await db(store).table('worlds').get(id)).project.schemaVersion).toBe('999.0');
+});

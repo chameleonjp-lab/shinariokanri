@@ -1,4 +1,5 @@
-import {nativeProjectHeader,summarySourceHash,deriveProjectSummary,validProjectSummary,type StoredProjectSummary,type ProjectSummary} from './projectSummary';
+import {mergeWorldSources} from '../domain/worldSources';
+import {deriveWorldSource,validWorldSource,type StoredWorldSource,type WorldSourceSummary,nativeProjectHeader,summarySourceHash,deriveProjectSummary,validProjectSummary,type StoredProjectSummary,type ProjectSummary} from './projectSummary';
 export type {ProjectSummary} from './projectSummary';
 import {createCapturedGraphComparer,mergeImportConflicts} from './importWork';
 import {installDatabaseProbe} from '../observability/databaseProbe';
@@ -105,6 +106,7 @@ class ScenarioDatabase extends Dexie {
   sharedSnapshots!:Table<import('../sync/publicShare').SharedSnapshot,string>;
   projects!: Table<StoredProject, string>;
   projectSummaries!: Table<StoredProjectSummary,string>;
+  worldSources!:Table<StoredWorldSource,string>;
   entities!: Table<StoredEntity, [string, string]>;
   relations!: Table<Relation, [string, string]>;
   blocks!: Table<StoredBlock, [string, string]>;
@@ -144,7 +146,7 @@ class ScenarioDatabase extends Dexie {
     this.version(5).stores({ syncBases:'projectId', preparedSync:'operationId,projectId', syncConflicts:'operationId,projectId', syncAckEvidence:'operationId,projectId',retainedSyncRecovery:'key,projectId',syncAssetAcks:'key,projectId',sharedSnapshots:'id,createdAt' });
     this.version(6).stores({ workspaceInputs: 'key' });
     this.version(7).stores({ recordParts:'key,scope' });
-    this.version(8).stores({ projectSummaries:'projectId' });
+    this.version(8).stores({ projectSummaries:'projectId',worldSources:'id,projectId' });
     installRecordPartsDatabase(this);
     installDatabaseProbe(this);
   }
@@ -507,7 +509,7 @@ export class ScenarioStore {
     }
   }
   // Store names avoid Dexie's recursive KeyPaths expansion on the domain's large discriminated unions.
-  private get writeTables(): string[] { return ['projects', 'projectSummaries', 'entities', 'relations', 'blocks', 'snapshots', 'commands', 'outbox', 'assets', 'views', 'syncMetadata', 'restorePoints', 'worlds', 'importLogs', 'recoveredPending','syncBases','preparedSync','syncConflicts','syncAckEvidence','retainedSyncRecovery','syncAssetAcks']; }
+  private get writeTables(): string[] { return ['projects', 'projectSummaries', 'worldSources', 'entities', 'relations', 'blocks', 'snapshots', 'commands', 'outbox', 'assets', 'views', 'syncMetadata', 'restorePoints', 'worlds', 'importLogs', 'recoveredPending','syncBases','preparedSync','syncConflicts','syncAckEvidence','retainedSyncRecovery','syncAssetAcks']; }
   private async guardWorldRegistry(incoming: ProjectData[]): Promise<void> {
     const snapshots = new Map<string, ProjectSnapshot>();
     for (const project of [...(await this.db.worlds.toArray()).map(row => row.project), ...incoming]) for (const snapshot of project.snapshots) {
@@ -733,7 +735,7 @@ export class ScenarioStore {
           name=typeof header.name==='string'?header.name:id;revision=typeof header.revision==='string'?header.revision:'0';
           const valid=await Dexie.waitFor(validProjectSummary(row,id,sourceHash));
           const [pendingCount,recoveredPendingCount,metadata]=await Promise.all([this.db.outbox.where('projectId').equals(id).count(),this.db.recoveredPending.where('projectId').equals(id).count(),this.db.syncMetadata.get(id)]);
-          return {sourceHash,row:valid?row:undefined,saveState:{localSaved:true as const,pendingCount,recoveredPendingCount,pendingAssetCount:'unloaded' as const,serverRevision:metadata?.serverRevision??'0',syncState:metadata?.state==='conflict'?'conflict' as const:pendingCount?'pending' as const:metadata?.state??'pending' as const}};
+          return {sourceHash,row:valid?row:undefined,saveState:{localSaved:true as const,pendingCount,recoveredPendingCount,pendingAssetCount:'unloaded' as const,serverRevision:metadata?.serverRevision??'0',syncState:metadata?.state==='conflict'?'conflict' as const:pendingCount||recoveredPendingCount||metadata?.state==='pending'?'pending' as const:'unloaded' as const}};
         });
         fence();
         if(captured) {
@@ -752,7 +754,7 @@ export class ScenarioStore {
             // Backfill is not a request to retain every editor in memory.
             if(this.cachedProjects.get(id)?.revision===project.revision)this.invalidateProjectCache(id);
           }
-          result.push({projectId:id,name:row.name,revision:row.revision,entityCount:row.entityCount,contentState:'unloaded',saveState:captured.saveState});
+          result.push({projectId:id,name:row.name,revision:row.revision,entityCount:row.entityCount,alternativeHeads:row.alternativeHeads,contentState:'unloaded',saveState:captured.saveState});
         }
       } catch(error) {
         fence();const failure=saveError(error);
@@ -827,6 +829,34 @@ export class ScenarioStore {
     const worlds = Object.fromEntries(rows.map(row => [row.id, row.project]));
     for (const [id, world] of Object.entries(extra)) worlds[id] = world;
     return worlds;
+  }
+  /** Immutable registry catalog. Key presence + sealed derivation are sufficient
+   * under the guarded writers; full native content remains unloaded. */
+  async listWorldSourceSummaries(options:{signal?:AbortSignal}={}):Promise<WorldSourceSummary[]> {
+    const {signal}=options,access=this.accessGeneration,lifetime=this.cacheLifetime;
+    const fence=()=>{checkCancelled(signal);if(access!==this.accessGeneration||lifetime!==this.cacheLifetime)throw new StorageError('CANCELLED','共通世界一覧の読み込み先が変わりました。');};
+    fence();const ids=await this.db.worlds.toCollection().primaryKeys(),sources=new Map<string,WorldSourceSummary>();
+    for(const id of ids){fence();try{
+      let row=await this.db.worldSources.get(id);
+      if(!await validWorldSource(row,id)){
+        const captured=await this.db.transaction('r',['worlds'],async()=>{bindRecordPartsSignal(signal);return this.db.worlds.get(id);});fence();if(!captured)continue;
+        const worlds={...await this.editorWorlds(captured.project,signal),[id]:captured.project};await validateColdRead(captured.project,worlds,{signal});fence();
+        row=await deriveWorldSource(id,captured.project);
+        await this.db.transaction('rw',['worlds','worldSources'],async()=>{bindRecordPartsSignal(signal);fence();const latest=await this.db.worlds.get(id);if(!latest||!sameJson(latest,captured))throw new StorageError('REVISION_CONFLICT','共通世界の保存情報が変わりました。');await this.db.worldSources.put(row!);fence();this.faultInjector?.('before-commit');});
+      }
+      sources.set(row!.projectId,{projectId:row!.projectId,name:row!.name,revision:row!.revision,registryOnly:true,contentState:'unloaded'});
+    }catch(error){fence();sources.set(id,{projectId:id,name:`固定世界 ${id}`,revision:'0',registryOnly:true,contentState:'error',error:saveError(error).message});}}
+    fence();return [...sources.values()];
+  }
+  async loadWorldSource(projectId:string,options:{signal?:AbortSignal}={}):Promise<{world:ProjectData;worlds:Record<string,ProjectData>}|undefined>{
+    const {signal}=options,access=this.accessGeneration,lifetime=this.cacheLifetime;
+    const fence=()=>{checkCancelled(signal);if(access!==this.accessGeneration||lifetime!==this.cacheLifetime)throw new StorageError('CANCELLED','共通世界の読み込み先または権限が変わりました。');};
+    fence();const summaries=await this.listWorldSourceSummaries({signal});fence();if(!summaries.some(row=>row.projectId===projectId&&row.contentState==='unloaded')){if(summaries.some(row=>row.contentState==='error'))throw new StorageError('VALIDATION_FAILED','共通世界の保存情報を確認できません。');return undefined;}
+    const metadata=await this.db.worldSources.where('projectId').equals(projectId).toArray(),sourceWorlds:Record<string,ProjectData>={};
+    await this.db.transaction('r',['worlds'],async()=>{bindRecordPartsSignal(signal);for(const row of metadata){fence();const value=await this.db.worlds.get(row.id);if(!value||value.project.projectId!==projectId)throw new StorageError('VALIDATION_FAILED','共通世界の索引と保存情報が一致しません。');sourceWorlds[row.id]=value.project;}});
+    const known={...sourceWorlds};for(const world of Object.values(sourceWorlds))Object.assign(known,await this.editorWorlds(world,signal));
+    for(const world of Object.values(sourceWorlds)){fence();await validateColdRead(world,known,{signal});}
+    const world=mergeWorldSources([],sourceWorlds)[0];fence();return world?{world,worlds:known}:undefined;
   }
   private async editorWorlds(project:ProjectData,signal?:AbortSignal):Promise<Record<string,ProjectData>> {
     return this.db.transaction('r',['worlds'],async()=>{bindRecordPartsSignal(signal);return this.readEditorWorlds(project,signal);});
@@ -1020,6 +1050,7 @@ export class ScenarioStore {
           if (existingWorld && !sameJson(existingSnapshot, world.snapshots[0])) throw new StorageError('IMMUTABLE_SNAPSHOT', '保存中に共通世界の固定版が変わりました。', id);
           await this.writeAssets([], world, false);
           if (!existingWorld) await this.db.worlds.add({ id, project: world });
+          await this.db.worldSources.put(await Dexie.waitFor(deriveWorldSource(id,existingWorld?.project??world)));
         }
         await this.writeAssets(assets, candidate, false);
         written = await this.writeContent(candidate, previous, operationId, historyIds);
@@ -1281,7 +1312,7 @@ export class ScenarioStore {
       const latest=await this.db.projects.get(projectId),base=await this.db.syncBases.get(projectId),prepared=await this.db.preparedSync.get(ack.operationId);if(latest?.revision!==previous.revision||base?.contentHash!==captured.base!.contentHash||base?.serverRevision!==captured.base!.serverRevision||!sameValue(prepared,captured.prepared))throw new SyncProtocolError('REVISION_CHANGED');
       if(ack.status==='conflict'){await this.db.syncConflicts.put({operationId:ack.operationId,projectId,prepared:captured.prepared!,ack,conflicts:ack.conflicts,createdAt:now});}
       else{
-        for(const [id,world]of Object.entries(receivedWorlds)){const old=await this.db.worlds.get(id);if(old&&!equalJson(old.project,world))throw new StorageError('IMMUTABLE_SNAPSHOT','固定世界の取得内容が保存済み版と異なります。');await this.db.worlds.put({id,project:world});}
+        for(const [id,world]of Object.entries(receivedWorlds)){const old=await this.db.worlds.get(id);if(old&&!equalJson(old.project,world))throw new StorageError('IMMUTABLE_SNAPSHOT','固定世界の取得内容が保存済み版と異なります。');await this.db.worlds.put({id,project:world});await this.db.worldSources.put(await Dexie.waitFor(deriveWorldSource(id,world)));}
         if(storedCommand){await this.writeContent(candidate,previous,storedCommand.operationId);this.faultInjector?.('after-content');await this.db.commands.add(storedCommand);this.faultInjector?.('after-history');}
         await this.db.syncBases.put(confirmed!);await this.db.outbox.bulkDelete(captured.prepared!.outboxIds);
         if(captured.prepared!.operation.resolvesOperationId){const original=await this.db.syncConflicts.get(captured.prepared!.operation.resolvesOperationId);if(!original||[...original.prepared.operation.targets.map(target=>target.targetId),...original.conflicts.map(c=>c.targetId)].some(id=>!captured.prepared!.operation.targets.some(target=>target.targetId===id)))throw new SyncProtocolError('PROTOCOL_INVALID');await this.db.syncConflicts.delete(original.operationId);}
@@ -1634,6 +1665,7 @@ export class ScenarioStore {
           const existing = await this.db.worlds.get(world.id);
           if (existing && !equalJson(existing.project, world.project)) throw new StorageError('IMMUTABLE_SNAPSHOT', '既存の共通世界snapshotと内容が異なります。', world.id);
           await this.db.worlds.put(world);
+          await this.db.worldSources.put(await Dexie.waitFor(deriveWorldSource(world.id,world.project)));
         }
         await this.writeContent(project, preview.target); this.faultInjector?.('after-content');
         let historyBatch: StoredCommand[] = [];

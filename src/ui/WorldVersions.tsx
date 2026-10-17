@@ -9,7 +9,7 @@ import { WindowedList } from './WindowedList';
 import { labelOf } from './Fields';
 import { TIMELINE_PAGE_SIZE, TimelinePagination, type TimelineSave } from './TimelineEditors';
 
-export interface WorldVersionsProps { project: ProjectData; worlds: ProjectData[]; worldChoices?:Pick<ProjectData,'projectId'|'name'|'revision'>[]; onWorldsLoaded?:(worlds:Record<string,ProjectData>)=>void; onSave: TimelineSave; onOpen: (id: ID, projectId?: ID, sourceVersionId?: ID) => void; onPinWorld?: (world: ProjectData, snapshotId: ID, candidate: ProjectData) => Promise<ProjectData> }
+export interface WorldVersionsProps { project: ProjectData; worlds: ProjectData[]; worldChoices?:(Pick<ProjectData,'projectId'|'name'|'revision'>&{registryOnly?:boolean})[]; onWorldsLoaded?:(worlds:Record<string,ProjectData>)=>void; onSave: TimelineSave; onOpen: (id: ID, projectId?: ID, sourceVersionId?: ID) => void; onPinWorld?: (world: ProjectData, snapshotId: ID, candidate: ProjectData) => Promise<ProjectData> }
 function DifferenceRow({ difference, onOpen }: { difference: WorldVersionDifference; onOpen: WorldVersionsProps['onOpen'] }) {
   const value = (difference.after ?? difference.before) as { name?: string; relationType?: string; projectId?: ID } | undefined;
   return <article className="world-version-change"><strong>{difference.change === 'added' ? '追加' : difference.change === 'removed' ? '除外' : '変更'} · {value?.name ?? value?.relationType ?? difference.id}</strong><p>{difference.kind} · <code>{difference.id}</code></p>{difference.kind !== 'calendar' && <button type="button" className="button subtle" onClick={() => onOpen(difference.id, value?.projectId, difference.afterSnapshotId ?? difference.beforeSnapshotId)}>元情報を確認</button>}</article>;
@@ -24,12 +24,12 @@ export function WorldVersions({ project, worlds, worldChoices, onWorldsLoaded, o
     if(!worldChoices)return;
     if(!worldChoices.some(world=>world.projectId===worldId)){const fixed=worlds.find(world=>world.projectId===worldId);setSourceLoad({id:worldId,state:fixed?'loaded':'missing',world:fixed});return;}
     const controller=new AbortController();let live=true;setSourceLoad({id:worldId,state:worldId?'loading':'unloaded'});
-    if(worldId)void (async()=>{const loaded=await scenarioStore.loadEditor(worldId,{signal:controller.signal,expectedRevision:choice?.revision,immutableView:true});if(!loaded){if(live)setSourceLoad({id:worldId,state:'missing'});return;}
+    if(worldId)void (async()=>{if(choice&&'registryOnly'in choice&&choice.registryOnly){const source=await scenarioStore.loadWorldSource(worldId,{signal:controller.signal});if(!live)return;setSourceLoad({id:worldId,state:source?'loaded':'missing',world:source?.world,dependencies:source?.worlds});if(source)onWorldsLoaded?.(source.worlds);return;}const loaded=await scenarioStore.loadEditor(worldId,{signal:controller.signal,expectedRevision:choice?.revision,immutableView:true});if(!loaded){if(live)setSourceLoad({id:worldId,state:'missing'});return;}
       const dependencies=await scenarioStore.listEditorWorldSnapshots(loaded,{signal:controller.signal});if(!live)return;
       setSourceLoad({id:worldId,state:'loaded',world:loaded,dependencies});onWorldsLoaded?.({...dependencies,...Object.fromEntries(loaded.snapshots.map(snapshot=>[snapshot.id,loaded]))});
     })().catch(cause=>{if(live)setSourceLoad({id:worldId,state:'error',error:(cause as Error).message});});
     return()=>{live=false;controller.abort();if(worldId!==project.projectId)scenarioStore.releaseEditor(worldId);};
-  },[scenarioStore,worldId,choice?.revision,!!worldChoices]);
+  },[scenarioStore,worldId,choice?.revision,choice&&'registryOnly'in choice?choice.registryOnly:undefined,!!worldChoices]);
   const sourceWorld=sourceLoad.id===worldId&&sourceLoad.state==='loaded'?sourceLoad.world:undefined;
   const availableWorlds=useMemo(()=>mergeWorldSources(sourceWorld?[...worlds,sourceWorld]:worlds,sourceLoad.dependencies??{}),[worlds,sourceWorld,sourceLoad.dependencies]);
   const world = worldChoices?sourceWorld:worlds.find(item => item.projectId === worldId), snapshot = world?.snapshots.find(item => item.id === snapshotId), current = project.worldReferences.find(reference => reference.projectId === worldId), eligible = useMemo(() => snapshot?.content.entities.filter(entity => !entity.deletedAt && ['character', 'lore', 'place', 'item', 'group', 'terminology'].includes(entity.kind) && (!query || `${entity.name} ${entity.id}`.toLocaleLowerCase().includes(query.toLocaleLowerCase()))) ?? [], [snapshot, query]);

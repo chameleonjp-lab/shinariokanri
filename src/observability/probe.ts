@@ -23,7 +23,7 @@ const metrics = [
   'memo.hit', 'memo.miss', 'probe.size.unknown', 'probe.size.milliseconds',
 ] as const;
 export type ProbeMetric = typeof metrics[number];
-export const PROBE_TABLES = ['projects', 'projectSummaries', 'entities', 'relations', 'blocks', 'snapshots', 'commands', 'outbox', 'assets', 'views', 'viewStates', 'syncMetadata', 'acks', 'restorePoints', 'worlds', 'importLogs', 'importDrafts', 'authorToolDrafts', 'workspaceInputs', 'recoveredPending', 'retainedSyncRecovery', 'syncAssetAcks', 'syncBases', 'preparedSync', 'syncConflicts', 'syncAckEvidence', 'sharedSnapshots', 'recordParts'] as const;
+export const PROBE_TABLES = ['projects', 'projectSummaries', 'worldSources', 'entities', 'relations', 'blocks', 'snapshots', 'commands', 'outbox', 'assets', 'views', 'viewStates', 'syncMetadata', 'acks', 'restorePoints', 'worlds', 'importLogs', 'importDrafts', 'authorToolDrafts', 'workspaceInputs', 'recoveredPending', 'retainedSyncRecovery', 'syncAssetAcks', 'syncBases', 'preparedSync', 'syncConflicts', 'syncAckEvidence', 'sharedSnapshots', 'recordParts'] as const;
 export type ProbeTable = typeof PROBE_TABLES[number];
 export interface ProbeEvent { sequence: number; phase: ProbePhase; milliseconds: number; outcome: 'ok' | 'error' }
 export interface ProbeSnapshot { version: 1; counters: Record<string, number>; events: ProbeEvent[]; droppedEvents: number; pendingTransactions: number }

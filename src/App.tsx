@@ -1,3 +1,5 @@
+import {useAlternativeDraftStatus} from './ui/alternativeDraftStatus';
+import type {WorldSourceSummary} from './storage/projectSummary';
 import type {ProjectSummary} from './storage/store';
 import {recordDiagnostic} from './diagnostics';
 import {WindowedList} from './ui/WindowedList';
@@ -56,6 +58,8 @@ export default function App() {
   const scenarioStore=useScenarioStore();
   const [projects, setProjects] = useState<ProjectData[]>([]);
   const [summaries,setSummaries]=useState<ProjectSummary[]>([]);
+  const [registryChoices,setRegistryChoices]=useState<WorldSourceSummary[]>([]);
+  const worldChoices=useMemo(()=>[...new Map([...registryChoices,...summaries].map(row=>[row.projectId,row])).values()],[registryChoices,summaries]);
   const [importedCompletions,setImportedCompletions]=useState<ProjectData[]>([]);
   const editorController=useRef<AbortController|null>(null);
   const [editorLoading,setEditorLoading]=useState<string|null>(null);
@@ -89,6 +93,7 @@ export default function App() {
   const alternativeDraftAcknowledgements = useRef<Record<string, Array<{ before: Array<{ id: string; headVersionId: string }>; after: Array<{ id: string; headVersionId: string }> }>>>({});
   const reconcileAlternativeEditor = (projectId: string, draft: AuthorAlternativeWorkspaceDraft) => (alternativeDraftAcknowledgements.current[projectId] ?? []).reduce((current, ack) => acknowledgeAlternativeWorkspaceDraft(current, ack.before, ack.after), draft);
   const [alternativeDrafts, setAlternativeDrafts] = useState<Record<string, AuthorAlternativeWorkspaceDraft>>(()=>readWorkspaceDrafts(scenarioStore.accountId).alternativeDrafts);
+  const alternativeInputStatus=useAlternativeDraftStatus(alternativeDrafts,summaries);
   const [settingsDrafts, setSettingsDrafts] = useState<Record<string, ProjectSettingsDraft>>(()=>readWorkspaceDrafts(scenarioStore.accountId).settingsDrafts);
   const [settingsSaving, setSettingsSaving] = useState<Record<string, boolean>>({});
   const [drafts, setDrafts] = useState<Record<string, Entity>>(()=>readWorkspaceDrafts(scenarioStore.accountId).drafts);
@@ -155,6 +160,7 @@ export default function App() {
     const controller=new AbortController();startupController.current=controller;
     const current = () => live && !controller.signal.aborted && startupController.current === controller;
     void Promise.all([scenarioStore.listProjectSummaries({signal:controller.signal,onProgress:(done,total)=>{if(current())setStartupProgress(`端末内の作品 ${done}/${total}件を確認しています`);}}),loadWorkspaceDrafts(scenarioStore).then(input=>{if(current()){setDrafts(input.drafts);setJsonBuffers(input.jsonBuffers);setSettingsDrafts(input.settingsDrafts);setAlternativeDrafts(input.alternativeDrafts);setWorkspaceReady(true);}return input;})]).then(([found]) => { if (!current()) return; setSummaries(found); const last = readPreference(`scenario-last-project:${scenarioStore.accountId??'guest'}`,scenarioStore.accountId?'':readPreference('scenario-last-project')); const selected=found.find(p=>p.projectId===last);if(selected)void openProject(selected); }).catch(e => { if (current()) {recordDiagnostic(e,{accountId:scenarioStore.accountId});setError((e as Error).message || '端末内の作品と未保存入力を読み込めませんでした。');} }).finally(() => { if (live && startupController.current === controller) setLoading(false); });
+    void scenarioStore.listWorldSourceSummaries({signal:controller.signal}).then(found=>{if(current())setRegistryChoices(found);}).catch(cause=>{if(current())setError((cause as Error).message);});
     return () => { live = false;startupLive.current=false;controller.abort();startupController.current?.abort();editorController.current?.abort();selectionGeneration.current++;summaryGeneration.current++; };
   }, []);
   const retryStartup = async () => {
@@ -168,13 +174,14 @@ export default function App() {
     try {
       await store.reopen();
       if (controller.signal.aborted) return;
-      const [found, input] = await Promise.all([
+      const [found, input, sources] = await Promise.all([
         store.listProjectSummaries({ signal: controller.signal,
           onProgress: (done, total) => { if (!controller.signal.aborted) setStartupProgress(`端末内の作品 ${done}/${total}件を確認。固定版・参照を検査しています`); } }),
         workspaceReady ? Promise.resolve(null) : loadWorkspaceDrafts(store),
+        store.listWorldSourceSummaries({signal:controller.signal}),
       ]);
       if (controller.signal.aborted || startupController.current !== controller) return;
-      setSummaries(found);
+      setSummaries(found);setRegistryChoices(sources);
       if (input) {
         setDrafts(input.drafts);setJsonBuffers(input.jsonBuffers);setSettingsDrafts(input.settingsDrafts);setAlternativeDrafts(input.alternativeDrafts);setWorkspaceReady(true);
       }
@@ -196,7 +203,7 @@ export default function App() {
   };
   useEffect(() => { setPreference('scenario-theme', theme); const media = window.matchMedia('(prefers-color-scheme: dark)'); const update = () => document.documentElement.dataset.theme = theme === 'system' ? media.matches ? 'dark' : 'light' : theme; update(); media.addEventListener('change', update); return () => media.removeEventListener('change', update); }, [theme]);
   useEffect(() => { const update = () => setOnline(navigator.onLine); window.addEventListener('online', update); window.addEventListener('offline', update); return () => { window.removeEventListener('online', update); window.removeEventListener('offline', update); }; }, []);
-  useEffect(() => { const handler = (e: BeforeUnloadEvent) => { if (pendingCommands.current > 0 || Object.values(settingsDrafts).some(settingsDraftChanged) || Object.values(settingsSaving).some(Boolean) || Object.keys(drafts).length || Object.keys(jsonBuffers).length || Object.entries(alternativeDrafts).some(([id, draft]) => hasUnsavedAlternativeWorkspaceDraft(draft, projects.find(item => item.projectId === id)?.authorAlternatives ?? []))) { e.preventDefault(); e.returnValue = ''; } }; window.addEventListener('beforeunload', handler); return () => window.removeEventListener('beforeunload', handler); }, [drafts, jsonBuffers, alternativeDrafts, projects, settingsDrafts, settingsSaving]);
+  useEffect(() => { const handler = (e: BeforeUnloadEvent) => { if (pendingCommands.current > 0 || Object.values(settingsDrafts).some(settingsDraftChanged) || Object.values(settingsSaving).some(Boolean) || Object.keys(drafts).length || Object.keys(jsonBuffers).length || alternativeInputStatus!=='clean') { e.preventDefault(); e.returnValue = ''; } }; window.addEventListener('beforeunload', handler); return () => window.removeEventListener('beforeunload', handler); }, [drafts, jsonBuffers, alternativeInputStatus, settingsDrafts, settingsSaving]);
 
   const restoreView = useCallback((next: WorkspacePreferences, selected: string | null) => {
     setWorldTick(next.worldTick); setWorldCheckpoint(next.worldCheckpoint ?? ''); setWorldPlace(next.worldPlace ?? null); setHiddenPages(next.hiddenPages ?? []); setPage(next.hiddenPages?.includes(next.page) ? 'work' : next.page); setStructureTab(next.structureTab); setWorkTab(next.workTab); setTimelineTab(next.timelineTab); setKind(next.kind); setSearchKind(next.searchKind); setStatusFilter(next.statusFilter); setQuery(next.query); setSelectedId(selected); editorHistory.current = [];
@@ -205,7 +212,7 @@ export default function App() {
 
   const refreshSummaries=async()=>{
     const generation=++summaryGeneration.current;
-    try{const found=await scenarioStore.listProjectSummaries();if(startupLive.current&&generation===summaryGeneration.current)setSummaries(found);}catch(cause){if(startupLive.current&&generation===summaryGeneration.current)setError((cause as Error).message);}
+    try{const [found,sources]=await Promise.all([scenarioStore.listProjectSummaries(),scenarioStore.listWorldSourceSummaries()]);if(startupLive.current&&generation===summaryGeneration.current){setSummaries(found);setRegistryChoices(sources);}}catch(cause){if(startupLive.current&&generation===summaryGeneration.current)setError((cause as Error).message);}
   };
   const applyProject = useCallback((updated: ProjectData) => {
     const latest=projectRef.current;
@@ -382,7 +389,7 @@ export default function App() {
           })}</section>)}
         </details>
         <div className="workspace-layout"><div className="workspace-list">
-          {page === 'timeline' && (timelineTab === 'timeline' ? <Timeline key={project.projectId} project={project} selectedId={selectedId} onSelect={openEntity} onAdd={() => add('event')} onSaveProject={saveProject} referenceEntities={effectiveWorldContent(project, worldSources).entities.filter(entity => entity.projectId !== project.projectId)} referenceRelations={effectiveWorldContent(project, worldSources).relations.filter(relation => relation.projectId !== project.projectId)} adoptedReferenceIds={adoptedWorldEntityIds(project)} referenceCalendars={effectiveWorldContent(project, worldSources).calendars} placeFilterId={worldPlace} worldTick={worldTick} checkpointId={worldCheckpoint} onViewPointChange={changeWorldPoint} onShowMap={(placeId, eventId) => { setWorldRequestedSection('maps'); setWorldPlace(placeId); if (eventId) setSelectedId(eventId); setTimelineTab('world'); }} onShowRelationships={(id, at) => { setSelectedId(id); setWorldTick(at); setTimelineTab('relations'); }} onShowWorldHistory={(id, at) => { setSelectedId(id); setWorldTick(at); setWorldPlace(null); setWorldRequestedSection('histories'); setTimelineTab('world'); }}/> : timelineTab === 'world' ? <WorldPanel key={project.projectId} project={project} worlds={worldSources} worldChoices={summaries} onWorldsLoaded={worlds=>setWorldRegistry(previous=>({...previous,...worlds}))} onSaveProject={saveProject} onOpen={openEntity} selectedPlaceId={worldPlace} selectedEntityId={selectedId} requestedSection={worldRequestedSection} worldTick={worldTick} checkpointId={worldCheckpoint} onViewPointChange={changeWorldPoint} onPinWorld={pinWorld} onShowTimeline={(placeId, eventId) => { setWorldPlace(placeId ?? null); if (eventId) setSelectedId(eventId); setTimelineTab('timeline'); }} onShowEntityTimeline={(id, at) => { setSelectedId(id); setWorldTick(at); setWorldPlace(null); setTimelineTab('timeline'); }}/> : <Relationships project={project} referenceEntities={effectiveWorldContent(project, worldSources).entities.filter(entity => entity.projectId !== project.projectId)} referenceRelations={effectiveWorldContent(project, worldSources).relations.filter(relation => relation.projectId !== project.projectId)} referenceCalendars={effectiveWorldContent(project, worldSources).calendars} onOpen={openEntity} onSave={saveRelation} onSaveProject={saveProject} selectedId={selectedId} worldTick={worldTick} checkpointId={worldCheckpoint} onViewPointChange={changeWorldPoint} onShowTimeline={(id, at) => { setSelectedId(id); setWorldTick(at); setWorldPlace(null); setTimelineTab('timeline'); }}/>)}
+          {page === 'timeline' && (timelineTab === 'timeline' ? <Timeline key={project.projectId} project={project} selectedId={selectedId} onSelect={openEntity} onAdd={() => add('event')} onSaveProject={saveProject} referenceEntities={effectiveWorldContent(project, worldSources).entities.filter(entity => entity.projectId !== project.projectId)} referenceRelations={effectiveWorldContent(project, worldSources).relations.filter(relation => relation.projectId !== project.projectId)} adoptedReferenceIds={adoptedWorldEntityIds(project)} referenceCalendars={effectiveWorldContent(project, worldSources).calendars} placeFilterId={worldPlace} worldTick={worldTick} checkpointId={worldCheckpoint} onViewPointChange={changeWorldPoint} onShowMap={(placeId, eventId) => { setWorldRequestedSection('maps'); setWorldPlace(placeId); if (eventId) setSelectedId(eventId); setTimelineTab('world'); }} onShowRelationships={(id, at) => { setSelectedId(id); setWorldTick(at); setTimelineTab('relations'); }} onShowWorldHistory={(id, at) => { setSelectedId(id); setWorldTick(at); setWorldPlace(null); setWorldRequestedSection('histories'); setTimelineTab('world'); }}/> : timelineTab === 'world' ? <WorldPanel key={project.projectId} project={project} worlds={worldSources} worldChoices={worldChoices} onWorldsLoaded={worlds=>setWorldRegistry(previous=>({...previous,...worlds}))} onSaveProject={saveProject} onOpen={openEntity} selectedPlaceId={worldPlace} selectedEntityId={selectedId} requestedSection={worldRequestedSection} worldTick={worldTick} checkpointId={worldCheckpoint} onViewPointChange={changeWorldPoint} onPinWorld={pinWorld} onShowTimeline={(placeId, eventId) => { setWorldPlace(placeId ?? null); if (eventId) setSelectedId(eventId); setTimelineTab('timeline'); }} onShowEntityTimeline={(id, at) => { setSelectedId(id); setWorldTick(at); setWorldPlace(null); setTimelineTab('timeline'); }}/> : <Relationships project={project} referenceEntities={effectiveWorldContent(project, worldSources).entities.filter(entity => entity.projectId !== project.projectId)} referenceRelations={effectiveWorldContent(project, worldSources).relations.filter(relation => relation.projectId !== project.projectId)} referenceCalendars={effectiveWorldContent(project, worldSources).calendars} onOpen={openEntity} onSave={saveRelation} onSaveProject={saveProject} selectedId={selectedId} worldTick={worldTick} checkpointId={worldCheckpoint} onViewPointChange={changeWorldPoint} onShowTimeline={(id, at) => { setSelectedId(id); setWorldTick(at); setWorldPlace(null); setTimelineTab('timeline'); }}/>)}
           {page === 'materials' && <><div className="list-heading"><h2>{KIND_LABELS[kind]}</h2><span>{activeEntities.filter(e => e.kind === kind).length}件</span></div><EntityCards key={kind} entities={activeEntities.filter(e => e.kind === kind)} project={project} selectedId={selectedId} onSelect={openEntity} onAdd={() => add(kind)}/></>}
           {page === 'structure' && structureTab === 'chapters' && <><WritingWorkspace project={project} onOpenEntity={openEntity} onSaveProject={saveProject}/><ChapterList project={project} selectedId={selectedId} onSelect={openEntity} onAdd={add} onSave={saveEntity}/></>}
           {page === 'structure' && structureTab === 'chapterReading' && <ChapterReadingView key={project.projectId} project={project} worldSnapshots={fixedWorldContents} onOpenEntity={openEntity} onOpenTarget={openTarget} onSaveMany={saveMany}/>}
