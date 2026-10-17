@@ -9,7 +9,7 @@ import {createHash} from 'node:crypto';
 import {release,cpus,totalmem} from 'node:os';
 
 const option=(name,fallback)=>{const i=process.argv.indexOf('--'+name);return i<0?fallback:process.argv[i+1];};
-const output=resolve(option('output','test-results/phase1/diagnostic.json')),suite=option('suite','standard');
+const output=resolve(option('output','test-results/p2-03/diagnostic.json')),suite=option('suite','standard');
 if(!['standard','large'].includes(suite))throw new Error('Unknown suite');
 const root=process.cwd(),distribution=output.replace(/\.json$/,'')+'-build';
 if(distribution===output)throw new Error('Output must end in .json');
@@ -24,13 +24,14 @@ async function files(directory,prefix=''){
   }
   return result.sort((a,b)=>a.path.localeCompare(b.path));
 }
-const result={version:1,suite,recordedAt:new Date().toISOString(),sourceCommit:git('rev-parse','HEAD'),sourceTree:git('rev-parse','HEAD^{tree}'),dirty:!!git('status','--porcelain'),
+const result={version:1,suite,recordedAt:new Date().toISOString(),sourceCommit:null,sourceTree:null,dirty:null,
   environment:{os:'Linux',osVersion:release(),node:process.version,cpu:cpus()[0]?.model,logicalCPUs:cpus().length,totalMemory:totalmem(),physicalDevice:false,network:'loopback only'},
   scope:'Literal checked-out product source; supplemental one OFF and one ON sample per operation, fixed OFF then ON order on separately seeded databases. Warm application cache. Not a latency distribution. Setup, input construction, validation assertions and probe settling excluded from interval. Additional diagnostics. Setup excluded. Inclusive nested spans; payload bytes are UTF-8 scalar/key plus binary estimates, not disk/wire/heap bytes. Worker-internal validation/hash and native IDB keep-alive requests UNKNOWN. Not formal30/180/7200 acceptance.',
   sourceFiles:[],errors:[]};
 const persist=async()=>{await mkdir(dirname(output),{recursive:true});await writeFile(output,JSON.stringify(result,null,2)+'\n');};
 let browser,server;
 try{
+  result.sourceCommit=git('rev-parse','HEAD');result.sourceTree=git('rev-parse','HEAD^{tree}');result.dirty=!!git('status','--porcelain');
   // Fresh ignored input is mandatory before hashes and build, including baseline overlays.
   execFileSync(process.execPath,['scripts/build/portable-runtime.mjs'],{cwd:root,stdio:['ignore',2,2]});
   result.generator={command:'node scripts/build/portable-runtime.mjs',exitCode:0};
