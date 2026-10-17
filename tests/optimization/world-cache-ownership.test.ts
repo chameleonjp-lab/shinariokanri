@@ -58,6 +58,24 @@ it('does not publish a committed late save after its editor was released',async(
  expect(await state.db.table('outbox').count()).toBe(2);
 });
 
+it('keeps the previous cache tuple when cancellation arrives after native save commit',async()=>{
+ const store=open(),initial=await store.saveProject(createProject('before postcommit cancellation'),{reason:'first'});
+ const input=(await store.getProjectForEditing(initial.project.projectId))!,state=raw(store),captured=barrier(),resume=barrier(),controller=new AbortController();
+ const before={project:state.cachedProjects.get(input.projectId),head:state.contentHeads.get(input.projectId),history:state.cachedHistoryIds.get(input.projectId),complete:state.completeHistories.has(input.projectId)};
+ const original=state.db.transaction.bind(state.db);
+ vi.spyOn(state.db,'transaction').mockImplementation(((...args:unknown[])=>{
+  const pending=(original as (...values:unknown[])=>Promise<unknown>)(...args);
+  return pending.then(async value=>{if((value as {kind?:string})?.kind==='saved'){captured.release();await resume.ready;}return value;});
+ }) as typeof state.db.transaction);
+ const saving=store.saveProject({...input,name:'native committed before abort'},{reason:'second',includeHistory:false,signal:controller.signal});
+ await captured.ready;controller.abort();resume.release();const result=await saving;
+ // Native commit and the successful API result are already authoritative.
+ expect(result.project.revision).toBe('2');expect((await state.db.table('projects').get(input.projectId)).name).toBe('native committed before abort');
+ expect(await state.db.table('outbox').count()).toBe(2);expect(await state.db.table('commands').count()).toBe(2);
+ expect(state.cachedProjects.get(input.projectId)).toBe(before.project);expect(state.contentHeads.get(input.projectId)).toBe(before.head);expect(state.cachedHistoryIds.get(input.projectId)).toBe(before.history);expect(state.completeHistories.has(input.projectId)).toBe(before.complete);
+ expect(state.cachedProjects.get(input.projectId)?.revision).toBe('1');
+});
+
 it('releases epoch metadata for failed missing reads and repeated project lifetimes',async()=>{
  const store=open();for(let index=0;index<20;index++){const project=createProject(`lifetime ${index}`);project.entities.push(createEntity(project.projectId,'note','retained canonical'));await store.saveProject(project,{reason:'seed'});store.releaseEditor(project.projectId);expect(await store.getProject(newId())).toBeUndefined();}
  const state=raw(store);for(const collection of [state.cachedProjects,state.contentHeads,state.cachedHistoryIds,state.completeHistories,state.cacheEpochs])expect(collection.size).toBe(0);

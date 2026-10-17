@@ -1124,7 +1124,7 @@ export class ScenarioStore {
       const result = committed.kind === 'replay' ? await this.duplicateResult(committed.command, requestHash, candidate.projectId, signal) : committed.result;
       measure('database'); milliseconds.total = performance.now() - started;
       commandCommitted(options.measurementStartedAt, operationId,milliseconds);
-      if (result.project === candidate) this.rememberProject(candidate, operationId, historyIds, saveCapture);
+      if (result.project === candidate && !signal?.aborted) this.rememberProject(candidate, operationId, historyIds, saveCapture);
       try { this.onSaveMetrics?.({ operationId, projectId: candidate.projectId, milliseconds, written, historyRead: previous === cachedBefore ? 0 : previous?.history.length ?? 0 }); } catch { /* Diagnostics never change a committed save's result. */ }
       if (editingHistory && options.includeHistory === true) {
         const rows = await this.db.commands.bulkGet(historyIds), byId = new Map(rows.filter((row): row is StoredCommand => !!row).map(row => [row.operationId, row])), ready = new Map<string, CommandRecord>();
