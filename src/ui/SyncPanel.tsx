@@ -13,6 +13,8 @@ import type {ConfirmedSyncBase,PreservedNativeConflict} from '../sync/nativeBrid
 import type {ConflictResolution} from '../sync/merge';
 import {closureAttachmentMetadata,validateAsset} from '../storage/archive';
 import {sha256} from '../storage/json';
+import type {RemoteWork} from './RemoteWorks';
+import {SyncProtocolError} from '../sync/protocol';
 import {ListPager,useListWindow} from './ListWindow';
 type Plan=Awaited<ReturnType<ScenarioStore['previewSyncResolution']>>;
 export function SyncPanel({project,onUpdated}:{project:ProjectData;onUpdated:(p:ProjectData)=>void}){
@@ -21,7 +23,20 @@ export function SyncPanel({project,onUpdated}:{project:ProjectData;onUpdated:(p:
  useEffect(()=>{if(!store.accountId)return;let live=true;void Promise.all([store.getConfirmedSyncBase(project.projectId),store.listSyncConflictAlternatives(project.projectId)]).then(([b,c])=>{if(live){setBase(b);setConflicts(c);}}).catch(cause=>{if(live)setError((cause as Error).message);});return()=>{live=false;};},[project.revision,scope]);
  async function refresh(){setBase(await store.getConfirmedSyncBase(project.projectId));setConflicts(await store.listSyncConflictAlternatives(project.projectId));const current=await store.getProjectForEditing(project.projectId);if(current)onUpdated(current);}
  async function run(task:()=>Promise<void>){if(authorField<boolean>(scope,'busy'))return;const abort=new AbortController();setController(abort);setBusy(true);setError('');setNotice('');try{if(!store.accountId||!client)throw Error('DEDICATED_CONNECTION_REQUIRED');await task();}catch(cause){recordDiagnostic(cause,{accountId:store.accountId,revision:project.revision});setError((cause as Error).message);}finally{setBusy(false);setController(null);}}
- async function bootstrap(){const source=structuredClone(project),expected=client!.getSession(),outboxIds=(await store.listOutbox(source.projectId)).filter(o=>BigInt(o.localRevision)<=BigInt(source.revision)).map(o=>o.operationId),worlds=await store.listWorldSnapshots();const result=await client!.request<{serverRevision:string;documents:ConfirmedSyncBase['documents'];contentHash:string}>('bootstrap',{project:source,worlds},expected,authorField<AbortController>(scope,'controller')?.signal);await store.bindBootstrapBase(source,{...result,outboxIds});await refresh();setNotice('新しいサーバー正本と確定共通元を保存しました。通信中の後発編集は保存待ちへ保持します。');}
+ async function bootstrap(){
+  const source=structuredClone(project),connection=client!,expected=connection.getSession(),signal=authorField<AbortController>(scope,'controller')?.signal;
+  const isCurrent=()=>{const session=connection.getSession();return session.authenticated&&session.accountId===store.accountId&&session.accountId===expected.accountId&&session.generation===expected.generation;};
+  const outboxIds=(await store.listOutbox(source.projectId)).filter(o=>BigInt(o.localRevision)<=BigInt(source.revision)).map(o=>o.operationId),worlds=await store.listWorldSnapshots();
+  const result=await connection.request<{serverRevision:string;documents:ConfirmedSyncBase['documents'];contentHash:string}>('bootstrap',{project:source,worlds},expected,signal);
+  await store.bindBootstrapBase(source,{...result,outboxIds});
+  // Bootstrap changes the server catalog; its previous role list can legitimately be empty.
+  await store.refreshAuthorAccess(async()=>{
+   const works=await connection.request<RemoteWork[]>('projects',{},expected,signal);
+   if(!Array.isArray(works)||works.some(work=>!work||typeof work.projectId!=='string')||new Set(works.map(work=>work.projectId)).size!==works.length)throw new SyncProtocolError('PROTOCOL_INVALID');
+   return Object.fromEntries(works.map(work=>[work.projectId,work.role]));
+  },{signal,isCurrent});
+  await refresh();setNotice('新しいサーバー正本と確定共通元を保存しました。通信中の後発編集は保存待ちへ保持します。');
+ }
  async function uploadBytes(){const expected=client!.getSession(),source=await store.getProject(project.projectId);if(!source)return;const metadata=closureAttachmentMetadata(source,await store.listWorldSnapshots());for(const [index,m]of metadata.entries()){setNotice(`素材bytesを確認・送信 ${index+1}/${metadata.length}`);if(await store.getAssetSyncAck(source.projectId,m.contentHash))continue;const bytes=await store.getAsset(m.contentHash);if(!bytes)throw Error('ASSET_BYTES_REQUIRED');let raw='';for(let start=0;start<bytes.length;start+=65536){if(authorField<AbortController>(scope,'controller')?.signal.aborted)throw Error('CANCELLED');raw+=Array.from(bytes.subarray(start,start+65536),value=>String.fromCharCode(value)).join('');if(start%1048576===0)await new Promise(resolve=>setTimeout(resolve,0));}const ack=await client!.request<{contentHash:string;bytes:number}>('upload_asset',{projectId:source.projectId,contentHash:m.contentHash,base64:btoa(raw)},expected,authorField<AbortController>(scope,'controller')?.signal);await store.confirmAssetUpload(source.projectId,{...ack,mediaType:m.mediaType});}}
  async function synchronize(){const queue=new SyncOutbox(new AccountScopedSyncStore(store as ScenarioStore&{accountId:string}),client!.getSession,client);const result=await queue.flush({accountId:store.accountId!,projectId:project.projectId},{signal:authorField<AbortController>(scope,'controller')?.signal,onProgress:(done,left)=>setNotice(`確定ACK ${done}件・保存待ち ${left}件`)});setReport(result);await refresh();if(['failed','forbidden','auth-required','account-changed','not-configured'].includes(result.status))throw Error(result.errorCode??'SYNC_FAILED');if(result.status!=='conflict'&&result.errorCode!=='CANCELLED')await uploadBytes();const saved=await store.getSaveState(project.projectId);setReport({...result,remaining:result.remaining+saved.pendingAssetCount,status:saved.syncState==='conflict'?'conflict':saved.pendingCount||saved.pendingAssetCount?'pending':result.status});}
  async function pull(){const expected=client!.getSession(),result=await client!.request<{project:ProjectData;documents:ConfirmedSyncBase['documents'];serverRevision:string;contentHash:string;worlds:Record<string,ProjectData>}>('pull',{projectId:project.projectId},expected,authorField<AbortController>(scope,'controller')?.signal);
