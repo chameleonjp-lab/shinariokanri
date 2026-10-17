@@ -5,7 +5,6 @@ import {createEntity,createProject,newId,textToRichText} from '../domain/model';
 import type {ContentState,Entity,ProjectData} from '../domain/types';
 import {ScenarioStore,type SaveMetrics} from './store';
 import {jsonBytes,sha256} from './json';
-import {startProbe} from '../observability/probe';
 import {dialogueContentHash} from '../domain/production';
 import {contentDelta,targetChanges,writeRows} from '../../tests/optimization/save-changeset-oracle';
 const stores:ScenarioStore[]=[];
@@ -19,18 +18,6 @@ function fixture(){
  return project;
 }
 const content=({history:_history,...project}:ProjectData):ContentState=>project;
-it('builds previous record maps once and shares final diff evidence with command and writer',async()=>{
- const store=open(),project=(await store.saveProject(fixture(),{reason:'initial',includeHistory:false})).project;
- const NativeMap=globalThis.Map,ids=new Set([...project.entities,...project.relations].map(row=>row.id));let indexedRows=0;
- // Observe actual record-map construction only in the save diff pipeline; no production test seam.
- globalThis.Map=new Proxy(NativeMap,{construct(target,args){
-  const entries=args[0];
-  if(Array.isArray(entries)&&entries.length&&entries.every(entry=>Array.isArray(entry)&&ids.has(entry[0])&&typeof entry[1]==='object')&&/normalizeRecords|targetChanges|contentDelta|changed|recordIndex|normalizedChanges/.test(new Error().stack??''))indexedRows+=entries.length;
-  return Reflect.construct(target,args);
- }}) as MapConstructor;
- try{await store.saveProject({...project,entities:project.entities.map((row,i)=>i?row:{...row,name:'renamed'})},{reason:'rename'});}finally{globalThis.Map=NativeMap;}
- expect(indexedRows).toBeLessThanOrEqual(2*(project.entities.length+project.relations.length));
-});
 it('matches frozen target/delta/write oracles and literal rename/reorder/tombstone/append expectations',async()=>{
  const metrics:SaveMetrics[]=[],store=open({onSaveMetrics:row=>metrics.push(row)});
  let project=(await store.saveProject(fixture(),{reason:'initial'})).project;
@@ -64,14 +51,9 @@ it('preserves exact v2 request bytes and same-ID replay after a rich-text change
  await expect(store.saveProject({...draft,name:'different request'},{reason,operationId})).rejects.toMatchObject({code:'OPERATION_CONFLICT'});
 });
 
-it('keeps reorder-only writes empty, preserves record revisions, and reports actual shared work',async()=>{
+it('keeps reorder-only writes empty and preserves record revisions',async()=>{
  const reports:SaveMetrics[]=[],store=open({onSaveMetrics:row=>reports.push(row)}),project=(await store.saveProject(fixture(),{reason:'initial'})).project;
- const probe=startProbe();let saved:ProjectData;
- try{saved=(await store.saveProject({...project,entities:[...project.entities].reverse()},{reason:'order'})).project;await probe.settle();}finally{probe.stop();}
- const counts=probe.snapshot().counters;
- expect(counts['save.changeset.builds']).toBe(1);expect(counts['save.recordIndex.rows']).toBe(7);
- expect(counts['save.changeset.currentVisits']).toBe(7);expect(counts['save.changeset.previousVisits']).toBe(7);
- expect(counts['save.fallbackDiff.indexRows']).toBe(0);
+ const saved=(await store.saveProject({...project,entities:[...project.entities].reverse()},{reason:'order'})).project;
  expect(reports.at(-1)?.written).toMatchObject({entities:0,relations:0,blocks:0});
  expect(saved!.entities).toEqual([...project.entities].reverse());
  const row=await raw(store).table('commands').get(saved!.history.at(-1)!.operationId);

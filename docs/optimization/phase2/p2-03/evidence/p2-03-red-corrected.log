@@ -1,0 +1,31 @@
+
+ RUN  v5.0.3 /workspace/phase2
+
+ ❯ src/storage/saveChangeset.test.ts (3 tests | 1 failed) 264ms
+   × builds previous record maps once and shares final diff evidence with command and writer 177ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/storage/saveChangeset.test.ts > builds previous record maps once and shares final diff evidence with command and writer
+AssertionError: expected 34 to be less than or equal to 14
+ ❯ src/storage/saveChangeset.test.ts:30:22
+     28|  }}) as MapConstructor;
+     29|  try{await store.saveProject({...project,entities:project.entities.map…
+     30|  expect(indexedRows).toBeLessThanOrEqual(2*(project.entities.length+pr…
+       |                      ^
+     31| });
+     32| it('matches frozen target/delta/write oracles and literal rename/reord…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 2 passed (3)
+   Start at  05:46:15
+   Duration  1.09s (transform 60%, tests 27%, import 13%)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

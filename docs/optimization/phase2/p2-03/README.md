@@ -1,0 +1,66 @@
+# P2-03: retain the reviewed save implementation
+
+The final production choice is the exact reviewed P2-01 implementation (`d3bf88c`). The shared-changeset prototype is **rejected for adoption**: although correctness review passed and duplicate map work fell, three of four OFF single observations are slower, changed-phase times are mixed, and shared prior maps live until commit. These observations establish no consistent time or heap benefit to justify adoption. They are not statistical proof that every workload slows down. No user approval or further implementation gate remains for this comparison.
+
+[Pre-edit design and counter definitions](DESIGN.md), [original requirement correspondence](requirement-correspondence.json), [spec review](evidence/task-3-spec-review.md), [spec re-review](evidence/task-3-spec-rereview.md), and [quality review](evidence/task-3-quality-review.md) accompany the evidence. [Selected production proof](evidence/selected-production.json) verifies store/probe byte-for-byte restoration to d3bf; the final branch has no shared-path feature flag or dormant production implementation. Public save API, exact v2 request encoding, old v1 replay, global validation/integrity, immutable pins/snapshots, checkpoint64 and the single native transaction are retained. Original import/history/sync fallback paths remain available. P2-01 summary native source read, both hashes and active-count scan remain unchanged.
+
+## Measured prototype sources and reproducibility
+
+Baseline is reviewed **unmerged P2-01** commit `d3bf88c31172386fd84926a615ed060c2ee2190c`, tree `0f7aa69c80c1d988bdfb7246f16ec252f3c2f8ec`, not latest main. [Baseline provenance](evidence/p2-03-baseline-provenance.json) proves all294 tracked product-source files byte-identical to that commit and exactly three measurement-only overlay files. Its reported dirty flag is true solely for the new harness HTML/TypeScript and driver; product diff is empty. Rejected prototype measured commit `be63656d92b963645c80d617890ff722b373bf7a`, tree `fb8884fc64a34030390b4505d89bfdea545f93a1`, is clean. Product/tests are unchanged from `85054a450a000f49de12ffe51e92fc4f66f3e34e`; be63656 fixes only measurement output/failure handling. [Candidate source manifest](evidence/p2-03-review-source-repaired.json) pins all measured prototype file bytes. [Exact experimental source](evidence/experimental-source.json) and its [ZIP](evidence/experimental-source.zip) preserve all nine files from be63656, including the unmodified optimizer assertions. [Extracted optimizer tests](evidence/experimental-optimizer-tests.txt) remain byte-for-byte copies of those test blocks. They passed on the pinned experimental source and are not presented as satisfied by the selected baseline. The independent literal/oracle/replay/negative/production/cold behavior tests remain active; reorder behavior remains active separately from the rejected optimizer counters.
+
+Run `node scripts/optimization/measure-save-changeset.mjs --suite standard --output <unique-path>.json` and then `--suite large` for each checkout. The driver runs the existing portable generator before hashing or bundling. Baseline generated runtime is171219B/SHA`7a9a23aa2934884b8109fc67d06d0ad7795db8a92c3b863e04fc5ce094ed9cc9`; candidate171350B/SHA`e7967351b7f379109bc27286f7d0c6584cee0a451d8a98bcf277e8d352f88b75`. Both actual generated inputs are explicitly present in raw source-file manifests. All four captures exit0 with empty errors and preserve exact source/tree/status/generator/build metadata; [exact capture commands/exits](evidence/capture-commands.json) are retained.
+
+Environment: Linux6.18.55, AMD EPYC9V74,5 logical CPUs,18,882,674,688B reported memory, Node24.19.0/npm11.9.0, system Chromium154.0.8037.57 over HTTP loopback. Captures ran serially in an exclusive local timing slot: baseline Standard, candidate Standard, baseline Large, candidate Large. Each capture seeds separate OFF then ON databases and measures rename then dialogue saves with warm store caches. Fixture construction, seeding, edit preparation, assertions and probe settling are outside each reported interval. Whole API return time is included. Browser/storage/JIT/GC effects are not controlled, no repeated sample distribution exists, and ordering is fixed.
+
+Original Standard fixture SHA`de0b9420abec95bcc37fc7fb7c3dc4c2667082258678f750af33bb53f8a557f5`,8800records; canonical project SHA`a15eb7d1c10e6c008c9881cc215239a67fa80e28eef0f7627e4742a2de05c13e`. Original/material Large SHA`814daf96a6511cf47409f3497b03c7ba0309af250bfd87306c44a1dec5d5a917`,88003records and75,497,472 actual asset bytes. Baseline/candidate fixture metadata and source hashes agree. No fixture/seed/material-byte changes.
+
+## OFF whole-save observations
+
+| Size / operation | Baseline ms | Candidate ms | Difference ms |
+| --- | ---: | ---: | ---: |
+| Standard rename | 364.0 | 384.2 | +20.2 |
+| Standard dialogue | 240.5 | 256.9 | +16.4 |
+| Large rename | 4728.0 | 5081.1 | +353.1 |
+| Large dialogue | 5220.9 | 5006.3 | -214.6 |
+
+[Raw comparisons with every phase](evidence/comparison-summary.json) retain all values. These are single observations, not p95 or formal30/180/7200 results. No unfavorable observation was discarded or rerun to select a better value.
+
+Each cell below is baseline→candidate milliseconds. Phase spans are sequential existing SaveMetrics, not causal experiments. In particular `diff` includes freezing and durable integrity as well as target/command construction; `reconcile` includes production normalization. Whole API time also includes post-metrics work.
+
+| Size / operation | Prepare | Hash | Read | Reconcile | Validate | Diff | Database |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Standard rename | 3.1→5.7 | 173.5→164.7 | 1.6→2.1 | 9.2→11.1 | 94.5→115.2 | 52.5→57.8 | 29.5→27.5 |
+| Standard dialogue | 2.8→4.0 | 58.5→71.0 | 3.6→1.7 | 54.7→58.2 | 47.2→52.1 | 48.6→45.3 | 25.0→24.6 |
+| Large rename | 149.1→143.5 | 1606.4→1798.1 | 360.3→401.4 | 109.1→89.1 | 1012.8→1038.2 | 573.5→616.1 | 916.7→994.6 |
+| Large dialogue | 284.3→116.1 | 1553.1→1594.7 | 395.9→465.7 | 534.4→731.5 | 792.1→567.9 | 599.5→543.7 | 1061.5→986.7 |
+
+Standard rename slows mostly in validation(+20.7ms), with changed diff(+5.3ms) and reconcile(+1.9ms) also slower; hash drops8.8ms. Standard dialogue slows mostly in hash(+12.5ms), validation(+4.9ms), reconcile(+3.5ms), while diff drops3.3ms. Large rename has slower hash(+191.7ms), database(+77.9ms), diff(+42.6ms) and read(+41.1ms), despite reconcile dropping20.0ms. Large dialogue improves in prepare(-168.2ms), validation(-224.2ms), diff(-55.8ms), database(-74.8ms), while reconcile rises197.1ms. Neither changed-phase nor overall time supports a consistent improvement. Single samples cannot isolate noise, GC, lifetime effects or the change's causal cost. The prototype is therefore rejected as the final performance design; the baseline remains selected.
+
+## Separate ON work evidence and retention limits
+
+| Size / operation | Baseline ON ms | Candidate ON ms | Hash calls / canonical bytes (both) |
+| --- | ---: | ---: | --- |
+| Standard rename | 1333.6 | 1544.5 | 5 / 6603192 |
+| Standard dialogue | 1289.7 | 1323.8 | 4 / 6603533 |
+| Large rename | 19481.8 | 16368.9 | 5 / 59408507 |
+| Large dialogue | 17790.4 | 17624.7 | 4 / 59408778 |
+
+ON times include substantial payload accounting and are not latency evidence. All paired hash call/byte counts match exactly; request hashing remains global. Both variants make2 current-validation calls and1 integrity-validation call per edit. Existing entry-length attribution remains normalize31200/312012 and target/delta/write17600/176006 for Standard/Large. These unchanged counters do not represent actual loop visits.
+
+The candidate records1 changeset build,8800/88003 previous-index constructor rows, and8800/88003 actual final-current plus8800/88003 actual prior-row visits per edit. Fallback index input is2 for each measured edit (the unchanged block/snapshot/view writer path); it is not a full entity diff rebuild. Every edit still commits1entity/1command/1outbox/1header/1summary; dialogue commits1block, rename0, relations0. Large commits6 record-part rows in both variants. No write savings are claimed because the baseline was already differential.
+
+Source-derived entity/relation Map insertions for a stable-size save, excluding project-header entries and non-entity indexes, are `7E+6R` in the baseline versus `2E+2R` in the candidate. That is59600→17600 for Standard and596021→176006 for Large. This is source analysis, not a measured baseline counter or every traversal. Normalization's other passes, global validation, request hashing, snapshots/views and P2-01 active-count filtering still occur. The focused constructor observer's34 versus≤14 budget omits mixed-header maps and incremental `Map.set`; it must not be substituted for these totals.
+
+The shared previous maps remain reachable through the operation-local changeset until the native transaction completes. The baseline helper maps have shorter logical lifetimes. Fewer cumulative Map insertions does **not** prove lower retained memory, peak, GC cost or elapsed time. Heap/peak/retention benefit is UNKNOWN; this experiment records no heap samples. P2-01 added summary work remains visible: its native source read/two hashes and6800/68003-entity active-count traversal are retained. [Prior main-versus-P2-01 evidence](../p2-01/README.md) documents Standard344034/344073 and Large953 extra hash bytes; Large uses the720B native envelope, not the decoded3.43MB header. This paired whole-store comparison uses the actual reviewed P2-01 baseline, not two APIs sharing the candidate store.
+
+## Verification, failures and artifacts
+
+Corrected baseline RED fails only the actual constructor-input assertion34>14; the original oracle/literal/hash comparisons pass. The frozen prototype focused tests passed162/162 in11 files, including11 new tests; its TypeScript and driver syntax checks exited0. [Selected-baseline verification](evidence/selected-verification.json) passes161/161 in11 files, including10 active new behavioral cases, plus TypeScript, regenerated portable input, docs, completion and original-contract checks (all exit0). The checker confirms73 locked originals/104requirements/116cases/464clauses/24packages/6groups/68supplemental and no acceptance promotion. Prototype optimizer results are never relabeled as baseline passes. [Command results](evidence/p2-03-command-results.json) retain raw logs and exact exits. Original negative coverage includes global duplicate/type/reference checks, shrinking anchors, production propagation, immutable history/pins, v1/v2 replay and conflicts, fake ACK, quota/final faults, legacy inline blocks, cold outbox/export, import and checkpoint64.
+
+Preserved failures: the initial new fixture used an unsupported trust relation between notes; a later new presence test overlooked existing authorAlternatives normalization to[]. Both test-only expectations were corrected without changing original tests. Spec review found the new runner's copied default could overwrite original phase1 output; be63656 gives it a task-specific default. The accompanying injected git-failure proof has runner exit1/errors1/no build and retained JSON/log/exit, while the proof assertion exits0. No final timing capture failed. The original reviews and all failure logs remain intact.
+
+[Artifact manifest](evidence/artifact-manifest.json) hashes the raw four captures/logs/exits, reviews, source/provenance manifests, test failures and actual build archives. Exact equal build manifests permit deduplication only within the same source: baseline builds contain12 files/1,876,454 actual bytes; candidate12/1,879,180 bytes. ZIP files retain every actual build member, not merely a hash listing. The candidate build is2726B larger in this harness. Build ZIP sizes/SHA are in the comparison summary. These are measurement bundles, not the parent-owned product build or full CI result.
+
+Original104requirements/116cases/464clauses/24packages/6groups/68supplemental/73locked inputs and all original fixtures/assertions/limits/retries/skips remain unchanged. Original94local/22external/**RELEASE BLOCKED** remains unchanged. Full unchanged unit/build/three-engine/downstream CI and formal acceptance are parent-owned and not claimed here. No physical-device, production/service/auth/billing/cloud/merge/publication action was performed.
+
+The prior private save implementation is already restored, with existing v8 schema and summary behavior intact. P2-03 introduces no persistent/native/portable format change or migration. The prototype commits and exact source/test/build/raw bytes remain preserved as a rejected alternative. Final P2-03 delivers the measured comparison, active independent behavior regressions and documented rejection; it does not ship the optimization or claim new performance acceptance.

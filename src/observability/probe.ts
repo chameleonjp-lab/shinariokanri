@@ -14,7 +14,6 @@ const metrics = [
   'db.write.payloadBytes', 'db.deleteRange.calls', 'db.transaction.committed', 'db.transaction.aborted',
   'hash.calls', 'hash.bytes', 'json.calls', 'json.bytes', 'copy.calls', 'copy.payloadBytes',
   'capture.calls', 'capture.payloadBytes', 'normalize.rows', 'targetChanges.rows', 'contentDelta.rows',
-  'save.recordIndex.rows', 'save.changeset.builds', 'save.changeset.currentVisits', 'save.changeset.previousVisits', 'save.fallbackDiff.indexRows',
   'writeContent.rows', 'hydrate.rows', 'decode.rows', 'decode.payloadBytes',
   'validate.current.calls', 'validate.integrity.calls', 'validate.full.calls',
   'query.index.builds', 'query.index.rows', 'query.text.rows', 'query.filter.rows',
