@@ -1,0 +1,60 @@
+
+ RUN  v5.0.3 /workspace/phase2
+
+ ❯ src/storage/saveChangeset.test.ts (10 tests | 1 failed) 519ms
+   × keeps absent versus present-undefined target fields and original compact header semantics 44ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/storage/saveChangeset.test.ts > keeps absent versus present-undefined target fields and original compact header semantics
+AssertionError: expected [ { …(4) } ] to deep equally contain { field: 'authorAlternatives', …(3) }
+
+- Expected:
+{
+  "after": {
+    "present": true,
+    "value": undefined,
+  },
+  "before": {
+    "present": false,
+  },
+  "field": "authorAlternatives",
+  "oldValueHash": "398b676e47d03a29016ee92fe378b8b4f1b3e965390c4c64ce78d27f79df74d1",
+}
+
++ Received:
+[
+  {
+    "after": {
+      "present": true,
+      "value": [],
+    },
+    "before": {
+      "present": false,
+    },
+    "field": "authorAlternatives",
+    "oldValueHash": "398b676e47d03a29016ee92fe378b8b4f1b3e965390c4c64ce78d27f79df74d1",
+  },
+]
+
+ ❯ src/storage/saveChangeset.test.ts:84:28
+     82|  const changes=(await store.listOutbox(project.projectId)).at(-1)!.cha…
+     83|  expect(changes).toEqual(await targetChanges(content(project),content(…
+     84|  expect(changes[0].fields).toContainEqual({field:'authorAlternatives',…
+       |                            ^
+     85|  expect((await raw(store).table('commands').get(saved.history.at(-1)!.…
+     86| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 8 passed (9)
+      Tests  1 failed | 147 passed (148)
+   Start at  05:48:20
+   Duration  50.61s (tests 94%, transform 3%, import 2%)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice
