@@ -21,6 +21,7 @@ async function choose(page,expect,world){
 }
 async function runUIProof(page,expect,runId,mode,supported,active){
  await active('mount actual App');const fixture=await page.evaluate(id=>window.worldOwnershipUI.setup(id),runId);
+ await active('actual App fixture seeded',{fixture});
  try{
   await expect(page.locator('.project-switch')).toContainText('P205 work 0');await versions(page);
   if(mode==='capture')await page.evaluate(()=>window.worldOwnershipUI.startObservation());
@@ -31,6 +32,7 @@ async function runUIProof(page,expect,runId,mode,supported,active){
   await page.evaluate(id=>window.worldOwnershipUI.failNextPreviewHash(id),fixture.worlds[1].projectId);
   await page.getByRole('button',{name:'適用前の差分・影響を確認',exact:true}).click();await expect(page.getByText('P205 literal rejected preview hash',{exact:true})).toBeVisible();
   const after={source:await page.getByLabel('参照する共通世界',{exact:true}).inputValue(),snapshot:await page.getByLabel('固定する共通世界版',{exact:true}).inputValue(),query:await page.getByRole('searchbox',{name:'採用する世界設定を検索'}).inputValue(),adopted:await page.getByRole('checkbox',{name:'P205 place 1',exact:true}).isChecked()};
+  await active('failed preview input comparison',{before,after});
   expect(after).toEqual(before);
   await active('late source A to B to A');await page.evaluate(id=>window.worldOwnershipUI.holdSource(id),fixture.worlds[2].projectId);
   await page.getByLabel('参照する共通世界',{exact:true}).selectOption(fixture.worlds[2].projectId);await expect.poll(()=>page.evaluate(()=>window.worldOwnershipUI.gateEntered())).toBe(true);
@@ -73,19 +75,21 @@ async function runUIProof(page,expect,runId,mode,supported,active){
   await choose(page,expect,fixture.worlds[0]);await page.getByLabel('固定する共通世界版',{exact:true}).selectOption(fixture.worlds[0].snapshotIds[1]);
   await page.getByRole('checkbox',{name:'P205 place 0',exact:true}).check();await page.getByRole('button',{name:'適用前の差分・影響を確認',exact:true}).click();
   await page.evaluate(({projectId,sourceId})=>window.worldOwnershipUI.holdPinAdoptionRefresh(projectId,sourceId),{projectId:fixture.selected,sourceId:fixture.worlds[0].projectId});
+  const sourceRevision=await page.evaluate(id=>window.worldOwnershipUI.advanceSourceRevision(id),fixture.worlds[0].projectId);expect(sourceRevision).toBe('2');
   await page.getByRole('button',{name:'確認した固定版・採用設定を保存',exact:true}).click();
   await expect.poll(()=>page.evaluate(()=>window.worldOwnershipUI.adoptionGateState().entered)).toBe(true);
   await expect.poll(()=>page.evaluate(()=>window.worldOwnershipUI.adoptionGateState().previewCompleted)).toBe(true);
   await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
   await expect(page.getByLabel('固定する共通世界版',{exact:true}).locator(`option[value="${fixture.worlds[0].snapshotId}"]`)).toHaveCount(1);
   const pinRefresh=await page.evaluate(()=>window.worldOwnershipUI.adoptionGateState());expect(pinRefresh.adoptedKeys).toEqual([fixture.worlds[0].snapshotIds[1]]);
+  await active('pin adoption refresh preserves newer current preview',{pinRefresh,sourceRevision,expectedSnapshot:fixture.worlds[0].snapshotId,expectedDetail:'P205 newer-only place 0'});
   await page.evaluate(()=>window.worldOwnershipUI.releaseAdoptionGate());await expect(page.getByRole('dialog')).toHaveCount(0);
   await expect(page.getByText('参照版：P205 edition 0',{exact:true})).toBeVisible();
   await page.getByLabel('固定する共通世界版',{exact:true}).selectOption(fixture.worlds[0].snapshotId);
   await page.getByRole('button',{name:'共通世界の元情報を開く',exact:true}).first().click();await expect(page.getByRole('dialog').last()).toContainText('P205 newer-only place 0');
   await page.getByRole('dialog').last().getByRole('button',{name:'閉じる',exact:true}).click();
   const final=await page.evaluate(()=>window.worldOwnershipUI.snapshot());if(mode==='check'){expect(final.instrumentationStarts).toBe(0);expect(final).not.toHaveProperty('probe');}
-  return{status:'ok',actualApp:true,transport:'HTTP loopback',uiInput:fixture.uiInput,pinRefresh,failedPreview:{before,after},lateSequence:'source 2 -> 3 -> 2, old 2 released after new 2 is displayed; immutable detail still resolves',outerSelectionRejection:'real import succeeded, followed editor read rejected; previous editor and adopted edition remain; source 2 -> 3 -> 2 rejects the old request and current immutable source detail resolves',pinAdoptionRefresh:'old source0 edition committed; only its adopted-closure refresh held while revision-triggered source0 preview completes; refresh released and unadopted newer edition detail still resolves',allSixPickerChoicesPreserved:true,adoptedEditionPreserved:true,boundaries,final,uiMetricSupport:supported?'actual ON gauges only in capture mode':'UNKNOWN: literal baseline has no UI retention gauges',latency:'NOT MEASURED: functional UI proof'};
+  return{status:'ok',actualApp:true,transport:'HTTP loopback',uiInput:fixture.uiInput,pinRefresh,failedPreview:{before,after},lateSequence:'source 2 -> 3 -> 2, old 2 released after new 2 is displayed; immutable detail still resolves',outerSelectionRejection:'real import succeeded, followed editor read rejected; a preview pending before rejection settles and a subsequent source 2 -> 3 -> 2 both resolve immutable detail',pinAdoptionRefresh:'old source0 edition committed; only its adopted-closure refresh held while source revision 2 triggers a fresh preview on both variants; refresh released and unadopted newer edition detail still resolves',allSixPickerChoicesPreserved:true,adoptedEditionPreserved:true,boundaries,final,uiMetricSupport:supported?'actual ON gauges only in capture mode':'UNKNOWN: literal baseline has no UI retention gauges',latency:'NOT MEASURED: functional UI proof'};
  }finally{await page.evaluate(()=>window.worldOwnershipUI.cleanup());}
 }
 async function heapDiagnostic(browser,url,runId,expect){
@@ -169,7 +173,8 @@ try{
  await page.goto(`http://127.0.0.1:${server.address().port}/tests/optimization/world-ownership-measurement-harness.html`);await page.waitForFunction(()=>!!window.worldOwnershipMeasurement);
  const pageFailure=new Promise((_,reject)=>{rejectPageError=reject;});
  const operation=page.evaluate(options=>window.worldOwnershipMeasurement.run(options),{suite,mode,worldCountersSupported,runId}).then(async()=>{
-  if(args.ui!=='false')result.ui=await runUIProof(page,expect,`${runId}-ui`,mode,worldCountersSupported,async action=>{result.activeUIAction=action;await persist();});
+  if(args.ui!=='false')result.ui=await runUIProof(page,expect,`${runId}-ui`,mode,worldCountersSupported,async(action,evidence)=>{result.activeUIAction=action;if(evidence)(result.uiCheckpoints??=[]).push({action,...evidence});await persist();});
+  else result.ui={status:'NOT RUN',reason:'explicit --ui false; API comparison only; actual App UI proof is separate'};
   delete result.activeUIAction;
  });
  let timer;try{await Promise.race([operation,pageFailure,new Promise((_,reject)=>{timer=setTimeout(()=>{interruptionCause='watchdog';reject(Error(`Harness timeout after ${timeout} ms`));},timeout);})]);}finally{clearTimeout(timer);}

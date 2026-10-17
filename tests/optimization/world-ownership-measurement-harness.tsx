@@ -45,11 +45,18 @@ const ui={
  },
  followGateEntered:()=>followGate?.entered??false,
  releaseFollowGate(){followGate?.release();},
+ async advanceSourceRevision(projectId:string){
+  if(!store)throw Error('UI not mounted');const current=await store.getProjectForEditing(projectId);if(!current)throw Error('editable source missing');
+  return(await store.saveProject(current,{reason:'UI source revision changes before pin refresh',includeHistory:false})).project.revision;
+ },
  async holdPinAdoptionRefresh(projectId:string,sourceId:string){
   if(!store)throw Error('UI not mounted');const current=await store.getProjectForEditing(projectId);if(!current)throw Error('selected editor missing');
   const expectedRevision=(BigInt(current.revision)+1n).toString(),original=store.listEditorWorldSnapshots.bind(store);let held=false,release!:()=>void;
   const pending=new Promise<void>(resolve=>release=resolve);adoptionGate={entered:false,previewCompleted:false,adoptedKeys:[],release};
-  store.listEditorWorldSnapshots=async(...args)=>{const result=await original(...args);if(args[0].projectId===projectId&&args[0].revision===expectedRevision&&!held){held=true;adoptionGate!.adoptedKeys=Object.keys(result);adoptionGate!.entered=true;await pending;}else if(held&&args[0].projectId===sourceId)adoptionGate!.previewCompleted=true;return result;};
+  store.listEditorWorldSnapshots=async(...args)=>{
+   if(args[0].projectId===projectId&&args[0].revision===expectedRevision&&!held){held=true;const result=await original(...args);adoptionGate!.adoptedKeys=Object.keys(result);adoptionGate!.entered=true;await pending;return result;}
+   const result=await original(...args);if(held&&args[0].projectId===sourceId)adoptionGate!.previewCompleted=true;return result;
+  };
  },
  adoptionGateState:()=>({entered:adoptionGate?.entered??false,previewCompleted:adoptionGate?.previewCompleted??false,adoptedKeys:adoptionGate?.adoptedKeys??[]}),
  releaseAdoptionGate(){adoptionGate?.release();},
