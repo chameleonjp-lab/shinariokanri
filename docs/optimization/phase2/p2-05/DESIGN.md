@@ -1,64 +1,49 @@
-# P2-05 dependency closure and cache ownership plan
+# P2-05 design disposition and rollback
 
-> Execute inline with test-driven-development and verification-before-completion. The controller owns independent reviews, CI and publication; no helper agents.
+Frozen implementation: `260957a9ec25f3afeda8bede6481ceb2e417685f`, tree `4f2527db1b42eaa3fa7d303c2f9abbadc48ce247`; exact P204 base: `5b3949253937f1880bd426b39706c90a1db2e343`, tree `c24e4391ac29a1e2ef9af3aecc65ae145b13b59a`. [Phase 1 D05](../../phase1/DESIGN.md), the [handoff](../../phase1/HANDOFF.md), original contracts and blocked conditions remain authoritative. Original plan/readiness, every RED/setup attempt and frozen source are in the [sealed archive](evidence.zip), indexed by its [manifest](evidence-manifest.json).
 
-**Goal:** Limit inactive retained project graphs and select operation dependencies without losing immutable editions, drafts or pending saves.
+## Adopted behavior and limits
 
-**Architecture:** Read complete immutable world rows for explicit and typed dependencies. Unknown shapes or ownership keep the original full-registry path. Keep save inputs and native head/history in an operation capture; cache retention is separate from content/access invalidation. App keeps adopted dependencies and one current preview owner separately.
+Inactive project graphs use an internal four-entry LRU. `cachedProjects`, `contentHeads`, `cachedHistoryIds` and `completeHistories` leave together; unique per-project identity objects replace permanent numeric tombstones. Version/access/lifetime checks reject late publication and ABA. Concurrent active operations may temporarily own additional identities. Caller-keyed weak tokens, retained editor/history arrays, author drafts and canonical rows lie outside this inactive budget. This is not a project/source/input limit.
 
-**Tech stack:** TypeScript, Dexie/IndexedDB, React, Vitest, Chromium.
+A save retains its previous image and native history/head tuple from the same read image independently of cache publication. Hydration need not re-enter the cache; a concurrent preview's eviction/release cannot create a false revision conflict. After native commit, abort skips only new cache publication: canonical revision/history/outbox and successful API completion remain authoritative. Native conflict/hash/asset checks stay unchanged.
 
-**Spec:** [Phase 1 D05](../../phase1/DESIGN.md), [handoff](../../phase1/HANDOFF.md). Exact starting commit: `5b3949253937f1880bd426b39706c90a1db2e343`, tree `c24e4391ac29a1e2ef9af3aecc65ae145b13b59a`.
+Current, ordinary save and complete-project reads select **whole** immutable dependency rows. Explicit editions establish retained owners; selected typed external IDs still probe their direct outer row so a healthy retained copy cannot hide a conflicting selected copy. A missing direct key with an established retained owner remains selected. Unknown shape/owner uses full registry discovery and original structural/hash/owner validation. No synthetic aliases, persisted owner metadata, migration or canonical pruning were added. Unknown-owner work remains O(registry), without an O(closure) claim.
 
-## Constraints and comparison
+Current/save roots include retained snapshots and alternatives; complete reads also include history before/after images. Selected history retains P204 materialization. Export/recovery retains its single complete native registry capture and original worker selection, including historical/pending/recovery state. P201 selected `loadEditor` and previous-editor release are baseline behavior, not P205 gains.
 
-Original 104 requirements / 116 cases / 464 clauses / 24 packages / 6 groups / 68 supplements / 73 locked inputs, 94 local / 22 external and RELEASE BLOCKED are unchanged. No fixture/assertion/timeout/retry/skip relaxation. Native formats, canonical snapshots/history, request hashes, global immutable collision guards and original numeric bounds remain unchanged. P201 already implements selected current closure and releaseEditor; those are baseline behavior, not P205 gains.
+Save/import immutable guards remain. Local ACK reproduction demonstrated a different-outer retained-ID collision between early prevalidation and final write. Nonempty applied ACK input repeats the global retained-ID guard **inside** the final native write transaction. The early guard preserves original fail-fast/error ordering and replay/conflict paths. This adds a mandatory full scan for that case; ACK is not timed by the capture matrix, so its cost is UNKNOWN. Rejection tests compare every native table with the post-rival image, including assets/outbox/base/prepared/metadata/evidence.
 
-| Alternative | Decision and cost |
+App keeps adopted dependencies and one replaceable preview by exact committed editor ID/revision/selection generation. The latest request fence separately rejects stale publication. Failed newer selection intent does not revoke the committed owner; exact-owner cleanup cannot clear a new/adopted closure. Delayed adoption refresh updates only the owner's adopted map, preserving its newer preview. Same-ID same/older-revision refresh preserves owner/preview; a genuine new revision resets it. Existing account/access/store remount and read lifetime fences remain. Other caller-held details/import completions/author inputs/view graphs lie outside this policy.
+
+## Evidence and tradeoff
+
+[Complete observations](DELIVERY.md) retain 74 OFF comparisons, all ON work and direct store/UI retention. Candidate final tuples were 4/4/4/1/4 with 8,144 JSON payload bytes versus original-size baseline 13/13/13/13/13 and Standard/Large 25,429,866/241,112,367 bytes. Candidate epochs reached zero on close; baselines retained 13 IDs. This supports scoped inactive retention, not total store/App/browser memory boundedness.
+
+Actual HTTP UI kept two registry entries across six sources, preserving choices/adopted edition/failed input/in-flight 2→3→2/failed outer selection/delayed adoption refresh/ordinary same-revision idle refresh. Baseline still showed old detail for a selected new edition after pin refresh; its partial common prefix and failure remain. Unsupported baseline gauges are UNKNOWN.
+
+Latency is not uniformly improved. Exact raw comparisons have 40 unfavorable pairs (13 Standard / 15 Large / 12 supplemental), including tiny near-ties. All three original cold edit/save/history waits worsened at both sizes. Their recorded project/record-part/decode/hash counts do not isolate those regressions' causes; host scheduling, GC/JIT and changed CPU/allocation costs remain UNKNOWN. The supplemental sequence shows a specific tradeoff: eviction causes cold body/dependency validation where baseline retained a graph, while selected listing/full reads avoid some unrelated world rows. Intrusive ON JSON-sizing elapsed is not OFF latency or causal proof.
+
+Retain this limited implementation for explicit retention ownership, save correctness and immutable collision fixes, with observed latency costs disclosed for human integration. It is not a universal speed improvement or proof that four is optimal. Formal performance acceptance remains blocked; the controller may defer adoption or select a measured alternative without changing requirements.
+
+| Alternative | Completeness, cost, invalidation and disposition |
 | --- | --- |
-| Operation closure of complete rows; direct keys first, owner discovery/full fallback when needed | Selected. No canonical metadata or migration. Unknown owner scans and validates the registry; this cost remains O(registry). Separate current/save/history/export roots; never infer absent from unloaded. |
-| Persist retained-snapshot owner catalog | Deferred. Requires all pin/ACK/import writers to maintain a complete versioned catalog atomically, old-version fallback and extra metadata bytes. Existing worldSources catalog proves discovery only. |
-| Shared global pin LRU/refcounts | Deferred as in D05: more lifetime/permission complexity than inactive project retention. |
+| Selected whole rows plus operation-local owner discovery/full fallback | Adopted without persistent format changes. Unknown owners still scan; caller validators remain authoritative. Reader rollback is available. |
+| Derived versioned retained-owner catalog | Unimplemented. May reduce unknown-owner body scans but adds metadata bytes/reads and atomic completeness obligations on save pin/import/ACK writers, old-version/missing/drift fallback and repair. Catalog discovery cannot replace body/hash/owner validation. No measured universal ranking. |
+| New canonical owner metadata | Unimplemented. Adds migration/recovery/export/all-writer obligations; no evidence establishes necessity or lower cost. Separate format/rollback design required. |
+| Four versus eight/sixteen/unbounded or byte-aware inactive budget | Only four was implemented/captured. Larger/weighted budgets may reduce cold rereads and retain more payload. No optimality, comparative timing or heap evidence. Unbounded baseline retains the observed large payload. |
+| Shared global pin LRU/refcounts | Deferred per D05. Could share graphs but adds view/save/account lifetime and writer invalidation complexity. Not measured or declared universally worse. |
 
-Current/save include current and retained snapshots/alternatives. Full reads include historical before/after. Selected history keeps P204 materialization and current restore validation. Full export/recovery keeps one native capture and every historical/pending/retained/sync-recovery dependency; its full registry capture is a deliberate safe fallback, not an O(closure) claim. Whole immutable rows and the existing writer collision guard remain authoritative.
+## Rollback
 
-## Review focus
+Selected reads can revert to full-registry reads; inactive LRU enforcement can be disabled/reconsidered without canonical deletion or migration. Revert preview policy only against preserved HTTP counterexamples: cumulative retention restores its memory tradeoff; indiscriminate cleanup restores demonstrated races. Keep local same-image save capture/publication fences and the independently justified atomic ACK guard when rolling back only an optimization. Do not silently remove correctness fixes with cache policy.
 
-- Differently keyed retained snapshots, transitive pins and typed anchors must resolve exact original IDs/hashes.
-- Eviction between hydration and save continuation must not create a false revision conflict or lose the command parent.
-- Old reads/saves must not publish after release, role/lifetime changes or a project token being recreated.
-- Clean and dirty editor/history tokens must survive ordinary retention pressure; canonical/outbox/assets are outside this budget.
-- UI preview replacement must keep adopted dependencies, all picker choices and failed-preview input.
+Exact baseline/candidate source blobs, seven overlays and actual build members are archived. Delivery documentation can revert independently. Account/role/access, canonical snapshots/history, assets/outbox/prepared state, request hashes and native formats remain authoritative.
 
-## Task 1: bounded project ownership and save capture
+## Verification and gates
 
-Modify `src/storage/store.ts`, numeric metrics in `src/observability/probe.ts`; add `tests/optimization/world-cache-ownership.test.ts`.
+Corrected full-registry/literal REDs preceded store/closure/cancellation/selected-corruption/ACK fixes. Invalid new fixtures, inadequate pin-oracle PASS, same-revision harness failure, initial missing helper/module and WIP full-suite/browser-policy failures remain archived. Historical source identities remain historical.
 
-- [ ] RED: public reads/saves of 12 projects leave at most four inactive cache graphs and matching project/head/history keys; released metadata is empty.
-- [ ] RED: actual editing/full hydration returns after release; a valid save advances exactly one revision/history/outbox and retains its literal native parent.
-- [ ] RED: a held committed save released before continuation does not repopulate any of the four collections.
-- [ ] Implement capacity four as an internal retention choice, unique identity epochs, operation-local previous/head captures and publication fences. No new domain/input limit.
-- [ ] GREEN: new ownership tests plus original cacheConcurrency, save/hash/atomic and P201 library tests; targeted TypeScript check.
+Exact260 received independent specification PASS/quality APPROVE before six exclusive captures. All 296 API rows fulfilled; candidate HTTP UI passed; baseline's pin error remains error with no invented `finishedAt`. Eight CDP rows are instantaneous separate fresh SMALL-context values without forced GC, not Large/retained/peak/release proof. No p95/significance/formal acceptance claim.
 
-## Task 2: operation dependencies and preview ownership
-
-Modify `store.ts`, focused `src/storage/worldClosure.ts`, `nativeExport.ts` if the retained-owner RED proves it necessary; `App.tsx`, `ui/WorldVersions.tsx`, focused UI registry helper. Add `tests/optimization/world-operation-closure.test.ts` and focused ownership/browser proofs.
-
-- [ ] RED: full/editing/save known dependencies avoid unrelated body reads; compare actual output against full-registry validators plus literal pin/record/hash expectations.
-- [ ] RED: retained old snapshot stored only under new outer key survives current/full/save/export/import and selected history; corrupted/missing/unsupported dependencies reject unchanged canonical/input state.
-- [ ] RED: A→B→C preview sequence retains adopted A plus current preview, while failed preview preserves author choices and late results cannot publish.
-- [ ] Implement only the evidence-backed paths; unknown shapes/ownership retain full fallback and count it honestly.
-- [ ] GREEN: new proofs and original worldPins/hash/import/export/recovery/cold/clean-dirty alternative tests without changing original tests.
-
-## Task 3: check-default comparison driver and frozen review checkpoint
-
-Add owned `scripts/optimization/measure-world-ownership.mjs` and `tests/optimization/world-ownership-measurement-*` files. Reuse the reviewed P204 observer only after inspecting its failure semantics.
-
-- [ ] RED/GREEN controlled tests for check-mode clock/probe prohibition, rejected OFF elapsed, ON observation completeness and active interruption evidence.
-- [ ] Default check mode: real Chromium, literal exact baseline and candidate, same original Standard/Large generator; actual source/overlay/generated/build ZIP/member/input provenance; unique output directories preserve failed attempts.
-- [ ] Separate OFF latency, ON rows/hash/bytes and store/UI retention counts. Optional separate fresh-context CDP heap observations explain GC/transient limitations; no retained-memory/peak acceptance claim.
-- [ ] Run focused tests/typecheck/docs and correctness-only checks. Record actual commands/exits and limitations. Commit clean source+driver, request independent exact-head spec and quality reviews, then STOP before timing capture.
-
-Rollback: restore full registry readers, disable bounded retention and replace preview owner policy with the original paths. No canonical deletion or migration rollback is required.
-
-The comparison runner's default 1,200,000 ms watchdog bounds its supplemental browser orchestration (core sequence and functional UI proof). It is separate from the unchanged original 600,000 ms operation condition and 2,000 ms conditions; it changes no original fixture, accepted condition, retry, timeout or skip. Check mode records no interval clocks, probes or heap observations. A separate optional fresh-context CDP diagnostic is available only in capture mode after the controller's review gate.
+Original 104/116/464/24/6/68/73 and 94 local / 22 external remain **RELEASE BLOCKED**. Fixtures/assertions/retry/skip and 600,000/2,000/30/180/7,200 conditions stay unchanged; 1,200,000 ms bounds only supplemental orchestration. The controller owns unchanged hosted CI, delivery review and Draft PR; no agent merge/push/deploy/device/live Auth/cloud tests.

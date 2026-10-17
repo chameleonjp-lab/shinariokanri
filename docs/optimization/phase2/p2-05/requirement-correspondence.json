@@ -64,7 +64,16 @@
       "originalProcedureSources": [
         "tests/e2e/ap04-original-f-world-versions.spec.ts"
       ],
-      "status": "original evidence unchanged; supplemental P205 proofs do not promote original acceptance"
+      "status": "original evidence unchanged; supplemental P205 proofs do not promote original acceptance",
+      "additionalSupplementalProcedures": [
+        "tests/optimization/world-selected-corruption.test.ts",
+        "tests/optimization/world-ack-collision.test.ts"
+      ],
+      "additionalRelevantSupplementalClauses": [
+        "then",
+        "negative_or_edge"
+      ],
+      "additionalGuardOnlyScope": "Selected direct old/retained copies must agree; ACK writes cannot introduce a different body under a retained immutable snapshot ID. No automatic rewrite of published editions."
     },
     {
       "case": "AT-F35",
@@ -81,7 +90,16 @@
       "originalProcedureSources": [
         "tests/e2e/ap04-original-f-source-schema.spec.ts"
       ],
-      "status": "original evidence unchanged; supplemental P205 proofs do not promote original acceptance"
+      "status": "original evidence unchanged; supplemental P205 proofs do not promote original acceptance",
+      "additionalSupplementalProcedures": [
+        "tests/optimization/world-selected-corruption.test.ts",
+        "tests/optimization/world-ack-collision.test.ts"
+      ],
+      "additionalRelevantSupplementalClauses": [
+        "then",
+        "negative_or_edge"
+      ],
+      "additionalGuardOnlyScope": "world-operation-closure.test.ts covers supplemental complete export/new/clone/cold. The two new tests add selected-conflict rejection and atomic rollback, not a replacement archive/merge procedure."
     },
     {
       "case": "AT-F54",
@@ -98,7 +116,16 @@
       "originalProcedureSources": [
         "tests/e2e/ap04-original-f-world-versions.spec.ts"
       ],
-      "status": "original evidence unchanged; supplemental P205 proofs do not promote original acceptance"
+      "status": "original evidence unchanged; supplemental P205 proofs do not promote original acceptance",
+      "additionalSupplementalProcedures": [
+        "tests/optimization/world-selected-corruption.test.ts",
+        "tests/optimization/world-ack-collision.test.ts"
+      ],
+      "additionalRelevantSupplementalClauses": [
+        "then",
+        "negative_or_edge"
+      ],
+      "additionalGuardOnlyScope": "Retained immutable edition bodies/IDs remain distinct and unchanged. New tests support only immutability/selection guards, not the full media workflow."
     },
     {
       "case": "AT-N06",
@@ -115,7 +142,16 @@
       "originalProcedureSources": [
         "tests/e2e/ap04-original-n-atomic-migration.spec.ts"
       ],
-      "status": "original evidence unchanged; supplemental P205 proofs do not promote original acceptance"
+      "status": "original evidence unchanged; supplemental P205 proofs do not promote original acceptance",
+      "additionalSupplementalProcedures": [
+        "tests/optimization/world-selected-corruption.test.ts",
+        "tests/optimization/world-ack-collision.test.ts"
+      ],
+      "additionalRelevantSupplementalClauses": [
+        "then",
+        "negative_or_edge"
+      ],
+      "additionalGuardOnlyScope": "Selected-corruption and racing ACK rejection preserve all native tables relative to the committed rival, including canonical/history/assets/outbox/base/prepared/metadata/evidence. No migration acceptance is inferred."
     },
     {
       "case": "AT-N09",
@@ -149,7 +185,16 @@
       "originalProcedureSources": [
         "tests/e2e/ap04-original-n-safety-recovery.spec.ts"
       ],
-      "status": "original evidence unchanged; supplemental P205 proofs do not promote original acceptance"
+      "status": "original evidence unchanged; supplemental P205 proofs do not promote original acceptance",
+      "additionalSupplementalProcedures": [
+        "tests/optimization/world-selected-corruption.test.ts",
+        "tests/optimization/world-ack-collision.test.ts"
+      ],
+      "additionalRelevantSupplementalClauses": [
+        "then",
+        "negative_or_edge"
+      ],
+      "additionalGuardOnlyScope": "Supplemental complete dependency export/new/clone/cold retains original IDs; new rejection tests preserve the native source and pending work. Physical loss and external Files guarantees are untested."
     },
     {
       "case": "AT-E07",
@@ -214,7 +259,16 @@
       "originalProcedureSources": [
         "tests/e2e/ap04-original-e12-continuity.spec.ts"
       ],
-      "status": "original evidence unchanged; supplemental P205 proofs do not promote original acceptance"
+      "status": "original evidence unchanged; supplemental P205 proofs do not promote original acceptance",
+      "additionalSupplementalProcedures": [
+        "tests/optimization/world-selected-corruption.test.ts",
+        "tests/optimization/world-ack-collision.test.ts"
+      ],
+      "additionalRelevantSupplementalClauses": [
+        "then",
+        "negative_or_edge"
+      ],
+      "additionalGuardOnlyScope": "Rejected ACK/selected-corruption operations preserve pending/native input. Postcommit cancellation preserves actual native/API success and skips only cache publication. Real OS Files cancel, flight mode and real old-app upgrade remain blocked."
     }
   ],
   "supplementalProcedures": [
@@ -224,11 +278,329 @@
     "tests/optimization/world-preview-ownership.test.ts",
     "tests/optimization/world-ownership-measurement.test.ts",
     "tests/optimization/world-ownership-measurement-failure.test.ts",
-    "scripts/optimization/measure-world-ownership.mjs"
+    "scripts/optimization/measure-world-ownership.mjs",
+    "tests/optimization/world-selected-corruption.test.ts",
+    "tests/optimization/world-ack-collision.test.ts"
   ],
   "originalFixtures": [
     "src/testing/performanceFixture.ts",
     "tests/optimization/fixtures.ts"
   ],
-  "notRun": "Formal Stage 3, external/device/service and performance capture before review; no acceptance promotion"
+  "notRun": "Formal Stage3, external/device/service/live Auth/production conditions remain NOT RUN; reviewed supplemental capture completed without acceptance promotion",
+  "additionalGuardClauseMappings": [
+    {
+      "case": "AT-F09",
+      "requirementIds": [
+        "REQ-F09"
+      ],
+      "originalClausePointer": "docs/quality/pr49-followup-2026-10-15/CLAUSE_REVIEW.json#/cases/32/clauses",
+      "originalClauses": [
+        {
+          "name": "given",
+          "original": "共通世界Wの公開版1を参照する旧作Pと続編Q"
+        },
+        {
+          "name": "when",
+          "original": "Wに改訂版2を作りQだけ参照更新し、Pの公開版1の設定を再度開く"
+        },
+        {
+          "name": "then",
+          "original": "過去作品の公開時点の設定を保ったまま、続編用の設定を作れる。"
+        },
+        {
+          "name": "negative_or_edge",
+          "original": "共通設定の公開版は不変とし作品が参照する版を固定する。続編の改訂を旧作へ自動適用しない。"
+        }
+      ],
+      "relevantSupplementalClauses": [
+        "then",
+        "negative_or_edge"
+      ],
+      "originalProcedureSources": [
+        {
+          "path": "tests/e2e/ap04-original-f-world-versions.spec.ts",
+          "actual651Bytes": 12995,
+          "actual651SHA256": "405734931b4611082efa490086acf0c129d9023af7365b7cb8812b8f6a7f8e49",
+          "unchangedFromExactP204": true,
+          "historicalClauseRegistryDeclaredSHA256": "405734931b4611082efa490086acf0c129d9023af7365b7cb8812b8f6a7f8e49",
+          "matchesHistoricalDeclaredHash": true
+        }
+      ],
+      "supplementalProcedures": [
+        "tests/optimization/world-selected-corruption.test.ts",
+        "tests/optimization/world-ack-collision.test.ts"
+      ],
+      "relatedSupplementalProcedures": [
+        "tests/optimization/world-cache-ownership.test.ts",
+        "tests/optimization/world-operation-closure.test.ts",
+        "scripts/optimization/measure-world-ownership.mjs"
+      ],
+      "scope": "Selected direct old/retained copies must agree; ACK writes cannot introduce a different body under a retained immutable snapshot ID. No automatic rewrite of published editions.",
+      "originalAcceptance": "unchanged; guard evidence only, not original whole-case promotion"
+    },
+    {
+      "case": "AT-F35",
+      "requirementIds": [
+        "REQ-F35"
+      ],
+      "originalClausePointer": "docs/quality/pr49-followup-2026-10-15/CLAUSE_REVIEW.json#/cases/58/clauses",
+      "originalClauses": [
+        {
+          "name": "given",
+          "original": "条件・線・素材・巨大tick・単体履歴を持つ作品"
+        },
+        {
+          "name": "when",
+          "original": "全体を出力し空環境へ復元、別途単体復元と追加/置換/統合を選択する"
+        },
+        {
+          "name": "then",
+          "original": "書き出して読み戻したとき、番号、条件、矢印、日時、素材が対応したまま残る。"
+        },
+        {
+          "name": "negative_or_edge",
+          "original": "単体復元は最新の関連情報への影響を提示する。追加・置換・統合のID規則を適用し、失敗時は全体をロールバックする。"
+        }
+      ],
+      "relevantSupplementalClauses": [
+        "then",
+        "negative_or_edge"
+      ],
+      "originalProcedureSources": [
+        {
+          "path": "tests/e2e/ap04-original-f-source-schema.spec.ts",
+          "actual651Bytes": 53900,
+          "actual651SHA256": "2fc8f4145853b354c8a1bdbabb599932cc40fe9e53024aa4e58b705de7caed64",
+          "unchangedFromExactP204": true,
+          "historicalClauseRegistryDeclaredSHA256": "2fc8f4145853b354c8a1bdbabb599932cc40fe9e53024aa4e58b705de7caed64",
+          "matchesHistoricalDeclaredHash": true
+        }
+      ],
+      "supplementalProcedures": [
+        "tests/optimization/world-selected-corruption.test.ts",
+        "tests/optimization/world-ack-collision.test.ts"
+      ],
+      "relatedSupplementalProcedures": [
+        "tests/optimization/world-cache-ownership.test.ts",
+        "tests/optimization/world-operation-closure.test.ts",
+        "scripts/optimization/measure-world-ownership.mjs"
+      ],
+      "scope": "world-operation-closure.test.ts covers supplemental complete export/new/clone/cold. The two new tests add selected-conflict rejection and atomic rollback, not a replacement archive/merge procedure.",
+      "originalAcceptance": "unchanged; guard evidence only, not original whole-case promotion"
+    },
+    {
+      "case": "AT-F54",
+      "requirementIds": [
+        "REQ-F54"
+      ],
+      "originalClausePointer": "docs/quality/pr49-followup-2026-10-15/CLAUSE_REVIEW.json#/cases/77/clauses",
+      "originalClauses": [
+        {
+          "name": "given",
+          "original": "共通設定版1を参照する公開済み小説/動画と未公開ゲーム"
+        },
+        {
+          "name": "when",
+          "original": "共通設定を版2へ改訂し、媒体ごとの変更候補と旧公開原稿を比較する"
+        },
+        {
+          "name": "then",
+          "original": "元設定を変えても各媒体の文章を自動で同じ文へ置換せず、公開済みの版と修正候補を比べられる。"
+        },
+        {
+          "name": "negative_or_edge",
+          "original": "派生作品は共通設定の版を参照する。媒体別文章と公開済みスナップショットは保持し、変更候補だけを伝える。"
+        }
+      ],
+      "relevantSupplementalClauses": [
+        "then",
+        "negative_or_edge"
+      ],
+      "originalProcedureSources": [
+        {
+          "path": "tests/e2e/ap04-original-f-world-versions.spec.ts",
+          "actual651Bytes": 12995,
+          "actual651SHA256": "405734931b4611082efa490086acf0c129d9023af7365b7cb8812b8f6a7f8e49",
+          "unchangedFromExactP204": true,
+          "historicalClauseRegistryDeclaredSHA256": "405734931b4611082efa490086acf0c129d9023af7365b7cb8812b8f6a7f8e49",
+          "matchesHistoricalDeclaredHash": true
+        }
+      ],
+      "supplementalProcedures": [
+        "tests/optimization/world-selected-corruption.test.ts",
+        "tests/optimization/world-ack-collision.test.ts"
+      ],
+      "relatedSupplementalProcedures": [
+        "tests/optimization/world-cache-ownership.test.ts",
+        "tests/optimization/world-operation-closure.test.ts",
+        "scripts/optimization/measure-world-ownership.mjs"
+      ],
+      "scope": "Retained immutable edition bodies/IDs remain distinct and unchanged. New tests support only immutability/selection guards, not the full media workflow.",
+      "originalAcceptance": "unchanged; guard evidence only, not original whole-case promotion"
+    },
+    {
+      "case": "AT-N06",
+      "requirementIds": [
+        "REQ-N06"
+      ],
+      "originalClausePointer": "docs/quality/pr49-followup-2026-10-15/CLAUSE_REVIEW.json#/cases/89/clauses",
+      "originalClauses": [
+        {
+          "name": "given",
+          "original": "保存中の容量不足と移行失敗を注入"
+        },
+        {
+          "name": "when",
+          "original": "複数対象の変更を試す"
+        },
+        {
+          "name": "then",
+          "original": "全変更が確定するか全変更が未確定となり再試行できる"
+        },
+        {
+          "name": "negative_or_edge",
+          "original": "一部更新・未検証のマイグレーション・偽の保存表示を残さない"
+        }
+      ],
+      "relevantSupplementalClauses": [
+        "then",
+        "negative_or_edge"
+      ],
+      "originalProcedureSources": [
+        {
+          "path": "tests/e2e/ap04-original-n-atomic-migration.spec.ts",
+          "actual651Bytes": 13730,
+          "actual651SHA256": "926dd6ba9aefa4e8d2dc64aa0c08248d1a96557aed2fcc59fe29dbf34703212b",
+          "unchangedFromExactP204": true,
+          "historicalClauseRegistryDeclaredSHA256": "3c2857ad62360f29a56dd15c0e265cead2bf05cad4424eae4211700e4838c2ad",
+          "matchesHistoricalDeclaredHash": false
+        }
+      ],
+      "supplementalProcedures": [
+        "tests/optimization/world-selected-corruption.test.ts",
+        "tests/optimization/world-ack-collision.test.ts"
+      ],
+      "relatedSupplementalProcedures": [
+        "tests/optimization/world-cache-ownership.test.ts",
+        "tests/optimization/world-operation-closure.test.ts",
+        "scripts/optimization/measure-world-ownership.mjs"
+      ],
+      "scope": "Selected-corruption and racing ACK rejection preserve all native tables relative to the committed rival, including canonical/history/assets/outbox/base/prepared/metadata/evidence. No migration acceptance is inferred.",
+      "originalAcceptance": "unchanged; guard evidence only, not original whole-case promotion"
+    },
+    {
+      "case": "AT-N14",
+      "requirementIds": [
+        "REQ-N14"
+      ],
+      "originalClausePointer": "docs/quality/pr49-followup-2026-10-15/CLAUSE_REVIEW.json#/cases/97/clauses",
+      "originalClauses": [
+        {
+          "name": "given",
+          "original": "端末内データを失った空環境"
+        },
+        {
+          "name": "when",
+          "original": "完全保存ファイルを読み込む"
+        },
+        {
+          "name": "then",
+          "original": "本文・ID・条件・素材を保って編集を再開できる"
+        },
+        {
+          "name": "negative_or_edge",
+          "original": "端末内履歴だけを外部バックアップの代わりとして保証しない"
+        }
+      ],
+      "relevantSupplementalClauses": [
+        "then",
+        "negative_or_edge"
+      ],
+      "originalProcedureSources": [
+        {
+          "path": "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+          "actual651Bytes": 31131,
+          "actual651SHA256": "58688c977fc412225d0ff8df96957aa2a28250e15122253c32374bfb7082079f",
+          "unchangedFromExactP204": true,
+          "historicalClauseRegistryDeclaredSHA256": "58688c977fc412225d0ff8df96957aa2a28250e15122253c32374bfb7082079f",
+          "matchesHistoricalDeclaredHash": true
+        }
+      ],
+      "supplementalProcedures": [
+        "tests/optimization/world-selected-corruption.test.ts",
+        "tests/optimization/world-ack-collision.test.ts"
+      ],
+      "relatedSupplementalProcedures": [
+        "tests/optimization/world-cache-ownership.test.ts",
+        "tests/optimization/world-operation-closure.test.ts",
+        "scripts/optimization/measure-world-ownership.mjs"
+      ],
+      "scope": "Supplemental complete dependency export/new/clone/cold retains original IDs; new rejection tests preserve the native source and pending work. Physical loss and external Files guarantees are untested.",
+      "originalAcceptance": "unchanged; guard evidence only, not original whole-case promotion"
+    },
+    {
+      "case": "AT-E12",
+      "requirementIds": [
+        "REQ-B23",
+        "REQ-F34",
+        "REQ-F35",
+        "REQ-N06",
+        "REQ-N11",
+        "REQ-N18"
+      ],
+      "originalClausePointer": "docs/quality/pr49-followup-2026-10-15/CLAUSE_REVIEW.json#/cases/115/clauses",
+      "originalClauses": [
+        {
+          "name": "given",
+          "original": "キャッシュ済みアプリと未送信作品"
+        },
+        {
+          "name": "when",
+          "original": "機内モード、保存容量不足、途中更新、移行失敗、専用出力からの再開を行う"
+        },
+        {
+          "name": "then",
+          "original": "失敗と未保存を明示し、更新は安全地点で適用し、書き出しと復元で再開できる"
+        },
+        {
+          "name": "negative_or_edge",
+          "original": "初回未取得・未取得素材・保存先取消を成功と扱わない"
+        }
+      ],
+      "relevantSupplementalClauses": [
+        "then",
+        "negative_or_edge"
+      ],
+      "originalProcedureSources": [
+        {
+          "path": "tests/e2e/ap04-original-e12-continuity.spec.ts",
+          "actual651Bytes": 24715,
+          "actual651SHA256": "7b91f8a112ab0dd2b0f9d6db5d3f53f30073fc6100d403c78843de9af42cf338",
+          "unchangedFromExactP204": true,
+          "historicalClauseRegistryDeclaredSHA256": "7b91f8a112ab0dd2b0f9d6db5d3f53f30073fc6100d403c78843de9af42cf338",
+          "matchesHistoricalDeclaredHash": true
+        }
+      ],
+      "supplementalProcedures": [
+        "tests/optimization/world-selected-corruption.test.ts",
+        "tests/optimization/world-ack-collision.test.ts"
+      ],
+      "relatedSupplementalProcedures": [
+        "tests/optimization/world-cache-ownership.test.ts",
+        "tests/optimization/world-operation-closure.test.ts",
+        "scripts/optimization/measure-world-ownership.mjs"
+      ],
+      "scope": "Rejected ACK/selected-corruption operations preserve pending/native input. Postcommit cancellation preserves actual native/API success and skips only cache publication. Real OS Files cancel, flight mode and real old-app upgrade remain blocked.",
+      "originalAcceptance": "unchanged; guard evidence only, not original whole-case promotion"
+    }
+  ],
+  "additionalMappingProvenance": {
+    "immutableExternalMap": {
+      "path": "/workspace/phase2-progress/p205-additional-clause-mapping.json",
+      "bytes": 14091,
+      "sha256": "f3b59fd0151b012837473dbed653d7b3bfdd8fc9225b27549c6e6ab3a7e51d81"
+    },
+    "scope": "F09/F54/N06/F35/N14/E12 then and negative_or_edge guard subsets only; original clauses/procedures/acceptance unchanged",
+    "hashMeaning": "Actual651 procedure hashes in the original map remain historical labels; original procedures are byte-identical at260 and exactP204. Historical clause-registry declared hashes remain separately labelled."
+  }
 }
