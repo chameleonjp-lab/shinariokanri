@@ -490,6 +490,8 @@ export class ScenarioStore {
   private readonly completeHistories = new Set<string>();
   private readonly cacheEpochs = new Map<string, number>();
   private cacheLifetime = 0;
+  private readonly cachedEditorSources=new WeakMap<ProjectData,string>();
+  private readonly editorSources=new WeakMap<ProjectData,{projectId:string;revision:string;sourceHash:string;access:number;lifetime:number}>();
   private readonly editingHistories = new WeakMap<CommandRecord[], { projectId: string; revision: string; historyIds: string[] }>();
   private readonly validationReferences = new WeakMap<Entity, DomainReference[]>();
   constructor(options: StoreOptions = {}) {
@@ -683,6 +685,7 @@ export class ScenarioStore {
     const accessGeneration=this.accessGeneration,lifetime=this.cacheLifetime;
     const fence=()=>{checkCancelled(signal);if(accessGeneration!==this.accessGeneration||lifetime!==this.cacheLifetime)throw new StorageError('CANCELLED','作品の閲覧権限または読み込み先が変わりました。');};
     fence();
+    let sourceHash:string|undefined;
     const started=commandMeasurementStart(),milliseconds:Record<string,number>={};let last=started;
     const measure=(stage:string)=>{if(last===undefined)return;const now=performance.now();milliseconds[stage]=(milliseconds[stage]??0)+now-last;last=now;};
     const denied=this.authorAccess&&await this.db.syncBases.get(projectId)&&this.authorAccess.get(projectId)!=='owner';
@@ -693,10 +696,11 @@ export class ScenarioStore {
       const read = await this.db.transaction('r', this.writeTables, async () => {
         bindRecordPartsSignal(signal);checkCancelled(signal);
         const headerStarted=started===undefined?undefined:performance.now();
+        if(selectedWorlds){const native=await nativeProjectHeader(projectId);sourceHash=native?await Dexie.waitFor(summarySourceHash(native)):undefined;}
         const header = await this.db.projects.get(projectId), cached = this.cachedProjects.get(projectId);
         if(headerStarted!==undefined)milliseconds['database.header']=performance.now()-headerStarted;
         if (!header) return undefined;
-        return cached?.revision === header.revision && sameJson(this.cachedHistoryIds.get(projectId), header.historyIds) ? { project: cached, historyIds: header.historyIds, contentHeadOperationId: header.contentHeadOperationId } : this.readProject(projectId, false,started===undefined?undefined:milliseconds,header,signal);
+        return cached?.revision === header.revision && sameJson(this.cachedHistoryIds.get(projectId), header.historyIds) && (!selectedWorlds||cached&&this.cachedEditorSources.get(cached)===sourceHash) ? { project: cached, historyIds: header.historyIds, contentHeadOperationId: header.contentHeadOperationId } : this.readProject(projectId, false,started===undefined?undefined:milliseconds,header,signal);
       });
       checkCancelled(signal);
       if (!read) return undefined;
@@ -714,7 +718,8 @@ export class ScenarioStore {
       }
       checkCancelled(signal);
       fence();
-      const view=this.editingCopy(project,read.historyIds,immutableView);measure('view');readMeasured(started,project.projectId,milliseconds);return view;
+      if(sourceHash&&this.cachedProjects.get(projectId)===project)this.cachedEditorSources.set(project,sourceHash);
+      const view=this.editingCopy(project,read.historyIds,immutableView);if(sourceHash)this.editorSources.set(view,{projectId,revision:project.revision,sourceHash,access:accessGeneration,lifetime});measure('view');readMeasured(started,project.projectId,milliseconds);return view;
     } catch (error) { checkCancelled(signal); throw saveError(error); }
   }
   /** Summary content is explicitly unloaded, even when its derivation is valid. */
@@ -773,8 +778,8 @@ export class ScenarioStore {
     if(!project)return undefined;
     await this.db.transaction('r',['projects','syncBases'],async()=>{
       bindRecordPartsSignal(signal);fence();if(this.authorAccess&&await this.db.syncBases.get(projectId)&&this.authorAccess.get(projectId)!=='owner')throw new StorageError('CANCELLED','作品の閲覧権限が変わりました。');
-      const header=await this.db.projects.get(projectId);fence();
-      if(!header||header.revision!==project.revision||expectedRevision!==undefined&&expectedRevision!==project.revision)throw new StorageError('REVISION_CONFLICT','読み込み中に作品が更新されました。入力を保持して再試行してください。');
+      const native=await nativeProjectHeader(projectId),proof=this.editorSources.get(project),sourceHash=native?await Dexie.waitFor(summarySourceHash(native)):undefined;fence();
+      if(!proof||proof.sourceHash!==sourceHash||expectedRevision!==undefined&&expectedRevision!==project.revision){if(BigInt(this.cachedProjects.get(projectId)?.revision??'0')<=BigInt(project.revision))this.invalidateProjectCache(projectId);throw new StorageError('REVISION_CONFLICT','読み込み中に作品が更新されました。入力を保持して再試行してください。');}
     });
     fence();return project;
   }
@@ -859,7 +864,7 @@ export class ScenarioStore {
     const world=mergeWorldSources([],sourceWorlds)[0];fence();return world?{world,worlds:known}:undefined;
   }
   private async editorWorlds(project:ProjectData,signal?:AbortSignal):Promise<Record<string,ProjectData>> {
-    return this.db.transaction('r',['worlds'],async()=>{bindRecordPartsSignal(signal);return this.readEditorWorlds(project,signal);});
+    return this.db.transaction('r',['worlds'],async()=>{bindRecordPartsSignal(signal);checkCancelled(signal);const count=await this.db.worlds.count();probeCount('db.count.calls',1,'worlds');probeCount('db.count.result',count,'worlds');if(count===0){checkCancelled(signal);return {};}return this.readEditorWorlds(project,signal);});
   }
   private async readEditorWorlds(project:ProjectData,signal?:AbortSignal):Promise<Record<string,ProjectData>> {
     const worlds:Record<string,ProjectData>={},visited=new Set<string>(),pending=referencedWorlds([project]);
@@ -876,8 +881,10 @@ export class ScenarioStore {
     await this.db.transaction('r',['projects','syncBases'],async()=>{
       bindRecordPartsSignal(signal);checkCancelled(signal);
       if(access!==this.accessGeneration||lifetime!==this.cacheLifetime||this.authorAccess&&await this.db.syncBases.where('projectId').equals(project.projectId).count()&&this.authorAccess.get(project.projectId)!=='owner')throw new StorageError('CANCELLED','作品の読み込み先または権限が変わりました。');
-      const header=await this.db.projects.get(project.projectId);
-      if(!header||header.revision!==project.revision)throw new StorageError('REVISION_CONFLICT','共通世界の確認中に作品が更新されました。入力を保持して再試行してください。');
+      const proof=this.editorSources.get(project);let current=false;
+      if(proof&&proof.projectId===project.projectId&&proof.revision===project.revision&&proof.access===access&&proof.lifetime===lifetime){const native=await nativeProjectHeader(project.projectId);current=!!native&&proof.sourceHash===await Dexie.waitFor(summarySourceHash(native));}
+      else{const header=await this.db.projects.get(project.projectId);current=!!header&&header.revision===project.revision;}
+      if(!current)throw new StorageError('REVISION_CONFLICT','共通世界の確認中に作品が更新されました。入力を保持して再試行してください。');
     });
     checkCancelled(signal);if(access!==this.accessGeneration||lifetime!==this.cacheLifetime)throw new StorageError('CANCELLED','作品の読み込み先が変わりました。');return result;
   }

@@ -87,3 +87,31 @@ hash or unavailable summary is unknown, never clean. Async completion is fenced
 by the exact input identity and summary-head signature; unrelated summary refresh
 or project selection cannot initiate repeated full-draft hashing. The existing
 canonical comparison remains the independent test oracle.
+
+## Source-bound editor publication and retained editions
+
+Selected editor reads capture a native-header fingerprint on the same transaction
+snapshot as the decoded header and current rows. Cached canonical graphs carry
+only their own verified fingerprint in a WeakMap; a missing/mismatched fingerprint
+requires a full read. A newly observed header is never stamped onto an older cache
+hit accepted only by revision/history IDs. The returned view's weak proof carries
+identity, revision, access generation and lifetime. Final editor and world-result
+publication compares the native fingerprint; callers without that proof retain
+the original decoded revision fallback. Packed header parts therefore decode once,
+while native envelope reads remain explicitly counted. Same-revision header
+changes and concurrent saves still reject. Full selected validation remains the
+only authority for body integrity.
+
+With zero canonical registry rows, an observed count query can return the only
+possible world registry, empty, without scanning the project graph. Existing full
+validation still rejects unresolved foreign references. Nonempty registry handling
+and historical-key fallback retain their existing behavior. There is no closure
+cache: mutable returned roots cannot reuse graph results merely by id/revision.
+
+Selected editable world sources merge their current image with all retained fixed
+editions of that source, including editions present only in the registry. This
+retains the existing merge order and full selected validation. Pin-save publication
+captures the active owner/generation after save confirmation and rechecks after the
+world read; a late A save cannot replace B's registry, while A→B→A before save
+confirmation can still publish A's new closure. Source-picker callbacks also check
+the rendered project/revision and selection generation before publication.

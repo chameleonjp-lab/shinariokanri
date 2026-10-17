@@ -77,3 +77,25 @@ test('a delayed clean alternative hash cannot suppress newer dirty input',async(
  await name.fill('保存された別案');await expect.poll(()=>page.evaluate(()=>(window as unknown as {draftHashGate:{waiting:number}}).draftHashGate.waiting)).toBeGreaterThan(0);await expect.poll(warned).toBe(true);
  await name.fill('後から入力した未保存名');await page.evaluate(()=>(window as unknown as {draftHashGate:{release:()=>void}}).draftHashGate.release());await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));await expect.poll(warned).toBe(true);await expect(name).toHaveValue('後から入力した未保存名');
 });
+
+test('editable world choices include fixed editions retained only in the registry',async({page})=>{
+ const world=createProject('編集できる共通世界');world.entities=[createEntity(world.projectId,'place','両版の城')];const first=await createWorldSnapshot(world,'編集作品の第一版'),second=await createWorldSnapshot(first,'レジストリだけの第二版');
+ const carrier=createProject('第二版を運ぶ作品'),independent=createProject('独立した選択先');carrier.worldReferences=[{projectId:world.projectId,immutableSnapshotId:second.snapshots[1].id,contentHash:second.snapshots[1].contentHash}];
+ await page.goto('./');await importWork(page,first);await importWork(page,carrier,{[second.snapshots[1].id]:second});await importWork(page,independent);await page.locator('.project-card').filter({hasText:independent.name}).click();await page.reload();await expect(page.locator('.project-switch')).toContainText(independent.name);
+ await page.locator('.sidebar').getByRole('button',{name:/^年表/}).click();await page.getByRole('tab',{name:'世界・地図・履歴',exact:true}).click();await page.getByRole('tab',{name:'共通世界の固定版',exact:true}).click();await page.getByLabel('参照する共通世界',{exact:true}).selectOption(world.projectId);
+ await expect(page.getByLabel('固定する共通世界版',{exact:true}).locator('option').filter({hasText:'レジストリだけの第二版'})).toHaveAttribute('value',second.snapshots[1].id);await page.getByLabel('固定する共通世界版',{exact:true}).selectOption(second.snapshots[1].id);
+ await page.getByRole('checkbox',{name:'両版の城',exact:true}).check();await page.getByRole('button',{name:'適用前の差分・影響を確認',exact:true}).click();await page.getByRole('button',{name:'確認した固定版・採用設定を保存',exact:true}).click();await expect(page.getByText('参照版：レジストリだけの第二版',{exact:true})).toBeVisible();
+});
+
+test('a late pin completion cannot replace the newly selected work world registry',async({page})=>{
+ const qa=createProject('Bだけの共通世界');qa.entities=[createEntity(qa.projectId,'place','Bの城')];const pair=[await createWorldSnapshot(qa,'保持された版一'),await createWorldSnapshot(createProject('別の共通世界'),'保持された版二')].sort((left,right)=>left.snapshots[0].id.localeCompare(right.snapshots[0].id)),[w,q]=pair;
+ const a=createProject('遅延保存A'),b=createProject('切替後B');b.worldReferences=[{projectId:q.projectId,immutableSnapshotId:q.snapshots[0].id,contentHash:q.snapshots[0].contentHash}];
+ await page.goto('./');await importWork(page,w);await importWork(page,b,{[q.snapshots[0].id]:q});await importWork(page,a);await page.locator('.project-card').filter({hasText:a.name}).click();
+ const versions=async()=>{await page.locator('.sidebar').getByRole('button',{name:/^年表/}).click();await page.getByRole('tab',{name:'世界・地図・履歴',exact:true}).click();await page.getByRole('tab',{name:'共通世界の固定版',exact:true}).click();};await versions();await page.getByLabel('参照する共通世界',{exact:true}).selectOption(w.projectId);await page.getByLabel('固定する共通世界版',{exact:true}).selectOption(w.snapshots[0].id);
+ await page.getByRole('button',{name:'適用前の差分・影響を確認',exact:true}).click();
+ await page.evaluate(()=>{const original=crypto.subtle.digest.bind(crypto.subtle),state={entered:false,release:()=>{}};(window as unknown as {pinGate:typeof state}).pinGate=state;const held=new Promise<void>(resolve=>state.release=resolve);crypto.subtle.digest=async(...args)=>{if(!state.entered){state.entered=true;await held;}return original(...args);};});
+ await page.getByRole('button',{name:'確認した固定版・採用設定を保存',exact:true}).click();await expect.poll(()=>page.evaluate(()=>(window as unknown as {pinGate:{entered:boolean}}).pinGate.entered)).toBe(true);
+ // Deliver the normal navigation button's event while the pin's async modal is pending.
+ await page.locator('.project-switch').evaluate(button=>(button as HTMLButtonElement).click());await page.locator('.project-card').filter({hasText:b.name}).click();await expect(page.locator('.project-switch')).toContainText(b.name);await versions();await expect(page.getByText(`参照版：${q.snapshots[0].versionLabel}`,{exact:true})).toBeVisible();
+ await page.evaluate(()=>(window as unknown as {pinGate:{release:()=>void}}).pinGate.release());await expect(page.getByText('作品の保存を検査しています…',{exact:false})).toHaveCount(0);await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));await expect(page.getByText(`参照版：${q.snapshots[0].versionLabel}`,{exact:true})).toBeVisible();await expect(page.locator('.project-switch')).toContainText(b.name);
+});

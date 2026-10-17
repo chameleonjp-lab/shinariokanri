@@ -25,8 +25,8 @@ export function WorldVersions({ project, worlds, worldChoices, onWorldsLoaded, o
     if(!worldChoices.some(world=>world.projectId===worldId)){const fixed=worlds.find(world=>world.projectId===worldId);setSourceLoad({id:worldId,state:fixed?'loaded':'missing',world:fixed});return;}
     const controller=new AbortController();let live=true;setSourceLoad({id:worldId,state:worldId?'loading':'unloaded'});
     if(worldId)void (async()=>{if(choice&&'registryOnly'in choice&&choice.registryOnly){const source=await scenarioStore.loadWorldSource(worldId,{signal:controller.signal});if(!live)return;setSourceLoad({id:worldId,state:source?'loaded':'missing',world:source?.world,dependencies:source?.worlds});if(source)onWorldsLoaded?.(source.worlds);return;}const loaded=await scenarioStore.loadEditor(worldId,{signal:controller.signal,expectedRevision:choice?.revision,immutableView:true});if(!loaded){if(live)setSourceLoad({id:worldId,state:'missing'});return;}
-      const dependencies=await scenarioStore.listEditorWorldSnapshots(loaded,{signal:controller.signal});if(!live)return;
-      setSourceLoad({id:worldId,state:'loaded',world:loaded,dependencies});onWorldsLoaded?.({...dependencies,...Object.fromEntries(loaded.snapshots.map(snapshot=>[snapshot.id,loaded]))});
+      const retained=await scenarioStore.loadWorldSource(worldId,{signal:controller.signal});const dependencies={...retained?.worlds,...await scenarioStore.listEditorWorldSnapshots(loaded,{signal:controller.signal})};if(!live)return;
+      const combined=mergeWorldSources([loaded],retained?.worlds??{}).find(world=>world.projectId===worldId)!;setSourceLoad({id:worldId,state:'loaded',world:combined,dependencies});onWorldsLoaded?.({...Object.fromEntries(loaded.snapshots.map(snapshot=>[snapshot.id,loaded])),...dependencies});
     })().catch(cause=>{if(live)setSourceLoad({id:worldId,state:'error',error:(cause as Error).message});});
     return()=>{live=false;controller.abort();if(worldId!==project.projectId)scenarioStore.releaseEditor(worldId);};
   },[scenarioStore,worldId,choice?.revision,choice&&'registryOnly'in choice?choice.registryOnly:undefined,!!worldChoices]);

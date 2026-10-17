@@ -6,6 +6,7 @@ import {createProject,createEntity} from '../../src/domain/model';
 import {packRecordData} from '../../src/storage/recordPartsCore';
 import {createWorldSnapshot} from '../../src/domain/world';
 import {exportScenario,inspectScenario} from '../../src/storage/archive';
+import {prepareAsset} from '../../src/domain/attachments';
 import {startProbe} from '../../src/observability/probe';
 const stores:ScenarioStore[]=[];
 const open=()=>{const store=new ScenarioStore({databaseName:`summary-${crypto.randomUUID()}`});stores.push(store);return store;};
@@ -149,9 +150,9 @@ it('binds a legacy packed-header summary to its native envelope without reading 
  expect((await store.listProjectSummaries())[0].contentState).toBe('unloaded');await expect(store.loadEditor(saved.projectId)).rejects.toMatchObject({code:'SAVE_FAILED'});
 });
 it('never reports fully synced while asset acknowledgement detail is unloaded',async()=>{
- const store=open(),saved=(await store.saveProject(createProject('Asset unknown'),{reason:'seed'})).project;
+ const store=open(),work=createProject('Asset unknown'),asset=await prepareAsset(new Uint8Array([1,2,3]),'pending.bin','application/octet-stream');work.entities=[createEntity(work.projectId,'attachment','Pending asset',{contentHash:asset.contentHash,byteSize:asset.bytes.length,mediaType:asset.mediaType,assetPath:`assets/${asset.contentHash}.bin`})];const saved=(await store.saveProject(work,{reason:'seed',assets:[asset]})).project;
  await db(store).table('outbox').clear();await db(store).table('syncMetadata').put({projectId:saved.projectId,serverRevision:saved.revision,state:'synced'});
- expect((await store.listProjectSummaries())[0].saveState).toMatchObject({pendingCount:0,pendingAssetCount:'unloaded',syncState:'unloaded'});
+ expect(await store.getSaveState(saved.projectId)).toMatchObject({pendingCount:0,pendingAssetCount:1,syncState:'pending'});expect((await store.listProjectSummaries())[0].saveState).toMatchObject({pendingCount:0,pendingAssetCount:'unloaded',syncState:'unloaded'});
 });
 it('offers registry-only world sources to unrelated works without reading their bodies in a steady catalog',async()=>{
  const store=open(),world=await createWorldSnapshot(createProject('Registry only'),'Pinned');
@@ -172,4 +173,25 @@ it('rebuilds catalog corruption atomically and surfaces native source corruption
  const cancelled=new AbortController();cancelled.abort();await expect(store.loadWorldSource(world.projectId,{signal:cancelled.signal})).rejects.toMatchObject({code:'CANCELLED'});
  await db(store).table('worlds').put({id,project:{...world,schemaVersion:'999.0'}});await expect(store.loadWorldSource(world.projectId)).rejects.toBeDefined();expect((await db(store).table('worlds').get(id)).project.schemaVersion).toBe('999.0');
  await db(store).table('worldSources').clear();expect((await store.listWorldSourceSummaries())[0].contentState).toBe('error');await expect(store.loadWorldSource(world.projectId)).rejects.toMatchObject({code:'VALIDATION_FAILED'});expect((await db(store).table('worlds').get(id)).project.schemaVersion).toBe('999.0');
+});
+it('does not decode packed headers again at editor and subsequent world-publication fences',async()=>{
+ const store=open(),saved=(await store.saveProject(createProject('Packed fence'),{reason:'seed'})).project,header=await db(store).table('projects').get(saved.projectId),packed=await packRecordData(header,'selected-fence-header');
+ await new Promise<void>((resolve,reject)=>{const tx=db(store).backendDB().transaction(['projects','recordParts'],'readwrite');tx.objectStore('projects').put({projectId:saved.projectId,name:saved.name,__scenarioRecordParts:packed.packed});for(const part of packed.parts)tx.objectStore('recordParts').put(part);tx.oncomplete=()=>resolve();tx.onerror=()=>reject(tx.error);});store.releaseEditor(saved.projectId);
+ const probe=startProbe(),loaded=await store.loadEditor(saved.projectId,{immutableView:true});await store.listEditorWorldSnapshots(loaded!);const measured=probe.stop();expect(measured.counters['db.read.rows.recordParts']).toBe(packed.parts.length);
+});
+it('rejects a changed native header with the same revision during editor validation',async()=>{
+ const store=open(),saved=(await store.saveProject(createProject('Original header'),{reason:'seed'})).project;store.releaseEditor(saved.projectId);
+ const internals=store as unknown as {editorWorlds:(...args:unknown[])=>Promise<unknown>},original=internals.editorWorlds.bind(store);let entered!:()=>void,resume!:()=>void;const ready=new Promise<void>(resolve=>entered=resolve),held=new Promise<void>(resolve=>resume=resolve);
+ vi.spyOn(internals,'editorWorlds').mockImplementationOnce(async(...args)=>{entered();await held;return original(...args);});const pending=store.loadEditor(saved.projectId),rejected=expect(pending).rejects.toMatchObject({code:'REVISION_CONFLICT'});await ready;await db(store).table('projects').put({...await db(store).table('projects').get(saved.projectId),schemaVersion:'999.0'});resume();await rejected;await expect(store.loadEditor(saved.projectId)).rejects.toBeDefined();expect((await db(store).table('projects').get(saved.projectId)).schemaVersion).toBe('999.0');
+});
+
+it('never stamps a same-revision changed native header onto an older cached graph',async()=>{
+ const store=open(),saved=(await store.saveProject(createProject('Cached original'),{reason:'seed'})).project;expect((await store.loadEditor(saved.projectId))?.name).toBe('Cached original');
+ await db(store).table('projects').put({...await db(store).table('projects').get(saved.projectId),name:'Native replacement'});expect((await store.loadEditor(saved.projectId))?.name).toBe('Native replacement');
+ await db(store).table('projects').put({...await db(store).table('projects').get(saved.projectId),schemaVersion:'999.0'});await expect(store.loadEditor(saved.projectId)).rejects.toBeDefined();expect((await db(store).table('projects').get(saved.projectId)).schemaVersion).toBe('999.0');
+});
+
+it('still rejects an unresolved foreign reference when the canonical registry is empty',async()=>{
+ const store=open(),saved=(await store.saveProject(createProject('Missing foreign world'),{reason:'seed'})).project;const header=await db(store).table('projects').get(saved.projectId);await db(store).table('projects').put({...header,worldReferences:[{projectId:crypto.randomUUID(),immutableSnapshotId:crypto.randomUUID(),contentHash:'0'.repeat(64)}]});store.releaseEditor(saved.projectId);
+ const probe=startProbe();await expect(store.loadEditor(saved.projectId)).rejects.toBeDefined();const measured=probe.stop();expect(measured.counters['db.count.calls.worlds']).toBe(1);expect(measured.counters['db.count.result.worlds']).toBe(0);expect(await db(store).table('worlds').count()).toBe(0);expect((await db(store).table('projects').get(saved.projectId)).worldReferences).toHaveLength(1);
 });
