@@ -11,10 +11,11 @@ export async function readWorldClosure(
  full: ()=>Promise<Record<string,ProjectData>>,
  signal?:AbortSignal,
 ):Promise<Record<string,ProjectData>> {
- const worlds:Record<string,ProjectData>={},explicit:string[]=[],typed:string[]=[],provided=new Set<string>(),seen=new WeakSet<object>();
+ const worlds:Record<string,ProjectData>={},explicit:string[]=[],typed:string[]=[],local=new Set<string>(),retained=new Set<string>(),seen=new WeakSet<object>();
  let unknown=false;
- const scan=(root:ProjectData)=>{
+ const scan=(root:ProjectData,own=false)=>{
   if(!root||!Array.isArray(root.snapshots)){unknown=true;return;}
+  const provided=own?local:retained;
   provided.add(root.projectId);for(const snapshot of root.snapshots)if(snapshot&&typeof snapshot.id==='string')provided.add(snapshot.id);else unknown=true;
   const pending:unknown[]=[root];
   while(pending.length){
@@ -36,15 +37,19 @@ export async function readWorldClosure(
   }
  };
  const fallback=async()=>{probeCount('world.closure.fullFallback');checkCancelled(signal);const result=await full();checkCancelled(signal);return result;};
- for(const root of roots)scan(root);
+ for(const root of roots)scan(root,true);
  const visited=new Set<string>();
  while(explicit.length||typed.length){
   checkCancelled(signal);if(unknown)return fallback();
   // Explicit editions establish retained snapshot owners before typed anchors
   // are resolved. A retained old ID is not necessarily a native outer key.
   const isTyped=explicit.length===0,id=(isTyped?typed:explicit).pop()!;
-  if(isTyped&&provided.has(id)||worlds[id]||visited.has(id))continue;visited.add(id);
-  const row=await read(id);checkCancelled(signal);if(!row)return fallback();
+  if(isTyped&&local.has(id)||worlds[id]||visited.has(id))continue;visited.add(id);
+  const row=await read(id);checkCancelled(signal);
+  // An external row can retain the selected old edition, but an existing
+  // direct old row must still join validation so a conflicting copy is seen.
+  // Missing direct ownership is already established by the retained owner.
+  if(!row){if(isTyped&&retained.has(id))continue;return fallback();}
   worlds[row.id]=row.project;scan(row.project);
  }
  if(unknown)return fallback();
