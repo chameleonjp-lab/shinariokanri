@@ -127,7 +127,7 @@ test('AT-N06 同じ旧作品の移行失敗と台詞の複数対象保存の容�
   await page.locator('.project-card').filter({ hasText: p.name }).click();
   const migrated = await backup(page);
   expect(migrated.project).toEqual(p);
-  expect((await image(page)).version).toBe(70);
+  expect((await image(page)).version).toBe(80);
 
   // when: a normal split affects the old line, two new lines, scene ordering,
   // translations/recording review state, history and outbox in one transaction.
