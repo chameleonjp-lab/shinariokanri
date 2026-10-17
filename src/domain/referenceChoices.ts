@@ -15,11 +15,17 @@ export function referenceProject(project: ProjectData, versionId?: string): Proj
 export function referenceChoices(project: ProjectData, scope: ReferenceScope = 'entity', kinds?: readonly EntityKind[], options: ReferenceOptions = {}): ReferenceChoice[] {
   const source = scope === 'snapshot' ? project : referenceProject(project, options.versionId);
   if (!source) return [];
-  const finish=probeSpan('reference.choices');probeCount('reference.choices.rows',source.entities.length);
-  const active = source.entities.filter(entity => options.includeArchived || !entity.deletedAt);
-  const entities = active.filter(entity => !kinds?.length || kinds.includes(entity.kind)).map(entity => ({ id: entity.id, label: `${entity.name || '無題'} · ${KIND_LABELS[entity.kind]}` }));
-  const names = new Map(active.map(entity => [entity.id, entity.name]));
-  const relations = ['relation', 'record', 'projection_record'].includes(scope) ? source.relations.filter(relation => options.includeArchived || !relation.deletedAt).map(relation => ({ id: relation.id, label: `${relation.relationType} · ${names.get(relation.fromId) ?? '不明'} → ${names.get(relation.toId) ?? '不明'}` })) : [];
+  const finish = probeSpan('reference.choices');
+  // Count actual entity-row visits, including repeated preparation passes. The
+  // disabled probe never retains inputs; no candidate/index survives this call.
+  const scan = <T>(rows: T[]): T[] => { probeCount('reference.choices.rows', rows.length); return rows; };
+  const active = ['calendar', 'project', 'identity'].includes(scope) ? [] : scan(source.entities).filter(entity => options.includeArchived || !entity.deletedAt);
+  const entities = ['entity', 'record', 'projection_record', 'presentation'].includes(scope)
+    ? scan(scan(active).filter(entity => !kinds?.length || kinds.includes(entity.kind))).map(entity => ({ id: entity.id, label: `${entity.name || '無題'} · ${KIND_LABELS[entity.kind]}` })) : [];
+  const relations = ['relation', 'record', 'projection_record'].includes(scope) ? (() => {
+    const names = new Map(scan(active).map(entity => [entity.id, entity.name]));
+    return source.relations.filter(relation => options.includeArchived || !relation.deletedAt).map(relation => ({ id: relation.id, label: `${relation.relationType} · ${names.get(relation.fromId) ?? '不明'} → ${names.get(relation.toId) ?? '不明'}` }));
+  })() : [];
   const blocks: ReferenceChoice[] = [], aliases: ReferenceChoice[] = [], triggers: ReferenceChoice[] = [];
   const walk = (value: unknown, name: string) => {
     if (Array.isArray(value)) { value.forEach(child => walk(child, name)); return; }
@@ -31,16 +37,16 @@ export function referenceChoices(project: ProjectData, scope: ReferenceScope = '
     }
     Object.values(object).forEach(child => walk(child, name));
   };
-  if (['block', 'alias', 'presentation', 'projection_record'].includes(scope)) active.forEach(entity => walk(entity.data, entity.name));
+  if (['block', 'alias', 'presentation', 'projection_record'].includes(scope)) scan(active).forEach(entity => walk(entity.data, entity.name));
   // Public paragraph identities belong to the editable policy, while its source
   // records and source paragraphs still resolve exclusively in the declared pin.
-  if (scope === 'projection_record' && source !== project) for (const policy of project.entities) if (policy.kind === 'projection_profile' && !policy.deletedAt) walk(policy.data.publicTexts, policy.name);
-  if (scope === 'projection_record') for (const entity of active) if (entity.kind === 'flow_node' && entity.data.trigger?.id) triggers.push({ id: entity.data.trigger.id, label: `${entity.name} · 起動条件` });
+  if (scope === 'projection_record' && source !== project) for (const policy of scan(project.entities)) if (policy.kind === 'projection_profile' && !policy.deletedAt) walk(policy.data.publicTexts, policy.name);
+  if (scope === 'projection_record') for (const entity of scan(active)) if (entity.kind === 'flow_node' && entity.data.trigger?.id) triggers.push({ id: entity.data.trigger.id, label: `${entity.name} · 起動条件` });
   let choices: ReferenceChoice[];
   switch (scope) {
     case 'calendar': choices = source.calendars.map(calendar => ({ id: calendar.id, label: calendar.name })); break;
     case 'project': choices = [{ id: source.projectId, label: source.name }, ...source.worldReferences.map(world => ({ id: world.projectId, label: '参照する共通世界' }))]; break;
-    case 'snapshot': choices = [{ id: project.projectId, label: '現在の作品版' }, ...project.snapshots.map(snapshot => ({ id: snapshot.id, label: `固定版 · ${snapshot.versionLabel}` })), ...active.filter(entity => entity.kind === 'snapshot').map(entity => ({ id: entity.id, label: `固定版 · ${entity.name}` })), ...project.worldReferences.map(world => ({ id: world.immutableSnapshotId, label: '固定した共通世界版' }))]; break;
+    case 'snapshot': choices = [{ id: project.projectId, label: '現在の作品版' }, ...project.snapshots.map(snapshot => ({ id: snapshot.id, label: `固定版 · ${snapshot.versionLabel}` })), ...scan(scan(active).filter(entity => entity.kind === 'snapshot')).map(entity => ({ id: entity.id, label: `固定版 · ${entity.name}` })), ...project.worldReferences.map(world => ({ id: world.immutableSnapshotId, label: '固定した共通世界版' }))]; break;
     case 'relation': choices = relations; break;
     case 'record': choices = [...entities, ...relations]; break;
     case 'projection_record': choices = [...entities, ...relations, ...blocks, ...triggers]; break;
