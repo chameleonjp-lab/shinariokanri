@@ -20,7 +20,7 @@ import { deletionImpact } from './domain/maintenance';
 import { WorldPanel } from './ui/WorldPanel';
 import { effectiveWorldContent } from './domain/world';
 import { resolvePinnedWorlds } from './domain/pinnedWorlds';
-import { adoptedWorldEntityIds, mergeWorldSources, ownWorldRegistry, replaceAdoptedWorlds, replaceWorldPreview, worldRegistryContents } from './domain/worldSources';
+import { adoptedWorldEntityIds, mergeWorldSources, ownWorldRegistry, replaceAdoptedWorlds, replaceWorldPreview, updateWorldRegistryRevision, worldRegistryContents } from './domain/worldSources';
 import { addChangeReviews } from './domain/changeReviews';
 import { equalJson, type AssetInput } from './storage';
 import { EmptyState, Icon, Modal, normalizeSearch, downloadBytes, safeFileName, type IconName, STATUS_LABELS } from './ui/components';
@@ -228,7 +228,7 @@ export default function App() {
     if (activeIdRef.current === updated.projectId || !activeIdRef.current) projectRef.current = updated;
     setProjects(previous => activeIdRef.current===updated.projectId||!activeIdRef.current?[updated]:previous);
     const generation=selectionGeneration.current;
-    setWorldRegistryState(previous=>previous.owner?.projectId===updated.projectId?ownWorldRegistry({projectId:updated.projectId,revision:updated.revision,generation},previous.adopted):previous);
+    setWorldRegistryState(previous=>updateWorldRegistryRevision(previous,{projectId:updated.projectId,revision:updated.revision,generation}));
     void refreshSummaries();
   }, [scenarioStore]);
   const measurementStart = useRef<number | undefined>(undefined);

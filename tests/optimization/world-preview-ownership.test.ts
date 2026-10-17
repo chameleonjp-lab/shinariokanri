@@ -28,3 +28,18 @@ it('refreshes adopted dependencies without dropping a newer preview of the same 
  for(const stale of [{...owner,generation:3},{...owner,revision:'7'},{...owner,projectId:'other'}])expect(sources.replaceAdoptedWorlds(refreshed,stale,{old})).toBe(refreshed);
  expect(sources.worldRegistryContents(sources.replaceWorldPreview(refreshed,owner,{}))).toEqual({fresh});
 });
+
+it('preserves the committed owner and preview across same-revision refreshes and unsuccessful newer intents',()=>{
+ const owner={projectId:'editor',revision:'8',generation:4},adopted=createProject('adopted'),preview=createProject('current preview');
+ const state=sources.replaceWorldPreview(sources.ownWorldRegistry(owner,{adopted}),owner,{preview});
+ // The request generation can advance without replacing the committed editor.
+ expect(sources.updateWorldRegistryRevision(state,{...owner,generation:5})).toBe(state);
+ // A delayed same-revision callback cannot replace an A -> B -> A owner.
+ expect(sources.updateWorldRegistryRevision(state,{...owner,generation:1})).toBe(state);
+ expect(sources.updateWorldRegistryRevision(state,{...owner,revision:'7'})).toBe(state);
+ expect(sources.updateWorldRegistryRevision(state,{...owner,projectId:'other'})).toBe(state);
+ const nextOwner={...owner,revision:'9',generation:5},next=sources.updateWorldRegistryRevision(state,nextOwner);
+ expect(next.owner).toEqual(nextOwner);expect(sources.worldRegistryContents(next)).toEqual({adopted});
+ expect(sources.replaceWorldPreview(next,owner,{preview})).toBe(next);
+ expect(sources.replaceAdoptedWorlds(state,owner,{adopted})).toMatchObject({owner,preview:{preview}});
+});

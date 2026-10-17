@@ -19,6 +19,30 @@ async function choose(page,expect,world){
  await page.getByLabel('参照する共通世界',{exact:true}).selectOption(world.projectId);
  await expect(page.getByLabel('固定する共通世界版',{exact:true}).locator(`option[value="${world.snapshotId}"]`)).toHaveCount(1);
 }
+async function runSameRevisionUIProof(page,expect,runId,active){
+ await active('same revision: mount local account App');const fixture=await page.evaluate(id=>window.worldOwnershipUI.setup(id,true),runId);
+ await active('same revision: local idle fixture seeded',{fixture,scope:'local fixed account/session; no live Auth or transport'});
+ try{
+  await expect(page.locator('.project-switch')).toContainText('P205 work 0');
+  await page.locator('.sidebar').getByRole('button',{name:/^作品・保存/}).click();await page.getByRole('tab',{name:'同期・限定共有',exact:true}).click();
+  await expect(page.getByRole('button',{name:'保存待ちを同期',exact:true})).toBeEnabled();
+  await page.evaluate(id=>window.worldOwnershipUI.holdSameRevisionRefresh(id),fixture.selected);
+  await page.getByRole('button',{name:'保存待ちを同期',exact:true}).click();await expect.poll(()=>page.evaluate(()=>window.worldOwnershipUI.sameRevisionState().entered)).toBe(true);
+  await versions(page);await choose(page,expect,fixture.worlds[2]);await page.getByLabel('固定する共通世界版',{exact:true}).selectOption(fixture.worlds[2].snapshotId);
+  await page.getByRole('checkbox',{name:'P205 place 2',exact:true}).check();await page.getByRole('searchbox',{name:'採用する世界設定を検索'}).fill('P205 place');
+  await page.getByRole('button',{name:'共通世界の元情報を開く',exact:true}).click();await expect(page.getByRole('dialog').last()).toContainText('P205 place 2');
+  await page.getByRole('dialog').last().getByRole('button',{name:'閉じる',exact:true}).click();
+  const before={source:await page.getByLabel('参照する共通世界',{exact:true}).inputValue(),snapshot:await page.getByLabel('固定する共通世界版',{exact:true}).inputValue(),query:await page.getByRole('searchbox',{name:'採用する世界設定を検索'}).inputValue(),adopted:await page.getByRole('checkbox',{name:'P205 place 2',exact:true}).isChecked()};
+  await active('same revision: release ordinary idle SyncPanel refresh',{before,held:await page.evaluate(()=>window.worldOwnershipUI.sameRevisionState())});
+  await page.evaluate(()=>window.worldOwnershipUI.releaseSameRevisionRefresh());await expect.poll(()=>page.evaluate(()=>window.worldOwnershipUI.sameRevisionState().returned)).toBe(true);
+  await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+  const after={source:await page.getByLabel('参照する共通世界',{exact:true}).inputValue(),snapshot:await page.getByLabel('固定する共通世界版',{exact:true}).inputValue(),query:await page.getByRole('searchbox',{name:'採用する世界設定を検索'}).inputValue(),adopted:await page.getByRole('checkbox',{name:'P205 place 2',exact:true}).isChecked()},state=await page.evaluate(()=>window.worldOwnershipUI.sameRevisionState());
+  await active('same revision: current immutable preview still resolves',{before,after,state});expect(after).toEqual(before);expect(state).toMatchObject({revision:'1',networkCalls:0,sendCalls:0});
+  await page.getByRole('button',{name:'共通世界の元情報を開く',exact:true}).click();await expect(page.getByRole('dialog').last()).toContainText('P205 place 2');
+  await page.getByRole('dialog').last().getByRole('button',{name:'閉じる',exact:true}).click();
+  return{status:'ok',actualApp:true,action:'ordinary idle SyncPanel refresh held after its real read; same editor/revision preserves loaded preview and input',before,after,state,uiInput:fixture.uiInput,scope:'local fixed account/session; zero transport calls; no live Auth evidence',latency:'NOT MEASURED'};
+ }finally{await page.evaluate(()=>window.worldOwnershipUI.cleanup());}
+}
 async function runUIProof(page,expect,runId,mode,supported,active){
  await active('mount actual App');const fixture=await page.evaluate(id=>window.worldOwnershipUI.setup(id),runId);
  await active('actual App fixture seeded',{fixture});
@@ -42,7 +66,7 @@ async function runUIProof(page,expect,runId,mode,supported,active){
   await page.getByRole('button',{name:'共通世界の元情報を開く',exact:true}).click();await expect(page.getByRole('dialog').last()).toContainText('P205 place 2');
   await page.getByRole('dialog').last().getByRole('button',{name:'閉じる',exact:true}).click();
   const boundaries=[];
-  for(const world of fixture.worlds){await choose(page,expect,world);boundaries.push({source:world.projectId,...await page.evaluate(()=>window.worldOwnershipUI.snapshot())});}
+  for(const world of fixture.worlds){await choose(page,expect,world);const boundary={source:world.projectId,...await page.evaluate(()=>window.worldOwnershipUI.snapshot())};boundaries.push(boundary);await active('six-source UI retention boundary',{boundary,uiMetricSupport:supported?'actual ON gauges only in capture mode':'UNKNOWN: literal baseline has no UI registry gauges'});}
   for(const world of fixture.worlds)await expect(page.getByLabel('参照する共通世界',{exact:true}).locator(`option[value="${world.projectId}"]`)).toHaveCount(1);
   await expect(page.getByText(`参照版：${fixture.adoptedLabel}`,{exact:true})).toBeVisible();
   await active('outer selection rejection preserves current preview capability');
@@ -173,7 +197,8 @@ try{
  await page.goto(`http://127.0.0.1:${server.address().port}/tests/optimization/world-ownership-measurement-harness.html`);await page.waitForFunction(()=>!!window.worldOwnershipMeasurement);
  const pageFailure=new Promise((_,reject)=>{rejectPageError=reject;});
  const operation=page.evaluate(options=>window.worldOwnershipMeasurement.run(options),{suite,mode,worldCountersSupported,runId}).then(async()=>{
-  if(args.ui!=='false')result.ui=await runUIProof(page,expect,`${runId}-ui`,mode,worldCountersSupported,async(action,evidence)=>{result.activeUIAction=action;if(evidence)(result.uiCheckpoints??=[]).push({action,...evidence});await persist();});
+  const active=async(action,evidence)=>{result.activeUIAction=action;if(evidence)(result.uiCheckpoints??=[]).push({action,...evidence});await persist();};
+  if(args.ui!=='false'){result.sameRevisionUI=await runSameRevisionUIProof(page,expect,`${runId}-same-revision`,active);result.ui=await runUIProof(page,expect,`${runId}-ui`,mode,worldCountersSupported,active);}
   else result.ui={status:'NOT RUN',reason:'explicit --ui false; API comparison only; actual App UI proof is separate'};
   delete result.activeUIAction;
  });

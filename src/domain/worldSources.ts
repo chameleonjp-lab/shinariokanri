@@ -6,6 +6,11 @@ export interface OwnedWorldRegistry {owner?:WorldRegistryOwner;adopted:Record<st
 export function ownWorldRegistry(owner?:WorldRegistryOwner,adopted:Record<string,ProjectData>={}):OwnedWorldRegistry {
   return {owner:owner?{...owner}:undefined,adopted,preview:{}};
 }
+/** A same-revision refresh does not adopt a new editor or revoke its preview. */
+export function updateWorldRegistryRevision(state:OwnedWorldRegistry,owner:WorldRegistryOwner):OwnedWorldRegistry {
+  if(state.owner?.projectId!==owner.projectId||BigInt(owner.revision)<=BigInt(state.owner.revision))return state;
+  return ownWorldRegistry(owner,state.adopted);
+}
 /** An editor owns adopted pins separately from its one replaceable preview. */
 export function replaceWorldPreview(state:OwnedWorldRegistry,owner:WorldRegistryOwner,preview:Record<string,ProjectData>):OwnedWorldRegistry {
   if(state.owner?.projectId!==owner.projectId||state.owner.revision!==owner.revision||state.owner.generation!==owner.generation)return state;
