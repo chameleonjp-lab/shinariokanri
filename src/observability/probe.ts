@@ -8,6 +8,7 @@ export const PHASES = [
 ] as const;
 export type ProbePhase = typeof PHASES[number];
 const metrics = [
+  'history.metadata.rows', 'history.metadata.payloadBytes', 'history.legacy.rows', 'history.legacy.payloadBytes', 'history.header.payloadBytes', 'history.partKeys', 'history.body.rows', 'history.body.partRows', 'history.body.partBytes',
   'db.count.calls', 'db.count.result',
   'db.read.calls', 'db.read.rows', 'db.read.keys', 'db.read.payloadBytes', 'db.read.requested',
   'db.write.calls', 'db.write.attempted', 'db.write.succeeded', 'db.write.committed', 'db.write.aborted',

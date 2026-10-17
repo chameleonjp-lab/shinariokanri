@@ -1,3 +1,4 @@
+import {bindCanonicalHistoryWrites,readHistoryPageCommands} from './historyMetadata';
 import {mergeWorldSources} from '../domain/worldSources';
 import {deriveWorldSource,validWorldSource,type StoredWorldSource,type WorldSourceSummary,nativeProjectHeader,summarySourceHash,deriveProjectSummary,validProjectSummary,type StoredProjectSummary,type ProjectSummary} from './projectSummary';
 export type {ProjectSummary} from './projectSummary';
@@ -821,8 +822,10 @@ export class ScenarioStore {
   async historyPage(projectId: string, options: { query?: string; page?: number; size?: number } = {}): Promise<HistoryPage> {
     const query = (options.query ?? '').normalize('NFKC').toLocaleLowerCase(), page = options.page ?? 0, size = options.size ?? 30;
     if (!Number.isSafeInteger(page) || page < 0 || !Number.isSafeInteger(size) || size < 1 || size > 60) throw new StorageError('VALIDATION_FAILED', '履歴のページは0以上、ページ件数は1〜60です。');
+    return this.db.transaction('r',['projects','commands'],async()=>{
     const header = await this.db.projects.get(projectId); if (!header) throw new StorageError('NOT_FOUND', '作品が見つかりません。');
-    const rows = await this.db.commands.bulkGet(header.historyIds);
+    probePayload('history.header.payloadBytes',header);
+    const rows = await readHistoryPageCommands<StoredCommand|undefined>(this.db,header.historyIds);
     const entries = rows.map((row, index) => {
       const value = row?.delta?.metadata ?? row?.record;
       if (!value || value.projectId !== projectId || value.operationId !== header.historyIds[index]) throw new StorageError('SAVE_FAILED', '履歴の操作情報が不足しています。', header.historyIds[index]);
@@ -831,6 +834,7 @@ export class ScenarioStore {
     }).reverse().filter(entry => !query || [entry.reason, entry.revision, entry.baseRevision, entry.operationId, entry.createdAt, ...entry.targetIds].some(value => value.normalize('NFKC').toLocaleLowerCase().includes(query)));
     const maximum = Math.max(0, Math.ceil(entries.length / size) - 1), bounded = Math.min(page, maximum);
     return { entries: entries.slice(bounded * size, (bounded + 1) * size), page: bounded, maximum, total: entries.length, size };
+    });
   }
   async historyCommand(projectId: string, operationId: string): Promise<CommandRecord> {
     const header = await this.db.projects.get(projectId), row = await this.db.commands.get(operationId);
@@ -1071,7 +1075,7 @@ export class ScenarioStore {
         await this.writeAssets(assets, candidate, false);
         written = await this.writeContent(candidate, previous, operationId, historyIds);
         this.faultInjector?.('after-content');
-        await this.db.commands.add(storedCommand);
+        bindCanonicalHistoryWrites();await this.db.commands.add(storedCommand);
         this.faultInjector?.('after-history');
         const metadata = await this.db.syncMetadata.get(candidate.projectId);
         await this.db.outbox.add({ operationId, projectId: candidate.projectId, accountId: this.accountId, baseRevision: metadata?.serverRevision ?? '0', localRevision: candidate.revision, createdAt: now, targetIds: command.targetIds, changes: changes.map(({ before, after, ...change }) => ({ ...change, ...(before === null ? { before: null } : {}), ...(after === null ? { after: null } : {}) })), commandOperationId: operationId });
@@ -1329,7 +1333,7 @@ export class ScenarioStore {
       if(ack.status==='conflict'){await this.db.syncConflicts.put({operationId:ack.operationId,projectId,prepared:captured.prepared!,ack,conflicts:ack.conflicts,createdAt:now});}
       else{
         for(const [id,world]of Object.entries(receivedWorlds)){const old=await this.db.worlds.get(id);if(old&&!equalJson(old.project,world))throw new StorageError('IMMUTABLE_SNAPSHOT','固定世界の取得内容が保存済み版と異なります。');await this.db.worlds.put({id,project:world});await this.db.worldSources.put(await Dexie.waitFor(deriveWorldSource(id,world)));}
-        if(storedCommand){await this.writeContent(candidate,previous,storedCommand.operationId);this.faultInjector?.('after-content');await this.db.commands.add(storedCommand);this.faultInjector?.('after-history');}
+        if(storedCommand){await this.writeContent(candidate,previous,storedCommand.operationId);this.faultInjector?.('after-content');bindCanonicalHistoryWrites();await this.db.commands.add(storedCommand);this.faultInjector?.('after-history');}
         await this.db.syncBases.put(confirmed!);await this.db.outbox.bulkDelete(captured.prepared!.outboxIds);
         if(captured.prepared!.operation.resolvesOperationId){const original=await this.db.syncConflicts.get(captured.prepared!.operation.resolvesOperationId);if(!original||[...original.prepared.operation.targets.map(target=>target.targetId),...original.conflicts.map(c=>c.targetId)].some(id=>!captured.prepared!.operation.targets.some(target=>target.targetId===id)))throw new SyncProtocolError('PROTOCOL_INVALID');await this.db.syncConflicts.delete(original.operationId);}
         if(postConflicts)await this.db.syncConflicts.put(postConflicts);
@@ -1357,7 +1361,7 @@ export class ScenarioStore {
     const worlds=await this.validationWorlds();validated(candidate,worldSnapshotContents(worlds));await verifySnapshotHashes([candidate]);await validateDurableIntegrity(candidate,worldSnapshotContents(worlds));
     const changes=await targetChanges(withoutHistory(previous),withoutHistory(candidate)),command:CommandRecord={operationId,projectId:plan.projectId,baseRevision:previous.revision,revision:candidate.revision,targetIds:changes.map(change=>change.targetId),reason:`競合の共通元・二案から明示選択: ${plan.operationId}`,createdAt:now,before:withoutHistory(previous),after:withoutHistory(candidate)};candidate.history=[...previous.history,command];
     await this.db.transaction('rw',this.writeTables,async()=>{const [current,latestBase,latestConflict]=await Promise.all([this.db.projects.get(plan.projectId),this.db.syncBases.get(plan.projectId),this.db.syncConflicts.get(plan.operationId)]);if(current?.revision!==plan.localRevision||!sameValue(latestBase,base)||!sameValue(latestConflict,conflict)||await this.db.preparedSync.where('projectId').equals(plan.projectId).count())throw new SyncProtocolError('REVISION_CHANGED');
-      await this.writeContent(candidate,previous,operationId);await this.db.commands.add({operationId,projectId:plan.projectId,revision:candidate.revision,record:command});
+      await this.writeContent(candidate,previous,operationId);bindCanonicalHistoryWrites();await this.db.commands.add({operationId,projectId:plan.projectId,revision:candidate.revision,record:command});
       await this.db.outbox.add({operationId,projectId:plan.projectId,accountId:this.accountId,baseRevision:plan.serverRevision,localRevision:candidate.revision,targetIds:command.targetIds,changes,command,createdAt:now});
       await this.db.syncBases.put(confirmed);const outboxIds=(await this.db.outbox.where('projectId').equals(plan.projectId).toArray()).map(row=>row.operationId);await this.db.preparedSync.add({operationId:plan.operation.operationId,projectId:plan.projectId,operation:plan.operation,localRevision:candidate.revision,localDocuments:nativeDocuments(candidate,plan.serverRevision),outboxIds,createdAt:now});this.faultInjector?.('before-commit');
     });this.invalidateProjectCache(plan.projectId);return copy(plan.operation);
@@ -1668,7 +1672,7 @@ export class ScenarioStore {
       const historyStorage = await importedCommandStorage(project.history, options.signal);
       options.onStage?.('commit');
       const result = await this.db.transaction('rw', this.writeTables, async () => {
-        bindRecordPartsImport(options.signal);
+        bindRecordPartsImport(options.signal);bindCanonicalHistoryWrites();
         checkCancelled(options.signal);
         if (await this.db.importLogs.get(operationId) || await this.db.outbox.get(operationId) || await this.db.commands.get(operationId)) throw new StorageError('OPERATION_CONFLICT', 'この読み込み操作IDは既に使われています。');
         const header = await this.db.projects.get(project.projectId);
