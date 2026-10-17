@@ -1,0 +1,105 @@
+import { strict as assert } from 'node:assert';
+import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
+import { cpus, release } from 'node:os';
+import { performance } from 'node:perf_hooks';
+import { referenceChoices, type ReferenceChoice, type ReferenceScope } from '../../src/domain/referenceChoices';
+import { referenceChoices as baseline } from './referenceChoicesBaseline';
+import { referenceScopes } from './referenceChoicesCases';
+import { createMaterialPerformanceFixture, createPerformanceFixture } from '../../src/testing/performanceFixture';
+import { jsonBytes } from '../../src/storage/json';
+import { probeEnabled, startProbe } from '../../src/observability/probe';
+import type { ProjectData } from '../../src/domain/types';
+
+const hash = (input: Uint8Array | string) => createHash('sha256').update(input).digest('hex');
+
+const rounds = 30;
+const summary = (samples: number[]) => {
+  const sorted = [...samples].sort((a, b) => a - b);
+  return { samples, median: (sorted[14] + sorted[15]) / 2, p95: sorted[Math.ceil(rounds * .95) - 1], min: sorted[0], max: sorted.at(-1) };
+};
+
+/** One-owner, request-keyed retained-candidate alternative, evaluation-only.
+ * The immutable-input precondition is imposed by this driver. This deliberately
+ * omits product invalidation/account/role/schema handling and cannot be adopted.
+ */
+function retainedCandidates(project: ProjectData) {
+  const choices = new Map<ReferenceScope, ReferenceChoice[]>();
+  return {
+    get(scope: ReferenceScope) {
+      if (!choices.has(scope)) choices.set(scope, referenceChoices(project, scope));
+      return choices.get(scope)!;
+    },
+    retained() {
+      const arrays = [...choices.values()];
+      return { keys: choices.size, choiceObjects: arrays.reduce((sum, rows) => sum + rows.length, 0), canonicalChoiceBytes: jsonBytes(arrays).byteLength };
+    },
+    clear() { choices.clear(); },
+  };
+}
+
+function countSourceVisits(project: ProjectData, run: (input: ProjectData) => unknown) {
+  let entities = 0, relations = 0;
+  const countArray = <T>(items: T[], count: () => void) => new Proxy(items, { get(target, key, receiver) {
+    if (typeof key === 'string' && /^\d+$/.test(key)) count();
+    return Reflect.get(target, key, receiver);
+  } });
+  run({ ...project, entities: countArray(project.entities, () => entities++), relations: countArray(project.relations, () => relations++) });
+  return { entitySourceVisits: entities, relationSourceVisits: relations };
+}
+
+export async function compareReferenceChoices() {
+  assert.equal(probeEnabled(), false);
+  const sourceFiles = ['src/domain/referenceChoices.ts', 'scripts/optimization/referenceChoicesBaseline.ts', 'scripts/optimization/referenceChoicesMeasurement.ts', 'scripts/optimization/measure-reference-choices.mjs', 'src/testing/performanceFixture.ts'].map(path => ({ path, sha256: hash(readFileSync(path)) }));
+  const observations = [];
+  const fixtures: Array<Record<string, unknown>> = [];
+  for (const size of ['standard', 'large'] as const) {
+    const fixture = size === 'standard' ? await createPerformanceFixture('standard-r06-v1') : await createMaterialPerformanceFixture('large-material-rb10-v1');
+    const project = fixture.project;
+    const { entities, relations, snapshots, history, views, ...header } = project;
+    const storedHeader = { ...header, entityIds: entities.map(row => row.id), relationIds: relations.map(row => row.id), snapshotIds: snapshots.map(row => row.id), historyIds: history.map(row => row.operationId), viewIds: views.map(row => row.id) };
+    fixtures.push({ size, seed: fixture.seed, sha256: fixture.sha256, canonicalProjectSha256: hash(jsonBytes(project)), counts: fixture.counts, assetBytes: fixture.assetBytes, canonicalProjectBytes: jsonBytes(project).byteLength, canonicalStoredHeaderBytes: jsonBytes(storedHeader).byteLength, headerSha256: hash(jsonBytes(storedHeader)) });
+    const cached = retainedCandidates(project);
+    for (const scope of referenceScopes) assert.deepEqual(cached.get(scope), baseline(project, scope));
+    const retention = cached.retained();
+    for (const [scopeIndex, scope] of referenceScopes.entries()) {
+      const expected = baseline(project, scope);
+      assert.deepEqual(referenceChoices(project, scope), expected);
+      assert.deepEqual(cached.get(scope), expected);
+      const functions = { current: () => baseline(project, scope), lazy: () => referenceChoices(project, scope), retained: () => cached.get(scope) };
+      const keys = ['current', 'lazy', 'retained'] as const;
+      const samples = { current: [] as number[], lazy: [] as number[], retained: [] as number[] };
+      // Setup/equality/probe/encoding/retention outside timing. Rotate variant
+      // order each round to reduce fixed-position bias; retain all 30 raw values.
+      for (const key of keys) functions[key]();
+      for (let round = 0; round < rounds; round++) for (let offset = 0; offset < keys.length; offset++) {
+        const key = keys[(round + offset + scopeIndex) % keys.length];
+        assert.equal(probeEnabled(), false);
+        const started = performance.now();
+        const actual = functions[key]();
+        samples[key].push(performance.now() - started);
+        assert.deepEqual(actual, expected);
+      }
+      const work = {} as Record<string, unknown>;
+      for (const key of keys) {
+        const capture = startProbe();
+        try { assert.deepEqual(functions[key](), expected); work[key] = capture.snapshot(); }
+        finally { capture.stop(); }
+      }
+      observations.push({ size, scope, equal: true, resultLength: expected.length, resultSha256: hash(jsonBytes(expected)), timingProbe: 'OFF', timingUnit: 'milliseconds', current: summary(samples.current), lazy: summary(samples.lazy), retainedWarm: summary(samples.retained), probeOn: work, sourceVisits: { current: countSourceVisits(project, input => baseline(input, scope)), lazy: countSourceVisits(project, input => referenceChoices(input, scope)), retainedWarm: { entitySourceVisits: 0, relationSourceVisits: 0 } }, retention: { currentPersistentCandidateBytes: 0, lazyPersistentCandidateBytes: 0, retainedAllScopeCandidates: retention } });
+    }
+    // A real mutable input counterexample for the evaluation-only cache.
+    const previousName = project.entities[0].name;
+    project.entities[0].name = previousName + ' changed';
+    const staleOnRename = JSON.stringify(cached.get('entity')) !== JSON.stringify(baseline(project, 'entity'));
+    assert.equal(staleOnRename, true);
+    fixtures.at(-1)!.retainedMutableRenameStale = staleOnRename;
+    project.entities[0].name = previousName;
+    // Separate cold build work: all scopes built once in a new, empty cache.
+    cached.clear();
+    const capture = startProbe();
+    try { for (const scope of referenceScopes) cached.get(scope); fixtures.at(-1)!.retainedColdBuildProbe = capture.snapshot(); }
+    finally { capture.stop(); cached.clear(); }
+  }
+  return { version: 1, sourceCommit: process.env.P2_REFERENCE_COMMIT, recordedAt: new Date().toISOString(), dirty: process.env.P2_REFERENCE_DIRTY === 'true', sourceFiles, environment: { node: process.version, os: release(), cpu: cpus()[0]?.model, physicalDevice: false }, rounds, scope: 'Additional Node domain diagnostics only, not formal Standard/Large save/search/30/180/7200 acceptance. Existing fixtures and actual material bytes are unchanged. Setup/assets are not timed. No heap/peak-memory claim: retained bytes are exact canonical choice bytes, excluding runtime overhead; both source and transient results remain required. Current baseline probe is legacy one-pass proxy; new probe counts actual entity preparation visits. Independent proxy source-array visit counts are directly comparable. Warm retained candidate lookup returns shared arrays and requires extra immutable ownership/invalidation design; not adopted.', fixtures, observations };
+}

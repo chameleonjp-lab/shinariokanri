@@ -1,0 +1,40 @@
+WebSocket server error:
+Error: listen EPERM: operation not permitted 0.0.0.0:24678
+    at Server.setupListenHandle [as _listen2] (node:net:2145:21)
+    at listenInCluster (node:net:2224:12)
+    at Server.listen (node:net:2344:7)
+    at Object.listen (file:///workspace/phase2/node_modules/vite/dist/node/chunks/node.js:24542:18)
+    at Object.listen (file:///workspace/phase2/node_modules/vite/dist/node/chunks/node.js:25215:27)
+    at DevEnvironment.listen (file:///workspace/phase2/node_modules/vite/dist/node/chunks/node.js:36793:12)
+    at file:///workspace/phase2/node_modules/vite/dist/node/chunks/node.js:24919:95
+    at Array.map (<anonymous>)
+    at file:///workspace/phase2/node_modules/vite/dist/node/chunks/node.js:24919:82
+    at async _createServer (file:///workspace/phase2/node_modules/vite/dist/node/chunks/node.js:24936:9)
+node:internal/child_process:1160
+    result.error = new ErrnoException(result.error, 'spawnSync ' + options.file);
+                   ^
+
+<ref *1> Error: spawnSync git EPERM
+    at Object.spawnSync (node:internal/child_process:1160:20)
+    at spawnSync (node:child_process:928:24)
+    at execFileSync (node:child_process:971:15)
+    at git (/workspace/phase2/scripts/optimization/referenceChoicesMeasurement.ts:30:64)
+    at compareReferenceChoices (/workspace/phase2/scripts/optimization/referenceChoicesMeasurement.ts:201:17)
+    at async file:///workspace/phase2/scripts/optimization/measure-reference-choices.mjs:9:18 {
+  errno: -1,
+  code: 'EPERM',
+  syscall: 'spawnSync git',
+  path: 'git',
+  spawnargs: [ 'rev-parse', 'HEAD' ],
+  error: [Circular *1],
+  status: 0,
+  signal: null,
+  output: [ null, '03aa371042ea7f3ddf6d05afc8200194b67e51f0\n', '' ],
+  pid: 2217,
+  stdout: '03aa371042ea7f3ddf6d05afc8200194b67e51f0\n',
+  stderr: ''
+}
+
+Node.js v24.19.0
+
+EXIT_CODE=1
