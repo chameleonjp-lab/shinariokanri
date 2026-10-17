@@ -1,0 +1,1714 @@
+{
+  "source": "docs/optimization/phase1/requirements.json",
+  "sourceBaseCommit": "f40d07afb709b91db1ec439c0a5503682ecab91b",
+  "scope": "Static impacted-path correspondence only. No original acceptance promotion. Each clause retains given/when/then/negative_or_edge pointers.",
+  "requirements": [
+    {
+      "id": "REQ-B12",
+      "title": "専用ファイルへの出力と読み込み",
+      "workPackage": "WP16",
+      "paths": [
+        "src/ui/BackupPanel.tsx",
+        "src/storage/store.ts",
+        "src/storage/archive.ts",
+        "src/storage/nativeExport.ts",
+        "src/storage/newImportSession.ts"
+      ],
+      "clauses": [
+        {
+          "case": "AT-B12",
+          "pointer": "docs/quality/pr49-followup-2026-10-15/CLAUSE_REVIEW.json#/cases/11/clauses",
+          "names": [
+            "given",
+            "when",
+            "then",
+            "negative_or_edge"
+          ],
+          "historicalResult": "passed"
+        },
+        {
+          "case": "AT-E01",
+          "pointer": "docs/quality/pr49-followup-2026-10-15/CLAUSE_REVIEW.json#/cases/104/clauses",
+          "names": [
+            "given",
+            "when",
+            "then",
+            "negative_or_edge"
+          ],
+          "historicalResult": "blocked_original_conditions"
+        },
+        {
+          "case": "AT-E07",
+          "pointer": "docs/quality/pr49-followup-2026-10-15/CLAUSE_REVIEW.json#/cases/110/clauses",
+          "names": [
+            "given",
+            "when",
+            "then",
+            "negative_or_edge"
+          ],
+          "historicalResult": "passed"
+        }
+      ],
+      "procedureSources": [
+        "tests/e2e/ap04-original-bm-archive.spec.ts",
+        "tests/e2e/ap04-original-e07-safety-bounds.spec.ts",
+        "tests/e2e/ap04-original-root-restoration-output.spec.ts"
+      ],
+      "optimizationCandidates": [
+        "OPT-03",
+        "OPT-04",
+        "OPT-05",
+        "OPT-11",
+        "OPT-13"
+      ],
+      "findingClass": "CODE/path-and-prior-procedure-cross-reference",
+      "freshAcceptance": "NOT_PERFORMED",
+      "limitation": "第1段階の経路照合。原4条項の新規受入認定ではない。各機能の動的網羅は第3段階へ。",
+      "auditCandidates": [
+        "AUD-003",
+        "AUD-004",
+        "AUD-008",
+        "AUD-011",
+        "AUD-012",
+        "AUD-013",
+        "AUD-014",
+        "AUD-015",
+        "AUD-016",
+        "AUD-017",
+        "AUD-018",
+        "AUD-019",
+        "AUD-021"
+      ]
+    },
+    {
+      "id": "REQ-B13",
+      "title": "世界の出来事と提示順の分離",
+      "workPackage": "WP10",
+      "paths": [
+        "src/ui/WritingWorkspace.tsx",
+        "src/ui/AuthorAlternativeStudio.tsx",
+        "src/domain/writingWorkspace.ts",
+        "src/domain/authorAlternativeIntegrity.ts"
+      ],
+      "clauses": [
+        {
+          "case": "AT-B13",
+          "pointer": "docs/quality/pr49-followup-2026-10-15/CLAUSE_REVIEW.json#/cases/12/clauses",
+          "names": [
+            "given",
+            "when",
+            "then",
+            "negative_or_edge"
+          ],
+          "historicalResult": "passed"
+        },
+        {
+          "case": "AT-E02",
+          "pointer": "docs/quality/pr49-followup-2026-10-15/CLAUSE_REVIEW.json#/cases/105/clauses",
+          "names": [
+            "given",
+            "when",
+            "then",
+            "negative_or_edge"
+          ],
+          "historicalResult": "passed"
+        }
+      ],
+      "procedureSources": [
+        "tests/e2e/ap04-original-bm-author.spec.ts",
+        "tests/e2e/ap04-original-e02-time-presentation.spec.ts"
+      ],
+      "optimizationCandidates": [
+        "OPT-02",
+        "OPT-03",
+        "OPT-07",
+        "OPT-09",
+        "OPT-10",
+        "OPT-11"
+      ],
+      "findingClass": "CODE/path-and-prior-procedure-cross-reference",
+      "freshAcceptance": "NOT_PERFORMED",
+      "limitation": "第1段階の経路照合。原4条項の新規受入認定ではない。各機能の動的網羅は第3段階へ。",
+      "auditCandidates": [
+        "AUD-002",
+        "AUD-003",
+        "AUD-004",
+        "AUD-006",
+        "AUD-008",
+        "AUD-009",
+        "AUD-010",
+        "AUD-011",
+        "AUD-013",
+        "AUD-015",
+        "AUD-017",
+        "AUD-018",
+        "AUD-020",
+        "AUD-021"
+      ]
+    },
+    {
+      "id": "REQ-B18",
+      "title": "関係・所属・位置・所有の変化",
+      "workPackage": "WP09",
+      "paths": [
+        "src/ui/WorldPanel.tsx",
+        "src/domain/world.ts",
+        "src/domain/pinnedWorlds.ts",
+        "src/storage/worldPins.ts"
+      ],
+      "clauses": [
+        {
+          "case": "AT-B18",
+          "pointer": "docs/quality/pr49-followup-2026-10-15/CLAUSE_REVIEW.json#/cases/17/clauses",
+          "names": [
+            "given",
+            "when",
+            "then",
+            "negative_or_edge"
+          ],
+          "historicalResult": "passed"
+        }
+      ],
+      "procedureSources": [
+        "tests/e2e/ap04-original-bm-world-narrative.spec.ts"
+      ],
+      "optimizationCandidates": [
+        "OPT-02",
+        "OPT-05",
+        "OPT-08",
+        "OPT-09",
+        "OPT-10",
+        "OPT-11"
+      ],
+      "findingClass": "CODE/path-and-prior-procedure-cross-reference",
+      "freshAcceptance": "NOT_PERFORMED",
+      "limitation": "第1段階の経路照合。原4条項の新規受入認定ではない。各機能の動的網羅は第3段階へ。",
+      "auditCandidates": [
+        "AUD-002",
+        "AUD-003",
+        "AUD-004",
+        "AUD-007",
+        "AUD-008",
+        "AUD-009",
+        "AUD-010",
+        "AUD-013",
+        "AUD-016",
+        "AUD-017",
+        "AUD-018",
+        "AUD-020",
+        "AUD-021"
+      ]
+    },
+    {
+      "id": "REQ-B20",
+      "title": "人物の目的と変化",
+      "workPackage": "WP10",
+      "paths": [
+        "src/ui/WritingWorkspace.tsx",
+        "src/ui/AuthorAlternativeStudio.tsx",
+        "src/domain/writingWorkspace.ts",
+        "src/domain/authorAlternativeIntegrity.ts"
+      ],
+      "clauses": [
+        {
+          "case": "AT-B20",
+          "pointer": "docs/quality/pr49-followup-2026-10-15/CLAUSE_REVIEW.json#/cases/19/clauses",
+          "names": [
+            "given",
+            "when",
+            "then",
+            "negative_or_edge"
+          ],
+          "historicalResult": "passed"
+        }
+      ],
+      "procedureSources": [
+        "tests/e2e/ap04-original-bm-author.spec.ts"
+      ],
+      "optimizationCandidates": [
+        "OPT-02",
+        "OPT-03",
+        "OPT-07",
+        "OPT-09",
+        "OPT-10",
+        "OPT-11"
+      ],
+      "findingClass": "CODE/path-and-prior-procedure-cross-reference",
+      "freshAcceptance": "NOT_PERFORMED",
+      "limitation": "第1段階の経路照合。原4条項の新規受入認定ではない。各機能の動的網羅は第3段階へ。",
+      "auditCandidates": [
+        "AUD-002",
+        "AUD-003",
+        "AUD-004",
+        "AUD-006",
+        "AUD-008",
+        "AUD-009",
+        "AUD-010",
+        "AUD-011",
+        "AUD-013",
+        "AUD-015",
+        "AUD-017",
+        "AUD-018",
+        "AUD-020",
+        "AUD-021"
+      ]
+    },
+    {
+      "id": "REQ-B23",
+      "title": "安定ID・保存・取り消し・履歴",
+      "workPackage": "WP03",
+      "paths": [
+        "src/storage/store.ts",
+        "src/storage/recordPartsDatabase.ts",
+        "src/ui/AccountWorkspace.tsx"
+      ],
+      "clauses": [
+        {
+          "case": "AT-B23",
+          "pointer": "docs/quality/pr49-followup-2026-10-15/CLAUSE_REVIEW.json#/cases/22/clauses",
+          "names": [
+            "given",
+            "when",
+            "then",
+            "negative_or_edge"
+          ],
+          "historicalResult": "passed"
+        },
+        {
+          "case": "AT-E12",
+          "pointer": "docs/quality/pr49-followup-2026-10-15/CLAUSE_REVIEW.json#/cases/115/clauses",
+          "names": [
+            "given",
+            "when",
+            "then",
+            "negative_or_edge"
+          ],
+          "historicalResult": "blocked_original_conditions"
+        }
+      ],
+      "procedureSources": [
+        "tests/e2e/ap04-original-e12-continuity.spec.ts",
+        "tests/e2e/ap04-original-identity-impact.spec.ts"
+      ],
+      "optimizationCandidates": [
+        "OPT-03",
+        "OPT-04",
+        "OPT-05",
+        "OPT-11",
+        "OPT-13"
+      ],
+      "findingClass": "CODE/path-and-prior-procedure-cross-reference",
+      "freshAcceptance": "NOT_PERFORMED",
+      "limitation": "第1段階の経路照合。原4条項の新規受入認定ではない。各機能の動的網羅は第3段階へ。",
+      "auditCandidates": [
+        "AUD-003",
+        "AUD-004",
+        "AUD-008",
+        "AUD-011",
+        "AUD-012",
+        "AUD-013",
+        "AUD-014",
+        "AUD-015",
+        "AUD-016",
+        "AUD-017",
+        "AUD-018",
+        "AUD-019",
+        "AUD-021"
+      ]
+    },
+    {
+      "id": "REQ-F03",
+      "title": "人物以外の筋で並べる",
+      "workPackage": "WP10",
+      "paths": [
+        "src/ui/WritingWorkspace.tsx",
+        "src/ui/AuthorAlternativeStudio.tsx",
+        "src/domain/writingWorkspace.ts",
+        "src/domain/authorAlternativeIntegrity.ts"
+      ],
+      "clauses": [
+        {
+          "case": "AT-F03",
+          "pointer": "docs/quality/pr49-followup-2026-10-15/CLAUSE_REVIEW.json#/cases/26/clauses",
+          "names": [
+            "given",
+            "when",
+            "then",
+            "negative_or_edge"
+          ],
+          "historicalResult": "passed"
+        }
+      ],
+      "procedureSources": [
+        "tests/e2e/ap04-original-f-writing.spec.ts"
+      ],
+      "optimizationCandidates": [
+        "OPT-02",
+        "OPT-03",
+        "OPT-07",
+        "OPT-09",
+        "OPT-10",
+        "OPT-11"
+      ],
+      "findingClass": "CODE/path-and-prior-procedure-cross-reference",
+      "freshAcceptance": "NOT_PERFORMED",
+      "limitation": "第1段階の経路照合。原4条項の新規受入認定ではない。各機能の動的網羅は第3段階へ。",
+      "auditCandidates": [
+        "AUD-002",
+        "AUD-003",
+        "AUD-004",
+        "AUD-006",
+        "AUD-008",
+        "AUD-009",
+        "AUD-010",
+        "AUD-011",
+        "AUD-013",
+        "AUD-015",
+        "AUD-017",
+        "AUD-018",
+        "AUD-020",
+        "AUD-021"
+      ]
+    },
+    {
+      "id": "REQ-F04",
+      "title": "場面の役割を記録する",
+      "workPackage": "WP10",
+      "paths": [
+        "src/ui/WritingWorkspace.tsx",
+        "src/ui/AuthorAlternativeStudio.tsx",
+        "src/domain/writingWorkspace.ts",
+        "src/domain/authorAlternativeIntegrity.ts"
+      ],
+      "clauses": [
+        {
+          "case": "AT-F04",
+          "pointer": "docs/quality/pr49-followup-2026-10-15/CLAUSE_REVIEW.json#/cases/27/clauses",
+          "names": [
+            "given",
+            "when",
+            "then",
+            "negative_or_edge"
+          ],
+          "historicalResult": "passed"
+        }
+      ],
+      "procedureSources": [
+        "tests/e2e/ap04-original-f-writing.spec.ts"
+      ],
+      "optimizationCandidates": [
+        "OPT-02",
+        "OPT-03",
+        "OPT-07",
+        "OPT-09",
+        "OPT-10",
+        "OPT-11"
+      ],
+      "findingClass": "CODE/path-and-prior-procedure-cross-reference",
+      "freshAcceptance": "NOT_PERFORMED",
+      "limitation": "第1段階の経路照合。原4条項の新規受入認定ではない。各機能の動的網羅は第3段階へ。",
+      "auditCandidates": [
+        "AUD-002",
+        "AUD-003",
+        "AUD-004",
+        "AUD-006",
+        "AUD-008",
+        "AUD-009",
+        "AUD-010",
+        "AUD-011",
+        "AUD-013",
+        "AUD-015",
+        "AUD-017",
+        "AUD-018",
+        "AUD-020",
+        "AUD-021"
+      ]
+    },
+    {
+      "id": "REQ-F05",
+      "title": "構成の雛形と盛り上がりを見る",
+      "workPackage": "WP10",
+      "paths": [
+        "src/ui/WritingWorkspace.tsx",
+        "src/ui/AuthorAlternativeStudio.tsx",
+        "src/domain/writingWorkspace.ts",
+        "src/domain/authorAlternativeIntegrity.ts"
+      ],
+      "clauses": [
+        {
+          "case": "AT-F05",
+          "pointer": "docs/quality/pr49-followup-2026-10-15/CLAUSE_REVIEW.json#/cases/28/clauses",
+          "names": [
+            "given",
+            "when",
+            "then",
+            "negative_or_edge"
+          ],
+          "historicalResult": "passed"
+        }
+      ],
+      "procedureSources": [
+        "tests/e2e/ap04-original-f-writing.spec.ts"
+      ],
+      "optimizationCandidates": [
+        "OPT-02",
+        "OPT-03",
+        "OPT-07",
+        "OPT-09",
+        "OPT-10",
+        "OPT-11"
+      ],
+      "findingClass": "CODE/path-and-prior-procedure-cross-reference",
+      "freshAcceptance": "NOT_PERFORMED",
+      "limitation": "第1段階の経路照合。原4条項の新規受入認定ではない。各機能の動的網羅は第3段階へ。",
+      "auditCandidates": [
+        "AUD-002",
+        "AUD-003",
+        "AUD-004",
+        "AUD-006",
+        "AUD-008",
+        "AUD-009",
+        "AUD-010",
+        "AUD-011",
+        "AUD-013",
+        "AUD-015",
+        "AUD-017",
+        "AUD-018",
+        "AUD-020",
+        "AUD-021"
+      ]
+    },
+    {
+      "id": "REQ-F06",
+      "title": "要約と本文を行き来する",
+      "workPackage": "WP10",
+      "paths": [
+        "src/ui/WritingWorkspace.tsx",
+        "src/ui/AuthorAlternativeStudio.tsx",
+        "src/domain/writingWorkspace.ts",
+        "src/domain/authorAlternativeIntegrity.ts"
+      ],
+      "clauses": [
+        {
+          "case": "AT-F06",
+          "pointer": "docs/quality/pr49-followup-2026-10-15/CLAUSE_REVIEW.json#/cases/29/clauses",
+          "names": [
+            "given",
+            "when",
+            "then",
+            "negative_or_edge"
+          ],
+          "historicalResult": "passed"
+        }
+      ],
+      "procedureSources": [
+        "tests/e2e/ap04-original-f-writing.spec.ts"
+      ],
+      "optimizationCandidates": [
+        "OPT-02",
+        "OPT-03",
+        "OPT-07",
+        "OPT-09",
+        "OPT-10",
+        "OPT-11"
+      ],
+      "findingClass": "CODE/path-and-prior-procedure-cross-reference",
+      "freshAcceptance": "NOT_PERFORMED",
+      "limitation": "第1段階の経路照合。原4条項の新規受入認定ではない。各機能の動的網羅は第3段階へ。",
+      "auditCandidates": [
+        "AUD-002",
+        "AUD-003",
+        "AUD-004",
+        "AUD-006",
+        "AUD-008",
+        "AUD-009",
+        "AUD-010",
+        "AUD-011",
+        "AUD-013",
+        "AUD-015",
+        "AUD-017",
+        "AUD-018",
+        "AUD-020",
+        "AUD-021"
+      ]
+    },
+    {
+      "id": "REQ-F09",
+      "title": "一つの世界を複数作品で使う",
+      "workPackage": "WP09",
+      "paths": [
+        "src/ui/WorldPanel.tsx",
+        "src/domain/world.ts",
+        "src/domain/pinnedWorlds.ts",
+        "src/storage/worldPins.ts"
+      ],
+      "clauses": [
+        {
+          "case": "AT-F09",
+          "pointer": "docs/quality/pr49-followup-2026-10-15/CLAUSE_REVIEW.json#/cases/32/clauses",
+          "names": [
+            "given",
+            "when",
+            "then",
+            "negative_or_edge"
+          ],
+          "historicalResult": "passed"
+        },
+        {
+          "case": "AT-E09",
+          "pointer": "docs/quality/pr49-followup-2026-10-15/CLAUSE_REVIEW.json#/cases/112/clauses",
+          "names": [
+            "given",
+            "when",
+            "then",
+            "negative_or_edge"
+          ],
+          "historicalResult": "passed"
+        }
+      ],
+      "procedureSources": [
+        "tests/e2e/ap04-original-e09-world-production.spec.ts",
+        "tests/e2e/ap04-original-f-world-versions.spec.ts"
+      ],
+      "optimizationCandidates": [
+        "OPT-02",
+        "OPT-05",
+        "OPT-08",
+        "OPT-09",
+        "OPT-10",
+        "OPT-11"
+      ],
+      "findingClass": "CODE/path-and-prior-procedure-cross-reference",
+      "freshAcceptance": "NOT_PERFORMED",
+      "limitation": "第1段階の経路照合。原4条項の新規受入認定ではない。各機能の動的網羅は第3段階へ。",
+      "auditCandidates": [
+        "AUD-002",
+        "AUD-003",
+        "AUD-004",
+        "AUD-007",
+        "AUD-008",
+        "AUD-009",
+        "AUD-010",
+        "AUD-013",
+        "AUD-016",
+        "AUD-017",
+        "AUD-018",
+        "AUD-020",
+        "AUD-021"
+      ]
+    },
+    {
+      "id": "REQ-F10",
+      "title": "地図と年表を連動する",
+      "workPackage": "WP09",
+      "paths": [
+        "src/ui/WorldPanel.tsx",
+        "src/domain/world.ts",
+        "src/domain/pinnedWorlds.ts",
+        "src/storage/worldPins.ts"
+      ],
+      "clauses": [
+        {
+          "case": "AT-F10",
+          "pointer": "docs/quality/pr49-followup-2026-10-15/CLAUSE_REVIEW.json#/cases/33/clauses",
+          "names": [
+            "given",
+            "when",
+            "then",
+            "negative_or_edge"
+          ],
+          "historicalResult": "passed"
+        }
+      ],
+      "procedureSources": [
+        "tests/e2e/ap04-original-bm-f07-12-world.spec.ts"
+      ],
+      "optimizationCandidates": [
+        "OPT-02",
+        "OPT-05",
+        "OPT-08",
+        "OPT-09",
+        "OPT-10",
+        "OPT-11"
+      ],
+      "findingClass": "CODE/path-and-prior-procedure-cross-reference",
+      "freshAcceptance": "NOT_PERFORMED",
+      "limitation": "第1段階の経路照合。原4条項の新規受入認定ではない。各機能の動的網羅は第3段階へ。",
+      "auditCandidates": [
+        "AUD-002",
+        "AUD-003",
+        "AUD-004",
+        "AUD-007",
+        "AUD-008",
+        "AUD-009",
+        "AUD-010",
+        "AUD-013",
+        "AUD-016",
+        "AUD-017",
+        "AUD-018",
+        "AUD-020",
+        "AUD-021"
+      ]
+    },
+    {
+      "id": "REQ-F11",
+      "title": "移動と場所の変化を記録する",
+      "workPackage": "WP09",
+      "paths": [
+        "src/ui/WorldPanel.tsx",
+        "src/domain/world.ts",
+        "src/domain/pinnedWorlds.ts",
+        "src/storage/worldPins.ts"
+      ],
+      "clauses": [
+        {
+          "case": "AT-F11",
+          "pointer": "docs/quality/pr49-followup-2026-10-15/CLAUSE_REVIEW.json#/cases/34/clauses",
+          "names": [
+            "given",
+            "when",
+            "then",
+            "negative_or_edge"
+          ],
+          "historicalResult": "passed"
+        }
+      ],
+      "procedureSources": [
+        "tests/e2e/ap04-original-bm-f07-12-world.spec.ts"
+      ],
+      "optimizationCandidates": [
+        "OPT-02",
+        "OPT-05",
+        "OPT-08",
+        "OPT-09",
+        "OPT-10",
+        "OPT-11"
+      ],
+      "findingClass": "CODE/path-and-prior-procedure-cross-reference",
+      "freshAcceptance": "NOT_PERFORMED",
+      "limitation": "第1段階の経路照合。原4条項の新規受入認定ではない。各機能の動的網羅は第3段階へ。",
+      "auditCandidates": [
+        "AUD-002",
+        "AUD-003",
+        "AUD-004",
+        "AUD-007",
+        "AUD-008",
+        "AUD-009",
+        "AUD-010",
+        "AUD-013",
+        "AUD-016",
+        "AUD-017",
+        "AUD-018",
+        "AUD-020",
+        "AUD-021"
+      ]
+    },
+    {
+      "id": "REQ-F12",
+      "title": "家系・別名・正体を扱う",
+      "workPackage": "WP09",
+      "paths": [
+        "src/ui/WorldPanel.tsx",
+        "src/domain/world.ts",
+        "src/domain/pinnedWorlds.ts",
+        "src/storage/worldPins.ts"
+      ],
+      "clauses": [
+        {
+          "case": "AT-F12",
+          "pointer": "docs/quality/pr49-followup-2026-10-15/CLAUSE_REVIEW.json#/cases/35/clauses",
+          "names": [
+            "given",
+            "when",
+            "then",
+            "negative_or_edge"
+          ],
+          "historicalResult": "passed"
+        },
+        {
+          "case": "AT-E05",
+          "pointer": "docs/quality/pr49-followup-2026-10-15/CLAUSE_REVIEW.json#/cases/108/clauses",
+          "names": [
+            "given",
+            "when",
+            "then",
+            "negative_or_edge"
+          ],
+          "historicalResult": "blocked_original_conditions"
+        }
+      ],
+      "procedureSources": [
+        "tests/e2e/ap04-original-bm-f07-12-private-projection.spec.ts"
+      ],
+      "optimizationCandidates": [
+        "OPT-02",
+        "OPT-05",
+        "OPT-08",
+        "OPT-09",
+        "OPT-10",
+        "OPT-11"
+      ],
+      "findingClass": "CODE/path-and-prior-procedure-cross-reference",
+      "freshAcceptance": "NOT_PERFORMED",
+      "limitation": "第1段階の経路照合。原4条項の新規受入認定ではない。各機能の動的網羅は第3段階へ。",
+      "auditCandidates": [
+        "AUD-002",
+        "AUD-003",
+        "AUD-004",
+        "AUD-007",
+        "AUD-008",
+        "AUD-009",
+        "AUD-010",
+        "AUD-013",
+        "AUD-016",
+        "AUD-017",
+        "AUD-018",
+        "AUD-020",
+        "AUD-021"
+      ]
+    },
+    {
+      "id": "REQ-F25",
+      "title": "採用状態と別案を記録する",
+      "workPackage": "WP10",
+      "paths": [
+        "src/ui/WritingWorkspace.tsx",
+        "src/ui/AuthorAlternativeStudio.tsx",
+        "src/domain/writingWorkspace.ts",
+        "src/domain/authorAlternativeIntegrity.ts"
+      ],
+      "clauses": [
+        {
+          "case": "AT-F25",
+          "pointer": "docs/quality/pr49-followup-2026-10-15/CLAUSE_REVIEW.json#/cases/48/clauses",
+          "names": [
+            "given",
+            "when",
+            "then",
+            "negative_or_edge"
+          ],
+          "historicalResult": "passed"
+        }
+      ],
+      "procedureSources": [
+        "tests/e2e/ap04-original-f-material-output.spec.ts"
+      ],
+      "optimizationCandidates": [
+        "OPT-02",
+        "OPT-03",
+        "OPT-07",
+        "OPT-09",
+        "OPT-10",
+        "OPT-11"
+      ],
+      "findingClass": "CODE/path-and-prior-procedure-cross-reference",
+      "freshAcceptance": "NOT_PERFORMED",
+      "limitation": "第1段階の経路照合。原4条項の新規受入認定ではない。各機能の動的網羅は第3段階へ。",
+      "auditCandidates": [
+        "AUD-002",
+        "AUD-003",
+        "AUD-004",
+        "AUD-006",
+        "AUD-008",
+        "AUD-009",
+        "AUD-010",
+        "AUD-011",
+        "AUD-013",
+        "AUD-015",
+        "AUD-017",
+        "AUD-018",
+        "AUD-020",
+        "AUD-021"
+      ]
+    },
+    {
+      "id": "REQ-F31",
+      "title": "画面の広さに合わせて編集する",
+      "workPackage": "WP02",
+      "paths": [
+        "src/App.tsx",
+        "src/ui/EntityEditor.tsx",
+        "src/ui/workspaceDrafts.ts"
+      ],
+      "clauses": [
+        {
+          "case": "AT-F31",
+          "pointer": "docs/quality/pr49-followup-2026-10-15/CLAUSE_REVIEW.json#/cases/54/clauses",
+          "names": [
+            "given",
+            "when",
+            "then",
+            "negative_or_edge"
+          ],
+          "historicalResult": "blocked_original_conditions"
+        },
+        {
+          "case": "AT-E01",
+          "pointer": "docs/quality/pr49-followup-2026-10-15/CLAUSE_REVIEW.json#/cases/104/clauses",
+          "names": [
+            "given",
+            "when",
+            "then",
+            "negative_or_edge"
+          ],
+          "historicalResult": "blocked_original_conditions"
+        },
+        {
+          "case": "AT-E11",
+          "pointer": "docs/quality/pr49-followup-2026-10-15/CLAUSE_REVIEW.json#/cases/114/clauses",
+          "names": [
+            "given",
+            "when",
+            "then",
+            "negative_or_edge"
+          ],
+          "historicalResult": "blocked_original_conditions"
+        }
+      ],
+      "procedureSources": [
+        "tests/e2e/ap04-original-f31-same-work-helper.ts",
+        "tests/e2e/ap04-original-n-mobile-offline.spec.ts"
+      ],
+      "optimizationCandidates": [
+        "OPT-07",
+        "OPT-09",
+        "OPT-14"
+      ],
+      "findingClass": "CODE/path-and-prior-procedure-cross-reference",
+      "freshAcceptance": "NOT_PERFORMED",
+      "limitation": "第1段階の経路照合。原4条項の新規受入認定ではない。各機能の動的網羅は第3段階へ。",
+      "auditCandidates": [
+        "AUD-006",
+        "AUD-009",
+        "AUD-010",
+        "AUD-016",
+        "AUD-018",
+        "AUD-020",
+        "AUD-021",
+        "AUD-022"
+      ]
+    },
+    {
+      "id": "REQ-F32",
+      "title": "指・マウス・キーボードに対応する",
+      "workPackage": "WP02",
+      "paths": [
+        "src/App.tsx",
+        "src/ui/EntityEditor.tsx",
+        "src/ui/workspaceDrafts.ts"
+      ],
+      "clauses": [
+        {
+          "case": "AT-F32",
+          "pointer": "docs/quality/pr49-followup-2026-10-15/CLAUSE_REVIEW.json#/cases/55/clauses",
+          "names": [
+            "given",
+            "when",
+            "then",
+            "negative_or_edge"
+          ],
+          "historicalResult": "passed"
+        },
+        {
+          "case": "AT-E01",
+          "pointer": "docs/quality/pr49-followup-2026-10-15/CLAUSE_REVIEW.json#/cases/104/clauses",
+          "names": [
+            "given",
+            "when",
+            "then",
+            "negative_or_edge"
+          ],
+          "historicalResult": "blocked_original_conditions"
+        },
+        {
+          "case": "AT-E11",
+          "pointer": "docs/quality/pr49-followup-2026-10-15/CLAUSE_REVIEW.json#/cases/114/clauses",
+          "names": [
+            "given",
+            "when",
+            "then",
+            "negative_or_edge"
+          ],
+          "historicalResult": "blocked_original_conditions"
+        }
+      ],
+      "procedureSources": [
+        "tests/e2e/ap04-original-f-source-schema.spec.ts"
+      ],
+      "optimizationCandidates": [
+        "OPT-07",
+        "OPT-09",
+        "OPT-14"
+      ],
+      "findingClass": "CODE/path-and-prior-procedure-cross-reference",
+      "freshAcceptance": "NOT_PERFORMED",
+      "limitation": "第1段階の経路照合。原4条項の新規受入認定ではない。各機能の動的網羅は第3段階へ。",
+      "auditCandidates": [
+        "AUD-006",
+        "AUD-009",
+        "AUD-010",
+        "AUD-016",
+        "AUD-018",
+        "AUD-020",
+        "AUD-021",
+        "AUD-022"
+      ]
+    },
+    {
+      "id": "REQ-F33",
+      "title": "表示と作業の続きへ戻る",
+      "workPackage": "WP02",
+      "paths": [
+        "src/App.tsx",
+        "src/ui/EntityEditor.tsx",
+        "src/ui/workspaceDrafts.ts"
+      ],
+      "clauses": [
+        {
+          "case": "AT-F33",
+          "pointer": "docs/quality/pr49-followup-2026-10-15/CLAUSE_REVIEW.json#/cases/56/clauses",
+          "names": [
+            "given",
+            "when",
+            "then",
+            "negative_or_edge"
+          ],
+          "historicalResult": "blocked_original_conditions"
+        }
+      ],
+      "procedureSources": [
+        "tests/e2e/ap04-original-f-resume-recovery.spec.ts"
+      ],
+      "optimizationCandidates": [
+        "OPT-07",
+        "OPT-09",
+        "OPT-14"
+      ],
+      "findingClass": "CODE/path-and-prior-procedure-cross-reference",
+      "freshAcceptance": "NOT_PERFORMED",
+      "limitation": "第1段階の経路照合。原4条項の新規受入認定ではない。各機能の動的網羅は第3段階へ。",
+      "auditCandidates": [
+        "AUD-006",
+        "AUD-009",
+        "AUD-010",
+        "AUD-016",
+        "AUD-018",
+        "AUD-020",
+        "AUD-021",
+        "AUD-022"
+      ]
+    },
+    {
+      "id": "REQ-F35",
+      "title": "履歴とファイルを確実に持ち出す",
+      "workPackage": "WP16",
+      "paths": [
+        "src/ui/BackupPanel.tsx",
+        "src/storage/store.ts",
+        "src/storage/archive.ts",
+        "src/storage/nativeExport.ts",
+        "src/storage/newImportSession.ts"
+      ],
+      "clauses": [
+        {
+          "case": "AT-F35",
+          "pointer": "docs/quality/pr49-followup-2026-10-15/CLAUSE_REVIEW.json#/cases/58/clauses",
+          "names": [
+            "given",
+            "when",
+            "then",
+            "negative_or_edge"
+          ],
+          "historicalResult": "passed"
+        },
+        {
+          "case": "AT-E07",
+          "pointer": "docs/quality/pr49-followup-2026-10-15/CLAUSE_REVIEW.json#/cases/110/clauses",
+          "names": [
+            "given",
+            "when",
+            "then",
+            "negative_or_edge"
+          ],
+          "historicalResult": "passed"
+        },
+        {
+          "case": "AT-E12",
+          "pointer": "docs/quality/pr49-followup-2026-10-15/CLAUSE_REVIEW.json#/cases/115/clauses",
+          "names": [
+            "given",
+            "when",
+            "then",
+            "negative_or_edge"
+          ],
+          "historicalResult": "blocked_original_conditions"
+        }
+      ],
+      "procedureSources": [
+        "tests/e2e/ap04-original-e07-safety-bounds.spec.ts",
+        "tests/e2e/ap04-original-e12-continuity.spec.ts",
+        "tests/e2e/ap04-original-f-source-schema.spec.ts",
+        "tests/e2e/ap04-original-root-restoration-output.spec.ts"
+      ],
+      "optimizationCandidates": [
+        "OPT-03",
+        "OPT-04",
+        "OPT-05",
+        "OPT-11",
+        "OPT-13"
+      ],
+      "findingClass": "CODE/path-and-prior-procedure-cross-reference",
+      "freshAcceptance": "NOT_PERFORMED",
+      "limitation": "第1段階の経路照合。原4条項の新規受入認定ではない。各機能の動的網羅は第3段階へ。",
+      "auditCandidates": [
+        "AUD-003",
+        "AUD-004",
+        "AUD-008",
+        "AUD-011",
+        "AUD-012",
+        "AUD-013",
+        "AUD-014",
+        "AUD-015",
+        "AUD-016",
+        "AUD-017",
+        "AUD-018",
+        "AUD-019",
+        "AUD-021"
+      ]
+    },
+    {
+      "id": "REQ-N01",
+      "title": "全端末での編集",
+      "workPackage": "WP02",
+      "paths": [
+        "src/App.tsx",
+        "src/ui/EntityEditor.tsx",
+        "src/ui/workspaceDrafts.ts"
+      ],
+      "clauses": [
+        {
+          "case": "AT-N01",
+          "pointer": "docs/quality/pr49-followup-2026-10-15/CLAUSE_REVIEW.json#/cases/84/clauses",
+          "names": [
+            "given",
+            "when",
+            "then",
+            "negative_or_edge"
+          ],
+          "historicalResult": "passed"
+        },
+        {
+          "case": "AT-E01",
+          "pointer": "docs/quality/pr49-followup-2026-10-15/CLAUSE_REVIEW.json#/cases/104/clauses",
+          "names": [
+            "given",
+            "when",
+            "then",
+            "negative_or_edge"
+          ],
+          "historicalResult": "blocked_original_conditions"
+        }
+      ],
+      "procedureSources": [
+        "tests/e2e/ap04-original-n-mobile-offline.spec.ts"
+      ],
+      "optimizationCandidates": [
+        "OPT-07",
+        "OPT-09",
+        "OPT-14"
+      ],
+      "findingClass": "CODE/path-and-prior-procedure-cross-reference",
+      "freshAcceptance": "NOT_PERFORMED",
+      "limitation": "第1段階の経路照合。原4条項の新規受入認定ではない。各機能の動的網羅は第3段階へ。",
+      "auditCandidates": [
+        "AUD-006",
+        "AUD-009",
+        "AUD-010",
+        "AUD-016",
+        "AUD-018",
+        "AUD-020",
+        "AUD-021",
+        "AUD-022"
+      ]
+    },
+    {
+      "id": "REQ-N06",
+      "title": "保存と移行の原子性",
+      "workPackage": "WP03",
+      "paths": [
+        "src/storage/store.ts",
+        "src/storage/recordPartsDatabase.ts",
+        "src/ui/AccountWorkspace.tsx"
+      ],
+      "clauses": [
+        {
+          "case": "AT-N06",
+          "pointer": "docs/quality/pr49-followup-2026-10-15/CLAUSE_REVIEW.json#/cases/89/clauses",
+          "names": [
+            "given",
+            "when",
+            "then",
+            "negative_or_edge"
+          ],
+          "historicalResult": "passed"
+        },
+        {
+          "case": "AT-E06",
+          "pointer": "docs/quality/pr49-followup-2026-10-15/CLAUSE_REVIEW.json#/cases/109/clauses",
+          "names": [
+            "given",
+            "when",
+            "then",
+            "negative_or_edge"
+          ],
+          "historicalResult": "blocked_original_conditions"
+        },
+        {
+          "case": "AT-E12",
+          "pointer": "docs/quality/pr49-followup-2026-10-15/CLAUSE_REVIEW.json#/cases/115/clauses",
+          "names": [
+            "given",
+            "when",
+            "then",
+            "negative_or_edge"
+          ],
+          "historicalResult": "blocked_original_conditions"
+        }
+      ],
+      "procedureSources": [
+        "tests/e2e/ap04-original-e12-continuity.spec.ts",
+        "tests/e2e/ap04-original-n-atomic-migration.spec.ts"
+      ],
+      "optimizationCandidates": [
+        "OPT-03",
+        "OPT-04",
+        "OPT-05",
+        "OPT-11",
+        "OPT-13"
+      ],
+      "findingClass": "CODE/path-and-prior-procedure-cross-reference",
+      "freshAcceptance": "NOT_PERFORMED",
+      "limitation": "第1段階の経路照合。原4条項の新規受入認定ではない。各機能の動的網羅は第3段階へ。",
+      "auditCandidates": [
+        "AUD-003",
+        "AUD-004",
+        "AUD-008",
+        "AUD-011",
+        "AUD-012",
+        "AUD-013",
+        "AUD-014",
+        "AUD-015",
+        "AUD-016",
+        "AUD-017",
+        "AUD-018",
+        "AUD-019",
+        "AUD-021"
+      ]
+    },
+    {
+      "id": "REQ-N09",
+      "title": "読み込みの制限と検証",
+      "workPackage": "WP16",
+      "paths": [
+        "src/ui/BackupPanel.tsx",
+        "src/storage/store.ts",
+        "src/storage/archive.ts",
+        "src/storage/nativeExport.ts",
+        "src/storage/newImportSession.ts"
+      ],
+      "clauses": [
+        {
+          "case": "AT-N09",
+          "pointer": "docs/quality/pr49-followup-2026-10-15/CLAUSE_REVIEW.json#/cases/92/clauses",
+          "names": [
+            "given",
+            "when",
+            "then",
+            "negative_or_edge"
+          ],
+          "historicalResult": "passed"
+        },
+        {
+          "case": "AT-E07",
+          "pointer": "docs/quality/pr49-followup-2026-10-15/CLAUSE_REVIEW.json#/cases/110/clauses",
+          "names": [
+            "given",
+            "when",
+            "then",
+            "negative_or_edge"
+          ],
+          "historicalResult": "passed"
+        }
+      ],
+      "procedureSources": [
+        "tests/e2e/ap04-original-e07-safety-bounds.spec.ts",
+        "tests/e2e/ap04-original-root-restoration-output.spec.ts",
+        "tests/e2e/rb10-import-errors.spec.ts"
+      ],
+      "optimizationCandidates": [
+        "OPT-03",
+        "OPT-04",
+        "OPT-05",
+        "OPT-11",
+        "OPT-13"
+      ],
+      "findingClass": "CODE/path-and-prior-procedure-cross-reference",
+      "freshAcceptance": "NOT_PERFORMED",
+      "limitation": "第1段階の経路照合。原4条項の新規受入認定ではない。各機能の動的網羅は第3段階へ。",
+      "auditCandidates": [
+        "AUD-003",
+        "AUD-004",
+        "AUD-008",
+        "AUD-011",
+        "AUD-012",
+        "AUD-013",
+        "AUD-014",
+        "AUD-015",
+        "AUD-016",
+        "AUD-017",
+        "AUD-018",
+        "AUD-019",
+        "AUD-021"
+      ]
+    },
+    {
+      "id": "REQ-N11",
+      "title": "通信なしでの継続",
+      "workPackage": "WP03",
+      "paths": [
+        "src/storage/store.ts",
+        "src/storage/recordPartsDatabase.ts",
+        "src/ui/AccountWorkspace.tsx"
+      ],
+      "clauses": [
+        {
+          "case": "AT-N11",
+          "pointer": "docs/quality/pr49-followup-2026-10-15/CLAUSE_REVIEW.json#/cases/94/clauses",
+          "names": [
+            "given",
+            "when",
+            "then",
+            "negative_or_edge"
+          ],
+          "historicalResult": "blocked_original_conditions"
+        },
+        {
+          "case": "AT-E12",
+          "pointer": "docs/quality/pr49-followup-2026-10-15/CLAUSE_REVIEW.json#/cases/115/clauses",
+          "names": [
+            "given",
+            "when",
+            "then",
+            "negative_or_edge"
+          ],
+          "historicalResult": "blocked_original_conditions"
+        }
+      ],
+      "procedureSources": [
+        "tests/e2e/ap04-original-e12-continuity.spec.ts",
+        "tests/e2e/ap04-original-n-mobile-offline.spec.ts"
+      ],
+      "optimizationCandidates": [
+        "OPT-03",
+        "OPT-04",
+        "OPT-05",
+        "OPT-11",
+        "OPT-13"
+      ],
+      "findingClass": "CODE/path-and-prior-procedure-cross-reference",
+      "freshAcceptance": "NOT_PERFORMED",
+      "limitation": "第1段階の経路照合。原4条項の新規受入認定ではない。各機能の動的網羅は第3段階へ。",
+      "auditCandidates": [
+        "AUD-003",
+        "AUD-004",
+        "AUD-008",
+        "AUD-011",
+        "AUD-012",
+        "AUD-013",
+        "AUD-014",
+        "AUD-015",
+        "AUD-016",
+        "AUD-017",
+        "AUD-018",
+        "AUD-019",
+        "AUD-021"
+      ]
+    },
+    {
+      "id": "REQ-N14",
+      "title": "復元手順の完了",
+      "workPackage": "WP16",
+      "paths": [
+        "src/ui/BackupPanel.tsx",
+        "src/storage/store.ts",
+        "src/storage/archive.ts",
+        "src/storage/nativeExport.ts",
+        "src/storage/newImportSession.ts"
+      ],
+      "clauses": [
+        {
+          "case": "AT-N14",
+          "pointer": "docs/quality/pr49-followup-2026-10-15/CLAUSE_REVIEW.json#/cases/97/clauses",
+          "names": [
+            "given",
+            "when",
+            "then",
+            "negative_or_edge"
+          ],
+          "historicalResult": "passed"
+        },
+        {
+          "case": "AT-E07",
+          "pointer": "docs/quality/pr49-followup-2026-10-15/CLAUSE_REVIEW.json#/cases/110/clauses",
+          "names": [
+            "given",
+            "when",
+            "then",
+            "negative_or_edge"
+          ],
+          "historicalResult": "passed"
+        }
+      ],
+      "procedureSources": [
+        "tests/e2e/ap04-original-e07-safety-bounds.spec.ts",
+        "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+        "tests/e2e/ap04-original-root-restoration-output.spec.ts"
+      ],
+      "optimizationCandidates": [
+        "OPT-03",
+        "OPT-04",
+        "OPT-05",
+        "OPT-11",
+        "OPT-13"
+      ],
+      "findingClass": "CODE/path-and-prior-procedure-cross-reference",
+      "freshAcceptance": "NOT_PERFORMED",
+      "limitation": "第1段階の経路照合。原4条項の新規受入認定ではない。各機能の動的網羅は第3段階へ。",
+      "auditCandidates": [
+        "AUD-003",
+        "AUD-004",
+        "AUD-008",
+        "AUD-011",
+        "AUD-012",
+        "AUD-013",
+        "AUD-014",
+        "AUD-015",
+        "AUD-016",
+        "AUD-017",
+        "AUD-018",
+        "AUD-019",
+        "AUD-021"
+      ]
+    },
+    {
+      "id": "REQ-N18",
+      "title": "失敗時の説明と入力保持",
+      "workPackage": "WP02",
+      "paths": [
+        "src/App.tsx",
+        "src/ui/EntityEditor.tsx",
+        "src/ui/workspaceDrafts.ts"
+      ],
+      "clauses": [
+        {
+          "case": "AT-N18",
+          "pointer": "docs/quality/pr49-followup-2026-10-15/CLAUSE_REVIEW.json#/cases/101/clauses",
+          "names": [
+            "given",
+            "when",
+            "then",
+            "negative_or_edge"
+          ],
+          "historicalResult": "passed"
+        },
+        {
+          "case": "AT-E12",
+          "pointer": "docs/quality/pr49-followup-2026-10-15/CLAUSE_REVIEW.json#/cases/115/clauses",
+          "names": [
+            "given",
+            "when",
+            "then",
+            "negative_or_edge"
+          ],
+          "historicalResult": "blocked_original_conditions"
+        }
+      ],
+      "procedureSources": [
+        "tests/e2e/ap04-original-e12-continuity.spec.ts",
+        "tests/e2e/ap04-original-n-failure-retry.spec.ts"
+      ],
+      "optimizationCandidates": [
+        "OPT-07",
+        "OPT-09",
+        "OPT-14"
+      ],
+      "findingClass": "CODE/path-and-prior-procedure-cross-reference",
+      "freshAcceptance": "NOT_PERFORMED",
+      "limitation": "第1段階の経路照合。原4条項の新規受入認定ではない。各機能の動的網羅は第3段階へ。",
+      "auditCandidates": [
+        "AUD-006",
+        "AUD-009",
+        "AUD-010",
+        "AUD-016",
+        "AUD-018",
+        "AUD-020",
+        "AUD-021",
+        "AUD-022"
+      ]
+    },
+    {
+      "id": "REQ-N19",
+      "title": "正本と公開版の保護",
+      "workPackage": "WP10",
+      "paths": [
+        "src/ui/WritingWorkspace.tsx",
+        "src/ui/AuthorAlternativeStudio.tsx",
+        "src/domain/writingWorkspace.ts",
+        "src/domain/authorAlternativeIntegrity.ts"
+      ],
+      "clauses": [
+        {
+          "case": "AT-N19",
+          "pointer": "docs/quality/pr49-followup-2026-10-15/CLAUSE_REVIEW.json#/cases/102/clauses",
+          "names": [
+            "given",
+            "when",
+            "then",
+            "negative_or_edge"
+          ],
+          "historicalResult": "passed"
+        }
+      ],
+      "procedureSources": [
+        "tests/e2e/ap04-original-root-restoration-output.spec.ts"
+      ],
+      "optimizationCandidates": [
+        "OPT-02",
+        "OPT-03",
+        "OPT-07",
+        "OPT-09",
+        "OPT-10",
+        "OPT-11"
+      ],
+      "findingClass": "CODE/path-and-prior-procedure-cross-reference",
+      "freshAcceptance": "NOT_PERFORMED",
+      "limitation": "第1段階の経路照合。原4条項の新規受入認定ではない。各機能の動的網羅は第3段階へ。",
+      "auditCandidates": [
+        "AUD-002",
+        "AUD-003",
+        "AUD-004",
+        "AUD-006",
+        "AUD-008",
+        "AUD-009",
+        "AUD-010",
+        "AUD-011",
+        "AUD-013",
+        "AUD-015",
+        "AUD-017",
+        "AUD-018",
+        "AUD-020",
+        "AUD-021"
+      ]
+    }
+  ],
+  "supportingStateAndAccessCorrespondence": [
+    {
+      "id": "REQ-F34",
+      "title": "通信なしの編集と同期を区別する",
+      "workPackage": "WP17",
+      "paths": [
+        "src/ui/SyncPanel.tsx",
+        "src/sync/outbox.ts",
+        "src/sync/nativeBridge.ts",
+        "src/sync/server.ts"
+      ],
+      "clauses": [
+        {
+          "case": "AT-F34",
+          "pointer": "docs/quality/pr49-followup-2026-10-15/CLAUSE_REVIEW.json#/cases/57/clauses",
+          "names": [
+            "given",
+            "when",
+            "then",
+            "negative_or_edge"
+          ],
+          "historicalResult": "blocked_original_conditions"
+        },
+        {
+          "case": "AT-E06",
+          "pointer": "docs/quality/pr49-followup-2026-10-15/CLAUSE_REVIEW.json#/cases/109/clauses",
+          "names": [
+            "given",
+            "when",
+            "then",
+            "negative_or_edge"
+          ],
+          "historicalResult": "blocked_original_conditions"
+        },
+        {
+          "case": "AT-E12",
+          "pointer": "docs/quality/pr49-followup-2026-10-15/CLAUSE_REVIEW.json#/cases/115/clauses",
+          "names": [
+            "given",
+            "when",
+            "then",
+            "negative_or_edge"
+          ],
+          "historicalResult": "blocked_original_conditions"
+        }
+      ],
+      "procedureSources": [
+        "tests/e2e/ap04-original-e12-continuity.spec.ts"
+      ],
+      "optimizationCandidates": [
+        "OPT-03",
+        "OPT-05",
+        "OPT-09",
+        "OPT-10",
+        "OPT-11",
+        "OPT-14"
+      ],
+      "findingClass": "CODE/path-and-prior-procedure-cross-reference",
+      "freshAcceptance": "NOT_PERFORMED",
+      "limitation": "第1段階の経路照合。原4条項の新規受入認定ではない。各機能の動的網羅は第3段階へ。",
+      "auditCandidates": [
+        "AUD-003",
+        "AUD-004",
+        "AUD-008",
+        "AUD-009",
+        "AUD-010",
+        "AUD-011",
+        "AUD-013",
+        "AUD-015",
+        "AUD-016",
+        "AUD-017",
+        "AUD-018",
+        "AUD-021",
+        "AUD-022"
+      ]
+    },
+    {
+      "id": "REQ-N07",
+      "title": "同期の競合と再送",
+      "workPackage": "WP17",
+      "paths": [
+        "src/ui/SyncPanel.tsx",
+        "src/sync/outbox.ts",
+        "src/sync/nativeBridge.ts",
+        "src/sync/server.ts"
+      ],
+      "clauses": [
+        {
+          "case": "AT-N07",
+          "pointer": "docs/quality/pr49-followup-2026-10-15/CLAUSE_REVIEW.json#/cases/90/clauses",
+          "names": [
+            "given",
+            "when",
+            "then",
+            "negative_or_edge"
+          ],
+          "historicalResult": "blocked_original_conditions"
+        },
+        {
+          "case": "AT-E06",
+          "pointer": "docs/quality/pr49-followup-2026-10-15/CLAUSE_REVIEW.json#/cases/109/clauses",
+          "names": [
+            "given",
+            "when",
+            "then",
+            "negative_or_edge"
+          ],
+          "historicalResult": "blocked_original_conditions"
+        }
+      ],
+      "procedureSources": [],
+      "optimizationCandidates": [
+        "OPT-03",
+        "OPT-05",
+        "OPT-09",
+        "OPT-10",
+        "OPT-11",
+        "OPT-14"
+      ],
+      "findingClass": "CODE/path-and-prior-procedure-cross-reference",
+      "freshAcceptance": "NOT_PERFORMED",
+      "limitation": "第1段階の経路照合。原4条項の新規受入認定ではない。各機能の動的網羅は第3段階へ。",
+      "auditCandidates": [
+        "AUD-003",
+        "AUD-004",
+        "AUD-008",
+        "AUD-009",
+        "AUD-010",
+        "AUD-011",
+        "AUD-013",
+        "AUD-015",
+        "AUD-016",
+        "AUD-017",
+        "AUD-018",
+        "AUD-021",
+        "AUD-022"
+      ]
+    },
+    {
+      "id": "REQ-N08",
+      "title": "権限と秘密の投影",
+      "workPackage": "WP18",
+      "paths": [
+        "src/ui/LimitedSharePanel.tsx",
+        "src/ui/SharedPortal.tsx",
+        "src/domain/projection.ts",
+        "src/sync/publicShare.ts"
+      ],
+      "clauses": [
+        {
+          "case": "AT-N08",
+          "pointer": "docs/quality/pr49-followup-2026-10-15/CLAUSE_REVIEW.json#/cases/91/clauses",
+          "names": [
+            "given",
+            "when",
+            "then",
+            "negative_or_edge"
+          ],
+          "historicalResult": "blocked_original_conditions"
+        },
+        {
+          "case": "AT-E05",
+          "pointer": "docs/quality/pr49-followup-2026-10-15/CLAUSE_REVIEW.json#/cases/108/clauses",
+          "names": [
+            "given",
+            "when",
+            "then",
+            "negative_or_edge"
+          ],
+          "historicalResult": "blocked_original_conditions"
+        }
+      ],
+      "procedureSources": [],
+      "optimizationCandidates": [
+        "OPT-05",
+        "OPT-06",
+        "OPT-09",
+        "OPT-10",
+        "OPT-11",
+        "OPT-14"
+      ],
+      "findingClass": "CODE/path-and-prior-procedure-cross-reference",
+      "freshAcceptance": "NOT_PERFORMED",
+      "limitation": "第1段階の経路照合。原4条項の新規受入認定ではない。各機能の動的網羅は第3段階へ。",
+      "auditCandidates": [
+        "AUD-003",
+        "AUD-005",
+        "AUD-008",
+        "AUD-009",
+        "AUD-010",
+        "AUD-013",
+        "AUD-016",
+        "AUD-017",
+        "AUD-018",
+        "AUD-020",
+        "AUD-021",
+        "AUD-022"
+      ]
+    }
+  ]
+}

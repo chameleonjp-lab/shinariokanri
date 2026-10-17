@@ -1,0 +1,52 @@
+[WebServer] (node:13298) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:13311) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 1 test using 1 worker
+
+(node:13358) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  1 [chromium] › tests/e2e/library-summaries.spec.ts:51:1 › registry-only imported worlds remain selectable from an unrelated work (12.6s)
+
+
+  1) [chromium] › tests/e2e/library-summaries.spec.ts:51:1 › registry-only imported worlds remain selectable from an unrelated work 
+
+    Error: expect(locator).toHaveAttribute(expected) failed
+
+    Locator: getByLabel('参照する共通世界', { exact: true }).locator('option').filter({ hasText: '共有された世界だけ' })
+    Expected: "d7f5f18d-e8d8-43a0-9f25-9131881da8a0"
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toHaveAttribute" getByLabel('参照する共通世界', { exact: true }).locator('option').filter({ hasText: '共有された世界だけ' }) with timeout 5000ms
+      - waiting for getByLabel('参照する共通世界', { exact: true }).locator('option').filter({ hasText: '共有された世界だけ' })
+
+
+      54 |  await page.goto('./');await importWork(page,c);await importWork(page,a,{[fixed.snapshots[0].id]:fixed});await importWork(page,b);
+      55 |  await page.locator('.project-card').filter({hasText:b.name}).click();await expect(page.locator('.project-switch')).toContainText(b.name);await page.reload();await expect(page.locator('.project-switch')).toContainText(b.name);await page.locator('.sidebar').getByRole('button',{name:/^年表/}).click();await page.getByRole('tab',{name:'世界・地図・履歴',exact:true}).click();await page.getByRole('tab',{name:'共通世界の固定版',exact:true}).click();
+    > 56 |  await expect(page.getByLabel('参照する共通世界',{exact:true}).locator('option').filter({hasText:world.name})).toHaveAttribute('value',world.projectId);
+         |                                                                                                        ^
+      57 |  await page.getByLabel('参照する共通世界',{exact:true}).selectOption(world.projectId);await page.getByLabel('固定する共通世界版',{exact:true}).selectOption(fixed.snapshots[0].id);
+      58 |  await page.getByRole('checkbox',{name:'共有世界の城',exact:true}).check();await page.getByRole('button',{name:'適用前の差分・影響を確認',exact:true}).click();await page.getByRole('button',{name:'確認した固定版・採用設定を保存',exact:true}).click();await expect(page.getByText('参照版：保持された世界版',{exact:true})).toBeVisible();
+      59 | });
+        at /workspace/phase2/tests/e2e/library-summaries.spec.ts:56:104
+
+    Error Context: ../phase2-progress/p2-01-browser-results/library-summaries-registry-5ca7f-able-from-an-unrelated-work-chromium/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../phase2-progress/p2-01-browser-results/library-summaries-registry-5ca7f-able-from-an-unrelated-work-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace ../phase2-progress/p2-01-browser-results/library-summaries-registry-5ca7f-able-from-an-unrelated-work-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    [chromium] › tests/e2e/library-summaries.spec.ts:51:1 › registry-only imported worlds remain selectable from an unrelated work 
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

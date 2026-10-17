@@ -1,0 +1,34 @@
+
+ RUN  v5.0.3 /workspace/phase2
+
+ ❯ tests/optimization/library-summaries.test.ts (16 tests | 1 failed) 1291ms
+   × falls back to the registry for a typed historical snapshot retained under a different world key 17ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/optimization/library-summaries.test.ts > falls back to the registry for a typed historical snapshot retained under a different world key
+StorageError: project.entities[0].data.body[0].links[0].target.sourceVersionId: 参照先が存在しないか、指定した作品・共通世界の範囲外です。
+ ❯ validateReadImage src/storage/readValidationCore.ts:16:39
+     14|  // reads must complete it once, alongside every world and snapshot ha…
+     15|  onStage?.('integrity');const issues=await validateProjectIntegrity(cu…
+     16|  if(issues.length)throw Object.assign(new StorageError('VALIDATION_FAI…
+       |                                       ^
+     17|  onStage?.('worlds');verifyWorlds([current],worlds);
+     18|  onStage?.('hashes');await verifySnapshotHashes([current]);
+ ❯ validateColdRead src/storage/readValidation.ts:9:118
+ ❯ ScenarioStore.readEditingProject src/storage/store.ts:706:9
+ ❯ tests/optimization/library-summaries.test.ts:124:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 3 passed (4)
+      Tests  1 failed | 30 passed (31)
+   Start at  04:47:22
+   Duration  2.21s (tests 61%, transform 29%, import 9%)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

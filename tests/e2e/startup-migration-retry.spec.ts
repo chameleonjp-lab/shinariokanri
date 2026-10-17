@@ -85,7 +85,7 @@ for (const failures of [1, 2]) test(`旧native v1の移行を${failures}回原�
   await expect(page.locator('.project-card').filter({ hasText: original.name })).toBeVisible();
   await expect(page.getByRole('alert')).toHaveCount(0);
   const migrated = await nativeImage(page);
-  expect(migrated.version).toBe(70);
+  expect(migrated.version).toBe(80);
   await page.locator('.project-card').filter({ hasText: original.name }).click();
   await page.locator('.sidebar').getByRole('button', { name: /^作品/ }).click();
   await page.getByRole('tab', { name: '完全保存・復元', exact: true }).click();
@@ -199,7 +199,7 @@ test('再試行のnative open完了が遅れても中止で通常画面へ戻り
   for (const [name, table] of Object.entries(before.tables)) expect(cancelled.tables[name]).toEqual(table);
   // The completed native migration can retain its new empty stores. Cancellation
   // does not roll back a committed schema or fabricate a version-10 result.
-  expect(cancelled.version).toBe(70);
+  expect(cancelled.version).toBe(80);
   await page.getByRole('button', { name: '読み込みを再試行', exact: true }).click();
   await expect(page.locator('.project-card').filter({ hasText: original.name })).toBeVisible();
   await expect(page.getByRole('alert')).toHaveCount(0);

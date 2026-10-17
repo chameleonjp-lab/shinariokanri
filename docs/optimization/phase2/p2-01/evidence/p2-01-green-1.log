@@ -1,0 +1,55 @@
+
+ RUN  v5.0.3 /workspace/phase2
+
+ ❯ tests/optimization/library-summaries.test.ts (3 tests | 3 failed) 252ms
+   × lists exact active counts without hydrating any current bodies after a cold reopen 186ms
+   × repairs a missing or corrupt summary without changing canonical content and isolates invalid works 39ms
+   × captures cancellation/options and refuses an expected revision mismatch 26ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/optimization/library-summaries.test.ts > lists exact active counts without hydrating any current bodies after a cold reopen
+DatabaseClosedError: DatabaseClosedError Database has been closed
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  tests/optimization/library-summaries.test.ts > repairs a missing or corrupt summary without changing canonical content and isolates invalid works
+TypeError: Cannot read properties of undefined (reading 'table')
+ ❯ Object.mutate node_modules/dexie/src/hooks/hooks-middleware.ts:39:23
+ ❯ node_modules/dexie/src/classes/collection/collection.ts:661:24
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  tests/optimization/library-summaries.test.ts > captures cancellation/options and refuses an expected revision mismatch
+AssertionError: expected StorageError: 端末内への保存に失敗しました。入力を保持して再試行して… { …(2) } to match object { code: 'CANCELLED' }
+(2 matching properties omitted from actual)
+
+- Expected
++ Received
+
+- {
+-   "code": "CANCELLED",
++ StorageError {
++   "code": "SAVE_FAILED",
+  }
+
+ ❯ tests/optimization/library-summaries.test.ts:31:23
+     29|  const controller=new AbortController(),options={signal:controller.sig…
+     30|  const pending=store.loadEditor(saved.projectId,options);options.signa…
+     31|  await expect(pending).rejects.toMatchObject({code:'CANCELLED'});
+       |                       ^
+     32|  await expect(store.loadEditor(saved.projectId,{expectedRevision:'0'})…
+     33|  expect(await store.loadEditor(crypto.randomUUID())).toBeUndefined();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed (3)
+   Start at  04:40:46
+   Duration  1.11s (transform 60%, tests 26%, import 14%)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

@@ -1,3 +1,6 @@
+import {mergeWorldSources} from '../domain/worldSources';
+import {deriveWorldSource,validWorldSource,type StoredWorldSource,type WorldSourceSummary,nativeProjectHeader,summarySourceHash,deriveProjectSummary,validProjectSummary,type StoredProjectSummary,type ProjectSummary} from './projectSummary';
+export type {ProjectSummary} from './projectSummary';
 import {createCapturedGraphComparer,mergeImportConflicts} from './importWork';
 import {installDatabaseProbe} from '../observability/databaseProbe';
 import {probeEnabled,probeCount,probePayload,probeGauge,probeSpan,probeSync,probeDuration,type ProbePhase} from '../observability/probe';
@@ -12,7 +15,7 @@ import {validateSyncRecovery,syncRecoveryImages,type NativeSyncRecovery,type Ret
 import Dexie, { type Table } from 'dexie';
 import { prepareWorldPin, type WorldPinInput } from './worldPins';
 import type { Block, CommandRecord, ContentState, Entity, ProjectContent, ProjectData, ProjectSnapshot, Relation, SavedView, ViewState } from '../domain/types';
-import { collectReferences, ID_PATTERN, isContentCopyField, newId, rewriteEntityReferences, rewriteRelationReferences, validateCurrentProject, validateProject, type DomainReference } from '../domain/model';
+import { collectReferences, collectRelationReferences, KIND_LABELS, ID_PATTERN, isContentCopyField, newId, rewriteEntityReferences, rewriteRelationReferences, validateCurrentProject, validateProject, type DomainReference } from '../domain/model';
 import { remapEditedTextReferences, remapEditedTextRelationReferences } from '../domain/text';
 import { reconcileDeliverables } from '../domain/production';
 import { addChangeReviews } from '../domain/changeReviews';
@@ -102,6 +105,8 @@ export interface ImportResult extends SaveResult { mode: ImportMode; idMap?: Rec
 class ScenarioDatabase extends Dexie {
   sharedSnapshots!:Table<import('../sync/publicShare').SharedSnapshot,string>;
   projects!: Table<StoredProject, string>;
+  projectSummaries!: Table<StoredProjectSummary,string>;
+  worldSources!:Table<StoredWorldSource,string>;
   entities!: Table<StoredEntity, [string, string]>;
   relations!: Table<Relation, [string, string]>;
   blocks!: Table<StoredBlock, [string, string]>;
@@ -141,6 +146,7 @@ class ScenarioDatabase extends Dexie {
     this.version(5).stores({ syncBases:'projectId', preparedSync:'operationId,projectId', syncConflicts:'operationId,projectId', syncAckEvidence:'operationId,projectId',retainedSyncRecovery:'key,projectId',syncAssetAcks:'key,projectId',sharedSnapshots:'id,createdAt' });
     this.version(6).stores({ workspaceInputs: 'key' });
     this.version(7).stores({ recordParts:'key,scope' });
+    this.version(8).stores({ projectSummaries:'projectId',worldSources:'id,projectId' });
     installRecordPartsDatabase(this);
     installDatabaseProbe(this);
   }
@@ -470,7 +476,16 @@ async function targetChanges(before: ContentState, after: ContentState, isNew = 
 
 export class ScenarioStore {
   private authorAccess:Map<string,string>|null=null;
-  setAuthorAccess(roles:Record<string,string>|null){this.authorAccess=roles?new Map(Object.entries(roles)):null;}
+  private accessGeneration=0;
+  setAuthorAccess(roles:Record<string,string>|null){this.authorAccess=roles?new Map(Object.entries(roles)):null;this.accessGeneration++;for(const id of this.cachedProjects.keys())this.invalidateProjectCache(id);}
+  /** Publish a fresh authoritative role response only in its original access/lifetime. */
+  async refreshAuthorAccess(load:()=>Promise<Record<string,string>>,options:{signal?:AbortSignal;isCurrent?:()=>boolean}={}){
+    const access=this.accessGeneration,lifetime=this.cacheLifetime,{signal,isCurrent}=options;checkCancelled(signal);
+    const roles=await load();checkCancelled(signal);
+    if(access!==this.accessGeneration||lifetime!==this.cacheLifetime||isCurrent&&!isCurrent())throw new StorageError('CANCELLED','権限の確認中に読み込み先または権限が変わりました。');
+    if(!roles||Array.isArray(roles)||Object.entries(roles).some(([id,role])=>!ID_PATTERN.test(id)||!['owner','editor'].includes(role)))throw new SyncProtocolError('PROTOCOL_INVALID');
+    this.setAuthorAccess(roles);
+  }
   private readonly db: ScenarioDatabase;
   private activeOperations=0;
   get pendingOperations(){return this.activeOperations;}
@@ -483,6 +498,8 @@ export class ScenarioStore {
   private readonly completeHistories = new Set<string>();
   private readonly cacheEpochs = new Map<string, number>();
   private cacheLifetime = 0;
+  private readonly cachedEditorSources=new WeakMap<ProjectData,string>();
+  private readonly editorSources=new WeakMap<ProjectData,{projectId:string;revision:string;sourceHash:string;access:number;lifetime:number}>();
   private readonly editingHistories = new WeakMap<CommandRecord[], { projectId: string; revision: string; historyIds: string[] }>();
   private readonly validationReferences = new WeakMap<Entity, DomainReference[]>();
   constructor(options: StoreOptions = {}) {
@@ -491,7 +508,7 @@ export class ScenarioStore {
     this.onSaveMetrics = options.onSaveMetrics;
     this.db = new ScenarioDatabase(options.databaseName ?? (this.accountId ? `scenario-manager-account-${encodeURIComponent(this.accountId)}` : 'scenario-manager-local-v1'));
     for(const name of ['saveProject','importScenario','putAsset','commitPreparedAck','confirmSyncResolution','bindBootstrapBase','bindConfirmedProject','saveAuthorToolDraft','saveImportDraft','applyReceivedImage','saveWorkspaceInputs','restoreAuthorInputs','restoreAuthorToolDrafts']){const fn=(this as unknown as Record<string,(...args:unknown[])=>Promise<unknown>>)[name].bind(this);Object.defineProperty(this,name,{configurable:true,writable:true,value:async(...args:unknown[])=>{this.activeOperations++;try{return await fn(...args);}finally{this.activeOperations--;}}});}
-    const phases:Record<string,ProbePhase>={listProjectsForEditing:'store.list',getProjectForEditing:'store.read',getProject:'store.fullRead',saveProject:'store.save',historyPage:'store.history',exportProject:'store.export',importScenario:'store.import',writeContent:'writeContent'};
+    const phases:Record<string,ProbePhase>={listProjectSummaries:'store.list',loadEditor:'store.read',listProjectsForEditing:'store.list',getProjectForEditing:'store.read',getProject:'store.fullRead',saveProject:'store.save',historyPage:'store.history',exportProject:'store.export',importScenario:'store.import',writeContent:'writeContent'};
     for(const [name,phase] of Object.entries(phases)){
       const fn=(this as unknown as Record<string,(...args:unknown[])=>Promise<unknown>>)[name].bind(this);
       Object.defineProperty(this,name,{configurable:true,writable:true,value:(...args:unknown[])=>{
@@ -502,7 +519,7 @@ export class ScenarioStore {
     }
   }
   // Store names avoid Dexie's recursive KeyPaths expansion on the domain's large discriminated unions.
-  private get writeTables(): string[] { return ['projects', 'entities', 'relations', 'blocks', 'snapshots', 'commands', 'outbox', 'assets', 'views', 'syncMetadata', 'restorePoints', 'worlds', 'importLogs', 'recoveredPending','syncBases','preparedSync','syncConflicts','syncAckEvidence','retainedSyncRecovery','syncAssetAcks']; }
+  private get writeTables(): string[] { return ['projects', 'projectSummaries', 'worldSources', 'entities', 'relations', 'blocks', 'snapshots', 'commands', 'outbox', 'assets', 'views', 'syncMetadata', 'restorePoints', 'worlds', 'importLogs', 'recoveredPending','syncBases','preparedSync','syncConflicts','syncAckEvidence','retainedSyncRecovery','syncAssetAcks']; }
   private async guardWorldRegistry(incoming: ProjectData[]): Promise<void> {
     const snapshots = new Map<string, ProjectSnapshot>();
     for (const project of [...(await this.db.worlds.toArray()).map(row => row.project), ...incoming]) for (const snapshot of project.snapshots) {
@@ -669,8 +686,14 @@ export class ScenarioStore {
   }
   /** Editing reads current rows only. Its immutable history token lets saves retain history without loading it. */
   async getProjectForEditing(projectId: string,options:{signal?:AbortSignal;onStage?:(stage:ReadStage)=>void;immutableView?:boolean}={}): Promise<ProjectData | undefined> {
+    return this.readEditingProject(projectId,options,false);
+  }
+  private async readEditingProject(projectId: string,options:{signal?:AbortSignal;onStage?:(stage:ReadStage)=>void;immutableView?:boolean},selectedWorlds:boolean): Promise<ProjectData | undefined> {
     const {signal, onStage, immutableView} = options;
-    checkCancelled(signal);
+    const accessGeneration=this.accessGeneration,lifetime=this.cacheLifetime;
+    const fence=()=>{checkCancelled(signal);if(accessGeneration!==this.accessGeneration||lifetime!==this.cacheLifetime)throw new StorageError('CANCELLED','作品の閲覧権限または読み込み先が変わりました。');};
+    fence();
+    let sourceHash:string|undefined;
     const started=commandMeasurementStart(),milliseconds:Record<string,number>={};let last=started;
     const measure=(stage:string)=>{if(last===undefined)return;const now=performance.now();milliseconds[stage]=(milliseconds[stage]??0)+now-last;last=now;};
     const denied=this.authorAccess&&await this.db.syncBases.get(projectId)&&this.authorAccess.get(projectId)!=='owner';
@@ -681,28 +704,95 @@ export class ScenarioStore {
       const read = await this.db.transaction('r', this.writeTables, async () => {
         bindRecordPartsSignal(signal);checkCancelled(signal);
         const headerStarted=started===undefined?undefined:performance.now();
+        if(selectedWorlds){const native=await nativeProjectHeader(projectId);sourceHash=native?await Dexie.waitFor(summarySourceHash(native)):undefined;}
         const header = await this.db.projects.get(projectId), cached = this.cachedProjects.get(projectId);
         if(headerStarted!==undefined)milliseconds['database.header']=performance.now()-headerStarted;
         if (!header) return undefined;
-        return cached?.revision === header.revision && sameJson(this.cachedHistoryIds.get(projectId), header.historyIds) ? { project: cached, historyIds: header.historyIds, contentHeadOperationId: header.contentHeadOperationId } : this.readProject(projectId, false,started===undefined?undefined:milliseconds,header,signal);
+        return cached?.revision === header.revision && sameJson(this.cachedHistoryIds.get(projectId), header.historyIds) && (!selectedWorlds||cached&&this.cachedEditorSources.get(cached)===sourceHash) ? { project: cached, historyIds: header.historyIds, contentHeadOperationId: header.contentHeadOperationId } : this.readProject(projectId, false,started===undefined?undefined:milliseconds,header,signal);
       });
       checkCancelled(signal);
       if (!read) return undefined;
       measure('database');
       let { project } = read;
       if (project !== this.cachedProjects.get(projectId)) {
-        const worlds = await this.validationWorlds();
+        const worlds = selectedWorlds?await this.editorWorlds(project,signal):await this.validationWorlds();
         measure('dependencies');let phase='transfer';
         await validateColdRead(project,worlds,{signal,onStage:stage=>{measure(phase);phase=`validation.${stage}`;onStage?.(stage);}});
         measure(phase);
         checkCancelled(signal);
+        fence();
         project = this.rememberProject(project, read.contentHeadOperationId, read.historyIds, readEpoch);
         measure('immutable');
       }
       checkCancelled(signal);
-      const view=this.editingCopy(project,read.historyIds,immutableView);measure('view');readMeasured(started,project.projectId,milliseconds);return view;
+      fence();
+      if(sourceHash&&this.cachedProjects.get(projectId)===project)this.cachedEditorSources.set(project,sourceHash);
+      const view=this.editingCopy(project,read.historyIds,immutableView);if(sourceHash)this.editorSources.set(view,{projectId,revision:project.revision,sourceHash,access:accessGeneration,lifetime});measure('view');readMeasured(started,project.projectId,milliseconds);return view;
     } catch (error) { checkCancelled(signal); throw saveError(error); }
   }
+  /** Summary content is explicitly unloaded, even when its derivation is valid. */
+  async listProjectSummaries(options:{signal?:AbortSignal;onProgress?:(completed:number,total:number)=>void}={}):Promise<ProjectSummary[]> {
+    const {signal,onProgress}=options,access=this.accessGeneration,lifetime=this.cacheLifetime;
+    const fence=()=>{checkCancelled(signal);if(access!==this.accessGeneration||lifetime!==this.cacheLifetime)throw new StorageError('CANCELLED','作品一覧の読み込み先または権限が変わりました。');};
+    fence();
+    const ids=await this.db.projects.toCollection().primaryKeys(),result:ProjectSummary[]=[];
+    onProgress?.(0,ids.length);
+    for(const [index,id] of ids.entries()) {
+      fence();
+      let name=id,revision='0',saveState:ProjectSummary['saveState']={localSaved:true,pendingCount:null,recoveredPendingCount:null,pendingAssetCount:'unloaded',serverRevision:null,syncState:'unloaded'};
+      try {
+        const captured=await this.db.transaction('r',['projects','projectSummaries','syncBases','syncMetadata','outbox','recoveredPending'],async()=>{
+          if(this.authorAccess&&await this.db.syncBases.where('projectId').equals(id).count()&&this.authorAccess.get(id)!=='owner')return undefined;
+          const header=await nativeProjectHeader(id);if(!header)return undefined;
+          const sourceHash=await Dexie.waitFor(summarySourceHash(header)),row=await this.db.projectSummaries.get(id);
+          name=typeof header.name==='string'?header.name:id;revision=typeof header.revision==='string'?header.revision:'0';
+          const valid=await Dexie.waitFor(validProjectSummary(row,id,sourceHash));
+          const [pendingCount,recoveredPendingCount,metadata]=await Promise.all([this.db.outbox.where('projectId').equals(id).count(),this.db.recoveredPending.where('projectId').equals(id).count(),this.db.syncMetadata.get(id)]);
+          return {sourceHash,row:valid?row:undefined,saveState:{localSaved:true as const,pendingCount,recoveredPendingCount,pendingAssetCount:'unloaded' as const,serverRevision:metadata?.serverRevision??'0',syncState:metadata?.state==='conflict'?'conflict' as const:pendingCount||recoveredPendingCount||metadata?.state==='pending'?'pending' as const:'unloaded' as const}};
+        });
+        fence();
+        if(captured) {
+          saveState=captured.saveState;
+          let row=captured.row;
+          if(!row) {
+            this.invalidateProjectCache(id);
+            const project=await this.loadEditor(id,{signal,immutableView:true});fence();
+            if(!project)continue;
+            row=await deriveProjectSummary(project,captured.sourceHash);
+            await this.db.transaction('rw',['projects','projectSummaries'],async()=>{
+              fence();const header=await nativeProjectHeader(id);
+              if(!header||await Dexie.waitFor(summarySourceHash(header))!==captured.sourceHash)throw new StorageError('REVISION_CONFLICT','一覧の確認中に作品が更新されました。再試行してください。');
+              await this.db.projectSummaries.put(row!);fence();this.faultInjector?.('before-commit');
+            });
+            // Backfill is not a request to retain every editor in memory.
+            if(this.cachedProjects.get(id)?.revision===project.revision)this.invalidateProjectCache(id);
+          }
+          result.push({projectId:id,name:row.name,revision:row.revision,entityCount:row.entityCount,alternativeHeads:row.alternativeHeads,contentState:'unloaded',saveState:captured.saveState});
+        }
+      } catch(error) {
+        fence();const failure=saveError(error);
+        result.push({projectId:id,name,revision,entityCount:null,contentState:'error',error:failure.message,saveState});
+      }
+      fence();onProgress?.(index+1,ids.length);
+    }
+    fence();return result;
+  }
+  async loadEditor(projectId:string,options:{signal?:AbortSignal;expectedRevision?:string;immutableView?:boolean;onStage?:(stage:ReadStage)=>void}={}):Promise<ProjectData|undefined> {
+    const {signal,expectedRevision,immutableView,onStage}=options,access=this.accessGeneration,lifetime=this.cacheLifetime;
+    const fence=()=>{checkCancelled(signal);if(access!==this.accessGeneration||lifetime!==this.cacheLifetime)throw new StorageError('CANCELLED','作品の読み込み先または権限が変わりました。');};
+    fence();
+    if(this.authorAccess&&await this.db.syncBases.where('projectId').equals(projectId).count()&&this.authorAccess.get(projectId)!=='owner')throw new StorageError('CANCELLED','この作品を編集する権限がありません。');
+    fence();const project=await this.readEditingProject(projectId,{signal,immutableView,onStage},true);fence();
+    if(!project)return undefined;
+    await this.db.transaction('r',['projects','syncBases'],async()=>{
+      bindRecordPartsSignal(signal);fence();if(this.authorAccess&&await this.db.syncBases.get(projectId)&&this.authorAccess.get(projectId)!=='owner')throw new StorageError('CANCELLED','作品の閲覧権限が変わりました。');
+      const native=await nativeProjectHeader(projectId),proof=this.editorSources.get(project),sourceHash=native?await Dexie.waitFor(summarySourceHash(native)):undefined;fence();
+      if(!proof||proof.sourceHash!==sourceHash||expectedRevision!==undefined&&expectedRevision!==project.revision){if(BigInt(this.cachedProjects.get(projectId)?.revision??'0')<=BigInt(project.revision))this.invalidateProjectCache(projectId);throw new StorageError('REVISION_CONFLICT','読み込み中に作品が更新されました。入力を保持して再試行してください。');}
+    });
+    fence();return project;
+  }
+  /** Explicit release leaves persisted workspace drafts and canonical rows intact. */
+  releaseEditor(projectId:string):void {this.invalidateProjectCache(projectId);}
   async listProjectsForEditing(options: { signal?: AbortSignal; onProgress?: (completed: number, total: number) => void;onStage?:(stage:ReadStage)=>void;immutableView?:boolean } = {}): Promise<ProjectData[]> {
     const {signal, onProgress, onStage, immutableView} = options;
     const readOptions = {signal, onStage, immutableView};
@@ -753,6 +843,60 @@ export class ScenarioStore {
     for (const [id, world] of Object.entries(extra)) worlds[id] = world;
     return worlds;
   }
+  /** Immutable registry catalog. Key presence + sealed derivation are sufficient
+   * under the guarded writers; full native content remains unloaded. */
+  async listWorldSourceSummaries(options:{signal?:AbortSignal}={}):Promise<WorldSourceSummary[]> {
+    const {signal}=options,access=this.accessGeneration,lifetime=this.cacheLifetime;
+    const fence=()=>{checkCancelled(signal);if(access!==this.accessGeneration||lifetime!==this.cacheLifetime)throw new StorageError('CANCELLED','共通世界一覧の読み込み先が変わりました。');};
+    fence();const ids=await this.db.worlds.toCollection().primaryKeys(),sources=new Map<string,WorldSourceSummary>(),errors:WorldSourceSummary[]=[];
+    for(const id of ids){let sourceProjectId:string|undefined;fence();try{
+      let row=await this.db.worldSources.get(id);
+      if(!await validWorldSource(row,id)){
+        const captured=await this.db.transaction('r',['worlds'],async()=>{bindRecordPartsSignal(signal);return this.db.worlds.get(id);});fence();if(!captured)continue;
+        if(typeof captured.project?.projectId==='string'&&/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(captured.project.projectId))sourceProjectId=captured.project.projectId;
+        const worlds={...await this.editorWorlds(captured.project,signal),[id]:captured.project};await validateColdRead(captured.project,worlds,{signal});fence();
+        row=await deriveWorldSource(id,captured.project);
+        await this.db.transaction('rw',['worlds','worldSources'],async()=>{bindRecordPartsSignal(signal);fence();const latest=await this.db.worlds.get(id);if(!latest||!sameJson(latest,captured))throw new StorageError('REVISION_CONFLICT','共通世界の保存情報が変わりました。');await this.db.worldSources.put(row!);fence();this.faultInjector?.('before-commit');});
+      }
+      sources.set(row!.projectId,{projectId:row!.projectId,name:row!.name,revision:row!.revision,registryOnly:true,contentState:'unloaded',sourceIdentity:'identified'});
+    }catch(error){fence();errors.push({projectId:sourceProjectId??id,name:`固定世界 ${id}`,revision:'0',registryOnly:true,contentState:'error',sourceIdentity:sourceProjectId?'identified':'unknown',error:saveError(error).message});}}
+    fence();return [...sources.values(),...errors];
+  }
+  async loadWorldSource(projectId:string,options:{signal?:AbortSignal}={}):Promise<{world:ProjectData;worlds:Record<string,ProjectData>}|undefined>{
+    const {signal}=options,access=this.accessGeneration,lifetime=this.cacheLifetime;
+    const fence=()=>{checkCancelled(signal);if(access!==this.accessGeneration||lifetime!==this.cacheLifetime)throw new StorageError('CANCELLED','共通世界の読み込み先または権限が変わりました。');};
+    fence();const summaries=await this.listWorldSourceSummaries({signal});fence();if(summaries.some(row=>row.contentState==='error'&&(row.projectId===projectId||row.sourceIdentity==='unknown')))throw new StorageError('VALIDATION_FAILED','選択した共通世界の保存情報を確認できません。');if(!summaries.some(row=>row.projectId===projectId&&row.contentState==='unloaded'))return undefined;
+    const metadata=await this.db.worldSources.where('projectId').equals(projectId).toArray(),sourceWorlds:Record<string,ProjectData>={};
+    await this.db.transaction('r',['worlds'],async()=>{bindRecordPartsSignal(signal);for(const row of metadata){fence();const value=await this.db.worlds.get(row.id);if(!value||value.project.projectId!==projectId)throw new StorageError('VALIDATION_FAILED','共通世界の索引と保存情報が一致しません。');sourceWorlds[row.id]=value.project;}});
+    const known={...sourceWorlds};for(const world of Object.values(sourceWorlds))Object.assign(known,await this.editorWorlds(world,signal));
+    for(const world of Object.values(sourceWorlds)){fence();await validateColdRead(world,known,{signal});}
+    const world=mergeWorldSources([],sourceWorlds)[0];fence();return world?{world,worlds:known}:undefined;
+  }
+  private async editorWorlds(project:ProjectData,signal?:AbortSignal):Promise<Record<string,ProjectData>> {
+    return this.db.transaction('r',['worlds'],async()=>{bindRecordPartsSignal(signal);checkCancelled(signal);const count=await this.db.worlds.count();probeCount('db.count.calls',1,'worlds');probeCount('db.count.result',count,'worlds');if(count===0){checkCancelled(signal);return {};}return this.readEditorWorlds(project,signal);});
+  }
+  private async readEditorWorlds(project:ProjectData,signal?:AbortSignal):Promise<Record<string,ProjectData>> {
+    const worlds:Record<string,ProjectData>={},visited=new Set<string>(),pending=referencedWorlds([project]);
+    // Explicit and typed pinned references can occur in snapshots and alternatives.
+    const typed=new Set<string>();const seen=new WeakSet<object>();
+    const walk=(value:unknown):void=>{if(!value||typeof value!=='object'||seen.has(value))return;seen.add(value);const record=value as Record<string,unknown>;const references=typeof record.kind==='string'&&Object.hasOwn(KIND_LABELS,record.kind)&&typeof record.projectId==='string'&&record.data&&typeof record.data==='object'?collectReferences(record as unknown as Entity):typeof record.relationType==='string'&&typeof record.projectId==='string'&&typeof record.fromId==='string'?collectRelationReferences(record as unknown as Relation):[];for(const reference of references)if(reference.scope==='snapshot')typed.add(reference.id);for(const child of Object.values(record))walk(child);};
+    walk(project);for(const id of typed)pending.push({projectId:'',immutableSnapshotId:id,contentHash:''});
+    while(pending.length){checkCancelled(signal);const reference=pending.pop()!;if(reference.immutableSnapshotId===project.projectId||project.snapshots.some(snapshot=>snapshot.id===reference.immutableSnapshotId))continue;if(visited.has(reference.immutableSnapshotId))continue;visited.add(reference.immutableSnapshotId);const row=await this.db.worlds.get(reference.immutableSnapshotId);if(!row){if(project.snapshots.some(snapshot=>snapshot.id===reference.immutableSnapshotId))continue;return this.validationWorlds();}worlds[row.id]=row.project;pending.push(...referencedWorlds([row.project]));const old=new Set(typed);walk(row.project);for(const id of typed)if(!old.has(id))pending.push({projectId:'',immutableSnapshotId:id,contentHash:''});}
+    checkCancelled(signal);return worlds;
+  }
+  async listEditorWorldSnapshots(project:ProjectData,options:{signal?:AbortSignal}={}):Promise<Record<string,ProjectData>> {
+    const {signal}=options,access=this.accessGeneration,lifetime=this.cacheLifetime;
+    const result=await this.editorWorlds(project,signal);checkCancelled(signal);
+    await this.db.transaction('r',['projects','syncBases'],async()=>{
+      bindRecordPartsSignal(signal);checkCancelled(signal);
+      if(access!==this.accessGeneration||lifetime!==this.cacheLifetime||this.authorAccess&&await this.db.syncBases.where('projectId').equals(project.projectId).count()&&this.authorAccess.get(project.projectId)!=='owner')throw new StorageError('CANCELLED','作品の読み込み先または権限が変わりました。');
+      const proof=this.editorSources.get(project);let current=false;
+      if(proof&&proof.projectId===project.projectId&&proof.revision===project.revision&&proof.access===access&&proof.lifetime===lifetime){const native=await nativeProjectHeader(project.projectId);current=!!native&&proof.sourceHash===await Dexie.waitFor(summarySourceHash(native));}
+      else{const header=await this.db.projects.get(project.projectId);current=!!header&&header.revision===project.revision;}
+      if(!current)throw new StorageError('REVISION_CONFLICT','共通世界の確認中に作品が更新されました。入力を保持して再試行してください。');
+    });
+    checkCancelled(signal);if(access!==this.accessGeneration||lifetime!==this.cacheLifetime)throw new StorageError('CANCELLED','作品の読み込み先が変わりました。');return result;
+  }
   async listWorldSnapshots(): Promise<Record<string, ProjectData>> { return copy(await this.validationWorlds()); }
   async getProjectAtRevision(projectId: string, revision: string): Promise<ProjectData | undefined> {
     if (!/^(?:0|[1-9]\d*)$/.test(revision)) throw new StorageError('VALIDATION_FAILED', 'revisionは正規の10進整数文字列で指定してください。');
@@ -799,6 +943,8 @@ export class ScenarioStore {
       this.db.blocks.bulkDelete(blockChanges.remove), this.db.snapshots.bulkDelete(snapshotChanges.remove), this.db.views.bulkDelete(viewChanges.remove),
     ]);
     await this.db.projects.put({ ...header, entityIds: entities.map(row => row.id), relationIds: relations.map(row => row.id), snapshotIds: snapshots.map(row => row.id), historyIds, viewIds: views.map(row => row.id), ...(contentHeadOperationId ? { contentHeadOperationId } : {}) });
+    const sourceHash=await Dexie.waitFor(summarySourceHash((await nativeProjectHeader(project.projectId))!));
+    await this.db.projectSummaries.put(await Dexie.waitFor(deriveProjectSummary(project,sourceHash)));
     await Promise.all([
       this.db.entities.bulkPut(extracted.map(row => ({ id: row.entity.id, projectId: project.projectId, kind: row.entity.kind, record: row.record }))),
       this.db.relations.bulkPut(relationChanges.put), this.db.blocks.bulkPut(blockChanges.put),
@@ -920,6 +1066,7 @@ export class ScenarioStore {
           if (existingWorld && !sameJson(existingSnapshot, world.snapshots[0])) throw new StorageError('IMMUTABLE_SNAPSHOT', '保存中に共通世界の固定版が変わりました。', id);
           await this.writeAssets([], world, false);
           if (!existingWorld) await this.db.worlds.add({ id, project: world });
+          await this.db.worldSources.put(await Dexie.waitFor(deriveWorldSource(id,existingWorld?.project??world)));
         }
         await this.writeAssets(assets, candidate, false);
         written = await this.writeContent(candidate, previous, operationId, historyIds);
@@ -1181,7 +1328,7 @@ export class ScenarioStore {
       const latest=await this.db.projects.get(projectId),base=await this.db.syncBases.get(projectId),prepared=await this.db.preparedSync.get(ack.operationId);if(latest?.revision!==previous.revision||base?.contentHash!==captured.base!.contentHash||base?.serverRevision!==captured.base!.serverRevision||!sameValue(prepared,captured.prepared))throw new SyncProtocolError('REVISION_CHANGED');
       if(ack.status==='conflict'){await this.db.syncConflicts.put({operationId:ack.operationId,projectId,prepared:captured.prepared!,ack,conflicts:ack.conflicts,createdAt:now});}
       else{
-        for(const [id,world]of Object.entries(receivedWorlds)){const old=await this.db.worlds.get(id);if(old&&!equalJson(old.project,world))throw new StorageError('IMMUTABLE_SNAPSHOT','固定世界の取得内容が保存済み版と異なります。');await this.db.worlds.put({id,project:world});}
+        for(const [id,world]of Object.entries(receivedWorlds)){const old=await this.db.worlds.get(id);if(old&&!equalJson(old.project,world))throw new StorageError('IMMUTABLE_SNAPSHOT','固定世界の取得内容が保存済み版と異なります。');await this.db.worlds.put({id,project:world});await this.db.worldSources.put(await Dexie.waitFor(deriveWorldSource(id,world)));}
         if(storedCommand){await this.writeContent(candidate,previous,storedCommand.operationId);this.faultInjector?.('after-content');await this.db.commands.add(storedCommand);this.faultInjector?.('after-history');}
         await this.db.syncBases.put(confirmed!);await this.db.outbox.bulkDelete(captured.prepared!.outboxIds);
         if(captured.prepared!.operation.resolvesOperationId){const original=await this.db.syncConflicts.get(captured.prepared!.operation.resolvesOperationId);if(!original||[...original.prepared.operation.targets.map(target=>target.targetId),...original.conflicts.map(c=>c.targetId)].some(id=>!captured.prepared!.operation.targets.some(target=>target.targetId===id)))throw new SyncProtocolError('PROTOCOL_INVALID');await this.db.syncConflicts.delete(original.operationId);}
@@ -1534,6 +1681,7 @@ export class ScenarioStore {
           const existing = await this.db.worlds.get(world.id);
           if (existing && !equalJson(existing.project, world.project)) throw new StorageError('IMMUTABLE_SNAPSHOT', '既存の共通世界snapshotと内容が異なります。', world.id);
           await this.db.worlds.put(world);
+          await this.db.worldSources.put(await Dexie.waitFor(deriveWorldSource(world.id,world.project)));
         }
         await this.writeContent(project, preview.target); this.faultInjector?.('after-content');
         let historyBatch: StoredCommand[] = [];

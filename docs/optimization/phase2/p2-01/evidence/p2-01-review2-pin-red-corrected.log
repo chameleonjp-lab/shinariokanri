@@ -1,0 +1,51 @@
+[WebServer] (node:16621) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:16634) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 1 test using 1 worker
+
+(node:16681) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  1 [chromium] › tests/e2e/library-summaries.spec.ts:90:1 › a late pin completion cannot replace the newly selected work world registry (10.8s)
+
+
+  1) [chromium] › tests/e2e/library-summaries.spec.ts:90:1 › a late pin completion cannot replace the newly selected work world registry 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByText('参照版：保持された版一', { exact: true })
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" getByText('参照版：保持された版一', { exact: true }) with timeout 5000ms
+      - waiting for getByText('参照版：保持された版一', { exact: true })
+
+
+       98 |  // Deliver the normal navigation button's event while the pin's async modal is pending.
+       99 |  await page.locator('.project-switch').evaluate(button=>(button as HTMLButtonElement).click());await page.locator('.project-card').filter({hasText:b.name}).click();await expect(page.locator('.project-switch')).toContainText(b.name);await versions();await expect(page.getByText(`参照版：${q.snapshots[0].versionLabel}`,{exact:true})).toBeVisible();
+    > 100 |  await page.evaluate(()=>(window as unknown as {pinGate:{release:()=>void}}).pinGate.release());await expect(page.getByText('作品の保存を検査しています…',{exact:false})).toHaveCount(0);await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));await expect(page.getByText(`参照版：${q.snapshots[0].versionLabel}`,{exact:true})).toBeVisible();await expect(page.locator('.project-switch')).toContainText(b.name);
+          |                                                                                                                                                                                                                                                                                                                                                                      ^
+      101 | });
+      102 |
+        at /workspace/phase2/tests/e2e/library-summaries.spec.ts:100:358
+
+    Error Context: ../phase2-progress/p2-01-browser-results/library-summaries-a-late-p-e05d4-elected-work-world-registry-chromium/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../phase2-progress/p2-01-browser-results/library-summaries-a-late-p-e05d4-elected-work-world-registry-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace ../phase2-progress/p2-01-browser-results/library-summaries-a-late-p-e05d4-elected-work-world-registry-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    [chromium] › tests/e2e/library-summaries.spec.ts:90:1 › a late pin completion cannot replace the newly selected work world registry 
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

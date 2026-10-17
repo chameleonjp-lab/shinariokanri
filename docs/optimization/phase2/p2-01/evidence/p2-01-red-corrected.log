@@ -1,0 +1,52 @@
+
+ RUN  v5.0.3 /workspace/phase2
+
+ ❯ tests/optimization/library-summaries.test.ts (3 tests | 3 failed) 206ms
+   × lists exact active counts without hydrating any current bodies after a cold reopen 31ms
+   × repairs a missing or corrupt summary without changing canonical content and isolates invalid works 160ms
+   × captures cancellation/options and refuses an expected revision mismatch 13ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/optimization/library-summaries.test.ts > lists exact active counts without hydrating any current bodies after a cold reopen
+StorageError: project.entities[0].deletionOperationId: 削除には削除操作IDが必要です。
+ ❯ validatedCurrent src/storage/store.ts:259:19
+    257|   const result = probeSync('validate.current',()=>validateCurrentProje…
+    258|   if (!result.ok) {
+    259|     const error = new StorageError('VALIDATION_FAILED', result.issues.…
+       |                   ^
+    260|     Object.assign(error, { issues: result.issues });
+    261|     throw error;
+ ❯ ScenarioStore.saveProject src/storage/store.ts:883:19
+ ❯ ScenarioStore.value src/storage/store.ts:493:519
+ ❯ tests/optimization/library-summaries.test.ts:13:15
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  tests/optimization/library-summaries.test.ts > repairs a missing or corrupt summary without changing canonical content and isolates invalid works
+InvalidTableError: Table projectSummaries does not exist
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  tests/optimization/library-summaries.test.ts > captures cancellation/options and refuses an expected revision mismatch
+TypeError: store.loadEditor is not a function
+ ❯ tests/optimization/library-summaries.test.ts:30:22
+     28|  const store=open(), saved=(await store.saveProject(createProject('Sel…
+     29|  const controller=new AbortController(),options={signal:controller.sig…
+     30|  const pending=store.loadEditor(saved.projectId,options);options.signa…
+       |                      ^
+     31|  await expect(pending).rejects.toMatchObject({code:'CANCELLED'});
+     32|  await expect(store.loadEditor(saved.projectId,{expectedRevision:'0'})…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed (3)
+   Start at  04:39:33
+   Duration  1.04s (transform 62%, tests 22%, import 15%)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice
