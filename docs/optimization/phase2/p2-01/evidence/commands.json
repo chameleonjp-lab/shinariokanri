@@ -1,0 +1,47 @@
+{
+  "permissions": "supported exec additional network permission; HTTP loopback only; browser administrator policy unchanged",
+  "captures": [
+    {
+      "source": "fa4c5a843dc12e375b6c9081ac3ad68a537a0880",
+      "cwd": "/workspace/phase2",
+      "command": "P2_SOURCE_COMMIT=$(git rev-parse HEAD) P2_SOURCE_TREE=$(git rev-parse HEAD^{tree}) P2_SOURCE_DIRTY=$(git status --porcelain) node scripts/optimization/measure-library-loading.mjs --suite growth --output /workspace/phase2-progress/p2-01-consistent-growth.json > /workspace/phase2-progress/p2-01-consistent-growth.log 2>&1",
+      "exit": 0,
+      "scope": "Single OFF/ON legacy API/common candidate store"
+    },
+    {
+      "source": "fa4c5a843dc12e375b6c9081ac3ad68a537a0880",
+      "cwd": "/workspace/phase2",
+      "command": "P2_SOURCE_COMMIT=$(git rev-parse HEAD) P2_SOURCE_TREE=$(git rev-parse HEAD^{tree}) P2_SOURCE_DIRTY=$(git status --porcelain) node scripts/optimization/measure-library-loading.mjs --suite standard --output /workspace/phase2-progress/p2-01-consistent-standard.json > /workspace/phase2-progress/p2-01-consistent-standard.log 2>&1",
+      "exit": 0,
+      "scope": "Single OFF/ON legacy API/common candidate store"
+    },
+    {
+      "source": "fa4c5a843dc12e375b6c9081ac3ad68a537a0880",
+      "cwd": "/workspace/phase2",
+      "command": "P2_SOURCE_COMMIT=$(git rev-parse HEAD) P2_SOURCE_TREE=$(git rev-parse HEAD^{tree}) P2_SOURCE_DIRTY=$(git status --porcelain) node scripts/optimization/measure-library-loading.mjs --suite large --output /workspace/phase2-progress/p2-01-consistent-large.json > /workspace/phase2-progress/p2-01-consistent-large.log 2>&1",
+      "exit": 0,
+      "scope": "Single OFF/ON legacy API/common candidate store"
+    },
+    {
+      "source": "fa4c5a843dc12e375b6c9081ac3ad68a537a0880",
+      "cwd": "/workspace/phase2",
+      "command": "P2_SOURCE_COMMIT=$(git rev-parse HEAD) P2_SOURCE_TREE=$(git rev-parse HEAD^{tree}) P2_SOURCE_DIRTY=$(git status --porcelain) node scripts/optimization/measure-library-loading.mjs --suite ui --output /workspace/phase2-progress/p2-01-consistent-ui.json > /workspace/phase2-progress/p2-01-consistent-ui.log 2>&1",
+      "exit": 0,
+      "scope": "Single OFF/ON legacy API/common candidate store"
+    },
+    {
+      "source": "fa4c5a843dc12e375b6c9081ac3ad68a537a0880",
+      "cwd": "/workspace/phase2",
+      "command": "node scripts/optimization/measure-phase1.mjs --suite standard --output /workspace/phase2-progress/p2-01-consistent-profile-standard.json > /workspace/phase2-progress/p2-01-consistent-profile-standard.log 2>&1",
+      "exit": 0,
+      "scope": "Unchanged original phase1 ON resource/write profile; not OFF latency"
+    },
+    {
+      "source": "fa4c5a843dc12e375b6c9081ac3ad68a537a0880",
+      "cwd": "/workspace/phase2",
+      "command": "node scripts/optimization/measure-phase1.mjs --suite large --output /workspace/phase2-progress/p2-01-consistent-profile-large.json > /workspace/phase2-progress/p2-01-consistent-profile-large.log 2>&1",
+      "exit": 0,
+      "scope": "Unchanged original phase1 ON resource/write profile; not OFF latency"
+    }
+  ]
+}

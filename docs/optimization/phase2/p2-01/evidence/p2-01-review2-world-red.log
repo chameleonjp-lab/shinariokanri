@@ -1,0 +1,52 @@
+[WebServer] (node:16052) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:16065) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 1 test using 1 worker
+
+(node:16112) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  1 [chromium] › tests/e2e/library-summaries.spec.ts:81:1 › editable world choices include fixed editions retained only in the registry (11.4s)
+
+
+  1) [chromium] › tests/e2e/library-summaries.spec.ts:81:1 › editable world choices include fixed editions retained only in the registry 
+
+    Error: expect(locator).toHaveAttribute(expected) failed
+
+    Locator: getByLabel('固定する共通世界版', { exact: true }).locator('option').filter({ hasText: 'レジストリだけの第二版' })
+    Expected: "782b1974-4f2f-4cab-bedc-2340120de21f"
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toHaveAttribute" getByLabel('固定する共通世界版', { exact: true }).locator('option').filter({ hasText: 'レジストリだけの第二版' }) with timeout 5000ms
+      - waiting for getByLabel('固定する共通世界版', { exact: true }).locator('option').filter({ hasText: 'レジストリだけの第二版' })
+
+
+      84 |  await page.goto('./');await importWork(page,first);await importWork(page,carrier,{[second.snapshots[1].id]:second});await importWork(page,independent);await page.locator('.project-card').filter({hasText:independent.name}).click();await page.reload();await expect(page.locator('.project-switch')).toContainText(independent.name);
+      85 |  await page.locator('.sidebar').getByRole('button',{name:/^年表/}).click();await page.getByRole('tab',{name:'世界・地図・履歴',exact:true}).click();await page.getByRole('tab',{name:'共通世界の固定版',exact:true}).click();await page.getByLabel('参照する共通世界',{exact:true}).selectOption(world.projectId);
+    > 86 |  await expect(page.getByLabel('固定する共通世界版',{exact:true}).locator('option').filter({hasText:'レジストリだけの第二版'})).toHaveAttribute('value',second.snapshots[1].id);await page.getByLabel('固定する共通世界版',{exact:true}).selectOption(second.snapshots[1].id);
+         |                                                                                                            ^
+      87 |  await page.getByRole('checkbox',{name:'両版の城',exact:true}).check();await page.getByRole('button',{name:'適用前の差分・影響を確認',exact:true}).click();await page.getByRole('button',{name:'確認した固定版・採用設定を保存',exact:true}).click();await expect(page.getByText('参照版：レジストリだけの第二版',{exact:true})).toBeVisible();
+      88 | });
+      89 |
+        at /workspace/phase2/tests/e2e/library-summaries.spec.ts:86:108
+
+    Error Context: ../phase2-progress/p2-01-browser-results/library-summaries-editable-04a12-tained-only-in-the-registry-chromium/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../phase2-progress/p2-01-browser-results/library-summaries-editable-04a12-tained-only-in-the-registry-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace ../phase2-progress/p2-01-browser-results/library-summaries-editable-04a12-tained-only-in-the-registry-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    [chromium] › tests/e2e/library-summaries.spec.ts:81:1 › editable world choices include fixed editions retained only in the registry 
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

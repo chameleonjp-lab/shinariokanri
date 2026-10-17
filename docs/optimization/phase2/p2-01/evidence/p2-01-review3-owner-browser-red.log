@@ -1,0 +1,47 @@
+[WebServer] (node:19629) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:19642) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 1 test using 1 worker
+
+(node:19689) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  1 [chromium] › tests/e2e/library-summaries.spec.ts:103:1 › an unrelated identified corrupt registry row does not hide an editable world own edition (1.0m)
+
+
+  1) [chromium] › tests/e2e/library-summaries.spec.ts:103:1 › an unrelated identified corrupt registry row does not hide an editable world own edition 
+
+    Test timeout of 60000ms exceeded.
+
+    Error: locator.click: Test timeout of 60000ms exceeded.
+    Call log:
+      - waiting for locator('.project-card').filter({ hasText: '独立した採用作品' })
+
+
+      104 |  const raw=createProject('健全な編集世界');raw.entities=[createEntity(raw.projectId,'place','健全な世界の城')];const world=await createWorldSnapshot(raw,'編集世界自身の版'),work=createProject('独立した採用作品'),bad=await createWorldSnapshot(createProject('無関係な破損世界'),'破損世界の版');
+      105 |  await page.goto('./');await importWork(page,world);await importWork(page,work);await page.evaluate(async bad=>{const db=await new Promise<IDBDatabase>((resolve,reject)=>{const request=indexedDB.open('scenario-manager-local-v1');request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error);});await new Promise<void>((resolve,reject)=>{const tx=db.transaction('worlds','readwrite');tx.objectStore('worlds').put({id:bad.snapshots[0].id,project:{...bad,schemaVersion:'999.0'}});tx.oncomplete=()=>resolve();tx.onerror=()=>reject(tx.error);});db.close();},bad);
+    > 106 |  await page.reload();await expect(page.locator('.project-switch')).toContainText(work.name);await page.locator('.sidebar').getByRole('button',{name:/^年表/}).click();await page.getByRole('tab',{name:'世界・地図・履歴',exact:true}).click();await page.getByRole('tab',{name:'共通世界の固定版',exact:true}).click();await page.getByLabel('参照する共通世界',{exact:true}).selectOption(world.projectId);
+          |                                                                                      ^
+      107 |  await expect(page.getByLabel('固定する共通世界版',{exact:true}).locator('option').filter({hasText:'編集世界自身の版'})).toHaveAttribute('value',world.snapshots[0].id);await page.getByLabel('固定する共通世界版',{exact:true}).selectOption(world.snapshots[0].id);await page.getByRole('checkbox',{name:'健全な世界の城',exact:true}).check();await page.getByRole('button',{name:'適用前の差分・影響を確認',exact:true}).click();await page.getByRole('button',{name:'確認した固定版・採用設定を保存',exact:true}).click();await expect(page.getByText('参照版：編集世界自身の版',{exact:true})).toBeVisible();
+      108 | });
+      109 |
+        at /workspace/phase2/tests/e2e/library-summaries.spec.ts:106:86
+
+    Error Context: ../phase2-progress/p2-01-browser-results/library-summaries-an-unrel-ca753--editable-world-own-edition-chromium/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../phase2-progress/p2-01-browser-results/library-summaries-an-unrel-ca753--editable-world-own-edition-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace ../phase2-progress/p2-01-browser-results/library-summaries-an-unrel-ca753--editable-world-own-edition-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    [chromium] › tests/e2e/library-summaries.spec.ts:103:1 › an unrelated identified corrupt registry row does not hide an editable world own edition 
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

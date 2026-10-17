@@ -1,0 +1,51 @@
+
+ RUN  v5.0.3 /workspace/phase2
+
+ ❯ tests/optimization/library-summaries.test.ts (21 tests | 2 failed) 1109ms
+   × never reports fully synced while asset acknowledgement detail is unloaded 17ms
+   × offers registry-only world sources to unrelated works without reading their bodies in a steady catalog 76ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/optimization/library-summaries.test.ts > never reports fully synced while asset acknowledgement detail is unloaded
+AssertionError: expected { localSaved: true, …(5) } to match object { pendingCount: +0, …(2) }
+(3 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+    "pendingAssetCount": "unloaded",
+    "pendingCount": 0,
+-   "syncState": "unloaded",
++   "syncState": "synced",
+  }
+
+ ❯ tests/optimization/library-summaries.test.ts:154:60
+    152|  const store=open(),saved=(await store.saveProject(createProject('Asse…
+    153|  await db(store).table('outbox').clear();await db(store).table('syncMe…
+    154|  expect((await store.listProjectSummaries())[0].saveState).toMatchObje…
+       |                                                            ^
+    155| });
+    156| it('offers registry-only world sources to unrelated works without read…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  tests/optimization/library-summaries.test.ts > offers registry-only world sources to unrelated works without reading their bodies in a steady catalog
+TypeError: store.listWorldSourceSummaries is not a function
+ ❯ tests/optimization/library-summaries.test.ts:161:53
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 19 passed (21)
+   Start at  04:57:27
+   Duration  1.91s (tests 61%, transform 31%, import 8%)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

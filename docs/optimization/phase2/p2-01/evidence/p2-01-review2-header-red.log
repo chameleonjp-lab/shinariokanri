@@ -1,0 +1,51 @@
+
+ RUN  v5.0.3 /workspace/phase2
+
+ ❯ tests/optimization/library-summaries.test.ts (24 tests | 2 failed) 1281ms
+   × does not decode packed headers again at editor and subsequent world-publication fences 35ms
+   × rejects a changed native header with the same revision during editor validation 16ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/optimization/library-summaries.test.ts > does not decode packed headers again at editor and subsequent world-publication fences
+AssertionError: expected 6 to be 2 // Object.is equality
+
+- Expected
++ Received
+
+- 2
++ 6
+
+ ❯ tests/optimization/library-summaries.test.ts:179:223
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  tests/optimization/library-summaries.test.ts > rejects a changed native header with the same revision during editor validation
+TypeError: Cannot read properties of undefined (reading 'table')
+ ❯ Object.mutate node_modules/dexie/src/hooks/hooks-middleware.ts:39:23
+ ❯ node_modules/dexie/src/classes/collection/collection.ts:661:24
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  tests/optimization/library-summaries.test.ts > rejects a changed native header with the same revision during editor validation
+Error: Promise returned by `expect(actual).rejects.toMatchObject(expected)` was not awaited. This assertion is asynchronous and must be awaited; otherwise, it is not guaranteed to complete before the test finishes:
+
+await expect(actual).rejects.toMatchObject(expected)
+
+ ❯ tests/optimization/library-summaries.test.ts:184:198
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 22 passed (24)
+   Start at  05:13:23
+   Duration  2.15s (tests 64%, transform 29%, import 7%)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

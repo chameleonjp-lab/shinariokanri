@@ -1,0 +1,134 @@
+[WebServer] (node:8779) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:8792) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 8 tests using 1 worker
+
+(node:8839) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  1 [chromium] › tests/e2e/ap04-original-n-atomic-migration.spec.ts:99:1 › AT-N06 同じ旧作品の移行失敗と台詞の複数対象保存の容量不足を原子拒否し、通常再試行後だけ全変更を確定する (1.7s)
+(node:8971) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  2 [chromium] › tests/e2e/library-summaries.spec.ts:20:1 › cold library isolates a corrupt work and preserves selected save, all restore targets and all world sources (9.1s)
+  ✓  3 [chromium] › tests/e2e/project-drafts.spec.ts:18:1 › 同じ情報IDを持つ別作品でも未保存の雛形入力を作品ごとに保持する (4.5s)
+  ✓  4 [chromium] › tests/e2e/rb10-library-reopen.spec.ts:53:1 › library selection keeps canonical projects clean and resumes a failed draft across another project, cold reload and empty new/clone restoration (15.7s)
+  ✘  5 [chromium] › tests/e2e/startup-migration-retry.spec.ts:64:32 › 旧native v1の移行を1回原子拒否した後、通常の再試行だけで作品・固定版・試読を復元する (953ms)
+(node:9380) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  6 [chromium] › tests/e2e/startup-migration-retry.spec.ts:64:32 › 旧native v1の移行を2回原子拒否した後、通常の再試行だけで作品・固定版・試読を復元する (1.7s)
+(node:9512) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  7 [chromium] › tests/e2e/startup-migration-retry.spec.ts:163:1 › 再試行のnative open完了が遅れても中止で通常画面へ戻り、新しい再試行だけを反映する (1.7s)
+(node:9645) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  8 [chromium] › tests/e2e/world-workspace.spec.ts:17:1 › 世界版の選択・借用参照・固定表示を通常画面で保存し、完全保存にも同じ版を保持する (6.8s)
+
+
+  1) [chromium] › tests/e2e/ap04-original-n-atomic-migration.spec.ts:99:1 › AT-N06 同じ旧作品の移行失敗と台詞の複数対象保存の容量不足を原子拒否し、通常再試行後だけ全変更を確定する 
+
+    Error: page.evaluate: VersionError: The requested version (10) is less than the existing version (80).
+
+      55 |   // Native 10 is the repository's existing Dexie-v1 migration fixture layout.
+      56 |   await page.goto('./build-info.json');
+    > 57 |   await page.evaluate(async ({ name, p, nativeRows }) => {
+         |              ^
+      58 |     const schema: Record<string, { key: string | string[]; indexes: [string, string | string[]][] }> = {
+      59 |       projects: { key: 'projectId', indexes: [['name', 'name']] },
+      60 |       entities: { key: ['projectId', 'id'], indexes: [['projectId', 'projectId'], ['[projectId+kind]', ['projectId', 'kind']]] },
+        at installVersionOne (/workspace/phase2/tests/e2e/ap04-original-n-atomic-migration.spec.ts:57:14)
+        at /workspace/phase2/tests/e2e/ap04-original-n-atomic-migration.spec.ts:108:3
+
+    Error Context: ../phase2-progress/p2-01-browser-results/ap04-original-n-atomic-mig-eecab-容量不足を原子拒否し、通常再試行後だけ全変更を確定する-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../phase2-progress/p2-01-browser-results/ap04-original-n-atomic-mig-eecab-容量不足を原子拒否し、通常再試行後だけ全変更を確定する-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace ../phase2-progress/p2-01-browser-results/ap04-original-n-atomic-mig-eecab-容量不足を原子拒否し、通常再試行後だけ全変更を確定する-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) [chromium] › tests/e2e/startup-migration-retry.spec.ts:64:32 › 旧native v1の移行を1回原子拒否した後、通常の再試行だけで作品・固定版・試読を復元する 
+
+    Error: page.evaluate: VersionError: The requested version (10) is less than the existing version (80).
+
+      26 |   // A real same-origin document without the App leaves no open current DB.
+      27 |   await page.goto('./build-info.json');
+    > 28 |   await page.evaluate(async ({ name, p }) => {
+         |              ^
+      29 |     const schema: Record<string, { key: string | string[]; indexes: [string, string | string[]][] }> = {
+      30 |       projects: { key: 'projectId', indexes: [['name', 'name']] },
+      31 |       entities: { key: ['projectId', 'id'], indexes: [['projectId', 'projectId'], ['[projectId+kind]', ['projectId', 'kind']]] },
+        at seedVersionOne (/workspace/phase2/tests/e2e/startup-migration-retry.spec.ts:28:14)
+        at /workspace/phase2/tests/e2e/startup-migration-retry.spec.ts:69:3
+
+    Error Context: ../phase2-progress/p2-01-browser-results/startup-migration-retry-旧n-e067f-した後、通常の再試行だけで作品・固定版・試読を復元する-chromium/error-context.md
+
+    attachment #5: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../phase2-progress/p2-01-browser-results/startup-migration-retry-旧n-e067f-した後、通常の再試行だけで作品・固定版・試読を復元する-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace ../phase2-progress/p2-01-browser-results/startup-migration-retry-旧n-e067f-した後、通常の再試行だけで作品・固定版・試読を復元する-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  3) [chromium] › tests/e2e/startup-migration-retry.spec.ts:64:32 › 旧native v1の移行を2回原子拒否した後、通常の再試行だけで作品・固定版・試読を復元する 
+
+    Error: page.evaluate: VersionError: The requested version (10) is less than the existing version (80).
+
+      26 |   // A real same-origin document without the App leaves no open current DB.
+      27 |   await page.goto('./build-info.json');
+    > 28 |   await page.evaluate(async ({ name, p }) => {
+         |              ^
+      29 |     const schema: Record<string, { key: string | string[]; indexes: [string, string | string[]][] }> = {
+      30 |       projects: { key: 'projectId', indexes: [['name', 'name']] },
+      31 |       entities: { key: ['projectId', 'id'], indexes: [['projectId', 'projectId'], ['[projectId+kind]', ['projectId', 'kind']]] },
+        at seedVersionOne (/workspace/phase2/tests/e2e/startup-migration-retry.spec.ts:28:14)
+        at /workspace/phase2/tests/e2e/startup-migration-retry.spec.ts:69:3
+
+    Error Context: ../phase2-progress/p2-01-browser-results/startup-migration-retry-旧n-3c9d2-した後、通常の再試行だけで作品・固定版・試読を復元する-chromium/error-context.md
+
+    attachment #5: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../phase2-progress/p2-01-browser-results/startup-migration-retry-旧n-3c9d2-した後、通常の再試行だけで作品・固定版・試読を復元する-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace ../phase2-progress/p2-01-browser-results/startup-migration-retry-旧n-3c9d2-した後、通常の再試行だけで作品・固定版・試読を復元する-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  4) [chromium] › tests/e2e/startup-migration-retry.spec.ts:163:1 › 再試行のnative open完了が遅れても中止で通常画面へ戻り、新しい再試行だけを反映する 
+
+    Error: page.evaluate: VersionError: The requested version (10) is less than the existing version (80).
+
+      26 |   // A real same-origin document without the App leaves no open current DB.
+      27 |   await page.goto('./build-info.json');
+    > 28 |   await page.evaluate(async ({ name, p }) => {
+         |              ^
+      29 |     const schema: Record<string, { key: string | string[]; indexes: [string, string | string[]][] }> = {
+      30 |       projects: { key: 'projectId', indexes: [['name', 'name']] },
+      31 |       entities: { key: ['projectId', 'id'], indexes: [['projectId', 'projectId'], ['[projectId+kind]', ['projectId', 'kind']]] },
+        at seedVersionOne (/workspace/phase2/tests/e2e/startup-migration-retry.spec.ts:28:14)
+        at /workspace/phase2/tests/e2e/startup-migration-retry.spec.ts:167:3
+
+    Error Context: ../phase2-progress/p2-01-browser-results/startup-migration-retry-再試-1e0e9-れても中止で通常画面へ戻り、新しい再試行だけを反映する-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../phase2-progress/p2-01-browser-results/startup-migration-retry-再試-1e0e9-れても中止で通常画面へ戻り、新しい再試行だけを反映する-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace ../phase2-progress/p2-01-browser-results/startup-migration-retry-再試-1e0e9-れても中止で通常画面へ戻り、新しい再試行だけを反映する-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  4 failed
+    [chromium] › tests/e2e/ap04-original-n-atomic-migration.spec.ts:99:1 › AT-N06 同じ旧作品の移行失敗と台詞の複数対象保存の容量不足を原子拒否し、通常再試行後だけ全変更を確定する 
+    [chromium] › tests/e2e/startup-migration-retry.spec.ts:64:32 › 旧native v1の移行を1回原子拒否した後、通常の再試行だけで作品・固定版・試読を復元する 
+    [chromium] › tests/e2e/startup-migration-retry.spec.ts:64:32 › 旧native v1の移行を2回原子拒否した後、通常の再試行だけで作品・固定版・試読を復元する 
+    [chromium] › tests/e2e/startup-migration-retry.spec.ts:163:1 › 再試行のnative open完了が遅れても中止で通常画面へ戻り、新しい再試行だけを反映する 
+  4 passed (47.5s)
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice
