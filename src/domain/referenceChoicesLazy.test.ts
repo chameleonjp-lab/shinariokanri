@@ -121,8 +121,8 @@ describe('lazy reference preparation', () => {
 
   it('deduplicates at first position using the last label and observes mutable input immediately', () => {
     const project = referenceEdgeProject();
-    project.calendars.push({ ...project.calendars[0], name: 'Last label' });
-    expect(referenceChoices(project, 'calendar')).toEqual([{ id: 'calendar', label: 'Last label' }]);
+    project.calendars.push({ ...project.calendars[0], id: 'second-calendar', name: 'Second' }, { ...project.calendars[0], name: 'Last label' });
+    expect(referenceChoices(project, 'calendar')).toEqual([{ id: 'calendar', label: 'Last label' }, { id: 'second-calendar', label: 'Second' }]);
     const options: ReferenceOptions = { versionId: 'pin' };
     referenceChoices(project, 'projection_record', undefined, options);
     project.snapshots[0].content.entities[0].name = 'Pin edit';

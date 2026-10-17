@@ -1,0 +1,64 @@
+
+> shinariokanri@0.1.0 pretest
+> node scripts/build/portable-runtime.mjs
+
+Production portable runtime generated: 155865 characters
+
+> shinariokanri@0.1.0 test
+> vitest run src/domain/referenceChoicesLazy.test.ts
+
+
+ RUN  v5.0.3 /workspace/phase2
+
+ ❯ src/domain/referenceChoicesLazy.test.ts (19 tests | 6 failed) 100ms
+   ❯ lazy reference preparation (19)
+     × calendar never reads entity rows with probe off or on 8ms
+     × project never reads entity rows with probe off or on 1ms
+     × identity never reads entity rows with probe off or on 1ms
+     × relation avoids unused entity choice labels and kind filtering 1ms
+     × block avoids unused entity choice labels and kind filtering 1ms
+     × alias avoids unused entity choice labels and kind filtering 0ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/domain/referenceChoicesLazy.test.ts > lazy reference preparation > calendar never reads entity rows with probe off or on
+ FAIL  src/domain/referenceChoicesLazy.test.ts > lazy reference preparation > project never reads entity rows with probe off or on
+ FAIL  src/domain/referenceChoicesLazy.test.ts > lazy reference preparation > identity never reads entity rows with probe off or on
+Error: unnecessary entity preparation
+ ❯ Object.get src/domain/referenceChoicesLazy.test.ts:20:65
+     18|       const content = versionId === 'pin' ? project.snapshots[0].conte…
+     19|       content.entities = new Proxy(content.entities, { get(target, key…
+     20|         if (typeof key === 'string' && /^\d+$/.test(key)) throw new Er…
+       |                                                                 ^
+     21|         return Reflect.get(target, key, receiver);
+     22|       } });
+ ❯ referenceChoices src/domain/referenceChoices.ts:19:34
+ ❯ src/domain/referenceChoicesLazy.test.ts:25:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  src/domain/referenceChoicesLazy.test.ts > lazy reference preparation > relation avoids unused entity choice labels and kind filtering
+ FAIL  src/domain/referenceChoicesLazy.test.ts > lazy reference preparation > block avoids unused entity choice labels and kind filtering
+ FAIL  src/domain/referenceChoicesLazy.test.ts > lazy reference preparation > alias avoids unused entity choice labels and kind filtering
+Error: unnecessary entity kind read
+ ❯ Object.get [as kind] src/domain/referenceChoicesLazy.test.ts:35:98
+     33|     const project = referenceEdgeProject();
+     34|     const expected = baseline(project, scope, ['note']);
+     35|     for (const entity of project.entities) Object.defineProperty(entit…
+       |                                                                                                  ^
+     36|     expect(referenceChoices(project, scope, ['note'])).toEqual(expecte…
+     37|   });
+ ❯ src/domain/referenceChoices.ts:20:84
+ ❯ referenceChoices src/domain/referenceChoices.ts:20:27
+ ❯ src/domain/referenceChoicesLazy.test.ts:36:12
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  6 failed | 13 passed (19)
+   Start at  04:23:58
+   Duration  452ms (transform 61%, tests 29%, import 10%, worker 1%)
+
+
+EXIT_CODE=1
