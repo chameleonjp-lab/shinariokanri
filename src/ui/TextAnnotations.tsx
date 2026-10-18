@@ -95,8 +95,8 @@ export function TextAnnotations({
   const activeBlock = blocks.find(block => block.id === selectedBlockId) ?? blocks[0];
   const allIgnored = useMemo(() => new Set([...ignoredCandidateKeys, ...persistedIgnored, ...locallyIgnored]), [ignoredCandidateKeys, persistedIgnored, locallyIgnored]);
   const candidates = useMemo(
-    () => activeBlock ? suggestLinkCandidates(activeBlock.text, project.entities, { sourceEntityId, projectId: project.projectId, ignoredKeys: allIgnored }) : [],
-    [activeBlock?.id, activeBlock?.text, project.entities, project.projectId, sourceEntityId, allIgnored],
+    () => activeBlock ? suggestLinkCandidates(activeBlock.text, project.entities, { project, sourceEntityId, projectId: project.projectId, ignoredKeys: allIgnored }) : [],
+    [activeBlock?.id, activeBlock?.text, project, sourceEntityId, allIgnored],
   );
   const selectedCandidate = candidates.find(candidate => candidate.id === candidateId);
   const occurrences = activeBlock ? findTextOccurrences(activeBlock.text, phrase) : [];

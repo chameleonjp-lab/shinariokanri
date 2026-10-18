@@ -1,5 +1,6 @@
 import { KIND_LABELS } from './model';
 import { editRichText } from './text';
+import {beginDerivedEvaluation} from './derivedIndexes';
 import type { Block, ContentAnchor, Entity, ProjectData, RichText, Ruby, TextLink, UnresolvedTextAnnotation } from './types';
 
 export type LinkCandidateSource = 'name' | 'reading' | 'alias' | 'alias_reading';
@@ -20,6 +21,8 @@ export interface LinkCandidate {
 }
 
 export interface LinkCandidateOptions {
+  /** The concrete saved author view, never a substitute for the supplied rows. */
+  project?:ProjectData;
   sourceEntityId?: string;
   excludeEntityIds?: readonly string[];
   ignoredKeys?: ReadonlySet<string>;
@@ -141,6 +144,7 @@ export function targetAnchorForTerm(entity: Entity, term: string): ContentAnchor
 
 /** Suggest every exact text occurrence for names, readings, and aliases in live entities. */
 export function suggestLinkCandidates(text: string, entities: readonly Entity[], options: LinkCandidateOptions = {}): LinkCandidate[] {
+  const evaluation=options.project?.entities===entities?beginDerivedEvaluation(options.project):undefined;
   const excluded = new Set(options.excludeEntityIds ?? []);
   if (options.sourceEntityId) excluded.add(options.sourceEntityId);
   const live = entities.filter(entity => !entity.deletedAt && !excluded.has(entity.id));
@@ -153,7 +157,9 @@ export function suggestLinkCandidates(text: string, entities: readonly Entity[],
   const candidates = new Map<string, LinkCandidate>();
   for (const entity of live) {
     const label = disambiguatedEntityLabel(entity, (counts.get(entity.name.normalize('NFC')) ?? 0) > 1);
-    for (const entry of entityTerms(entity)) {
+    const build=()=>{const value=entityTerms(entity);return {value,cost:{references:value.length,textCodeUnits:value.reduce((n,entry)=>n+entry.term.length+(entry.reading?.length??0),0)}};};
+    const terms=evaluation?.ownsEntity(entity)?evaluation.get('suggestion.terms/v1',entity,build):build().value;
+    for (const entry of terms) {
       for (const occurrence of findTextOccurrences(text, entry.term)) {
         const id = `${entity.id}:${occurrence.start}:${occurrence.end}:${encodeURIComponent(entry.term.normalize('NFC'))}`;
         const ignoreKey = ignoredLinkCandidateKey(options.projectId ?? '', options.sourceEntityId ?? '', entity.id, entry.term);

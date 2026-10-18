@@ -19,6 +19,7 @@ const metrics = [
   'writeContent.rows', 'hydrate.rows', 'decode.rows', 'decode.payloadBytes',
   'validate.current.calls', 'validate.integrity.calls', 'validate.full.calls',
   'query.index.builds', 'query.index.rows', 'query.text.rows', 'query.filter.rows',
+  'derived.hit', 'derived.miss', 'derived.admitted', 'derived.rejected', 'derived.invalidated',
   'reference.choices.rows', 'reference.index.builds', 'reference.index.rows', 'ui.filter.rows', 'ui.indices.rows',
   'worker.started', 'worker.terminated', 'worker.sent.messages', 'worker.sent.payloadBytes',
   'worker.received.messages', 'worker.received.payloadBytes',

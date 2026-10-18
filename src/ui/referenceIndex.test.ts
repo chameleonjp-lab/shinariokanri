@@ -12,6 +12,17 @@ function fixture(){
  p.entities.push(a,b,shared,body,archived,self);expect(validateProject(p)).toMatchObject({ok:true});return {p,a,b,shared,body,self};
 }
 describe('derived reference index publication',()=>{
+ it('keeps caller edits to returned arrays out of subsequent reference answers',async()=>{
+  const {p,a,shared,body}=fixture();await prepareReferenceIndex(p.entities,{yieldControl:async()=>{}});
+  const rows=referencesTo(p.entities,a.id);rows.length=0;
+  expect(cachedReferencesTo(p.entities,a.id)?.map(e=>e.id)).toEqual([shared.id,body.id]);
+ });
+ it('rechecks mutable arrays instead of retaining stale in-place reference changes',async()=>{
+  const {p,a,b,shared,body}=fixture();await prepareReferenceIndex(p.entities,{yieldControl:async()=>{}});
+  shared.data.povId=b.id;shared.data.body=[];
+  expect(cachedReferencesTo(p.entities,a.id)?.map(e=>e.id)).toEqual([body.id]);
+  expect(referencesTo(p.entities,b.id).map(e=>e.id)).toEqual([shared.id,body.id]);
+ });
  it('keeps typed/Unicode references in project order, excludes archived/self, and never mutates records',async()=>{
   const {p,a,b,shared,body,self}=fixture(),before=structuredClone(p.entities),source=[...p.entities],progress:number[]=[];
   expect(cachedReferencesTo(source,a.id)).toBeUndefined();

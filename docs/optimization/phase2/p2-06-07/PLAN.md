@@ -44,12 +44,12 @@
 
 **Interfaces:** `beginDerivedEvaluation(project)` returns a revocable evaluation only for a registered immutable saved view. `ProjectDerivedOwner` binds views, admits bounded numeric-cost entries and clears immediately. Store construction supports an internal disabled/budget comparison option; no product UI setting is added.
 
-- [ ] Add real-store tests showing two compilations currently build two indexes/text corpora; assert one build on the same valid saved source, then full rebuild on revision/role/account/close/schema/root changes.
-- [ ] Implement source ownership without copying/retaining history, proving immutable plain current data lazily. Check actual schema rules once per evaluation, never once per entity.
-- [ ] Share dependency indexes and normalized text, Japanese author terms, link-term preparation and eligible state/reference indexes. Keep option-dependent labels/exclusions per call and hash verification before fixed reuse assessment.
-- [ ] Use bounded admission without repeated whole-corpus LRU eviction; report logical references/text units separately from heap. Invalidation clears entries and strong source references.
-- [ ] Preserve mutable/unknown full fallbacks and reference preparation’s no-partial-publication/cancel contract. Returned mutable containers cannot corrupt shared internal values.
-- [ ] Run lifecycle, negative, existing targeted domain/UI/storage tests and the full unit suite; commit.
+- [x] Add real-store tests showing two compilations currently build two indexes/text corpora; assert one build on the same valid saved source, then full rebuild on revision/role/account/close/schema/root changes.
+- [x] Implement source ownership without copying/retaining history, proving immutable plain current data lazily. Check actual schema rules once per evaluation, never once per entity.
+- [x] Share dependency indexes and normalized text, Japanese author terms, link-term preparation and eligible state/reference indexes. Keep option-dependent labels/exclusions per call and hash verification before fixed reuse assessment.
+- [x] Use bounded admission without repeated whole-corpus LRU eviction; report logical references/text units separately from heap. Invalidation clears entries and strong source references.
+- [x] Preserve mutable/unknown full fallbacks and reference preparation’s no-partial-publication/cancel contract. Returned mutable containers cannot corrupt shared internal values.
+- [x] Run lifecycle, negative, existing targeted domain/UI/storage tests and the full unit suite; commit.
 
 ## Task 3: Common meaning and ordered collection reads (P2-07)
 

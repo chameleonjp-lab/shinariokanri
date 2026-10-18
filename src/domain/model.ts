@@ -1195,7 +1195,7 @@ export function validateProject(input: unknown, options: ProjectValidationOption
   return validateProjectData(input, options, memo);
 }
 
-function validationSchemaSignature(): string | undefined {
+export function validationSchemaSignature(): string | undefined {
   // Read every current schema value, including mutable registry edits, but
   // represent shared schema nodes once. Expanding the same rich-text/condition
   // schema at every history image used most of the recovery validation budget.

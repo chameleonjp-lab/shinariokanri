@@ -5,6 +5,7 @@ import { requiresFixedStateUsageVerification,stateUsageIndex } from './stateUsag
 import type {StateUsage} from './stateUsage';
 import {verifyReusePins} from './reuse';
 import type { CollectionData, Entity, EntityKind, ID, ProjectData, Query, Sort } from './types';
+import {beginDerivedEvaluation,type DerivedEvaluation} from './derivedIndexes';
 
 /** Search normalization is separate from stored text. Original Japanese spelling remains untouched. */
 export function normalizeCatalogText(value: string): string {
@@ -101,7 +102,12 @@ function buildQueryIndex(project: ProjectData): CatalogQueryIndex {
 /** Captures one evaluation's dependencies; rebuild after project edits rather than caching mutable drafts. */
 export function compileCatalogQuery(project: ProjectData, query: Query): (entity: Entity) => boolean {
   let index: CatalogQueryIndex | undefined;
-  const dependencies = () => index ??= buildQueryIndex(project);
+  let evaluation:DerivedEvaluation|undefined,checked=false;
+  const shared=()=>{if(!checked){evaluation=beginDerivedEvaluation(project);checked=true;}return evaluation;};
+  const dependencies = () => index ??= shared()?.get('catalog.dependencies','current',()=>{
+    const value=buildQueryIndex(project),members=[...value.participantEvents.values(),...value.scenesByEvent.values(),...value.productionTargets.values()].reduce((n,ids)=>n+ids.size,0);
+    return {value,cost:{references:2*value.byId.size+members+value.chapters.size+2*value.foreshadows.size+value.disclosures.length+2*value.sceneByNode.size}};
+  })??buildQueryIndex(project);
   const text = new WeakMap<Entity, string[]>();
   const compile = (query: Query): ((entity: Entity) => boolean) => {
     switch (query.op) {
@@ -112,7 +118,15 @@ export function compileCatalogQuery(project: ProjectData, query: Query): (entity
       case 'text': {
         const needle = normalizeCatalogText(query.value);
         if (!needle) return () => true;
-        return entity => { let terms = text.get(entity); if (!terms) { terms = collectCatalogText(entity).map(term => term.normalized); text.set(entity, terms); } return terms.some(term => term.includes(needle)); };
+        return entity => {
+          let terms=text.get(entity);
+          if(!terms){
+            const current=shared(),build=()=>{const value=collectCatalogText(entity).map(term=>term.normalized);return {value,cost:{references:value.length,textCodeUnits:value.reduce((n,term)=>n+term.length,0)}};};
+            terms=current?.ownsEntity(entity)?current.get('catalog.text/v2',entity,build):build().value;
+            text.set(entity,terms);
+          }
+          return terms.some(term=>term.includes(needle));
+        };
       }
       case 'production': {
         const ids = dependencies().productionTargets.get(query.value);
@@ -245,7 +259,7 @@ function aliasesOf(entity: Entity): unknown[] {
 }
 
 /** Builds an author-side index. It can include private aliases; do not use it as a public projection. */
-export function buildJapaneseAuthorIndex(project: ProjectData): JapaneseAuthorIndexEntry[] {
+function regenerateJapaneseAuthorIndex(project: ProjectData): JapaneseAuthorIndexEntry[] {
   const entities = activeEntities(project);
   const categoryByMember = new Map<ID, string[]>();
   for (const group of entities) {
@@ -290,6 +304,17 @@ export function buildJapaneseAuthorIndex(project: ProjectData): JapaneseAuthorIn
     }
   }
   return entries.sort((a, b) => compareValues(a.reading || a.term, b.reading || b.term) || compareValues(a.term, b.term) || compareValues(a.entityName, b.entityName) || compareValues(a.entityId, b.entityId) || compareValues(a.id, b.id));
+}
+
+export function buildJapaneseAuthorIndex(project:ProjectData):JapaneseAuthorIndexEntry[]{
+  const evaluation=beginDerivedEvaluation(project);
+  if(!evaluation)return regenerateJapaneseAuthorIndex(project);
+  const entries=evaluation.get('author.japanese/v1','current',()=>{
+    const value=regenerateJapaneseAuthorIndex(project);
+    return {value,cost:{references:value.length+value.reduce((n,e)=>n+e.classifications.length,0),textCodeUnits:value.reduce((n,e)=>n+e.id.length+e.entityId.length+e.kind.length+e.entityName.length+e.term.length+e.reading.length+e.normalizedTerm.length+e.normalizedReading.length+e.source.length+e.classifications.reduce((s,label)=>s+label.length,0),0)}};
+  });
+  // Preserve the existing editable return contract, without exposing shared containers.
+  return evaluation.peek('author.japanese/v1','current')===entries?entries.map(entry=>({...entry,classifications:[...entry.classifications]})):entries;
 }
 
 export function searchJapaneseAuthorIndex(entries: readonly JapaneseAuthorIndexEntry[], query: string, kind?: EntityKind): JapaneseAuthorIndexEntry[] {
