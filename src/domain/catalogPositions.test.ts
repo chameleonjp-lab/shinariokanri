@@ -1,7 +1,22 @@
 import { describe, expect, it } from 'vitest';
 import { createEntity, createProject, newId } from './model';
 import { findCatalogTextPositions } from './catalogPositions';
+import {startProbe,probeEnabled} from '../observability/probe';
 describe('normalized search position navigation', () => {
+  it('separates full position scans, trace reuse and regenerated mutable text without recording authored content',()=>{
+    const project=createProject('position work'),note=createEntity(project.projectId,'note','name',{body:[{id:newId(),kind:'paragraph',text:'😀ガラス'}]});project.entities=[note];
+    const probe=startProbe();
+    try{
+      expect(findCatalogTextPositions(project,[note],'がらす')[0].anchor).toMatchObject({start:1,end:4});
+      expect(findCatalogTextPositions(project,[note],'がらす')).toHaveLength(1);
+      note.data.body[0].text='前ガラス';expect(findCatalogTextPositions(project,[note],'がらす')[0].anchor).toMatchObject({start:1,end:4});
+      const snapshot=probe.snapshot();
+      expect(snapshot.counters).toMatchObject({'query.positions.rows':3,'query.positions.blocks':3,'query.positions.matches':3,'query.positions.traceBuilds':2,'query.positions.traceHits':1});
+      expect(snapshot.events.filter(event=>event.phase==='query.positions')).toHaveLength(3);
+      expect(Object.values(snapshot.counters).every(value=>typeof value==='number')).toBe(true);
+    }finally{probe.stop();}
+    expect(probeEnabled()).toBe(false);expect(findCatalogTextPositions(project,[note],'がらす')).toHaveLength(1);
+  });
   it('maps kana, emoji and width expansion to the unchanged original range', () => {
     const project = createProject('検索'); const block = { id: newId(), kind: 'paragraph' as const, text: '😀ガラスと㍿、ガラス' };
     const scene = createEntity(project.projectId, 'scene', '場面', { body: [block] }); project.entities = [scene];

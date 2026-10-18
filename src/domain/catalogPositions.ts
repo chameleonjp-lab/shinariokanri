@@ -1,5 +1,6 @@
 import type { ContentAnchor, Entity, ProjectData, RichText } from './types';
 import { normalizeCatalogText } from './catalog';
+import {probeEnabled,probeCount,probeSpan} from '../observability/probe';
 export interface CatalogTextPosition { id: string; entityId: string; name: string; fieldPath: string; text: string; anchor: ContentAnchor }
 function tracedText(text: string) {
   const parts: string[] = [], starts: number[] = [], ends: number[] = []; let offset = 0;
@@ -21,9 +22,11 @@ function tracedText(text: string) {
 // mapping without retaining discarded records; mutable caller inputs must still
 // be checked against the exact current text.
 const traces = new WeakMap<object, { source: string; trace: ReturnType<typeof tracedText> }>();
-function blockTrace(block: RichText[number]) {
+type TraceWork={blocks:number;builds:number;hits:number};
+function blockTrace(block: RichText[number],work?:TraceWork) {
   const cached = traces.get(block);
-  if (cached?.source === block.text) return cached.trace;
+  if (cached?.source === block.text) {if(work)work.hits++;return cached.trace;}
+  if(work)work.builds++;
   const trace = tracedText(block.text);
   traces.set(block, { source: block.text, trace });
   return trace;
@@ -31,13 +34,17 @@ function blockTrace(block: RichText[number]) {
 /** Search normalization is traced back to the untouched Unicode text, including width expansions. */
 export function findCatalogTextPositions(project: ProjectData, entities: Entity[], query: string): CatalogTextPosition[] {
   const needle = normalizeCatalogText(query); if (!needle) return [];
+  const work=probeEnabled()?{blocks:0,builds:0,hits:0}:undefined,finish=probeSpan('query.positions');
+  probeCount('query.positions.rows',entities.length);
   const positions: CatalogTextPosition[] = [];
+  try{
   for (const entity of entities) {
     if (entity.deletedAt || entity.projectId !== project.projectId) continue;
     for (const [key, value] of Object.entries(entity.data)) {
       if (!Array.isArray(value) || !value.every(block => block && typeof block === 'object' && typeof block.id === 'string' && typeof block.text === 'string' && ['paragraph', 'heading', 'list_item', 'quote'].includes(String(block.kind)))) continue;
       for (const block of value as RichText) {
-        const trace = blockTrace(block); let offset = 0;
+        if(work)work.blocks++;
+        const trace = blockTrace(block,work); let offset = 0;
         while ((offset = trace.text.indexOf(needle, offset)) >= 0) {
           const first = Array.from(trace.text.slice(0, offset)).length, last = first + Array.from(needle).length - 1;
           const start = trace.starts[first], end = trace.ends[last];
@@ -47,5 +54,8 @@ export function findCatalogTextPositions(project: ProjectData, entities: Entity[
       }
     }
   }
+  if(work){probeCount('query.positions.blocks',work.blocks);probeCount('query.positions.traceBuilds',work.builds);probeCount('query.positions.traceHits',work.hits);}
+  probeCount('query.positions.matches',positions.length);finish();
   return positions;
+  }catch(error){finish('error');throw error;}
 }
