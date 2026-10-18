@@ -1,0 +1,36 @@
+
+> shinariokanri@0.1.0 pretest
+> node scripts/build/portable-runtime.mjs
+
+Production portable runtime generated: 155926 characters
+
+> shinariokanri@0.1.0 test
+> vitest run --maxWorkers=1 --fileParallelism=false tests/optimization/fixtureIdentity.test.ts
+
+
+ RUN  v5.0.3 /workspace/shinariokanri-audit
+
+ ❯ tests/optimization/fixtureIdentity.test.ts (2 tests | 1 failed) 4389ms
+   × keeps the original Large canonical digest separately from insertion-order JSON and real 72MiB assets 4128ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/optimization/fixtureIdentity.test.ts > keeps the original Large canonical digest separately from insertion-order JSON and real 72MiB assets
+Error: Original fixture digest differs
+ ❯ studyFixtureIdentity scripts/optimization/fixtureIdentity.ts:5:40
+      3| export async function studyFixtureIdentity(fixture: PerformanceFixture…
+      4|   const wire = new TextEncoder().encode(JSON.stringify(fixture.project…
+      5|   if (digest !== fixture.sha256) throw new Error('Original fixture dig…
+       |                                        ^
+      6|   return { sha256: digest, wireJsonSha256: digest, jsonBytes: wire.byt…
+      7| }
+ ❯ tests/optimization/fixtureIdentity.test.ts:16:20
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 1 passed (2)
+   Start at  03:51:21
+   Duration  4.79s (tests 94%, transform 5%, import 1%)
+

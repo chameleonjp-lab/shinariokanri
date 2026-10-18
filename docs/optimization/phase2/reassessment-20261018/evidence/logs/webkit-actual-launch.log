@@ -1,0 +1,42 @@
+Skipping host requirements validation logic because `PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS` env variable is set.
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+browserType.launch: Target page, context or browser has been closed
+Browser logs:
+
+<launching> /tmp/shinariokanri-browsers/webkit-2370/pw_run.sh --inspector-pipe --headless --no-startup-window
+<launched> pid=3530
+[pid=3530][err] /tmp/shinariokanri-browsers/webkit-2370/minibrowser-wpe/bin/MiniBrowser: error while loading shared libraries: libharfbuzz-icu.so.0: cannot open shared object file: No such file or directory
+Call log:
+[2m  - <launching> /tmp/shinariokanri-browsers/webkit-2370/pw_run.sh --inspector-pipe --headless --no-startup-window[22m
+[2m  - <launched> pid=3530[22m
+[2m  - [pid=3530][err] /tmp/shinariokanri-browsers/webkit-2370/minibrowser-wpe/bin/MiniBrowser: error while loading shared libraries: libharfbuzz-icu.so.0: cannot open shared object file: No such file or directory[22m
+[2m  - [pid=3530] <gracefully close start>[22m
+[2m  - [pid=3530] <kill>[22m
+[2m  - [pid=3530] <will force kill>[22m
+[2m  - [pid=3530] exception while trying to kill process: Error: kill ESRCH[22m
+[2m  - [pid=3530] <process did exit: exitCode=127, signal=null>[22m
+[2m  - [pid=3530] starting temporary directories cleanup[22m
+[2m  - [pid=3530] finished temporary directories cleanup[22m
+[2m  - [pid=3530] <gracefully close end>[22m
+
+    at /workspace/shinariokanri-audit/[eval1]:1:63
+    at async node:internal/modules/esm/loader:224:26 {
+  log: [
+    '  - <launching> /tmp/shinariokanri-browsers/webkit-2370/pw_run.sh --inspector-pipe --headless --no-startup-window',
+    '  - <launched> pid=3530',
+    '  - [pid=3530][err] /tmp/shinariokanri-browsers/webkit-2370/minibrowser-wpe/bin/MiniBrowser: error while loading shared libraries: libharfbuzz-icu.so.0: cannot open shared object file: No such file or directory',
+    '  - [pid=3530] <gracefully close start>',
+    '  - [pid=3530] <kill>',
+    '  - [pid=3530] <will force kill>',
+    '  - [pid=3530] exception while trying to kill process: Error: kill ESRCH',
+    '  - [pid=3530] <process did exit: exitCode=127, signal=null>',
+    '  - [pid=3530] starting temporary directories cleanup',
+    '  - [pid=3530] finished temporary directories cleanup',
+    '  - [pid=3530] <gracefully close end>'
+  ]
+}
+
+Node.js v24.19.0
