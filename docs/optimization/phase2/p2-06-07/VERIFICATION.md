@@ -58,6 +58,20 @@ P2-06単独時点で原full unit 144 files/1370 tests（497.92秒）、最初の
 
 最終whole-branch agent reviewでは既指摘2件の軽量反例再実行、全UI/proof/designの重い区間の非重複、元UIへの復帰、失効・秘密・証拠境界を確認し、追加のP1/P2なし。指摘された起動計測の説明を修正し、各Storeは新規だが同じseed済みDB/contextを事前読込した区間であることを明記した。最終回答と対応は `evidence/review.txt`。原条件の独立した人の第3段階受入をこのagent reviewで置換しない。
 
+## PR #68 初回CI失敗と計測条件の修正
+
+初回run `39126143827` attempt 1、提出head `33982c0` は、原numeric observationで失敗した。Chromium/Firefoxは各245 passed/1 failed。元harnessの `query.index.builds === 2` に対し、製品defaultの実値が1 build/1 shared hitだった。ローカルでも元テストの同じ失敗を再現し、補助consoleを一時追加したtraceで実counterを確認した後、consoleを除去した。元失敗artifact（ID `12136049367`、SHA256 `72074c48b0d924f3e750caaa29bd5d79fd9afde0f684ea700198f8618d3a0c75`）・生log・RED・数値診断を保持する。
+
+元E2Eブロックと元2 build assertはbyte/式を保持する。profile内のseed/readerだけに `disabled-baseline` を設け、既存internal optionで共有を無効化し、実際に2回構築する従来比較条件を継続する。growth/calibration/Appのfactoryや製品設定へ波及させず、counterの補正も行わない。1引数profileはこの従来条件であり、返却JSONにmodeと「製品default性能ではない」scopeを明示する。
+
+追加E2Eは通常factoryの `product-default` で同じ元fixture/保存行数/hash/history/秘密/close条件を再検査し、実1 build/1 hitを要求する。元queryの結果は空だったため、同じ元fixtureの2人目のcharacterに対する非空15件も追加した。event.participantsとscene.eventIdsを直接走査した独立期待順序と実結果の全ID/順序SHAを比較し、2回とも共有hit、追加構築0、close後の全論理保持0を要求する。oracle/hash処理はqueryの時計外である。
+
+計測CLIは `--derived-index-mode` を追加し、既定を明示的に `product-default` とする。baselineは明示flagでのみCLIから選び、modeを出力へ記録する。過去の計測値を読み替えない。ローカルのCLI両条件はChromium `154.0.8037.57` で成功し、default=1 build/1 hit・独立15件SHA一致、baseline=実2 build/0 hitだった。この追加実行は修正中のdirty tooling bytesを各sourceFiles SHAで記録した診断であり、新しい性能比較ではない。
+
+修正後の両条件はChromium/Firefox/WebKitの計6 tests成功（51.4秒）。型検査、通常build、docs/completion/phase1、新証拠current-source検査も成功した。修正後のPython文書/証拠73 testsも成功（13.877秒）。独立reviewは追加P1/P2なし、元テストblockと製品src/package/lock/性能計測3overlayの不変を確認した。製品bytesは依然として測定source `886d0c0` と一致する。提出inventoryは元245件＋既存追加UI反例1件＋新default観測1件の各engine247件となる。
+
+証拠は [ci-repair.zip](evidence/ci-repair.zip) に元bytesのまま収容し、manifestとcheckerでZIP全memberのbytes/SHA/coverageを検査する。最終の原全7 CI・復元原本・後続回帰・aggregateは修正後headで確認し、実run/head/tree/結果をDraft PR本文へ記録する。この文書は再CI前のsnapshotであり、上記ローカル成功を全CI成功へ代入しない。
+
 ## 未実行・原release条件
 
 原8指標×Standard/Large各30、元6条件×30の180保存、実7200秒soak、最終候補の88,003記録/113履歴・送信待ち/実72MiB、600000ms完全保存/new/clone/cold、2000ms進捗/取消の正式再受入は第3段階。補助UI 180 query actionsや1回のrenameをその成功へ代入しない。原rb10等のCIが成功しても、全正式再受入を実施したとは表現しない。

@@ -53,13 +53,20 @@ async function growth(){
   return {manifest:GROWTH_MANIFEST,projects,history};
 }
 
-async function profile(size:'standard'|'large'){
+type ProfileMode='disabled-baseline'|'product-default';
+async function profile(size:'standard'|'large',profileMode:ProfileMode='disabled-baseline'){
+  if(profileMode!=='disabled-baseline'&&profileMode!=='product-default')throw new Error('Unknown derived-index profile mode');
+  // Preserve the historical two-real-build observation in its explicit baseline lane.
+  // Growth, calibration and App/UI continue to use the normal factory above.
+  const profileStore=(name:string,onSaveMetrics?:(metrics:SaveMetrics)=>void)=>profileMode==='disabled-baseline'
+    ?new ScenarioStore({databaseName:name,onSaveMetrics,derivedIndexes:false})
+    :store(name,onSaveMetrics);
   const fixture=size==='large'?await createMaterialPerformanceFixture('large-material-rb10-v1'):await createPerformanceFixture('standard-r06-v1');
-  const name=`phase1-profile-${size}`,seed=store(name),metrics:Array<Omit<SaveMetrics,'projectId'|'operationId'>>=[];
+  const name=`phase1-profile-${size}`,seed=profileStore(name),metrics:Array<Omit<SaveMetrics,'projectId'|'operationId'>>=[];
   const metadata={seed:fixture.seed,size,counts:fixture.counts,assetBytes:fixture.assetBytes,sha256:fixture.sha256};
   try{
     await seed.saveProject(fixture.project,{reason:'元fixtureの初期化',includeHistory:false,immutableView:true,assets:'assets'in fixture?fixture.assets as AssetInput[]:[]});
-    seed.close();const reader=store(name,({operationId:_id,projectId:_pid,...row})=>metrics.push(row));
+    seed.close();const reader=profileStore(name,({operationId:_id,projectId:_pid,...row})=>metrics.push(row));
     try{
       const beforeHeap=heap();let current:Awaited<ReturnType<ScenarioStore['getProjectForEditing']>>;
       const cold=await observe(async()=>{current=await reader.getProjectForEditing(fixture.project.projectId,{immutableView:true});require(current);return {records:current!.entities.length+current!.relations.length,history:reader.getHistoryCount(current!)};});
@@ -81,10 +88,31 @@ async function profile(size:'standard'|'large'){
         require(results[0].length===results[1].length&&results[0].every((e,i)=>e.id===results[1][i].id));
         return {counts:results.map(result=>result.length)};
       });
-      require(search.probe.counters['query.index.builds']===2);
+      if(profileMode==='disabled-baseline'){
+        require(search.probe.counters['query.index.builds']===2);
+      }else{
+        require(search.probe.counters['query.index.builds']===1);
+        require(search.probe.counters['derived.hit']===1);
+      }
+      const nonemptySearch=profileMode==='product-default'?await (async()=>{
+        const character=current!.entities.filter(e=>e.kind==='character')[1]!;
+        const events=new Set(current!.entities.filter(e=>!e.deletedAt&&e.kind==='event'&&e.data.participants?.some(p=>p.characterId===character.id)).map(e=>e.id));
+        // Independent fixture oracle: direct model traversal, not the catalog index/query API.
+        const expectedIds=current!.entities.filter(e=>!e.deletedAt&&(e.kind==='event'?events.has(e.id):e.kind==='scene'&&e.data.eventIds.some(id=>events.has(id)))).map(e=>e.id);
+        require(expectedIds.length===15);
+        const measured=await observe(()=>{
+          const query={op:'participant' as const,characterId:character.id};
+          return [filterCatalogEntities(current!,query).map(e=>e.id),filterCatalogEntities(current!,query).map(e=>e.id)];
+        });
+        require(measured.result.every(ids=>ids.length===expectedIds.length&&ids.every((id,i)=>id===expectedIds[i])));
+        require((measured.probe.counters['query.index.builds']??0)===0);
+        require(measured.probe.counters['derived.hit']===2);
+        // Hashing and oracle assertions are outside the separately reported query clock.
+        return {...measured,result:{counts:measured.result.map(ids=>ids.length)},expected:{count:expectedIds.length,sha256:await sha256(jsonBytes(expectedIds))},actualSHA256:await Promise.all(measured.result.map(ids=>sha256(jsonBytes(ids))))};
+      })():undefined;
       const calendar=await observe(()=>({count:referenceChoices(current!,'calendar').length}));
       const afterHeap=heap(),closed=await observe(()=>{reader.close();return heap();});
-      return {fixture:metadata,beforeHeap,cold,operations,search,calendar,afterHeap,closed};
+      return {profileMode,scope:profileMode==='disabled-baseline'?'Historical no-sharing baseline: two actual index builds; not product-default performance.':'Normal product-default derived sharing; separate from the historical baseline.',fixture:metadata,beforeHeap,cold,operations,search,nonemptySearch,calendar,afterHeap,closed,derivedAfterClose:reader.derivedIndexRetention()};
     }finally{reader.close();}
   }finally{await seed.deleteDatabase();}
 }

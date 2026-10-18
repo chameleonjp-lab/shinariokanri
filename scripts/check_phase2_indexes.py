@@ -235,6 +235,8 @@ def validate(root, verify_current_source=False):
         require(len(data) == row['bytes'] and hashlib.sha256(data).hexdigest() == row['sha256'], 'manifest artifact bytes differ')
     require(manifest['generatorLogsArchive']['path'] in listed and len(manifest['generatorLogFiles'])==14, 'generator stdout archive missing')
     verify_archive(root,manifest['generatorLogsArchive'],manifest['generatorLogFiles'])
+    require(manifest['ciRepairArchive']['path'] in listed and len(manifest['ciRepairFiles'])>0, 'CI repair evidence archive missing')
+    verify_archive(root,manifest['ciRepairArchive'],manifest['ciRepairFiles'])
     runs = []
     for record in manifest['runs']:
         raw_path = safe_file(root, record['path'])

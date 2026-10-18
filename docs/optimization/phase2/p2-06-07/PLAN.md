@@ -74,6 +74,8 @@
 - [x] Obtain one fresh whole-branch review and address material findings by RED→GREEN tests. Final review found no additional P1/P2 and the fresh-Store wording correction is applied.
 - [ ] Submit all results as a new main-targeted Draft PR and confirm all original CI jobs. This committed plan is a pre-CI snapshot; the actual final run/attempt/head/tree and result are recorded in the Draft PR body. Do not merge it.
 
+PR #68 first-CI follow-up: preserve the original two-real-build observation in an explicitly disabled-sharing baseline, add a normal-product native observation with identical save invariants and an independent nonempty ordered oracle, and label CLI modes. Both lanes pass on all three engines locally; retain the original CI failure and RED evidence. The delivery gate above remains pending until the repaired submitted head passes all seven original CI jobs. Product bytes and the three sealed performance overlays remain unchanged.
+
 ## Completion boundary
 
 Phase 2 implementation/comparison delivery requires every task above and original CI on the submitted source. It does not declare the phase-3 8 metrics × Standard/Large ×30, 180-save distribution, real 7200-second soak, final 72 MiB/113-history complete new/clone/cold acceptance, physical devices or external services newly passed.
