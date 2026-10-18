@@ -1,34 +1,31 @@
 import { useEffect, useRef, useState } from 'react';
 import {useAuthorScope} from './StoreContext';
-import type {CollectionReadView} from '../domain/orderedCollection';
 
 const PREFIX = 'scenario-list-position:v1:';
 function readPage(scope: string) {
   try { const page = Number(localStorage.getItem(PREFIX + scope)); return Number.isSafeInteger(page) && page >= 0 && page <= 100_000 ? page : 0; } catch { return 0; }
 }
 /** Per-project view position, independent from authored data and save revisions. */
-export function useListWindow<T extends { id: string }>({ items,collection,enabled=true, scope, selectedId, size = 60,followSelected=true }: { items: readonly T[];collection?:CollectionReadView<T>;enabled?:boolean; scope: string; selectedId?: string | null; size?: number;followSelected?:boolean }) {
+export function useListWindow<T extends { id: string }>({ items, scope, selectedId, size = 60,followSelected=true }: { items: readonly T[]; scope: string; selectedId?: string | null; size?: number;followSelected?:boolean }) {
   scope=useAuthorScope(scope);
   const [position, setPosition] = useState(() => ({ scope, page: readPage(scope) }));
   const selected = useRef<string | null | undefined>(undefined);
   const lastScope = useRef(scope);
-  const total=collection?.ids.length??items.length;
-  const maximum = Math.max(0, Math.ceil(total / size) - 1);
+  const maximum = Math.max(0, Math.ceil(items.length / size) - 1);
   const page = Math.min(position.scope === scope ? position.page : readPage(scope), maximum);
   function setPage(next: number) {
     const bounded = Math.max(0, Math.min(next, maximum));
     setPosition({ scope, page: bounded });
     try { localStorage.setItem(PREFIX + scope, String(bounded)); } catch { /* Navigation remains available without persistent preferences. */ }
   }
-  const selectedIndex = selectedId ? collection?collection.positionOf(selectedId):items.findIndex(item => item.id === selectedId) : -1;
+  const selectedIndex = selectedId ? items.findIndex(item => item.id === selectedId) : -1;
   useEffect(() => {
     if (lastScope.current === scope && selected.current === selectedId) return;
     lastScope.current = scope; selected.current = selectedId;
     if (followSelected&&selectedIndex >= 0) setPage(Math.floor(selectedIndex / size));
     else setPosition({ scope, page: readPage(scope) });
   }, [scope, selectedId, selectedIndex,followSelected]);
-  const read=collection?.readPage(enabled?page*size:0,enabled?size:0);
-  return { items:enabled?read?.rows??items.slice(page*size,(page+1)*size):[],readState:read?.state??'loaded', page, maximum, total, offset: page * size, setPage, selectedPage: selectedIndex < 0 ? undefined : Math.floor(selectedIndex / size) };
+  return { items: items.slice(page * size, (page + 1) * size), page, maximum, total: items.length, offset: page * size, setPage, selectedPage: selectedIndex < 0 ? undefined : Math.floor(selectedIndex / size) };
 }
 export function ListPager({ page, maximum, total, setPage, selectedPage, label }: { page: number; maximum: number; total: number; setPage: (page: number) => void; selectedPage?: number; label: string }) {
   if (!maximum) return null;

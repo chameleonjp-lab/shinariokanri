@@ -233,8 +233,9 @@ export function evaluateCollection(project: ProjectData, collection: Entity<'col
   return { collectionId: collection.id, mode: collection.data.mode, entities: selected, entityIds: selected.map(entity => entity.id), missingIds, query };
 }
 
-/** Current-only UI read model. DB current validation remains complete; no DB
- * row reduction is inferred from these bounded in-memory row reads. */
+/** Comparison adapter: UI adoption was rejected after measured preparation and
+ * lookup overhead. Production lists retain their original full-result path.
+ * This independently checked experiment does not imply partial DB reads. */
 export function createCatalogCollection(project:ProjectData,query:Query,collection?:Entity<'collection'>):OrderedCollection<Entity>{
   const evaluation=beginDerivedEvaluation(project);
   if(!evaluation){
