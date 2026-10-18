@@ -32,6 +32,7 @@ def verify_capture(raw):
     seed, records, entities, asset_bytes, digest = FIXTURES[raw['suite']]
     cohorts = raw['cohorts']
     require(len(cohorts) == 2 and [c['enabled'] for c in cohorts] == [False, True], 'missing separate OFF/ON')
+    require(datetime.fromisoformat(cohorts[0]['finishedAt']) <= datetime.fromisoformat(cohorts[1]['startedAt']), 'OFF/ON cohorts overlap')
     shared = None
     for cohort in cohorts:
         enabled, observed = cohort['enabled'], cohort['observations']
@@ -107,6 +108,15 @@ def verify_artifacts(folder, raw):
     for descriptor, records in [('sourceArchive', 'sourceFiles'), ('runtimeArchive', 'runtimeFiles'), ('overlayArchive', 'overlays'), ('buildArchive', 'buildFiles')]:
         verify_archive(folder, raw[descriptor], raw[records])
     verify_source_files(folder, raw, safe_file(folder, raw['sourceArchive']['path']))
+    owned = any(row['path'] == 'src/domain/derivedIndexes.ts' for row in raw['sourceFiles'])
+    for cohort in raw['cohorts']:
+        observed = cohort['observations']
+        require((observed['afterClose'] is not None) is owned, 'retention support misreported')
+        if owned:
+            cap = observed['options'].get('textCodeUnits', 4194304)
+            for key in ('afterStartup', 'afterQueries', 'afterParticipant'):
+                stats = observed[key]
+                require(all(integer(value) for value in stats.values()) and stats['owners'] <= 4 and stats['entries'] <= 100000 and stats['references'] <= 500000 and stats['textCodeUnits'] <= cap, 'logical retention exceeds store budget')
     # Additional build/runtime paths are bound to the same commit/tree. They
     # cannot be smuggled into the original helper's exact source coverage.
     with zipfile.ZipFile(safe_file(folder, raw['runtimeArchive']['path'])) as archive:

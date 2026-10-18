@@ -34,7 +34,7 @@ class CaptureContract(unittest.TestCase):
             observed = dict(status='ok', options=dict(enabled=enabled, suite='standard'), fixture=dict(seed=seed, counts=dict(totalRecords=records), assetBytes=asset_bytes, sha256=digest, wireJsonSha256=digest, jsonBytes=6258972, assets=[]), nativeAssets=[], expected=expected,
                             expectedParticipant=dict(count=15, sha256='b'*64), selection=dict(index=6699, total=6800), savedSource=dict(current='c'*64, revision='1'), postReadSource=dict(current='c'*64, revision='1'), renameInput='d'*64,
                             inputUnchanged=True, orderedResultsVerified=True, afterClose=dict(owners=0, entries=0, references=0, textCodeUnits=0), operations=operations, actions=actions, startup=row('startup'))
-            cohorts.append(dict(enabled=enabled, status='ok', startedAt='2026-10-18T00:00:00Z', finishedAt='2026-10-18T00:01:00Z', observations=copy.deepcopy(observed)))
+            cohorts.append(dict(enabled=enabled, status='ok', startedAt='2026-10-18T00:01:00Z' if enabled else '2026-10-18T00:00:00Z', finishedAt='2026-10-18T00:02:00Z' if enabled else '2026-10-18T00:01:00Z', observations=copy.deepcopy(observed)))
         return dict(version=1, suite='standard', repetitions=30, sequence=checker.SEQUENCE, scope=checker.SCOPE, literalSourceVerified=True, status='ok', errors=[], unexpectedRequests=[], recordedAt='2026-10-18T00:00:00Z', finishedAt='2026-10-18T00:02:00Z', cohorts=cohorts,
                     summary=dict(queries=[dict(count=30, minimum=1, median=1, p95=1, maximum=1) for _ in range(6)], navigation=dict(count=60, minimum=1, median=1, p95=1, maximum=1), participant=dict(count=30, minimum=1, median=1, p95=1, maximum=1)))
 
@@ -50,6 +50,11 @@ class CaptureContract(unittest.TestCase):
     def test_on_elapsed_is_never_latency(self):
         raw = self.valid()
         raw['cohorts'][1]['observations']['actions'][0]['milliseconds'] = 0.1
+        with self.assertRaises(ValueError): self.checker().verify_capture(raw)
+
+    def test_overlapping_off_on_sessions_are_rejected(self):
+        raw = self.valid()
+        raw['cohorts'][1]['startedAt'] = raw['cohorts'][0]['startedAt']
         with self.assertRaises(ValueError): self.checker().verify_capture(raw)
 
     def test_same_count_wrong_order_oracle_is_rejected(self):
