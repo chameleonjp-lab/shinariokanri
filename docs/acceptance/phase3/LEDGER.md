@@ -1,0 +1,14 @@
+# SDD ledger — plan: docs/acceptance/phase3/PLAN.md
+
+- Base: `67bef6a08f63a737d64d5bab0c8a17e3364bbc0a`, tree `9fd71d58d745153e363cddb750aefa33c00ed795`; fresh task checkout, branch `codex/phase3-acceptance-20261018`; no AGENTS.md found.
+- #59 merged 2026-10-16T15:33:26Z (`f40d07a`); #60–68 merged and #59/60/61/62/63/64/65/68 heads are actual local Git ancestors. Open PRs empty; main protection reported disabled. No settings changed.
+- Pre-flight: Task 2 seal supplies Task 4 binding; Task 3 must finish product changes before Task 4 measurements. Task 1 trace joins Task 4 actual cases by ID, never by execution count.
+- Ruling: Execute the registered phase-three plan inline without another design-approval round — user's explicit request authorizes this work — product scope/requirements remain unchanged; cost if wrong: reviewable Draft changes only.
+- Baseline document/plan/phase1 checks passed: 104/116/464/24/6/68, 73 original contracts. Full baseline unit started; no success inferred before exit.
+- Setup: Initial npm ci failed because default cache was outside writable roots. Retried with a writable task-local npm cache; 61 packages installed, no package/lock edits.
+- Historical formal and full-large-exceptions archives recovered from immutable `d5e132ef`, all part bytes/SHA and 118+28 members verified before extraction. Historical results remain historical.
+- Baseline full unit: 1388 passed / 2 failed in 542.70s; both failures were file navigation refused by the system Chromium administrator policy. No original assertion changed. The same exports file passed 21/21 with the CI-style Playwright Chromium; full repeat passed 148 files / 1390 tests in 550.20s.
+- Added evidence kernels: 13 missing-validator RED → GREEN; archive/path functions 2 missing-function RED → GREEN; same-count save-fixture substitution initially escaped and was pinned with original SHA/actual material hashes (RED → GREEN). Final kernel suite 16/16.
+- Added continuous UI initially stopped at unconfirmed public policy, then exposed the incorrect test expectation that import adds no audit pending. Kept both original product boundaries; test now requires explicit approval and original pending plus exactly one restoration audit. Chromium/WebKit passed, 12.8/24.7s, no original E2E edits.
+- Python baseline after removing a task-private cache path from the ledger: 86/86 document/evidence tests and 25/25 CI/recovery helpers passed. Original docs/phase1/plan checks passed. New snapshot/bundle integration remains to verify before sealing.
+- Local Firefox could not create its default Mozilla configuration directory on the readonly home filesystem; XDG/TMPDIR and nested content sandbox settings did not resolve startup. WebKit dependencies were extracted only under the ignored local browser directory; no host package installation or administrator policy change. Final original CI will supply Firefox execution.
