@@ -100,3 +100,84 @@ for (const type of ['boolean', 'integer', 'enum'] as const) test(`RG-R05 ${type}
   await expect(page.getByRole('button', { name: new RegExp(`${type === 'boolean' ? '真偽' : type === 'integer' ? '整数' : '列挙'}状態の道`) })).toBeEnabled();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
 });
+
+
+test('RG-R05 保存直後に前版の同一内容の下書きが残っても再読込で保存済み版を選び、次の編集で競合しない', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 900 });
+  await seed(page);
+  let editor = await openByName(page, 'integer比較条件');
+  let condition = editor.locator('[data-field="condition"]');
+  await condition.getByLabel('比較演算').selectOption('in');
+  await condition.getByRole('button', { name: '比較値を追加', exact: true }).click();
+  await condition.getByRole('group', { name: '比較値2', exact: true }).getByLabel('値', { exact: true }).fill('3');
+  await expect(editor.locator('.editor-save-state')).toContainText('端末内保存済み');
+
+  // Recreate the exact crash window: native entity save committed at revision 1,
+  // but the independent workspace-input transaction still contains its revision-0
+  // duplicate. Never modify the authoritative saved entity or its command history.
+  await page.evaluate(async () => {
+    const db = await new Promise<IDBDatabase>((resolve, reject) => {
+      const request = indexedDB.open('scenario-manager-local-v1');
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    try {
+      const saved = await new Promise<Record<string, unknown>>((resolve, reject) => {
+        const transaction = db.transaction('entities', 'readonly');
+        const request = transaction.objectStore('entities').getAll();
+        request.onsuccess = () => {
+          const row = (request.result as Array<{ record: Record<string, unknown> }>).find(
+            item => item.record?.name === 'integer比較条件',
+          );
+          if (!row) reject(new Error('Saved comparison edge missing from native storage'));
+          else resolve(row.record);
+        };
+        request.onerror = () => reject(request.error);
+      });
+      if (saved.revision !== '1') throw new Error('Expected the first committed entity revision');
+      const key = String(saved.projectId) + ':' + String(saved.id);
+      await new Promise<void>((resolve, reject) => {
+        const transaction = db.transaction('workspaceInputs', 'readwrite');
+        const store = transaction.objectStore('workspaceInputs');
+        const request = store.get('workspace');
+        request.onsuccess = () => {
+          const previous = request.result?.value as {
+            drafts: Record<string, Record<string, unknown>>;
+            jsonBuffers: Record<string, Record<string, string>>;
+            settingsDrafts: Record<string, unknown>;
+            alternativeDrafts: Record<string, unknown>;
+          } | undefined;
+          store.put({
+            key: 'workspace',
+            value: {
+              drafts: { ...previous?.drafts, [key]: { ...saved, revision: '0', updatedAt: '2026-10-18T00:00:00.000Z' } },
+              jsonBuffers: previous?.jsonBuffers ?? {},
+              settingsDrafts: previous?.settingsDrafts ?? {},
+              alternativeDrafts: previous?.alternativeDrafts ?? {},
+            },
+          });
+        };
+        transaction.oncomplete = () => resolve();
+        transaction.onerror = () => reject(transaction.error);
+        transaction.onabort = () => reject(transaction.error);
+      });
+    } finally { db.close(); }
+  });
+
+  await page.reload();
+  editor = await openByName(page, 'integer比較条件');
+  condition = editor.locator('[data-field="condition"]');
+  await expect(editor.locator('.editor-save-state')).toContainText('端末内保存済み');
+  await expect(editor.locator('.revision-label')).toContainText('版 1');
+  const field = condition.getByRole('group', { name: '比較値2', exact: true }).getByLabel('値', { exact: true });
+  await expect(field).toHaveValue('3');
+  await field.fill('');
+  await expect(condition.getByRole('alert')).toBeVisible();
+  await expect(editor.getByRole('button', { name: '保存する', exact: true })).toBeDisabled();
+  await field.fill('3');
+  await expect(editor.locator('.editor-save-state')).toContainText('端末内保存済み');
+  await page.reload();
+  editor = await openByName(page, 'integer比較条件');
+  await expect(editor.locator('[data-field="condition"]').getByRole('group', { name: '比較値2', exact: true }).getByLabel('値', { exact: true })).toHaveValue('3');
+  await expect(editor.locator('.editor-save-state')).toContainText('端末内保存済み');
+});
