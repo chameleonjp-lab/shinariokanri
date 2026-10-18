@@ -56,7 +56,7 @@ def create_binding():
             meta, name = entry.split('\t', 1); mode, kind, oid = meta.split(' ')
             rows.append(dict(mode=mode, type=kind, sha=oid, name=name))
         proof['trees'][git('rev-parse', ref)] = rows
-    return dict(format='phase3-candidate/1', commit=commit, tree=tree, build_info=build,
+    return dict(format='phase3-candidate/1', sourceRoot=str(ROOT), commit=commit, tree=tree, build_info=build,
                 source_files=sources, artifact_files=artifacts, original_documents=documents,
                 generated_runtime=record('src/portable/generated/runtime.js'), sourceProof=proof)
 

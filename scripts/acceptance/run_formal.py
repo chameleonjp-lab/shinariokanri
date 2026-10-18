@@ -11,6 +11,7 @@ import sys
 from seal_candidate import ROOT, create_binding, retain_snapshot, verify_binding
 sys.path.insert(0, str(ROOT/'scripts'))
 from check_phase3 import assess_performance, assess_saves, assess_soak, verify_exit, loads
+from acceptance.procedures import canonical_command
 
 
 def utc(): return datetime.now(timezone.utc).isoformat()
@@ -46,17 +47,12 @@ def run(output, only=None):
         sequence['steps'].append(row); save(output/'sequence.json', sequence)
         raw_path = directory/'raw.json'
         try:
+            command = canonical_command(step, str(output))
             if step.startswith('performance-'):
                 size = step.removeprefix('performance-')
-                command = ['node', 'scripts/measure-app.mjs', '--size', size, '--samples', '30', '--mode', 'performance', '--output', str(raw_path)]
             elif step == 'saves180':
                 (output/'results').mkdir(exist_ok=True)
-                command = ['node', 'scripts/acceptance/measure-original-saves.mjs', '--binding', str(binding_path), '--proof', str(output), '--attempt', 'saves180']
                 raw_path = output/'results/saves180/raw.json'
-            elif step == 'soak':
-                command = ['node', 'scripts/measure-large-history.mjs', '--soak-seconds', '7200', '--restore-storage', 'persistent', '--output', str(raw_path)]
-            else:
-                command = ['node', 'scripts/acceptance/measure-full-exceptions.mjs', '--binding', str(binding_path), '--source', str(output/'soak'), '--output', str(raw_path)]
             row['argv'] = command; row['raw'] = str(raw_path.relative_to(output)); save(output/'sequence.json', sequence)
             execute(command, directory)
             raw_bytes = raw_path.read_bytes(); raw = loads(raw_bytes)

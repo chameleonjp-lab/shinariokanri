@@ -162,6 +162,7 @@ def verify_pending(expected, actual, mapping):
     for row in actual:
         source = by_sequence[row['sequence']]
         require(row['sourceHash'] == source['hash'] and row['commandHash'] == row['actualHash'] and
+                (bool(mapping) or row['actualHash'] == source['hash']) and
                 row['origin'] == source['origin'] and
                 row['operationId'] == mapping.get(source['operationId'], source['operationId']), 'Pending identity/hash/origin differs')
         parts = row['nativeParts']
@@ -199,8 +200,9 @@ def assess_saves(raw, product):
                 final['recoveredPendingCount'] == 0 and restored['contentHash'] == final['contentHash'] and restored['records'] == final['records'] and
                 restored['historyCount'] == restored['recoveredPendingCount'] == 91 and restored['outboxCount'] == 1 and
                 case['restorationProgress']['stage'] == 'native_hash_history_pending_assets_confirmed', 'Original 91-command/cold/empty recovery differs')
-        require(len(final['assets']) == 3*index and final['assets'] == restored['assets'] and
-                all(r['bytes'] == 1048576 and r['verified'] is True for r in final['assets']), 'Actual attached save assets differ')
+        pinned_assets = [dict(hash=r['hash'], bytes=r['bytes'], verified=True) for r in fixture['assetHashes']]
+        require(case['before']['assets'] == final['assets'] == restored['assets'] == pinned_assets,
+                'Actual attached save assets differ from original native fixture')
         for form_index, form in enumerate(case['forms']):
             samples = form['samples']; summary = form['summary']
             require(len(samples) == summary['count'] == 30, 'Missing original save samples')

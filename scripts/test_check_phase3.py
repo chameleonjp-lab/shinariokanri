@@ -119,7 +119,7 @@ class Phase3EvidenceTests(unittest.TestCase):
 
     def test_pending_requires_all_sequences_origins_and_real_parts(self):
         expected = [dict(sequence=0, operationId='a', hash='x', origin={'operationId': 'a'})]
-        actual = [dict(sequence=0, operationId='a', sourceHash='x', actualHash='z', commandHash='z', origin={'operationId': 'a'},
+        actual = [dict(sequence=0, operationId='a', sourceHash='x', actualHash='x', commandHash='x', origin={'operationId': 'a'},
                        nativeParts=[dict(sequence=0, bytes=1, sha256='a' * 64)])]
         checker.verify_pending(expected, actual, {})
         for edit in ('sequence', 'origin', 'parts', 'hash'):
@@ -129,6 +129,16 @@ class Phase3EvidenceTests(unittest.TestCase):
             elif edit == 'parts': changed[0]['nativeParts'] = []
             else: changed[0]['commandHash'] = 'forged'
             with self.assertRaises(ValueError): checker.verify_pending(expected, changed, {})
+
+    def test_unchanged_id_pending_cannot_substitute_both_actual_hashes(self):
+        source = [dict(sequence=0, operationId='a', hash='original', origin={'operationId': 'a'})]
+        actual = [dict(sequence=0, operationId='a', sourceHash='original', actualHash='0'*64,
+                       commandHash='0'*64, origin={'operationId':'a'},
+                       nativeParts=[dict(sequence=0, bytes=1, sha256='a'*64)])]
+        with self.assertRaises(ValueError): checker.verify_pending(source, actual, {})
+        # A clone has re-keyed command bytes; normalized source correspondence is separate.
+        actual[0]['operationId'] = 'clone'
+        checker.verify_pending(source, actual, {'a':'clone'})
 
     def test_clone_mapping_requires_disjoint_bijection(self):
         checker.verify_mapping({'a', 'b'}, {'a': 'x', 'b': 'y'})
@@ -173,6 +183,40 @@ class Phase3EvidenceTests(unittest.TestCase):
             elif edit == 'writes': raw['cases'][0]['forms'][0]['samples'][0]['calls']['entities.put'] = 1
             else: raw['cases'][0]['forms'][0]['samples'][0]['digestCalls'] = 5000
             with self.assertRaises(ValueError, msg=edit): checker.assess_saves(raw, product)
+
+    def test_saved_and_restored_materials_must_match_original_native_hashes(self):
+        original = json.loads(gzip.decompress((ROOT/'tests/fixtures/phase3/historical-original180.json.gz').read_bytes()))
+        product = dict(commit=original['commit'], tree=original['tree'], version=original['build'])
+        for phases in (('after', 'afterCold', 'empty390ColdRestoration'),
+                       ('before', 'after', 'afterCold', 'empty390ColdRestoration')):
+            raw = copy.deepcopy(original)
+            for phase in phases:
+                for row in raw['cases'][1][phase]['assets']: row['hash'] = '0'*64
+            with self.assertRaises(ValueError): checker.assess_saves(raw, product)
+
+    def test_procedure_and_canonical_command_reject_self_consistent_tampering(self):
+        from acceptance.procedures import canonical_command, portable_driver, verify_execution
+        repo, proof, commit = '/synthetic/repo', '/synthetic/proof', 'a'*40
+        snapshot = {p: (ROOT/p).read_bytes() for p in (
+            'scripts/acceptance/originals/six-save-forms.mjs',
+            'scripts/acceptance/originals/full-large-exceptions.mjs')}
+        for step in ('performance-standard', 'performance-large', 'saves180', 'soak', 'exceptions'):
+            argv = canonical_command(step, proof)
+            command = dict(argv=argv, cwd=repo)
+            expected = portable_driver(step, snapshot, repo, proof, commit)
+            verify_execution(step, command, argv, repo, proof, commit, snapshot, expected)
+            changed = copy.deepcopy(command); changed['argv'] = ['node', 'unapproved.mjs']
+            with self.assertRaises(ValueError):
+                verify_execution(step, changed, changed['argv'], repo, proof, commit, snapshot, expected)
+            changed = copy.deepcopy(command); changed['cwd'] = '/synthetic/other'
+            with self.assertRaises(ValueError):
+                verify_execution(step, changed, argv, repo, proof, commit, snapshot, expected)
+            if expected is not None:
+                # Recomputing the raw SHA cannot legitimize a changed assertion.
+                altered = expected.replace(b'8800', b'8799', 1) if step == 'saves180' else expected.replace(b'7200', b'0000', 1)
+                self.assertNotEqual(altered, expected)
+                with self.assertRaises(ValueError):
+                    verify_execution(step, command, argv, repo, proof, commit, snapshot, altered)
 
 
 if __name__ == '__main__': unittest.main()

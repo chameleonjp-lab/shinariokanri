@@ -60,6 +60,6 @@ def verify_snapshot(binding, archive_bytes, root):
     # measured production, original procedures and all test inputs must match.
     for path in expected:
         if path.startswith(('src/', 'tests/', 'examples/', 'supabase/', '.github/')) or path in SCOPES or path in (
-                'scripts/measure-app.mjs', 'scripts/measure-large-history.mjs', 'scripts/large-history-verification-entry.mjs') or path.startswith('scripts/acceptance/originals/'):
+                'scripts/measure-app.mjs', 'scripts/measure-large-history.mjs', 'scripts/large-history-verification-entry.mjs') or path.startswith('scripts/acceptance/'):
             require((root/path).read_bytes() == contents[path], 'Current production/test input changed after measurement: '+path)
     return contents

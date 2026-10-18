@@ -41,7 +41,7 @@
 
 **Files:** `scripts/acceptance/seal_candidate.py`, `measure-original-saves.mjs`, `run_formal.py`, `scripts/check_phase3.py`, `scripts/test_check_phase3.py`, `docs/acceptance/phase3/procedures/`.
 
-**Interfaces:** `seal_candidate.py --output PATH`はclean HEAD/tree/buildとsource/artifact/原契約のSHAを固定。`run_formal.py --binding PATH --output DIR`は原30×2、180、7200/full113を直列実行して各実終了と実行前後のsealを記録。`check_phase3.py --evidence DIR`は実測・byte・出所を再検査し、公開gateを変更しない。
+**Interfaces:** `seal_candidate.py --output PATH`はclean HEAD/tree/buildとsource/artifact/原契約のSHAを固定。`run_formal.py --output DIR`は候補のsealを作成し、原30×2、180、7200/full113を直列実行して各実終了と実行前後のsealを記録。`check_phase3.py --evidence DIR`は実測・byte・出所を再検査し、公開gateを変更しない。
 
 - [ ] 成功原本のmutatorで偽p95、欠落値、別fixture/build、短縮soak、113未満、欠落素材、未完了new/clone/cold、終了code不明を拒否するテストを先に書いてREDを確認。
 - [ ] 過去原180手順の実blob/全118memberを照合し、path/label/portの可搬化に限定。元assert/fixture/30回/期限を維持する。

@@ -12,6 +12,7 @@ from check_phase3 import (require, loads, sha, verify_archive, safe_relative, re
                          verify_exit, assess_performance, assess_saves, assess_soak,
                          verify_history, verify_pending, verify_large_assets)
 from acceptance.snapshot import verify_snapshot
+from acceptance.procedures import verify_execution, absolute
 
 STEPS = ('performance-standard', 'performance-large', 'saves180', 'soak', 'exceptions')
 CRITICAL = ('projects','entities','relations','blocks','snapshots','commands','outbox','assets','views','syncMetadata',
@@ -82,6 +83,7 @@ def validate(folder):
         data = actual(row['path']); require(len(data) == row['bytes'] and sha(data) == row['sha256'], 'Actual file descriptor differs'); return data
     binding_bytes = read('candidate.json'); binding = loads(binding_bytes)
     snapshot = verify_snapshot(binding, read('candidate.zip'), root)
+    absolute(binding['sourceRoot']); absolute(manifest['recordedRoot'])
     product = binding['build_info']; sequence = loads(read('sequence.json'))
     require(sequence['candidate'] == product['commit'] and sequence['status'] == 'completed' and
             [row['step'] for row in sequence['steps']] == list(STEPS), 'Missing/reordered final formal sequence')
@@ -93,8 +95,14 @@ def validate(folder):
         previous = finished
         receipt = loads(read(step+'/execution/exit.json')); verify_exit(receipt)
         command = loads(read(step+'/execution/command.json'))
+        driver = read('results/saves180/executed-procedure.mjs') if step == 'saves180' else (
+            read('exceptions/executed-driver.mjs') if step == 'exceptions' else None)
+        verify_execution(step, command, row['argv'], binding['sourceRoot'], manifest['recordedRoot'],
+                         binding['commit'], snapshot, driver)
         require(command['argv'] == row['argv'] and read(step+'/execution/executed-wrapper.py') == snapshot['scripts/acceptance/execute.py'] and
-                command['procedure']['sha256'] == sha(snapshot['scripts/acceptance/execute.py']), 'Actual command/wrapper differs from sealed procedure')
+                command['procedure'] == dict(path=binding['sourceRoot']+'/scripts/acceptance/execute.py', retained='executed-wrapper.py',
+                    bytes=len(snapshot['scripts/acceptance/execute.py']), sha256=sha(snapshot['scripts/acceptance/execute.py'])),
+                'Actual command/wrapper differs from sealed procedure')
         descriptor(receipt['log'])
         data = read(row['raw']); raw = loads(data); raws[step] = raw
         assessment = loads(read(step+'/ADJUDICATION.json'))
