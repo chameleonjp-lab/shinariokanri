@@ -5,7 +5,10 @@ import {beginDerivedEvaluation,type DerivedEvaluation} from '../domain/derivedIn
 // The weak marker records completion only; it retains no author rows or index.
 const checked=new WeakSet<readonly Entity[]>();
 type Index=Map<string,Entity[]>;
-export type ReferenceIndexRead=(id:string)=>Entity[];
+export interface ReferenceIndexRead {(id:string):Entity[];isCurrent:()=>boolean}
+// A separately created guard captures only the lease, never the full index.
+// UI may retain this guard and target rows after a budget-rejected preparation.
+const currentGuard=(evaluation?:DerivedEvaluation)=>evaluation?()=>evaluation.isCurrent():()=>false;
 function addReferences(index:Map<string,Entity[]>,entity:Entity){
  if(entity.deletedAt)return;
  for(const target of new Set(collectReferences(entity).map(ref=>ref.id))){if(target===entity.id)continue;const rows=index.get(target)??[];rows.push(entity);index.set(target,rows);}
@@ -31,10 +34,10 @@ const yieldToBrowser=()=>new Promise<void>(resolve=>{
 });
 export async function prepareReferenceIndex(entities:readonly Entity[],options:{project?:ProjectData;signal?:AbortSignal;onProgress?:(completed:number,total:number)=>void;yieldControl?:()=>Promise<void>}={}):Promise<ReferenceIndexRead>{
  const check=()=>{if(options.signal?.aborted)throw new DOMException('参照の確認を中止しました。','AbortError');};
- const read=(index:Index,evaluation?:DerivedEvaluation):ReferenceIndexRead=>id=>{
+ const read=(index:Index,evaluation?:DerivedEvaluation):ReferenceIndexRead=>Object.assign((id:string)=>{
   if(evaluation&&!evaluation.isCurrent())throw new DOMException('参照の読込先が変わりました。','AbortError');
   return [...((evaluation?index:buildIndex(entities)).get(id)??[])];
- };
+ },{isCurrent:currentGuard(evaluation)});
  check();const evaluation=evaluationFor(entities,options.project),known=evaluation?.peek<Index>('reference.current','all');
  const checkSource=()=>{check();if(evaluation&&!evaluation.isCurrent())throw new DOMException('参照の読込先が変わりました。','AbortError');};
  if(known){options.onProgress?.(entities.length,entities.length);return read(known,evaluation);}

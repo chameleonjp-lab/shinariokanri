@@ -209,6 +209,26 @@ it('shares an owned reference index and isolates returned rows from the shared m
   }finally{probe.stop();}
 });
 
+it('gives UI-held reference rows a revocable proof after actual schema and role changes',async()=>{
+  const source=fixture(),id=source.entities[0]!.id;
+  source.entities.push(createEntity(source.projectId,'character','新しい参照元',{reading:id}));
+  const s=store(),p=await saved(s,source),read=await prepareReferenceIndex(p.entities,{project:p,yieldControl:async()=>{}});
+  expect(read(id).map(e=>e.name)).toEqual(['門の出来事']);
+  expect(typeof Reflect.get(read,'isCurrent'),'component-held rows need a source/schema validity proof').toBe('function');
+  const isCurrent=Reflect.get(read,'isCurrent') as ()=>boolean;
+  expect(isCurrent()).toBe(true);
+  const definition=ENTITY_SCHEMAS.character;if(definition.type!=='object')throw Error('character schema kind');
+  const field=definition.fields.reading!,original=field.schema;
+  try{
+    field.schema={type:'ref',scope:'entity',kinds:['character']};
+    expect(isCurrent()).toBe(false);
+    expect(cachedReferencesTo(p.entities,id,p)?.map(e=>e.name)).toEqual(['門の出来事','新しい参照元']);
+    const next=await prepareReferenceIndex(p.entities,{project:p,yieldControl:async()=>{}});
+    expect((Reflect.get(next,'isCurrent') as ()=>boolean)()).toBe(true);
+    s.setAuthorAccess({});expect((Reflect.get(next,'isCurrent') as ()=>boolean)()).toBe(false);
+  }finally{field.schema=original;}
+});
+
 it('clears values and uses complete regeneration while schema dependencies contain an unsupported cycle',async()=>{
   const s=store(),p=await saved(s),schema=ENTITY_SCHEMAS.character,probe=startProbe();
   if(schema.type!=='object')throw Error('fixture schema');
