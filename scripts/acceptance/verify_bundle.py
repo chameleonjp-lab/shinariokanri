@@ -10,7 +10,7 @@ import zipfile
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from check_phase3 import (require, loads, sha, verify_archive, safe_relative, recorded_relative,
                          verify_exit, assess_performance, assess_saves, assess_soak,
-                         verify_history, verify_pending, verify_large_assets)
+                         verify_history, verify_pending, verify_large_assets, original_performance_fixture)
 from acceptance.snapshot import verify_snapshot
 from acceptance.procedures import verify_execution, absolute
 
@@ -133,7 +133,7 @@ def validate(folder):
                 require(len(data) == helper['bytes'] and sha(data) == helper['sha256'], 'Actual retained helper bytes differ')
         if step.startswith('performance-'):
             size = step.removeprefix('performance-'); require(raw['size'] == size, 'Formal size differs')
-            expected = loads((root/f'docs/optimization/phase1/evidence/candidate-{size}30.json').read_bytes())['fixture']
+            expected = original_performance_fixture(root, size)
             metrics = assess_performance(raw, product, expected)
             require(all(r['result'] != 'failed_local_numeric_condition' for r in metrics.values()), 'Original final numeric threshold failed')
             require(raw['measurementContract']['helperSha256'] == sha(snapshot['scripts/measure-app.mjs']), 'Original measured procedure changed')
