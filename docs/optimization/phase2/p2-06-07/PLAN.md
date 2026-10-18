@@ -69,9 +69,10 @@
 
 - [x] Seal clean product commits and unchanged original Standard/Large inputs. Measure repeated queries and page/selected reads with 30 repetitions; compare literal main, P2-06, rejected B prototypes, final bounded reuse and same-source 4Mi/8Mi budgets. Separate cold setup, repeated work, retained logical entries and actual heap observations.
 - [x] Exercise real native IndexedDB and browser UI paths where claimed. Record save/rename/alias/archive and dependency invalidation; independent fake-IDB proof has the same normalized current as native UI. Unchanged operations retain existing literal-source evidence and are not relabeled as new formal acceptance.
-- [x] Keep all failures and adverse values. Reject unsafe or slower alternatives; state limits of causal claims, warm startup, heap/GC, API watchdog and unexecuted phase-3/external conditions.
-- [ ] Implement evidence validation with real negative/tamper tests; run docs/completion/phase1 and archived-source checks, original full unit/build and complete three-engine CI with recovery originals/later regressions/aggregate.
-- [ ] Obtain one fresh whole-branch review, address material findings by RED→GREEN tests and suite, and submit all results as a new main-targeted Draft PR. Do not merge it.
+- [x] Keep all failures and adverse values. Reject unsafe or slower alternatives; state limits of causal claims, seeded-context startup, heap/GC, API watchdog and unexecuted phase-3/external conditions.
+- [x] Implement evidence validation with real negative/tamper tests; pass docs/completion/phase1, archived-source/current-source, Python 73+25 tests, original full unit (148 files/1390 tests), normal build, and the additional UI counterexample on all 3 engines. Complete original CI with recovery originals/later regressions/aggregate is tracked by the final delivery gate below.
+- [x] Obtain one fresh whole-branch review and address material findings by RED→GREEN tests. Final review found no additional P1/P2 and the fresh-Store wording correction is applied.
+- [ ] Submit all results as a new main-targeted Draft PR and confirm all original CI jobs. This committed plan is a pre-CI snapshot; the actual final run/attempt/head/tree and result are recorded in the Draft PR body. Do not merge it.
 
 ## Completion boundary
 

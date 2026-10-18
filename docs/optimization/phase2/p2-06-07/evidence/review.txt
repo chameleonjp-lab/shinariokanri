@@ -1,0 +1,26 @@
+Independent whole-branch agent review, 2026-10-18.
+Reviewed HEAD 06648299000908c032c96c009c159e5ce5c840b1; product source 886d0c0e664c159b53be22bb9e19cc0d7df8159d.
+
+Final response:
+最終レビューでは、追加のP1/P2は見つかりませんでした。対象はHEAD `0664829` と製品ソース `886d0c0` です。
+- catalog.ts:239：未登録frozen入力の反例を再実行し、schema変更後の全再生成を確認。
+- check_phase2_indexes.py:229：空manifestの拒否、固定source・全比較・独立SHA・archive検査を確認。
+- BのUI採用棄却、元UIへの復帰、速度悪化・heap・計測範囲の記述は証拠と整合しています。
+- MEASUREMENTSのfresh-store表現修正を確認事項として伝達済みです。
+残条件は進行中の全unitと、Draft提出後の原全7 job・3 engineの成功確認です。第3段階の正式受入、実機・本番・公開は未実施のままです。重い検査・編集は行っていません。
+
+Reviewer supplemental observations:
+既指摘の2反例は現コードで軽量再実行し、未登録frozenはfull filterと一致、空manifestはmandatory labelsで拒否されることを確認。全UI/proof/designの実時刻区間を読み取りで比較し重いcaptureの重複なし。provider対応proof各12 query中11件にhidden selection実記録あり。
+
+Author disposition:
+Both original P1 findings fixed with RED/GREEN evidence. Fresh-store wording corrected: each coreRead and mount has a new ScenarioStore; same seeded database/context has already been read, so this is not a cold-start acceptance proof. No further product source change. Final local checks and original CI are recorded separately after completion. This agent review is not the independent human/external phase-3 acceptance gate.
+
+Final evidence-layout delta review:
+小差分を確認しました。追加指摘はありません。
+- ZIP内14ログは、元HEADの各ファイルとbyte一致しました。
+- archive検査の再利用とmanifest登録は整合しています。
+- CSV変更はCRLF→LFのみでした。
+- fresh-storeの説明は実装と一致しています。
+- 製品src・package/lockに変更はありません。
+残条件は証拠19 testsと提出後の原全7 jobの成功確認です。
+Author: evidence tests completed 19/19 PASS in 2.304 seconds; original CI remains pending until Draft submission.

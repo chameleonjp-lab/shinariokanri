@@ -27,6 +27,8 @@ python3 scripts/check_completion_plan.py
 
 通常CIは保存した履歴ソース・生値・ZIPを毎回検査する。`--verify-current-source` は今回の提出時に追加実行し、現在の全製品srcとpackage/lockが最終測定ソースと一致することを確認する。将来の正当な製品変更を過去の測定ソースへ固定する検査にはしない。
 
+GitHubの差分表示上限内で製品変更も確認できるよう、14 captureの生成stdoutは `evidence/generator-stdout.zip` に元bytesのまま収録し、manifestの `generatorLogFiles` に全member SHAを記録した。checkerはZIP全memberも検査する。その他の生測定・失敗・最終検査logは個別に保持する。
+
 新規main向けDraft PRの本文に、最終head/treeと原workflowのrun/attempt・全7 job・全3 engineの実結果を追記する。CIの測定後に説明を追記するためだけの製品変更は行わず、PR本文の結果とこの提出時スナップショットを区別する。Draftはmergeしない。
 
 実機、production/Auth/service/billing、既存Supabase、公開・配備は操作していない。専用の実サービス試験環境は提供されておらず、その外部条件は保留。ローカルブラウザと同じワークスペース内のloopbackだけを補助計測に用いた。

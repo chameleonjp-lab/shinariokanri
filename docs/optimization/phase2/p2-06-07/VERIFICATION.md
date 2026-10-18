@@ -34,13 +34,29 @@
 
 旧collection prototypeのcold query増加、Standard predicateの劣化、Bのprepare/read追加費用、heapの増加値・close後の残存を保持する。ON時間をOFFへ混ぜない。試作前後のソース変更を同一sourceの比較と呼ばず、固定source matrixで示す。
 
+保存したraw logには元出力の末尾空白があるため、整形検査でraw logを変更しない。製品・文書の差分整形検査は `evidence/` を除く範囲で成功し、CSVは数値を変えずLFへ修正した。全差分の空白警告と対象範囲を分けて記録する。
+
 ## ローカル検査と最終CI
 
 P2-06単独時点で原full unit 144 files/1370 tests（497.92秒）、最初のP2-07試作で147 files/1385 tests（496.37秒）が成功。その後の反例・失効修正を含む最終提出ソースは原workflowの全unit/build/3 engineで再検査し、最終head/run/attempt/実数・artifactをDraft PR本文に記録する。
 
-元F58/F60/catalog noteと新しい反例はChromium 9 tests/35秒、新規UI反例は3 engine/17.2秒で事前確認済み。ただし提出時の新しい全CIを代替しない。workflow/inventoryを減らしたり、retry/timeout/skipを変えたりしていない。
+元F58/F60/catalog noteと新しい反例はChromium 9 tests/35秒、新規UI反例は3 engine/17.2秒で事前確認済み。さらに最終製品sourceで以下を実行した。ただし提出時の新しい全CIを代替しない。workflow/inventoryを減らしたり、retry/timeout/skipを変えたりしていない。
 
-提出時ローカル検査の実行結果は `evidence/logs/final-*` とmanifestに記録する。CIはその後の外部結果であるため、未実行を成功とする静的snapshotは作らない。レビューの最終回答と対応も証拠へ保存する。
+| 最終製品sourceのローカル確認 | 実結果 |
+| --- | --- |
+| 原unit全件、1 worker/非並列 | **148 files / 1,390 tests成功、505.07秒**、[生ログ](evidence/logs/final-full-unit.log) |
+| 元tsconfigによる通常build | 成功、[生ログ](evidence/logs/final-build.log) |
+| 文書系Python（新しい証拠19 testsを含む） | 73 tests成功、[生ログ](evidence/logs/final-python-doc-tests.log) |
+| CI制御/復元原本Python | 25 tests成功、[生ログ](evidence/logs/final-ci-controls.log) |
+| 追加UI反例、Chromium/Firefox/WebKit | 全3 tests成功、16.0秒、[生ログ](evidence/logs/final-three-engine-counterexamples.log) |
+| docs/completion/phase1原73入力・104対応/過去source/new evidence-current | すべてexit0、`final-check-results.json` と各log |
+| 元release guard | 期待どおりexit1、RELEASE BLOCKED、[生ログ](evidence/logs/final-release-blocked.log) |
+
+全コマンド・実exit・実施時刻は [final-check-results.json](evidence/final-check-results.json)。製品src/package/lockはこの全検査中および提出時に測定済みsourceと一致する。
+
+提出時ローカル検査の実行結果は `evidence/logs/final-*` とmanifestに記録する。CIはその後の外部結果であるため、未実行を成功とする静的snapshotは作らない。
+
+最終whole-branch agent reviewでは既指摘2件の軽量反例再実行、全UI/proof/designの重い区間の非重複、元UIへの復帰、失効・秘密・証拠境界を確認し、追加のP1/P2なし。指摘された起動計測の説明を修正し、各Storeは新規だが同じseed済みDB/contextを事前読込した区間であることを明記した。最終回答と対応は `evidence/review.txt`。原条件の独立した人の第3段階受入をこのagent reviewで置換しない。
 
 ## 未実行・原release条件
 
