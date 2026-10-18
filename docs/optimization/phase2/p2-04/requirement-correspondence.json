@@ -1,0 +1,357 @@
+{
+  "version": 1,
+  "dependencyBase": "17a4cfb9dad2c20eb5adb369b7951a3f5a85c1aa",
+  "scope": "P2-04 supplemental mapping. Original case/clause/procedure pointers retained; no acceptance promotion.",
+  "originalCounts": {
+    "requirements": 104,
+    "cases": 116,
+    "clauses": 464,
+    "workPackages": 24,
+    "regressionGroups": 6,
+    "supplementalChecks": 68,
+    "lockedOriginals": 73,
+    "local": 94,
+    "external": 22,
+    "release": "BLOCKED"
+  },
+  "requirements": [
+    {
+      "id": "REQ-B12",
+      "title": "専用ファイルへの出力と読み込み",
+      "originalCasesAndClauses": [
+        {
+          "case": "AT-B12",
+          "pointer": "docs/quality/pr49-followup-2026-10-15/CLAUSE_REVIEW.json#/cases/11/clauses",
+          "names": [
+            "given",
+            "when",
+            "then",
+            "negative_or_edge"
+          ],
+          "historicalResult": "passed"
+        },
+        {
+          "case": "AT-E01",
+          "pointer": "docs/quality/pr49-followup-2026-10-15/CLAUSE_REVIEW.json#/cases/104/clauses",
+          "names": [
+            "given",
+            "when",
+            "then",
+            "negative_or_edge"
+          ],
+          "historicalResult": "blocked_original_conditions"
+        },
+        {
+          "case": "AT-E07",
+          "pointer": "docs/quality/pr49-followup-2026-10-15/CLAUSE_REVIEW.json#/cases/110/clauses",
+          "names": [
+            "given",
+            "when",
+            "then",
+            "negative_or_edge"
+          ],
+          "historicalResult": "passed"
+        }
+      ],
+      "originalProcedureSources": [
+        "tests/e2e/ap04-original-bm-archive.spec.ts",
+        "tests/e2e/ap04-original-e07-safety-bounds.spec.ts",
+        "tests/e2e/ap04-original-root-restoration-output.spec.ts"
+      ],
+      "productPaths": [
+        "src/storage/store.ts",
+        "src/storage/recordPartsDatabase.ts",
+        "src/storage/historyMetadata.ts"
+      ],
+      "supplementalProcedures": [
+        "tests/optimization/history-metadata.test.ts",
+        "tests/optimization/history-page-oracle.ts"
+      ],
+      "status": "supplemental focused verification only; original full CI and final acceptance remain separately owned"
+    },
+    {
+      "id": "REQ-B23",
+      "title": "安定ID・保存・取り消し・履歴",
+      "originalCasesAndClauses": [
+        {
+          "case": "AT-B23",
+          "pointer": "docs/quality/pr49-followup-2026-10-15/CLAUSE_REVIEW.json#/cases/22/clauses",
+          "names": [
+            "given",
+            "when",
+            "then",
+            "negative_or_edge"
+          ],
+          "historicalResult": "passed"
+        },
+        {
+          "case": "AT-E12",
+          "pointer": "docs/quality/pr49-followup-2026-10-15/CLAUSE_REVIEW.json#/cases/115/clauses",
+          "names": [
+            "given",
+            "when",
+            "then",
+            "negative_or_edge"
+          ],
+          "historicalResult": "blocked_original_conditions"
+        }
+      ],
+      "originalProcedureSources": [
+        "tests/e2e/ap04-original-e12-continuity.spec.ts",
+        "tests/e2e/ap04-original-identity-impact.spec.ts"
+      ],
+      "productPaths": [
+        "src/storage/store.ts",
+        "src/storage/recordPartsDatabase.ts",
+        "src/storage/historyMetadata.ts"
+      ],
+      "supplementalProcedures": [
+        "tests/optimization/history-metadata.test.ts",
+        "tests/optimization/history-page-oracle.ts"
+      ],
+      "status": "supplemental focused verification only; original full CI and final acceptance remain separately owned"
+    },
+    {
+      "id": "REQ-F35",
+      "title": "履歴とファイルを確実に持ち出す",
+      "originalCasesAndClauses": [
+        {
+          "case": "AT-F35",
+          "pointer": "docs/quality/pr49-followup-2026-10-15/CLAUSE_REVIEW.json#/cases/58/clauses",
+          "names": [
+            "given",
+            "when",
+            "then",
+            "negative_or_edge"
+          ],
+          "historicalResult": "passed"
+        },
+        {
+          "case": "AT-E07",
+          "pointer": "docs/quality/pr49-followup-2026-10-15/CLAUSE_REVIEW.json#/cases/110/clauses",
+          "names": [
+            "given",
+            "when",
+            "then",
+            "negative_or_edge"
+          ],
+          "historicalResult": "passed"
+        },
+        {
+          "case": "AT-E12",
+          "pointer": "docs/quality/pr49-followup-2026-10-15/CLAUSE_REVIEW.json#/cases/115/clauses",
+          "names": [
+            "given",
+            "when",
+            "then",
+            "negative_or_edge"
+          ],
+          "historicalResult": "blocked_original_conditions"
+        }
+      ],
+      "originalProcedureSources": [
+        "tests/e2e/ap04-original-e07-safety-bounds.spec.ts",
+        "tests/e2e/ap04-original-e12-continuity.spec.ts",
+        "tests/e2e/ap04-original-f-source-schema.spec.ts",
+        "tests/e2e/ap04-original-root-restoration-output.spec.ts"
+      ],
+      "productPaths": [
+        "src/storage/store.ts",
+        "src/storage/recordPartsDatabase.ts",
+        "src/storage/historyMetadata.ts"
+      ],
+      "supplementalProcedures": [
+        "tests/optimization/history-metadata.test.ts",
+        "tests/optimization/history-page-oracle.ts"
+      ],
+      "status": "supplemental focused verification only; original full CI and final acceptance remain separately owned"
+    },
+    {
+      "id": "REQ-N06",
+      "title": "保存と移行の原子性",
+      "originalCasesAndClauses": [
+        {
+          "case": "AT-N06",
+          "pointer": "docs/quality/pr49-followup-2026-10-15/CLAUSE_REVIEW.json#/cases/89/clauses",
+          "names": [
+            "given",
+            "when",
+            "then",
+            "negative_or_edge"
+          ],
+          "historicalResult": "passed"
+        },
+        {
+          "case": "AT-E06",
+          "pointer": "docs/quality/pr49-followup-2026-10-15/CLAUSE_REVIEW.json#/cases/109/clauses",
+          "names": [
+            "given",
+            "when",
+            "then",
+            "negative_or_edge"
+          ],
+          "historicalResult": "blocked_original_conditions"
+        },
+        {
+          "case": "AT-E12",
+          "pointer": "docs/quality/pr49-followup-2026-10-15/CLAUSE_REVIEW.json#/cases/115/clauses",
+          "names": [
+            "given",
+            "when",
+            "then",
+            "negative_or_edge"
+          ],
+          "historicalResult": "blocked_original_conditions"
+        }
+      ],
+      "originalProcedureSources": [
+        "tests/e2e/ap04-original-e12-continuity.spec.ts",
+        "tests/e2e/ap04-original-n-atomic-migration.spec.ts"
+      ],
+      "productPaths": [
+        "src/storage/store.ts",
+        "src/storage/recordPartsDatabase.ts",
+        "src/storage/historyMetadata.ts"
+      ],
+      "supplementalProcedures": [
+        "tests/optimization/history-metadata.test.ts",
+        "tests/optimization/history-page-oracle.ts"
+      ],
+      "status": "supplemental focused verification only; original full CI and final acceptance remain separately owned"
+    },
+    {
+      "id": "REQ-N09",
+      "title": "読み込みの制限と検証",
+      "originalCasesAndClauses": [
+        {
+          "case": "AT-N09",
+          "pointer": "docs/quality/pr49-followup-2026-10-15/CLAUSE_REVIEW.json#/cases/92/clauses",
+          "names": [
+            "given",
+            "when",
+            "then",
+            "negative_or_edge"
+          ],
+          "historicalResult": "passed"
+        },
+        {
+          "case": "AT-E07",
+          "pointer": "docs/quality/pr49-followup-2026-10-15/CLAUSE_REVIEW.json#/cases/110/clauses",
+          "names": [
+            "given",
+            "when",
+            "then",
+            "negative_or_edge"
+          ],
+          "historicalResult": "passed"
+        }
+      ],
+      "originalProcedureSources": [
+        "tests/e2e/ap04-original-e07-safety-bounds.spec.ts",
+        "tests/e2e/ap04-original-root-restoration-output.spec.ts",
+        "tests/e2e/rb10-import-errors.spec.ts"
+      ],
+      "productPaths": [
+        "src/storage/store.ts",
+        "src/storage/recordPartsDatabase.ts",
+        "src/storage/historyMetadata.ts"
+      ],
+      "supplementalProcedures": [
+        "tests/optimization/history-metadata.test.ts",
+        "tests/optimization/history-page-oracle.ts"
+      ],
+      "status": "supplemental focused verification only; original full CI and final acceptance remain separately owned"
+    },
+    {
+      "id": "REQ-N11",
+      "title": "通信なしでの継続",
+      "originalCasesAndClauses": [
+        {
+          "case": "AT-N11",
+          "pointer": "docs/quality/pr49-followup-2026-10-15/CLAUSE_REVIEW.json#/cases/94/clauses",
+          "names": [
+            "given",
+            "when",
+            "then",
+            "negative_or_edge"
+          ],
+          "historicalResult": "blocked_original_conditions"
+        },
+        {
+          "case": "AT-E12",
+          "pointer": "docs/quality/pr49-followup-2026-10-15/CLAUSE_REVIEW.json#/cases/115/clauses",
+          "names": [
+            "given",
+            "when",
+            "then",
+            "negative_or_edge"
+          ],
+          "historicalResult": "blocked_original_conditions"
+        }
+      ],
+      "originalProcedureSources": [
+        "tests/e2e/ap04-original-e12-continuity.spec.ts",
+        "tests/e2e/ap04-original-n-mobile-offline.spec.ts"
+      ],
+      "productPaths": [
+        "src/storage/store.ts",
+        "src/storage/recordPartsDatabase.ts",
+        "src/storage/historyMetadata.ts"
+      ],
+      "supplementalProcedures": [
+        "tests/optimization/history-metadata.test.ts",
+        "tests/optimization/history-page-oracle.ts"
+      ],
+      "status": "supplemental focused verification only; original full CI and final acceptance remain separately owned"
+    },
+    {
+      "id": "REQ-N14",
+      "title": "復元手順の完了",
+      "originalCasesAndClauses": [
+        {
+          "case": "AT-N14",
+          "pointer": "docs/quality/pr49-followup-2026-10-15/CLAUSE_REVIEW.json#/cases/97/clauses",
+          "names": [
+            "given",
+            "when",
+            "then",
+            "negative_or_edge"
+          ],
+          "historicalResult": "passed"
+        },
+        {
+          "case": "AT-E07",
+          "pointer": "docs/quality/pr49-followup-2026-10-15/CLAUSE_REVIEW.json#/cases/110/clauses",
+          "names": [
+            "given",
+            "when",
+            "then",
+            "negative_or_edge"
+          ],
+          "historicalResult": "passed"
+        }
+      ],
+      "originalProcedureSources": [
+        "tests/e2e/ap04-original-e07-safety-bounds.spec.ts",
+        "tests/e2e/ap04-original-n-safety-recovery.spec.ts",
+        "tests/e2e/ap04-original-root-restoration-output.spec.ts"
+      ],
+      "productPaths": [
+        "src/storage/store.ts",
+        "src/storage/recordPartsDatabase.ts",
+        "src/storage/historyMetadata.ts"
+      ],
+      "supplementalProcedures": [
+        "tests/optimization/history-metadata.test.ts",
+        "tests/optimization/history-page-oracle.ts"
+      ],
+      "status": "supplemental focused verification only; original full CI and final acceptance remain separately owned"
+    }
+  ],
+  "additionalNativeBrowserProcedure": {
+    "path": "tests/e2e/history-canonical-metadata.spec.ts",
+    "scope": "Supplemental real HTTP/native IndexedDB canonical metadata, selected/cold full body and corruption boundary; existing CI inventory, no original replacement",
+    "fixture": "p204-heavy-history-v1",
+    "originalConditionsChanged": false
+  }
+}

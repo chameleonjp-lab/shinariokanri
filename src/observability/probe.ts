@@ -8,6 +8,8 @@ export const PHASES = [
 ] as const;
 export type ProbePhase = typeof PHASES[number];
 const metrics = [
+  'history.write.candidates', 'history.write.fallbackShape', 'history.write.fallbackSize', 'history.write.canonical', 'history.write.sealCalls', 'history.write.sealBytes',
+  'history.metadata.rows', 'history.metadata.payloadBytes', 'history.legacy.rows', 'history.legacy.payloadBytes', 'history.header.payloadBytes', 'history.partKeys', 'history.body.rows', 'history.body.partRows', 'history.body.partBytes',
   'db.count.calls', 'db.count.result',
   'db.read.calls', 'db.read.rows', 'db.read.keys', 'db.read.payloadBytes', 'db.read.requested',
   'db.write.calls', 'db.write.attempted', 'db.write.succeeded', 'db.write.committed', 'db.write.aborted',
@@ -20,7 +22,9 @@ const metrics = [
   'reference.choices.rows', 'reference.index.builds', 'reference.index.rows', 'ui.filter.rows', 'ui.indices.rows',
   'worker.started', 'worker.terminated', 'worker.sent.messages', 'worker.sent.payloadBytes',
   'worker.received.messages', 'worker.received.payloadBytes',
-  'cache.projects', 'cache.records', 'cache.payloadBytes', 'cache.invalidated',
+  'cache.projects', 'cache.records', 'cache.payloadBytes', 'cache.invalidated', 'cache.heads', 'cache.histories', 'cache.completeHistories', 'cache.epochs',
+  'world.closure.fullFallback',
+  'ui.worldRegistry.entries', 'ui.worldRegistry.projects', 'ui.worldRegistry.records', 'ui.worldRegistry.payloadBytes',
   'memo.hit', 'memo.miss', 'probe.size.unknown', 'probe.size.milliseconds',
 ] as const;
 export type ProbeMetric = typeof metrics[number];

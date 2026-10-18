@@ -1,0 +1,52 @@
+{
+  "scope": "Selected baseline after rejecting prototype. Product files exactlyd3bf; 161 tests in11files including10 active new behavior cases; optimizer work assertions preserved unchanged only in pinned experimental source. No acceptance promotion.",
+  "commands": [
+    {
+      "command": "node scripts/build/portable-runtime.mjs",
+      "exit": 0,
+      "log": "p2-03-selected-prebuild.log",
+      "bytes": 57,
+      "sha256": "c6d2d6f8a2cb55fc91f2c4909e6aa136a4d480073bbbbf5d8a9b8efc39475551"
+    },
+    {
+      "command": "npx vitest run src/storage/saveChangeset.test.ts src/storage/performance.test.ts src/storage/storage.test.ts src/storage/rb07Production.test.ts src/storage/immutableCommandHash.test.ts src/storage/cacheConcurrency.test.ts src/storage/importedHistoryDeltas.test.ts src/storage/worldPins.test.ts src/storage/rb09Sync.test.ts tests/optimization/probe.test.ts tests/optimization/library-summaries.test.ts",
+      "exit": 0,
+      "log": "p2-03-selected-focused.log",
+      "bytes": 380,
+      "sha256": "e03431203f59c8f19b34640b8c48022bf441bbc6fb7307698d3150637beb9d1b"
+    },
+    {
+      "command": "npx tsc --noEmit",
+      "exit": 0,
+      "log": "p2-03-selected-types.log",
+      "bytes": 208,
+      "sha256": "76162e465989f3f070a9de8db711fbf358e53b74d09ce1bbdb57c727e4c4a16d"
+    },
+    {
+      "command": "python3 scripts/check_docs.py",
+      "exit": 0,
+      "log": "p2-03-selected-docs.log",
+      "bytes": 477,
+      "sha256": "85644a5f82d11ef49eb8b642236688e8736290f9dad21729bfb689cbbe1514b5"
+    },
+    {
+      "command": "python3 scripts/check_completion_plan.py",
+      "exit": 0,
+      "log": "p2-03-selected-completion.log",
+      "bytes": 125,
+      "sha256": "8517bd65fbd7fa3f831e995faaa1725f5c7b83e0fcb4e0967f44d8d21d25b4a9"
+    },
+    {
+      "command": "python3 scripts/check_phase1.py",
+      "exit": 0,
+      "log": "p2-03-selected-originals.log",
+      "bytes": 222,
+      "sha256": "316d9e346313a9d8e982c034f9db3c2ddf693f900be8972f77de585619d5f833"
+    }
+  ],
+  "generatedInput": {
+    "path": "src/portable/generated/runtime.js",
+    "bytes": 171219,
+    "sha256": "7a9a23aa2934884b8109fc67d06d0ad7795db8a92c3b863e04fc5ce094ed9cc9"
+  }
+}

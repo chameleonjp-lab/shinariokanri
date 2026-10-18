@@ -1,4 +1,36 @@
 import type { ID, ProjectData } from './types';
+import {probeEnabled,probeGauge,probePayload} from '../observability/probe';
+
+export interface WorldRegistryOwner { projectId:string;revision:string;generation:number }
+export interface OwnedWorldRegistry {owner?:WorldRegistryOwner;adopted:Record<string,ProjectData>;preview:Record<string,ProjectData>}
+export function ownWorldRegistry(owner?:WorldRegistryOwner,adopted:Record<string,ProjectData>={}):OwnedWorldRegistry {
+  return {owner:owner?{...owner}:undefined,adopted,preview:{}};
+}
+/** A same-revision refresh does not adopt a new editor or revoke its preview. */
+export function updateWorldRegistryRevision(state:OwnedWorldRegistry,owner:WorldRegistryOwner):OwnedWorldRegistry {
+  if(state.owner?.projectId!==owner.projectId||BigInt(owner.revision)<=BigInt(state.owner.revision))return state;
+  return ownWorldRegistry(owner,state.adopted);
+}
+/** An editor owns adopted pins separately from its one replaceable preview. */
+export function replaceWorldPreview(state:OwnedWorldRegistry,owner:WorldRegistryOwner,preview:Record<string,ProjectData>):OwnedWorldRegistry {
+  if(state.owner?.projectId!==owner.projectId||state.owner.revision!==owner.revision||state.owner.generation!==owner.generation)return state;
+  return {...state,preview};
+}
+/** A delayed adopted-closure refresh must keep this owner's newer preview. */
+export function replaceAdoptedWorlds(state:OwnedWorldRegistry,owner:WorldRegistryOwner,adopted:Record<string,ProjectData>):OwnedWorldRegistry {
+  if(state.owner?.projectId!==owner.projectId||state.owner.revision!==owner.revision||state.owner.generation!==owner.generation)return state;
+  return {...state,adopted};
+}
+export function worldRegistryContents(state:OwnedWorldRegistry):Record<string,ProjectData> {
+  const result={...state.adopted,...state.preview};
+  if(probeEnabled()){
+    const projects=[...new Set(Object.values(result))];
+    probeGauge('ui.worldRegistry.entries',Object.keys(result).length);probeGauge('ui.worldRegistry.projects',projects.length);
+    probeGauge('ui.worldRegistry.records',projects.reduce((sum,project)=>sum+project.entities.length+project.relations.length,0));
+    probeGauge('ui.worldRegistry.payloadBytes',0);for(const project of projects)probePayload('ui.worldRegistry.payloadBytes',project);
+  }
+  return result;
+}
 /** Explicit adoption controls visibility, while locally used participants remain reachable. */
 export function adoptedWorldEntityIds(project: ProjectData): ID[] | undefined {
   const views = project.views.filter(view => view.view.startsWith('world-adoption:'));
