@@ -22,17 +22,17 @@ class CaptureContract(unittest.TestCase):
     def valid(self):
         checker = self.checker()
         seed, records, entities, asset_bytes, digest = checker.FIXTURES['standard']
-        expected = {q: {'count': 6800 if q == '' else 20 if q == '門番' else 6700, 'sha256': 'a' * 64, 'firstNames': ['x']} for q in set(checker.SEQUENCE + [''])}
+        expected = {q: {'count': 6800 if q == '' else 20 if q == '門番' else 6700, 'sha256': checker.expected_hash('standard',q), 'firstNames': ['門番1','門番6','門番11'] if q=='門番' else ['アオ0','門番1','記録係2']} for q in set(checker.SEQUENCE + [''])}
         cohorts = []
         for enabled in (False, True):
             def row(label, **kwargs):
                 return dict(label=label, status='ok', apiCompletion='fulfilled', **kwargs,
                             **({'probe': {'pendingTransactions': 0, 'droppedEvents': 0, 'counters': {}}} if enabled else {'milliseconds': 1}))
-            actions = [row(f'query-{n}-{i}', expectation=dict(query=q, repetition=n, queryIndex=i), query=q, count=f"{expected[q]['count']}件", names=['x']) for n in range(30) for i, q in enumerate(checker.SEQUENCE)]
+            actions = [row(f'query-{n}-{i}', expectation=dict(query=q, repetition=n, queryIndex=i), query=q, count=f"{expected[q]['count']}件", names=expected[q]['firstNames']) for n in range(30) for i, q in enumerate(checker.SEQUENCE)]
             actions += [row(f'navigation-{n}-{p}', expectation=dict(page=p, repetition=n), pager=f'{p+1} / 114 · 6800件') for n in range(30) for p in (110, 111)]
             operations = [row(label) for label in ['listProjectSummaries', 'loadEditor', 'historyPage'] + [f'participant-{n}' for n in range(30)] + ['rename-one']]
             observed = dict(status='ok', options=dict(enabled=enabled, suite='standard'), fixture=dict(seed=seed, counts=dict(totalRecords=records), assetBytes=asset_bytes, sha256=digest, wireJsonSha256=digest, jsonBytes=6258972, assets=[]), nativeAssets=[], expected=expected,
-                            expectedParticipant=dict(count=15, sha256='b'*64), selection=dict(index=6699, total=6800), savedSource=dict(current='c'*64, revision='1'), postReadSource=dict(current='c'*64, revision='1'), renameInput='d'*64,
+                            expectedParticipant=dict(count=15, sha256=checker.EXPECTED_IDS['standard']['participant']), selection=dict(index=6699, total=6800), savedSource=dict(current='c'*64, revision='1'), postReadSource=dict(current='c'*64, revision='1'), renameInput='d'*64,
                             inputUnchanged=True, orderedResultsVerified=True, afterClose=dict(owners=0, entries=0, references=0, textCodeUnits=0), operations=operations, actions=actions, startup=row('startup'))
             cohorts.append(dict(enabled=enabled, status='ok', startedAt='2026-10-18T00:01:00Z' if enabled else '2026-10-18T00:00:00Z', finishedAt='2026-10-18T00:02:00Z' if enabled else '2026-10-18T00:01:00Z', observations=copy.deepcopy(observed)))
         return dict(version=1, suite='standard', repetitions=30, sequence=checker.SEQUENCE, scope=checker.SCOPE, literalSourceVerified=True, status='ok', errors=[], unexpectedRequests=[], recordedAt='2026-10-18T00:00:00Z', finishedAt='2026-10-18T00:02:00Z', cohorts=cohorts,
@@ -104,5 +104,52 @@ class CaptureContract(unittest.TestCase):
                 with zipfile.ZipFile(root / 'build.zip', 'w') as z: z.writestr(name, b'x')
                 data = (root / 'build.zip').read_bytes()
                 with self.assertRaises(ValueError): checker.verify_archive(root, dict(path='build.zip', bytes=len(data), sha256=hashlib.sha256(data).hexdigest()), [])
+
+    def test_empty_matrix_manifest_cannot_delete_every_required_comparison(self):
+        checker = self.checker()
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            folder = root / checker.FOLDER
+            folder.mkdir(parents=True)
+            (folder / 'evidence-manifest.json').write_text(json.dumps(dict(releaseState='RELEASE BLOCKED', originalAcceptancePerformed=False, files=[], runs=[], labels=[], sources={})))
+            with self.assertRaises(ValueError): checker.validate(root)
+
+    def test_missing_main_and_wrong_literal_sources_are_rejected_before_artifacts(self):
+        checker = self.checker()
+        original = dict(releaseState='RELEASE BLOCKED', originalAcceptancePerformed=False, files=[], runs=[], labels=sorted(checker.LABELS), sources=checker.FIXED_SOURCES)
+        for field, value in [('labels', sorted(checker.LABELS-{'main'})), ('sources', dict(checker.FIXED_SOURCES, main='e'*40))]:
+            with tempfile.TemporaryDirectory() as directory:
+                root = Path(directory); folder = root / checker.FOLDER; folder.mkdir(parents=True)
+                manifest = dict(original); manifest[field] = value
+                (folder/'evidence-manifest.json').write_text(json.dumps(manifest))
+                with self.assertRaisesRegex(ValueError, 'labels|source'): checker.validate(root)
+
+    def order_proof(self):
+        checker = self.checker(); ui = self.valid(); ui.update(sourceCommit='1'*40,productTree='2'*40)
+        observed = ui['cohorts'][0]['observations']; phases=[]
+        for label,queries in [('original',['霧','霧の','門番','記録','']),('renamed-alias',['計測変更後の人物','追加した独立別名','記録名0','霧']),('archived',['計測変更後の人物','追加した独立別名','霧'])]:
+            rows=[]
+            for query in queries:
+                if label=='original': value={k:observed['expected'][query][k] for k in ('count','sha256')}
+                elif label=='renamed-alias': value=dict(count=6700,sha256=checker.EXPECTED_IDS['standard']['text']) if query=='霧' else dict(count=0,sha256=checker.EMPTY_IDS) if query=='記録名0' else dict(count=1,sha256=checker.EDIT_IDS['standard']['person'])
+                else: value=dict(count=6699,sha256=checker.EDIT_IDS['standard']['archived']) if query=='霧' else dict(count=0,sha256=checker.EMPTY_IDS)
+                provider=dict(ids=value,pages=value,pageSize=60,allPageStates='loaded',hiddenSelection=None)
+                rows.append(copy.deepcopy(dict(text=query,expected=value,full=value,provider=provider)))
+            phases.append(dict(label=label,queries=rows))
+        return dict(version=1,scope='Independent functional full-order oracle with fake IndexedDB; not browser latency or native persistence proof',suite='standard',sourceCommit=ui['sourceCommit'],productTree=ui['productTree'],status='ok',errors=[],fixture=observed['fixture'],normalizedCurrentSHA256=observed['savedSource']['current'],textCodeUnits=None,providerSupported=True,phases=phases,afterClose=dict(owners=0,entries=0,references=0,textCodeUnits=0)),ui
+
+    def test_complete_full_filter_provider_ids_and_pages_proof(self):
+        proof,ui=self.order_proof(); self.checker().verify_order_proof(proof,ui)
+
+    def test_same_count_substitution_in_every_saved_edit_result_is_rejected(self):
+        proof,ui=self.order_proof(); row=proof['phases'][1]['queries'][0]
+        for target in (row['expected'],row['full'],row['provider']['ids'],row['provider']['pages']): target['sha256']='e'*64
+        with self.assertRaises(ValueError): self.checker().verify_order_proof(proof,ui)
+
+    def test_provider_page_order_or_native_input_mismatch_is_rejected(self):
+        proof,ui=self.order_proof(); proof['phases'][0]['queries'][0]['provider']['pages']=dict(count=6700,sha256='e'*64)
+        with self.assertRaises(ValueError): self.checker().verify_order_proof(proof,ui)
+        proof,ui=self.order_proof(); proof['normalizedCurrentSHA256']='e'*64
+        with self.assertRaises(ValueError): self.checker().verify_order_proof(proof,ui)
 
 if __name__ == '__main__': unittest.main()
