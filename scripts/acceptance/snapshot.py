@@ -12,7 +12,7 @@ from acceptance.seal_candidate import SCOPES
 def git_hash(kind, data): return hashlib.sha1(f'{kind} {len(data)}\0'.encode()+data).hexdigest()
 
 
-def verify_snapshot(binding, archive_bytes, root):
+def verify_snapshot(binding, archive_bytes, root, contract_root=None):
     records = {}
     for row in binding['source_files'] + binding['artifact_files'] + binding['original_documents'] + [binding['generated_runtime']]:
         path = safe_relative(row['path'])
@@ -48,7 +48,7 @@ def verify_snapshot(binding, archive_bytes, root):
             else: expected.add(path)
     visit(binding['tree'])
     require(len(binding['source_files']) == len(expected) and {r['path'] for r in binding['source_files']} == expected, 'Incomplete sealed source inventory')
-    lock = loads((root/'docs/optimization/phase1/contract-lock.json').read_bytes())
+    lock = loads(((contract_root or root)/'docs/optimization/phase1/contract-lock.json').read_bytes())
     require(len(binding['original_documents']) == 73 and {r['path'] for r in binding['original_documents']} == {r['path'] for r in lock['files']}, 'Original contract inventory differs')
     for original in lock['files']:
         data = contents[original['path']]
