@@ -6,15 +6,18 @@ import { ProductionReviewPanel } from './ProductionReviewPanel';
 import { FlowHierarchy } from './FlowHierarchy';
 import { ReactionBuilder } from './ReactionBuilder';
 import type { ContentAnchor, Entity, EntityKind, ProjectData } from '../domain/types';
+import type {OrderedCollection} from '../domain/orderedCollection';
 import { KIND_LABELS, getEntitiesByKind } from '../domain/model';
 import { DATA_GROUPS } from './fieldSpecs';
 import { dataOf, labelOf, describeCondition } from './Fields';
 import { EmptyState, Icon, StatusBadge, fieldText, PROGRESS_LABELS } from './components';
 import { timeLabel } from './Timeline';
 
-export function EntityCards({ entities, project, selectedId, onSelect, emptyTitle = 'まだ情報がありません', onAdd }: { entities: Entity[]; project: ProjectData; selectedId: string | null; onSelect: (id: string) => void; emptyTitle?: string; onAdd?: () => void }) {
-  const view=useListWindow({items:entities,scope:`cards:${project.projectId}:${entities[0]?.kind??'empty'}`,selectedId,size:60});
-  if (!entities.length) return <EmptyState title={emptyTitle} action={onAdd && <button type="button" className="button primary" onClick={onAdd}><Icon name="plus"/>追加する</button>}>名前だけの登録から、少しずつ内容を育てられます。</EmptyState>;
+export function EntityCards({ entities,collection, project, selectedId, onSelect, emptyTitle = 'まだ情報がありません', onAdd }: { entities: Entity[];collection?:OrderedCollection<Entity>; project: ProjectData; selectedId: string | null; onSelect: (id: string) => void; emptyTitle?: string; onAdd?: () => void }) {
+  const frame=collection?.beginRead(),first=frame?frame.readPage(0,1).rows[0]:entities[0];
+  const view=useListWindow({items:entities,collection:frame,scope:`cards:${project.projectId}:${first?.kind??'empty'}`,selectedId,size:60});
+  if(view.readState!=='loaded')return <p role="status">一覧を確認できません。入力と選択を保持しています。作品を開き直してください。</p>;
+  if (!(collection?.ids.length??entities.length)) return <EmptyState title={emptyTitle} action={onAdd && <button type="button" className="button primary" onClick={onAdd}><Icon name="plus"/>追加する</button>}>名前だけの登録から、少しずつ内容を育てられます。</EmptyState>;
   return <><div className="entity-cards">{view.items.map((e, i) => {
     const d = dataOf(e), desc = fieldText(d.summary) || fieldText(d.body) || fieldText(d.description) || fieldText(d.text) || fieldText(d.question);
     return <button type="button" key={e.id} className={`entity-card ${selectedId === e.id ? 'selected' : ''}`} onClick={() => onSelect(e.id)}><div className={`entity-avatar avatar-${e.kind}`}>{e.kind === 'character' ? Array.from(e.name)[0] || '人' : e.kind === 'scene' || e.kind === 'chapter' ? <span>{String(view.offset + i + 1).padStart(2, '0')}</span> : <Icon name={['variable', 'effect', 'assertion'].includes(e.kind) ? 'flag' : ['flow_graph', 'flow_node', 'flow_edge'].includes(e.kind) ? 'structure' : e.kind === 'event' ? 'timeline' : 'note'}/>}</div><div className="entity-card-copy"><div className="entity-card-heading"><h3>{labelOf(e)}</h3><StatusBadge status={e.status}/></div>{d.reading && <span className="reading-label">{d.reading}</span>}<p>{desc || '詳細はあとから補えます'}</p><div className="entity-card-meta"><span>{KIND_LABELS[e.kind]}</span>{e.kind === 'event' && <span>{timeLabel(d.time, project)}</span>}{e.kind === 'scene' && d.povId && <span>視点 · {labelOf(project.entities.find(v => v.id === d.povId))}</span>}{e.kind === 'chapter' && <span>{(d.sceneIds || []).length}場面</span>}{e.kind === 'variable' && <span>{d.key} · {d.initial?.type === 'unknown' ? '初期値未設定' : String(d.initial?.value)}</span>}{e.kind === 'flow_edge' && <span>{labelOf(project.entities.find(v => v.id === d.fromId))} → {typeof d.toId === 'string' ? labelOf(project.entities.find(v => v.id === d.toId)) : '未完成の行き先'}</span>}</div></div><span className="entity-card-arrow"><Icon name="arrow" size={18}/></span></button>;

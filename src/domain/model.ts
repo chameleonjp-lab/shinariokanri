@@ -9,6 +9,7 @@ import { measureText } from './textMetrics';
 import { contentValidationContext, type ContentIdObservation, type ContentValidationMemo } from './contentValidationMemo';
 import { captureImmutablePlainData, isImmutablePlainData } from './immutablePlainData';
 import { isValidUnicode } from '../storage/json';
+import {describeFieldSemantics,type FieldMeaning} from './fieldSemantics';
 
 export const KIND_LABELS: Record<EntityKind, string> = {
   character: '人物', group: 'グループ', event: '出来事', place: '場所', item: '物品', note: 'メモ', chapter: '章', scene: '場面', goal: '目標',
@@ -19,6 +20,12 @@ export const KIND_LABELS: Record<EntityKind, string> = {
   media_variant: '媒体版', voice_rule: '口調', external_contract: '外部契約', snapshot: '公開版', projection_profile: '公開投影',
 };
 export const ENTITY_KINDS = Object.keys(KIND_LABELS) as EntityKind[];
+export function entityFieldMeaning(kind:EntityKind,key:string):FieldMeaning|undefined{
+  if(!Object.hasOwn(ENTITY_SCHEMAS,kind))return undefined;
+  const schema=ENTITY_SCHEMAS[kind];
+  if(schema.type!=='object'||!Object.hasOwn(schema.fields,key))return undefined;
+  return describeFieldSemantics(kind,key,schema.fields[key]!);
+}
 export const STATUSES = ['confirmed', 'provisional', 'needs_review', 'rejected', 'alternate'] as const;
 export const SCOPES = ['scene', 'chapter', 'character', 'run', 'across_runs'] as const;
 export const RELATION_TYPES: RelationTypeDefinition[] = [

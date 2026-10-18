@@ -20,6 +20,8 @@ const metrics = [
   'validate.current.calls', 'validate.integrity.calls', 'validate.full.calls',
   'query.index.builds', 'query.index.rows', 'query.text.rows', 'query.filter.rows',
   'derived.hit', 'derived.miss', 'derived.admitted', 'derived.rejected', 'derived.invalidated',
+  'collection.order.rows', 'collection.page.requested', 'collection.page.rows', 'collection.selected.requested', 'collection.selected.rows',
+  'collection.index.builds', 'collection.index.rows',
   'reference.choices.rows', 'reference.index.builds', 'reference.index.rows', 'ui.filter.rows', 'ui.indices.rows',
   'worker.started', 'worker.terminated', 'worker.sent.messages', 'worker.sent.payloadBytes',
   'worker.received.messages', 'worker.received.payloadBytes',

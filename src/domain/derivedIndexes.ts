@@ -35,6 +35,8 @@ export interface DerivedEvaluation {
   peek<T>(namespace:string,key:object|string):T|undefined;
   publish<T>(namespace:string,key:object|string,value:DerivedValue<T>):boolean;
   ownsEntity(entity:Entity):boolean;
+  /** Cheap lifetime/header fence inside an already checked synchronous operation. */
+  isActive():boolean;
   /** Async work checks this before publication, not once per row. */
   isCurrent():boolean;
 }
@@ -110,6 +112,7 @@ export class ProjectDerivedOwner {
         probeCount('derived.miss');const built=build();publish(namespace,key,built);return built.value;
       },
       ownsEntity:entity=>live()&&this.members?.has(entity)===true,
+      isActive:()=>live()&&this.matches(view),
       isCurrent:()=>live()&&this.matches(view)&&validationSchemaSignature()===signature,
     };
   }

@@ -6,6 +6,9 @@ import type {StateUsage} from './stateUsage';
 import {verifyReusePins} from './reuse';
 import type { CollectionData, Entity, EntityKind, ID, ProjectData, Query, Sort } from './types';
 import {beginDerivedEvaluation,type DerivedEvaluation} from './derivedIndexes';
+import {createOrderedCollection,staleCollectionPage,type OrderedCollection,type CollectionReadView,type CollectionRow,type CollectionPage} from './orderedCollection';
+import {isImmutablePlainData} from './immutablePlainData';
+export {createOrderedCollection} from './orderedCollection';
 
 /** Search normalization is separate from stored text. Original Japanese spelling remains untouched. */
 export function normalizeCatalogText(value: string): string {
@@ -78,14 +81,14 @@ interface CatalogQueryIndex {
   disclosures: Entity<'disclosure'>[];
   sceneByNode: Map<ID, ID>;
 }
-function buildQueryIndex(project: ProjectData): CatalogQueryIndex {
+function buildQueryIndex(project: ProjectData,knownRows?:Map<ID,Entity>): CatalogQueryIndex {
   const finish=probeSpan('query.index');probeCount('query.index.builds');probeCount('query.index.rows',project.entities.length);
-  const index: CatalogQueryIndex = { byId: new Map(), participantEvents: new Map(), scenesByEvent: new Map(), productionTargets: new Map(), chapters: new Set(), foreshadows: new Map(), disclosures: [], sceneByNode: new Map() };
+  const index: CatalogQueryIndex = { byId:knownRows??new Map(), participantEvents: new Map(), scenesByEvent: new Map(), productionTargets: new Map(), chapters: new Set(), foreshadows: new Map(), disclosures: [], sceneByNode: new Map() };
   const add = <K>(map: Map<K, Set<ID>>, key: K, id: ID) => { let ids = map.get(key); if (!ids) { ids = new Set(); map.set(key, ids); } ids.add(id); };
   // One scan serves all dependency operators in the complete compound query.
   for (const entity of project.entities) {
     if (entity.deletedAt) continue;
-    index.byId.set(entity.id, entity);
+    if(!knownRows)index.byId.set(entity.id, entity);
     switch (entity.kind) {
       case 'event': for (const participant of entity.data.participants ?? []) add(index.participantEvents, participant.characterId, entity.id); break;
       case 'scene': for (const eventId of entity.data.eventIds) add(index.scenesByEvent, eventId, entity.id); break;
@@ -101,13 +104,20 @@ function buildQueryIndex(project: ProjectData): CatalogQueryIndex {
 
 /** Captures one evaluation's dependencies; rebuild after project edits rather than caching mutable drafts. */
 export function compileCatalogQuery(project: ProjectData, query: Query): (entity: Entity) => boolean {
-  let index: CatalogQueryIndex | undefined;
-  let evaluation:DerivedEvaluation|undefined,checked=false;
-  const shared=()=>{if(!checked){evaluation=beginDerivedEvaluation(project);checked=true;}return evaluation;};
-  const dependencies = () => index ??= shared()?.get('catalog.dependencies','current',()=>{
-    const value=buildQueryIndex(project),members=[...value.participantEvents.values(),...value.scenesByEvent.values(),...value.productionTargets.values()].reduce((n,ids)=>n+ids.size,0);
-    return {value,cost:{references:2*value.byId.size+members+value.chapters.size+2*value.foreshadows.size+value.disclosures.length+2*value.sceneByNode.size}};
+  return compileQuery(project,query);
+}
+function queryIndex(project:ProjectData,evaluation?:DerivedEvaluation):CatalogQueryIndex{
+  return evaluation?.get('catalog.dependencies','current',()=>{
+    const knownRows=evaluation.peek<Map<ID,Entity>>('collection.rows','current');
+    const value=buildQueryIndex(project,knownRows),members=[...value.participantEvents.values(),...value.scenesByEvent.values(),...value.productionTargets.values()].reduce((n,ids)=>n+ids.size,0);
+    return {value,cost:{references:(knownRows?0:2*value.byId.size)+members+value.chapters.size+2*value.foreshadows.size+value.disclosures.length+2*value.sceneByNode.size}};
   })??buildQueryIndex(project);
+}
+function compileQuery(project:ProjectData,query:Query,initial?:DerivedEvaluation):(entity:Entity)=>boolean{
+  let index: CatalogQueryIndex | undefined;
+  let evaluation:DerivedEvaluation|undefined=initial,checked=initial!==undefined;
+  const shared=()=>{if(!checked){evaluation=beginDerivedEvaluation(project);checked=true;}return evaluation;};
+  const dependencies = () => index ??= queryIndex(project,shared());
   const text = new WeakMap<Entity, string[]>();
   const compile = (query: Query): ((entity: Entity) => boolean) => {
     switch (query.op) {
@@ -222,6 +232,57 @@ export function evaluateCollection(project: ProjectData, collection: Entity<'col
   }
   selected = sortCatalogEntities(selected, collection.data.sort);
   return { collectionId: collection.id, mode: collection.data.mode, entities: selected, entityIds: selected.map(entity => entity.id), missingIds, query };
+}
+
+/** Current-only UI read model. DB current validation remains complete; no DB
+ * row reduction is inferred from these bounded in-memory row reads. */
+export function createCatalogCollection(project:ProjectData,query:Query,collection?:Entity<'collection'>):OrderedCollection<Entity>{
+  const evaluation=beginDerivedEvaluation(project);
+  if(!evaluation&&!isImmutablePlainData(project)){
+    // An unowned mutable caller cannot supply a reusable result-order proof.
+    // Regenerate the complete answer on each read, including duplicate draft rows.
+    const snapshot=()=>{
+      const rows=collection?evaluateCollection(project,collection).entities:filterCatalogEntities(project,query),ids=rows.map(row=>row.id);
+      return {rows,ids};
+    };
+    return {
+      get ids(){return snapshot().ids;},
+      beginRead():CollectionReadView<Entity>{
+        const captured=snapshot(),ids=Object.freeze(captured.ids),source=project.entities;let active=true;queueMicrotask(()=>{active=false;});
+        return {ids,positionOf:id=>active?ids.indexOf(id):-1,originalIndex:id=>{const index=active?ids.lastIndexOf(id):-1;return index<0?undefined:index;},
+          readPage(offset,size){
+            if(!Number.isSafeInteger(offset)||offset<0||!Number.isSafeInteger(size)||size<0)throw Error('Invalid collection page');
+            if(!active)return staleCollectionPage();const rows=captured.rows.slice(offset,offset+size);probeCount('collection.page.requested',rows.length);probeCount('collection.page.rows',rows.length);return {state:'loaded',rows,missingIds:[],unloadedIds:[]};
+          },
+          selected(id){if(!active)return {state:'stale'};probeCount('collection.selected.requested');const row=source.find(row=>!row.deletedAt&&row.id===id);if(row)probeCount('collection.selected.rows');return row?{state:'loaded',row}:{state:'absent'};},
+        };
+      },
+      positionOf:id=>snapshot().ids.indexOf(id),
+      originalIndex:id=>{const index=snapshot().ids.lastIndexOf(id);return index<0?undefined:index;},
+      readPage(offset,size):CollectionPage<Entity>{
+        if(!Number.isSafeInteger(offset)||offset<0||!Number.isSafeInteger(size)||size<0)throw Error('Invalid collection page');
+        const rows=snapshot().rows.slice(offset,offset+size);probeCount('collection.page.requested',rows.length);probeCount('collection.page.rows',rows.length);
+        return {state:'loaded',rows,missingIds:[],unloadedIds:[]};
+      },
+      selected(id):CollectionRow<Entity>{
+        probeCount('collection.selected.requested');const row=project.entities.find(row=>!row.deletedAt&&row.id===id);
+        if(row)probeCount('collection.selected.rows');return row?{state:'loaded',row}:{state:'absent'};
+      },
+    };
+  }
+  let ids:ID[];
+  if(collection)ids=evaluateCollection(project,collection).entityIds;
+  else{
+    const finish=probeSpan('query.filter'),matches=compileQuery(project,query,evaluation);ids=[];probeCount('query.filter.rows',project.entities.length);
+    for(const entity of project.entities)if(!entity.deletedAt&&matches(entity))ids.push(entity.id);
+    finish();
+  }
+  const buildRows=()=>{probeCount('collection.index.builds');probeCount('collection.index.rows',project.entities.length);const value=new Map(project.entities.filter(row=>!row.deletedAt).map(row=>[row.id,row]));return {value,cost:{references:2*value.size}};};
+  let local:Map<ID,Entity>|undefined;
+  return createOrderedCollection<Entity>(ids,requested=>{
+    const byId=evaluation?(evaluation.peek<CatalogQueryIndex>('catalog.dependencies','current')?.byId??evaluation.get('collection.rows','current',buildRows)):local??=buildRows().value;
+    const rows=new Map<string,CollectionRow<Entity>>();for(const id of requested){const row=byId.get(id);rows.set(id,row?{state:'loaded',row}:{state:'absent'});}return rows;
+  },evaluation?()=>evaluation.isCurrent():()=>true,evaluation?()=>evaluation.isActive():()=>true);
 }
 
 export type JapaneseIndexSource = 'name' | 'reading' | 'alias' | 'alias_reading' | 'canonical' | 'variant';
