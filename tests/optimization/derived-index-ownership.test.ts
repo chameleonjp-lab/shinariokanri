@@ -1,7 +1,7 @@
 import 'fake-indexeddb/auto';
 import {afterEach,expect,it} from 'vitest';
 import {ScenarioStore} from '../../src/storage/store';
-import {createEntity,createProject,newId,ENTITY_SCHEMAS} from '../../src/domain/model';
+import {createEntity,createProject,newId,emptyValidity,ENTITY_SCHEMAS} from '../../src/domain/model';
 import {filterCatalogEntities,buildJapaneseAuthorIndex} from '../../src/domain/catalog';
 import {stateUsageIndex} from '../../src/domain/stateUsage';
 import {suggestLinkCandidates} from '../../src/domain/linkCandidates';
@@ -126,6 +126,33 @@ it('uses a full fallback for root dependency replacement and drops the lease on 
     filterCatalogEntities(current,dependency);filterCatalogEntities(current,dependency);
     expect(probe.snapshot().counters['query.index.builds']).toBe(5);
   }finally{probe.stop();}
+});
+
+it('replaces warmed author terms after real rename, alias, reorder and archive saves without changing old views',async()=>{
+  const source=fixture(),person=source.entities[0]!;
+  if(person.kind!=='character')throw Error('fixture person kind');
+  person.data.aliases=[{id:newId(),text:'旧別名',reading:'きゅうべつめい',validity:emptyValidity(),audienceHolderIds:[],isPublicDefault:true}];
+  const s=store(),original=await saved(s,source),personId=person.id;
+  expect(filterCatalogEntities(original,{op:'text',value:'旧別名'}).map(e=>e.id)).toEqual([personId]);
+  buildJapaneseAuthorIndex(original);
+  const editable=(await s.getProjectForEditing(original.projectId))!,edited=editable.entities.find(e=>e.id===personId)!;
+  if(edited.kind!=='character')throw Error('editable person kind');
+  edited.name='改名した人物';edited.data.aliases![0]!.text='新しい別名';
+  editable.entities.reverse();
+  const next=(await s.saveProject(editable,{reason:'rename alias and order',includeHistory:false,immutableView:true})).project;
+  expect(beginDerivedEvaluation(original)).toBeUndefined();
+  expect(filterCatalogEntities(next,{op:'text',value:'旧別名'})).toEqual([]);
+  expect(filterCatalogEntities(next,{op:'text',value:'新しい別名'}).map(e=>e.id)).toEqual([personId]);
+  expect(filterCatalogEntities(next,{op:'text',value:''}).map(e=>e.id)).toEqual([...source.entities].reverse().map(e=>e.id));
+  expect(buildJapaneseAuthorIndex(next).some(entry=>entry.term==='新しい別名')).toBe(true);
+  expect(buildJapaneseAuthorIndex(next).some(entry=>entry.term==='旧別名')).toBe(false);
+  // Old caller-held immutable data stays historically correct, but unregistered.
+  expect(filterCatalogEntities(original,{op:'text',value:'旧別名'}).map(e=>e.id)).toEqual([personId]);
+  const archived={...next,entities:next.entities.map(e=>e.id===personId?{...e,deletedAt:'2026-10-18T00:00:00.000Z',deletionOperationId:newId()}:e)};
+  const final=(await s.saveProject(archived,{reason:'archive person',includeHistory:false,immutableView:true})).project;
+  expect(beginDerivedEvaluation(next)).toBeUndefined();
+  expect(filterCatalogEntities(final,{op:'text',value:'新しい別名'})).toEqual([]);
+  expect(buildJapaneseAuthorIndex(final).some(entry=>entry.entityId===personId)).toBe(false);
 });
 
 it('shares Japanese preparation but returns independent editable entry containers',async()=>{
