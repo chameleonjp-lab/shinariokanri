@@ -46,6 +46,7 @@ def verify_run(raw):
     seed, records, entities, asset_bytes, digest = FIXTURES[raw['suite']]
     fixture = raw['fixture']
     require(fixture.get('seed') == seed and fixture.get('counts', {}).get('totalRecords') == records and fixture.get('assetBytes') == asset_bytes and fixture.get('sha256') == digest, 'original fixture differs')
+    require(fixture.get('wireJsonSha256') == ('32e7995933c9e0ca6af2330df1036d0c182ad34810d41e45b0a9530d42998f4f' if asset_bytes else digest) and fixture.get('jsonBytes') == (59407368 if asset_bytes else 6258972), 'original fixture insertion-order bytes differ')
     require(fixture.get('assets') == ([{'bytes': 25165824, 'sha256': value} for value in ASSETS] if asset_bytes else []), 'original fixture material bytes differ')
     require(raw.get('sequence') == SEQUENCE and raw.get('limits') == LIMITS, 'sequence or budget differs')
     counts = [6700, 6700, 20, 6700, 6700, 6700] if not asset_bytes else [67000, 67000, 200, 67000, 67000, 67000]

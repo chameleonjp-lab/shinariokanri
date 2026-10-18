@@ -11,6 +11,7 @@ registerHooks({ resolve(specifier, context, nextResolve) {
   catch (error) { if (specifier.startsWith('.') && !/\.[a-z]+$/.test(specifier)) return nextResolve(`${specifier}.ts`, context); throw error; }
 } });
 const { createCatalogStudy } = await import('./catalogStudy.ts');
+const { studyFixtureIdentity } = await import('./fixtureIdentity.ts');
 const { createPerformanceFixture, createMaterialPerformanceFixture } = await import('../../src/testing/performanceFixture.ts');
 const { captureImmutablePlainData } = await import('../../src/domain/immutablePlainData.ts');
 const { filterCatalogEntities } = await import('../../src/domain/catalog.ts');
@@ -58,15 +59,15 @@ try {
   }
   const generatedAt = performance.now();
   const fixture = suite === 'large' ? await createMaterialPerformanceFixture('large-material-rb10-v1') : await createPerformanceFixture('standard-r06-v1');
-  const sourceBytes = serial(fixture.project), assets = [];
+  const sourceBytes = serial(fixture.project), identity = await studyFixtureIdentity(fixture), assets = [];
   for (const asset of fixture.assets ?? []) { assert.equal(sha(asset.bytes), asset.contentHash); assets.push({ bytes: asset.bytes.length, sha256: asset.contentHash }); }
   assert.equal(fixture.counts.totalRecords, suite === 'large' ? 88003 : 8800);
   assert.equal(fixture.assetBytes, suite === 'large' ? 75497472 : 0);
-  assert.equal(sha(sourceBytes), fixture.sha256);
+  assert.equal(sha(sourceBytes), identity.wireJsonSha256);
   const original = JSON.parse(await readFile(`docs/optimization/phase1/evidence/candidate-${suite}30.json`, 'utf8')).fixture;
   assert.equal(fixture.sha256, original.sha256, 'Original phase1 fixture bytes must remain identical');
   assert.deepEqual(assets, original.assetHashes.map(row => ({ bytes: row.bytes, sha256: row.hash })));
-  result.fixture = { seed: fixture.seed, counts: fixture.counts, assetBytes: fixture.assetBytes, assets, jsonBytes: sourceBytes.length, sha256: sha(sourceBytes), generatorMilliseconds: performance.now() - generatedAt };
+  result.fixture = { seed: fixture.seed, counts: fixture.counts, assetBytes: fixture.assetBytes, assets, ...identity, generatorMilliseconds: performance.now() - generatedAt };
   const capturedAt = performance.now(), captured = captureImmutablePlainData(fixture.project);
   assert.equal(captured.captured, true); result.immutableCaptureMilliseconds = performance.now() - capturedAt;
   const project = captured.value, owner = Object.freeze({ account: 'synthetic-only', role: 'author', project: project.projectId, revision: project.revision, pins: sha(serial(project.worldReferences)), schema: 'original-main-schema', visibility: 'author', normalization: 'original-catalog' });
@@ -103,7 +104,7 @@ try {
       result.diagnostics.push({ mode, queries, retained, afterClose: study.stats(), probe: capture.stop() });
     } finally { capture.stop(); study.close(); }
   }
-  assert.equal(sha(serial(fixture.project)), fixture.sha256); assert.equal(sha(serial(project)), fixture.sha256);
+  assert.equal(sha(serial(fixture.project)), identity.wireJsonSha256); assert.equal(sha(serial(project)), identity.wireJsonSha256);
   for (const asset of fixture.assets ?? []) assert.equal(sha(asset.bytes), asset.contentHash);
   result.inputUnchanged = true;
   result.summary = Object.fromEntries(modes.map(mode => [mode, sequence.map((_, queryIndex) => summarize(result.observations.filter(row => row.mode === mode).map(row => row.queries[queryIndex].milliseconds)))]));

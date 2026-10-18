@@ -19,7 +19,7 @@ def capture():
     return {'version': 1, 'suite': 'standard', 'repetitions': 30, 'dirty': False, 'sourceCommit': '1' * 40, 'sourceTree': '2' * 40,
             'productTree': '73263a85e2ef2ead9799f91125ba54fb643182b4', 'errors': [], 'finishedAt': '2026-10-18T00:00:01Z', 'recordedAt': '2026-10-18T00:00:00Z',
             'inputUnchanged': True, 'scope': 'Supplemental Node source experiment, not original browser30/180/7200 acceptance',
-            'fixture': {'seed': 'standard-r06-v1', 'counts': {'totalRecords': 8800}, 'assetBytes': 0, 'assets': [], 'sha256': 'de0b9420abec95bcc37fc7fb7c3dc4c2667082258678f750af33bb53f8a557f5'},
+            'fixture': {'seed': 'standard-r06-v1', 'counts': {'totalRecords': 8800}, 'assetBytes': 0, 'assets': [], 'sha256': 'de0b9420abec95bcc37fc7fb7c3dc4c2667082258678f750af33bb53f8a557f5', 'wireJsonSha256': 'de0b9420abec95bcc37fc7fb7c3dc4c2667082258678f750af33bb53f8a557f5', 'jsonBytes': 6258972},
             'sequence': [{'op': 'text', 'value': value} for value in ('霧', '霧の', '門番', '記録', '霧', '霧の')], 'expected': expected,
             'limits': {'maxTextBytes': 8388608, 'maxResultEntries': 8, 'maxResultReferences': 100000}, 'observations': rows,
             'diagnostics': [dict(mode=mode, retained=dict(stats), afterClose=dict(cleared), queries=[dict(row, queryIndex=i, counters={'query.filter.rows': (i + 1) * 6800}) for i, row in enumerate(expected)], probe={'counters': {'query.filter.rows': 40800}, 'pendingTransactions': 0, 'droppedEvents': 0}) for mode in modes],
@@ -61,6 +61,10 @@ class ReassessmentCheckerTests(unittest.TestCase):
 
     def test_original_fixture_digest_cannot_be_replaced(self):
         self.rejected(lambda r: r['fixture'].__setitem__('sha256', 'c' * 64), 'fixture')
+
+    def test_raw_json_digest_and_size_cannot_be_relabelled(self):
+        self.rejected(lambda r: r['fixture'].__setitem__('wireJsonSha256', 'd' * 64), 'fixture')
+        self.rejected(lambda r: r['fixture'].__setitem__('jsonBytes', 1), 'fixture')
 
     def test_dirty_failed_and_unfinished_runs_are_not_success(self):
         self.rejected(lambda r: r.__setitem__('dirty', True), 'unsealed')
