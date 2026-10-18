@@ -92,6 +92,20 @@ def verify_identity(raw, product):
             'Source/build identity differs')
 
 
+def original_performance_fixture(root, size):
+    """Read the immutable original fixture expectation, independently of raw data."""
+    require(size in ('standard', 'large'), 'Unknown original performance size')
+    path = Path(root)/f'docs/optimization/phase1/evidence/candidate-{size}30.json'
+    data = path.read_bytes()
+    expected = {
+        'standard': '4039e887fd9b61929d35668e6d9bdd9244ba10d9',
+        'large': 'b7a015e5e2e0452d5580c83bcb5613a26d70f4d3',
+    }
+    actual = hashlib.sha1(b'blob '+str(len(data)).encode()+b'\0'+data).hexdigest()
+    require(actual == expected[size], 'Original performance expectation changed')
+    return loads(data)['fixture']
+
+
 def assess_performance(raw, product, fixture):
     verify_identity(raw, product)
     require(raw['mode'] == 'performance' and raw['fixture']['sha256'] == fixture['sha256'] and
