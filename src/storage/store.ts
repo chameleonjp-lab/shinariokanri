@@ -1,5 +1,6 @@
 import {bindCanonicalHistoryWrites,readHistoryPageCommands} from './historyMetadata';
 import {readWorldClosure} from './worldClosure';
+import {DerivedIndexBudget,ProjectDerivedOwner} from '../domain/derivedIndexes';
 import {mergeWorldSources} from '../domain/worldSources';
 import {deriveWorldSource,validWorldSource,type StoredWorldSource,type WorldSourceSummary,nativeProjectHeader,summarySourceHash,deriveProjectSummary,validProjectSummary,type StoredProjectSummary,type ProjectSummary} from './projectSummary';
 export type {ProjectSummary} from './projectSummary';
@@ -88,7 +89,7 @@ export interface SaveMetrics {
   written: { entities: number; relations: number; blocks: number; snapshots: number; views: number; commands: number; outbox: number };
   historyRead: number;
 }
-export interface StoreOptions { databaseName?: string; accountId?: string; faultInjector?: (stage: FaultStage) => void; onSaveMetrics?: (metrics: SaveMetrics) => void }
+export interface StoreOptions { databaseName?: string; accountId?: string; faultInjector?: (stage: FaultStage) => void; onSaveMetrics?: (metrics: SaveMetrics) => void; derivedIndexes?:false|Partial<import('../domain/derivedIndexes').DerivedIndexLimits> }
 interface CacheEpoch { version: number }
 interface CacheCapture { project: CacheEpoch; version?: number; lifetime: number; access: number }
 interface ReadBaseline { historyIds: string[]; contentHeadOperationId?: string }
@@ -482,6 +483,9 @@ async function targetChanges(before: ContentState, after: ContentState, isNew = 
 }
 
 export class ScenarioStore {
+  private readonly derivedBudget:DerivedIndexBudget;
+  private readonly derivedOwners=new Map<string,ProjectDerivedOwner>();
+  derivedIndexRetention(){return {owners:this.derivedOwners.size,...this.derivedBudget.snapshot()};}
   private authorAccess:Map<string,string>|null=null;
   private accessGeneration=0;
   setAuthorAccess(roles:Record<string,string>|null){this.authorAccess=roles?new Map(Object.entries(roles)):null;this.accessGeneration++;for(const id of this.cacheEpochs.keys())this.invalidateProjectCache(id);}
@@ -511,6 +515,7 @@ export class ScenarioStore {
   private readonly readBaselines = new WeakMap<ProjectData, ReadBaseline>();
   private readonly validationReferences = new WeakMap<Entity, DomainReference[]>();
   constructor(options: StoreOptions = {}) {
+    this.derivedBudget=new DerivedIndexBudget(options.derivedIndexes===false?{entries:0}:options.derivedIndexes);
     this.accountId = options.accountId ?? null;
     this.faultInjector = options.faultInjector;
     this.onSaveMetrics = options.onSaveMetrics;
@@ -543,6 +548,7 @@ export class ScenarioStore {
   async deleteDatabase(): Promise<void> { this.close(); await this.db.delete(); }
 
   private invalidateProjectCache(projectId: string): void {
+    this.derivedOwners.get(projectId)?.close();this.derivedOwners.delete(projectId);
     probeCount('cache.invalidated');
     // A removed identity is never reused. Late reads cannot match a recreated
     // default generation, and released IDs need no permanent tombstone.
@@ -574,6 +580,7 @@ export class ScenarioStore {
     // Validation continues outside the read transaction. A newer save/import
     // or completed read must not be replaced when an earlier read resumes.
     if (readEpoch && (readEpoch.project !== epoch || readEpoch.version !== undefined && readEpoch.version !== epoch?.version || readEpoch.lifetime !== this.cacheLifetime || readEpoch.access !== this.accessGeneration) || cachedBefore && BigInt(cachedBefore.revision) > BigInt(project.revision)) return project;
+    this.derivedOwners.get(project.projectId)?.close();this.derivedOwners.delete(project.projectId);
     const cached = freeze({ ...withoutHistory(project), history: freeze(project.history.map(command => freeze(command))) });
     this.cachedProjects.delete(project.projectId);this.cachedProjects.set(project.projectId, cached);
     this.contentHeads.set(project.projectId, contentHeadOperationId);
@@ -589,7 +596,14 @@ export class ScenarioStore {
   private editingCopy(project: ProjectData, historyIds = project.history.map(command => command.operationId),immutableView=false): ProjectData {
     const history: CommandRecord[] = freeze([]);
     this.editingHistories.set(history, { projectId: project.projectId, revision: project.revision, historyIds });
-    return { ...(immutableView?withoutHistory(project):copy(withoutHistory(project))), history };
+    const view={ ...(immutableView?withoutHistory(project):copy(withoutHistory(project))), history };
+    const saved=this.cachedProjects.get(project.projectId);
+    if(immutableView&&saved&&this.derivedBudget.limits.entries){
+      let owner=this.derivedOwners.get(project.projectId);
+      if(!owner){owner=new ProjectDerivedOwner(saved,this.derivedBudget,{accountId:this.accountId,roleGeneration:this.accessGeneration});this.derivedOwners.set(project.projectId,owner);}
+      owner.bind(view);
+    }
+    return view;
   }
   getHistoryCount(project: ProjectData): number { return this.editingHistories.get(project.history)?.historyIds.length ?? project.history.length; }
 

@@ -1,0 +1,50 @@
+
+ RUN  v5.0.3 /workspace/shinariokanri-phase2-integration
+
+ ❯ tests/optimization/catalog-collection.test.ts (10 tests | 1 failed | 9 skipped) 9ms
+   × keeps a mismatched returned row unchecked instead of substituting it for a requested ID 8ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/optimization/catalog-collection.test.ts > keeps a mismatched returned row unchecked instead of substituting it for a requested ID
+AssertionError: expected { state: 'loaded', …(3) } to deeply equal { state: 'unloaded', rows: [], …(2) }
+
+- Expected
++ Received
+
+  {
+    "missingIds": [],
+-   "rows": [],
+-   "state": "unloaded",
+-   "unloadedIds": [
+-     "a",
++   "rows": [
++     {
++       "id": "other",
++     },
+    ],
++   "state": "loaded",
++   "unloadedIds": [],
+  }
+
+ ❯ tests/optimization/catalog-collection.test.ts:47:30
+     45| it('keeps a mismatched returned row unchecked instead of substituting …
+     46|   const view=invoke('createOrderedCollection',['a'],()=>new Map([['a',…
+     47|   expect(view.readPage(0,1)).toEqual({state:'unloaded',rows:[],missing…
+       |                              ^
+     48|   expect(view.selected('a')).toEqual({state:'unloaded'});
+     49| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 9 skipped (10)
+   Start at  10:08:05
+   Duration  906ms (transform 81%, import 18%, tests 1%)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

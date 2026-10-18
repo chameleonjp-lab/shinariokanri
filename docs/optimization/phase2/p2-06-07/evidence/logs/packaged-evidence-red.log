@@ -1,0 +1,26 @@
+E
+======================================================================
+ERROR: test_packaged_literal_sources_samples_and_required_artifacts (scripts.test_check_phase2_indexes.CaptureContract.test_packaged_literal_sources_samples_and_required_artifacts)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/shinariokanri-phase2-integration/scripts/test_check_phase2_indexes.py", line 47, in test_packaged_literal_sources_samples_and_required_artifacts
+    self.assertEqual(len(self.checker().validate(SCRIPT.parents[1])),14)
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/shinariokanri-phase2-integration/scripts/check_phase2_indexes.py", line 227, in validate
+    manifest = load(folder / 'evidence-manifest.json')
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/shinariokanri-phase2-integration/scripts/check_phase2_reassessment.py", line 114, in load
+    return json.loads(path.read_text(), object_pairs_hook=unique)
+                      ^^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/pathlib.py", line 1027, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/pathlib.py", line 1013, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/workspace/shinariokanri-phase2-integration/docs/optimization/phase2/p2-06-07/evidence-manifest.json'
+
+----------------------------------------------------------------------
+Ran 1 test in 0.002s
+
+FAILED (errors=1)

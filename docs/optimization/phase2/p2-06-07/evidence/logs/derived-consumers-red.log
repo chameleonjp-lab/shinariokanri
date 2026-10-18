@@ -1,0 +1,78 @@
+
+ RUN  v5.0.3 /workspace/shinariokanri-phase2-integration
+
+ ❯ tests/optimization/derived-index-ownership.test.ts (13 tests | 3 failed) 465ms
+   × shares Japanese preparation but returns independent editable entry containers 18ms
+   × shares eligible state declarations without allowing returned maps or uses to corrupt the index 15ms
+   × shares suggestion terms while recalculating option-dependent labels, ignores and Unicode positions 16ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/optimization/derived-index-ownership.test.ts > shares Japanese preparation but returns independent editable entry containers
+AssertionError: expected undefined to be 1 // Object.is equality
+
+- Expected:
+1
+
++ Received:
+undefined
+
+ ❯ tests/optimization/derived-index-ownership.test.ts:135:54
+    133|     const next=buildJapaneseAuthorIndex(p);
+    134|     expect(next).toHaveLength(p.entities.length);expect(next.some(e=>e…
+    135|     expect(probe.snapshot().counters['derived.hit']).toBe(1);
+       |                                                      ^
+    136|   }finally{probe.stop();}
+    137| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  tests/optimization/derived-index-ownership.test.ts > shares eligible state declarations without allowing returned maps or uses to corrupt the index
+AssertionError: expected undefined to be 2 // Object.is equality
+
+- Expected:
+2
+
++ Received:
+undefined
+
+ ❯ tests/optimization/derived-index-ownership.test.ts:146:54
+    144|     const first=stateUsageIndex(p);expect(first.get(flag.id)?.[0]?.ope…
+    145|     expect(stateUsageIndex(p).get(flag.id)).toEqual([{entityId:effect.…
+    146|     expect(probe.snapshot().counters['derived.hit']).toBe(2);
+       |                                                      ^
+    147|   }finally{probe.stop();}
+    148| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  tests/optimization/derived-index-ownership.test.ts > shares suggestion terms while recalculating option-dependent labels, ignores and Unicode positions
+AssertionError: expected undefined to be 3 // Object.is equality
+
+- Expected:
+3
+
++ Received:
+undefined
+
+ ❯ tests/optimization/derived-index-ownership.test.ts:158:54
+    156|     const next=suggestLinkCandidates('😀葵',p.entities,{...options,excl…
+    157|     expect(next).toHaveLength(1);expect(next[0]!.entityId).toBe(second…
+    158|     expect(probe.snapshot().counters['derived.hit']).toBe(p.entities.l…
+       |                                                      ^
+    159|     expect(suggestLinkCandidates('😀葵',p.entities,{...options,ignoredK…
+    160|   }finally{probe.stop();}
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 10 passed (13)
+   Start at  09:13:54
+   Duration  1.26s (transform 49%, tests 40%, import 11%)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

@@ -18,7 +18,12 @@ const fields = fieldSemanticInventory(), schema = await readFile('src/domain/sch
 const result = { version: 1, recordedAt: new Date().toISOString(), sourceCommit: git('rev-parse', 'HEAD'), sourceTree: git('rev-parse', 'HEAD^{tree}'), productTree: git('rev-parse', 'HEAD:src'), dirty: !!git('status', '--porcelain'),
   scope: 'Static authoritative schema/UI/projection inventory; original acceptance NOT_PERFORMED',
   schemaSha256: createHash('sha256').update(schema).digest('hex'), fields,
-  findings: [character, group].map(entity => ({ kind: entity.kind, paths: indexedFormalReferencePaths(entity), status: 'CURRENT_PRODUCT_DISCREPANCY_UNFIXED', cause: 'collectCatalogText uses key suffixes rather than authoritative per-kind reference semantics', requiredDisposition: 'Resolve in a separate reviewed product change; preserve authored UUID-looking text and kind-specific rich-text goals' })),
+  findings: [character, group].map(entity => {
+    const paths=indexedFormalReferencePaths(entity);
+    return {kind:entity.kind,paths,status:paths.length?'CURRENT_PRODUCT_DISCREPANCY_UNFIXED':'RESOLVED_REFERENCE_LEAVES_EXCLUDED',
+      cause:paths.length?'Formal reference leaves still enter the text corpus':'Authoritative kind/path references are excluded; authored UUID-looking text remains searchable',
+      requiredDisposition:paths.length?'Resolve the product discrepancy and retain independent expectations':'Keep the independent regression checks and the original historical source/evidence'};
+  }),
 };
 await writeFile(process.argv[2], JSON.stringify(result, null, 2) + '\n', { flag: 'wx' });
 console.log(JSON.stringify({ fields: fields.length, kinds: new Set(fields.map(row => row.kind)).size, findings: result.findings.length }));

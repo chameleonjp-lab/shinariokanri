@@ -1,0 +1,62 @@
+
+ RUN  v5.0.3 /workspace/shinariokanri-phase2-integration
+
+ ❯ tests/optimization/derived-index-ownership.test.ts (6 tests | 4 failed) 263ms
+   × shares dependency and text preparation across compilations and saved views of one actual store source 161ms
+   × drops reuse after actual store role, including old view calls 21ms
+   × drops reuse after actual store release, including old view calls 14ms
+   × drops reuse after actual store close, including old view calls 18ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/optimization/derived-index-ownership.test.ts > shares dependency and text preparation across compilations and saved views of one actual store source
+AssertionError: expected 2 to be 1 // Object.is equality
+
+- Expected
++ Received
+
+- 1
++ 2
+
+ ❯ tests/optimization/derived-index-ownership.test.ts:34:61
+     32|     expect(filterCatalogEntities(p,{op:'text',value:'霧'}).map(e=>e.nam…
+     33|     expect(filterCatalogEntities(again,{op:'text',value:'門'}).map(e=>e…
+     34|     expect(probe.snapshot().counters['query.index.builds']).toBe(1);
+       |                                                             ^
+     35|     expect(probe.snapshot().counters['query.text.rows']).toBe(p.entiti…
+     36|   }finally{probe.stop();}
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  tests/optimization/derived-index-ownership.test.ts > drops reuse after actual store role, including old view calls
+ FAIL  tests/optimization/derived-index-ownership.test.ts > drops reuse after actual store release, including old view calls
+ FAIL  tests/optimization/derived-index-ownership.test.ts > drops reuse after actual store close, including old view calls
+AssertionError: expected 2 to be 1 // Object.is equality
+
+- Expected
++ Received
+
+- 1
++ 2
+
+ ❯ tests/optimization/derived-index-ownership.test.ts:43:61
+     41|   try{
+     42|     filterCatalogEntities(p,dependency);filterCatalogEntities(p,depend…
+     43|     expect(probe.snapshot().counters['query.index.builds']).toBe(1);
+       |                                                             ^
+     44|     if(invalidation==='role')s.setAuthorAccess({});
+     45|     else if(invalidation==='release')s.releaseEditor(p.projectId);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  4 failed | 2 passed (6)
+   Start at  09:06:14
+   Duration  1.09s (transform 60%, tests 26%, import 13%)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

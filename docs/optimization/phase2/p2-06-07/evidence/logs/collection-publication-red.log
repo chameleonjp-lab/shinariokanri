@@ -1,0 +1,48 @@
+
+ RUN  v5.0.3 /workspace/shinariokanri-phase2-integration
+
+ ❯ tests/optimization/catalog-collection.test.ts (7 tests | 1 failed) 412ms
+   × rechecks source ownership after a reader invalidates it during acquisition 8ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/optimization/catalog-collection.test.ts > rechecks source ownership after a reader invalidates it during acquisition
+AssertionError: expected { state: 'loaded', …(3) } to deeply equal { state: 'stale', rows: [], …(2) }
+
+- Expected
++ Received
+
+  {
+    "missingIds": [],
+-   "rows": [],
+-   "state": "stale",
++   "rows": [
++     {
++       "id": "a",
++     },
++   ],
++   "state": "loaded",
+    "unloadedIds": [],
+  }
+
+ ❯ tests/optimization/catalog-collection.test.ts:30:30
+     28|   let current=true;
+     29|   const view=invoke('createOrderedCollection',['a'],()=>{current=false…
+     30|   expect(view.readPage(0,1)).toEqual({state:'stale',rows:[],missingIds…
+       |                              ^
+     31|   current=true;expect(view.selected('a')).toEqual({state:'stale'});
+     32| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 6 passed (7)
+   Start at  09:45:37
+   Duration  1.20s (transform 50%, tests 37%, import 12%)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

@@ -1,0 +1,54 @@
+
+ RUN  v5.0.3 /workspace/shinariokanri-phase2-integration
+
+ ❯ tests/optimization/field-semantics.test.ts (3 tests | 2 failed) 42ms
+   × covers all 345 fields of 43 kinds against frozen expectations independent of the new descriptor 6ms
+   × keeps kind-specific text, nested/conditional reference syntax and public restrictions distinct 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/optimization/field-semantics.test.ts > covers all 345 fields of 43 kinds against frozen expectations independent of the new descriptor
+AssertionError: missing common model field semantics: expected 'undefined' to be 'function' // Object.is equality
+
+Expected: "function"
+Received: "undefined"
+
+ ❯ meaning tests/optimization/field-semantics.test.ts:12:66
+     10| const meaning=(kind:string,field:string)=>{
+     11|   const describe=Reflect.get(model,'entityFieldMeaning');
+     12|   expect(typeof describe,'missing common model field semantics').toBe(…
+       |                                                                  ^
+     13|   return describe(kind,field);
+     14| };
+ ❯ tests/optimization/field-semantics.test.ts:31:12
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  tests/optimization/field-semantics.test.ts > keeps kind-specific text, nested/conditional reference syntax and public restrictions distinct
+AssertionError: missing common model field semantics: expected 'undefined' to be 'function' // Object.is equality
+
+Expected: "function"
+Received: "undefined"
+
+ ❯ meaning tests/optimization/field-semantics.test.ts:12:66
+     10| const meaning=(kind:string,field:string)=>{
+     11|   const describe=Reflect.get(model,'entityFieldMeaning');
+     12|   expect(typeof describe,'missing common model field semantics').toBe(…
+       |                                                                  ^
+     13|   return describe(kind,field);
+     14| };
+ ❯ tests/optimization/field-semantics.test.ts:38:10
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 1 passed (3)
+   Start at  09:31:35
+   Duration  401ms (transform 72%, tests 14%, import 13%, worker 1%)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

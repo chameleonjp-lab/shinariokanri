@@ -9,7 +9,7 @@ import {useReferenceRows} from './useReferenceRows';
 
 /** Progress belongs to this derived view, so it cannot redraw the input form. */
 export function EntityReferenceSection({project,id,related,onOpen,onTextReferences}:{project:ProjectData;id:string;related:Relation[];onOpen:(id:string)=>void;onTextReferences:()=>void}){
- const read=useReferenceRows(project.entities,id,project.revision);
+ const read=useReferenceRows(project.entities,id,project.revision,project);
  const hasRouteCondition=related.some(r=>!!r.validity.routeCondition);
  const relationNames=useMemo(()=>hasRouteCondition?Object.fromEntries(project.entities.map(e=>[e.id,labelOf(e)])):{},[project.entities,hasRouteCondition]);
  if(!related.length&&!read.rows.length&&read.phase==='ready')return null;

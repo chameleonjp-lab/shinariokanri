@@ -1,0 +1,63 @@
+
+ RUN  v5.0.3 /workspace/shinariokanri-phase2-integration
+
+ ❯ tests/optimization/derived-node-compatibility.test.ts (1 test | 1 failed) 68ms
+   × keeps the product index boundary importable by the existing Node type-stripping measurement tools 67ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/optimization/derived-node-compatibility.test.ts > keeps the product index boundary importable by the existing Node type-stripping measurement tools
+AssertionError: node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+file:///workspace/shinariokanri-phase2-integration/src/domain/derivedIndexes.ts:54
+  readonly identity:Readonly<{accountId:string|null;roleGeneration:number;visibilityScope:'author';normalizationVersion:number}>;
+  constructor(source:ProjectData,private readonly budget:DerivedIndexBudget,identity:{accountId:string|null;roleGeneration:number}){
+                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^
+    const {history:_history,authorAlternatives:_alternatives,...current}=source;
+
+SyntaxError [ERR_UNSUPPORTED_TYPESCRIPT_SYNTAX]: TypeScript parameter property is not supported in strip-only mode
+    at parseTypeScript (node:internal/modules/typescript:68:40)
+    at processTypeScriptCode (node:internal/modules/typescript:146:42)
+    at stripTypeScriptModuleTypes (node:internal/modules/typescript:215:22)
+    at ModuleLoader.<anonymous> (node:internal/modules/esm/translators:680:29)
+    at #translate (node:internal/modules/esm/loader:434:20)
+    at afterLoad (node:internal/modules/esm/loader:502:29)
+    at ModuleLoader.loadAndTranslate (node:internal/modules/esm/loader:507:12)
+    at #getOrCreateModuleJobAfterResolve (node:internal/modules/esm/loader:560:36)
+    at afterResolve (node:internal/modules/esm/loader:607:52)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:613:12) {
+  code: 'ERR_UNSUPPORTED_TYPESCRIPT_SYNTAX'
+}
+
+Node.js v24.19.0
+: expected 1 to be +0 // Object.is equality
+
+- Expected
++ Received
+
+- 0
++ 1
+
+ ❯ tests/optimization/derived-node-compatibility.test.ts:12:39
+     10|     const module=await import(${JSON.stringify(url)});console.log(type…
+     11|   const result=spawnSync(process.execPath,['--input-type=module','-e',…
+     12|   expect(result.status,result.stderr).toBe(0);
+       |                                       ^
+     13|   expect(result.stdout.trim()).toBe('function');
+     14| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+   Start at  09:28:06
+   Duration  187ms (tests 72%, transform 16%, import 8%, worker 3%)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

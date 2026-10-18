@@ -3,7 +3,7 @@ export const PHASES = [
   'store.list', 'store.read', 'store.fullRead', 'store.save', 'store.history', 'store.export', 'store.import',
   'save.prepare', 'save.read', 'save.hash', 'save.reconcile', 'save.validate', 'save.diff', 'save.database',
   'copy', 'capture', 'normalize', 'targetChanges', 'contentDelta', 'writeContent', 'hydrate', 'decode',
-  'validate.current', 'validate.integrity', 'validate.full', 'query.filter', 'query.index', 'reference.choices',
+  'validate.current', 'validate.integrity', 'validate.full', 'query.filter', 'query.index', 'query.positions', 'reference.choices',
   'ui.filter', 'ui.indices', 'worker.read', 'worker.parts', 'worker.archive', 'ui.startup', 'ui.save',
 ] as const;
 export type ProbePhase = typeof PHASES[number];
@@ -19,6 +19,10 @@ const metrics = [
   'writeContent.rows', 'hydrate.rows', 'decode.rows', 'decode.payloadBytes',
   'validate.current.calls', 'validate.integrity.calls', 'validate.full.calls',
   'query.index.builds', 'query.index.rows', 'query.text.rows', 'query.filter.rows',
+  'query.positions.rows', 'query.positions.blocks', 'query.positions.matches', 'query.positions.traceBuilds', 'query.positions.traceHits',
+  'derived.hit', 'derived.miss', 'derived.admitted', 'derived.rejected', 'derived.invalidated',
+  'collection.order.rows', 'collection.page.requested', 'collection.page.rows', 'collection.selected.requested', 'collection.selected.rows',
+  'collection.index.builds', 'collection.index.rows',
   'reference.choices.rows', 'reference.index.builds', 'reference.index.rows', 'ui.filter.rows', 'ui.indices.rows',
   'worker.started', 'worker.terminated', 'worker.sent.messages', 'worker.sent.payloadBytes',
   'worker.received.messages', 'worker.received.payloadBytes',

@@ -1,0 +1,42 @@
+
+ RUN  v5.0.3 /workspace/shinariokanri-phase2-integration
+
+ ❯ tests/optimization/derived-node-compatibility.test.ts (2 tests | 1 failed) 285ms
+   × reports the live formal-reference fix accurately without rewriting historical evidence 182ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/optimization/derived-node-compatibility.test.ts > reports the live formal-reference fix accurately without rewriting historical evidence
+AssertionError: expected { kind: 'character', paths: [], …(3) } to match object { paths: [], …(1) }
+(3 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+    "paths": [],
+-   "status": "RESOLVED_REFERENCE_LEAVES_EXCLUDED",
++   "status": "CURRENT_PRODUCT_DISCREPANCY_UNFIXED",
+  }
+
+ ❯ tests/optimization/derived-node-compatibility.test.ts:25:58
+     23|     const report=JSON.parse(readFileSync(output,'utf8'));
+     24|     expect(report.findings).toHaveLength(2);
+     25|     for(const finding of report.findings)expect(finding).toMatchObject…
+       |                                                          ^
+     26|   }finally{rmSync(directory,{recursive:true,force:true});}
+     27| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 1 passed (2)
+   Start at  09:28:58
+   Duration  410ms (tests 91%, transform 5%, import 3%, worker 1%)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

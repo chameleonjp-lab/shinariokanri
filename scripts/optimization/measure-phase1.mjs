@@ -11,6 +11,8 @@ import {release,cpus,totalmem} from 'node:os';
 const option=(name,fallback)=>{const i=process.argv.indexOf('--'+name);return i<0?fallback:process.argv[i+1];};
 const output=resolve(option('output','test-results/phase1/diagnostic.json')),suite=option('suite','growth');
 if(!['growth','standard','large','ui','calibration'].includes(suite))throw new Error('Unknown suite');
+const profileMode=option('derived-index-mode','product-default');
+if(!['disabled-baseline','product-default'].includes(profileMode))throw new Error('Unknown derived-index profile mode');
 const root=process.cwd(),distribution=output.replace(/\.json$/,'')+'-build';
 if(distribution===output)throw new Error('Output must end in .json');
 const git=(...args)=>execFileSync('git',args,{encoding:'utf8',maxBuffer:16*1024*1024}).trim();
@@ -24,7 +26,7 @@ async function files(directory,prefix=''){
   }
   return result.sort((a,b)=>a.path.localeCompare(b.path));
 }
-const result={version:1,suite,recordedAt:new Date().toISOString(),sourceCommit:git('rev-parse','HEAD'),sourceTree:git('rev-parse','HEAD^{tree}'),dirty:!!git('status','--porcelain'),
+const result={version:1,suite,derivedIndexMode:['standard','large'].includes(suite)?profileMode:null,recordedAt:new Date().toISOString(),sourceCommit:git('rev-parse','HEAD'),sourceTree:git('rev-parse','HEAD^{tree}'),dirty:!!git('status','--porcelain'),
   environment:{os:'Linux',osVersion:release(),node:process.version,cpu:cpus()[0]?.model,logicalCPUs:cpus().length,totalMemory:totalmem(),physicalDevice:false,network:'loopback only'},
   scope:'Additional diagnostics. Setup excluded. Inclusive nested spans; payload bytes are UTF-8 scalar/key plus binary estimates, not disk/wire/heap bytes. Worker-internal validation/hash and native IDB keep-alive requests UNKNOWN. Not formal30/180/7200 acceptance.',
   sourceFiles:[],errors:[]};
@@ -59,7 +61,7 @@ try{
     await page.locator('.editor-save-state').filter({hasText:'端末内保存済み'}).waitFor();
     result.save=await page.evaluate(()=>window.phase1.saveVisible());
     await page.evaluate(()=>window.phase1.cleanup());
-  }else result.observations=await page.evaluate(suite=>suite==='standard'||suite==='large'?window.phase1.profile(suite):window.phase1[suite](),suite);
+  }else result.observations=await page.evaluate(({suite,profileMode})=>suite==='standard'||suite==='large'?window.phase1.profile(suite,profileMode):window.phase1[suite](),{suite,profileMode});
   result.finishedAt=new Date().toISOString();
 }catch(error){result.errors.push({name:error.name,message:error.message});process.exitCode=1;}
 finally{await browser?.close();if(server){server.closeAllConnections();await new Promise(done=>server.close(done));}await persist();}

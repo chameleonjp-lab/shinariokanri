@@ -1,0 +1,182 @@
+[
+  {
+    "label": "docs",
+    "command": [
+      "python3",
+      "scripts/check_docs.py"
+    ],
+    "startedAt": "2026-10-18T11:54:20.465566+00:00",
+    "finishedAt": "2026-10-18T11:54:20.678201+00:00",
+    "exit": 0,
+    "expectedExit": 0,
+    "status": "passed",
+    "log": "final-docs.log"
+  },
+  {
+    "label": "completion",
+    "command": [
+      "python3",
+      "scripts/check_completion_plan.py"
+    ],
+    "startedAt": "2026-10-18T11:54:20.678428+00:00",
+    "finishedAt": "2026-10-18T11:54:20.720451+00:00",
+    "exit": 0,
+    "expectedExit": 0,
+    "status": "passed",
+    "log": "final-completion.log"
+  },
+  {
+    "label": "phase1",
+    "command": [
+      "python3",
+      "scripts/check_phase1.py"
+    ],
+    "startedAt": "2026-10-18T11:54:20.720723+00:00",
+    "finishedAt": "2026-10-18T11:54:20.895120+00:00",
+    "exit": 0,
+    "expectedExit": 0,
+    "status": "passed",
+    "log": "final-phase1.log"
+  },
+  {
+    "label": "archived-reassessment",
+    "command": [
+      "python3",
+      "scripts/check_phase2_reassessment.py"
+    ],
+    "startedAt": "2026-10-18T11:54:20.895371+00:00",
+    "finishedAt": "2026-10-18T11:54:21.029204+00:00",
+    "exit": 0,
+    "expectedExit": 0,
+    "status": "passed",
+    "log": "final-archived-reassessment.log"
+  },
+  {
+    "label": "evidence-current",
+    "command": [
+      "python3",
+      "scripts/check_phase2_indexes.py",
+      "--verify-current-source"
+    ],
+    "startedAt": "2026-10-18T11:54:21.029481+00:00",
+    "finishedAt": "2026-10-18T11:54:23.367316+00:00",
+    "exit": 0,
+    "expectedExit": 0,
+    "status": "passed",
+    "log": "final-evidence-current.log"
+  },
+  {
+    "label": "python-doc-tests",
+    "command": [
+      "python3",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "scripts",
+      "-p",
+      "test_check_*.py",
+      "-v"
+    ],
+    "startedAt": "2026-10-18T11:54:23.367628+00:00",
+    "finishedAt": "2026-10-18T11:54:37.794626+00:00",
+    "exit": 0,
+    "expectedExit": 0,
+    "status": "passed",
+    "log": "final-python-doc-tests.log"
+  },
+  {
+    "label": "ci-controls",
+    "command": [
+      "python3",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "scripts/ci",
+      "-p",
+      "test_*.py",
+      "-v"
+    ],
+    "startedAt": "2026-10-18T11:54:37.794999+00:00",
+    "finishedAt": "2026-10-18T11:54:38.049166+00:00",
+    "exit": 0,
+    "expectedExit": 0,
+    "status": "passed",
+    "log": "final-ci-controls.log"
+  },
+  {
+    "label": "build",
+    "command": [
+      "npm",
+      "run",
+      "build"
+    ],
+    "startedAt": "2026-10-18T11:54:38.049445+00:00",
+    "finishedAt": "2026-10-18T11:54:41.331342+00:00",
+    "exit": 0,
+    "expectedExit": 0,
+    "status": "passed",
+    "log": "final-build.log"
+  },
+  {
+    "label": "full-unit",
+    "command": [
+      "npm",
+      "test",
+      "--",
+      "--maxWorkers=1",
+      "--fileParallelism=false"
+    ],
+    "startedAt": "2026-10-18T11:54:41.331741+00:00",
+    "finishedAt": "2026-10-18T12:03:07.038619+00:00",
+    "exit": 0,
+    "expectedExit": 0,
+    "status": "passed",
+    "log": "final-full-unit.log"
+  },
+  {
+    "label": "three-engine-counterexamples",
+    "command": [
+      "npx",
+      "playwright",
+      "test",
+      "tests/e2e/phase2-derived-collections.spec.ts",
+      "--reporter=line",
+      "--output=/workspace/audit-progress/p2-06-07/final-ui-results"
+    ],
+    "startedAt": "2026-10-18T12:03:07.039042+00:00",
+    "finishedAt": "2026-10-18T12:03:23.688798+00:00",
+    "exit": 0,
+    "expectedExit": 0,
+    "status": "passed",
+    "log": "final-three-engine-counterexamples.log"
+  },
+  {
+    "label": "release-blocked",
+    "command": [
+      "python3",
+      "scripts/check_release.py"
+    ],
+    "startedAt": "2026-10-18T12:03:23.689195+00:00",
+    "finishedAt": "2026-10-18T12:03:23.723377+00:00",
+    "exit": 1,
+    "expectedExit": 1,
+    "status": "passed",
+    "log": "final-release-blocked.log"
+  },
+  {
+    "label": "diff",
+    "command": [
+      "git",
+      "diff",
+      "--check"
+    ],
+    "startedAt": "2026-10-18T12:03:23.723918+00:00",
+    "finishedAt": "2026-10-18T12:03:23.756076+00:00",
+    "exit": 0,
+    "expectedExit": 0,
+    "status": "passed",
+    "log": "final-diff.log"
+  }
+]

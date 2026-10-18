@@ -1,0 +1,40 @@
+
+ RUN  v5.0.3 /workspace/shinariokanri-phase2-integration
+
+ ❯ src/domain/catalogPositions.test.ts (5 tests | 1 failed) 21ms
+   ❯ normalized search position navigation (5)
+     × separates full position scans, trace reuse and regenerated mutable text without recording authored content 17ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/domain/catalogPositions.test.ts > normalized search position navigation > separates full position scans, trace reuse and regenerated mutable text without recording authored content
+AssertionError: expected {} to match object { 'query.positions.rows': 3, …(4) }
+
+- Expected
++ Received
+
+- {
+-   "query.positions.blocks": 3,
+-   "query.positions.matches": 3,
+-   "query.positions.rows": 3,
+-   "query.positions.traceBuilds": 2,
+-   "query.positions.traceHits": 1,
+- }
++ {}
+
+ ❯ src/domain/catalogPositions.test.ts:14:33
+     12|       note.data.body[0].text='前ガラス';expect(findCatalogTextPositions(pr…
+     13|       const snapshot=probe.snapshot();
+     14|       expect(snapshot.counters).toMatchObject({'query.positions.rows':…
+       |                                 ^
+     15|       expect(snapshot.events.filter(event=>event.phase==='query.positi…
+     16|       expect(Object.values(snapshot.counters).every(value=>typeof valu…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 4 passed (5)
+   Start at  10:48:56
+   Duration  431ms (transform 80%, import 13%, tests 6%, worker 1%)
+

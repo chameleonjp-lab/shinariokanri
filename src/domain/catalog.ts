@@ -5,6 +5,9 @@ import { requiresFixedStateUsageVerification,stateUsageIndex } from './stateUsag
 import type {StateUsage} from './stateUsage';
 import {verifyReusePins} from './reuse';
 import type { CollectionData, Entity, EntityKind, ID, ProjectData, Query, Sort } from './types';
+import {beginDerivedEvaluation,type DerivedEvaluation} from './derivedIndexes';
+import {createOrderedCollection,staleCollectionPage,type OrderedCollection,type CollectionReadView,type CollectionRow,type CollectionPage} from './orderedCollection';
+export {createOrderedCollection} from './orderedCollection';
 
 /** Search normalization is separate from stored text. Original Japanese spelling remains untouched. */
 export function normalizeCatalogText(value: string): string {
@@ -31,15 +34,15 @@ function isReferenceField(key: string): boolean {
   return /(?:Id|Ids)$/.test(key);
 }
 
-function collectText(value: unknown, path: string, output: CatalogTextTerm[], depth = 0): void {
-  if (depth > 32 || value == null) return;
+function collectText(value: unknown, path: string, output: CatalogTextTerm[], references: ReadonlySet<string>, depth = 0): void {
+  if (depth > 32 || value == null || references.has(path)) return;
   if (typeof value === 'string') {
     const text = value.trim();
     if (text) output.push({ path, text, normalized: normalizeCatalogText(text) });
     return;
   }
   if (Array.isArray(value)) {
-    value.forEach((item, index) => collectText(item, `${path}[${index}]`, output, depth + 1));
+    value.forEach((item, index) => collectText(item, `${path}[${index}]`, output, references, depth + 1));
     return;
   }
   if (typeof value !== 'object') return;
@@ -48,7 +51,7 @@ function collectText(value: unknown, path: string, output: CatalogTextTerm[], de
     if (SEARCH_IGNORED_FIELDS.has(key) || isReferenceField(key)) continue;
     if (key === 'value' && object.type === 'ref') continue;
     if (typeof nested === 'string' && ['kind', 'op', 'scope', 'valueType', 'stage', 'role', 'direction', 'mode', 'operation', 'resolutionPolicy'].includes(key)) continue;
-    collectText(nested, path ? `${path}.${key}` : key, output, depth + 1);
+    collectText(nested, path ? `${path}.${key}` : key, output, references, depth + 1);
   }
 }
 
@@ -56,9 +59,10 @@ function collectText(value: unknown, path: string, output: CatalogTextTerm[], de
 export function collectCatalogText(entity: Entity): CatalogTextTerm[] {
   probeCount('query.text.rows');
   const output: CatalogTextTerm[] = [];
+  const references = new Set(collectReferences(entity).map(reference => reference.path));
   if (entity.name.trim()) output.push({ path: 'name', text: entity.name.trim(), normalized: normalizeCatalogText(entity.name) });
-  collectText(entity.data, 'data', output);
-  collectText(entity.customValues, 'customValues', output);
+  collectText(entity.data, 'data', output, references);
+  collectText(entity.customValues, 'customValues', output, references);
   return output;
 }
 
@@ -76,14 +80,14 @@ interface CatalogQueryIndex {
   disclosures: Entity<'disclosure'>[];
   sceneByNode: Map<ID, ID>;
 }
-function buildQueryIndex(project: ProjectData): CatalogQueryIndex {
+function buildQueryIndex(project: ProjectData,knownRows?:Map<ID,Entity>): CatalogQueryIndex {
   const finish=probeSpan('query.index');probeCount('query.index.builds');probeCount('query.index.rows',project.entities.length);
-  const index: CatalogQueryIndex = { byId: new Map(), participantEvents: new Map(), scenesByEvent: new Map(), productionTargets: new Map(), chapters: new Set(), foreshadows: new Map(), disclosures: [], sceneByNode: new Map() };
+  const index: CatalogQueryIndex = { byId:knownRows??new Map(), participantEvents: new Map(), scenesByEvent: new Map(), productionTargets: new Map(), chapters: new Set(), foreshadows: new Map(), disclosures: [], sceneByNode: new Map() };
   const add = <K>(map: Map<K, Set<ID>>, key: K, id: ID) => { let ids = map.get(key); if (!ids) { ids = new Set(); map.set(key, ids); } ids.add(id); };
   // One scan serves all dependency operators in the complete compound query.
   for (const entity of project.entities) {
     if (entity.deletedAt) continue;
-    index.byId.set(entity.id, entity);
+    if(!knownRows)index.byId.set(entity.id, entity);
     switch (entity.kind) {
       case 'event': for (const participant of entity.data.participants ?? []) add(index.participantEvents, participant.characterId, entity.id); break;
       case 'scene': for (const eventId of entity.data.eventIds) add(index.scenesByEvent, eventId, entity.id); break;
@@ -99,8 +103,20 @@ function buildQueryIndex(project: ProjectData): CatalogQueryIndex {
 
 /** Captures one evaluation's dependencies; rebuild after project edits rather than caching mutable drafts. */
 export function compileCatalogQuery(project: ProjectData, query: Query): (entity: Entity) => boolean {
+  return compileQuery(project,query);
+}
+function queryIndex(project:ProjectData,evaluation?:DerivedEvaluation):CatalogQueryIndex{
+  return evaluation?.get('catalog.dependencies','current',()=>{
+    const knownRows=evaluation.peek<Map<ID,Entity>>('collection.rows','current');
+    const value=buildQueryIndex(project,knownRows),members=[...value.participantEvents.values(),...value.scenesByEvent.values(),...value.productionTargets.values()].reduce((n,ids)=>n+ids.size,0);
+    return {value,cost:{references:(knownRows?0:2*value.byId.size)+members+value.chapters.size+2*value.foreshadows.size+value.disclosures.length+2*value.sceneByNode.size}};
+  })??buildQueryIndex(project);
+}
+function compileQuery(project:ProjectData,query:Query,initial?:DerivedEvaluation):(entity:Entity)=>boolean{
   let index: CatalogQueryIndex | undefined;
-  const dependencies = () => index ??= buildQueryIndex(project);
+  let evaluation:DerivedEvaluation|undefined=initial,checked=initial!==undefined;
+  const shared=()=>{if(!checked){evaluation=beginDerivedEvaluation(project);checked=true;}return evaluation;};
+  const dependencies = () => index ??= queryIndex(project,shared());
   const text = new WeakMap<Entity, string[]>();
   const compile = (query: Query): ((entity: Entity) => boolean) => {
     switch (query.op) {
@@ -111,7 +127,15 @@ export function compileCatalogQuery(project: ProjectData, query: Query): (entity
       case 'text': {
         const needle = normalizeCatalogText(query.value);
         if (!needle) return () => true;
-        return entity => { let terms = text.get(entity); if (!terms) { terms = collectCatalogText(entity).map(term => term.normalized); text.set(entity, terms); } return terms.some(term => term.includes(needle)); };
+        return entity => {
+          let terms=text.get(entity);
+          if(!terms){
+            const current=shared(),build=()=>{const value=collectCatalogText(entity).map(term=>term.normalized);return {value,cost:{references:value.length,textCodeUnits:value.reduce((n,term)=>n+term.length,0)}};};
+            terms=current?.ownsEntity(entity)?current.get('catalog.text/v2',entity,build):build().value;
+            text.set(entity,terms);
+          }
+          return terms.some(term=>term.includes(needle));
+        };
       }
       case 'production': {
         const ids = dependencies().productionTargets.get(query.value);
@@ -209,6 +233,58 @@ export function evaluateCollection(project: ProjectData, collection: Entity<'col
   return { collectionId: collection.id, mode: collection.data.mode, entities: selected, entityIds: selected.map(entity => entity.id), missingIds, query };
 }
 
+/** Comparison adapter: UI adoption was rejected after measured preparation and
+ * lookup overhead. Production lists retain their original full-result path.
+ * This independently checked experiment does not imply partial DB reads. */
+export function createCatalogCollection(project:ProjectData,query:Query,collection?:Entity<'collection'>):OrderedCollection<Entity>{
+  const evaluation=beginDerivedEvaluation(project);
+  if(!evaluation){
+    // Immutability alone does not prove schema/role ownership. Every unowned
+    // caller regenerates the answer, including deeply frozen caller input.
+    // Regenerate the complete answer on each read, including duplicate draft rows.
+    const snapshot=()=>{
+      const rows=collection?evaluateCollection(project,collection).entities:filterCatalogEntities(project,query),ids=rows.map(row=>row.id);
+      return {rows,ids};
+    };
+    return {
+      get ids(){return snapshot().ids;},
+      beginRead():CollectionReadView<Entity>{
+        const captured=snapshot(),ids=Object.freeze(captured.ids),source=project.entities;let active=true;queueMicrotask(()=>{active=false;});
+        return {ids,positionOf:id=>active?ids.indexOf(id):-1,originalIndex:id=>{const index=active?ids.lastIndexOf(id):-1;return index<0?undefined:index;},
+          readPage(offset,size){
+            if(!Number.isSafeInteger(offset)||offset<0||!Number.isSafeInteger(size)||size<0)throw Error('Invalid collection page');
+            if(!active)return staleCollectionPage();const rows=captured.rows.slice(offset,offset+size);probeCount('collection.page.requested',rows.length);probeCount('collection.page.rows',rows.length);return {state:'loaded',rows,missingIds:[],unloadedIds:[]};
+          },
+          selected(id){if(!active)return {state:'stale'};probeCount('collection.selected.requested');const row=source.find(row=>!row.deletedAt&&row.id===id);if(row)probeCount('collection.selected.rows');return row?{state:'loaded',row}:{state:'absent'};},
+        };
+      },
+      positionOf:id=>snapshot().ids.indexOf(id),
+      originalIndex:id=>{const index=snapshot().ids.lastIndexOf(id);return index<0?undefined:index;},
+      readPage(offset,size):CollectionPage<Entity>{
+        if(!Number.isSafeInteger(offset)||offset<0||!Number.isSafeInteger(size)||size<0)throw Error('Invalid collection page');
+        const rows=snapshot().rows.slice(offset,offset+size);probeCount('collection.page.requested',rows.length);probeCount('collection.page.rows',rows.length);
+        return {state:'loaded',rows,missingIds:[],unloadedIds:[]};
+      },
+      selected(id):CollectionRow<Entity>{
+        probeCount('collection.selected.requested');const row=project.entities.find(row=>!row.deletedAt&&row.id===id);
+        if(row)probeCount('collection.selected.rows');return row?{state:'loaded',row}:{state:'absent'};
+      },
+    };
+  }
+  let ids:ID[];
+  if(collection)ids=evaluateCollection(project,collection).entityIds;
+  else{
+    const finish=probeSpan('query.filter'),matches=compileQuery(project,query,evaluation);ids=[];probeCount('query.filter.rows',project.entities.length);
+    for(const entity of project.entities)if(!entity.deletedAt&&matches(entity))ids.push(entity.id);
+    finish();
+  }
+  const buildRows=()=>{probeCount('collection.index.builds');probeCount('collection.index.rows',project.entities.length);const value=new Map(project.entities.filter(row=>!row.deletedAt).map(row=>[row.id,row]));return {value,cost:{references:2*value.size}};};
+  return createOrderedCollection<Entity>(ids,requested=>{
+    const byId=evaluation.peek<CatalogQueryIndex>('catalog.dependencies','current')?.byId??evaluation.get('collection.rows','current',buildRows);
+    const rows=new Map<string,CollectionRow<Entity>>();for(const id of requested){const row=byId.get(id);rows.set(id,row?{state:'loaded',row}:{state:'absent'});}return rows;
+  },()=>evaluation.isCurrent(),()=>evaluation.isActive());
+}
+
 export type JapaneseIndexSource = 'name' | 'reading' | 'alias' | 'alias_reading' | 'canonical' | 'variant';
 
 export interface JapaneseAuthorIndexEntry {
@@ -244,7 +320,7 @@ function aliasesOf(entity: Entity): unknown[] {
 }
 
 /** Builds an author-side index. It can include private aliases; do not use it as a public projection. */
-export function buildJapaneseAuthorIndex(project: ProjectData): JapaneseAuthorIndexEntry[] {
+function regenerateJapaneseAuthorIndex(project: ProjectData): JapaneseAuthorIndexEntry[] {
   const entities = activeEntities(project);
   const categoryByMember = new Map<ID, string[]>();
   for (const group of entities) {
@@ -289,6 +365,17 @@ export function buildJapaneseAuthorIndex(project: ProjectData): JapaneseAuthorIn
     }
   }
   return entries.sort((a, b) => compareValues(a.reading || a.term, b.reading || b.term) || compareValues(a.term, b.term) || compareValues(a.entityName, b.entityName) || compareValues(a.entityId, b.entityId) || compareValues(a.id, b.id));
+}
+
+export function buildJapaneseAuthorIndex(project:ProjectData):JapaneseAuthorIndexEntry[]{
+  const evaluation=beginDerivedEvaluation(project);
+  if(!evaluation)return regenerateJapaneseAuthorIndex(project);
+  const entries=evaluation.get('author.japanese/v1','current',()=>{
+    const value=regenerateJapaneseAuthorIndex(project);
+    return {value,cost:{references:value.length+value.reduce((n,e)=>n+e.classifications.length,0),textCodeUnits:value.reduce((n,e)=>n+e.id.length+e.entityId.length+e.kind.length+e.entityName.length+e.term.length+e.reading.length+e.normalizedTerm.length+e.normalizedReading.length+e.source.length+e.classifications.reduce((s,label)=>s+label.length,0),0)}};
+  });
+  // Preserve the existing editable return contract, without exposing shared containers.
+  return evaluation.peek('author.japanese/v1','current')===entries?entries.map(entry=>({...entry,classifications:[...entry.classifications]})):entries;
 }
 
 export function searchJapaneseAuthorIndex(entries: readonly JapaneseAuthorIndexEntry[], query: string, kind?: EntityKind): JapaneseAuthorIndexEntry[] {

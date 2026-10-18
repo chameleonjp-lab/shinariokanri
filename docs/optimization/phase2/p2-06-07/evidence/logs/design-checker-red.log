@@ -1,0 +1,32 @@
+....E.F...E.......
+======================================================================
+ERROR: test_complete_rotating_source_design_comparison (scripts.test_check_phase2_indexes.CaptureContract.test_complete_rotating_source_design_comparison)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/shinariokanri-phase2-integration/scripts/test_check_phase2_indexes.py", line 167, in test_complete_rotating_source_design_comparison
+    raw,ui=self.design();self.checker().verify_design(raw,ui,dict(entries=100000,references=750000,textCodeUnits=8388608))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'phase2_indexes' has no attribute 'verify_design'
+
+======================================================================
+ERROR: test_missing_mode_false_p95_or_full_result_disguised_as_page_is_rejected (scripts.test_check_phase2_indexes.CaptureContract.test_missing_mode_false_p95_or_full_result_disguised_as_page_is_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/shinariokanri-phase2-integration/scripts/test_check_phase2_indexes.py", line 172, in test_missing_mode_false_p95_or_full_result_disguised_as_page_is_rejected
+    with self.assertRaises(ValueError): self.checker().verify_design(raw,ui,dict(entries=100000,references=750000,textCodeUnits=8388608))
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'phase2_indexes' has no attribute 'verify_design'
+
+======================================================================
+FAIL: test_functional_backend_and_no_latency_scope_cannot_be_promoted (scripts.test_check_phase2_indexes.CaptureContract.test_functional_backend_and_no_latency_scope_cannot_be_promoted)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/shinariokanri-phase2-integration/scripts/test_check_phase2_indexes.py", line 156, in test_functional_backend_and_no_latency_scope_cannot_be_promoted
+    with self.assertRaises(ValueError): self.checker().verify_order_proof(proof,ui)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+----------------------------------------------------------------------
+Ran 18 tests in 0.075s
+
+FAILED (failures=1, errors=2)

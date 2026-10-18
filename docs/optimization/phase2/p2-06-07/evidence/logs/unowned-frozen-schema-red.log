@@ -1,0 +1,35 @@
+
+ RUN  v5.0.3 /workspace/shinariokanri-phase2-integration
+
+ ❯ tests/optimization/catalog-collection.test.ts (11 tests | 1 failed) 473ms
+   × fully regenerates unregistered frozen input when actual schema reference meaning changes 6ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/optimization/catalog-collection.test.ts > fully regenerates unregistered frozen input when actual schema reference meaning changes
+AssertionError: expected [ Array(1) ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   "c87ff83d-4032-454f-9ae8-ad63aa32e532",
++ ]
+
+ ❯ tests/optimization/catalog-collection.test.ts:109:22
+    107|     field.schema={type:'ref',scope:'entity',kinds:['character']};
+    108|     expect(catalog.filterCatalogEntities(captured.value,{op:'text',val…
+    109|     expect(view.ids).toEqual([]);expect(view.readPage(0,30).rows).toEq…
+       |                      ^
+    110|     expect(view.selected(person.id)).toEqual({state:'loaded',row:captu…
+    111|     await Promise.resolve();expect(frame.readPage(0,30).state).toBe('s…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 10 passed (11)
+   Start at  10:53:09
+   Duration  1.42s (transform 52%, tests 36%, import 11%)
+

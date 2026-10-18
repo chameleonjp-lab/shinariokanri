@@ -2,15 +2,17 @@ import type { Entity, ID, ProjectData } from './types';
 import { collectReferences } from './model';
 import { adoptedRecord } from './adoption';
 import {resolveReuseContent,reuseOrigin,reuseFieldOrigin} from './reuse';
+import {beginDerivedEvaluation} from './derivedIndexes';
 
 export interface StateUsage { entityId: ID; path: string; operation: 'read' | 'update' | 'reset'; reason: string; sourceEntityId?:ID; sourceVersionId?:ID; reuseOwnerId?:ID }
 export function requiresFixedStateUsageVerification(project:ProjectData):boolean {
-  return project.entities.some(entity=>adoptedRecord(entity)&&(entity.kind==='scene'||entity.kind==='flow_node')&&entity.data.reuse&&entity.data.reuse.mode!=='clone');
+  return beginDerivedEvaluation(project)?.get('state.fixed-required','current',()=>({value:fixedRequired(project),cost:{references:0}}))??fixedRequired(project);
 }
+const fixedRequired=(project:ProjectData)=>project.entities.some(entity=>adoptedRecord(entity)&&(entity.kind==='scene'||entity.kind==='flow_node')&&entity.data.reuse&&entity.data.reuse.mode!=='clone');
 /** Author-declared uses retain stable IDs across rename, reorder and clone.
  * Saved trial values and review targets still protect references, but are not
  * declarations that read, update or reset a state during a story. */
-export function stateUsageIndex(project: ProjectData): Map<ID, StateUsage[]> {
+function regenerateStateUsageIndex(project: ProjectData): Map<ID, StateUsage[]> {
   // This is a declaration index. Callers that assess untrusted pins must verify
   // their expected hashes first; the catalog keeps that pending/failed work
   // unconfirmed rather than interpreting an incomplete index as unused.
@@ -38,6 +40,19 @@ export function stateUsageIndex(project: ProjectData): Map<ID, StateUsage[]> {
     }
   }
   return index;
+}
+export function stateUsageIndex(project:ProjectData):Map<ID,StateUsage[]>{
+  const evaluation=beginDerivedEvaluation(project);
+  if(!evaluation)return regenerateStateUsageIndex(project);
+  const fixed=evaluation.get('state.fixed-required','current',()=>({value:fixedRequired(project),cost:{references:0}}));
+  // A cached declaration map cannot stand in for required fixed-pin hash verification.
+  if(fixed)return regenerateStateUsageIndex(project);
+  const index=evaluation.get('state.usage/v1','current',()=>{
+    const value=regenerateStateUsageIndex(project);let references=2*value.size,textCodeUnits=0;
+    for(const [id,uses] of value){references+=uses.length;textCodeUnits+=id.length;for(const use of uses)textCodeUnits+=Object.values(use).reduce((n,value)=>n+(typeof value==='string'?value.length:0),0);}
+    return {value,cost:{references,textCodeUnits}};
+  });
+  return evaluation.peek('state.usage/v1','current')===index?new Map([...index].map(([id,uses])=>[id,uses.map(use=>({...use}))])):index;
 }
 export function stateUsage(project: ProjectData, variableId: ID): StateUsage[] { return stateUsageIndex(project).get(variableId) ?? []; }
 export function stateUpdateOrigins(project: ProjectData, effectId: ID): Entity[] {

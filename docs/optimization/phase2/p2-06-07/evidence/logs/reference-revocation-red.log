@@ -1,0 +1,40 @@
+
+ RUN  v5.0.3 /workspace/shinariokanri-phase2-integration
+
+ ❯ tests/optimization/derived-index-ownership.test.ts (15 tests | 1 failed | 14 skipped) 155ms
+   × does not publish delayed reference preparation after the concrete role owner is revoked 154ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/optimization/derived-index-ownership.test.ts > does not publish delayed reference preparation after the concrete role owner is revoked
+AssertionError: expected [ +0, 3 ] to deeply equal [ +0 ]
+
+- Expected
++ Received
+
+  [
+    0,
++   3,
+  ]
+
+ ❯ tests/optimization/derived-index-ownership.test.ts:170:20
+    168|   s.setAuthorAccess({});resume();
+    169|   await expect(pending).rejects.toMatchObject({name:'AbortError'});
+    170|   expect(progress).toEqual([0]);
+       |                    ^
+    171|   expect(cachedReferencesTo(p.entities,p.entities[0]!.id,p)).toBeUndef…
+    172|   expect(s.derivedIndexRetention()).toEqual({owners:0,entries:0,refere…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 14 skipped (15)
+   Start at  09:17:35
+   Duration  961ms (transform 66%, tests 18%, import 15%)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

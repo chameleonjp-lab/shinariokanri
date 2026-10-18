@@ -1,0 +1,81 @@
+# P2-06/07 implementation plan
+
+> Execute inline with `superpowers:executing-plans`; use TDD and one independent whole-branch review. The user authorized completion of phase 2 on 2026-10-18. Only PR #67 was authorized to merge; subsequent work is submitted as Draft PR evidence.
+
+**Goal:** Complete the remaining derived-index, field-semantics and collection-read work against actual integrated main, with bounded retention, independent correctness checks and literal-source measurements.
+
+**Architecture:** A ScenarioStore-owned, revocable lease binds derived work to private immutable current content. Evaluation scopes check the complete source/header identity and actual schema signature before sharing. Unknown/mutable inputs retain full regeneration. Ordered ID collections were implemented and compared, then rejected for product UI adoption; the experimental domain adapter remains. Full editor/DB validation and original UI array reads remain intact.
+
+**Tech stack:** Existing TypeScript/React/Dexie/Vitest/Playwright; no new dependencies or external services.
+
+**Spec:** `docs/implementation/codex-three-phase-2026-10-17/PHASE_2_OPTIMIZATION.md`, `docs/optimization/phase1/DESIGN.md`, `docs/optimization/phase1/HANDOFF.md`, and historical `docs/optimization/phase2/reassessment-20261018/`.
+
+## Global constraints
+
+- Baseline is actual main `a13d8fad93b1a4a14c4cc4d45ab98783388de177`, tree `7876a9346443f47f49e5f057801f647c85726f56`; original #63/#64/#65 merge commits are all ancestors.
+- Preserve 104 requirements, 116 cases/464 clauses, 24 stages/6 groups/68 supporting checks, all original fixture/seed/bytes/assert/timeout/retry/skip values, and native 1.0 format.
+- Preserve 30 repetitions, 180 saves, 7200 seconds, 600000 ms and 2000 ms as their original contracts. Final integrated formal reacceptance belongs to phase 3; supplemental measurements never replace it.
+- No devices, production/auth/service changes, payment, deployment, publication, further main merges, DB migrations, X-feature adoption or changed release criteria. RELEASE BLOCKED remains.
+- Author classifications, confirmed references, suggestions/ignore decisions and post-projection public terms remain separate. A derived cache is not validation or authorization evidence.
+- Source identity, raw values/failures, actual build bytes and independent expectations accompany every comparison. OFF latency and separate ON numeric diagnostics are not mixed.
+
+## Review focus
+
+1. Equal IDs/revisions in different accounts, revoked roles, old views after close/release/save, and delayed reference preparation must not share or republish another owner’s cache.
+2. Mutable or foreign records passed to the single-record query API must keep their own text/meaning; a trusted project must not turn an ID match into an object-identity proof.
+3. In-place schema edits, root header edits and same-ID/different-hash world replacements must invalidate work; malformed/cyclic dependencies cannot establish a proof.
+4. `character.goals`/`group.members` are formal references, while `scene.goals` and authored UUID-looking text are searchable; public names/IDs and private aliases stay separate.
+5. Hidden selected IDs, tail pages, Japanese search/order and original move indices survive filtered navigation. Unloaded/stale data is not an absent row; paging does not claim fewer DB rows.
+
+## Task 1: Correct formal-reference text boundaries
+
+**Files:** `src/domain/catalog.ts`, focused catalog tests, `tests/optimization/semanticStudy.test.ts`.
+
+**Interface:** `collectCatalogText(entity)` retains its API; its corpus excludes only actual formal-reference leaf paths in addition to the existing ignored metadata.
+
+- [x] Add tests that search concrete goals/member IDs and retain scene goal text and authored UUID-looking strings; watch the original implementation fail.
+- [x] Use the existing model reference walker to exclude those paths. Keep type- and field-specific meanings, original query order and foreign-record behavior.
+- [x] Update the live known-discrepancy assertion to require zero; keep the archived historical discrepancy/source/evidence unchanged.
+- [x] Run focused domain/research tests and commit the correction.
+
+## Task 2: Store-owned bounded derived indexes (P2-06)
+
+**Files:** new `src/domain/derivedIndexes.ts`, `src/storage/store.ts`, `src/domain/model.ts`, `src/domain/catalog.ts`, `src/domain/stateUsage.ts`, `src/domain/linkCandidates.ts`, `src/ui/referenceIndex.ts`, their callers/tests and numeric probe declarations.
+
+**Interfaces:** `beginDerivedEvaluation(project)` returns a revocable evaluation only for a registered immutable saved view. `ProjectDerivedOwner` binds views, admits bounded numeric-cost entries and clears immediately. Store construction supports an internal disabled/budget comparison option; no product UI setting is added.
+
+- [x] Add real-store tests showing two compilations currently build two indexes/text corpora; assert one build on the same valid saved source, then full rebuild on revision/role/account/close/schema/root changes.
+- [x] Implement source ownership without copying/retaining history, proving immutable plain current data lazily. Check actual schema rules once per evaluation, never once per entity.
+- [x] Share dependency indexes and normalized text, Japanese author terms, link-term preparation and eligible state/reference indexes. Keep option-dependent labels/exclusions per call and hash verification before fixed reuse assessment.
+- [x] Use bounded admission without repeated whole-corpus LRU eviction; report logical references/text units separately from heap. Invalidation clears entries and strong source references.
+- [x] Preserve mutable/unknown full fallbacks and reference preparation’s no-partial-publication/cancel contract. Returned mutable containers cannot corrupt shared internal values.
+- [x] Run lifecycle, negative, existing targeted domain/UI/storage tests and the full unit suite; commit.
+
+## Task 3: Common meaning and ordered collection reads (P2-07)
+
+**Files:** new field-semantics/ordered-collection modules and independent expectation fixture; `src/ui/fieldSpecs.ts` and relevant tests. Prototype changes to `ListWindow.tsx`, `Lists.tsx`, `CatalogPanel.tsx` were measured and reverted byte-exact to P2-06. `WindowedList.tsx` is unchanged.
+
+**Interfaces:** descriptors derive model field/reference semantics from the existing registry, while UI labels/layout and public allowlists retain independent contracts. Ordered collections expose ordered IDs, bounded page reads, original ordinal and independent selection lookup.
+
+- [x] Freeze independent baseline field/UI/public expectations before deriving new behavior; add negative tests for kind-specific goals, references, conditional/nested fields and deliberate public enum restrictions. Reproduce the contract byte-identically from clean literal main.
+- [x] Implement descriptor coverage and consume it at an existing semantic/UI boundary. Keep schema generator output unchanged and detect drift against independent fixtures.
+- [x] Add failing page/selection/ordinal tests, implement and integrate the provider prototype, then compare current, ordinal-only A and provider B. Reject B product UI integration on measured overhead; preserve comparison adapter and original UI.
+- [x] Keep full validated current DB reads as the safe fallback. Record actual provider row reads, search scans, DOM count and DB reads independently; do not infer DB reduction from page size.
+- [x] Run relevant navigation/Japanese/catalog/public/reference checks plus new counterexamples and commit. Final full submitted-source CI is tracked below and in the Draft PR.
+
+## Task 4: Measurements, review and final Draft delivery
+
+**Files:** supplemental measurement harness/checker/tests and `docs/optimization/phase2/p2-06-07/` reports, manifests, source/build identities and raw evidence.
+
+- [x] Seal clean product commits and unchanged original Standard/Large inputs. Measure repeated queries and page/selected reads with 30 repetitions; compare literal main, P2-06, rejected B prototypes, final bounded reuse and same-source 4Mi/8Mi budgets. Separate cold setup, repeated work, retained logical entries and actual heap observations.
+- [x] Exercise real native IndexedDB and browser UI paths where claimed. Record save/rename/alias/archive and dependency invalidation; independent fake-IDB proof has the same normalized current as native UI. Unchanged operations retain existing literal-source evidence and are not relabeled as new formal acceptance.
+- [x] Keep all failures and adverse values. Reject unsafe or slower alternatives; state limits of causal claims, seeded-context startup, heap/GC, API watchdog and unexecuted phase-3/external conditions.
+- [x] Implement evidence validation with real negative/tamper tests; pass docs/completion/phase1, archived-source/current-source, Python 73+25 tests, original full unit (148 files/1390 tests), normal build, and the additional UI counterexample on all 3 engines. Complete original CI with recovery originals/later regressions/aggregate is tracked by the final delivery gate below.
+- [x] Obtain one fresh whole-branch review and address material findings by RED→GREEN tests. Final review found no additional P1/P2 and the fresh-Store wording correction is applied.
+- [ ] Submit all results as a new main-targeted Draft PR and confirm all original CI jobs. This committed plan is a pre-CI snapshot; the actual final run/attempt/head/tree and result are recorded in the Draft PR body. Do not merge it.
+
+PR #68 first-CI follow-up: preserve the original two-real-build observation in an explicitly disabled-sharing baseline, add a normal-product native observation with identical save invariants and an independent nonempty ordered oracle, and label CLI modes. Both lanes pass on all three engines locally; retain the original CI failure and RED evidence. The delivery gate above remains pending until the repaired submitted head passes all seven original CI jobs. Product bytes and the three sealed performance overlays remain unchanged.
+
+## Completion boundary
+
+Phase 2 implementation/comparison delivery requires every task above and original CI on the submitted source. It does not declare the phase-3 8 metrics × Standard/Large ×30, 180-save distribution, real 7200-second soak, final 72 MiB/113-history complete new/clone/cold acceptance, physical devices or external services newly passed.
