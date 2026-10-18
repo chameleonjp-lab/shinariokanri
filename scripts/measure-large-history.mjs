@@ -12,6 +12,7 @@ import { resolve, join, extname, dirname } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { release } from 'node:os';
+import { navigateMeasuredApp } from './acceptance/navigation.ts';
 
 const arg = (name, fallback) => { const index = process.argv.indexOf('--' + name); return index < 0 ? fallback : process.argv[index + 1]; };
 const root = process.cwd(), output = resolve(arg('output', 'artifacts/large-history-113.json'));
@@ -80,6 +81,11 @@ const collectFailureObservation = async () => {
   if (!page || page.isClosed()) { result.failureObservation = { ...begin, status: 'unavailable', reason: 'Source page is not open' }; return; }
   let timeout;
   const observed = page.evaluate(() => ({
+    body: document.body?.innerText,
+    navigation: [...document.querySelectorAll('.mobile-menu,.sidebar')].map(node => ({
+      className: node.className, expanded: node.getAttribute('aria-expanded'),
+      rectangle: node.getBoundingClientRect().toJSON(),
+    })),
     ui: globalThis.__largeHistoryUIProbe?.snapshot(),
     export: globalThis.__finishLargeHistoryProbe?.(),
     cancel: globalThis.__largeHistoryCancelProbe,
@@ -153,7 +159,7 @@ try {
   result.fixture = await page.evaluate(trial => seedLargeHistory(trial), !!soakSeconds);
   await page.goto(url); await page.locator('.app-shell').waitFor();
   result.environment.browser = await page.evaluate(() => navigator.userAgent); result.environment.browserVersion = browser.version();
-  const nav = async name => { const menu = page.getByRole('button', { name: 'メニューを開く', exact: true }); if (await menu.isVisible()) await menu.click(); await page.locator('.sidebar').getByRole('button', { name }).first().click(); };
+  const nav = name => navigateMeasuredApp(page, name);
   const checkpoint = () => page.evaluate(async fixture => { await import('/__large-history/entry.js'); return sourceCheckpoint(fixture); }, result.fixture);
   const switchProject = async title => {
     await page.locator('.app-shell').waitFor(); const menu = page.getByRole('button', { name: 'メニューを開く', exact: true }); if (await menu.isVisible()) await menu.click();
