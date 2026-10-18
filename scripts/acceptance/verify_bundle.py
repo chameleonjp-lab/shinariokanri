@@ -95,6 +95,8 @@ def validate(folder):
         previous = finished
         receipt = loads(read(step+'/execution/exit.json')); verify_exit(receipt)
         command = loads(read(step+'/execution/command.json'))
+        require(started <= datetime.fromisoformat(command['startedAt']) <= datetime.fromisoformat(receipt['finishedAt']) <= finished,
+                'Actual execution interval is outside its serial step')
         driver = read('results/saves180/executed-procedure.mjs') if step == 'saves180' else (
             read('exceptions/executed-driver.mjs') if step == 'exceptions' else None)
         verify_execution(step, command, row['argv'], binding['sourceRoot'], manifest['recordedRoot'],
@@ -104,7 +106,12 @@ def validate(folder):
                     bytes=len(snapshot['scripts/acceptance/execute.py']), sha256=sha(snapshot['scripts/acceptance/execute.py'])),
                 'Actual command/wrapper differs from sealed procedure')
         descriptor(receipt['log'])
+        require(row['raw'] == ('results/saves180/raw.json' if step == 'saves180' else step+'/raw.json'),
+                'Raw result path differs from the canonical executed output')
         data = read(row['raw']); raw = loads(data); raws[step] = raw
+        require(datetime.fromisoformat(command['startedAt']) <= datetime.fromisoformat(raw.get('recordedAt', raw.get('startedAt'))) <=
+                datetime.fromisoformat(raw['finishedAt']) <= datetime.fromisoformat(receipt['finishedAt']),
+                'Raw result timestamps are outside the actual child execution')
         assessment = loads(read(step+'/ADJUDICATION.json'))
         require(assessment['product'] == product and assessment['raw'] == dict(bytes=len(data), sha256=sha(data)), 'Adjudication raw identity differs')
         if step.startswith('performance-') or step == 'soak':

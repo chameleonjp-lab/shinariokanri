@@ -32,10 +32,10 @@
 
 **Interfaces:** 最新main `67bef6a08f63a737d64d5bab0c8a17e3364bbc0a`、#59–68の実マージ状態、原4条項と既存test/fixtureの具体的対応を後続判定へ渡す。
 
-- [ ] 最新main/open PR/protection/祖先と既存検証を確認する。
+- [x] 最新main/open PR/protection/祖先と既存検証を確認する。
 - [ ] 原116/464・24/6/68、AUD001–023/OPT01–15、22外部待ち、X12案を逐条照合する。
-- [ ] 現行・最小補完・広域再設計を比較し、再現した欠陥のみ修正対象とする。
-- [ ] `check_docs.py`, `check_completion_plan.py`, `check_phase1.py`とbaseline unitの実結果を保存する。
+- [x] 現行・最小補完・広域再設計を比較し、再現した欠陥のみ修正対象とする。
+- [x] `check_docs.py`, `check_completion_plan.py`, `check_phase1.py`とbaseline unitの実結果を保存する。
 
 ## Task 2: 可搬な正式計測と証拠検査
 
@@ -43,9 +43,9 @@
 
 **Interfaces:** `seal_candidate.py --output PATH`はclean HEAD/tree/buildとsource/artifact/原契約のSHAを固定。`run_formal.py --output DIR`は候補のsealを作成し、原30×2、180、7200/full113を直列実行して各実終了と実行前後のsealを記録。`check_phase3.py --evidence DIR`は実測・byte・出所を再検査し、公開gateを変更しない。
 
-- [ ] 成功原本のmutatorで偽p95、欠落値、別fixture/build、短縮soak、113未満、欠落素材、未完了new/clone/cold、終了code不明を拒否するテストを先に書いてREDを確認。
-- [ ] 過去原180手順の実blob/全118memberを照合し、path/label/portの可搬化に限定。元assert/fixture/30回/期限を維持する。
-- [ ] seal・直列runner・検査を実装してGREEN。実コマンド／log／実終了を保存する。
+- [x] 成功原本のmutatorで偽p95、欠落値、別fixture/build、短縮soak、113未満、欠落素材、未完了new/clone/cold、終了code不明を拒否するテストを先に書いてREDを確認。
+- [x] 過去原180手順の実blob/全118memberを照合し、path/label/portの可搬化に限定。元assert/fixture/30回/期限を維持する。
+- [x] seal・直列runner・検査を実装してGREEN。実コマンド／log／実終了を保存する。
 
 ## Task 3: 制作導線・例外の補完
 
