@@ -1,0 +1,64 @@
+
+ RUN  v5.0.3 /workspace/shinariokanri-phase2-integration
+
+ ❯ src/ui/referenceIndex.test.ts (5 tests | 2 failed) 92ms
+   ❯ derived reference index publication (5)
+     × keeps caller edits to returned arrays out of subsequent reference answers 22ms
+     × rechecks mutable arrays instead of retaining stale in-place reference changes 6ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/ui/referenceIndex.test.ts > derived reference index publication > keeps caller edits to returned arrays out of subsequent reference answers
+AssertionError: expected [] to deeply equal [ …(2) ]
+
+- Expected
++ Received
+
+- [
+-   "7dd65e98-cc55-497a-b6c6-0390f869372c",
+-   "4b5aca88-c48c-43ae-8bce-478b4fad033f",
+- ]
++ []
+
+ ❯ src/ui/referenceIndex.test.ts:18:61
+     16|   const {p,a,shared,body}=fixture();await prepareReferenceIndex(p.enti…
+     17|   const rows=referencesTo(p.entities,a.id);rows.length=0;
+     18|   expect(cachedReferencesTo(p.entities,a.id)?.map(e=>e.id)).toEqual([s…
+       |                                                             ^
+     19|  });
+     20|  it('rechecks mutable arrays instead of retaining stale in-place refer…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/ui/referenceIndex.test.ts > derived reference index publication > rechecks mutable arrays instead of retaining stale in-place reference changes
+AssertionError: expected [ …(2) ] to deeply equal [ Array(1) ]
+
+- Expected
++ Received
+
+  [
++   "4f3f4df0-02b8-41e1-9010-4043645d8a1a",
+    "bc3ea395-0af7-4c69-88d2-4c939d964135",
+  ]
+
+ ❯ src/ui/referenceIndex.test.ts:23:61
+     21|   const {p,a,b,shared,body}=fixture();await prepareReferenceIndex(p.en…
+     22|   shared.data.povId=b.id;shared.data.body=[];
+     23|   expect(cachedReferencesTo(p.entities,a.id)?.map(e=>e.id)).toEqual([b…
+       |                                                             ^
+     24|   expect(referencesTo(p.entities,b.id).map(e=>e.id)).toEqual([shared.i…
+     25|  });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 3 passed (5)
+   Start at  09:10:53
+   Duration  393ms (transform 60%, tests 30%, import 9%, worker 1%)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

@@ -1,0 +1,90 @@
+
+ RUN  v5.0.3 /workspace/shinariokanri-phase2-integration
+
+ ❯ tests/optimization/semanticStudy.test.ts (2 tests | 1 failed) 15ms
+   × keeps live formal-reference leaves out of search while retaining the archived discrepancy evidence 11ms
+ ❯ src/domain/catalogReferenceText.test.ts (2 tests | 2 failed) 17ms
+   × excludes reference leaves whose field names do not end in Id or Ids 12ms
+   × retains kind-specific goal text and UUID-looking text explicitly written by the author 4ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/domain/catalogReferenceText.test.ts > excludes reference leaves whose field names do not end in Id or Ids
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ src/domain/catalogReferenceText.test.ts:9:65
+      7|   const person=createEntity(project.projectId,'character','人物',{goals:…
+      8|   const group=createEntity(project.projectId,'group','分類',{members:[me…
+      9|   expect(matchesQuery(project,person,{op:'text',value:goalId})).toBe(f…
+       |                                                                 ^
+     10|   expect(matchesQuery(project,group,{op:'text',value:memberId})).toBe(…
+     11|   expect(collectCatalogText(person).map(term=>term.path)).not.toContai…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  src/domain/catalogReferenceText.test.ts > retains kind-specific goal text and UUID-looking text explicitly written by the author
+AssertionError: expected [ { path: 'data.goals[0]', …(2) } ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   {
++     "normalized": "9bd9dace-d022-4356-9c3c-79c0ad22dfa8",
++     "path": "data.goals[0]",
++     "text": "9bd9dace-d022-4356-9c3c-79c0ad22dfa8",
++   },
++ ]
+
+ ❯ src/domain/catalogReferenceText.test.ts:22:67
+     20|   expect(matchesQuery(project,scene,{op:'text',value:id})).toBe(true);
+     21|   expect(matchesQuery(project,person,{op:'text',value:id})).toBe(true);
+     22|   expect(collectCatalogText(person).filter(term=>term.text===id)).toEq…
+       |                                                                   ^
+     23|   expect(collectCatalogText(person).find(term=>term.path==='data.body[…
+     24| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  tests/optimization/semanticStudy.test.ts > keeps live formal-reference leaves out of search while retaining the archived discrepancy evidence
+AssertionError: expected [ { path: 'data.goals[0]', …(1) } ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   {
++     "path": "data.goals[0]",
++     "scope": "entity",
++   },
++ ]
+
+ ❯ tests/optimization/semanticStudy.test.ts:17:50
+     15|   const group = createEntity(project.projectId, 'group', '分類', { membe…
+     16|   const scene = createEntity(project.projectId, 'scene', '場面', { goals…
+     17|   expect(indexedFormalReferencePaths(character)).toEqual([]);
+       |                                                  ^
+     18|   expect(indexedFormalReferencePaths(group)).toEqual([]);
+     19|   expect(indexedFormalReferencePaths(scene)).toEqual([]);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  3 failed | 1 passed (4)
+   Start at  09:03:16
+   Duration  668ms (transform 71%, import 21%, tests 7%, worker 1%)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

@@ -1,0 +1,35 @@
+
+ RUN  v5.0.3 /workspace/shinariokanri-phase2-integration
+
+ ❯ tests/optimization/catalog-collection.test.ts (9 tests | 1 failed | 8 skipped) 8ms
+   × shares one fresh proof inside a synchronous read frame and expires it across an await 7ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/optimization/catalog-collection.test.ts > shares one fresh proof inside a synchronous read frame and expires it across an await
+AssertionError: expected 'undefined' to be 'function' // Object.is equality
+
+Expected: "function"
+Received: "undefined"
+
+ ❯ tests/optimization/catalog-collection.test.ts:37:33
+     35|   let proofs=0,active=true;
+     36|   const view=invoke('createOrderedCollection',['a'],()=>new Map([['a',…
+     37|   expect(typeof view.beginRead).toBe('function');const frame=view.begi…
+       |                                 ^
+     38|   expect(frame.positionOf('a')).toBe(0);expect(frame.readPage(0,1).row…
+     39|   expect(proofs).toBe(1);await Promise.resolve();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 8 skipped (9)
+   Start at  10:04:07
+   Duration  1.03s (transform 81%, import 17%, tests 1%)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

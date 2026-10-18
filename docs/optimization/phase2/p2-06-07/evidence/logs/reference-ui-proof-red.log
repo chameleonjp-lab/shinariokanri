@@ -1,0 +1,30 @@
+
+ RUN  v5.0.3 /workspace/shinariokanri-phase2-integration
+
+ ❯ tests/optimization/derived-index-ownership.test.ts (19 tests | 1 failed) 644ms
+   × gives UI-held reference rows a revocable proof after actual schema and role changes 33ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/optimization/derived-index-ownership.test.ts > gives UI-held reference rows a revocable proof after actual schema and role changes
+AssertionError: component-held rows need a source/schema validity proof: expected 'undefined' to be 'function' // Object.is equality
+
+Expected: "function"
+Received: "undefined"
+
+ ❯ tests/optimization/derived-index-ownership.test.ts:217:106
+    215|   const s=store(),p=await saved(s,source),read=await prepareReferenceI…
+    216|   expect(read(id).map(e=>e.name)).toEqual(['門の出来事']);
+    217|   expect(typeof Reflect.get(read,'isCurrent'),'component-held rows nee…
+       |                                                                                                          ^
+    218|   const isCurrent=Reflect.get(read,'isCurrent') as ()=>boolean;
+    219|   expect(isCurrent()).toBe(true);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 18 passed (19)
+   Start at  10:44:55
+   Duration  1.51s (tests 45%, transform 44%, import 10%)
+

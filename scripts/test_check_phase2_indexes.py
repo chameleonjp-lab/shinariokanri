@@ -41,6 +41,11 @@ class CaptureContract(unittest.TestCase):
     def test_complete_off_and_separate_on(self):
         self.checker().verify_capture(self.valid())
 
+    def test_packaged_literal_sources_samples_and_required_artifacts(self):
+        # The existing documents job discovers this test; saved evidence is
+        # checked there without binding future product edits to old bytes.
+        self.assertEqual(len(self.checker().validate(SCRIPT.parents[1])),14)
+
     def test_missing_last_sample_and_recomputed_summary_still_fails(self):
         raw = self.valid()
         raw['cohorts'][0]['observations']['actions'].pop()
@@ -136,7 +141,7 @@ class CaptureContract(unittest.TestCase):
                 provider=dict(ids=value,pages=value,pageSize=60,allPageStates='loaded',hiddenSelection=None)
                 rows.append(copy.deepcopy(dict(text=query,expected=value,full=value,provider=provider)))
             phases.append(dict(label=label,queries=rows))
-        return dict(version=1,scope='Independent functional full-order oracle with fake IndexedDB; not browser latency or native persistence proof',suite='standard',sourceCommit=ui['sourceCommit'],productTree=ui['productTree'],status='ok',errors=[],fixture=observed['fixture'],normalizedCurrentSHA256=observed['savedSource']['current'],textCodeUnits=None,providerSupported=True,phases=phases,afterClose=dict(owners=0,entries=0,references=0,textCodeUnits=0)),ui
+        return dict(version=1,scope='Independent functional full-order oracle with fake IndexedDB; not browser latency or native persistence proof',suite='standard',sourceCommit=ui['sourceCommit'],productTree=ui['productTree'],status='ok',errors=[],environment=dict(node='v24.19.0',execArgv=['--experimental-transform-types'],backend='fake-indexeddb',timingsCaptured=False),fixture=observed['fixture'],normalizedCurrentSHA256=observed['savedSource']['current'],textCodeUnits=None,providerSupported=True,phases=phases,afterClose=dict(owners=0,entries=0,references=0,textCodeUnits=0)),ui
 
     def test_complete_full_filter_provider_ids_and_pages_proof(self):
         proof,ui=self.order_proof(); self.checker().verify_order_proof(proof,ui)
@@ -152,4 +157,24 @@ class CaptureContract(unittest.TestCase):
         proof,ui=self.order_proof(); proof['normalizedCurrentSHA256']='e'*64
         with self.assertRaises(ValueError): self.checker().verify_order_proof(proof,ui)
 
+    def test_functional_backend_and_no_latency_scope_cannot_be_promoted(self):
+        for key,value in [('backend','native IndexedDB'),('timingsCaptured',True),('execArgv',[])]:
+            proof,ui=self.order_proof(); proof['environment'][key]=value
+            with self.assertRaises(ValueError): self.checker().verify_order_proof(proof,ui)
+
+    def design(self):
+        checker=self.checker();ui=self.valid();ui.update(sourceCommit='1'*40,productTree='2'*40)
+        modes=['full-array','ordinal-A','provider-B'];rows=[]
+        for n in range(30):
+            for mode in modes[n%3:]+modes[:n%3]:
+                rows.append(dict(repetition=n,mode=mode,prepareMilliseconds=1,milliseconds=1,orderedOracle=True,retained=dict(entries=0,references=0,textCodeUnits=0),afterClose=dict(entries=0,references=0,textCodeUnits=0),containers=dict(fullResultRows=0 if mode=='provider-B' else 6800,ordinalEntries=0 if mode=='full-array' else 6800,requestedPageRows=20,selectedRows=1)))
+        return dict(version=1,scope='Supplemental Node collection preparation/acquisition comparison; not App/DB/formal acceptance',suite='standard',sourceCommit=ui['sourceCommit'],productTree=ui['productTree'],status='ok',errors=[],repetitions=30,recordedAt='2026-10-18T00:00:00Z',finishedAt='2026-10-18T00:00:01Z',fixture=ui['cohorts'][0]['observations']['fixture'],definition=dict(modes=modes),expected=dict(count=6800,sha256=checker.EXPECTED_IDS['standard']['all'],selectedId='cc6e3fcd-0000-4000-8000-000000003779',selectedIndex=6799,hiddenId='cc6e3fcd-0000-4000-8000-000000000004'),observations=rows,diagnostics=[dict(mode=m,probe=dict(counters={},pendingTransactions=0,droppedEvents=0)) for m in modes],summary={m:dict(prepare=checker.summary([1]*30),read=checker.summary([1]*30)) for m in modes}),ui
+
+    def test_complete_rotating_source_design_comparison(self):
+        raw,ui=self.design();self.checker().verify_design(raw,ui,dict(entries=100000,references=750000,textCodeUnits=8388608))
+
+    def test_missing_mode_false_p95_or_full_result_disguised_as_page_is_rejected(self):
+        for mutate in [lambda d:d['observations'].pop(),lambda d:d['summary']['provider-B']['read'].update(p95=0.1),lambda d:d['observations'][2]['containers'].update(requestedPageRows=6800),lambda d:d['observations'][0]['afterClose'].update(references=1),lambda d:d['observations'][0].update(mode='provider-B')]:
+            raw,ui=self.design();mutate(raw)
+            with self.assertRaises(ValueError): self.checker().verify_design(raw,ui,dict(entries=100000,references=750000,textCodeUnits=8388608))
 if __name__ == '__main__': unittest.main()

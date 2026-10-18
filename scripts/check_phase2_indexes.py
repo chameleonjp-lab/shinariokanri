@@ -16,7 +16,7 @@ from check_phase2_reassessment import FIXTURES, ASSETS, require, number, integer
 FOLDER = 'docs/optimization/phase2/p2-06-07'
 SCOPE = 'Supplemental actual-App/native-IDB observations; not formal phase3 acceptance'
 SEQUENCE = ['霧', '霧の', '門番', '記録', '霧', '霧の']
-FIXED_SOURCES = {'main': 'a13d8fad93b1a4a14c4cc4d45ab98783388de177', 'p206': 'b6e2120208972edb398b74dbeff951fb007111d3', 'prior': '0c378f5d7578cec090e4cedd67e0ead758e2bb69', 'full-b': '6df646113f0dc88e896cd76bf33f7b0eb57ffbc1', 'full-b-budget8': '6df646113f0dc88e896cd76bf33f7b0eb57ffbc1', 'selected': '3791b8a82624534b751de1d1e41314a0b048ffd6', 'budget4': '3791b8a82624534b751de1d1e41314a0b048ffd6'}
+FIXED_SOURCES = {'main': 'a13d8fad93b1a4a14c4cc4d45ab98783388de177', 'p206': 'b6e2120208972edb398b74dbeff951fb007111d3', 'prior': '0c378f5d7578cec090e4cedd67e0ead758e2bb69', 'full-b': '6df646113f0dc88e896cd76bf33f7b0eb57ffbc1', 'full-b-budget8': '6df646113f0dc88e896cd76bf33f7b0eb57ffbc1', 'selected': '886d0c0e664c159b53be22bb9e19cc0d7df8159d', 'budget4': '886d0c0e664c159b53be22bb9e19cc0d7df8159d'}
 LABELS = set(FIXED_SOURCES)
 # Independent, original-fixture authored-kind/name predicates. These hashes
 # freeze result ID order as well as count; a same-count substitution fails.
@@ -123,6 +123,14 @@ def verify_archive(folder, descriptor, records):
             require(len(payload) == expected[member.filename]['bytes'] and hashlib.sha256(payload).hexdigest() == expected[member.filename]['sha256'], 'archived member bytes differ')
 
 
+def archived_limits(folder, raw):
+    if not any(row['path'] == 'src/domain/derivedIndexes.ts' for row in raw['sourceFiles']): return None
+    with zipfile.ZipFile(safe_file(folder, raw['sourceArchive']['path'])) as archive:
+        code = archive.read('src/domain/derivedIndexes.ts').decode()
+    declaration = next(line for line in code.splitlines() if 'export const DEFAULT_DERIVED_INDEX_LIMITS:' in line)
+    return {key: int(re.search(key+r':([0-9_]+)', declaration)[1].replace('_','')) for key in ('entries', 'references', 'textCodeUnits')}
+
+
 def verify_artifacts(folder, raw):
     for descriptor, records in [('sourceArchive', 'sourceFiles'), ('runtimeArchive', 'runtimeFiles'), ('overlayArchive', 'overlays'), ('buildArchive', 'buildFiles')]:
         verify_archive(folder, raw[descriptor], raw[records])
@@ -144,12 +152,7 @@ def verify_artifacts(folder, raw):
     visit_runtime(raw['sourceTree'])
     require({r['path'] for r in raw['runtimeFiles']} == expected_runtime and len(raw['runtimeFiles']) == len(expected_runtime), 'runtime source coverage differs')
     owned = any(row['path'] == 'src/domain/derivedIndexes.ts' for row in raw['sourceFiles'])
-    limits = None
-    if owned:
-        with zipfile.ZipFile(safe_file(folder, raw['sourceArchive']['path'])) as archive:
-            code = archive.read('src/domain/derivedIndexes.ts').decode()
-        declaration = next(line for line in code.splitlines() if 'export const DEFAULT_DERIVED_INDEX_LIMITS:' in line)
-        limits = {key: int(re.search(key+r':([0-9_]+)', declaration)[1].replace('_','')) for key in ('entries', 'references', 'textCodeUnits')}
+    limits = archived_limits(folder,raw)
     for cohort in raw['cohorts']:
         observed = cohort['observations']
         require((observed['afterClose'] is not None) is owned, 'retention support misreported')
@@ -172,6 +175,8 @@ def verify_artifacts(folder, raw):
 
 def verify_order_proof(raw, ui):
     require(raw.get('version') == 1 and raw.get('scope') == 'Independent functional full-order oracle with fake IndexedDB; not browser latency or native persistence proof' and raw.get('status') == 'ok' and raw.get('errors') == [], 'failed or promoted functional proof')
+    environment=raw.get('environment',{})
+    require(environment.get('backend')=='fake-indexeddb' and environment.get('timingsCaptured') is False and '--experimental-transform-types' in environment.get('execArgv',[]) and re.fullmatch(r'v24\.[0-9]+\.[0-9]+',environment.get('node','')), 'functional backend/runtime scope differs')
     require(raw['suite'] == ui['suite'] and raw['sourceCommit'] == ui['sourceCommit'] and raw['productTree'] == ui['productTree'], 'functional/UI source differs')
     observed = ui['cohorts'][0]['observations']
     require(raw['fixture'] == observed['fixture'] and raw['normalizedCurrentSHA256'] == observed['savedSource']['current'] and raw['textCodeUnits'] == observed['options'].get('textCodeUnits'), 'functional/native UI input differs')
@@ -197,6 +202,24 @@ def verify_order_proof(raw, ui):
                 require(hidden is None or hidden['state'] == 'loaded' and hidden['id'] == hidden['actualId'], 'independent selected row differs')
             else: require(row['provider'] is None, 'unsupported provider reported as measured')
     if raw['afterClose'] is not None: require(all(type(v) is int and v == 0 for v in raw['afterClose'].values()), 'functional close retained indexes')
+
+
+def verify_design(raw,ui,limits):
+    modes=['full-array','ordinal-A','provider-B']
+    require(raw.get('version')==1 and raw.get('scope')=='Supplemental Node collection preparation/acquisition comparison; not App/DB/formal acceptance' and raw.get('status')=='ok' and raw.get('errors')==[], 'failed or promoted source experiment')
+    require(raw['sourceCommit']==ui['sourceCommit'] and raw['productTree']==ui['productTree'] and raw['suite']==ui['suite'] and raw['fixture']==ui['cohorts'][0]['observations']['fixture'], 'source experiment/UI source or input differs')
+    require(datetime.fromisoformat(raw['finishedAt'])>=datetime.fromisoformat(raw['recordedAt']) and raw['repetitions']==30 and raw['definition']['modes']==modes, 'source experiment definition differs')
+    large=raw['suite']=='large';count=68003 if large else 6800;prefix='859ae1ea' if large else 'cc6e3fcd'
+    require(raw['expected']==dict(count=count,sha256=EXPECTED_IDS[raw['suite']]['all'],selectedId=prefix+'-0000-4000-8000-'+('f00000000002' if large else '000000003779'),selectedIndex=count-1,hiddenId=prefix+'-0000-4000-8000-000000000004'), 'source experiment independent oracle differs')
+    require([(r['repetition'],r['mode']) for r in raw['observations']]==[(n,m) for n in range(30) for m in modes[n%3:]+modes[:n%3]], 'source experiment rotating samples missing')
+    for row in raw['observations']:
+        require(number(row['prepareMilliseconds']) and number(row['milliseconds']) and row['orderedOracle'] is True, 'incomplete OFF source experiment')
+        require(row['containers']==dict(fullResultRows=0 if row['mode']=='provider-B' else count,ordinalEntries=0 if row['mode']=='full-array' else count,requestedPageRows=count%60,selectedRows=1), 'source experiment acquisition/container differs')
+        require(set(row['retained'])==set(limits) and all(integer(v) and v<=limits[k] for k,v in row['retained'].items()) and set(row['afterClose'])==set(limits) and all(type(v) is int and v==0 for v in row['afterClose'].values()), 'source experiment retention differs')
+    require([r['mode'] for r in raw['diagnostics']]==modes, 'missing separate ON source experiment')
+    for row in raw['diagnostics']:
+        require('milliseconds' not in row and 'prepareMilliseconds' not in row and row['probe']['droppedEvents']==row['probe']['pendingTransactions']==0 and all(number(v) for v in row['probe']['counters'].values()), 'invalid ON source experiment')
+    require(raw['summary']=={mode:dict(prepare=summary([r['prepareMilliseconds'] for r in raw['observations'] if r['mode']==mode]),read=summary([r['milliseconds'] for r in raw['observations'] if r['mode']==mode])) for mode in modes}, 'source experiment false percentile')
 
 
 def validate(root, verify_current_source=False):
@@ -252,6 +275,21 @@ def validate(root, verify_current_source=False):
         else: require(proof['runner']['sha256']==runner_hash, 'functional verification tools differ across sources')
     selected = next(raw for raw in runs if raw['label']=='selected')
     require(next(row for row in selected['sourceFiles'] if row['path']=='scripts/optimization/verify-derived-results.mjs')['sha256']==runner_hash, 'functional verifier differs from sealed selected tool')
+    designs=manifest['designs']
+    require(len(designs)==4 and {(r['label'],r['suite']) for r in designs}=={(label,suite) for label in ('full-b','selected') for suite in FIXTURES}, 'missing source design comparison')
+    design_tool_hash=None
+    for record in designs:
+        require(record['path'] in listed, 'source experiment missing from artifact manifest')
+        path=safe_file(root,record['path']);design=load(path)
+        ui=next(raw for raw in runs if raw['label']==record['label'] and raw['suite']==record['suite'])
+        verify_design(design,ui,archived_limits(path.parent,design))
+        verify_archive(path.parent,design['sourceArchive'],design['sourceFiles'])
+        verify_source_files(path.parent,design,safe_file(path.parent,design['sourceArchive']['path']))
+        require(str((path.parent/design['sourceArchive']['path']).relative_to(root)) in listed, 'source experiment archive missing from artifact manifest')
+        tool=next(row['sha256'] for row in design['sourceFiles'] if row['path']=='scripts/optimization/compare-collection-designs.mjs')
+        if design_tool_hash is None: design_tool_hash=tool
+        else: require(tool==design_tool_hash, 'source experiment tools differ')
+    require(next(row['sha256'] for row in selected['sourceFiles'] if row['path']=='scripts/optimization/compare-collection-designs.mjs')==design_tool_hash, 'source experiment tool differs from sealed selected source')
     if verify_current_source:
         current_src = {str(p.relative_to(root)) for p in (root/'src').rglob('*') if p.is_file() and not str(p.relative_to(root)).startswith('src/portable/generated/')}
         measured_src = {r['path'] for r in selected['sourceFiles'] if r['path'].startswith('src/')}

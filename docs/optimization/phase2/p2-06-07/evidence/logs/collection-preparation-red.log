@@ -1,0 +1,38 @@
+
+ RUN  v5.0.3 /workspace/shinariokanri-phase2-integration
+
+ ❯ tests/optimization/catalog-collection.test.ts (8 tests | 1 failed | 7 skipped) 233ms
+   × prepares only a row lookup for plain pages, without unrelated query dependency indexes 232ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/optimization/catalog-collection.test.ts > prepares only a row lookup for plain pages, without unrelated query dependency indexes
+AssertionError: expected 1 to be +0 // Object.is equality
+
+- Expected
++ Received
+
+- 0
++ 1
+
+ ❯ tests/optimization/catalog-collection.test.ts:50:64
+     48|   try{
+     49|     const view=invoke('createCatalogCollection',p,all);view.readPage(0…
+     50|     expect(probe.snapshot().counters['query.index.builds']??0).toBe(0);
+       |                                                                ^
+     51|     expect(probe.snapshot().counters['collection.index.builds']).toBe(…
+     52|   }finally{probe.stop();}
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 7 skipped (8)
+   Start at  09:49:26
+   Duration  1.12s (transform 64%, tests 23%, import 13%)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

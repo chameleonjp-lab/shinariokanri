@@ -1,0 +1,126 @@
+
+ RUN  v5.0.3 /workspace/shinariokanri-phase2-integration
+
+ ❯ tests/optimization/catalog-collection.test.ts (6 tests | 6 failed) 335ms
+   × reads only requested IDs and keeps unloaded, absent and stale results distinct 6ms
+   × keeps all 125 authored IDs, tail selection and original ordinals while acquiring bounded pages 186ms
+   × keeps a nonmatching selected ID available without injecting it into filtered Japanese results 60ms
+   × refuses stale rows after source ownership changes instead of reporting an empty valid collection 45ms
+   × fully regenerates an unknown mutable source and preserves duplicate draft rows without sharing them 1ms
+   × retains saved collection ordering and missing fixed IDs independently from selection 36ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/optimization/catalog-collection.test.ts > reads only requested IDs and keeps unloaded, absent and stale results distinct
+AssertionError: missing createOrderedCollection: expected 'undefined' to be 'function' // Object.is equality
+
+Expected: "function"
+Received: "undefined"
+
+ ❯ invoke tests/optimization/catalog-collection.test.ts:9:119
+      7| import type {ProjectData,Query} from '../../src/domain/types';
+      8|
+      9| const invoke=(name:string,...args:unknown[])=>{const fn=Reflect.get(ca…
+       |                                                                                                                       ^
+     10| const stores:ScenarioStore[]=[];
+     11| const all:Query={op:'all',children:[]};
+ ❯ tests/optimization/catalog-collection.test.ts:19:31
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  tests/optimization/catalog-collection.test.ts > keeps all 125 authored IDs, tail selection and original ordinals while acquiring bounded pages
+AssertionError: missing createCatalogCollection: expected 'undefined' to be 'function' // Object.is equality
+
+Expected: "function"
+Received: "undefined"
+
+ ❯ invoke tests/optimization/catalog-collection.test.ts:9:119
+      7| import type {ProjectData,Query} from '../../src/domain/types';
+      8|
+      9| const invoke=(name:string,...args:unknown[])=>{const fn=Reflect.get(ca…
+       |                                                                                                                       ^
+     10| const stores:ScenarioStore[]=[];
+     11| const all:Query={op:'all',children:[]};
+ ❯ tests/optimization/catalog-collection.test.ts:28:32
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+ FAIL  tests/optimization/catalog-collection.test.ts > keeps a nonmatching selected ID available without injecting it into filtered Japanese results
+AssertionError: missing createCatalogCollection: expected 'undefined' to be 'function' // Object.is equality
+
+Expected: "function"
+Received: "undefined"
+
+ ❯ invoke tests/optimization/catalog-collection.test.ts:9:119
+      7| import type {ProjectData,Query} from '../../src/domain/types';
+      8|
+      9| const invoke=(name:string,...args:unknown[])=>{const fn=Reflect.get(ca…
+       |                                                                                                                       ^
+     10| const stores:ScenarioStore[]=[];
+     11| const all:Query={op:'all',children:[]};
+ ❯ tests/optimization/catalog-collection.test.ts:40:61
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯
+
+ FAIL  tests/optimization/catalog-collection.test.ts > refuses stale rows after source ownership changes instead of reporting an empty valid collection
+AssertionError: missing createCatalogCollection: expected 'undefined' to be 'function' // Object.is equality
+
+Expected: "function"
+Received: "undefined"
+
+ ❯ invoke tests/optimization/catalog-collection.test.ts:9:119
+      7| import type {ProjectData,Query} from '../../src/domain/types';
+      8|
+      9| const invoke=(name:string,...args:unknown[])=>{const fn=Reflect.get(ca…
+       |                                                                                                                       ^
+     10| const stores:ScenarioStore[]=[];
+     11| const all:Query={op:'all',children:[]};
+ ❯ tests/optimization/catalog-collection.test.ts:49:34
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/6]⎯
+
+ FAIL  tests/optimization/catalog-collection.test.ts > fully regenerates an unknown mutable source and preserves duplicate draft rows without sharing them
+AssertionError: missing createCatalogCollection: expected 'undefined' to be 'function' // Object.is equality
+
+Expected: "function"
+Received: "undefined"
+
+ ❯ invoke tests/optimization/catalog-collection.test.ts:9:119
+      7| import type {ProjectData,Query} from '../../src/domain/types';
+      8|
+      9| const invoke=(name:string,...args:unknown[])=>{const fn=Reflect.get(ca…
+       |                                                                                                                       ^
+     10| const stores:ScenarioStore[]=[];
+     11| const all:Query={op:'all',children:[]};
+ ❯ tests/optimization/catalog-collection.test.ts:56:26
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/6]⎯
+
+ FAIL  tests/optimization/catalog-collection.test.ts > retains saved collection ordering and missing fixed IDs independently from selection
+AssertionError: missing createCatalogCollection: expected 'undefined' to be 'function' // Object.is equality
+
+Expected: "function"
+Received: "undefined"
+
+ ❯ invoke tests/optimization/catalog-collection.test.ts:9:119
+      7| import type {ProjectData,Query} from '../../src/domain/types';
+      8|
+      9| const invoke=(name:string,...args:unknown[])=>{const fn=Reflect.get(ca…
+       |                                                                                                                       ^
+     10| const stores:ScenarioStore[]=[];
+     11| const all:Query={op:'all',children:[]};
+ ❯ tests/optimization/catalog-collection.test.ts:67:14
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/6]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  6 failed (6)
+   Start at  09:38:28
+   Duration  1.15s (transform 53%, tests 32%, import 14%)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

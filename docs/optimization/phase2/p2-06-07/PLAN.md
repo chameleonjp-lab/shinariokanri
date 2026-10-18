@@ -4,7 +4,7 @@
 
 **Goal:** Complete the remaining derived-index, field-semantics and collection-read work against actual integrated main, with bounded retention, independent correctness checks and literal-source measurements.
 
-**Architecture:** A ScenarioStore-owned, revocable lease binds derived work to private immutable current content. Evaluation scopes check the complete source/header identity and actual schema signature before sharing. Unknown/mutable inputs retain full regeneration. Ordered ID collections separate row acquisition, page and selection; full editor/DB validation remains intact.
+**Architecture:** A ScenarioStore-owned, revocable lease binds derived work to private immutable current content. Evaluation scopes check the complete source/header identity and actual schema signature before sharing. Unknown/mutable inputs retain full regeneration. Ordered ID collections were implemented and compared, then rejected for product UI adoption; the experimental domain adapter remains. Full editor/DB validation and original UI array reads remain intact.
 
 **Tech stack:** Existing TypeScript/React/Dexie/Vitest/Playwright; no new dependencies or external services.
 
@@ -53,23 +53,23 @@
 
 ## Task 3: Common meaning and ordered collection reads (P2-07)
 
-**Files:** new field-semantics/ordered-collection modules and independent expectation fixture; `src/ui/fieldSpecs.ts`, `WindowedList.tsx`, `ListWindow.tsx`, `CatalogPanel.tsx`, relevant list callers/tests.
+**Files:** new field-semantics/ordered-collection modules and independent expectation fixture; `src/ui/fieldSpecs.ts` and relevant tests. Prototype changes to `ListWindow.tsx`, `Lists.tsx`, `CatalogPanel.tsx` were measured and reverted byte-exact to P2-06. `WindowedList.tsx` is unchanged.
 
 **Interfaces:** descriptors derive model field/reference semantics from the existing registry, while UI labels/layout and public allowlists retain independent contracts. Ordered collections expose ordered IDs, bounded page reads, original ordinal and independent selection lookup.
 
-- [ ] Freeze independent baseline field/UI/public expectations before deriving new behavior; add negative tests for kind-specific goals, references, conditional/nested fields and deliberate public enum restrictions.
-- [ ] Implement descriptor coverage and consume it at an existing semantic/UI boundary. Keep schema generator output unchanged and detect drift against independent fixtures.
-- [ ] Add failing page/selection/ordinal tests, then implement the ID collection provider and integrate list/catalog consumers. Compare current, ordinal-only A and provider B without calling A a DB read model.
-- [ ] Keep full validated current DB reads as the safe fallback. Record actual provider row reads, search scans, DOM count and DB reads independently; do not infer DB reduction from page size.
-- [ ] Run all original relevant navigation/Japanese/catalog/public/reference checks plus new counterexamples; commit.
+- [x] Freeze independent baseline field/UI/public expectations before deriving new behavior; add negative tests for kind-specific goals, references, conditional/nested fields and deliberate public enum restrictions. Reproduce the contract byte-identically from clean literal main.
+- [x] Implement descriptor coverage and consume it at an existing semantic/UI boundary. Keep schema generator output unchanged and detect drift against independent fixtures.
+- [x] Add failing page/selection/ordinal tests, implement and integrate the provider prototype, then compare current, ordinal-only A and provider B. Reject B product UI integration on measured overhead; preserve comparison adapter and original UI.
+- [x] Keep full validated current DB reads as the safe fallback. Record actual provider row reads, search scans, DOM count and DB reads independently; do not infer DB reduction from page size.
+- [x] Run relevant navigation/Japanese/catalog/public/reference checks plus new counterexamples and commit. Final full submitted-source CI is tracked below and in the Draft PR.
 
 ## Task 4: Measurements, review and final Draft delivery
 
 **Files:** supplemental measurement harness/checker/tests and `docs/optimization/phase2/p2-06-07/` reports, manifests, source/build identities and raw evidence.
 
-- [ ] Seal clean product commits and unchanged original Standard/Large inputs. Measure repeated queries and page/selected reads with 30 repetitions; compare disabled/current, selected bounded reuse and the rejected alternative/budget. Separate cold setup, repeated work, retained logical entries and actual heap observations.
-- [ ] Exercise real native IndexedDB and browser UI paths where claimed. Record save/rename/alias/delete and dependency invalidation; unchanged operations retain existing literal-source evidence and are not relabeled as new formal acceptance.
-- [ ] Keep all failures and adverse values. Reject unsafe or slower alternatives; state limits of causal claims, heap/GC and any unexecuted phase-3/external conditions.
+- [x] Seal clean product commits and unchanged original Standard/Large inputs. Measure repeated queries and page/selected reads with 30 repetitions; compare literal main, P2-06, rejected B prototypes, final bounded reuse and same-source 4Mi/8Mi budgets. Separate cold setup, repeated work, retained logical entries and actual heap observations.
+- [x] Exercise real native IndexedDB and browser UI paths where claimed. Record save/rename/alias/archive and dependency invalidation; independent fake-IDB proof has the same normalized current as native UI. Unchanged operations retain existing literal-source evidence and are not relabeled as new formal acceptance.
+- [x] Keep all failures and adverse values. Reject unsafe or slower alternatives; state limits of causal claims, warm startup, heap/GC, API watchdog and unexecuted phase-3/external conditions.
 - [ ] Implement evidence validation with real negative/tamper tests; run docs/completion/phase1 and archived-source checks, original full unit/build and complete three-engine CI with recovery originals/later regressions/aggregate.
 - [ ] Obtain one fresh whole-branch review, address material findings by RED→GREEN tests and suite, and submit all results as a new main-targeted Draft PR. Do not merge it.
 
