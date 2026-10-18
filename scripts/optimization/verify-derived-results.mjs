@@ -1,5 +1,7 @@
 // Independent functional oracle. Node fake-IDB is explicit; native UI evidence
 // is separate and must have the identical normalized-current content hash.
+// Invoke with node --experimental-transform-types: legacy store dependencies
+// already use TypeScript parameter properties. Do not modify product syntax.
 import {registerHooks} from 'node:module';
 import {mkdir,readFile,writeFile} from 'node:fs/promises';
 import {resolve,join} from 'node:path';
@@ -17,7 +19,7 @@ const ui=JSON.parse(await readFile(uiPath,'utf8')),suite=ui.suite,git=(...a)=>ex
 const load=name=>import(pathToFileURL(join(root,name)));
 await mkdir(output);
 const commit=git('rev-parse',ui.sourceCommit);
-const result={version:1,scope:'Independent functional full-order oracle with fake IndexedDB; not browser latency or native persistence proof',suite,status:'running',recordedAt:new Date().toISOString(),sourceCommit:commit,sourceTree:git('rev-parse',`${commit}^{tree}`),productTree:git('rev-parse',`${commit}:src`),phases:[],errors:[]};
+const result={version:1,scope:'Independent functional full-order oracle with fake IndexedDB; not browser latency or native persistence proof',suite,status:'running',recordedAt:new Date().toISOString(),environment:{node:process.version,execArgv:process.execArgv,backend:'fake-indexeddb',timingsCaptured:false},sourceCommit:commit,sourceTree:git('rev-parse',`${commit}^{tree}`),productTree:git('rev-parse',`${commit}:src`),phases:[],errors:[]};
 const persist=()=>writeFile(join(output,'verification.json'),JSON.stringify(result,null,2)+'\n');
 let store;
 await persist();
