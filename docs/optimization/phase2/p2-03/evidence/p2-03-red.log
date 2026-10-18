@@ -1,0 +1,48 @@
+
+ RUN  v5.0.3 /workspace/phase2
+
+ ❯ src/storage/saveChangeset.test.ts (3 tests | 2 failed) 287ms
+   × builds previous record maps once and shares final diff evidence with command and writer 220ms
+   × matches frozen target/delta/write oracles and literal rename/reorder/tombstone/append expectations 27ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/storage/saveChangeset.test.ts > builds previous record maps once and shares final diff evidence with command and writer
+AssertionError: expected 34 to be less than or equal to 14
+ ❯ src/storage/saveChangeset.test.ts:30:22
+     28|  }}) as MapConstructor;
+     29|  try{await store.saveProject({...project,entities:project.entities.map…
+     30|  expect(indexedRows).toBeLessThanOrEqual(2*(project.entities.length+pr…
+       |                      ^
+     31| });
+     32| it('matches frozen target/delta/write oracles and literal rename/reord…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/storage/saveChangeset.test.ts > matches frozen target/delta/write oracles and literal rename/reorder/tombstone/append expectations
+StorageError: project.relations[0].fromId: この関係で許されない始点種類です。
+project.relations[0].toId: この関係で許されない終点種類です。
+ ❯ validatedCurrent src/storage/store.ts:265:19
+    263|   const result = probeSync('validate.current',()=>validateCurrentProje…
+    264|   if (!result.ok) {
+    265|     const error = new StorageError('VALIDATION_FAILED', result.issues.…
+       |                   ^
+    266|     Object.assign(error, { issues: result.issues });
+    267|     throw error;
+ ❯ ScenarioStore.saveProject src/storage/store.ts:1021:19
+ ❯ ScenarioStore.value src/storage/store.ts:502:519
+ ❯ src/storage/saveChangeset.test.ts:38:14
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 1 passed (3)
+   Start at  05:45:55
+   Duration  1.19s (transform 60%, tests 27%, import 13%)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice
