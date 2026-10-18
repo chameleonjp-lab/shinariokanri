@@ -5,7 +5,7 @@ import {probeCount} from '../observability/probe';
 
 export interface DerivedIndexLimits {entries:number;references:number;textCodeUnits:number}
 export interface DerivedIndexCost {references:number;textCodeUnits?:number}
-export const DEFAULT_DERIVED_INDEX_LIMITS:Readonly<DerivedIndexLimits>=Object.freeze({entries:100_000,references:500_000,textCodeUnits:4_194_304});
+export const DEFAULT_DERIVED_INDEX_LIMITS:Readonly<DerivedIndexLimits>=Object.freeze({entries:100_000,references:500_000,textCodeUnits:8_388_608});
 export interface DerivedValue<T> {value:T;cost:DerivedIndexCost}
 type Entry={value:unknown;cost:DerivedIndexLimits};
 const bindings=new WeakMap<ProjectData,ProjectDerivedOwner>();
