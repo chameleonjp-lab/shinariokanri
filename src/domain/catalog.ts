@@ -7,7 +7,6 @@ import {verifyReusePins} from './reuse';
 import type { CollectionData, Entity, EntityKind, ID, ProjectData, Query, Sort } from './types';
 import {beginDerivedEvaluation,type DerivedEvaluation} from './derivedIndexes';
 import {createOrderedCollection,staleCollectionPage,type OrderedCollection,type CollectionReadView,type CollectionRow,type CollectionPage} from './orderedCollection';
-import {isImmutablePlainData} from './immutablePlainData';
 export {createOrderedCollection} from './orderedCollection';
 
 /** Search normalization is separate from stored text. Original Japanese spelling remains untouched. */
@@ -238,8 +237,9 @@ export function evaluateCollection(project: ProjectData, collection: Entity<'col
  * row reduction is inferred from these bounded in-memory row reads. */
 export function createCatalogCollection(project:ProjectData,query:Query,collection?:Entity<'collection'>):OrderedCollection<Entity>{
   const evaluation=beginDerivedEvaluation(project);
-  if(!evaluation&&!isImmutablePlainData(project)){
-    // An unowned mutable caller cannot supply a reusable result-order proof.
+  if(!evaluation){
+    // Immutability alone does not prove schema/role ownership. Every unowned
+    // caller regenerates the answer, including deeply frozen caller input.
     // Regenerate the complete answer on each read, including duplicate draft rows.
     const snapshot=()=>{
       const rows=collection?evaluateCollection(project,collection).entities:filterCatalogEntities(project,query),ids=rows.map(row=>row.id);
@@ -278,11 +278,10 @@ export function createCatalogCollection(project:ProjectData,query:Query,collecti
     finish();
   }
   const buildRows=()=>{probeCount('collection.index.builds');probeCount('collection.index.rows',project.entities.length);const value=new Map(project.entities.filter(row=>!row.deletedAt).map(row=>[row.id,row]));return {value,cost:{references:2*value.size}};};
-  let local:Map<ID,Entity>|undefined;
   return createOrderedCollection<Entity>(ids,requested=>{
-    const byId=evaluation?(evaluation.peek<CatalogQueryIndex>('catalog.dependencies','current')?.byId??evaluation.get('collection.rows','current',buildRows)):local??=buildRows().value;
+    const byId=evaluation.peek<CatalogQueryIndex>('catalog.dependencies','current')?.byId??evaluation.get('collection.rows','current',buildRows);
     const rows=new Map<string,CollectionRow<Entity>>();for(const id of requested){const row=byId.get(id);rows.set(id,row?{state:'loaded',row}:{state:'absent'});}return rows;
-  },evaluation?()=>evaluation.isCurrent():()=>true,evaluation?()=>evaluation.isActive():()=>true);
+  },()=>evaluation.isCurrent(),()=>evaluation.isActive());
 }
 
 export type JapaneseIndexSource = 'name' | 'reading' | 'alias' | 'alias_reading' | 'canonical' | 'variant';

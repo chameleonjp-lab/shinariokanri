@@ -1,7 +1,8 @@
 import 'fake-indexeddb/auto';
 import {afterEach,expect,it} from 'vitest';
 import * as catalog from '../../src/domain/catalog';
-import {createEntity,createProject,newId} from '../../src/domain/model';
+import {createEntity,createProject,newId,ENTITY_SCHEMAS} from '../../src/domain/model';
+import {captureImmutablePlainData} from '../../src/domain/immutablePlainData';
 import {ScenarioStore} from '../../src/storage/store';
 import {startProbe} from '../../src/observability/probe';
 import type {ProjectData,Query} from '../../src/domain/types';
@@ -93,6 +94,22 @@ it('fully regenerates an unknown mutable source and preserves duplicate draft ro
   const duplicate={...last,name:'同IDの未検証入力'};p.entities.push(duplicate);
   const draft=invoke('createCatalogCollection',p,all);
   expect(draft.readPage(124,2).rows).toEqual([last,duplicate]);
+});
+
+it('fully regenerates unregistered frozen input when actual schema reference meaning changes',async()=>{
+  const p=createProject('unregistered immutable'),person=createEntity(p.projectId,'character','frozen person');person.data.reading=person.id;p.entities.push(person);
+  const captured=captureImmutablePlainData(p);if(!captured.captured)throw Error('capture failed');
+  const view=invoke('createCatalogCollection',captured.value,{op:'text',value:person.id}),frame=view.beginRead();
+  expect(view.ids).toEqual([person.id]);expect(view.readPage(0,30).rows.map((e:{id:string})=>e.id)).toEqual([person.id]);
+  const definition=ENTITY_SCHEMAS.character;if(definition.type!=='object')throw Error('schema kind');
+  const field=definition.fields.reading!,original=field.schema;
+  try{
+    field.schema={type:'ref',scope:'entity',kinds:['character']};
+    expect(catalog.filterCatalogEntities(captured.value,{op:'text',value:person.id})).toEqual([]);
+    expect(view.ids).toEqual([]);expect(view.readPage(0,30).rows).toEqual([]);
+    expect(view.selected(person.id)).toEqual({state:'loaded',row:captured.value.entities[0]});
+    await Promise.resolve();expect(frame.readPage(0,30).state).toBe('stale');
+  }finally{field.schema=original;}
 });
 
 it('retains saved collection ordering and missing fixed IDs independently from selection',async()=>{
