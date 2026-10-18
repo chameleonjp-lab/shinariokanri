@@ -31,15 +31,15 @@ function isReferenceField(key: string): boolean {
   return /(?:Id|Ids)$/.test(key);
 }
 
-function collectText(value: unknown, path: string, output: CatalogTextTerm[], depth = 0): void {
-  if (depth > 32 || value == null) return;
+function collectText(value: unknown, path: string, output: CatalogTextTerm[], references: ReadonlySet<string>, depth = 0): void {
+  if (depth > 32 || value == null || references.has(path)) return;
   if (typeof value === 'string') {
     const text = value.trim();
     if (text) output.push({ path, text, normalized: normalizeCatalogText(text) });
     return;
   }
   if (Array.isArray(value)) {
-    value.forEach((item, index) => collectText(item, `${path}[${index}]`, output, depth + 1));
+    value.forEach((item, index) => collectText(item, `${path}[${index}]`, output, references, depth + 1));
     return;
   }
   if (typeof value !== 'object') return;
@@ -48,7 +48,7 @@ function collectText(value: unknown, path: string, output: CatalogTextTerm[], de
     if (SEARCH_IGNORED_FIELDS.has(key) || isReferenceField(key)) continue;
     if (key === 'value' && object.type === 'ref') continue;
     if (typeof nested === 'string' && ['kind', 'op', 'scope', 'valueType', 'stage', 'role', 'direction', 'mode', 'operation', 'resolutionPolicy'].includes(key)) continue;
-    collectText(nested, path ? `${path}.${key}` : key, output, depth + 1);
+    collectText(nested, path ? `${path}.${key}` : key, output, references, depth + 1);
   }
 }
 
@@ -56,9 +56,10 @@ function collectText(value: unknown, path: string, output: CatalogTextTerm[], de
 export function collectCatalogText(entity: Entity): CatalogTextTerm[] {
   probeCount('query.text.rows');
   const output: CatalogTextTerm[] = [];
+  const references = new Set(collectReferences(entity).map(reference => reference.path));
   if (entity.name.trim()) output.push({ path: 'name', text: entity.name.trim(), normalized: normalizeCatalogText(entity.name) });
-  collectText(entity.data, 'data', output);
-  collectText(entity.customValues, 'customValues', output);
+  collectText(entity.data, 'data', output, references);
+  collectText(entity.customValues, 'customValues', output, references);
   return output;
 }
 

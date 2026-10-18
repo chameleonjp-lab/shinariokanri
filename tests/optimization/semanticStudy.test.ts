@@ -10,13 +10,13 @@ it('distinguishes kind-specific rich text, references and intentionally narrower
   expect(find('collection', 'mode')).toMatchObject({ values: ['dynamic', 'fixed'], publicValues: ['fixed'] });
 });
 
-it('detects the current suffix-heuristic search discrepancy using the authoritative reference walker', () => {
+it('keeps live formal-reference leaves out of search while retaining the archived discrepancy evidence', () => {
   const project = createProject(), goal = createEntity(project.projectId, 'goal', '目的'), character = createEntity(project.projectId, 'character', '人物', { goals: [goal.id] });
   const group = createEntity(project.projectId, 'group', '分類', { members: [character.id] });
   const scene = createEntity(project.projectId, 'scene', '場面', { goals: [{ id: goal.id, kind: 'paragraph', text: '目的の本文' }] });
-  expect(indexedFormalReferencePaths(character)).toEqual([{ path: 'data.goals[0]', scope: 'entity' }]);
-  expect(indexedFormalReferencePaths(group)).toEqual([{ path: 'data.members[0]', scope: 'entity' }]);
+  expect(indexedFormalReferencePaths(character)).toEqual([]);
+  expect(indexedFormalReferencePaths(group)).toEqual([]);
   expect(indexedFormalReferencePaths(scene)).toEqual([]);
   expect(JSON.stringify(indexedFormalReferencePaths(character))).not.toContain(goal.id);
-  // This asserts the audit detects an existing discrepancy; it does not approve that product behavior.
+  // Historical source and the original discrepancy remain sealed in the prior evidence archive.
 });
