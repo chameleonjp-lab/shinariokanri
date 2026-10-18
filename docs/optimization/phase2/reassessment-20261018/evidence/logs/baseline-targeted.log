@@ -1,0 +1,21 @@
+
+> shinariokanri@0.1.0 pretest
+> node scripts/build/portable-runtime.mjs
+
+Production portable runtime generated: 155926 characters
+
+> shinariokanri@0.1.0 test
+> vitest run --maxWorkers=1 --fileParallelism=false src/domain/catalog.test.ts src/domain/catalogPerformance.test.ts src/ui/referenceIndex.test.ts src/domain/linkCandidates.test.ts src/domain/fixedStateUsage.test.ts
+
+
+ RUN  v5.0.3 /workspace/shinariokanri-audit
+
+
+ Test Files  5 passed (5)
+      Tests  36 passed (36)
+   Start at  03:29:22
+   Duration  2.38s (tests 53%, transform 33%, import 13%, worker 1%)
+
+    Isolate  5 workers spawned · ~75ms startup each (spawn + environment, per file)
+             at least ~300ms faster with isolate: false — reuses workers across files instead of one per file
+

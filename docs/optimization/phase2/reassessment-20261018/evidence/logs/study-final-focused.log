@@ -1,0 +1,48 @@
+
+> shinariokanri@0.1.0 pretest
+> node scripts/build/portable-runtime.mjs
+
+Production portable runtime generated: 155926 characters
+
+> shinariokanri@0.1.0 test
+> vitest run --maxWorkers=1 --fileParallelism=false tests/optimization/semanticStudy.test.ts tests/optimization/fixtureIdentity.test.ts tests/optimization/catalogStudy.test.ts
+
+
+ RUN  v5.0.3 /workspace/shinariokanri-audit
+
+ ❯ tests/optimization/semanticStudy.test.ts (2 tests | 1 failed) 17ms
+   × distinguishes kind-specific rich text, references and intentionally narrower public definitions 11ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/optimization/semanticStudy.test.ts > distinguishes kind-specific rich text, references and intentionally narrower public definitions
+AssertionError: expected { kind: 'scene', field: 'goals', …(8) } to match object { model: 'richtext', ui: 'rich', …(2) }
+(6 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+    "model": "richtext",
+-   "public": "rich",
++   "public": null,
+    "reference": null,
+    "ui": "rich",
+  }
+
+ ❯ tests/optimization/semanticStudy.test.ts:9:34
+      7|   expect(new Set(rows.map(row => row.kind))).toEqual(new Set(ENTITY_KI…
+      8|   expect(find('character', 'goals')).toMatchObject({ model: 'array', i…
+      9|   expect(find('scene', 'goals')).toMatchObject({ model: 'richtext', ui…
+       |                                  ^
+     10|   expect(find('collection', 'mode')).toMatchObject({ values: ['fixed',…
+     11| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 2 passed (3)
+      Tests  1 failed | 52 passed (53)
+   Start at  03:54:12
+   Duration  4.57s (tests 91%, transform 6%, import 3%)
+

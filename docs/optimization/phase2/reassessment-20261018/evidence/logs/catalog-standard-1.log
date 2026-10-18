@@ -1,0 +1,25 @@
+node:internal/child_process:1160
+    result.error = new ErrnoException(result.error, 'spawnSync ' + options.file);
+                   ^
+
+<ref *1> Error: spawnSync git EPERM
+    at Object.spawnSync (node:internal/child_process:1160:20)
+    at spawnSync (node:child_process:928:24)
+    at execFileSync (node:child_process:971:15)
+    at git (file:///workspace/shinariokanri-audit/scripts/optimization/measure-catalog-study.mjs:21:55)
+    at file:///workspace/shinariokanri-audit/scripts/optimization/measure-catalog-study.mjs:31:55 {
+  errno: -1,
+  code: 'EPERM',
+  syscall: 'spawnSync git',
+  path: 'git',
+  spawnargs: [ 'rev-parse', 'HEAD' ],
+  error: [Circular *1],
+  status: 0,
+  signal: null,
+  output: [ null, '0a50f4242faefefee0851b3b99d71da5bf0e3b18\n', '' ],
+  pid: 4297,
+  stdout: '0a50f4242faefefee0851b3b99d71da5bf0e3b18\n',
+  stderr: ''
+}
+
+Node.js v24.19.0

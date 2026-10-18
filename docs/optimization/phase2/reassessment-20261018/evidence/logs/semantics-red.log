@@ -1,0 +1,111 @@
+
+> shinariokanri@0.1.0 pretest
+> node scripts/build/portable-runtime.mjs
+
+Production portable runtime generated: 155926 characters
+
+> shinariokanri@0.1.0 test
+> vitest run --maxWorkers=1 --fileParallelism=false tests/optimization/semanticStudy.test.ts
+
+
+ RUN  v5.0.3 /workspace/shinariokanri-audit
+
+ ❯ tests/optimization/semanticStudy.test.ts (2 tests | 2 failed) 13ms
+   × distinguishes kind-specific rich text, references and intentionally narrower public definitions 7ms
+   × detects the current suffix-heuristic search discrepancy using the authoritative reference walker 5ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/optimization/semanticStudy.test.ts > distinguishes kind-specific rich text, references and intentionally narrower public definitions
+AssertionError: expected Set{} to deeply equal Set{ 'character', 'group', …(41) }
+
+- Expected
++ Received
+
+- Set {
+-   "assertion",
+-   "attachment",
+-   "chapter",
+-   "character",
+-   "checkpoint",
+-   "collection",
+-   "creative_brief",
+-   "cue",
+-   "decision",
+-   "dialogue_line",
+-   "disclosure",
+-   "effect",
+-   "event",
+-   "external_contract",
+-   "flow_edge",
+-   "flow_graph",
+-   "flow_node",
+-   "foreshadow",
+-   "gameplay_spec",
+-   "goal",
+-   "group",
+-   "item",
+-   "localization",
+-   "lore",
+-   "map",
+-   "media_variant",
+-   "note",
+-   "place",
+-   "production_task",
+-   "projection_profile",
+-   "quest",
+-   "recording",
+-   "review",
+-   "scene",
+-   "snapshot",
+-   "source",
+-   "storyboard_frame",
+-   "template",
+-   "terminology",
+-   "trace",
+-   "travel_route",
+-   "variable",
+-   "voice_rule",
+- }
++ Set {}
+
+ ❯ tests/optimization/semanticStudy.test.ts:7:46
+      5| it('distinguishes kind-specific rich text, references and intentionall…
+      6|   const rows = fieldSemanticInventory(), find = (kind: string, field: …
+      7|   expect(new Set(rows.map(row => row.kind))).toEqual(new Set(ENTITY_KI…
+       |                                              ^
+      8|   expect(find('character', 'goals')).toMatchObject({ model: 'array', i…
+      9|   expect(find('scene', 'goals')).toMatchObject({ model: 'richtext', ui…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  tests/optimization/semanticStudy.test.ts > detects the current suffix-heuristic search discrepancy using the authoritative reference walker
+AssertionError: expected [] to deeply equal [ { path: 'data.goals[0]', …(1) } ]
+
+- Expected
++ Received
+
+- [
+-   {
+-     "path": "data.goals[0]",
+-     "scope": "entity",
+-   },
+- ]
++ []
+
+ ❯ tests/optimization/semanticStudy.test.ts:17:50
+     15|   const group = createEntity(project.projectId, 'group', '分類', { membe…
+     16|   const scene = createEntity(project.projectId, 'scene', '場面', { goals…
+     17|   expect(indexedFormalReferencePaths(character)).toEqual([{ path: 'dat…
+       |                                                  ^
+     18|   expect(indexedFormalReferencePaths(group)).toEqual([{ path: 'data.me…
+     19|   expect(indexedFormalReferencePaths(scene)).toEqual([]);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed (2)
+   Start at  03:53:54
+   Duration  308ms (transform 79%, import 13%, tests 6%, worker 1%)
+

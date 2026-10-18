@@ -1,0 +1,211 @@
+test_close_must_release_logical_indexes_and_source (test_check_phase2_reassessment.ReassessmentCheckerTests.test_close_must_release_logical_indexes_and_source) ... FAIL
+test_complete_supplemental_capture (test_check_phase2_reassessment.ReassessmentCheckerTests.test_complete_supplemental_capture) ... ok
+test_corpus_full_scan_cannot_disappear_from_diagnostics (test_check_phase2_reassessment.ReassessmentCheckerTests.test_corpus_full_scan_cannot_disappear_from_diagnostics) ... FAIL
+test_dirty_failed_and_unfinished_runs_are_not_success (test_check_phase2_reassessment.ReassessmentCheckerTests.test_dirty_failed_and_unfinished_runs_are_not_success) ... FAIL
+test_duplicate_repetition_cannot_replace_missing_row (test_check_phase2_reassessment.ReassessmentCheckerTests.test_duplicate_repetition_cannot_replace_missing_row) ... FAIL
+test_fabricated_expected_count_is_not_an_oracle (test_check_phase2_reassessment.ReassessmentCheckerTests.test_fabricated_expected_count_is_not_an_oracle) ... FAIL
+test_missing_or_excess_retention_is_not_zero (test_check_phase2_reassessment.ReassessmentCheckerTests.test_missing_or_excess_retention_is_not_zero) ... FAIL
+test_missing_repetition_is_not_thirty (test_check_phase2_reassessment.ReassessmentCheckerTests.test_missing_repetition_is_not_thirty) ... FAIL
+test_nan_and_boolean_are_not_timings (test_check_phase2_reassessment.ReassessmentCheckerTests.test_nan_and_boolean_are_not_timings) ... 
+  test_nan_and_boolean_are_not_timings (test_check_phase2_reassessment.ReassessmentCheckerTests.test_nan_and_boolean_are_not_timings) (value=nan) ... FAIL
+  test_nan_and_boolean_are_not_timings (test_check_phase2_reassessment.ReassessmentCheckerTests.test_nan_and_boolean_are_not_timings) (value=inf) ... FAIL
+  test_nan_and_boolean_are_not_timings (test_check_phase2_reassessment.ReassessmentCheckerTests.test_nan_and_boolean_are_not_timings) (value=-1) ... FAIL
+  test_nan_and_boolean_are_not_timings (test_check_phase2_reassessment.ReassessmentCheckerTests.test_nan_and_boolean_are_not_timings) (value=True) ... FAIL
+test_original_fixture_digest_cannot_be_replaced (test_check_phase2_reassessment.ReassessmentCheckerTests.test_original_fixture_digest_cannot_be_replaced) ... FAIL
+test_p95_is_recomputed_from_every_raw_value (test_check_phase2_reassessment.ReassessmentCheckerTests.test_p95_is_recomputed_from_every_raw_value) ... FAIL
+test_probe_must_have_no_pending_native_work (test_check_phase2_reassessment.ReassessmentCheckerTests.test_probe_must_have_no_pending_native_work) ... FAIL
+test_product_tree_and_acceptance_scope_cannot_be_promoted (test_check_phase2_reassessment.ReassessmentCheckerTests.test_product_tree_and_acceptance_scope_cannot_be_promoted) ... FAIL
+test_wrong_order_is_rejected (test_check_phase2_reassessment.ReassessmentCheckerTests.test_wrong_order_is_rejected) ... FAIL
+test_wrong_result_is_not_saved_as_fast (test_check_phase2_reassessment.ReassessmentCheckerTests.test_wrong_result_is_not_saved_as_fast) ... FAIL
+
+======================================================================
+FAIL: test_close_must_release_logical_indexes_and_source (test_check_phase2_reassessment.ReassessmentCheckerTests.test_close_must_release_logical_indexes_and_source)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/shinariokanri-audit/scripts/test_check_phase2_reassessment.py", line 72, in test_close_must_release_logical_indexes_and_source
+    self.rejected(lambda r: r['observations'][1]['afterClose'].__setitem__('projectRows', 6800), 'close')
+  File "/workspace/shinariokanri-audit/scripts/test_check_phase2_reassessment.py", line 33, in rejected
+    with self.assertRaisesRegex(ValueError, message):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_corpus_full_scan_cannot_disappear_from_diagnostics (test_check_phase2_reassessment.ReassessmentCheckerTests.test_corpus_full_scan_cannot_disappear_from_diagnostics)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/shinariokanri-audit/scripts/test_check_phase2_reassessment.py", line 75, in test_corpus_full_scan_cannot_disappear_from_diagnostics
+    self.rejected(lambda r: r['diagnostics'][1]['probe']['counters'].pop('query.filter.rows'), 'scan')
+  File "/workspace/shinariokanri-audit/scripts/test_check_phase2_reassessment.py", line 33, in rejected
+    with self.assertRaisesRegex(ValueError, message):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_dirty_failed_and_unfinished_runs_are_not_success (test_check_phase2_reassessment.ReassessmentCheckerTests.test_dirty_failed_and_unfinished_runs_are_not_success)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/shinariokanri-audit/scripts/test_check_phase2_reassessment.py", line 63, in test_dirty_failed_and_unfinished_runs_are_not_success
+    self.rejected(lambda r: r.__setitem__('dirty', True), 'unsealed')
+  File "/workspace/shinariokanri-audit/scripts/test_check_phase2_reassessment.py", line 33, in rejected
+    with self.assertRaisesRegex(ValueError, message):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_duplicate_repetition_cannot_replace_missing_row (test_check_phase2_reassessment.ReassessmentCheckerTests.test_duplicate_repetition_cannot_replace_missing_row)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/shinariokanri-audit/scripts/test_check_phase2_reassessment.py", line 40, in test_duplicate_repetition_cannot_replace_missing_row
+    self.rejected(lambda r: r['observations'].__setitem__(-1, r['observations'][0]), 'duplicate')
+  File "/workspace/shinariokanri-audit/scripts/test_check_phase2_reassessment.py", line 33, in rejected
+    with self.assertRaisesRegex(ValueError, message):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_fabricated_expected_count_is_not_an_oracle (test_check_phase2_reassessment.ReassessmentCheckerTests.test_fabricated_expected_count_is_not_an_oracle)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/shinariokanri-audit/scripts/test_check_phase2_reassessment.py", line 57, in test_fabricated_expected_count_is_not_an_oracle
+    self.rejected(lambda r: r['expected'][0].__setitem__('count', 0), 'expected')
+  File "/workspace/shinariokanri-audit/scripts/test_check_phase2_reassessment.py", line 33, in rejected
+    with self.assertRaisesRegex(ValueError, message):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_missing_or_excess_retention_is_not_zero (test_check_phase2_reassessment.ReassessmentCheckerTests.test_missing_or_excess_retention_is_not_zero)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/shinariokanri-audit/scripts/test_check_phase2_reassessment.py", line 68, in test_missing_or_excess_retention_is_not_zero
+    self.rejected(lambda r: r['observations'][1]['retained'].pop('retainedUtf8Bytes'), 'retention')
+  File "/workspace/shinariokanri-audit/scripts/test_check_phase2_reassessment.py", line 33, in rejected
+    with self.assertRaisesRegex(ValueError, message):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_missing_repetition_is_not_thirty (test_check_phase2_reassessment.ReassessmentCheckerTests.test_missing_repetition_is_not_thirty)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/shinariokanri-audit/scripts/test_check_phase2_reassessment.py", line 37, in test_missing_repetition_is_not_thirty
+    self.rejected(lambda r: r['observations'].pop(), '90')
+  File "/workspace/shinariokanri-audit/scripts/test_check_phase2_reassessment.py", line 33, in rejected
+    with self.assertRaisesRegex(ValueError, message):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_nan_and_boolean_are_not_timings (test_check_phase2_reassessment.ReassessmentCheckerTests.test_nan_and_boolean_are_not_timings) (value=nan)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/shinariokanri-audit/scripts/test_check_phase2_reassessment.py", line 48, in test_nan_and_boolean_are_not_timings
+    self.rejected(lambda r: r['observations'][0]['queries'][0].__setitem__('milliseconds', value), 'timing')
+  File "/workspace/shinariokanri-audit/scripts/test_check_phase2_reassessment.py", line 33, in rejected
+    with self.assertRaisesRegex(ValueError, message):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_nan_and_boolean_are_not_timings (test_check_phase2_reassessment.ReassessmentCheckerTests.test_nan_and_boolean_are_not_timings) (value=inf)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/shinariokanri-audit/scripts/test_check_phase2_reassessment.py", line 48, in test_nan_and_boolean_are_not_timings
+    self.rejected(lambda r: r['observations'][0]['queries'][0].__setitem__('milliseconds', value), 'timing')
+  File "/workspace/shinariokanri-audit/scripts/test_check_phase2_reassessment.py", line 33, in rejected
+    with self.assertRaisesRegex(ValueError, message):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_nan_and_boolean_are_not_timings (test_check_phase2_reassessment.ReassessmentCheckerTests.test_nan_and_boolean_are_not_timings) (value=-1)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/shinariokanri-audit/scripts/test_check_phase2_reassessment.py", line 48, in test_nan_and_boolean_are_not_timings
+    self.rejected(lambda r: r['observations'][0]['queries'][0].__setitem__('milliseconds', value), 'timing')
+  File "/workspace/shinariokanri-audit/scripts/test_check_phase2_reassessment.py", line 33, in rejected
+    with self.assertRaisesRegex(ValueError, message):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_nan_and_boolean_are_not_timings (test_check_phase2_reassessment.ReassessmentCheckerTests.test_nan_and_boolean_are_not_timings) (value=True)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/shinariokanri-audit/scripts/test_check_phase2_reassessment.py", line 48, in test_nan_and_boolean_are_not_timings
+    self.rejected(lambda r: r['observations'][0]['queries'][0].__setitem__('milliseconds', value), 'timing')
+  File "/workspace/shinariokanri-audit/scripts/test_check_phase2_reassessment.py", line 33, in rejected
+    with self.assertRaisesRegex(ValueError, message):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_original_fixture_digest_cannot_be_replaced (test_check_phase2_reassessment.ReassessmentCheckerTests.test_original_fixture_digest_cannot_be_replaced)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/shinariokanri-audit/scripts/test_check_phase2_reassessment.py", line 60, in test_original_fixture_digest_cannot_be_replaced
+    self.rejected(lambda r: r['fixture'].__setitem__('sha256', 'c' * 64), 'fixture')
+  File "/workspace/shinariokanri-audit/scripts/test_check_phase2_reassessment.py", line 33, in rejected
+    with self.assertRaisesRegex(ValueError, message):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_p95_is_recomputed_from_every_raw_value (test_check_phase2_reassessment.ReassessmentCheckerTests.test_p95_is_recomputed_from_every_raw_value)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/shinariokanri-audit/scripts/test_check_phase2_reassessment.py", line 51, in test_p95_is_recomputed_from_every_raw_value
+    self.rejected(lambda r: r['summary']['corpus'][0].__setitem__('p95', 0.5), 'summary')
+  File "/workspace/shinariokanri-audit/scripts/test_check_phase2_reassessment.py", line 33, in rejected
+    with self.assertRaisesRegex(ValueError, message):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_probe_must_have_no_pending_native_work (test_check_phase2_reassessment.ReassessmentCheckerTests.test_probe_must_have_no_pending_native_work)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/shinariokanri-audit/scripts/test_check_phase2_reassessment.py", line 78, in test_probe_must_have_no_pending_native_work
+    self.rejected(lambda r: r['diagnostics'][0]['probe'].__setitem__('pendingTransactions', 1), 'probe')
+  File "/workspace/shinariokanri-audit/scripts/test_check_phase2_reassessment.py", line 33, in rejected
+    with self.assertRaisesRegex(ValueError, message):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_product_tree_and_acceptance_scope_cannot_be_promoted (test_check_phase2_reassessment.ReassessmentCheckerTests.test_product_tree_and_acceptance_scope_cannot_be_promoted)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/shinariokanri-audit/scripts/test_check_phase2_reassessment.py", line 81, in test_product_tree_and_acceptance_scope_cannot_be_promoted
+    self.rejected(lambda r: r.__setitem__('productTree', 'd' * 40), 'product')
+  File "/workspace/shinariokanri-audit/scripts/test_check_phase2_reassessment.py", line 33, in rejected
+    with self.assertRaisesRegex(ValueError, message):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_wrong_order_is_rejected (test_check_phase2_reassessment.ReassessmentCheckerTests.test_wrong_order_is_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/shinariokanri-audit/scripts/test_check_phase2_reassessment.py", line 43, in test_wrong_order_is_rejected
+    self.rejected(lambda r: r['observations'][3].__setitem__('order', ['current', 'corpus', 'results']), 'order')
+  File "/workspace/shinariokanri-audit/scripts/test_check_phase2_reassessment.py", line 33, in rejected
+    with self.assertRaisesRegex(ValueError, message):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_wrong_result_is_not_saved_as_fast (test_check_phase2_reassessment.ReassessmentCheckerTests.test_wrong_result_is_not_saved_as_fast)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/shinariokanri-audit/scripts/test_check_phase2_reassessment.py", line 54, in test_wrong_result_is_not_saved_as_fast
+    self.rejected(lambda r: r['observations'][1]['queries'][0].__setitem__('sha256', 'b' * 64), 'result')
+  File "/workspace/shinariokanri-audit/scripts/test_check_phase2_reassessment.py", line 33, in rejected
+    with self.assertRaisesRegex(ValueError, message):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+----------------------------------------------------------------------
+Ran 15 tests in 0.023s
+
+FAILED (failures=17)

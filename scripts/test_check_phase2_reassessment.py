@@ -4,8 +4,10 @@ import hashlib
 from pathlib import Path
 import tempfile
 import unittest
+import zipfile
 
-from check_phase2_reassessment import verify_run, verify_source_files
+import check_phase2_reassessment as checker
+from check_phase2_reassessment import validate, verify_run, verify_source_files
 
 
 def capture():
@@ -15,7 +17,7 @@ def capture():
     modes = ['current', 'corpus', 'results']
     queries = [dict(row, queryIndex=i, milliseconds=float(i + 1)) for i, row in enumerate(expected)]
     rows = [dict(repetition=n, mode=mode, order=modes[n % 3:] + modes[:n % 3], prepareMilliseconds=0.1,
-                 queries=copy.deepcopy(queries), retained=dict(stats), afterClose=dict(cleared)) for n in range(30) for mode in modes]
+                 queries=copy.deepcopy(queries), retained=dict(stats), afterClose=dict(cleared)) for n in range(30) for mode in modes[n % 3:] + modes[:n % 3]]
     return {'version': 1, 'suite': 'standard', 'repetitions': 30, 'dirty': False, 'sourceCommit': '1' * 40, 'sourceTree': '2' * 40,
             'productTree': '73263a85e2ef2ead9799f91125ba54fb643182b4', 'errors': [], 'finishedAt': '2026-10-18T00:00:01Z', 'recordedAt': '2026-10-18T00:00:00Z',
             'inputUnchanged': True, 'scope': 'Supplemental Node source experiment, not original browser30/180/7200 acceptance',
@@ -27,6 +29,9 @@ def capture():
 
 
 class ReassessmentCheckerTests(unittest.TestCase):
+    def test_packaged_evidence_is_bound_to_source_and_original_contracts(self):
+        validate(Path(__file__).resolve().parents[1])
+
     def test_complete_supplemental_capture(self):
         verify_run(capture())
 
@@ -40,10 +45,13 @@ class ReassessmentCheckerTests(unittest.TestCase):
         self.rejected(lambda r: r['observations'].pop(), '90')
 
     def test_duplicate_repetition_cannot_replace_missing_row(self):
-        self.rejected(lambda r: r['observations'].__setitem__(-1, r['observations'][0]), 'duplicate')
+        self.rejected(lambda r: r['observations'].__setitem__(-1, r['observations'][0]), 'order|duplicate')
 
     def test_wrong_order_is_rejected(self):
         self.rejected(lambda r: r['observations'][3].__setitem__('order', ['current', 'corpus', 'results']), 'order')
+
+    def test_recorded_order_must_match_actual_observation_order(self):
+        self.rejected(lambda r: r['observations'].__setitem__(slice(0, 2), r['observations'][1::-1]), 'order')
 
     def test_nan_and_boolean_are_not_timings(self):
         for value in (math.nan, math.inf, -1, True):
@@ -127,6 +135,55 @@ class ReassessmentCheckerTests(unittest.TestCase):
             raw['sourceProof']['commit'] += 'changed'
             with self.assertRaisesRegex(ValueError, 'commit binding'):
                 verify_source_files(root, raw)
+
+    def archive_capture(self, root):
+        raw = self.source_capture(root)
+        archive = root / 'source.zip'
+        with zipfile.ZipFile(archive, 'w') as bundle:
+            bundle.write(root / 'src/a.ts', 'src/a.ts')
+        return raw, archive
+
+    def test_historical_archive_survives_future_source_change_but_delivery_check_rejects_it(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory); raw, archive = self.archive_capture(root)
+            (root / 'src/a.ts').write_text('a legitimate future implementation')
+            verify_source_files(root, raw, archive=archive)
+            with self.assertRaisesRegex(ValueError, 'source changed'):
+                verify_source_files(root, raw)
+
+    def test_archive_members_and_bytes_cannot_be_substituted(self):
+        for member, data, message in [('src/a.ts', b'corrupt', 'source changed'),
+                                      ('src/extra.ts', b'extra', 'coverage'),
+                                      ('../a.ts', b'unsafe', 'unsafe')]:
+            with self.subTest(member=member), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory); raw, archive = self.archive_capture(root)
+                with zipfile.ZipFile(archive, 'w') as bundle:
+                    bundle.writestr(member, data)
+                with self.assertRaisesRegex(ValueError, message):
+                    verify_source_files(root, raw, archive=archive)
+
+    def cohort(self):
+        standard = capture()
+        large = copy.deepcopy(standard)
+        large.update(suite='large', recordedAt='2026-10-18T00:00:02Z', finishedAt='2026-10-18T00:00:03Z')
+        for raw in (standard, large):
+            raw['environment'] = {'node': 'v24.19.0', 'physicalDevice': False}
+        return {'standard': standard, 'large': large}
+
+    def test_cohort_requires_bound_suite_commit_tree_environment_and_serial_runs(self):
+        checker.verify_cohort(self.cohort(), '1' * 40)
+        mutations = [lambda r: r['large'].__setitem__('suite', 'standard'),
+                     lambda r: r['large'].__setitem__('sourceCommit', '3' * 40),
+                     lambda r: r['large'].__setitem__('sourceTree', '3' * 40),
+                     lambda r: r['large']['environment'].__setitem__('node', 'other'),
+                     lambda r: r['large'].__setitem__('recordedAt', '2026-10-18T00:00:00Z')]
+        for mutate in mutations:
+            with self.subTest(mutation=mutate):
+                captures = self.cohort(); mutate(captures)
+                with self.assertRaises(ValueError):
+                    checker.verify_cohort(captures, '1' * 40)
+        with self.assertRaisesRegex(ValueError, 'commit'):
+            checker.verify_cohort(self.cohort(), '4' * 40)
 
 
 if __name__ == '__main__':

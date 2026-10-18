@@ -1,0 +1,146 @@
+
+> shinariokanri@0.1.0 pretest
+> node scripts/build/portable-runtime.mjs
+
+Production portable runtime generated: 155926 characters
+
+> shinariokanri@0.1.0 test
+> vitest run --maxWorkers=1 --fileParallelism=false tests/optimization/catalogStudy.test.ts
+
+
+ RUN  v5.0.3 /workspace/shinariokanri-audit
+
+ ❯ tests/optimization/catalogStudy.test.ts (39 tests | 29 failed) 68ms
+   ❯ catalog study current (11)
+     × preserves hand-written Japanese, same-name, archive, reference and ordering expectations 17ms
+     × rejects changed account and destroys the old scope before returning 3ms
+     × rejects changed role and destroys the old scope before returning 2ms
+     × rejects changed project and destroys the old scope before returning 1ms
+     × rejects changed revision and destroys the old scope before returning 1ms
+     × rejects changed pins and destroys the old scope before returning 1ms
+     × rejects changed schema and destroys the old scope before returning 1ms
+     × rejects changed visibility and destroys the old scope before returning 3ms
+     × rejects changed normalization and destroys the old scope before returning 1ms
+   ❯ catalog study corpus (11)
+     × preserves hand-written Japanese, same-name, archive, reference and ordering expectations 3ms
+     × rejects changed account and destroys the old scope before returning 2ms
+     × rejects changed role and destroys the old scope before returning 2ms
+     × rejects changed project and destroys the old scope before returning 1ms
+     × rejects changed revision and destroys the old scope before returning 2ms
+     × rejects changed pins and destroys the old scope before returning 1ms
+     × rejects changed schema and destroys the old scope before returning 1ms
+     × rejects changed visibility and destroys the old scope before returning 2ms
+     × rejects changed normalization and destroys the old scope before returning 1ms
+   ❯ catalog study results (11)
+     × preserves hand-written Japanese, same-name, archive, reference and ordering expectations 2ms
+     × rejects changed account and destroys the old scope before returning 1ms
+     × rejects changed role and destroys the old scope before returning 1ms
+     × rejects changed project and destroys the old scope before returning 1ms
+     × rejects changed revision and destroys the old scope before returning 1ms
+     × rejects changed pins and destroys the old scope before returning 1ms
+     × rejects changed schema and destroys the old scope before returning 1ms
+     × rejects changed visibility and destroys the old scope before returning 1ms
+     × rejects changed normalization and destroys the old scope before returning 1ms
+   ❯ catalog study safety and resource limits (6)
+     × rejects mutable and shallow-frozen corpus sources without freezing the input 0ms
+     × rejects mutable and shallow-frozen results sources without freezing the input 0ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 29 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/optimization/catalogStudy.test.ts > catalog study current > preserves hand-written Japanese, same-name, archive, reference and ordering expectations
+ FAIL  tests/optimization/catalogStudy.test.ts > catalog study corpus > preserves hand-written Japanese, same-name, archive, reference and ordering expectations
+ FAIL  tests/optimization/catalogStudy.test.ts > catalog study results > preserves hand-written Japanese, same-name, archive, reference and ordering expectations
+AssertionError: expected { closed: false, …(5) } to match object { closed: true, …(5) }
+
+- Expected
++ Received
+
+  {
+-   "closed": true,
+-   "projectRows": 0,
++   "closed": false,
++   "projectRows": 5,
+    "resultEntries": 0,
+    "resultReferences": 0,
+    "retainedTerms": 0,
+    "retainedUtf8Bytes": 0,
+  }
+
+ ❯ tests/optimization/catalogStudy.test.ts:43:27
+     41|     }
+     42|     study.close();
+     43|     expect(study.stats()).toMatchObject({ closed: true, retainedTerms:…
+       |                           ^
+     44|     expect(() => study.query({ op: 'text', value: '' }, owner)).toThro…
+     45|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/29]⎯
+
+ FAIL  tests/optimization/catalogStudy.test.ts > catalog study current > rejects changed account and destroys the old scope before returning
+ FAIL  tests/optimization/catalogStudy.test.ts > catalog study current > rejects changed role and destroys the old scope before returning
+ FAIL  tests/optimization/catalogStudy.test.ts > catalog study current > rejects changed project and destroys the old scope before returning
+ FAIL  tests/optimization/catalogStudy.test.ts > catalog study current > rejects changed revision and destroys the old scope before returning
+ FAIL  tests/optimization/catalogStudy.test.ts > catalog study current > rejects changed pins and destroys the old scope before returning
+ FAIL  tests/optimization/catalogStudy.test.ts > catalog study current > rejects changed schema and destroys the old scope before returning
+ FAIL  tests/optimization/catalogStudy.test.ts > catalog study current > rejects changed visibility and destroys the old scope before returning
+ FAIL  tests/optimization/catalogStudy.test.ts > catalog study current > rejects changed normalization and destroys the old scope before returning
+ FAIL  tests/optimization/catalogStudy.test.ts > catalog study corpus > rejects changed account and destroys the old scope before returning
+ FAIL  tests/optimization/catalogStudy.test.ts > catalog study corpus > rejects changed role and destroys the old scope before returning
+ FAIL  tests/optimization/catalogStudy.test.ts > catalog study corpus > rejects changed project and destroys the old scope before returning
+ FAIL  tests/optimization/catalogStudy.test.ts > catalog study corpus > rejects changed revision and destroys the old scope before returning
+ FAIL  tests/optimization/catalogStudy.test.ts > catalog study corpus > rejects changed pins and destroys the old scope before returning
+ FAIL  tests/optimization/catalogStudy.test.ts > catalog study corpus > rejects changed schema and destroys the old scope before returning
+ FAIL  tests/optimization/catalogStudy.test.ts > catalog study corpus > rejects changed visibility and destroys the old scope before returning
+ FAIL  tests/optimization/catalogStudy.test.ts > catalog study corpus > rejects changed normalization and destroys the old scope before returning
+ FAIL  tests/optimization/catalogStudy.test.ts > catalog study results > rejects changed account and destroys the old scope before returning
+ FAIL  tests/optimization/catalogStudy.test.ts > catalog study results > rejects changed role and destroys the old scope before returning
+ FAIL  tests/optimization/catalogStudy.test.ts > catalog study results > rejects changed project and destroys the old scope before returning
+ FAIL  tests/optimization/catalogStudy.test.ts > catalog study results > rejects changed revision and destroys the old scope before returning
+ FAIL  tests/optimization/catalogStudy.test.ts > catalog study results > rejects changed pins and destroys the old scope before returning
+ FAIL  tests/optimization/catalogStudy.test.ts > catalog study results > rejects changed schema and destroys the old scope before returning
+ FAIL  tests/optimization/catalogStudy.test.ts > catalog study results > rejects changed visibility and destroys the old scope before returning
+ FAIL  tests/optimization/catalogStudy.test.ts > catalog study results > rejects changed normalization and destroys the old scope before returning
+AssertionError: expected [Function] to throw an error
+
+- Expected:
+null
+
++ Received:
+undefined
+
+ ❯ tests/optimization/catalogStudy.test.ts:56:94
+     54|     const study = createCatalogStudy(frozen(fixture().project), owner,…
+     55|     study.query({ op: 'text', value: '青衣' }, owner);
+     56|     expect(() => study.query({ op: 'text', value: '青衣' }, { ...owner, …
+       |                                                                                              ^
+     57|     expect(study.stats()).toMatchObject({ closed: true, retainedTerms:…
+     58|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/29]⎯
+
+ FAIL  tests/optimization/catalogStudy.test.ts > catalog study safety and resource limits > rejects mutable and shallow-frozen corpus sources without freezing the input
+ FAIL  tests/optimization/catalogStudy.test.ts > catalog study safety and resource limits > rejects mutable and shallow-frozen results sources without freezing the input
+AssertionError: expected [Function] to throw an error
+
+- Expected:
+null
+
++ Received:
+undefined
+
+ ❯ tests/optimization/catalogStudy.test.ts:76:62
+     74|   it.each(['corpus', 'results'] as const)('rejects mutable and shallow…
+     75|     const f = fixture();
+     76|     expect(() => createCatalogStudy(f.project, owner, mode)).toThrow(/…
+       |                                                              ^
+     77|     expect(Object.isFrozen(f.first)).toBe(false);
+     78|     Object.freeze(f.project); Object.freeze(f.project.entities);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/29]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  29 failed | 10 passed (39)
+   Start at  03:32:09
+   Duration  634ms (transform 68%, tests 20%, import 12%, worker 1%)
+

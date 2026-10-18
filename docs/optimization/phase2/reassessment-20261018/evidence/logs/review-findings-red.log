@@ -1,0 +1,85 @@
+
+> shinariokanri@0.1.0 pretest
+> node scripts/build/portable-runtime.mjs
+
+Production portable runtime generated: 155926 characters
+
+> shinariokanri@0.1.0 test
+> vitest run --maxWorkers=1 --fileParallelism=false tests/optimization/catalogStudy.test.ts
+
+
+ RUN  v5.0.3 /workspace/shinariokanri-audit
+
+ ❯ tests/optimization/catalogStudy.test.ts (49 tests | 3 failed) 53ms
+   ❯ catalog study safety and resource limits (16)
+     × rejects an inherited owner rather than losing all guard dimensions 5ms
+     × does not invoke a query JSON hook or cache its forged serialization 3ms
+     × records the actual full row scan in corpus mode despite reusing normalization 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/optimization/catalogStudy.test.ts > catalog study safety and resource limits > rejects an inherited owner rather than losing all guard dimensions
+AssertionError: expected [Function] to throw an error
+
+- Expected:
+null
+
++ Received:
+undefined
+
+ ❯ tests/optimization/catalogStudy.test.ts:76:98
+     74| describe('catalog study safety and resource limits', () => {
+     75|   it('rejects an inherited owner rather than losing all guard dimensio…
+     76|     expect(() => createCatalogStudy(frozen(fixture().project), Object.…
+       |                                                                                                  ^
+     77|   });
+     78|   it('does not invoke a query JSON hook or cache its forged serializat…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  tests/optimization/catalogStudy.test.ts > catalog study safety and resource limits > does not invoke a query JSON hook or cache its forged serialization
+AssertionError: expected [ Array(1) ] to deeply equal [ Array(1) ]
+
+- Expected
++ Received
+
+  [
+-   "0e0e6a53-8685-4434-a20e-b38b58d58794",
++   "bdb87819-1230-4cb8-9efc-a0ad2b75176a",
+  ]
+
+ ❯ tests/optimization/catalogStudy.test.ts:82:66
+     80|     const unusual = { op: 'text' as const, value: '青衣', toJSON() { cal…
+     81|     expect(ids(study.query(unusual, owner))).toEqual([f.first.id]);
+     82|     expect(ids(study.query({ op: 'text', value: '場面' }, owner))).toEqu…
+       |                                                                  ^
+     83|     expect(calls).toBe(0); study.close();
+     84|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  tests/optimization/catalogStudy.test.ts > catalog study safety and resource limits > records the actual full row scan in corpus mode despite reusing normalization
+AssertionError: expected undefined to be 10 // Object.is equality
+
+- Expected:
+10
+
++ Received:
+undefined
+
+ ❯ tests/optimization/catalogStudy.test.ts:89:64
+     87|     try {
+     88|       study.query({ op: 'text', value: '青衣' }, owner); study.query({ o…
+     89|       expect(capture.snapshot().counters['query.filter.rows']).toBe(10…
+       |                                                                ^
+     90|       expect(capture.snapshot().counters['query.text.rows']).toBe(4);
+     91|     } finally { capture.stop(); study.close(); }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 46 passed (49)
+   Start at  03:39:31
+   Duration  400ms (transform 67%, tests 18%, import 13%, worker 2%)
+

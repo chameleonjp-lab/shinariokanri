@@ -1,0 +1,16 @@
+..............F....
+======================================================================
+FAIL: test_raw_json_digest_and_size_cannot_be_relabelled (test_check_phase2_reassessment.ReassessmentCheckerTests.test_raw_json_digest_and_size_cannot_be_relabelled)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/shinariokanri-audit/scripts/test_check_phase2_reassessment.py", line 66, in test_raw_json_digest_and_size_cannot_be_relabelled
+    self.rejected(lambda r: r['fixture'].__setitem__('wireJsonSha256', 'd' * 64), 'fixture')
+  File "/workspace/shinariokanri-audit/scripts/test_check_phase2_reassessment.py", line 36, in rejected
+    with self.assertRaisesRegex(ValueError, message):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+----------------------------------------------------------------------
+Ran 19 tests in 0.037s
+
+FAILED (failures=1)

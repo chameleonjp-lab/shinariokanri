@@ -2,12 +2,14 @@
 from __future__ import annotations
 
 from datetime import datetime
+import argparse
 import hashlib
 import json
 import math
 from pathlib import Path, PurePosixPath
 import re
 import sys
+import zipfile
 
 FOLDER = 'docs/optimization/phase2/reassessment-20261018'
 BASE = 'b32de9525c4acf5206ac3d6d1d23f5b90967ec95'
@@ -64,6 +66,8 @@ def verify_run(raw):
 
     rows = raw['observations']
     require(len(rows) == 90, 'expected 90 mode/repetition observations')
+    expected_order = [(n, mode) for n in range(30) for mode in MODES[n % 3:] + MODES[:n % 3]]
+    require([(row['repetition'], row['mode']) for row in rows] == expected_order, 'actual observation order differs')
     seen, timings = set(), {(mode, i): [] for mode in MODES for i in range(6)}
     for row in rows:
         mode, repetition = row['mode'], row['repetition']
@@ -110,8 +114,12 @@ def load(path):
     return json.loads(path.read_text(), object_pairs_hook=unique)
 
 
-def safe_file(root, relative):
+def safe_relative(relative):
     require(isinstance(relative, str) and '\\' not in relative and '\x00' not in relative and not relative.startswith('/') and str(PurePosixPath(relative)) == relative and '..' not in PurePosixPath(relative).parts, 'unsafe artifact path')
+
+
+def safe_file(root, relative):
+    safe_relative(relative)
     path = root / relative
     require(path.resolve().is_relative_to(root.resolve()) and path.is_file() and not path.is_symlink(), 'missing or unsafe artifact')
     return path
@@ -121,7 +129,18 @@ def git_hash(kind, data):
     return hashlib.sha1(f'{kind} {len(data)}\0'.encode() + data).hexdigest()
 
 
-def verify_source_files(root, raw):
+def verify_source_files(root, raw, archive=None):
+    archived = None
+    if archive is not None:
+        with zipfile.ZipFile(archive) as bundle:
+            archived = {}
+            for member in bundle.infolist():
+                safe_relative(member.filename.rstrip('/') if member.is_dir() else member.filename)
+                if member.is_dir():
+                    continue
+                require(member.filename not in archived, 'duplicate archived source member')
+                archived[member.filename] = bundle.read(member)
+        require(set(archived) == {record['path'] for record in raw['sourceFiles']}, 'archived source coverage differs')
     proof = raw['sourceProof']
     require(git_hash('commit', proof['commit'].encode()) == raw['sourceCommit'] and proof['commit'].splitlines()[0] == 'tree ' + raw['sourceTree'], 'measured commit binding differs')
     trees = proof['trees']
@@ -139,7 +158,8 @@ def verify_source_files(root, raw):
         relative = record['path']
         require(relative not in source_paths, 'duplicate source file')
         source_paths.add(relative)
-        data = safe_file(root, relative).read_bytes()
+        safe_relative(relative)
+        data = archived[relative] if archived is not None else safe_file(root, relative).read_bytes()
         require(len(data) == record['bytes'] and hashlib.sha256(data).hexdigest() == record['sha256'], f'measured source changed: {relative}')
         current = raw['sourceTree']
         for part in PurePosixPath(relative).parts:
@@ -164,21 +184,40 @@ def verify_source_files(root, raw):
     require(next(entry['sha'] for entry in trees[raw['sourceTree']] if entry['name'] == 'src') == raw['productTree'], 'product tree not in measured commit')
 
 
-def validate(root):
+def verify_cohort(captures, measured_commit):
+    require(set(captures) == set(FIXTURES), 'incomplete measured cohort')
+    standard = captures['standard']
+    for suite, raw in captures.items():
+        require(raw['suite'] == suite, 'cohort suite binding differs')
+        require(raw['sourceCommit'] == measured_commit, 'cohort measured commit differs')
+        require(raw['sourceTree'] == standard['sourceTree'], 'cohort source tree differs')
+        require(raw['environment'] == standard['environment'], 'cohort environment differs')
+    require(datetime.fromisoformat(standard['finishedAt']) <= datetime.fromisoformat(captures['large']['recordedAt']), 'cohort runs overlap')
+
+
+def validate(root, verify_current_source=False):
     folder = root / FOLDER
     manifest = load(folder / 'evidence-manifest.json')
     require(manifest.get('baseCommit') == BASE and manifest.get('releaseState') == 'RELEASE BLOCKED' and manifest.get('originalAcceptancePerformed') is False, 'baseline/release status changed')
     paths = set()
     for record in manifest['files']:
+        require(record['path'].startswith(FOLDER + '/'), 'historical manifest must not freeze current product/tooling')
         require(record['path'] not in paths, 'duplicate artifact')
         paths.add(record['path'])
         data = safe_file(root, record['path']).read_bytes()
         require(len(data) == record['bytes'] and hashlib.sha256(data).hexdigest() == record['sha256'], f'artifact bytes differ: {record["path"]}')
+    archive = f'{FOLDER}/evidence/measured-source-d963f3d.zip'
+    require(archive in paths, 'missing measured source archive')
+    captures = {}
     for suite in FIXTURES:
         relative = f'{FOLDER}/evidence/{suite}.json'
         require(relative in paths, 'missing measurement manifest entry')
         raw = load(root / relative); verify_run(raw)
-        verify_source_files(root, raw)
+        captures[suite] = raw
+        verify_source_files(root, raw, archive=safe_file(root, archive))
+        if verify_current_source:
+            verify_source_files(root, raw)
+    verify_cohort(captures, manifest['measuredCommit'])
     lock = load(root / 'docs/optimization/phase1/contract-lock.json')
     require(lock['counts'] == dict(requirements=104, cases=116, clauses=464, workPackages=24, regressionGroups=6, supplemental=68) and len(lock['files']) == 73, 'original scope changed')
     for record in lock['files']:
@@ -192,16 +231,23 @@ def validate(root):
         require(row['clauses'] == by_id[row['id']]['clauses'] and row['freshOriginalAcceptance'] == 'NOT_PERFORMED', 'original clause/acceptance promotion')
         require(row['paths'] == by_id[row['id']]['paths'], 'trace path coverage changed')
         for relative in row['paths']:
-            safe_file(root, relative)
+            safe_relative(relative)
+            # Paths describe the measured historical implementation; future renames
+            # must not turn valid preserved evidence into a failing product gate.
+            if verify_current_source:
+                safe_file(root, relative)
     integration = load(folder / 'integration.json')
     require(integration['main']['sha'] == BASE and integration['productChangesPerformed'] is False and integration['phase2PrerequisitesInMain'] == {'63': False, '64': False, '65': False}, 'prerequisite/adoption status changed')
     return len(paths)
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--verify-current-source', action='store_true', help='delivery-only: also compare current checkout with measured source; omit in future product CI')
+    args = parser.parse_args()
     try:
-        count = validate(Path(__file__).resolve().parents[1])
+        count = validate(Path(__file__).resolve().parents[1], verify_current_source=args.verify_current_source)
         print(f'PHASE2 REASSESSMENT VERIFIED: {count} artifacts; supplemental only; RELEASE BLOCKED')
-    except (OSError, ValueError, KeyError, TypeError, StopIteration) as error:
+    except (OSError, ValueError, KeyError, TypeError, StopIteration, zipfile.BadZipFile) as error:
         print(f'PHASE2 REASSESSMENT FAILED: {error}', file=sys.stderr)
         sys.exit(1)
