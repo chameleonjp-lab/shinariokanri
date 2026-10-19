@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest';
 import { createEntity, createProject } from '../domain/model';
-import { reconcileSavedDrafts, updateJsonBuffer } from './draftState';
+import { reconcileSavedDrafts, removeCommittedDraftDuplicates, updateJsonBuffer } from './draftState';
 it('completes an unmounted editor save without dropping another project or later input', () => {
   const a = createProject('A'), b = createProject('B');
   const submitted = createEntity(a.projectId, 'character', '保存した名前');
@@ -25,4 +25,42 @@ it('clears only the submitted capture after its editor was remounted with later 
   expect(completed[otherKey]).toEqual({ _noteCapture: 'other' });
   const removed = updateJsonBuffer({ [key]: { _noteCapture: 'submitted' } }, key, '_noteCapture', undefined, 'submitted');
   expect(removed).toEqual({});
+});
+
+it('reload discards a stale revision-0 workspace draft only when all authored fields match saved revision 1', () => {
+  const project = createProject('recovery');
+  const base = createEntity(project.projectId, 'flow_edge', 'saved condition');
+  const saved = { ...base, revision: '1', updatedAt: '2026-10-19T00:00:01.000Z' };
+  const stale = { ...saved, revision: '0', updatedAt: '2026-10-18T00:00:00.000Z' };
+  const key = project.projectId + ':' + base.id;
+  const another = createEntity(project.projectId, 'note', 'other unsaved');
+  const otherKey = another.projectId + ':' + another.id;
+  const fromDifferentProject = { ...base, projectId: 'other-project' };
+  const unrelatedKey = 'other-project:' + base.id;
+  const drafts = { [key]: stale, [otherKey]: another, [unrelatedKey]: fromDifferentProject };
+  expect(removeCommittedDraftDuplicates(drafts, { ...project, entities: [saved] })).toEqual({
+    [otherKey]: another,
+    [unrelatedKey]: fromDifferentProject,
+  });
+});
+
+it('does not erase newer, different, malformed or uncommitted input at reload', () => {
+  const project = createProject('recovery');
+  const old = createEntity(project.projectId, 'character', 'initial');
+  const saved = { ...old, name: 'saved name', revision: '1' };
+  const key = project.projectId + ':' + old.id;
+  const working = [
+    { ...old, name: 'later unsaved', revision: '0' },
+    { ...saved, revision: '2' },
+    { ...saved, revision: 'invalid' },
+    { ...old, name: 'other author update', revision: '1' },
+  ];
+  for (const draft of working) {
+    const drafts = { [key]: draft };
+    expect(removeCommittedDraftDuplicates(drafts, { ...project, entities: [saved] })).toBe(drafts);
+  }
+  const empty = {};
+  expect(removeCommittedDraftDuplicates(empty, { ...project, entities: [saved] })).toBe(empty);
+  const unmodified = { [key]: saved };
+  expect(removeCommittedDraftDuplicates(unmodified, { ...project, entities: [] })).toBe(unmodified);
 });
