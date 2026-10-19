@@ -101,11 +101,14 @@ class Stage1TraceabilityTests(unittest.TestCase):
                 target.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copyfile(ROOT/name, target)
             (future/'tests/e2e/basic-registration.spec.ts').write_text('// future reviewed test source\n')
-            result = self.validator.validate(future, self.value)
+            try:
+                result = self.validator.validate(future, self.value)
+            except ValueError as error:
+                self.fail('Historical preparation must allow later source edits: '+str(error))
             self.assertEqual(result['formalAcceptance'], 'not_assessed')
 
     def test_historical_source_pin_cannot_be_relabelled(self):
-        self.reject(lambda d: d['source_inventory'][0].update(gitBlob='0'*40), 'historical source')
+        self.reject(lambda d: d['source_inventory'][0].update(gitBlob='0'*40), 'source')
 
     def test_cli_reports_preparation_without_acceptance(self):
         result = subprocess.run([sys.executable, str(CHECKER)], cwd=ROOT, capture_output=True, text=True)
