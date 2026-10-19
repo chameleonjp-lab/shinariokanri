@@ -25,6 +25,7 @@ HISTORICAL = {
     'additional-original-regressions-1fcadcca': ('1cf01c9b9798d03dc641d0422663cd76192cf24dea813458d36df9ab6c6de07f', 'rg02-rg03-same-given-1fcadcca-attempt1'),
 }
 CHECKPOINTS = ('original-prefix-and-cold', 'front-deletion', 'paragraph-split', 'paragraph-move', 'move-compensation-undo', 'paragraph-merge', 'overlapping-replacement', 'overlap-cold')
+N05_DECLARED_ENTRY_IDS = {'b4196e71-6a2a-4d82-a71e-1795db4a9640', 'ff88d0be-3cec-497c-a916-c8984c444605'}
 NATIVE_TABLES = set('acks assets authorToolDrafts blocks commands entities importDrafts importLogs outbox preparedSync projectSummaries projects recordParts recoveredPending relations restorePoints retainedSyncRecovery sharedSnapshots snapshots syncAckEvidence syncAssetAcks syncBases syncConflicts syncMetadata viewStates views workspaceInputs worldSources worlds'.split())
 
 
@@ -267,7 +268,7 @@ def assess_n05(detail, downloads, expected_fixture):
     require(len(downloads) == 2 and downloads[0] == downloads[1] == detail['result'], 'N05 two actual results differ')
     result = detail['result']
     require(result['status'] == 'unknown' and result['truncated'] is True and result['limits'] == dict(maxStates=100000, maxTransitions=10000, maxMs=30000), 'N05 original unknown/caps differ')
-    require(len(set(result['declaredEntryIds'])) == 2, 'N05 declared entries differ')
+    require(len(result['declaredEntryIds']) == 2 and set(result['declaredEntryIds']) == N05_DECLARED_ENTRY_IDS, 'N05 declared entries differ')
     require(set(detail['nativeBefore']) == NATIVE_TABLES and detail['nativeBefore'] == detail['nativeAfter'], 'N05 all 29 native fingerprints differ')
     for row in detail['nativeBefore'].values():
         require(isinstance(row['count'], int) and row['count'] >= 0 and re.fullmatch('[0-9a-f]{64}', row['sha256']), 'N05 invalid table fingerprint')
@@ -309,7 +310,9 @@ def verify_n05(repository, binding_path, binding, directory):
     metadata = json.loads(metadata_raw)
     fixture_raw = (repository/'tests/fixtures/rb10-large-analysis'/metadata['archive']).read_bytes()
     require(len(fixture_raw) == 1914098 and sha(fixture_raw) == '1ca2b19dcf4c8464c68a24a1bbe02cd1b1c4be20187ed2cee99d4e541822d0d0', 'Fixed original N05 archive differs')
-    provenance = dict(format='phase3-n05-downloads/1', trial=capture['trial'], bindingSHA256=sha(binding_path.read_bytes()), candidate=binding['commit'], tree=binding['tree'], build=binding['build_info'], originalSHA256=sha(original), fixture=dict(metadataSHA256=sha(metadata_raw), archive=metadata['archive'], bytes=len(fixture_raw), sha256=sha(fixture_raw)))
+    package_raw = (repository/'package.json').read_bytes()
+    require(json.loads(package_raw)['type'] == 'module' and (stage/'package.json').read_bytes() == package_raw, 'N05 original ESM package context differs')
+    provenance = dict(format='phase3-n05-downloads/1', trial=capture['trial'], bindingSHA256=sha(binding_path.read_bytes()), candidate=binding['commit'], tree=binding['tree'], build=binding['build_info'], originalSHA256=sha(original), packageSHA256=sha(package_raw), fixture=dict(metadataSHA256=sha(metadata_raw), archive=metadata['archive'], bytes=len(fixture_raw), sha256=sha(fixture_raw)))
     require(re.fullmatch(r'[0-9a-f-]{36}', capture['trial']), 'Invalid trial')
     require(all(capture.get(k) == v and events.get(k) == v for k,v in provenance.items()), 'N05 mixed trial/candidate/build/fixture')
     require(capture['status'] == 'completed' and capture['returncode'] == 0 and capture['repository'] == str(repository) and capture['output'] == str(directory), 'N05 actual driver incomplete')
@@ -365,7 +368,7 @@ def verify(repository, binding_path, historical, output):
         name = step['step']
         require(step['status'] == 'passed' and step['returncode'] == 0, 'RG sequence child failed')
         directory, source = output/name, originals[name]/'executed-inputs'
-        names = ('rg01.spec.ts','rebound-original-seed.ts') if name == 'rg01' else ('same-given.spec.ts','original-fixtures.ts','original-runtime-regressions.test.ts')
+        names = ('rg01.spec.ts','rebound-original-seed.ts','package.json') if name == 'rg01' else ('same-given.spec.ts','original-fixtures.ts','original-runtime-regressions.test.ts','package.json')
         rows = []
         for n in names:
             original = (source/n).read_bytes()

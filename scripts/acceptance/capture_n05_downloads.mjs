@@ -60,6 +60,8 @@ async function main() {
   const repository=resolve(options['--repository']), output=resolve(options['--output']);
   const bindingBytes=await readFile(resolve(options['--binding'])),binding=JSON.parse(bindingBytes);
   const original=await readFile(join(repository,'tests/rb10/large-analysis.spec.ts'));
+  const packageBytes=await readFile(join(repository,'package.json'));
+  if(JSON.parse(packageBytes).type!=='module')throw new Error('Original ESM package context missing');
   const fixture=await readFile(join(repository,'tests/fixtures/rb10-large-analysis/metadata.json'));
   if(sha(original)!==ORIGINAL_SHA256 || sha(fixture)!==ORIGINAL_METADATA_SHA256 || sha(await readFile(join(repository,'tests/rb10/playwright.config.ts')))!==ORIGINAL_CONFIG_SHA256)throw new Error('Fixed original N05 input changed');
   const metadata=JSON.parse(fixture), archive=await readFile(join(repository,'tests/fixtures/rb10-large-analysis',metadata.archive));
@@ -75,13 +77,14 @@ async function main() {
   await seal();await mkdir(output);await mkdir(join(output,'downloads'));
   const stage=join(output,'staging');await mkdir(stage);await symlink(join(repository,'node_modules'),join(stage,'node_modules'),'dir');
   const provenance={format:'phase3-n05-downloads/1',trial:randomUUID(),bindingSHA256:sha(bindingBytes),
-    candidate:binding.commit,tree:binding.tree,build:binding.build_info,originalSHA256:sha(original),
+    candidate:binding.commit,tree:binding.tree,build:binding.build_info,originalSHA256:sha(original),packageSHA256:sha(packageBytes),
     fixture:{metadataSHA256:sha(fixture),archive:metadata.archive,bytes:archive.length,sha256:sha(archive)}};
   const transformed=stageSource(original.toString());
   if(transformed.slice(transformed.indexOf('\n'))!==original.toString().slice(original.indexOf(10)))throw new Error('Original body changed');
   const bridge=bridgeSource(provenance,output);
   const config=`import original from ${JSON.stringify(join(repository,'tests/rb10/playwright.config.ts'))};\nexport default {...original,testDir:${JSON.stringify(stage)},testMatch:'capture-original.spec.ts',reporter:[['list'],['json',{outputFile:${JSON.stringify(join(output,'results.json'))}}]],webServer:{...original.webServer,cwd:${JSON.stringify(repository)}}};\n`;
   await writeFile(join(output,'executed-original.spec.ts'),original,{flag:'wx'});
+  await writeFile(join(stage,'package.json'),packageBytes,{flag:'wx'});
   await writeFile(join(stage,'capture-original.spec.ts'),transformed,{flag:'wx'});
   await writeFile(join(stage,'capture-bridge.ts'),bridge,{flag:'wx'});
   await writeFile(join(stage,'playwright.config.ts'),config,{flag:'wx'});

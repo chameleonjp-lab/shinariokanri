@@ -36,7 +36,7 @@ def run(name,inputs,config,env):
 
 # Exact original body and seed; all original operation/time assertions remain.
 d=output/'rg01';config=portable(source1/'playwright.config.mjs')
-run('rg01',[(n,source1/n,portable(source1/n)) for n in ('rg01.spec.ts','rebound-original-seed.ts')],config,{'RG01_OUTPUT_DIR':str(d),'CI':'1'})
+run('rg01',[(n,source1/n,portable(source1/n)) for n in ('rg01.spec.ts','rebound-original-seed.ts','package.json')],config,{'RG01_OUTPUT_DIR':str(d),'CI':'1'})
 # Bind the two existing exact product assertions to this clean candidate.
 text=portable(source23/'same-given.spec.ts')
 for old,new in [('1fcadcca703863873a57d297e83b1b184e63e778',binding['commit']),('8ec3a03810bb0cf1b1b4',build['version'])]:
@@ -44,7 +44,7 @@ for old,new in [('1fcadcca703863873a57d297e83b1b184e63e778',binding['commit']),(
 d=output/'rg02-rg03';config=portable(source23/'playwright.config.mjs').replace('/workspace/pr49-checks/rg02-rg03-same-given-1fcadcca-attempt1',str(d))
 original_source=(source23/'original-runtime-regressions.test.ts').read_bytes();current=(repo/'tests/runtime-regressions.test.ts').read_bytes()
 assert original_source==current,'Original runtime fixture source has changed; inspect before proceeding'
-run('rg02-rg03',[(n,source23/n,text if n=='same-given.spec.ts' else portable(source23/n)) for n in ('same-given.spec.ts','original-fixtures.ts','original-runtime-regressions.test.ts')],config,{'CI':'1'})
+run('rg02-rg03',[(n,source23/n,text if n=='same-given.spec.ts' else portable(source23/n)) for n in ('same-given.spec.ts','original-fixtures.ts','original-runtime-regressions.test.ts','package.json')],config,{'CI':'1'})
 # The driver wraps the unchanged N05 body with an automatic download fixture.
 # It owns the unused n05 directory and retains the real Playwright child receipt.
 seal();d=output/'n05';driver=repo/'scripts/acceptance/capture_n05_downloads.mjs'

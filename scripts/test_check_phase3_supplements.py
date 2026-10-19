@@ -80,7 +80,7 @@ def n05():
     tables['entities']['count']=88522
     tables['assets']['count']=3
     tables['workspaceInputs']['count']=1
-    result = dict(status='unknown',truncated=True,limits=dict(maxStates=100000,maxTransitions=10000,maxMs=30000),declaredEntryIds=['unbounded','long'])
+    result = dict(status='unknown',truncated=True,limits=dict(maxStates=100000,maxTransitions=10000,maxMs=30000),declaredEntryIds=sorted(v.N05_DECLARED_ENTRY_IDS))
     return dict(fixture={'retainedOriginalRecords':88003},result=result,nativeBefore=tables,nativeAfter=copy.deepcopy(tables),timing=dict(startedAt=100,firstPaintAt=500,largestTimerGap=100),progress='状態を確認中 10件')
 
 
@@ -161,6 +161,17 @@ class SupplementRejects(unittest.TestCase):
         e=current[next(iter(current))];e.set('actual-product.json',dict(build={'version':'other'},buildInfoSHA256='buildhash'))
         with self.assertRaisesRegex(ValueError,'actual build'):
             v.assess_rg23(current,original,{'version':'build'},'buildhash')
+    def test_saved_original_symlink_and_hardlink_rejected(self):
+        path=self.directory/'downloads/2.json'
+        for kind in ('symlink','hardlink'):
+            with self.subTest(kind=kind):
+                path.unlink()
+                if kind=='symlink':
+                    path.symlink_to(self.directory/'downloads/1.json')
+                else:
+                    path.hardlink_to(self.directory/'downloads/1.json')
+                with self.assertRaisesRegex(ValueError,'regular saved file|alias'):
+                    self.downloads()
     def test_n05_outer_step_requires_real_driver_argv_hash_and_exit(self):
         driver=ROOT/'scripts/acceptance/capture_n05_downloads.mjs'
         binding=self.directory/'binding.json'
