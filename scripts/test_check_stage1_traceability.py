@@ -3,6 +3,8 @@ from __future__ import annotations
 import copy
 import importlib.util
 import json
+import shutil
+import tempfile
 from pathlib import Path
 import subprocess
 import sys
@@ -83,6 +85,27 @@ class Stage1TraceabilityTests(unittest.TestCase):
 
     def test_external_conditions_are_not_dropped(self):
         self.reject(lambda d: d['external_cases'].pop(), 'external')
+
+    def test_historical_sources_do_not_freeze_future_product_test_work(self):
+        # These are historical candidate entries, not immutable original contracts.
+        with tempfile.TemporaryDirectory() as directory:
+            future = Path(directory)
+            files = {r['path'] for r in self.value['locked_inputs']} | {
+                'docs/optimization/phase1/contract-lock.json',
+                'docs/optimization/phase1/evidence/candidate-standard30.json',
+                'docs/optimization/phase1/evidence/candidate-large30.json',
+                'docs/quality/pr49-followup-2026-10-15/EXTERNAL_CASES.md',
+            } | {r['path'] for r in self.value['source_inventory']}
+            for name in files:
+                target = future/name
+                target.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(ROOT/name, target)
+            (future/'tests/e2e/basic-registration.spec.ts').write_text('// future reviewed test source\n')
+            result = self.validator.validate(future, self.value)
+            self.assertEqual(result['formalAcceptance'], 'not_assessed')
+
+    def test_historical_source_pin_cannot_be_relabelled(self):
+        self.reject(lambda d: d['source_inventory'][0].update(gitBlob='0'*40), 'historical source')
 
     def test_cli_reports_preparation_without_acceptance(self):
         result = subprocess.run([sys.executable, str(CHECKER)], cwd=ROOT, capture_output=True, text=True)
