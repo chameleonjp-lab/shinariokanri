@@ -89,3 +89,22 @@
 現行方式は各runnerがnpm/buildを準備し、元全inventoryと後続検査を1workerで実行する。共有build配布案は準備重複を減らせるが、build metadata/SW identity・実engine添付とsourceの結合を変更する。追加shard案は時間短縮余地があるが、global/setup/実添付・欠落検出の独立性を新たに証明する必要がある。現行の準備時間に対し本体の長時間が支配的で、今回その追加費用に見合う実証はない。現行を継続し、必須全件・3engine・失敗証拠を保つ。未実測の共有/shardを高速と断定しない。
 
 速度、論理保持量、実heapは別物である。P2-06の8Mi文字予算とclose後0は論理観測であり、実heap/peak/実機の上限合格にはしない。今回の原30/180/7200はheap計測を暗黙に追加した結果でもない。
+
+## NP04: 同じ作品を専門操作へ渡す境界（2026-10-19）
+
+既存共通E2Eの空作品から作ったproject/人物/章/場面IDと、既存の「復元前の固定版」を `phase3-persona-handoff.ts` へ渡す。同じテスト内の通常UIで専門操作を行い、実出力の完全scenarioに戻す。補助helperは別fixtureをimportしない。既存の専門E2Eは参照専用で維持する。新しい6本の長いE2Eは追加しない。製品変更はない。
+
+| 職種 | 同じ作品での開始→専門操作 | 実成果物と境界の期待 | 完全保存/復元→再編集 | 元専門E2E（独立条件を継続） |
+| --- | --- | --- | --- | --- |
+| 小説/脚本 | 空作品→人物/章/場面の通常作成→型付き章/人物参照→本文/作者メモ→検索/章試読→固定版 | 実公開Markdownの本文あり/秘密なし。場面/人物/章IDを実完全fileと照合 | new/coldでproject全体一致→browser offlineで同じ場面IDの名称再編集、本文/参照/秘密と旧pin保持 | `ap04-original-f-writing` のF03/F04/F05/F06。ルビ/筋/作者別案等の全原条件の成功へは転記しない |
+| ゲーム | 同じ場面ID→入口/終端/線/分岐図を通常UIで登録→実試読→一手戻る→同じ台詞へ戻る→経路記録 | 実完全scenario内のtrace 1件、同じedge ID、入口scene ID/graph IDを照合。対象ゲームのactual受領とは別 | complete/cold/offline再編集後も同じ入口/線/graph/traceと元pin。場面重複を作らない | `ap04-original-e03-state`、`ap04-original-e10-exploration`。unknown/抽選/上限/対象ゲームは元検査/外部台帳を維持 |
+| 世界設定監修 | 同じ場面ID/固定版ID→小説媒体を登録→改訂候補入力→画面移動→再開→差分確認→旧媒体を保持して候補保存 | 旧media ID/baseSnapshotId/sourceIds/本文不変、新候補は別ID・provisional/needsReview。改訂用元版が追加されても元pin全体不変 | 実完全scenario→new/cold→offline再編集後に旧mediaと候補/元pinを再照合 | `ap04-original-f-world-versions` の共通世界W/旧作P/続編Qと版1/2は別fixtureの原条件。今回の同じ場面の媒体境界と区別 |
+| 素材/翻訳 | 同じ人物/場面→台詞ID→同じ原文hashの英訳→通常UIで実WAV追加→台詞/翻訳/添付を収録へ接続→現在原文の確認 | 実WAV bytes/hash、台詞/翻訳/収録/添付IDとsourceHash。確認後翻訳stage reviewed | 完全scenarioの素材bytes SHAをcomplete/cold/offline再編集後に同じ期待と照合 | `ap04-original-e08-deliverables` の分割/差戻し/単体復元・再確認、`ap04-original-f-material-output` のPNG/欠落素材/公開制御は元検査を維持 |
+| ディレクター/レビュー | 同じ場面/固定版→実相談Markdownを読み込む→出所/対象版/本文対象を選択→移動/cold再開→quota拒否→同じ入力で再試行→作者別案保存 | 添付した実proposal.md、別案内の同じ場面IDの提案本文と出所/相談版customValues。正本本文/秘密は不変 | complete/cold/offline再編集後に別案の同じ対象/出所/元版を照合。実reviewer認証や原指摘lifecycleは未代替 | `rb08-handoff` の相談MD/受領/旧媒体境界、原F29実reviewerは外部台帳 |
+| 個人offline制作 | 共通本文の未保存draft→native quota拒否→検索から同じ場面へ戻る→入力復帰/再試行→保存→同作品の各専門成果物 | 拒否前後のauthorFingerprint一致、本文draft保持、検索語/結果から同じ場面へ戻る。専用fileは実download bytes | 実new/coldでproject全体一致とpending元全件＋復元監査1件→狭幅browser offline再編集→historyちょうど+1、全専門成果物/固定版保持 | `ap04-original-n-mobile-offline`、`ap04-original-e12-continuity` のnative/更新/不在素材等を維持。実OS/実旧アプリ更新は外部待ち |
+
+中断/再試行は、本文のnative quota拒否（正本非変更）、媒体改訂候補の画面移動、相談MDの画面移動/coldと保存拒否で固定する。相談の版/対象ID選択は再開後のselect値で照合する。本文の検索語と同じ場面の結果1件の特定（変更確認noteの別結果は除外しない）、試読の一手戻り後の同台詞を戻り位置として照合する。長一覧のscroll pixelや実OSのFiles取消を、この小規模fixtureで確認したとは扱わない。未保存入力は作品の正本/完全fileと別であり、拒否中の正本一致と再試行後の実完全fileを区別する。
+
+初期の元固定版1件というassertは専門helper呼出前に維持する。媒体改訂の既存機能が追加する元設定版を期待から削除しない。new/coldの全project一致・pending検査・offline history+1・全pin不変という既存assertは維持する。timeout180秒・retry0・skip・engine/fixtureの原条件は緩めない。#72 RG-R05および専門原回帰は変更していない。
+
+実検査argv/exit・添付・局所環境の制約は [VERIFICATION.md](VERIFICATION.md) と提出REPORTへ記録し、実行済のengineだけを実結果とする。別fixtureの専門成功を同一作品の全原工程成功へ転記しない。実Auth/実機/対象ゲームの未実行はNP08台帳のBLOCKEDを維持する。
