@@ -1,0 +1,31 @@
+name: RTK Safe Execution self-tests
+
+on:
+  pull_request:
+    paths:
+      - '.agents/skills/rtk-safe-execution/**'
+      - '.github/workflows/rtk-safe-skill-self-tests.yml'
+      - 'AGENTS.md'
+      - 'docs/quality/rtk-safe-execution/**'
+  push:
+    branches: [main]
+    paths:
+      - '.agents/skills/rtk-safe-execution/**'
+      - '.github/workflows/rtk-safe-skill-self-tests.yml'
+      - 'AGENTS.md'
+      - 'docs/quality/rtk-safe-execution/**'
+
+permissions:
+  contents: read
+
+jobs:
+  skill-self-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Check isolated runner and evidence behavior (mock RTK)
+        run: python3 -m unittest discover -s .agents/skills/rtk-safe-execution/tests -v
