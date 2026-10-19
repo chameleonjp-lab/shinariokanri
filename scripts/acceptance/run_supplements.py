@@ -2,7 +2,7 @@
 import argparse,hashlib,json,os,shutil,subprocess,sys,tempfile
 from pathlib import Path
 p=argparse.ArgumentParser();p.add_argument('--repository',type=Path,required=True);p.add_argument('--binding',type=Path,required=True);p.add_argument('--historical',type=Path,required=True);p.add_argument('--output',type=Path,required=True);a=p.parse_args()
-repo=a.repository.resolve();output=a.output.resolve();output.mkdir(exist_ok=False)
+repo=a.repository.resolve();a.binding=a.binding.resolve();a.historical=a.historical.resolve();output=a.output.resolve();output.mkdir(exist_ok=False)
 binding=json.loads(a.binding.read_bytes());build=binding['build_info']
 sha=lambda b:hashlib.sha256(b).hexdigest()
 def git(*args):return subprocess.check_output(['git',*args],cwd=repo,text=True).strip()
@@ -45,10 +45,17 @@ d=output/'rg02-rg03';config=portable(source23/'playwright.config.mjs').replace('
 original_source=(source23/'original-runtime-regressions.test.ts').read_bytes();current=(repo/'tests/runtime-regressions.test.ts').read_bytes()
 assert original_source==current,'Original runtime fixture source has changed; inspect before proceeding'
 run('rg02-rg03',[(n,source23/n,text if n=='same-given.spec.ts' else portable(source23/n)) for n in ('same-given.spec.ts','original-fixtures.ts','original-runtime-regressions.test.ts')],config,{'CI':'1'})
-# N05's assertions are unchanged. Only the runner adds a persisted JSON reporter.
-seal();d=output/'n05';d.mkdir();shutil.copyfile(repo/'tests/rb10/large-analysis.spec.ts',d/'executed-original.spec.ts')
-command=['npx','playwright','test','-c','tests/rb10/playwright.config.ts','--project=chromium','--reporter=list,json','--output',str(d/'test-results')]
-row=dict(step='n05',argv=command,originalSHA256=sha((d/'executed-original.spec.ts').read_bytes()),status='running');plan['steps'].append(row);save()
-code=subprocess.call([sys.executable,str(repo/'scripts/acceptance/execute.py'),'--workdir',str(repo),'--receipt',str(d/'execution'),'--',*command],cwd=repo,env={**os.environ,'CI':'1','PLAYWRIGHT_JSON_OUTPUT_NAME':str(d/'results.json')})
+# The driver wraps the unchanged N05 body with an automatic download fixture.
+# It owns the unused n05 directory and retains the real Playwright child receipt.
+seal();d=output/'n05';driver=repo/'scripts/acceptance/capture_n05_downloads.mjs'
+command=['node',str(driver),'--repository',str(repo),'--binding',str(a.binding),'--output',str(d)]
+row=dict(step='n05',argv=command,originalSHA256=sha((repo/'tests/rb10/large-analysis.spec.ts').read_bytes()),driverSHA256=sha(driver.read_bytes()),status='running');plan['steps'].append(row);save()
+code=subprocess.call([sys.executable,str(repo/'scripts/acceptance/execute.py'),'--workdir',str(repo),'--receipt',str(output/'n05-capture-execution'),'--',*command],cwd=repo,env={**os.environ,'CI':'1'})
 row['returncode']=code;row['status']='passed' if code==0 else 'failed';save();assert code==0;seal()
-plan['status']='completed';save();print('All original supplementary executions finished; independent attachment assessment still required')
+plan['status']='completed';save()
+# Assess original manifests, allowed transformations, real exits and attachments.
+verifier=repo/'scripts/acceptance/verify_supplements.py';shutil.copyfile(verifier,output/'executed-verifier.py')
+command=[sys.executable,str(verifier),'--repository',str(repo),'--binding',str(a.binding),'--historical',str(a.historical),'--output',str(output)]
+code=subprocess.call([sys.executable,str(repo/'scripts/acceptance/execute.py'),'--workdir',str(repo),'--receipt',str(output/'assessment-execution'),'--',*command],cwd=repo)
+plan['assessment']=dict(argv=command,verifierSHA256=sha(verifier.read_bytes()),returncode=code,status='passed' if code==0 else 'failed');save();assert code==0;seal()
+print('Original supplementary executions and independent attachment assessment passed; formal and external acceptance remain separate')
