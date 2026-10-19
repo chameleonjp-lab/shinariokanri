@@ -53,3 +53,10 @@ python3 -m unittest discover -s scripts/ci -p 'test_*.py' -v
 ## 残る条件
 
 1Aの現行30/180・heap、Fのclean build/配信bytes/seal、正式5実行、N05/RG/資源のF再取得、最終116/464判定、正式束/CI各ZIPの独立再取得・全member/CRC/SHA照合、外部22件、実2account/旧C29＋原18宣言の揃い/CP15は今回の実績ではない。旧18宣言について1Aの14宣言/10 unique回収実績は保持し、残りの揃いを未確認とする。95MiB超過時の輸送/checker拡張も未実装。原release 9gateとBLOCKEDを維持する。
+
+## 提出候補の確認と独立レビュー
+
+- 中間head `10271290e635d38f7dd692b00bb1645b0bc9c1fc` / tree `3e971115399c5e39ab7f3f023c90175886783676` の[run39270444134](https://github.com/chameleonjp-lab/shinariokanri/actions/runs/39270444134)/attempt1、documents job118121000701は成功。上記4コマンドは実exit0、Python133件＋CI補助25件成功。元phase3拒否kernel、新しい16件と入口helpを確認した。後続の修正文書へこのCI headを付け替えない。
+- GitHubから新TRACEABILITY blob `9fc2823df8c76202538594c4da6988307cbfd178` を再取得し、作成したJSON全文と厳密一致を確認。src/tests/.github各subtreeは開始mainと厳密一致。これはprovider ZIPの全member監査とは別。
+- 同じ中間headの全10ファイルを読取担当1人が独立レビューし、原ID/原文差異0、暫定判定の境界・全73台帳・runbook実argvと原sourceの一致を確認。Critical/Important指摘なし。Minorの「再開後に5節だけを指示すると未実施の4節を飛ばし得る」を採用し、3節再確認→未実施4節→5節と明記した。製品・実引数・測定契約は変更していない。CP15の独立ユーザー受入ではない。
+- 修正後の最終head/CIはこの文書を含むため、[PR #78本文](https://github.com/chameleonjp-lab/shinariokanri/pull/78)で確定する。中間runのunit/browserや最終CIの結果を未確認のまま成功にしない。

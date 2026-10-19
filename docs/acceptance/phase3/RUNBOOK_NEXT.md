@@ -134,7 +134,7 @@ python3 scripts/acceptance/run_formal.py --output "$FORMAL_ROOT" --only soak
 python3 scripts/acceptance/run_formal.py --output "$FORMAL_ROOT" --only exceptions
 ```
 
-既存outputへ引数なしで全体再開すると、最初の既記録stepで拒否される。既存runnerに--resumeや--bindingを足した架空の呼び方は使わない。継続中も各未実施stepの実exit・cleanup・sealを保存し、完走後に5節を実行する。
+既存outputへ引数なしで全体再開すると、最初の既記録stepで拒否される。既存runnerに--resumeや--bindingを足した架空の呼び方は使わない。継続中も各未実施stepの実exit・cleanup・sealを保存する。完走後は3節の原条件を再確認し、未実施の4節（補助原本・資源測定）→5節（独立verify・再取得）の順で実行する。
 
 ## 1D時点の未実行
 
