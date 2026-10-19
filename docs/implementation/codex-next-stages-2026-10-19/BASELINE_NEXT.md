@@ -67,7 +67,7 @@ phase1の既存candidate-Standard/Large30は `6e03cd904089c5bce22cce88c58262ffdb
 | B04 旧18宣言 | 32宣言中14宣言/10 unique hashの保存済み実bytesを今回再取得し、各expected bytes/SHAへ照合。18宣言は不足のまま。旧宣言pathへの復帰や旧実行成功は認定しない | 原保存者・1A担当：INPUTSに列挙した18宣言の実bytesを元保存先から取得 |
 | B05 original N05 Large binary | 元bytes `1914098`、Git blob `566cd06cc4602d31aff08b0bdd5830c29888c039`、元metadata SHA `1ca2b19dcf4c8464c68a24a1bbe02cd1b1c4be20187ed2cee99d4e541822d0d0`。APIから本文未取得 | 1A担当：完全clone後に元Git blob・bytes・SHAを実ファイルで照合 |
 | B06 外部受入 | [22原外部条件](../../acceptance/phase3/EXTERNAL.md)、実2アカウント、CP15独立確認、原9release gate、未採用X01〜12を維持。実機・実サービス試験は実施していない | 1B/3Cと原担当へ所在を渡す。専用許可環境と実依頼なしに実行しない |
-| B07 Draft PR | 初回のcapacityエラー後、ユーザーのPR作成指示で同じ承認付き経路を再実行し、`docs/1a-baseline-lock-20261019` の作成に成功。PR・CIは提出後の実結果をhandoffとPR本文で確定する | 1A担当：Draft提出・本変更CIを確認。全体STATUSは更新しない |
+| B07 Draft PR | 初回のcapacityエラー後、同じ承認付き経路で [Draft PR #75](https://github.com/chameleonjp-lab/shinariokanri/pull/75) を作成。未merge。最終headとCIの実結果はPR本文で確定する | ユーザー：文書差分をレビュー。1A担当：同じ1Aの未実測・未回収を継続。全体STATUSは更新しない |
 
 不足する04a7引継ぎを全履歴から再構成しない。既存歴史束は [bundle-location](../../quality/pr49-followup-2026-10-15/evidence/bundle-location.json) のimmutable commit `d5e132ef6f4db6a0f3fbe888228ffd1007d653f9` で識別する。原回収runnerはpart/member実bytesを検査するが、今回その束全体は実行・再検証していない。
 

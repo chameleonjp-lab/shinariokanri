@@ -1,6 +1,6 @@
 # 1A：実行結果・CI・未実行条件
 
-2026-10-19T06:08:54Z再確認。対象product sourceは開始main `a8caf979adc36c09f0ba7fcd3576b0472cff3392`、tree `a0d391556e4ff71fe752a48147e908d59e526bb3`。作業領域はAPIから取得した必要ファイルの部分snapshotであり、Git clone・clean candidate・製品buildではない。Markdown変更だけを提出対象にし、STATUS、製品、原文、fixture、runner、workflowは変更していない。
+2026-10-19T06:10:35Z Draft提出。対象product sourceは開始main `a8caf979adc36c09f0ba7fcd3576b0472cff3392`、tree `a0d391556e4ff71fe752a48147e908d59e526bb3`。作業領域はAPIから取得した必要ファイルの部分snapshotであり、Git clone・clean candidate・製品buildではない。Markdown変更だけを提出対象にし、STATUS、製品、原文、fixture、runner、workflowは変更していない。
 
 ## 実行した検証
 
@@ -40,7 +40,7 @@
 | --- | --- | --- |
 | #72統合main | [39181462652](https://github.com/chameleonjp-lab/shinariokanri/actions/runs/39181462652) / 1 / `096364269729c0958026ef6e92401ad1e53032a3` | completed / success。scope、documents、unit、3 browser、verifyの7 jobs全successをAPIで再確認 |
 | 開始main（#74 merge） | [39201056932](https://github.com/chameleonjp-lab/shinariokanri/actions/runs/39201056932) / 1 / `a8caf979adc36c09f0ba7fcd3576b0472cff3392` | completed / success、scope/documents/unit/3 browser/verifyの7 jobs全successをAPIで確認 |
-| 今回の変更 | 新branch作成成功、Draft PR・CIは提出後に確定 | 最終head・実run/attemptと結果はPR本文へ記録。旧CIを本変更の結果へ付け替えない |
+| 今回の変更 | [Draft PR #75](https://github.com/chameleonjp-lab/shinariokanri/pull/75) / branch `docs/1a-baseline-lock-20261019` / 未merge | この文書を含む最終head・実run/attemptと結果はPR本文へ記録。旧CIを本変更の結果へ付け替えない |
 
 CIの正本は開始mainの `.github/workflows/ci.yml`。今回の予定4ファイルは全て `docs/implementation/**/*.md` で、既存 `scripts/ci/ci_controls.py` がPRでdocumentation-onlyと判定する範囲。scope定義を変更していない。Draft提出後はdocumentsとverifyを含む実runの最終状態を確認し、run/attempt/headをPR本文へ確定する。main pushは既存どおりfullであり、文書CI成功と正式受入成功は別判定。
 
@@ -49,5 +49,5 @@ CIの正本は開始mainの `.github/workflows/ci.yml`。今回の予定4ファ�
 - 現行 `npm ci` / production build / candidate seal / 原Standard・Large各30 / 元180保存 / 各size3標本heapは未実行。必要条件は完全checkout、lock依存、実engine・host library、許可済み測定host。同host直列で測定し、parallel buildを重ねない。
 - 原N05 Large binary1件、旧C29・18宣言・04a7終了原本は未回収。対象ID・期待値・保存先候補・担当はBASELINE_NEXTとINPUTSにある。
 - 実7200/full113・同一全量異常系の最終候補受入、116/464の現在実観測付き判定、外部22条件・独立確認・公開は未実行。原release BLOCKEDを保持。
-- 初回の新規branch作成は自動承認審査の `Selected model is at capacity` で未実行だった。PR作成再開時に同じ承認付き経路でbranch作成が成功した。審査を回避せず、Draft提出結果と本変更CIを別途記録する。
-- ローカルの部分snapshotで出たdocument/99検査失敗を解消したと報告しない。完全checkoutで必須4コマンドを実行し、本変更のCIも別途確認する。
+- 初回の新規branch作成は自動承認審査の `Selected model is at capacity` で未実行だった。PR作成再開時に同じ承認付き経路でbranch作成が成功した。審査を回避せず、Draft PR #75を作成済み。本変更CIの最終結果はPR本文で別途記録する。
+- ローカルの部分snapshotで出たdocument/99検査失敗を解消したと報告しない。GitHubの完全checkoutで必須4コマンドを含む本変更CIを確認し、その結果をPR本文へ記録する。ローカルの部分snapshotでの失敗は履歴として保持する。
