@@ -14,6 +14,11 @@ TRACE = 'docs/acceptance/phase3/TRACEABILITY.json'
 LOCK = 'docs/optimization/phase1/contract-lock.json'
 # Exact immutable contract-lock blob, independently pinned at 1D start.
 LOCK_BLOB = 'b1f2edd7b491e5d99a1d908466a644a4d5d07faa'
+# Immutable historical source-candidate metadata; current execution gets a new seal.
+SOURCE_INVENTORY_BLOB = 'cff43926407d0e1f66aa9cb02f081c590c076744'
+SNAPSHOT = dict(commit='aa86e25b91287329c061a97d1d3f9c4e0e0e9f85',
+                tree='f191b5bfce8d356470bb507ab5c257c322b6fc95',
+                src_tree='6c0098365af131f13d36c53b499f458a36ae225e')
 NAMES = ('given', 'when', 'then', 'negative_or_edge')
 COUNTS = dict(requirements=104, cases=116, clauses=464, workPackages=24,
               regressionGroups=6, supplemental=68)
@@ -81,6 +86,10 @@ def validate(root, value=None):
             '1ca2b19dcf4c8464c68a24a1bbe02cd1b1c4be20187ed2cee99d4e541822d0d0',
             'original fixture binary SHA differs')
 
+    historical_bytes = (json.dumps(value['source_inventory'], ensure_ascii=False,
+                        sort_keys=True, separators=(',', ':'))+'\n').encode('utf-8')
+    require(value['snapshot'] == SNAPSHOT and blob(historical_bytes) == SOURCE_INVENTORY_BLOB,
+            'historical source snapshot or inventory changed')
     source_paths = {}
     for row in value['source_inventory']:
         path = row['path']
@@ -88,7 +97,8 @@ def validate(root, value=None):
                 '\\' not in path and '..' not in PurePosixPath(path).parts and
                 str(PurePosixPath(path)) == path and path not in source_paths,
                 'source path differs')
-        require(blob((root/path).read_bytes()) == row['gitBlob'], 'source bytes differ: '+path)
+        require(row['snapshot'] == SNAPSHOT['commit'] and re.fullmatch(r'[a-f0-9]{40}', row['gitBlob']),
+                'historical source binding differs: '+path)
         source_paths[path] = row
     require(source_paths, 'source inventory missing')
 
@@ -191,7 +201,7 @@ def validate(root, value=None):
     check_dependency_graph(value['request_dependencies'])
     require(value['request_dependencies'] == [dict(id=key, depends_on=deps) for key, deps in REQUESTS],
             'request dependency contract differs')
-    return dict(counts=COUNTS, lockedInputs=len(lock['files']), sourceCandidates=len(source_paths),
+    return dict(counts=COUNTS, lockedInputs=len(lock['files']), sourceCandidates=len(source_paths), currentSourceCoverage='not_assessed',
                 formalAcceptance='not_assessed', releaseDecision='RELEASE BLOCKED')
 
 

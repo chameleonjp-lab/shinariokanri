@@ -30,7 +30,7 @@ python3 scripts/acceptance/recover_historical.py --help
 python3 scripts/acceptance/run_supplements.py --help
 ```
 
-原check_phase3既存kernelは偽p95/欠落生値/別fixture・build/短縮soak/113不足/素材欠損/未完了new・clone・cold/実終了不明/実argv改変を既に拒否する。今回の自動発見testから元検査を削らず実行する。新検査器は原104/116/464/24/6/68、全73実bytes/Git blob、原Large binary実SHA、source候補bytes、fixture期待、依存非循環、未実行昇格禁止を検査する。
+原check_phase3既存kernelは偽p95/欠落生値/別fixture・build/短縮soak/113不足/素材欠損/未完了new・clone・cold/実終了不明/実argv改変を既に拒否する。今回の自動発見testから元検査を削らず実行する。新検査器は原104/116/464/24/6/68、全73実bytes/Git blob、原Large binary実SHA、過去source候補台帳pin、fixture期待、依存非循環、未実行昇格禁止を検査する。
 
 最終差分はJSON・検査器・既存範囲外のoptimization文書を含むのでfull scope。既存ci.ymlの次の4コマンドに加え元全unit/build、3engine全inventory・後続rb03/rb04/rb10・失敗証拠回収・最終verifyを通す。workflow/skip/retry/timeout/assert/seedは変更しない。
 
@@ -60,3 +60,13 @@ python3 -m unittest discover -s scripts/ci -p 'test_*.py' -v
 - GitHubから新TRACEABILITY blob `9fc2823df8c76202538594c4da6988307cbfd178` を再取得し、作成したJSON全文と厳密一致を確認。src/tests/.github各subtreeは開始mainと厳密一致。これはprovider ZIPの全member監査とは別。
 - 同じ中間headの全10ファイルを読取担当1人が独立レビューし、原ID/原文差異0、暫定判定の境界・全73台帳・runbook実argvと原sourceの一致を確認。Critical/Important指摘なし。Minorの「再開後に5節だけを指示すると未実施の4節を飛ばし得る」を採用し、3節再確認→未実施4節→5節と明記した。製品・実引数・測定契約は変更していない。CP15の独立ユーザー受入ではない。
 - 修正後の最終head/CIはこの文書を含むため、[PR #78本文](https://github.com/chameleonjp-lab/shinariokanri/pull/78)で確定する。中間runのunit/browserや最終CIの結果を未確認のまま成功にしない。
+
+## 過去sourceと後続workspaceの境界修正
+
+追加点検で、暫定表の過去source候補52件を常に現行workspaceのbytesへ照合しており、後続PRの正当なE2E追加や準備文書更新を拒否する点を発見。読取担当の追認でもImportantと確認した。原契約73入力の固定と、過去の操作入口候補の固定は別の保証である。
+
+反例を先に追加したhead `a92501ba57759f92c2f73887f63b31eceb111fbd` / tree `2674ec73c33abe5ff9fcf7570b6f74106f912037`。[run39274638742](https://github.com/chameleonjp-lab/shinariokanri/actions/runs/39274638742)/attempt1、documents job118136124358。`python3 -m unittest discover -s scripts -p 'test_check_*.py' -v` は135件中1fail、実exit1。原73/fixture/sourceをtemp rootへ保持したうえで、非原契約のbasic-registration.spec.tsだけを変更すると、`Historical preparation must allow later source edits: source bytes differ: tests/e2e/basic-registration.spec.ts` を実観測した。単なるmissing moduleではなく実際の誤拒否のREDである。
+
+修正は、source_inventoryのsorted-key compact JSON＋末尾LFのGit blob `cff43926407d0e1f66aa9cb02f081c590c076744` と過去snapshotのcommit/tree/src treeを固定し、現行workspaceの非原契約source bytesへ強制しない方式。過去pinの改変/付替えは拒否し、現在の実行source coverageは未判定のままにする。原73入力の全実bytes/fixture検査とpassed禁止は保持した。新しい実行候補は各seal/実観測で別に証明する。
+
+中間head b7c989fのrun39271066584/attempt1はdocuments/unit・buildが成功した後、この修正の提出によりbrowser3件が取消、集約verifyはfailure。最終成功とは扱わない。先行025988bのtest調整途中runも同じ未完了区間であり、最終CIへ付け替えない。修正後の最終head/run/attempt・135件と元full CIの実結果は提出後PR本文へ固定する。
