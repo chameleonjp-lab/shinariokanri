@@ -16,3 +16,17 @@
 元ケース外の残条件：AC-G02の実2account切替、旧C29の37part/MANIFESTと旧不足18宣言の実bytes、正式独立受入の確認者・結果。fresh agentによるコードレビューと原CP15の独立ユーザー受入は別である。旧配布保留や旧404は過去の観測であり、今回の配布/公開を実行した意味にはならない。
 
 本番DB・別用途Supabase・実作品・認証/権限・支払/課金・hosting設定を変更しない。新しいCloud environmentの作成/設定、実機、merge、配備、公開は実行しない。原9公開gateと`check_release.py`はそのまま使う。
+
+## NP08の個別準備（2026-10-19）
+
+[独立準備台帳 VERIFICATION.md](VERIFICATION.md) に原22IDの各given/when/then/negative_or_edgeを逐語保持し、必要な実端末・実役割・二実端末・ゲーム/実費用の要否、隔離入力、記録手順、安全な空のJSON記録欄、次の一操作を個別化した。各caseの **PREPAREDは手順/記録様式の準備完了**、**BLOCKED / 未実行は原実条件の未充足**を意味する。実サービスや実Authへ接続した実績はない。
+
+| 独立分類 | 原ID（22件、重複なし） | 台帳入口 |
+| --- | --- | --- |
+| 実機 9 | AT-B24, AT-F31, AT-F33, AT-N02, AT-N03, AT-N04, AT-N13, AT-E01, AT-E11 | [各caseの環境・四条項・手順](VERIFICATION.md#at-b24) |
+| 実機＋実サービス 6 | AT-F01, AT-F34, AT-N07, AT-N11, AT-E06, AT-E12 | [実二端末/機内モード/更新等](VERIFICATION.md#at-f01) |
+| 実Auth 4 | AT-F29, AT-F30, AT-N08, AT-E05 | [実reviewerと役割検証](VERIFICATION.md#at-f29) |
+| ゲーム 2 | AT-F42, AT-E10 | [対象ゲームとstub/actual](VERIFICATION.md#at-f42) |
+| 契約/費用 1 | AT-N17 | [実構成・契約と対象build](VERIFICATION.md#at-n17) |
+
+同台帳に元22件とは別の3欄を保持する。AC-G02-N/E・CP04の実2account、旧C29の37part/MANIFESTと旧不足18宣言の各実bytes、CP15の独立確認者/結果はいずれも未取得である。元9release gatesとcheckerを維持し、原外部表・実条件の結果は変更しない。

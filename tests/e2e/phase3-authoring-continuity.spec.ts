@@ -1,7 +1,9 @@
 import {expect, test, type Page} from '@playwright/test';
 import {readFile} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
-import {backup, navigate, openEntity, seed, retainGeneratedOutput} from './ap04-original-helpers';
+import {backup, navigate, openEntity, seed, retainGeneratedOutput, authorFingerprint} from './ap04-original-helpers';
+
+import {connectPersonaHandoffs, assertPersonaHandoffs, rejectNextProjectWrite} from './phase3-persona-handoff';
 
 // Additional composition proof. Original persona-specific cases remain separate.
 // Unicode and narrow viewports are automated observations, never real IME/device evidence.
@@ -46,8 +48,24 @@ test('phase3: 空作品の通常制作から参照・試読・履歴・秘密出
   await editor.getByLabel('章', {exact:true}).selectOption(chapter.id);
   await editor.getByLabel('視点人物', {exact:true}).selectOption(person.id);
   await editor.getByRole('tab', {name:'本文', exact:true}).click();
+  const beforeDraft = await authorFingerprint(page);
   await editor.getByRole('textbox', {name:'本文', exact:true}).fill(body);
+  await rejectNextProjectWrite(page);
+  await editor.locator('.editor-footer').getByRole('button', {name:'保存する', exact:true}).click();
+  await expect(editor.locator('.editor-save-state')).toContainText('未保存');
+  expect(await authorFingerprint(page)).toBe(beforeDraft);
+  // The interrupted save must retain the draft and the route back to this ID.
+  await navigate(page, /^検索/);
+  await page.getByLabel('作品内を検索', {exact:true}).fill(scene.name);
+  await page.locator('.entity-card').filter({has:page.getByRole('heading', {name:scene.name, exact:true})}).click();
+  await editor.getByRole('tab', {name:'本文', exact:true}).click();
+  await expect(editor.getByRole('textbox', {name:'本文', exact:true})).toHaveValue(body);
   await save(page);
+  await editor.getByRole('button', {name:'詳細を閉じる', exact:true}).click();
+  await expect(page.getByLabel('作品内を検索', {exact:true})).toHaveValue(scene.name);
+  const returned = page.locator('.entity-card').filter({has:page.getByRole('heading', {name:scene.name, exact:true})});
+  await expect(returned).toHaveCount(1);
+  await returned.click();
   await editor.getByRole('tab', {name:'作者メモ', exact:true}).click();
   await editor.getByRole('textbox', {name:'作者メモ', exact:true}).fill(secret);
   await save(page);
@@ -93,10 +111,13 @@ test('phase3: 空作品の通常制作から参照・試読・履歴・秘密出
   await retainGeneratedOutput(publicBytes, download.suggestedFilename(), 'text/markdown');
   expect(publicBytes.toString()).toContain('約束を守る');
   expect(publicBytes.toString()).not.toContain(secret);
+  const shared = await backup(page);
+  expect(shared.project.snapshots).toHaveLength(1);
+  const handoffs = await connectPersonaHandoffs(page, shared.project, {sceneId:scene.id, personId:person.id, secret});
   const complete = await backup(page);
+  await assertPersonaHandoffs(complete, handoffs);
   expect(complete.project.entities.find(e => e.id === scene.id)).toMatchObject({data:{chapterId:chapter.id, povId:person.id}});
   expect(JSON.stringify(complete.project.entities.find(e => e.id === scene.id))).toContain(secret);
-  expect(complete.project.snapshots).toHaveLength(1);
   const fresh = await browser.newContext({viewport:{width:390, height:844}});
   try {
     const restored = await fresh.newPage();
@@ -104,6 +125,7 @@ test('phase3: 空作品の通常制作から参照・試読・履歴・秘密出
     await restored.reload();
     const cold = await backup(restored);
     expect(cold.project).toEqual(complete.project);
+    await assertPersonaHandoffs(cold, handoffs);
     expect(cold.recovery).toBeDefined();
     expect(complete.recovery).toBeDefined();
     const originalPending = complete.recovery!.pending;
@@ -120,6 +142,7 @@ test('phase3: 空作品の通常制作から参照・試読・履歴・秘密出
     await save(restored);
     const changed = await backup(restored);
     expect(changed.project.entities.find(e => e.id === scene.id)).toMatchObject({name:'復元後も同じ場面', data:{chapterId:chapter.id, povId:person.id}});
+    await assertPersonaHandoffs(changed, handoffs);
     expect(changed.project.history.length).toBe(cold.project.history.length+1);
     expect(changed.project.snapshots).toEqual(complete.project.snapshots);
     expect(changed.project.entities.filter(e => e.kind === 'scene')).toHaveLength(1);
@@ -128,5 +151,5 @@ test('phase3: 空作品の通常制作から参照・試読・履歴・秘密出
   await info.attach('phase3-continuity.json', {body:JSON.stringify({scope:'Additional automated UI continuity, not physical/IME/Auth acceptance',
     engine:info.project.name, startedFromEmpty:true, typedReferences:{person:person.id, chapter:chapter.id, scene:scene.id},
     publicSHA256:createHash('sha256').update(publicBytes).digest('hex'), completeSHA256:createHash('sha256').update(complete.bytes).digest('hex'),
-    privateAuthorNotesExcluded:true, coldFullCorrespondence:true, offlineReeditAndImmutablePin:true}), contentType:'application/json'});
+    handoffs, interruptedSaveRetainedDraftAndSearchReturn:true, privateAuthorNotesExcluded:true, coldFullCorrespondence:true, offlineReeditAndImmutablePin:true}), contentType:'application/json'});
 });
