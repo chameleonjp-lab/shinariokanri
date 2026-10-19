@@ -68,4 +68,4 @@ N05の2原本は別々の実downloadイベントから保存する。整形し�
 - `src/storage/store.ts`、`src/App.tsx`、共有型、共有manifest・台帳の編集者は同時に1人。先に変更範囲を割り当て、重複が判明した部分は直列へ戻す。別ブランチでも同じ基盤を同時変更してよいとは限らない。
 - 通常の依頼は自分の `handoffs/<ID>.md` を更新する。全体 `STATUS.md` は1D・2C・3Cの段階統合担当だけが集約更新する。次の実行可否は依存handoffとGitHubの実merge / CIを照合して判断する。
 
-短い引継ぎは再調査の入口であり原本の置換ではない。ログ要約のためのRTK等は必須にしない。#71は調査時点で未統合の別Draft PRなので、実装済みの前提や今回の依存へ加えない。
+短い引継ぎは再調査の入口であり原本の置換ではない。PR提出中に#73で [AGENTS.md](../../../AGENTS.md) と [任意のRTKガイド](../../quality/rtk-safe-execution/README.md) がmainへ統合された。RTKを使う場合だけ同Skillを読み、元々必要な非機密のローカルunit出力／安全なtracked filename一覧に限定する。RTK本体は同梱されず、存在や削減率を前提にせず無断インストールしない。正式CI、3engine受入、7200／full113、性能測定、権限・原本照合の出力は短縮対象にしない。RTKのlocal raw.logと正式な証拠を区別し、前者をGitや公開artifactへ自動送信しない。

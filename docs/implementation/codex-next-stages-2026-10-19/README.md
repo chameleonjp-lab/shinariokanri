@@ -1,6 +1,6 @@
 # Codex向け 次の3段階・10依頼の実装計画
 
-2026-10-19作成。対象リポジトリは [chameleonjp-lab/shinariokanri](https://github.com/chameleonjp-lab/shinariokanri)。調査基準は main `096364269729c0958026ef6e92401ad1e53032a3`。これは次の開発の計画であり、下表の作業を実施したという報告ではありません。
+2026-10-19作成。対象リポジトリは [chameleonjp-lab/shinariokanri](https://github.com/chameleonjp-lab/shinariokanri)。製品調査の基準は main `096364269729c0958026ef6e92401ad1e53032a3`。PR提出時に #73統合後のmain `8426bc020e0191c10942398449582b8c7650166d` も確認し、追加された任意のRTK実行ガイドを反映した。これは次の開発の計画であり、下表の作業を実施したという報告ではありません。
 
 ## 最初の依頼
 
@@ -16,7 +16,7 @@
 
 ## Codexが毎回読むもの
 
-1. このREADME、[守る条件](GUARDRAILS.md)、[段階の進捗](STATUS.md)。
+1. リポジトリの [AGENTS.md](../../../AGENTS.md)、このREADME、[守る条件](GUARDRAILS.md)、[段階の進捗](STATUS.md)。
 2. 指定された `requests/<単位ID>.md` と、存在する自分・依存元の `handoffs/<単位ID>.md`。
 3. 依頼書に指定した原資料の節、対象コード、必要な検査。まず `rg` で呼出元と範囲を特定する。
 

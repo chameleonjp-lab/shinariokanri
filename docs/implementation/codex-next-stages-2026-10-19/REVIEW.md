@@ -2,6 +2,12 @@
 
 調査基準：main `096364269729c0958026ef6e92401ad1e53032a3`、tree `b9cc89027bba1ca922f47ee147a9b6f0a16a8cc8`、2026-10-19。以後の実行担当は着手時にmain・open PR・CIを再取得する。この比較は元PR #59と#60〜72の実装・記録に基づく計画資料であり、本計画の作業を実行した報告ではない。
 
+## PR提出時の更新：#73の実行ガイド
+
+作業中に [PR #73](https://github.com/chameleonjp-lab/shinariokanri/pull/73) が統合され、mainは `8426bc020e0191c10942398449582b8c7650166d`、treeは `a0695f9edaf8788b47ef1f11b03ad8ce7de62867` へ進んだ。差分はAGENTS、任意RTK Skill・自己検査・ガイドの9ファイルで、製品src、元tests／scripts、既存ci.ymlの変更はない。下記の製品調査基準と正式受入未完了の判定は保持し、実行ガイドの扱いだけ更新した。[比較差分](https://github.com/chameleonjp-lab/shinariokanri/compare/096364269729c0958026ef6e92401ad1e53032a3...8426bc020e0191c10942398449582b8c7650166d)
+
+RTKは必要なローカルunit出力／安全なファイル一覧に任意使用するもので、本体導入や実際の削減率を保証しない。正式CI・性能・全量復元の代替にはしない。[導入ガイド](../../quality/rtk-safe-execution/README.md)
+
 ## 判定
 
 **3段階の実装基盤はおおむね計画の方針に沿っているが、第3段階の正式受入と証拠の確定は未完了。性能案の一部は比較して不採用、別の一部は意図した初段階までである。** 「全体が想定外の実装」や「計画上の全受入が完了」とは判定しない。
@@ -22,7 +28,7 @@
 - #70の原fixture blob確認も既存修正。runnerの共通化は将来の整理案であって、同じ不具合が残っているという判定ではない。[PR #70](https://github.com/chameleonjp-lab/shinariokanri/pull/70)
 - 旧「94ケースがローカル条件を満たし22ケース外部待ち」は製品 `1fcadcca` の記録。最新mainへ転記しない。04a7候補の30/180完了記録や、7200秒試行の72編集・4564.287504485秒までの記録も履歴であり、最終終了・full113の成功原本は回収と確認が必要。[旧判定の入口](../../quality/pr49-followup-2026-10-15/README.md)／[再開記録](../../acceptance/phase3/RESUME_20261018.md)
 - 調査時点の `docs/acceptance/phase3/` は7本のMarkdownが中心で、最新候補の完成した116/464逐条表・最終測定表・証拠束の確定結果がそろっていない。これは受入成果物の不足であり、新しい重大な製品不具合を独立に再現したという指摘ではない。[phase3の現状](https://github.com/chameleonjp-lab/shinariokanri/tree/096364269729c0958026ef6e92401ad1e53032a3/docs/acceptance/phase3)
-- #71は調査時点で未統合のRTK Safe ExecutionのDraft PR。本計画の実装済み前提や必須依存にしない。[PR #71](https://github.com/chameleonjp-lab/shinariokanri/pull/71)
+- 初回調査では#71が未統合だったが、提出時には#73で実行ガイドが導入された。再導入タスクを追加せず、最新AGENTSに従って任意使用する。RTK本体のインストール済みを意味しない。[PR #73](https://github.com/chameleonjp-lab/shinariokanri/pull/73)
 
 ## 15項目の差異と対応先
 
@@ -42,7 +48,7 @@
 | OPT-12 Large性能の未設定目標 | **提案はある・最終比較未了**。原上限なし6項目を観測とし、原合否と別の時間/仕事量目標を提案。 | 目標未採用、最終mainの正式比較資料が未完成。任意閾値で合格を作れない。 | NP05 / NP06 / NP07 | [根拠1](https://github.com/chameleonjp-lab/shinariokanri/blob/096364269729c0958026ef6e92401ad1e53032a3/docs/optimization/phase1/DESIGN.md) / [根拠2](https://github.com/chameleonjp-lab/shinariokanri/blob/096364269729c0958026ef6e92401ad1e53032a3/docs/acceptance/phase3/RESUME_20261018.md) |
 | OPT-13 完全復元と日常操作の差 | **基盤あり・正式受入未了**。完全復元/異常系runnerと共通制作E2Eは実装。04a7の30/180完了記録あり。 | 最新候補の7200/full113と原逐条判定・証拠束は未完成。6職種の接続証拠も補完する。 | NP02〜NP07 | [根拠1](https://github.com/chameleonjp-lab/shinariokanri/blob/096364269729c0958026ef6e92401ad1e53032a3/tests/e2e/phase3-authoring-continuity.spec.ts#L6-L131) / [根拠2](https://github.com/chameleonjp-lab/shinariokanri/blob/096364269729c0958026ef6e92401ad1e53032a3/docs/acceptance/phase3/RESUME_20261018.md) |
 | OPT-14 実端末・実権限・ゲーム証拠 | **未実証を維持・分類済み**。外部22件と必要条件を文書化。実機除外という原範囲に合う。 | 実機以外にも実Auth/ゲーム/契約等が必要。別3残条件も維持する。 | NP08 | [根拠1](https://github.com/chameleonjp-lab/shinariokanri/blob/096364269729c0958026ef6e92401ad1e53032a3/docs/acceptance/phase3/EXTERNAL.md) / [根拠2](https://github.com/chameleonjp-lab/shinariokanri/blob/096364269729c0958026ef6e92401ad1e53032a3/docs/quality/pr49-followup-2026-10-15/EXTERNAL_CASES.md) |
-| OPT-15 CI時間と独立性 | **現在のCI成功・次の改善候補**。保守的docs scope、3engine独立job、全inventory/添付、最終verifyは既存。 | 準備cache/build共有/shardの純効果は別比較。#71は未統合Draft。 | NP15 | [根拠1](https://github.com/chameleonjp-lab/shinariokanri/actions/runs/39181462652) / [根拠2](https://github.com/chameleonjp-lab/shinariokanri/blob/096364269729c0958026ef6e92401ad1e53032a3/.github/workflows/ci.yml) |
+| OPT-15 CI時間と独立性 | **現在のCI成功・次の改善候補**。保守的docs scope、3engine独立job、全inventory/添付、最終verifyは既存。 | 準備cache/build共有/shardの純効果は別比較。#73のRTKガイドは任意のローカル出力短縮であり、元CI時間の改善とは別。 | NP15 | [根拠1](https://github.com/chameleonjp-lab/shinariokanri/actions/runs/39181462652) / [根拠2](https://github.com/chameleonjp-lab/shinariokanri/blob/096364269729c0958026ef6e92401ad1e53032a3/.github/workflows/ci.yml) |
 
 ## 受入を完了するための具体的な不足
 
