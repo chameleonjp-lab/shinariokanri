@@ -62,6 +62,8 @@ GitHub APIで各PRの`merged=true`、`merged_by=chameleonjp-lab`、最終head/me
 
 ## 必要検査と最終候補の識別
 
+[Draft PR #81](https://github.com/chameleonjp-lab/shinariokanri/pull/81)へ提出。初回提出後にPR URLを自handoff/STATUS/本記録へ追記した。対象製品と4 Markdown以外の所有範囲は変えていない。最終版の検査をこの追記後headで確認する。
+
 今回の変更は`docs/implementation/`以下の4 Markdown（準備/検証/自handoff追加＋STATUS更新）だけ。既存`ci_controls.py`のdocumentation-only判定を使用する。製品/JSON/検査入力/runner/fixture/assert/timeout/retry/skip/engine/workflowは編集せず、文言変更を写す新testも作らない。
 
 ```sh

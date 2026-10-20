@@ -12,7 +12,7 @@
 | [1D](requests/1D.md) | 1B・1C | 準備範囲統合済み（NP05/06/07全体は未完了） | [#78](https://github.com/chameleonjp-lab/shinariokanri/pull/78)merge済み、最終CI attempt2全7jobs成功。比較設計/runbook/暫定表/検査器。[引継ぎ](handoffs/1D.md) |
 | [2A](requests/2A.md) | 1D | 阻害（準備統合済み、NP09/10必要成果は未完了） | [#79](https://github.com/chameleonjp-lab/shinariokanri/pull/79)準備3文書merge済み、最終文書CI成功。製品実装/動的検証/比較・採否未了。[引継ぎ](handoffs/2A.md) |
 | [2B](requests/2B.md) | 2A | 阻害（準備統合済み、NP11/13必要成果は未完了） | [#80](https://github.com/chameleonjp-lab/shinariokanri/pull/80)準備3文書merge済み、最終文書CI成功。1A基準・2A実成果不足。[引継ぎ](handoffs/2B.md) |
-| [2C](requests/2C.md) | 2A・2B | PR提出・統合待ち（準備のみ、製品変更は阻害） | 新Draft PRで人物一画面/世界保持の比較・負例設計と阻害を提出。両NP未実装/未実測、採否保留。[引継ぎ](handoffs/2C.md) |
+| [2C](requests/2C.md) | 2A・2B | PR提出・統合待ち（準備のみ、製品変更は阻害） | [Draft #81](https://github.com/chameleonjp-lab/shinariokanri/pull/81)で人物一画面/世界保持の比較・負例設計と阻害を提出。両NP未実装/未実測、採否保留。[引継ぎ](handoffs/2C.md) |
 | [3A](requests/3A.md) | 2C | 未着手（2C必要成果不足につき着手不可） | 未作成 |
 | [3B](requests/3B.md) | 3A | 未着手 | 未作成 |
 | [3C](requests/3C.md) | 3B | 未着手 | 未作成 |
