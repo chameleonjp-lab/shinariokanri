@@ -2,7 +2,7 @@
 
 更新基準：2026-10-20 UTC、3C統合担当の第3段階スナップショット。#83ユーザーmerge後の更新main `006333705a7e556fa0e54f1054df6b2910053cde` / tree `a8709a2202a22380bdc323607f753c8520ae7174` から開始し、#75〜83の実merge・最終PR CIを再取得した。[3C検証台帳](evidence/3C/VERIFICATION.md)。**第1・第2・第3段階全体は未完了。最終F未固定、3B正式結果なし、NP07正式確定はBLOCKED。** 本3Cは準備/履歴証拠の再取得と不足の逐条確認を提出する。
 
-この一覧は1D・2C・3Cの統合担当だけが更新する。handoff提出当時の統合待ちを実GitHub状態で補正し、準備のmergeや文書CIを改善実測・正式受入へ昇格しない。自3Cは新Draft PR提出・ユーザーmerge待ち。最終head/tree/実CIはPR本文で確定する。
+この一覧は1D・2C・3Cの統合担当だけが更新する。handoff提出当時の統合待ちを実GitHub状態で補正し、準備のmergeや文書CIを改善実測・正式受入へ昇格しない。自3Cは[新Draft PR #84](https://github.com/chameleonjp-lab/shinariokanri/pull/84)提出・ユーザーmerge待ち。最終head/tree/実CIはPR本文で確定する。
 
 | 単位 | 依存 | 現在の状態 | 成果PR／引継ぎ |
 | --- | --- | --- | --- |

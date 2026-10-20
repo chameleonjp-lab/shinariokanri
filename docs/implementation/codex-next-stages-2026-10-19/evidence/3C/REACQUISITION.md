@@ -42,7 +42,18 @@ nested ZIPはbindingのsource_files / artifact_files / original_documents / gene
 
 ## 再現方法
 
-以下のコードは今回使用した取得/静的照合手順の再掲。repoのrunner・workflow・検査器を追加/変更するものではない。未使用pathへ別cloneし、取得元のHEADが固定SHAと異なれば停止する。再取得先と元作業checkoutの役割はコード内で明示する。通常の許可済み作業環境で使用する。
+以下のコードは今回使用した取得/静的照合手順の再掲。repoのrunner・workflow・検査器を追加/変更するものではない。通常の許可済み作業環境で使用する。実行当時はmainのHEADが固定SHAと一致していた。将来mainが進んだ場合も再現できるよう、新しい空取得先では次の手順で固定SHAを明示fetchし、ファイルをcheckoutせずdetached HEADを固定する。
+
+```sh
+git clone --filter=blob:none --depth 1 --no-checkout --branch main https://github.com/chameleonjp-lab/shinariokanri.git /workspace/3c-reacquired-0063337
+git -C /workspace/3c-reacquired-0063337 fetch --filter=blob:none --depth 1 origin 006333705a7e556fa0e54f1054df6b2910053cde
+git -C /workspace/3c-reacquired-0063337 update-ref --no-deref HEAD 006333705a7e556fa0e54f1054df6b2910053cde
+git -C /workspace/3c-reacquired-0063337 rev-parse HEAD
+```
+
+この固定手順は新取得先だけのローカルGit metadata操作で、元の記録・remote branch・製品・原本bytesを変更しない。HEADは上記完全SHAであることを確認し、取得コードのassertでも不一致を拒否する。LOCAL側の読取checkoutも同じ固定SHAを用意し、再取得先と元作業checkoutを分ける。既に取得済みのdirectoryへ繰り返さない。
+
+独立レビューの指摘で追加したこの固定手順は、別の空path `/tmp/3c-fixed-replay` でclone→固定SHA fetch→detached HEAD固定→rev-parse→docs/src未checkoutの確認を実行し、全てexit0だった。元150件の取得を再実行したり、履歴原本を変更したりしていない。
 
 取得（初回の欠落修正を反映済み）：
 
