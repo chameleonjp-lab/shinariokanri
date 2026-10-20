@@ -1,56 +1,64 @@
 # 段階の進捗（統合時の一覧）
 
-更新基準：2026-10-19、1D統合担当の第1段階スナップショット。開始main `aa86e25b91287329c061a97d1d3f9c4e0e0e9f85` / tree `f191b5bfce8d356470bb507ab5c257c322b6fc95`。依存の実mergeと最終CIを確認した。[検証・依存台帳](evidence/1D/VERIFICATION.md)。**第1段階全体は未完了**。1Aの現行30/180・heapが阻害、1DはDraft提出・統合待ちである。
+更新基準：2026-10-20 UTC、2C統合担当の第2段階スナップショット。開始点は#80ユーザーmerge後main `4930bd5bf3c3f53cf65483e270e8df94d515be2c` / tree `a4b99bb5497cc49ce7c2922e7db367b31a6f95e4`。#75〜80の実merge・最終PR CIを再確認した。[依存・検証台帳](evidence/2C/VERIFICATION.md)。**第1・第2段階全体は未完了**。1A現行基準と2A/2B実成果が不足し、2Cは準備のみである。開始mainの全CIも失敗している。
 
-この一覧は1D・2C・3Cの統合担当だけが更新する。依存handoffの提出当時の状態とGitHubの現在状態を照合し、CI成功と正式受入を分ける。
+この一覧は1D・2C・3Cの統合担当だけが更新する。handoff提出当時の統合待ちを現在のGitHub状態で補正するが、準備のmergeや文書CIを性能改善・正式受入へ昇格しない。
 
 | 単位 | 依存 | 状態 | 成果PR／引継ぎ |
 | --- | --- | --- | --- |
-| [1A](requests/1A.md) | 計画PRのユーザーmerge | 阻害（現行30/180・heap未取得） | [#75](https://github.com/chameleonjp-lab/shinariokanri/pull/75) merge済み、文書CI成功。識別/原本準備と残実測を分離。[引継ぎ](handoffs/1A.md) |
-| [1B](requests/1B.md) | 1A | 完了（NP02・03の指定範囲） | [#77](https://github.com/chameleonjp-lab/shinariokanri/pull/77) merge済み、最終PR/merge-main全CI成功。原2download/RG補助/11反例。[引継ぎ](handoffs/1B.md) |
-| [1C](requests/1C.md) | 1A | 完了（NP04接続・NP08準備の指定範囲） | [#76](https://github.com/chameleonjp-lab/shinariokanri/pull/76) merge済み、最終PR/merge-main全CI成功。実外部は全BLOCKED。[引継ぎ](handoffs/1C.md) |
-| [1D](requests/1D.md) | 1B・1C | PR提出・統合待ち | [Draft #78](https://github.com/chameleonjp-lab/shinariokanri/pull/78)、比較設計/runbook/暫定表/検査器。最終CIはPR本文で確定。[引継ぎ](handoffs/1D.md) |
-| [2A](requests/2A.md) | 1D | 未着手（製品変更前に1A基準が必要） | 未作成 |
-| [2B](requests/2B.md) | 2A | 未着手 | 未作成 |
-| [2C](requests/2C.md) | 2A・2B | 未着手 | 未作成 |
-| [3A](requests/3A.md) | 2C | 未着手 | 未作成 |
+| [1A](requests/1A.md) | 計画PRのユーザーmerge | 阻害（現行30/180・heap等が未取得） | [#75](https://github.com/chameleonjp-lab/shinariokanri/pull/75)準備merge済み、最終文書CI成功。原Large binaryは1Bで取得、clean build/配信bytes/seal・残実測は未了。[引継ぎ](handoffs/1A.md) |
+| [1B](requests/1B.md) | 1A | 完了（NP02・03の指定範囲） | [#77](https://github.com/chameleonjp-lab/shinariokanri/pull/77)merge済み、最終全7jobs成功。原2download/RG補助/11反例。[引継ぎ](handoffs/1B.md) |
+| [1C](requests/1C.md) | 1A | 完了（NP04接続・NP08準備の指定範囲） | [#76](https://github.com/chameleonjp-lab/shinariokanri/pull/76)merge済み、最終全7jobs成功。実外部は全BLOCKED。[引継ぎ](handoffs/1C.md) |
+| [1D](requests/1D.md) | 1B・1C | 準備範囲統合済み（NP05/06/07全体は未完了） | [#78](https://github.com/chameleonjp-lab/shinariokanri/pull/78)merge済み、最終CI attempt2全7jobs成功。比較設計/runbook/暫定表/検査器。[引継ぎ](handoffs/1D.md) |
+| [2A](requests/2A.md) | 1D | 阻害（準備統合済み、NP09/10必要成果は未完了） | [#79](https://github.com/chameleonjp-lab/shinariokanri/pull/79)準備3文書merge済み、最終文書CI成功。製品実装/動的検証/比較・採否未了。[引継ぎ](handoffs/2A.md) |
+| [2B](requests/2B.md) | 2A | 阻害（準備統合済み、NP11/13必要成果は未完了） | [#80](https://github.com/chameleonjp-lab/shinariokanri/pull/80)準備3文書merge済み、最終文書CI成功。1A基準・2A実成果不足。[引継ぎ](handoffs/2B.md) |
+| [2C](requests/2C.md) | 2A・2B | PR提出・統合待ち（準備のみ、製品変更は阻害） | 新Draft PRで人物一画面/世界保持の比較・負例設計と阻害を提出。両NP未実装/未実測、採否保留。[引継ぎ](handoffs/2C.md) |
+| [3A](requests/3A.md) | 2C | 未着手（2C必要成果不足につき着手不可） | 未作成 |
 | [3B](requests/3B.md) | 3A | 未着手 | 未作成 |
 | [3C](requests/3C.md) | 3B | 未着手 | 未作成 |
 
-「完了」は指定単位の成果がユーザーにより統合された範囲だけ。1B/1Cの統合は1Aの未実測を解除せず、NP05/06/07や外部受入の完了も意味しない。必要な基準なしの製品変更/採用を止める。
+「完了」は指定単位の条件を満たしてユーザーが統合した範囲だけ。1B/1Cの指定範囲完了と1D準備統合は1A未実測・NP05/06/07・外部受入の完了を意味しない。2A/2B準備PRが統合されても、下流の製品変更条件は解除されない。
 
 ## 原NP01〜16の対応
 
 | NP | 現在の完了区間／残区間 |
 | --- | --- |
-| NP01 | 1Aの版・原本の所在/不足を固定。1Bで原Large binaryの実bytesも取得。clean候補/build/配信bytesと現行測定の結合は残る |
-| NP02 | 1Bで別イベント2実download原本を保存し独立拒否条件を確認。Fの再実行は3B |
+| NP01 | 1Aの版・原本の所在/不足を固定し、1Bで原Large binary実bytesを取得済み。clean候補/build/配信bytes・現行測定との結合は残る |
+| NP02 | 1Bで別イベント2実download原本と独立拒否条件を統合。Fの再実行は3B |
 | NP03 | 1Bで原RG補助と実11反例を新規再構成・統合。原6群の最終合格とは別 |
-| NP04 | 1Cの同作品/人物/章/場面/固定版と6職種接続を統合。Fでの逐条対応は3B/3C |
-| NP05 | 1D比較設計を提出。1Aの現行前測定が阻害、3B最終同条件比較も未実行。**全体未完了** |
-| NP06 | 1Dの5実行/実終了/cleanup/seal/独立verify/再開手順を提出。3B正式実行は未実行。**全体未完了** |
-| NP07 | 1Dの原104/116/464/24/6/68暫定表を提出。3C実逐条判定/再取得は未確定。**全体未完了** |
-| NP08 | 1Cの原22件＋別3条件の準備済。実条件はBLOCKED、3Cで更新 |
-| NP09・NP10 | 2A未着手。古い履歴取消→全metadata完全性を保った本文軽量化の比較 |
-| NP11・NP13 | 2B未着手。棄却shared changeset/provider/ordinalを再採用せず別局所案を比較 |
-| NP12・NP14 | 2C未着手。選択人物の基本情報一画面→4/8/16/bytes保持比較 |
+| NP04 | 1Cで同作品/人物/章/場面/固定版と6職種接続を統合。Fでの逐条対応は3B/3C |
+| NP05 | 1D比較設計は統合済み。1A現行前測定不足、3B最終同条件比較未実行。**全体未完了** |
+| NP06 | 1Dの5実行/実終了/cleanup/seal/独立verify/再開手順は統合済み。3B正式実行未了。**全体未完了** |
+| NP07 | 1Dの原104/116/464/24/6/68暫定表は統合済み。3C実逐条確定/再取得は未確定。**全体未完了** |
+| NP08 | 1Cの原22件＋別3条件の準備済み、実条件BLOCKED。3Cで更新 |
+| NP09・NP10 | 2A準備のみ統合。NP09取消の実装/安全性→NP10全metadata完全性を保つ比較/採否の必要成果が未完了 |
+| NP11・NP13 | 2B準備のみ統合。normalize局所案と位置生成/scope準備の比較/実装・採否は保留。棄却shared changeset/provider/ordinalは再採用しない |
+| NP12 | 2C人物基本情報一画面と完全保存/失効境界・C/A/B/独立負例を設計。未実装/未実測、採否保留 |
+| NP14 | 2Cの4/8/16件・4/8/16MiB比較と所有負例を設計。実比較はNP12判断後。未実装/未実測、採否保留 |
 | NP15 | 3A未着手。元必須検査を保ったCI準備比較 |
 | NP16 | 3B/3C未着手。NP06と同じFの正式結果を参照 |
 
-## 次の一操作と第2段階の条件
+## 現在のCIと第2段階の開始条件
 
-ユーザーが[Draft #78](https://github.com/chameleonjp-lab/shinariokanri/pull/78)の最終full CI・成果を確認しmergeする。その後、許可済み通常実行環境で**1Aの未測定区間を再開**し、最初の製品変更より前の現行30/180・heap原本を固定する。欠ける環境/依存/素材/保存先があれば、必要な一操作と阻害をhandoffへ残す。
+#75〜80の最終PR CIは成功。文書scopeの#75/79/80はscope/documents/verify成功・unit/browser skippedであり、製品全CIではない。#76/77/78はlatest全7jobs成功。各head/merge/run/attemptは[台帳](evidence/2C/VERIFICATION.md)に固定した。
 
-1D統合後の2A読取・独立設計は可能。製品変更へ進む条件は、1A〜1Dの必要成果の実統合、同条件の変更前基準、独立期待・取得/判定手順・所有path・rollbackであり、**正式受入合格を第2段階の開始条件にはしない**。今回2A以降へ進んでいない。
+#80統合後mainの[run39388952025 / attempt1](https://github.com/chameleonjp-lab/shinariokanri/actions/runs/39388952025)は**failure**。unitの原Large fixture同一性ケースが5000ms timeout（1391成功/1失敗）。build/browserは未実行、verifyは必須job失敗/skipを拒否した。原因・再現性は未確定で、時間条件を変更せず調査/必要な再実行を行う条件を残す。2C文書CIや過去のmain成功で上書きしない。
+
+次の一操作は[1D引継ぎ末尾の1A再開文](handoffs/1D.md)を使い、許可済み通常環境で最初の製品変更前の原30/180・各size3標本heapとclean source/tree/build/配信bytes/fixture/driver/実終了/cleanup/sealを固定すること。1A/2A/2Bをこの2C依頼で代行しない。
+
+その後、2A NP09→NP10、2B NP11/NP13の必要成果・採否・元全CIをユーザーmerge後の更新mainで確認する。2Cの実行順はNP12独立反例・一画面比較/採否→NP14同操作列保持比較/採否。NP12が実比較後に不採用でも、現行完全currentを対照にNP14へ進める。未実施を不採用として閉じない。**3Aへ渡せる段階ではない。**
+
+開始条件は必要成果の実統合、同条件の変更前基準、独立期待・所有path・取得/判定手順・rollbackと必要CI。正式最終受入合格を第2段階の開始条件にはしない。2Cの準備と残区間は[比較設計](evidence/2C/PREPARATION.md)と[自handoff](handoffs/2C.md)へ分離した。
 
 ## 外部・公開判定
 
-原22外部ケースは1Cの手順/様式準備済、実受入は全BLOCKED。AC-G02/CP04実2account、旧C29の37part/MANIFEST＋旧18不足宣言の揃い、CP15独立確認者/結果は別3欄。未採用X01〜X12とX36補助は未採用のまま。元check_release.pyの9gate/BLOCKEDを保持し、完成版全条件合格・公開可能は宣言しない。
+原22外部ケースは手順/様式準備済み、実受入は全BLOCKED。AC-G02/CP04実2account、旧C29の37part/MANIFEST＋旧18不足宣言、CP15独立確認者/結果は別3欄で未解消。未採用X01〜X12とX36補助を採用へ昇格せず、元check_release.pyの9gate/BLOCKEDを維持する。正式30/180・7200/full113・完全復元/異常系・116/464逐条確定は今回未実行。完成版全条件合格・公開可能を宣言しない。
 
 ## 更新時の確認
 
-- [x] 依存PRの実merge・対象commit・CI run/attemptをGitHub APIで照合した。
-- [x] 各handoffの指定範囲と残区間を確認し、提出当時のCI待ちは現在の実状態で補正した。
-- [x] 分割NP05/06/07を準備と正式実行/確定へ分離した。
-- [x] 原22外部＋別3条件、未採用Xと元release gateを保持した。
-- [ ] 1Aの現行前測定完了と1Dのユーザーmergeを確認する。
+- [x] #75〜80の実ユーザーmerge・対象head/commit・最新CI run/attempt/jobsを照合した。
+- [x] 提出当時の統合待ちと現在の準備統合済みを補正し、実成果不足を別に示した。
+- [x] 統合後main CIの失敗/skipと2C文書CIを別に記録した。
+- [x] NP05/06/07の準備と正式実行/確定、原22外部＋別3条件、未採用Xとrelease gateを保持した。
+- [ ] 1A現行基準、2A/2B必要実成果、統合後mainの元全CI成功を確認する。
+- [ ] NP12→NP14の実比較/採否と必要成果のユーザーmergeを確認し、2C終了後に3Aへ渡す。
