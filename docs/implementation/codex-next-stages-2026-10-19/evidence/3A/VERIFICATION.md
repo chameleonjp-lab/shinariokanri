@@ -23,7 +23,7 @@
 
 ## 開始mainと直前mainのCI
 
-08:34:36 UTC時点の開始main [run39393627941 / attempt1](https://github.com/chameleonjp-lab/shinariokanri/actions/runs/39393627941) はpush / head `4f3110963794eb142340282b2267a266feac585f` / **in_progress**。scope/documents成功、[unit](https://github.com/chameleonjp-lab/shinariokanri/actions/runs/39393627941/job/118531972719)の元全unit実行中。build/3engine/verifyの成功は未確認。提出前に再取得した最終観測をPR本文へ記録し、この途中snapshotを成功へ読み替えない。
+08:43:20 UTC時点の開始main [run39393627941 / attempt1](https://github.com/chameleonjp-lab/shinariokanri/actions/runs/39393627941) はpush / head `4f3110963794eb142340282b2267a266feac585f` / **queued（後続browser待ち）**。scope/documentsと[unit](https://github.com/chameleonjp-lab/shinariokanri/actions/runs/39393627941/job/118531972719)が成功、元unitは148 files / 1392 testsが全成功、buildもexit0で通過した。3engineはqueued、最終verify/全CI成功は未確認。提出前に再取得した最終観測をPR本文へ記録し、この途中snapshotを全成功へ読み替えない。
 
 直前#80 merge main [run39388952025 / attempt1](https://github.com/chameleonjp-lab/shinariokanri/actions/runs/39388952025) の失敗は[unit原ログ](https://github.com/chameleonjp-lab/shinariokanri/actions/runs/39388952025/job/118516558902)を再取得して確認した。`npm test -- --maxWorkers=1 --fileParallelism=false` exit1、148 files中147成功/1失敗、1392 tests中1391成功/1失敗。`tests/optimization/fixtureIdentity.test.ts:13`のLarge同一性ケースが`Test timed out in 5000ms`。digest不一致のassert失敗やflakyとは断定しない。build未実行、browser skipped、verify failureを文書CIや別版の成功で上書きしない。
 
@@ -69,7 +69,7 @@ scopeは純Markdown allowlist、空/不明diff・push・製品pathは全検査�
 
 ## 提出差分と実行する文書CI
 
-所有pathは`evidence/3A/PREPARATION.md`、本記録、`handoffs/3A.md`の3 Markdownのみ。STATUSや外部台帳、共有manifest、他handoff、workflow/helper、製品/JSON/fixtureは変更しない。独立レビューは読取だけ、追加実装担当なし。
+[Draft PR #82](https://github.com/chameleonjp-lab/shinariokanri/pull/82)へ提出。所有pathは`evidence/3A/PREPARATION.md`、本記録、`handoffs/3A.md`の3 Markdownのみ。STATUSや外部台帳、共有manifest、他handoff、workflow/helper、製品/JSON/fixtureは変更しない。独立レビューは読取だけ、追加実装担当なし。レビューによりfinal verify/復元helper/失敗添付回収/ZIP独立監査の責務を再照合し、比較設計の現行保証の記述を訂正した。これはCP15の独立ユーザー受入ではない。
 
 既存allowlist内のMarkdown差分として、新Draft PRのActionsで次の4コマンドとscope/verifyを実行する。文言を写す追加testは作らない。
 
@@ -89,7 +89,7 @@ python3 -m unittest discover -s scripts/ci -p 'test_*.py' -v
 | 残条件 | 現在と解除に必要なもの |
 | --- | --- |
 | 1A・段階2 | 現行30/180・heap、clean source/tree/build/配信bytes/fixture/driver/実終了/cleanup/seal不足。2A/2B/2C必要成果と採否・元CIのユーザー実mergeが必要。準備mergeでは不足 |
-| 現在の元7job/3engine成功対照 | 開始mainは上記時点で実行中。直前main失敗を保持し、同条件で原因調査/必要な確認を行う |
+| 現在の元7job/3engine成功対照 | 開始mainは上記時点でunit/build成功、後続未完了。直前main失敗を保持し、同条件で原因調査/必要な確認を行う |
 | NP15 C/A/B | 新cacheなし、cold/warm/破損・fallbackの実測なし。局所/全CI/runner総時間・完全原本監査、独立負例と採否は未了 |
 | 同一候補の正式検証 | 3B/3Cの原30/180、各size3標本heap、実7200/full113/72MiB全量、同全量復元・異常系、116/464逐条・空領域への再取得、N05別2download、全ZIP member/CRC/bytes/SHAが必要 |
 | 外部・公開 | 原22外部＋実2account/旧C29の37part＋MANIFESTと旧18宣言/CP15独立確認者と結果は未解消。未採用Xと元check_release.pyの9gate/BLOCKEDを維持 |

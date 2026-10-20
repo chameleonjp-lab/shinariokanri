@@ -18,7 +18,7 @@
 | unit | Node24、`actions/setup-node@v4`の`cache: npm`、`npm ci`、`npx playwright install --with-deps chromium firefox webkit`、既存CHROMIUM_PATH設定、`npm test -- --maxWorkers=1 --fileParallelism=false`、`npm run build` |
 | 各browser | 同じnpm準備、当該engineの`install --with-deps`、既存Chromium path設定、各runnerでbuild→source記録→全inventory取得→全e2e→復元4原本検証→後続rb→always添付回収 |
 | 後続rb | rb10は既存Chromiumのみ。rb03/rb04-authorは各engine、rb04-writingは既存Chromium/WebKit。元の条件を維持し、別engineの成功で代替しない |
-| verify | 全必須job成功、3engine全inventory/結果、原本/失敗添付、run/checkout commit/tree/engine/attemptを照合。engine別artifactと集約ZIPを従来通り残す |
+| verify/保持 | 最終verifyは全必須jobと3engineのsource/inventory/results、commit/run/engine/selected attempt、engine間tree一致を照合。復元4原本のbytes/hash検査はbrowser内のrecovery helper、失敗添付はalways回収。engine別/集約ZIPの全member/CRC/bytes/SHA独立監査は別途必要 |
 
 `pretest`/`prebuild`のportable runtime生成も残す。単なるdist流用でsource component用runtime生成を消さない。
 
