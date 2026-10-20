@@ -65,6 +65,14 @@ python3 -m unittest discover -s scripts/ci -p 'test_*.py' -v
 
 正式build/seal/配信bytesと性能原本は今回未取得。fixtureは[1A入力台帳](../../baselines/1A/INPUTS.md)の識別を参照し、Standard `standard-r06-v1` / 8800 / SHA-256 `de0b9420abec95bcc37fc7fb7c3dc4c2667082258678f750af33bb53f8a557f5`、Large `large-material-rb10-v1` / 88003 / `814daf96a6511cf47409f3497b03c7ba0309af250bfd87306c44a1dec5d5a917` / 実75497472素材bytesを保持する。今回fixture生成/seed/再照合はしていない。src treeの一致だけで同じbuild/fixture/driverを推定しない。
 
+## 初回提出版の実検証（最終版とは区別）
+
+[Draft PR #80](https://github.com/chameleonjp-lab/shinariokanri/pull/80)の初回head `ee9388570e5e0466fb27f1e2101fec4217c66d7f` / tree `d0456c18b2a917a854c285453ccd67e78fae6e26`、[run39367538244](https://github.com/chameleonjp-lab/shinariokanri/actions/runs/39367538244) / attempt1は04:06 UTCの再取得でcompleted/success。全5job取得、scope/documents/verify成功、unit/browserはskipped。
+
+[documentsログ](https://github.com/chameleonjp-lab/shinariokanri/actions/runs/39367538244/job/118447685784)で上記4コマンドを実確認した。bash -eの各stepがsuccessで実exitはすべて0、check_docsはDOCUMENT VALIDATION PASSED、check_completion_planはCOMPLETION PLAN PASSED、test_check_*は135件、scripts/ciは25件成功。[scopeログ](https://github.com/chameleonjp-lab/shinariokanri/actions/runs/39367538244/job/118447685767)はexit0/run_product=false/reason=documentation-only、[verifyログ](https://github.com/chameleonjp-lab/shinariokanri/actions/runs/39367538244/job/118448212003)はexit0/product_checks=not_run_documentation_only。製品検査・性能比較の成功ではない。
+
+実checkout `a52ce9c1eba8413d3293a0d770eae0237a653ac9` はGit Data APIでparentsが開始main＋初回head、treeが初回提出treeと同じと確認した。3文書のGitHub再取得は作成本文と完全一致、比較は3 Markdown追加228行、docs以外の全root entryは不変。この節とhandoffのPRリンク追記後の最終head/CIは別にPR本文へ確定し、初回成功を付け替えない。
+
 ## 未実行・阻害と次の一操作
 
 | 条件 | 状態 / 理由 / 次に必要なもの |
