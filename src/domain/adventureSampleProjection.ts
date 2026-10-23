@@ -12,7 +12,7 @@ const SAMPLE_OUTPUT_KINDS = new Set<EntityKind>([
   'flow_node', 'flow_edge', 'flow_graph', 'dialogue_line', 'quest', 'lore',
   'variable', 'effect', 'assertion', 'foreshadow', 'disclosure', 'attachment',
   'source', 'cue', 'storyboard_frame', 'localization', 'recording', 'terminology',
-  'map', 'gameplay_spec', 'production_task', 'voice_rule', 'external_contract',
+  'map', 'travel_route', 'gameplay_spec', 'production_task', 'voice_rule', 'external_contract',
 ]);
 
 function samplePublicText(entity: Entity): PublicTextFields {
@@ -54,15 +54,15 @@ export function addAdventureRuntimeProfile(project: ProjectData): ProjectData {
     && !entity.deletedAt && entity.status === 'confirmed'
     && (entity.kind !== 'dialogue_line' || lineIds.has(entity.id)));
   const profiles = [true, false].map(runtime => {
-    // Maps and translation records are delivered in the production bundle;
-    // they have no execution semantics in the portable story player.
-    const included = runtime ? selected.filter(entity => !['map', 'localization', 'recording'].includes(entity.kind)) : selected;
+    // Maps, routes, translations and work plans belong to the production bundle.
+    // The player receives the story and its behavior without references to those plans.
+    const included = runtime ? selected.filter(entity => !['map', 'travel_route', 'localization', 'recording', 'production_task'].includes(entity.kind)) : selected;
     const allowedKinds = [...new Set(included.map(entity => entity.kind))];
     const profile = createEntity(project.projectId, 'projection_profile', runtime ? ADVENTURE_RUNTIME_PROFILE : ADVENTURE_PRODUCTION_PROFILE, {
       audience: 'サンプルを試遊する読者・制作と翻訳の操作を学ぶ作者',
       publicTitle: '星還りの旅人・全3章の試遊', publicVersionLabel: 'サンプルの試遊・制作版',
       includedIds: included.map(entity => entity.id), allowedKinds,
-      allowedFields: Object.fromEntries(allowedKinds.map(kind => [kind, Object.keys(PROJECTION_FIELDS[kind] ?? {}).filter(field => !(runtime && kind === 'place' && field === 'mapIds'))])),
+      allowedFields: Object.fromEntries(allowedKinds.map(kind => [kind, Object.keys(PROJECTION_FIELDS[kind] ?? {}).filter(field => !(runtime && (kind === 'place' && field === 'mapIds' || kind === 'gameplay_spec' && field === 'taskIds')))])),
       namePolicy: { defaultPolicy: { mode: 'exclude' }, byEntityId: Object.fromEntries(included.map(entity => [entity.id, { mode: 'replace' as const, replacement: entity.name }])) },
       publicTexts: Object.fromEntries(included.map(entity => [entity.id, samplePublicText(entity)])),
       publicValues: Object.fromEntries(included.filter(entity => ['variable', 'external_contract', 'assertion'].includes(entity.kind)).map(entity => [entity.id, samplePublicValues(entity)])),
