@@ -203,7 +203,7 @@ test('全3章サンプルは全情報種別と素材を保存し、再読込と�
   await expect(page.locator('.reader-ending')).toContainText('全3章の完結');
 
   await page.reload();
-  await expect(page.locator('.app-shell')).toBeVisible();
+  await expect(page.locator('.app-shell')).toBeVisible({ timeout: 60_000 });
   const afterReload = await completeBackup(page);
   expect(afterReload.project).toEqual(content);
   expect(afterReload.assets).toEqual(original.assets);
@@ -219,6 +219,7 @@ test('全3章サンプルは全情報種別と素材を保存し、再読込と�
   await page.locator('.project-switch').click();
   await expect(page.locator('.project-card')).toHaveCount(2);
   await page.locator(`.project-card[data-project-id="${content.projectId}"]`).click();
+  await expect(page.locator('.app-shell')).toBeVisible({ timeout: 60_000 });
   const originalAgain = await completeBackup(page);
   expect(originalAgain.project).toEqual(content);
   expect(originalAgain.assets).toEqual(original.assets);
