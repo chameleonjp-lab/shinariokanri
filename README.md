@@ -23,6 +23,7 @@
 - [開発・検証の実行方法](docs/implementation/README.md)
 - [実装進捗と残件](docs/implementation/PROGRESS.md)
 - [ローカル編集・復元の手順](docs/implementation/USER_GUIDE.md)
+- [人間・AI向け全機能マニュアルと全3章サンプル](docs/implementation/MANUALS_AND_SAMPLE.md)（トップ・作品内メニューから検索／コピー／保存）
 - [公開構成と証拠ゲート](docs/implementation/RELEASE.md)
 
 - [資料の入口と読む順番](docs/README.md)

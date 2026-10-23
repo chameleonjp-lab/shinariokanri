@@ -14,7 +14,7 @@ async function closeEditor(page: Page) {
 
 test('幅390pxの手動試読で候補がない場合の代替進行を確認・巻戻・記録再生できる', async ({ page }) => {
   await page.goto('./');
-  await page.getByRole('button', { name: 'サンプルで試す', exact: true }).click();
+  await page.getByRole('button', { name: '短い分岐サンプルで試す', exact: true }).click();
   await navigate(page, /^構成/);
   await page.getByRole('tab', { name: '分岐', exact: true }).click();
 

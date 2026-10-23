@@ -1,0 +1,43 @@
+.library-header-actions, .manual-audiences, .manual-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.library-help { margin: 32px 0; display: grid; grid-template-columns: 1.15fr 1fr; gap: 22px; }
+.sample-introduction, .manual-introduction { border: 1px solid var(--border); border-radius: 16px; padding: 25px; background: var(--surface); }
+.sample-introduction { background: linear-gradient(135deg, var(--accent-soft), var(--surface)); }
+.library-help h2 { margin: 8px 0 12px; font-size: 20px; line-height: 1.6; }
+.library-help p { font-size: 13px; color: var(--muted); }
+.sample-chapters { display: flex; flex-wrap: wrap; gap: 8px; padding: 0; list-style: none; margin: 18px 0; }
+.sample-chapters li { border: 1px solid var(--border); border-radius: 7px; padding: 7px 10px; font-size: 12px; background: var(--surface); }
+.sample-introduction .sample-save-note { font-size: 11px; margin: 10px 0 0; }
+.manual-introduction .manual-actions { align-items: stretch; flex-direction: column; }
+.sidebar-manuals { margin: 10px 0; padding: 10px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.sidebar-manuals .nav-item { font-size: 12px; }
+.modal.modal-wide:has(.manual-guide) { width: min(1060px, calc(100vw - 28px)); }
+.manual-guide { font-size: 14px; }
+.manual-intro { color: var(--muted); font-size: 13px; }
+.manual-audiences { margin-bottom: 20px; }
+.manual-tools label { display: block; font-weight: 600; font-size: 13px; }
+.manual-tools input { margin-top: 8px; }
+.manual-actions { margin-top: 12px; }
+.manual-result-count { color: var(--muted); font-size: 12px; margin: 10px 0 20px; }
+.manual-layout { display: grid; grid-template-columns: 210px minmax(0, 1fr); gap: 28px; align-items: start; }
+.manual-toc { position: sticky; top: 80px; max-height: calc(100dvh - 150px); overflow-y: auto; padding: 4px; border-right: 1px solid var(--border); }
+.manual-toc h3 { font-size: 14px; }
+.manual-toc button { display: block; width: 100%; border: 0; border-radius: 6px; background: transparent; text-align: left; padding: 10px 8px; font-size: 12px; line-height: 1.7; color: var(--accent); min-height: 44px; }
+.manual-toc button:hover { background: var(--accent-soft); }
+.manual-sections section { border-bottom: 1px solid var(--border); padding: 5px 0 22px; margin-bottom: 24px; overflow-wrap: anywhere; }
+.manual-sections h3 { scroll-margin-top: 90px; font-size: 18px; color: var(--accent); line-height: 1.7; }
+.manual-sections p, .manual-sections ol, .manual-guide .manual-notes ul { font-size: 14px; line-height: 1.95; }
+.manual-sections ol { padding-left: 25px; }
+.manual-sections li + li { margin-top: 10px; }
+.manual-notes { background: var(--soft); border-radius: 8px; padding: 14px 16px; }
+.manual-guide .manual-notes ul { margin: 0; padding-left: 19px; font-size: 13px; }
+@media (max-width: 700px) {
+  .library-header { flex-wrap: wrap; gap: 12px; }
+  .library-header-actions { width: 100%; }
+  .library-help { grid-template-columns: minmax(0, 1fr); }
+  .sample-introduction, .manual-introduction { padding: 20px; }
+  .manual-layout { grid-template-columns: minmax(0, 1fr); gap: 22px; }
+  .manual-toc { position: static; max-height: 220px; border: 1px solid var(--border); border-radius: 8px; padding: 12px; }
+  .manual-toc h3 { margin-bottom: 4px; }
+  .manual-audiences .button { flex: 1; min-width: 110px; padding: 10px; font-size: 12px; }
+  .manual-sections h3 { font-size: 16px; }
+}
