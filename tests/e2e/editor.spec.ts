@@ -121,7 +121,7 @@ test('配信サーバー停止後にキャッシュ取得済みの作品を再�
 
 test('サンプルの条件付き選択肢と巻き戻しを操作できる', async ({ page }) => {
   await page.goto('./');
-  await page.getByRole('button', { name: 'サンプルで試す', exact: true }).click();
+  await page.getByRole('button', { name: '短い分岐サンプルで試す', exact: true }).click();
   await navigate(page, /^構成/);
   await page.getByRole('tab', { name: '試読・検査', exact: true }).click();
   await page.getByRole('button', { name: '試読を始める', exact: true }).click();
