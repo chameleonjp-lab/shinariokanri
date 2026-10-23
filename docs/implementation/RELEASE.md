@@ -2,7 +2,11 @@
 
 # 公開構成と完了条件
 
-公開候補は公開リポジトリのGitHub Pages。基底パスは `/shinariokanri/`、候補URLは `https://chameleonjp-lab.github.io/shinariokanri/`。これは候補であり、公開済みのURLではない。Pagesサイト設定と公開操作はまだ行っていない。
+開発中の最新版の公開先は公開リポジトリのGitHub Pages。基底パスは `/shinariokanri/`、URLは `https://chameleonjp-lab.github.io/shinariokanri/`。2026-10-23の利用者による公開・自動更新の依頼に基づき、Pagesの配信元をGitHub Actionsとし、`.github/workflows/pages.yml` で `main` へのすべてのpush（PRのマージを含む）を自動配信の対象とする。Node.js 24で `npm ci` と `npm run build` を実行し、生成した `dist` だけを配信する。ビルドや配信が失敗した場合は既存の公開版を維持する。手動再実行はActionsの `Deploy latest main to GitHub Pages` を `main` で実行する。作業ブランチや未マージのPRからは公開しない。
+
+この配信は開発中の `main` の公開であり、完成版の正式受入ではない。既存の `.github/workflows/ci.yml`、完成版の `Publish verified release`、`scripts/check_release.py` の証拠条件は維持する。最新版の自動配信では完成版受入証拠を生成したり、未確認の条件を合格扱いにしたりしない。公開後は `build-info.json` のcommit/tree/baseとActionsの配信結果を照合する。
+
+配信は既存の `pages` concurrencyグループで直列化する。配信直前に実行対象commitと最新 `main` を照合し、一致しない古い実行は停止する。古いrunやdeployジョブだけの再実行による巻き戻しを防ぎ、最新版のrunから再実行する。
 
 静的buildのHTML・JS・キャッシュには作者の作品データを含めない。作品は端末内に保存し、同期の接続先がないときはクラウドに送信しない。バックエンドを設定した場合は、接続先・認証・RLS・private素材・容量/通信/メール費用を別に検証する。新規有料機能は有効にしていない。現行プランの使用量と課金条件はWP24で記録するまで未確認とする。
 
