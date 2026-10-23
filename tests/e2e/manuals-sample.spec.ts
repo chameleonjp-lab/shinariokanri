@@ -1,7 +1,9 @@
 import { expect, test, type Page } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
+import { strFromU8, unzipSync } from 'fflate';
 import { ENTITY_KINDS, getEntitiesByKind } from '../../src/domain/model';
-import { inspectScenario } from '../../src/storage/archive';
+import { inspectScenario, type ScenarioManifest } from '../../src/storage/archive';
+import { sha256 } from '../../src/storage/json';
 
 async function openMenu(page: Page) {
   const menu = page.getByRole('button', { name: 'メニューを開く', exact: true });
@@ -14,15 +16,36 @@ async function navigate(page: Page, name: RegExp) {
   await page.locator('.sidebar').getByRole('button', { name }).first().click();
 }
 
-async function completeBackup(page: Page) {
+async function downloadCompleteBackup(page: Page) {
   await navigate(page, /^作品・保存$/);
   await page.getByRole('tab', { name: '完全保存・復元', exact: true }).click();
   const pending = page.waitForEvent('download');
   await page.getByRole('button', { name: '完全保存ファイルを作成', exact: true }).click();
   const download = await pending;
   expect(await download.failure()).toBeNull();
-  const bytes = new Uint8Array(await readFile((await download.path())!));
-  return inspectScenario(bytes, { worker: false });
+  return new Uint8Array(await readFile((await download.path())!));
+}
+
+async function completeBackup(page: Page) {
+  return inspectScenario(await downloadCompleteBackup(page), { worker: false });
+}
+
+async function expectBackupUnchanged(page: Page, expected: ScenarioManifest) {
+  const files = unzipSync(await downloadCompleteBackup(page));
+  const actual = JSON.parse(strFromU8(files['manifest.json'])) as ScenarioManifest;
+  const stable = ({ snapshotId: _snapshot, exportedAt: _date, ...manifest }: ScenarioManifest) => ({
+    ...manifest, files: [...manifest.files].sort((a, b) => a.path.localeCompare(b.path)),
+  });
+  expect(stable(actual)).toEqual(stable(expected));
+  expect(Number.isFinite(Date.parse(actual.exportedAt))).toBe(true);
+  expect(actual.snapshotId).toMatch(/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/);
+  expect(Object.keys(files).sort()).toEqual(['manifest.json', ...expected.files.map(file => file.path)].sort());
+  // Identical payload bytes have the same validity as the fully inspected original.
+  // Compare every project, recovery, world and asset file without retaining another decoded graph.
+  for (const file of expected.files) {
+    expect(files[file.path].byteLength, file.path).toBe(file.byteSize);
+    expect(await sha256(files[file.path]), file.path).toBe(file.sha256);
+  }
 }
 
 test('トップのマニュアルを検索・目次移動し、AIへ渡せる全文を保存できる', async ({ page, request }) => {
@@ -204,9 +227,7 @@ test('全3章サンプルは全情報種別と素材を保存し、再読込と�
 
   await page.reload();
   await expect(page.locator('.app-shell')).toBeVisible({ timeout: 60_000 });
-  const afterReload = await completeBackup(page);
-  expect(afterReload.project).toEqual(content);
-  expect(afterReload.assets).toEqual(original.assets);
+  await expectBackupUnchanged(page, original.manifest);
 
   await page.locator('.project-switch').click();
   await page.getByRole('button', { name: '全3章のサンプルを開く', exact: true }).click();
@@ -220,7 +241,5 @@ test('全3章サンプルは全情報種別と素材を保存し、再読込と�
   await expect(page.locator('.project-card')).toHaveCount(2);
   await page.locator(`.project-card[data-project-id="${content.projectId}"]`).click();
   await expect(page.locator('.app-shell')).toBeVisible({ timeout: 60_000 });
-  const originalAgain = await completeBackup(page);
-  expect(originalAgain.project).toEqual(content);
-  expect(originalAgain.assets).toEqual(original.assets);
+  await expectBackupUnchanged(page, original.manifest);
 });
