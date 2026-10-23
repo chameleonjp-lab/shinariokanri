@@ -9,8 +9,12 @@ import { getTrialChoices, pinTrialRecord, startTrial, stepTrial } from './runtim
 import { confirmConsultationImport, previewConsultationImport } from './productionPlanning';
 import { jsonBytes, sha256 } from '../storage/json';
 import { addAdventureRuntimeProfile } from './adventureSampleProjection';
+import { enrichAdventureWorld } from './adventureSampleWorld';
+import { enrichAdventureStory } from './adventureSampleStory';
+import { enrichAdventureProduction } from './adventureSampleProduction';
+import { enrichAdventureCore } from './adventureSampleCore';
 
-export const ADVENTURE_SAMPLE_TITLE = '星還りの旅人 — 全3章サンプル';
+export const ADVENTURE_SAMPLE_TITLE = '星還りの旅人 — 全3章・充実版サンプル';
 export const ADVENTURE_SAMPLE_DESCRIPTION = '異世界へ迷い込んだ測量士・澪が、冒険者リナと失われた星路をたどる。帰還の鍵と街を守る誓いが、三つの章で結び直される。';
 export const ADVENTURE_SAMPLE_SUMMARY = ADVENTURE_SAMPLE_DESCRIPTION;
 export interface AdventureSample { project: ProjectData; assets: AssetInput[] }
@@ -237,9 +241,14 @@ export async function createAdventureSampleProject(): Promise<AdventureSample> {
   const relation = (from: Entity, to: Entity, type: string, evidence: Entity[], validity = emptyValidity()) => project.relations.push({ id: newId(), projectId: project.projectId, revision: '0', fromId: from.id, toId: to.id, relationType: type, direction: 'forward', validity, evidenceIds: evidence.map(item => item.id), status: 'confirmed', visibility: 'private' });
   relation(mio, lina, 'trust', [scenes[5]], { ...emptyValidity(), worldRange: { start: '34', end: null }, routeCondition: condition(route.id, enumeration('救助')) });
   relation(eda, lina, 'mentor_of', [scenes[3], scenes[10]]); relation(ordo, lina, 'mentor_of', [scenes[1]]); relation(events[6], events[10], 'causes', [scenes[6], scenes[10]]); relation(compass, lores[6], 'related', [scenes[8]]); relation(seil, source, 'reference', [scenes[2]]);
-  const taskWriting = add('production_task', '全3章の本文・選択結果を推敲', { targetIds: chapters.map(chapter => chapter.id), stage: 'writing', progress: 'doing', estimate: { value: 3, unit: '時間', assumptions: ['作者1名による初回推敲の仮見積り'], scope: { projectId: project.projectId }, unknownCount: 0, source: 'サンプル制作計画' } });
-  const taskReview = add('production_task', '両経路の伏線と公開範囲を再確認', { targetIds: [graph.id, ...disclosures.map(item => item.id)], stage: 'review', progress: 'todo', dependsOn: [taskWriting.id], blockingReason: '本文推敲後に二つの経路を読み直す。' });
-  const taskTranslation = add('production_task', '英語台詞の意味と口調を確認', { targetIds: lines.map(line => line.id), stage: 'translation', progress: 'todo', dependsOn: [taskReview.id] });
+  // Expand the authored world and journey before taking any immutable editions
+  // or generating trial evidence. Existing IDs remain the anchors of the story.
+  enrichAdventureCore(project);
+  enrichAdventureWorld(project);
+  enrichAdventureStory(project);
+  const taskWriting = add('production_task', '全3章の本文・選択結果を推敲', { targetIds: chapters.map(chapter => chapter.id), stage: 'writing', progress: 'doing', estimate: { range: { min: 12, max: 18 }, unit: '時間', assumptions: ['36場面の本文と資料を作者1名が突き合わせる仮見積り。実測前の計画値。'], scope: { projectId: project.projectId }, unknownCount: 0, source: 'サンプル制作計画' } });
+  const taskReview = add('production_task', '両経路の伏線と公開範囲を再確認', { targetIds: [graph.id, ...project.entities.filter(entity => entity.kind === 'disclosure').map(item => item.id)], stage: 'review', progress: 'todo', dependsOn: [taskWriting.id], blockingReason: '本文推敲後に二つの経路を読み直す。' });
+  const taskTranslation = add('production_task', '英語台詞の意味と口調を確認', { targetIds: [...new Set(project.entities.flatMap(entity => entity.kind === 'scene' ? entity.data.dialogueLineIds ?? [] : []))], stage: 'translation', progress: 'todo', dependsOn: [taskReview.id] });
   add('production_task', '台詞を収録し効果音を差し替える', { targetIds: [lines[10].id, cue.id], stage: 'recording', progress: 'todo', dependsOn: [taskTranslation.id] });
   add('production_task', 'ゲームへ条件と効果を実装', { targetIds: [graph.id], stage: 'implementation', progress: 'todo', dependsOn: [taskReview.id] });
   add('production_task', '読者用出力を試読して公開を判断', { targetIds: chapters.map(chapter => chapter.id), stage: 'publication', progress: 'todo', dependsOn: [taskReview.id] });
@@ -251,14 +260,24 @@ export async function createAdventureSampleProject(): Promise<AdventureSample> {
   add('flow_graph', '補助演習・外部契約と仮値', { nodeIds: [externalStart.id, externalEnd.id], edgeIds: [externalEdge.id], entryIds: [externalStart.id], exitIds: [externalEnd.id] });
   add('collection', '主要人物・固定一覧', { mode: 'fixed', memberIds: characters.map(person => person.id), sort: { field: 'name', direction: 'asc' } });
   add('collection', '伏線の一覧・条件で更新', { mode: 'dynamic', query: { op: 'kind', value: 'foreshadow' }, sort: { field: 'name', direction: 'asc' } });
-  const brief = add('creative_brief', '星還りの旅人・企画', { targetAudience: rich('人との協力、謎の回収、安心できる結末を好む中高生以上の読者。'), experience: rich('世界の規則を理解して自分で道を選ぶ。別れの寂しさと帰還の喜びを両方味わう。'), theme: rich('知識は独占せず、異なる技能を持ち寄ることで人を守る。'), tone: rich('静かな驚きと冒険。救助の緊迫感はあるが残虐描写は避ける。'), scope: rich('全3章12場面。帰還の謎・唄・事故原因はこの作品内で回収。続編を読まなければ解決しない謎は残さない。'), deliverableIds: chapters.map(chapter => chapter.id) });
-  add('note', 'はじめに：サンプルの読み方と全機能の巡り方', { body: rich('この作品は編集できる独立コピーです。元のサンプルはトップから何度でも作り直せます。\n構成の章・場面で全3章12場面を読む。構成→分岐で「全3章・星還りの旅」を開き、書庫／準備、救助／急行、信頼による交渉の違いを試す。試読では開始点を本編に合わせる。外部契約の演習は別の開始点。\n年表で本編と300年前の事故を比較。関係表・図では人物の信頼と伏線→回収の証拠を見る。世界・地図・履歴で旅路、場所の親子、門の稼働状態の変化を見る。\n資料で人物・目標・口調・設定・物品・事実と認識・伏線を開く。人物票には職業・初登場章・拠点の雛形項目がある。台詞のリンクから翻訳草稿、収録計画、演出、絵コンテ、出所と実素材へたどる。\n検索で用語・別名・読み・分類を調べ、固定一覧と動的一覧をカード／表／図／年表へ切り替える。本文にはルビと資料へのリンクを付けた箇所がある。\n制作では企画、判断、依存するタスク、ゲーム仕様、媒体版を確認。相談・別案には架空のAI提案があり、本文へ自動採用されないことを確認できる。\n作品・保存で完全保存→別作品として復元を試す。素材bytesを含める。目的別出力では「読者用・全3章本文」で本文を持ち出す。汎用ランタイムJSON・単体の試遊出力は「試遊用・全3章と外部契約の演習」、翻訳・制作の出力は「制作・翻訳用・全3章」を選ぶ。出力内容と公開名を確認してから保存する。変更履歴は実際に編集した時点から増える。\n試読記録はサンプル作成時に実際の内部ランタイムで生成した経路だけを保存する。任意の外部ゲーム演習・同期・共有・認証・実収録の完了を表すものではない。同期と共有は自分の接続先を設定して試す。'), attachmentIds: attachments.map(item => item.id) });
-  add('note', 'はじめに：応用操作を試す演習', { body: rich('共通世界の参照：トップからサンプルをもう一つ作り、作品名を「星還り・応用練習」へ変更する。年表→世界・地図・履歴→共通世界の固定版で、元の「星還りの旅人」を選択。固定する版は「全3章・初期設定と本文」、採用設定は「星路と魔力保存則」などを選び、「適用前の差分・影響を確認」→「確認した固定版・採用設定を保存」。現在稿でなく固定した版を参照する。別コピーの同名情報は別IDなので、原作の設定と混同せずIDと出所も確認する。\n反応系列：構成→分岐の「短い反応の系列を作る」で、01と04など二場面を選び、系列名を「リナの初回と再訪」、提示方式を初回・再訪にして差分を確認・保存する。新しい分岐図の開始点から試読し、再訪時の表示と巻戻しを比べる。本編の既存の分岐図を上書きしない。\n階層と再利用：練習コピーで資料の進行ノードの種類を呼出しにし、子の分岐図、復帰先の接続、引数を設定して章・場面・会話の階層図で参照先を確認する。固定版の場面は再利用の参照・複製・上書きで違いを比較する。循環や戻り先の未完成は試読前に診断を確認する。\n台詞の分割・統合、素材の差替え：制作の元台詞と英訳草稿・収録計画を開く。元台詞を編集して保存すると原文hashと再確認状態が変わる。元の演出と素材を確認してから翻訳の原台詞を対応し直す。収録はplannedのままで、実録音が済んだことにはしない。\n保存と履歴：メモを一行編集して保存し、作品・保存→変更履歴で変更前後を読む。復元差分を確認して戻す。完全保存をダウンロードし、トップから新しいIDの複製として復元する。同期・共有・外部受渡しは各自の接続先を設定して行い、この練習コピーに実際の秘密や認証情報を登録しない。') });
+  const brief = add('creative_brief', '星還りの旅人・企画', { targetAudience: rich('人との協力、謎の回収、安心できる結末を好む中高生以上の読者。'), experience: rich('世界の規則を理解して自分で道を選ぶ。別れの寂しさと帰還の喜びを両方味わう。'), theme: rich('知識は独占せず、異なる技能を持ち寄ることで人を守る。'), tone: rich('静かな驚きと冒険。救助の緊迫感はあるが残虐描写は避ける。'), scope: rich('全3章36場面。帰還の謎・唄・事故原因はこの作品内で回収。続編を読まなければ解決しない謎は残さない。'), deliverableIds: chapters.map(chapter => chapter.id) });
+  add('note', 'はじめに：サンプルの読み方と全機能の巡り方', { body: rich('この作品は編集できる独立コピーです。元のサンプルはトップから何度でも作り直せます。\n構成の章・場面で全3章36場面を読む。構成→分岐で「全3章・星還りの旅」を開き、書庫／準備、救助／急行、信頼による交渉の違いを試す。試読では開始点を本編に合わせる。外部契約の演習は別の開始点。\n年表では300年前の事故から10日間の旅までをたどり、本隊の移動と街で進む避難・補給・記録公開を比較。関係表・図では人物の信頼と伏線→回収の証拠を見る。世界・地図・履歴で旅路、場所の親子、門の稼働状態の変化を見る。\n資料で人物・目標・口調・設定・物品・事実と認識・伏線を開く。人物票には職業・初登場章・拠点の雛形項目がある。台詞のリンクから翻訳草稿、収録計画、演出、絵コンテ、出所と実素材へたどる。\n検索で用語・別名・読み・分類を調べ、固定一覧と動的一覧をカード／表／図／年表へ切り替える。本文にはルビと資料へのリンクを付けた箇所がある。\n制作では企画、判断、依存するタスク、ゲーム仕様、媒体版を確認。相談・別案には架空のAI提案があり、本文へ自動採用されないことを確認できる。\n作品・保存で完全保存→別作品として復元を試す。素材bytesを含める。目的別出力では「読者用・全3章本文」で本文を持ち出す。汎用ランタイムJSON・単体の試遊出力は「試遊用・全3章と外部契約の演習」、翻訳・制作の出力は「制作・翻訳用・全3章」を選ぶ。出力内容と公開名を確認してから保存する。変更履歴は実際に編集した時点から増える。\n試読記録はサンプル作成時に実際の内部ランタイムで生成した経路だけを保存する。任意の外部ゲーム演習・同期・共有・認証・実収録の完了を表すものではない。同期と共有は自分の接続先を設定して試す。'), attachmentIds: attachments.map(item => item.id) });
+  add('note', 'はじめに：応用操作を試す演習', { body: rich('共通世界の参照：トップからサンプルをもう一つ作り、作品名を「星還り・応用練習」へ変更する。年表→世界・地図・履歴→共通世界の固定版で、元の「星還りの旅人」を選択。固定する版は「全3章・初期設定と本文」、採用設定は「星路と魔力保存則」などを選び、「適用前の差分・影響を確認」→「確認した固定版・採用設定を保存」。現在稿でなく固定した版を参照する。別コピーの同名情報は別IDなので、原作の設定と混同せずIDと出所も確認する。\n反応系列：構成→分岐の「短い反応の系列を作る」で、「知らない星の朝」と「三音を携えて」など二場面を選び、系列名を「リナの初回と再訪」、提示方式を初回・再訪にして差分を確認・保存する。新しい分岐図の開始点から試読し、再訪時の表示と巻戻しを比べる。本編の既存の分岐図を上書きしない。\n階層と再利用：練習コピーで資料の進行ノードの種類を呼出しにし、子の分岐図、復帰先の接続、引数を設定して章・場面・会話の階層図で参照先を確認する。固定版の場面は再利用の参照・複製・上書きで違いを比較する。循環や戻り先の未完成は試読前に診断を確認する。\n台詞の分割・統合、素材の差替え：制作の元台詞と英訳草稿・収録計画を開く。元台詞を編集して保存すると原文hashと再確認状態が変わる。元の演出と素材を確認してから翻訳の原台詞を対応し直す。収録はplannedのままで、実録音が済んだことにはしない。\n保存と履歴：メモを一行編集して保存し、作品・保存→変更履歴で変更前後を読む。復元差分を確認して戻す。完全保存をダウンロードし、トップから新しいIDの複製として復元する。同期・共有・外部受渡しは各自の接続先を設定して行い、この練習コピーに実際の秘密や認証情報を登録しない。') });
   // Use a real named occurrence rather than relying on offsets in the narrative.
   const linkBlock = scenes[0].data.body[0], linkStart = linkBlock.text.indexOf('コンパス');
   if (linkStart >= 0) linkBlock.links = [{ start: linkStart, end: linkStart + 4, target: { entityId: compass.id } }];
   // A separate text block makes the ruby range unambiguous and editable.
   scenes[0].data.body[0].ruby = [{ start: scenes[0].data.body[0].text.indexOf('澪'), end: scenes[0].data.body[0].text.indexOf('澪') + 1, text: 'みお' }];
+  await enrichAdventureProduction(project);
+  const count = (kind: EntityKind) => project.entities.filter(entity => entity.kind === kind).length;
+  add('note', '充実版の案内：十日間の旅と、人々が動く世界', { body: rich(
+    `全3章・${count('scene')}場面、人物${count('character')}人、場所${count('place')}箇所、物品${count('item')}件、出来事${count('event')}件、世界設定${count('lore')}件、伏線${count('foreshadow')}件を収めた編集用サンプルです。物品には種類と個体の両方を含みます。\n` +
+    '構成では各章の12場面を順に読み、目的・対立・結果・新情報・緊張度を本文と比べてください。試読の救助経路では36場面を巡り、急行経路では一部の寄り道を省いて同じ結末へ進みます。\n' +
+    '年表は本編開始から見ると十日間の活動を追えます。「表示単位」を日にすると、移動、休息、街の避難と本隊の調査を比べやすくなります。過去の事故や制度の成立は、出来事一覧の検索または「全体へ戻る」からたどれます。\n' +
+    '人物は来歴・得意なこと・限界・願い・口調と実際の出来事、場所は周辺環境・行き方・利用条件、物品は製法・扱い方・所在・持ち主と使用場面を見比べてください。選択や解決の根拠を、本文と資料を往復して確かめられます。\n' +
+    '制作資料では場面に対応する演出・絵コンテ・英訳草稿・収録計画・作業の依存関係を確認できます。翻訳や収録の計画は作品制作の練習資料であり、収録済みを表しません。\n' +
+    'この充実版はトップから新しく開いたコピーに入ります。以前に作った作品はそのまま残るので、編集した内容を失わずに比較できます。'
+  ) });
   project = await createWorldSnapshot(project, '全3章・初期設定と本文');
   const fixed = project.snapshots.at(-1)!;
   const review = add('review', '第3章・証拠と推測の境界を読む', { target: { entityId: scenes[9].id, blockId: scenes[9].data.body[1].id }, targetVersionId: fixed.id, body: rich('セイルの訂正が、測量と記録のどの証拠によるものか読者に伝わるか確認する。これはサンプルの未解決レビューで、第三者の承認記録ではない。'), stage: 'open', quotedText: scenes[9].data.body[1].text });
@@ -285,11 +304,11 @@ export async function createAdventureSampleProject(): Promise<AdventureSample> {
     namePolicy: { defaultPolicy: { mode: 'exclude' }, byEntityId: Object.fromEntries(publicEntities.map(entity => [entity.id, { mode: 'replace' as const, replacement: entity.name }])) },
     publicTexts, includeAuthorNotes: false, excludedFields: ['authorNotes'], idPolicy: 'remap',
   });
-  add('media_variant', '小説版・全3章の読者用構成', { medium: 'novel', baseSnapshotId: fixed.id, projectionProfileId: profile.id, sourceIds: chapters.map(chapter => chapter.id), body: rich('章順で12場面を読む小説版。分岐は救助経路を主とし、急行経路の判断は作者の比較資料として保持。公開前に本文と投影を確認する。'), needsReview: true });
+  add('media_variant', '小説版・全3章の読者用構成', { medium: 'novel', baseSnapshotId: fixed.id, projectionProfileId: profile.id, sourceIds: chapters.map(chapter => chapter.id), body: rich('章順で36場面を読む小説版。分岐は救助経路を主とし、急行経路の判断は作者の比較資料として保持。公開前に本文と投影を確認する。'), needsReview: true });
   add('media_variant', 'ゲーム版・二つの旅程', { medium: 'game', baseSnapshotId: fixed.id, sourceIds: [graph.id, gameplay.id], body: rich('書庫と救助の選択をプレイヤーへ委ねる。外部戦闘演習は追加仕様で、本編は測量による非戦闘解決。実ゲームへの組込みは未実施。'), needsReview: true });
-  for (const [label, preferred] of [['救助経路・全12場面', ['書庫で', '浅瀬で', '住民の']], ['急行経路・情報を共有して帰還', ['荷を整え', 'ミナに', '監督官の']]] as const) {
+  for (const [label, preferred] of [['救助経路・全36場面', ['書庫で', '浅瀬で', '住民の']], ['急行経路・情報を共有して帰還', ['荷を整え', 'ミナに', '監督官の']]] as const) {
     let session = startTrial(project, { entryId: nodes[0].id });
-    for (let step = 0; session.status === 'ready' && step < 30; step++) {
+    for (let step = 0; session.status === 'ready' && step <= graph.data.nodeIds.length; step++) {
       const choices = getTrialChoices(project, session).filter(choice => choice.result === 'true');
       const next = choices.find(choice => preferred.some(prefix => choice.label.startsWith(prefix))) ?? choices[0];
       session = stepTrial(project, session, next ? { edgeId: next.edgeId } : {});

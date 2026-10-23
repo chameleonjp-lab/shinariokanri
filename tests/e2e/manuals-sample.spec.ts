@@ -1,7 +1,9 @@
 import { expect, test, type Page } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
+import { strFromU8, unzipSync } from 'fflate';
 import { ENTITY_KINDS, getEntitiesByKind } from '../../src/domain/model';
-import { inspectScenario } from '../../src/storage/archive';
+import { inspectScenario, type ScenarioManifest } from '../../src/storage/archive';
+import { sha256 } from '../../src/storage/json';
 
 async function openMenu(page: Page) {
   const menu = page.getByRole('button', { name: 'メニューを開く', exact: true });
@@ -14,15 +16,36 @@ async function navigate(page: Page, name: RegExp) {
   await page.locator('.sidebar').getByRole('button', { name }).first().click();
 }
 
-async function completeBackup(page: Page) {
+async function downloadCompleteBackup(page: Page) {
   await navigate(page, /^作品・保存$/);
   await page.getByRole('tab', { name: '完全保存・復元', exact: true }).click();
   const pending = page.waitForEvent('download');
   await page.getByRole('button', { name: '完全保存ファイルを作成', exact: true }).click();
   const download = await pending;
   expect(await download.failure()).toBeNull();
-  const bytes = new Uint8Array(await readFile((await download.path())!));
-  return inspectScenario(bytes, { worker: false });
+  return new Uint8Array(await readFile((await download.path())!));
+}
+
+async function completeBackup(page: Page) {
+  return inspectScenario(await downloadCompleteBackup(page), { worker: false });
+}
+
+async function expectBackupUnchanged(page: Page, expected: ScenarioManifest) {
+  const files = unzipSync(await downloadCompleteBackup(page));
+  const actual = JSON.parse(strFromU8(files['manifest.json'])) as ScenarioManifest;
+  const stable = ({ snapshotId: _snapshot, exportedAt: _date, ...manifest }: ScenarioManifest) => ({
+    ...manifest, files: [...manifest.files].sort((a, b) => a.path.localeCompare(b.path)),
+  });
+  expect(stable(actual)).toEqual(stable(expected));
+  expect(Number.isFinite(Date.parse(actual.exportedAt))).toBe(true);
+  expect(actual.snapshotId).toMatch(/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/);
+  expect(Object.keys(files).sort()).toEqual(['manifest.json', ...expected.files.map(file => file.path)].sort());
+  // Identical payload bytes have the same validity as the fully inspected original.
+  // Compare every project, recovery, world and asset file without retaining another decoded graph.
+  for (const file of expected.files) {
+    expect(files[file.path].byteLength, file.path).toBe(file.byteSize);
+    expect(await sha256(files[file.path]), file.path).toBe(file.sha256);
+  }
 }
 
 test('トップのマニュアルを検索・目次移動し、AIへ渡せる全文を保存できる', async ({ page, request }) => {
@@ -125,7 +148,8 @@ test('アカウントの再認証待ちでも常設入口から両マニュア�
 });
 
 test('全3章サンプルは全情報種別と素材を保存し、再読込と独立した再作成ができる', async ({ page }) => {
-  test.setTimeout(180_000);
+  // Read all 36 scenes and verify four complete backups of the expanded fixture.
+  test.setTimeout(360_000);
   await page.goto('./');
   await page.getByRole('button', { name: '全3章のサンプルを開く', exact: true }).click();
   await expect(page.locator('.app-shell')).toBeVisible({ timeout: 60_000 });
@@ -133,8 +157,12 @@ test('全3章サンプルは全情報種別と素材を保存し、再読込と�
   const content = original.project;
   const chapters = content.entities.filter(entity => entity.kind === 'chapter');
   expect(chapters).toHaveLength(3);
-  expect(content.entities.filter(entity => entity.kind === 'scene').length).toBeGreaterThanOrEqual(12);
-  expect(content.entities.filter(entity => entity.kind === 'character').length).toBeGreaterThanOrEqual(8);
+  expect(chapters.map(chapter => chapter.data.sceneIds.length)).toEqual([12, 12, 12]);
+  expect(content.entities.filter(entity => entity.kind === 'scene')).toHaveLength(36);
+  expect(content.entities.filter(entity => entity.kind === 'character').length).toBeGreaterThanOrEqual(24);
+  expect(content.entities.filter(entity => entity.kind === 'place').length).toBeGreaterThanOrEqual(24);
+  expect(content.entities.filter(entity => entity.kind === 'item').length).toBeGreaterThanOrEqual(30);
+  expect(content.entities.filter(entity => entity.kind === 'event').length).toBeGreaterThanOrEqual(65);
   expect([...new Set(content.entities.map(entity => entity.kind))].sort()).toEqual([...ENTITY_KINDS].sort());
   expect(original.summary.missingAssets).toBe(0);
   expect(original.assets.length).toBeGreaterThan(0);
@@ -144,10 +172,22 @@ test('全3章サンプルは全情報種別と素材を保存し、再読込と�
   await navigate(page, /^構成/);
   await page.getByRole('tab', { name: '章・本文', exact: true }).click();
   for (const chapter of chapters) await expect(page.locator('.chapter-list').getByRole('heading', { name: chapter.name, exact: true })).toBeVisible();
-  await expect(page.locator('.chapter-list .scene-row')).toHaveCount(12);
+  await expect(page.locator('.chapter-list .scene-row')).toHaveCount(36);
   await navigate(page, /^資料/);
   await expect(page.locator('.entity-card')).toHaveCount(content.entities.filter(entity => entity.kind === 'character').length);
   await navigate(page, /^年表/);
+  await page.getByRole('button', { name: '出来事一覧', exact: true }).click();
+  const events = getEntitiesByKind(content, 'event');
+  await expect(page.locator('.timeline-list-search')).toContainText(`${events.length}件`);
+  const eventSearch = page.getByRole('searchbox', { name: '出来事一覧を検索', exact: true });
+  const historical = events.find(event => event.name === '300年前・星路の一斉閉鎖事故')!;
+  const finalScene = getEntitiesByKind(content, 'scene').find(scene => scene.id === chapters.at(-1)!.data.sceneIds.at(-1))!;
+  for (const eventId of [historical.id, finalScene.data.eventIds[0]]) {
+    await eventSearch.fill(eventId);
+    await expect(page.locator('.event-table-row')).toHaveCount(1);
+    await expect(page.locator(`.event-table-row[data-event-id="${eventId}"]`)).toBeVisible();
+  }
+  await eventSearch.clear();
   await page.getByRole('tab', { name: '世界・地図・履歴', exact: true }).click();
   await page.getByRole('tab', { name: '地図・場所・移動', exact: true }).click();
   const map = content.entities.find(entity => entity.kind === 'map')!;
@@ -165,16 +205,16 @@ test('全3章サンプルは全情報種別と素材を保存し、再読込と�
   await expect(page.locator('.reader-issue')).toHaveCount(0);
   await expect(page.getByRole('button', { name: '一手戻る', exact: true })).toBeDisabled();
   const choiceLabels = ['書庫で反転星図を調べる', '浅瀬で避難者を救助する', '住民の証言を添えて共同調査を申し出る'];
+  const sceneOrder = chapters.flatMap(chapter => chapter.data.sceneIds).map(id => content.entities.find(entity => entity.id === id)!.name);
   let choicesTaken = 0;
   const automatic = page.getByRole('button', { name: '進行規則に従って次へ', exact: true });
-  for (let step = 0; step < 24 && !(await page.locator('.reader-ending').isVisible()); step++) {
-    const beforeCount = await page.locator('.trial-trace li').count();
+  for (let step = 0; step < 60 && !(await page.locator('.reader-ending').isVisible()); step++) {
     if (await automatic.isVisible()) await automatic.click();
     else {
       expect(choicesTaken).toBeLessThan(choiceLabels.length);
       await page.locator('.reader-choices').getByRole('button', { name: new RegExp(`^${choiceLabels[choicesTaken++]}`) }).click();
     }
-    await expect(page.locator('.trial-trace li')).toHaveCount(beforeCount + 1);
+    await expect(page.locator('.reader-sheet-heading h2')).toHaveText(sceneOrder[step + 1]);
     await expect(page.locator('.reader-issue')).toHaveCount(0);
   }
   expect(choicesTaken).toBe(3);
@@ -186,10 +226,8 @@ test('全3章サンプルは全情報種別と素材を保存し、再読込と�
   await expect(page.locator('.reader-ending')).toContainText('全3章の完結');
 
   await page.reload();
-  await expect(page.locator('.app-shell')).toBeVisible();
-  const afterReload = await completeBackup(page);
-  expect(afterReload.project).toEqual(content);
-  expect(afterReload.assets).toEqual(original.assets);
+  await expect(page.locator('.app-shell')).toBeVisible({ timeout: 60_000 });
+  await expectBackupUnchanged(page, original.manifest);
 
   await page.locator('.project-switch').click();
   await page.getByRole('button', { name: '全3章のサンプルを開く', exact: true }).click();
@@ -202,7 +240,6 @@ test('全3章サンプルは全情報種別と素材を保存し、再読込と�
   await page.locator('.project-switch').click();
   await expect(page.locator('.project-card')).toHaveCount(2);
   await page.locator(`.project-card[data-project-id="${content.projectId}"]`).click();
-  const originalAgain = await completeBackup(page);
-  expect(originalAgain.project).toEqual(content);
-  expect(originalAgain.assets).toEqual(original.assets);
+  await expect(page.locator('.app-shell')).toBeVisible({ timeout: 60_000 });
+  await expectBackupUnchanged(page, original.manifest);
 });
