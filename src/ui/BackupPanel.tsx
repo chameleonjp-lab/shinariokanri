@@ -4,14 +4,17 @@ import {useScenarioStore,useAuthorScope,storeForAuthorScope} from './StoreContex
 import { useEffect, useSyncExternalStore, useMemo, useState } from 'react';
 import type { Entity, ProjectData } from '../domain/types';
 import { newId } from '../domain/model';
-import { ARCHIVE_LIMITS, inspectScenario, performImportWork, sha256, StorageError, type ImportDraft, type ImportMode, type ImportPreview, type PreparedScenario } from '../storage';
+import { ARCHIVE_LIMITS, inspectScenario, inspectBackupFile, restoreBackupTrial, estimateBackupCapacity, performImportWork, sha256, type BackupInspection, type BackupTrial, type BackupCapacity, StorageError, type ImportDraft, type ImportMode, type ImportPreview, type PreparedScenario } from '../storage';
 import { collectImportIds, type ImportId } from '../storage/importMapping';
 import { Icon, downloadBytes, safeFileName } from './components';
 import { labelOf } from './Fields';
 import { ListPager, useListWindow } from './ListWindow';
 import { PagedSelect } from './PagedSelect';
+import { BackupTrialPreview } from './BackupTrialPreview';
 
-interface Draft extends ImportDraft { prepared?: PreparedScenario; preview?: ImportPreview; checked: boolean; busy: boolean; ready: boolean; error: string; notice: string; progress: string; saved?: { projectId: string; revision: string }; controller?: AbortController }
+interface Verification { created?: {createdAt: string; sourceHash: string; assetMode: 'embedded' | 'metadata_only'}; selection?: 'checking' | 'checked' | 'failed' | 'cancelled'; inspection?: BackupInspection; trial?: BackupTrial; capacity?: BackupCapacity }
+
+interface Draft extends ImportDraft { verification?: Verification; selectedBytes?: Uint8Array; prepared?: PreparedScenario; preview?: ImportPreview; checked: boolean; busy: boolean; ready: boolean; error: string; notice: string; progress: string; saved?: { projectId: string; revision: string }; controller?: AbortController }
 const drafts = new Map<string, Draft>(), listeners = new Set<() => void>(), writes = new Map<string, Promise<unknown>>();
 const queuedFiles = new Map<string, File>();
 function recoveryErrorMessage(cause: unknown, fileName?: string): string {
@@ -96,15 +99,37 @@ export function BackupPanel({ project, projects, onImported }: { project: Projec
   useEffect(() => {
     if (load(key).ready || load(key).busy) return;
     update(key, { busy: true, progress: '保持した復元入力を読み込み中…' });
-    void scenarioStore.getImportDraft(key).then(async saved => {if(!saved&&key.startsWith('guest:')){const old=await scenarioStore.getImportDraft(key.slice(6));if(old){saved={...old,key};await scenarioStore.saveImportDraft(saved);await scenarioStore.clearImportDraft(key.slice(6));}}
+    void Promise.all([scenarioStore.getImportDraft(key), scenarioStore.getAuthorToolDraft(`${key}:backup-verification`)]).then(async ([saved, record]) => {
+      if (record?.fields.verification) update(key, {verification: record.fields.verification as Verification});
+      return saved;
+    }).then(async saved => {if(!saved&&key.startsWith('guest:')){const old=await scenarioStore.getImportDraft(key.slice(6));if(old){saved={...old,key};await scenarioStore.saveImportDraft(saved);await scenarioStore.clearImportDraft(key.slice(6));}}
       if (saved) {
         const prepared = saved.bytes ? await inspectScenario(saved.bytes) : undefined;
         if (saved.bytes && await sha256(saved.bytes) !== saved.sourceHash) throw new Error('保持した元ファイルのhashが一致しません。');
-        update(key, { ...saved, bytes: undefined, prepared, preview: undefined, checked: false, notice: prepared ? '元ファイルとID対応の入力を再開しました。対象版の影響を再確認してください。' : '' });
+        update(key, { ...saved, bytes: undefined, selectedBytes: saved.bytes, prepared, preview: undefined, checked: false, notice: prepared ? '元ファイルとID対応の入力を再開しました。対象版の影響を再確認してください。' : '' });
       }
     }).catch(cause => update(key, { error: recoveryErrorMessage(cause) })).finally(() => update(key, { ready: true, busy: false, progress: '' }));
   }, [key]);
   useEffect(() => { if (!draft.busy && draft.ready) { const file = queuedFiles.get(key); if (file) { queuedFiles.delete(key); void inspect(file); } } }, [key, draft.busy, draft.ready]);
+  function verification(patch: Partial<Verification>) {
+    const previous = load(key).verification, value = {...previous, ...patch}; update(key, {verification: value});
+    const projectId = project?.projectId ?? value.inspection?.projectId ?? previous?.inspection?.projectId;
+    if (!projectId) return;
+    const pending = (writes.get(key) ?? Promise.resolve()).catch(() => {}).then(() => scenarioStore.saveAuthorToolDraft({key: `${key}:backup-verification`, projectId, baseRevision: project?.revision ?? value.inspection?.revision ?? previous?.inspection?.revision ?? '0', fields: {verification: value}})).catch(cause => update(key, {error: `確認記録の端末内保存に失敗しました。画面内の結果は保持しています。${recoveryErrorMessage(cause)}`}));
+    writes.set(key, pending);
+  }
+  function cancelSelection(event?: Event) { event?.stopPropagation(); verification({selection: 'cancelled', inspection: undefined, trial: undefined, capacity: undefined}); }
+  async function trialRestore() {
+    const request = load(key), inspection = request.verification?.inspection;
+    if (request.busy || !request.selectedBytes || !inspection || request.verification?.trial) return;
+    const controller = new AbortController(); update(key, {busy: true, controller, error: '', notice: '', progress: '元作品を残して別コピーへ試し復元中…'});
+    try {
+      const result = await restoreBackupTrial(scenarioStore, request.selectedBytes, inspection, {signal: controller.signal});
+      verification({trial: result.trial});
+      onImported(result.project, {followSelection: false});
+    } catch (cause) {recordDiagnostic(cause, {accountId: scenarioStore.accountId, revision: project?.revision}); update(key, {error: recoveryErrorMessage(cause)});}
+    finally {update(key, {busy: false, controller: undefined, progress: ''});}
+  }
   async function preview() {
     const request = load(key); if (request.busy || !request.prepared) return;
     update(key, { busy: true, error: '', checked: false, progress: 'ID対応・差分・素材を検査中…' });
@@ -115,15 +140,19 @@ export function BackupPanel({ project, projects, onImported }: { project: Projec
   }
   async function inspect(file: File) {
     if (load(key).busy) { queuedFiles.set(key, file); return; }
-    if (file.size > ARCHIVE_LIMITS.compressedBytes) { update(key, { error: `${file.name}: 保存ファイルの上限は64 MiBです。元の復元入力と保存済み作品を保持しています。` }); return; }
+    if (file.size > ARCHIVE_LIMITS.compressedBytes) { verification({selection: 'failed', inspection: undefined, trial: undefined, capacity: undefined}); update(key, { error: `${file.name}: 保存ファイルの上限は64 MiBです。元の復元入力と保存済み作品を保持しています。` }); return; }
+    verification({selection: 'checking', inspection: undefined, trial: undefined, capacity: undefined});
     const controller = new AbortController(); let inspected = false; update(key, { busy: true, error: '', notice: '', progress: 'ファイルを読み込み中…', controller });
     try {
-      const bytes = new Uint8Array(await file.arrayBuffer()), prepared = await inspectScenario(bytes, { signal: controller.signal, onProgress: progress => update(key, { progress: `${progress.stage} ${progress.completed} / ${progress.total}` }) }), sourceHash = await sha256(bytes), prior = load(key), sameFile = sourceHash === prior.sourceHash;
+      const bytes = new Uint8Array(await file.arrayBuffer()), {prepared, inspection} = await inspectBackupFile(bytes, file.name, { signal: controller.signal, onProgress: progress => update(key, { progress: `${progress.stage} ${progress.completed} / ${progress.total}` }) }), sourceHash = inspection.sourceHash, prior = load(key), sameFile = sourceHash === prior.sourceHash;
+      const capacity = await estimateBackupCapacity(typeof navigator !== 'undefined' && navigator.storage?.estimate ? () => navigator.storage.estimate() : undefined);
+      if (controller.signal.aborted) throw new StorageError('CANCELLED', '検査を取り消しました。元作品は保持しています。');
+      verification({selection: 'checked', inspection, trial: undefined, capacity});
       const next: ImportDraft = { key, bytes, sourceHash, mode: sameFile ? prior.mode : projects.some(p => p.projectId === prepared.project.projectId) ? 'clone' : 'new', targetProjectId: sameFile ? prior.targetProjectId : projects.some(p => p.projectId === prepared.project.projectId) ? prepared.project.projectId : prior.targetProjectId, idMap: sameFile ? prior.idMap : {}, resolutions: sameFile ? prior.resolutions : {} };
-      update(key, { ...next, bytes: undefined, prepared, preview: undefined, checked: false });
+      update(key, { ...next, bytes: undefined, selectedBytes: bytes, prepared, preview: undefined, checked: false });
       inspected = true;
       try { await (writes.get(key) ?? Promise.resolve()).catch(() => {}); await scenarioStore.saveImportDraft(next); } catch (cause) { recordDiagnostic(cause,{accountId:scenarioStore.accountId,revision:project?.revision});update(key, { error: `元ファイルの一時保存に失敗しました。入力は画面内に保持しています。${recoveryErrorMessage(cause, file.name)}` }); }
-    } catch (cause) { recordDiagnostic(cause,{accountId:scenarioStore.accountId,revision:project?.revision});update(key, { error: recoveryErrorMessage(cause, file.name) }); }
+    } catch (cause) { verification({selection: controller.signal.aborted ? 'cancelled' : 'failed', inspection: undefined, trial: undefined, capacity: undefined}); recordDiagnostic(cause,{accountId:scenarioStore.accountId,revision:project?.revision});update(key, { error: recoveryErrorMessage(cause, file.name) }); }
     finally { update(key, { busy: false, controller: undefined, progress: '' }); }
     if (inspected && load(key).prepared && load(key).mode !== 'mapped_merge') await preview();
   }
@@ -137,13 +166,27 @@ export function BackupPanel({ project, projects, onImported }: { project: Projec
   async function exportBackup(full = true) {
     if (!project || load(key).busy) return; update(key, { busy: true, error: '', notice: '', progress: '完全保存ファイルを作成中…' });
     const controller = new AbortController(); update(key, { controller });
-    try { const bytes = await scenarioStore.exportProject(project.projectId, { assetMode: full ? 'embedded' : 'metadata_only', signal: controller.signal,onProgress:p=>update(key,{progress:({container:'ファイル一覧を確認',expanding:'ファイルを展開',hashes:'保存した操作を照合',validating:'内容と履歴を検査',serializing:'本文・履歴・素材を格納',compressing:'保存ファイルを圧縮'})[p.stage]+` ${p.completed}/${p.total}`}) }); downloadBytes(bytes as BlobPart, `${safeFileName(project.name)}${full ? '' : '-素材を除く'}.scenario`, 'application/zip'); update(key, { notice: full ? '完全保存ファイルを作成しました。端末のダウンロードを確認してください。' : '素材bytesを除いたファイルを作成しました。完全復元には素材が別途必要です。' }); }
+    try { const bytes = await scenarioStore.exportProject(project.projectId, { assetMode: full ? 'embedded' : 'metadata_only', signal: controller.signal,onProgress:p=>update(key,{progress:({container:'ファイル一覧を確認',expanding:'ファイルを展開',hashes:'保存した操作を照合',validating:'内容と履歴を検査',serializing:'本文・履歴・素材を格納',compressing:'保存ファイルを圧縮'})[p.stage]+` ${p.completed}/${p.total}`}) }); const sourceHash = await sha256(bytes);
+      if (controller.signal.aborted) throw new StorageError('CANCELLED', '控えの作成を取り消しました。端末内の作品は保持しています。');
+      verification({created: {createdAt: new Date().toISOString(), sourceHash, assetMode: full ? 'embedded' : 'metadata_only'}});
+      downloadBytes(bytes as BlobPart, `${safeFileName(project.name)}${full ? '' : '-素材を除く'}.scenario`, 'application/zip'); update(key, { notice: full ? '画像・音声を同梱する控えを作成しました。「ファイル」やダウンロードから実物を選び、検査・試し復元してください。' : '素材を別に用意する控えを作成しました。画像・音声は含まれません。完全復元には素材が別途必要です。' }); }
     catch (cause) { recordDiagnostic(cause,{accountId:scenarioStore.accountId,revision:project?.revision});update(key, { error: recoveryErrorMessage(cause) }); }
     finally { update(key, { busy: false, controller: undefined, progress: '' }); }
   }
-  return <section className="backup-page">{project && <div className="backup-card"><Icon name="download" size={26}/><div><h3>作品を完全保存</h3><p>本文・状態・固定世界・履歴・送信待ち・添付を .scenario ファイルに保存します。</p><button className="button primary" disabled={draft.busy} onClick={() => void exportBackup()}>完全保存ファイルを作成</button><button className="text-button" disabled={draft.busy} onClick={() => void exportBackup(false)}>素材bytesを除いて保存</button></div></div>}
+  return <section className="backup-page">{project && <div className="backup-card"><Icon name="download" size={26}/><div><h3>持ち出す控えを作る</h3><p>「この端末に保存」は、このブラウザー内の保存です。端末の故障やブラウザーのデータ消去に備えるには、.scenario の控えを「ファイル」などへ保存してください。</p><h4>画像・音声も同梱する控え</h4><p>本文・状態・固定世界・履歴・送信待ちと画像・音声を含みます。このファイルから別コピーへ素材も読み戻せます。</p><button className="button primary" disabled={draft.busy} onClick={() => void exportBackup()}>完全保存ファイルを作成</button><h4>画像・音声を別に用意する控え</h4><p>本文・状態・固定世界・履歴・送信待ちと素材の情報だけを含みます。画像・音声の実物は含まれません。素材を別に用意しないと、すべては戻せません。</p><button className="text-button" disabled={draft.busy} onClick={() => void exportBackup(false)}>素材bytesを除いて保存</button></div></div>}
     {!!recoveredPendingCount && <p className="info-notice" role="status">復元した送信待ち操作 {recoveredPendingCount}件を保持しています。接続先・権限・サーバー確定基底を再確認するまで送信しません。</p>}
-    <div className="backup-card"><Icon name="upload" size={26}/><div><h3>ファイルから復元</h3><p>元ファイルと対応の入力を端末内に保持し、影響を確認してから復元します。</p><label className="button secondary file-button">保存ファイルを選ぶ<input type="file" accept=".scenario,.zip,application/zip" disabled={draft.busy} onChange={event => { const file = event.target.files?.[0]; event.target.value = ''; if (file) void inspect(file); }}/></label></div></div>
+    <div className="backup-card"><Icon name="upload" size={26}/><div><h3>ファイルから復元</h3><p>元ファイルと対応の入力を端末内に保持し、影響を確認してから復元します。控えを作った後は「ファイル」やダウンロードにある実物を選んで検査し、元作品を残す別コピーで試せます。</p><label className="button secondary file-button">保存ファイルを選ぶ<input type="file" accept=".scenario,.zip,application/zip" disabled={draft.busy} onChange={event => { const file = event.target.files?.[0]; event.target.value = ''; if (file) void inspect(file); else cancelSelection(); }} ref={input => {if (!input) return; input.addEventListener('cancel', cancelSelection); return () => input.removeEventListener('cancel', cancelSelection);}}/></label></div></div>
+    <section className="backup-card" aria-label="控えの確認記録"><div><h3>控えの確認記録</h3>
+      <p>{draft.verification?.created ? `作成時刻 ${draft.verification.created.createdAt} · ${draft.verification.created.assetMode === 'embedded' ? '画像・音声を同梱' : '素材を別に用意'}` : '控えはまだ作成していません。'} 作成だけでは、保存先の実ファイルは未検査です。</p>
+      {draft.verification?.selection === 'checking' ? <p>実ファイルを検査中…</p> : draft.verification?.selection === 'failed' ? <p>ファイル検査に失敗しました。確認済みにはしていません。</p> : draft.verification?.selection === 'cancelled' ? <p>ファイルの選択を取り消しました。今回のファイルは未検査です。</p> : !draft.verification?.inspection && <p>実ファイルは未検査です。</p>}
+      {draft.verification?.inspection && <><p>ファイル検査に成功 · {draft.verification.inspection.fileName} · 検査時刻 {draft.verification.inspection.checkedAt}</p><p style={{overflowWrap: 'anywhere'}}>検査対象の作品 {draft.verification.inspection.projectId} · 版 {draft.verification.inspection.revision} · ファイル内の作成時刻 {draft.verification.inspection.exportedAt}</p><details><summary>照合したファイルと添付内容</summary><p style={{overflowWrap: 'anywhere'}}>ファイル SHA-256 {draft.verification.inspection.sourceHash}</p><p>同梱素材 {draft.verification.inspection.assets.length}件 · 含まれない素材 {draft.verification.inspection.missingAssets}件</p></details>
+      {draft.verification.inspection.assetMode === 'metadata_only' && <p className="info-notice">画像・音声を含まない控えです。素材を別に用意する必要があります。この端末に素材があっても、控えから全素材を復元した証明にはなりません。</p>}
+      {draft.verification.created && <p>{draft.verification.created.sourceHash === draft.verification.inspection.sourceHash ? '直前に作成した控えと同じファイルです。' : '直前に作成した控えとは別のファイルです。検査対象の作品・版だけの結果です。'}</p>}
+      <p>{draft.verification.capacity?.availableBytes === undefined ? '容量は確認できません' : `このブラウザーの空き容量の概算 ${draft.verification.capacity.availableBytes.toLocaleString()} bytes`} · 確認時刻 {draft.verification.capacity?.checkedAt ?? '未取得'}。保存先の「ファイル」や端末全体の容量ではありません。容量の概算は復元成功を保証しません。</p>
+      {draft.verification.trial ? <><p>この端末の別コピーへ読み戻しました · 試し復元したコピーの版 {draft.verification.trial.revision} · {draft.verification.trial.restoredAt}</p><p style={{overflowWrap: 'anywhere'}}>コピーID {draft.verification.trial.projectId} · 読み戻した同梱素材 {draft.verification.trial.restoredAssets}件 · 含まれない素材 {draft.verification.trial.missingAssets}件</p><BackupTrialPreview trial={draft.verification.trial} inspection={draft.verification.inspection}/></> : <p>試し復元は未実施です。</p>}
+      <button className="button secondary" disabled={draft.busy || !draft.selectedBytes || !!draft.verification.trial} onClick={() => void trialRestore()}>元作品を残して別コピーへ試し復元</button></>}
+      {!draft.verification?.inspection && <button className="button secondary" disabled>元作品を残して別コピーへ試し復元</button>}
+    </div></section>
     {draft.busy && <p role="status">{draft.progress || '処理中…'}{draft.controller && <button className="text-button" onClick={() => draft.controller?.abort()}>中止</button>}</p>}{ownershipPending && <p role="status">IDの所有者と対応を確認しています…</p>}{draft.error && <div className="error-notice" role="alert">{draft.error}</div>}{ownershipError && <div className="error-notice" role="alert">ID対応の検査を続けられません。元ファイルと保存済み作品を保持しています。{ownershipError}</div>}{draft.notice && <p className="success-notice" role="status">{draft.notice}</p>}
     {draft.prepared && <div className="import-preview"><h3>検査済みの作品 · {draft.prepared.summary.name}</h3><p>{draft.prepared.summary.entities}件の情報 · {draft.prepared.summary.history}件の履歴 · {draft.prepared.summary.assetBytes} bytesの素材</p>{draft.prepared.warnings.map(warning => <p className="info-notice" key={warning}>{warning}</p>)}<label>復元方法<select aria-label="復元方法" disabled={draft.busy} value={draft.mode} onChange={event => { const mode = event.target.value as ImportMode; change({ mode, resolutions: {} }); if (mode === 'new' || mode === 'clone') void preview(); }}><option value="new">保存IDを維持して新規復元</option><option value="clone">新しいIDへ複製して追加</option><option value="replace">同じ作品を置換</option><option value="merge">同じ作品へ統合</option><option value="mapped_merge">別作品へ明示ID対応で統合</option></select></label>
       {['replace', 'merge', 'mapped_merge'].includes(draft.mode) && <PagedSelect label="復元する対象作品" scope={`${key}:import-project`} disabled={draft.busy} value={draft.targetProjectId} onChange={targetProjectId => change({ targetProjectId, idMap: {}, resolutions: {} })} items={projects.filter(p => draft.mode === 'mapped_merge' ? p.projectId !== draft.prepared!.project.projectId : p.projectId === draft.prepared!.project.projectId).map(p => ({ id: p.projectId, label: `${p.name} · 版 ${p.revision}` }))}/>}
