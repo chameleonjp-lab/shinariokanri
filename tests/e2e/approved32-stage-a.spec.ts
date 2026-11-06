@@ -2,7 +2,8 @@ import { expect, test, type Page } from '@playwright/test';
 import { createEntity, createProject, textToRichText } from '../../src/domain/model';
 import { createWorldSnapshot } from '../../src/domain/world';
 import { exportScenario } from '../../src/storage/archive';
-import type { ProjectData } from '../../src/domain/types';
+import type { Entity, ProjectData } from '../../src/domain/types';
+import { authorFingerprint } from './ap04-original-helpers';
 
 async function navigate(page: Page, name: RegExp) {
   const menu = page.getByRole('button', { name: 'メニューを開く' });
@@ -168,4 +169,44 @@ test('相対日時の入力は基準の24単位の日を継承して換算する
   await dialog.getByLabel('相対日時の差の最大', { exact: true }).fill('2');
   await dialog.getByRole('button', { name: '変更前の影響を確認', exact: true }).click();
   await expect(dialog).toContainText('0年1月2日 〜 0年1月3日');
+});
+
+test('日単位の相対差を空欄から再入力し、一時的な逆転を修正して保存できる', async ({ page }) => {
+  const project = createProject('相対日時の途中入力');
+  project.calendars.push({ id: 'fiction', name: '一日24単位の暦', kind: 'repeating', originLabel: '原点', ticksPerDay: '24', years: [{ months: [{ name: '始月', days: 30 }] }] });
+  const anchor = createEntity(project.projectId, 'event', '別暦の基準', { time: { mode: 'instant', at: '0', calendarId: 'fiction' }, laneRole: 'common' });
+  const relative = createEntity(project.projectId, 'event', '二日以内の出来事', { time: { mode: 'relative', anchorEventId: anchor.id, anchorPoint: 'start', minOffset: '24', maxOffset: '48' }, laneRole: 'common' });
+  project.entities.push(anchor, relative);
+  await seed(page, project); await navigate(page, /^年表/);
+  await page.locator(`[data-event-id="${relative.id}"]`).first().click();
+  const close = page.getByRole('button', { name: '詳細を閉じる' });
+  if (await close.isVisible()) await close.click();
+  else await page.getByRole('button', { name: '一覧に戻る' }).click();
+  const open = page.getByRole('button', { name: '選択した出来事の日時・制約', exact: true });
+  const dialog = page.getByRole('dialog', { name: `日時・前後関係 · ${relative.name}` });
+  await open.click();
+  await dialog.getByLabel('相対日時の差の入力単位', { exact: true }).selectOption('day');
+  const minimum = dialog.getByLabel('相対日時の差の最小', { exact: true });
+  const maximum = dialog.getByLabel('相対日時の差の最大', { exact: true });
+  const savedTime = async () => {
+    const records = JSON.parse(await authorFingerprint(page))[1] as { id: string; record: Entity<'event'> }[];
+    return records.find(row => row.id === relative.id)?.record.data.time;
+  };
+  await expect(minimum).toHaveValue('1');
+  await expect(maximum).toHaveValue('2');
+  await minimum.clear();
+  await minimum.fill('2');
+  await dialog.getByRole('button', { name: '変更前の影響を確認', exact: true }).click();
+  await dialog.getByRole('button', { name: '差分を一括確定', exact: true }).click();
+  await expect(dialog).not.toBeVisible();
+  await expect.poll(savedTime).toEqual({ mode: 'relative', anchorEventId: anchor.id, anchorPoint: 'start', minOffset: '48', maxOffset: '48' });
+
+  await open.click();
+  await dialog.getByLabel('相対日時の差の入力単位', { exact: true }).selectOption('day');
+  await minimum.fill('3');
+  await maximum.fill('3');
+  await dialog.getByRole('button', { name: '変更前の影響を確認', exact: true }).click();
+  await dialog.getByRole('button', { name: '差分を一括確定', exact: true }).click();
+  await expect(dialog).not.toBeVisible();
+  await expect.poll(savedTime).toEqual({ mode: 'relative', anchorEventId: anchor.id, anchorPoint: 'start', minOffset: '72', maxOffset: '72' });
 });

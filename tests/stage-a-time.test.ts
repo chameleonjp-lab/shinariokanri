@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { TickInput, TimelineTimeEditor } from '../src/ui/TimelineEditors';
 import { describe, expect, it } from 'vitest';
 import { createEntity, createProject } from '../src/domain/model';
-import { calendarDisplayUnits } from '../src/domain/timeEditing';
+import { calendarDisplayUnits, calendarForTime } from '../src/domain/timeEditing';
 import { GREGORIAN_CALENDAR } from '../src/domain/time';
 import { timeLabel } from '../src/ui/Timeline';
 
@@ -24,6 +24,21 @@ describe('stage A human-readable world time', () => {
     expect(markup).toContain('1日 24 時間の最小単位');
     expect(markup).not.toContain('秒');
     expect(timeLabel(relative.data.time, project)).toContain('時間の最小単位');
+  });
+  it.each([
+    { minOffset: '', maxOffset: '48' },
+    { minOffset: '72', maxOffset: '48' },
+    { minOffset: '-48', maxOffset: '-24' },
+  ])('retains the inherited calendar through current offset edits $minOffset to $maxOffset', offsets => {
+    const project = createProject();
+    const calendar = { id: 'fiction', name: '架空暦', kind: 'repeating' as const, originLabel: '創世', ticksPerDay: '24', years: [{ months: [{ name: '始月', days: 30 }] }] };
+    project.calendars.push(calendar);
+    const origin = createEntity(project.projectId, 'event', '独自暦の基準', { time: { mode: 'instant', at: '0', calendarId: calendar.id } });
+    const anchor = createEntity(project.projectId, 'event', '翌日の基準', { time: { mode: 'relative', anchorEventId: origin.id, anchorPoint: 'start', minOffset: '24', maxOffset: '24' } });
+    project.entities.push(origin, anchor);
+    expect(calendarForTime({ mode: 'relative', anchorEventId: anchor.id, anchorPoint: 'start', ...offsets }, project)).toBe(calendar);
+    anchor.data.time = { ...anchor.data.time as Extract<typeof anchor.data.time, { mode: 'relative' }>, minOffset: '', maxOffset: '24' };
+    expect(calendarForTime({ mode: 'relative', anchorEventId: anchor.id, anchorPoint: 'start', ...offsets }, project)).toBeUndefined();
   });
   it.each(['missing', 'cycle', 'unknown', 'conflict'])('uses only smallest units for a relative editor with a %s anchor', mode => {
     const project = createProject();

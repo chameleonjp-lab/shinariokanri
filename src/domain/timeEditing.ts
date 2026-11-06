@@ -5,10 +5,12 @@ import { addTicks, calendarDateToTick, compareTicks, floorDiv, isTick, MAX_TICK,
 export function worldTimeUnit(calendar?: CalendarDefinition): string {
   return calendar?.kind === 'gregorian' && calendar.ticksPerDay === '86400' ? '秒' : '時間の最小単位';
 }
-/** Relative time inherits only a successfully resolved anchor's calendar. */
+/** Resolve the anchor chain independently of the relative offsets being edited. */
 export function calendarForTime(time: TimeSpec, project: Pick<ProjectData, 'entities' | 'calendars'>): CalendarDefinition | undefined {
-  const resolved = resolveTime(time, project.entities.filter((entity): entity is Entity<'event'> => entity.kind === 'event' && !entity.deletedAt));
-  return resolved.status === 'resolved' ? project.calendars.find(calendar => calendar.id === resolved.calendarId) : undefined;
+  const events = project.entities.filter((entity): entity is Entity<'event'> => entity.kind === 'event' && !entity.deletedAt);
+  const anchor = time.mode === 'relative' ? events.find(event => event.id === time.anchorEventId) : undefined;
+  const resolved = time.mode === 'relative' ? anchor && resolveTime(anchor.data.time, events, [anchor.id]) : resolveTime(time, events);
+  return resolved?.status === 'resolved' ? project.calendars.find(calendar => calendar.id === resolved.calendarId) : undefined;
 }
 export function formatWorldTick(tick: Tick, calendar?: CalendarDefinition): string {
   if (!calendar) return `時間の最小単位 ${tick}（暦の対応未定）`;
