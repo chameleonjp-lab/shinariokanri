@@ -6,6 +6,15 @@ import {labelOf} from './Fields';
 import {PagedSelect} from './PagedSelect';
 import {ListPager,useListWindow} from './ListWindow';
 import type { ContentAnchor, Entity, ProjectData } from '../domain/types';
+import { adoptedRecord } from '../domain/adoption';
+
+export function ProductionSourceLinks({project,entity,onOpenTarget}:{project:ProjectData;entity:Entity;onOpenTarget:(anchor:ContentAnchor)=>void}) {
+  if(entity.kind==='storyboard_frame')return <button type="button" className="button secondary" onClick={()=>onOpenTarget(entity.data.anchor)}>絵コンテの元の行へ戻る</button>;
+  if(entity.kind!=='dialogue_line')return null;
+  const frames=project.entities.filter((e):e is Entity<'storyboard_frame'>=>e.kind==='storyboard_frame'&&adoptedRecord(e)&&(!e.data.anchor.sourceVersionId||e.data.anchor.sourceVersionId===project.projectId)&&(e.data.anchor.lineId??e.data.anchor.entityId)===entity.id);
+  return <>{entity.data.sourceAnchor&&<button type="button" className="button secondary" onClick={()=>onOpenTarget(entity.data.sourceAnchor!)}>元の段落・対応する台詞へ</button>}{frames.map(frame=><button type="button" className="button secondary" key={frame.id} onClick={()=>onOpenTarget({entityId:frame.id})}>対応する絵コンテ: {frame.name}</button>)}</>;
+}
+
 
 /** The diagram uses the same paged task set as the complete, keyboard-accessible list. */
 export function ProductionDependencies({ tasks, onOpen }: { tasks: Entity<'production_task'>[]; onOpen: (id: string) => void }) {

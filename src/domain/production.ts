@@ -13,7 +13,7 @@ function stable(value: unknown): string {
 export async function dialogueContentHash(project: ProjectData, line: Entity<'dialogue_line'>): Promise<string> {
  const cues=(line.data.cueIds ?? []).map(id=>project.entities.find(e=>e.id===id && e.kind==='cue' && !e.deletedAt));
  if(cues.some(cue=>!cue)) throw new Error('REFERENCE_INVALID: 台詞の演出参照が見つかりません。');
- const content={text:line.data.text.map(block=>({kind:block.kind,text:block.text,ruby:block.ruby??[]})),speakerId:line.data.speakerId??null,cues:cues.map(cue=>cue!.data)};
+ const content={...(line.data.scriptKind&&line.data.scriptKind!=='dialogue'?{scriptKind:line.data.scriptKind}:{}),text:line.data.text.map(block=>({kind:block.kind,text:block.text,ruby:block.ruby??[]})),speakerId:line.data.speakerId??null,cues:cues.map(cue=>cue!.data)};
  const bytes=new TextEncoder().encode(stable(content));
  return [...new Uint8Array(await crypto.subtle.digest('SHA-256',bytes))].map(v=>v.toString(16).padStart(2,'0')).join('');
 }
@@ -29,7 +29,7 @@ export async function reconcileDeliverables(before: ProjectData, candidate: Proj
   if(!old||Boolean(old.deletedAt)!==Boolean(entity.deletedAt)||stable(old.data)!==stable(entity.data))changedData.add(id);
  }
  for(const id of previous.keys())if(!current.has(id))changedData.add(id);
- const content=(line:Entity<'dialogue_line'>, index:Map<ID,Entity>)=>stable({text:line.data.text.map(block=>({kind:block.kind,text:block.text,ruby:block.ruby??[]})),speakerId:line.data.speakerId??null,cues:(line.data.cueIds??[]).map(id=>{const cue=index.get(id);if(!cue||cue.kind!=='cue'||cue.deletedAt)throw new Error('REFERENCE_INVALID: 台詞の演出参照が見つかりません。');return cue.data;})});
+ const content=(line:Entity<'dialogue_line'>, index:Map<ID,Entity>)=>stable({...(line.data.scriptKind&&line.data.scriptKind!=='dialogue'?{scriptKind:line.data.scriptKind}:{}),text:line.data.text.map(block=>({kind:block.kind,text:block.text,ruby:block.ruby??[]})),speakerId:line.data.speakerId??null,cues:(line.data.cueIds??[]).map(id=>{const cue=index.get(id);if(!cue||cue.kind!=='cue'||cue.deletedAt)throw new Error('REFERENCE_INVALID: 台詞の演出参照が見つかりません。');return cue.data;})});
  for(const entity of candidate.entities) {
   if(entity.kind!=='dialogue_line'||entity.deletedAt)continue;
   const old=previous.get(entity.id);
@@ -52,8 +52,11 @@ export async function reconcileDeliverables(before: ProjectData, candidate: Proj
  });
  // A fixed edition owns its anchor IDs. A live edit cannot invalidate that unchanged edition.
  const liveReference=(entity:Entity,path:string)=>{let value:unknown=entity;for(const part of path.split(/[.\[\]]+/).filter(Boolean)){if(value&&typeof value==='object'){const object=value as Record<string,unknown>,version=object.sourceVersionId??object.targetSnapshotId??((entity.kind==='trace'||entity.kind==='checkpoint')?object.contentVersionId:undefined);if(typeof version==='string'&&version!==candidate.projectId)return false;value=object[part];}else return true;}return true;};
- // Follow typed production dependencies once. Historical ancestry does not change copied content.
- const reverse=new Map<ID,ID[]>();for(const entity of entities)if(!entity.deletedAt&&!['rejected','alternate'].includes(entity.status))for(const reference of collectReferences(entity))if(!reference.path.startsWith('data.lineage')&&!reference.path.startsWith('data.originLineIds')&&liveReference(entity,reference.path)){const uses=reverse.get(reference.id);if(uses)uses.push(entity.id);else reverse.set(reference.id,[entity.id]);}
+ // Scene containment must not invalidate sibling frames/cues. A task explicitly
+ // targeting the whole scene still owns every contained line, at every stage.
+ // Historical ancestry does not change copied content.
+ const reverse=new Map<ID,ID[]>();for(const entity of entities)if(!entity.deletedAt&&!['rejected','alternate'].includes(entity.status))for(const reference of collectReferences(entity))if(!(entity.kind==='scene'&&reference.path.startsWith('data.dialogueLineIds'))&&!reference.path.startsWith('data.lineage')&&!reference.path.startsWith('data.originLineIds')&&liveReference(entity,reference.path)){const uses=reverse.get(reference.id);if(uses)uses.push(entity.id);else reverse.set(reference.id,[entity.id]);}
+ for(const task of entities)if(task.kind==='production_task'&&!task.deletedAt&&!['rejected','alternate'].includes(task.status))for(const id of task.data.targetIds){const scene=current.get(id);if(scene?.kind==='scene'&&!scene.deletedAt&&!['rejected','alternate'].includes(scene.status))for(const lineId of scene.data.dialogueLineIds??[]){const uses=reverse.get(lineId);if(uses)uses.push(task.id);else reverse.set(lineId,[task.id]);}}
  const affected=new Set(changedData),sourceAffected=new Set<ID>(),queue=[...affected];for(let at=0;at<queue.length;at++)for(const id of reverse.get(queue[at])??[]){sourceAffected.add(id);if(!affected.has(id)){affected.add(id);queue.push(id);}}
  const next={...candidate,entities:entities.map(entity=>{if(!affected.has(entity.id)||entity.deletedAt||['rejected','alternate'].includes(entity.status))return entity;
   if(entity.kind==='storyboard_frame'&&previous.has(entity.id))return {...entity,status:'needs_review' as const};

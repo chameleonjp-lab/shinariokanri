@@ -68,7 +68,7 @@ export const PROJECTION_FIELDS: Readonly<Partial<Record<EntityKind, Readonly<Rec
   flow_node: { nodeType: oneOf('scene', 'choice', 'automatic', 'call', 'entry', 'exit', 'terminal'), sceneId: ref, childGraphId: ref, terminalReason: text, trigger: { type: 'trigger' }, gate: condition, executionPolicy: oneOf('manual_choice', 'first_match', 'all_match'), fallbackId: ref, shownInformationIds: refs },
   flow_edge: { fromId: ref, toId: ref, edgeType: oneOf('choice', 'automatic', 'call_return'), label: text, condition, effectIds: refs, priority: number, choiceLineId: ref },
   flow_graph: { nodeIds: refs, edgeIds: refs, entryIds: refs, exitIds: refs, parentGraphId: ref,parameters:{type:'parameters'} },
-  dialogue_line: { text: rich, speakerId: ref, choiceEdgeId: ref, cueIds: refs },
+  dialogue_line: { scriptKind: oneOf('dialogue', 'action', 'subtitle'), scriptNumber: number, sourceAnchor: { type: 'anchor' }, text: rich, speakerId: ref, choiceEdgeId: ref, cueIds: refs },
   quest: { key: text, stateVariableId: ref, description: rich, flowIds: refs, transitionRules: { type: 'transitions' } },
   lore: { body: rich, assertionIds: refs, reading: text },
   variable: { key: text, valueType: oneOf('boolean', 'integer', 'enum'), scope: oneOf('scene', 'chapter', 'character', 'run', 'across_runs'), initial: typed, allowed: { type: 'allowed' }, ownerId: ref, externalContractId: ref, externalUseDeclared: boolean, description: rich, derived:{type:'expression'},resetRules:{type:'resets'},exclusions:{type:'exclusions'}, transitionRules: { type: 'transitions' } },
