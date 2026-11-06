@@ -43,7 +43,7 @@ const AXIS_LABELS: Record<StoryLaneAxis, string> = {
 export interface WritingWorkspaceProps {
   project: ProjectData;
   initialAxis?: StoryLaneAxis;
-  onOpenEntity: (id: string) => void;
+  onOpenEntity: (id: string, fieldPath?: string) => void;
   /** The host saves this as a canonical project command, including revision/history updates. */
   onSaveProject?: (project: ProjectData, reason: string) => unknown | Promise<unknown>;
 }
@@ -61,8 +61,10 @@ function laneAxisControl(axis: StoryLaneAxis, onChange: (next: StoryLaneAxis) =>
   </label>;
 }
 
-export function WritingWorkspace({ project, initialAxis = 'character', onOpenEntity, onSaveProject }: WritingWorkspaceProps) {
+export function WritingWorkspace({ project, initialAxis = 'chapter', onOpenEntity, onSaveProject }: WritingWorkspaceProps) {
   const [axis, setAxis] = useState<StoryLaneAxis>(initialAxis);
+  const [chapterId, setChapterId] = useState('');
+  const [activeSceneId, setActiveSceneId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false), [error, setError] = useState(''), saving = useRef(false);
   const saveCandidate = async (candidate: ProjectData, reason: string) => {
     if (!onSaveProject || saving.current) return;
@@ -73,9 +75,11 @@ export function WritingWorkspace({ project, initialAxis = 'character', onOpenEnt
   };
   const [arcOrder, setArcOrder] = useState<ArcOrder>('presentation');
   const lanes = useMemo(() => buildStoryLanes(project, axis), [project, axis]);
+  const sceneNumbers = useMemo(() => new Map(buildChapterReadingSequence(project).map((entry, index) => [entry.scene.id, index + 1])), [project]);
   const characters = project.entities.filter((entity): entity is Entity<'character'> => entity.kind === 'character' && !entity.deletedAt);
   const chapters = project.entities.filter((entity): entity is Entity<'chapter'> => entity.kind === 'chapter' && !entity.deletedAt);
   const canEdit = Boolean(onSaveProject);
+  const openScene = (sceneId: string, fieldPath: string) => { setActiveSceneId(sceneId); onOpenEntity(sceneId, fieldPath); };
 
   const removeFromThread = async (sceneId: string, threadId: string) => {
     if (!onSaveProject) return;
@@ -88,6 +92,7 @@ export function WritingWorkspace({ project, initialAxis = 'character', onOpenEnt
 
   return <section className="writing-workspace" aria-label="物語の構成"><fieldset disabled={busy} className="writing-save-fields">
     <div className="section-heading"><h2>物語を並べて見る</h2><span>同じ場面IDを切り替えて表示します</span></div>
+    <label className="form-field"><span>書く章を選ぶ</span><select aria-label="書く章を選ぶ" value={chapterId} onChange={event => { setChapterId(event.target.value); setAxis('chapter'); }}><option value="">すべての章</option>{chapters.map(chapter => <option key={chapter.id} value={chapter.id}>{chapter.name || '名称未設定の章'}</option>)}</select></label>
     {laneAxisControl(axis, setAxis)}
     {axis === 'character' && <label className="form-field">
       <span>人物の変化を見る順</span>
@@ -96,7 +101,7 @@ export function WritingWorkspace({ project, initialAxis = 'character', onOpenEnt
       </select>
     </label>}
     {!lanes.length && <p className="field-hint">この軸に表示できる項目はありません。</p>}
-    <WindowedList className="story-lanes" items={lanes} scope={`writing-lanes:${project.projectId}:${axis}`} label="物語の並び" size={8} searchText={lane=>lane.label} render={lane => {
+    <WindowedList className="story-lanes" items={axis === 'chapter' && chapterId ? lanes.filter(lane => lane.id === chapterId) : lanes} scope={`writing-lanes:${project.projectId}:${axis}:${chapterId}`} label="物語の並び" size={8} searchText={lane=>lane.label} render={lane => {
         const arc = lane.kind === 'character' ? buildCharacterArc(project, lane.id, arcOrder) : undefined;
         const sceneIds = arc ? arc.entries.map(entry => entry.scene.id) : lane.sceneIds;
         const actualChapter = lane.kind === 'chapter' ? chapters.find(chapter => chapter.id === lane.id) : undefined;
@@ -110,14 +115,14 @@ export function WritingWorkspace({ project, initialAxis = 'character', onOpenEnt
             </span>}
           </header>
           {!lane.sceneIds.length && <p className="field-hint">場面はまだありません。</p>}
-          <WindowedList as="ol" className="story-lane-scenes" items={sceneIds.map(id=>({id}))} scope={`writing-scenes:${project.projectId}:${axis}:${lane.id}:${arcOrder}`} label={`${lane.label}の場面`} size={20} searchText={({id})=>sceneTitle(project,id)} render={({id:sceneId}, index) => {
+          <WindowedList as="ol" className="story-lane-scenes" items={sceneIds.map(id=>({id}))} selectedId={activeSceneId} scope={`writing-scenes:${project.projectId}:${axis}:${lane.id}:${arcOrder}`} label={`${lane.label}の場面`} size={20} searchText={({id})=>sceneTitle(project,id)} render={({id:sceneId}, index) => {
               const scene = project.entities.find((entity): entity is Entity<'scene'> => entity.id === sceneId && entity.kind === 'scene');
               if (!scene) return null;
               const entry = arc?.entries.find(item => item.scene.id === sceneId);
               const memberIndex = actualChapter?.data.sceneIds.indexOf(sceneId) ?? -1;
-              return <li key={sceneId} data-scene-id={sceneId}>
-                <button type="button" className="story-scene-link" onClick={() => onOpenEntity(sceneId)}>
-                  <strong>{index + 1}. {scene.name || '名称未設定の場面'}</strong>
+              return <li key={sceneId} data-scene-id={sceneId} data-scene-number={sceneNumbers.get(sceneId)} aria-current={activeSceneId === sceneId ? 'true' : undefined}>
+                <button type="button" className="story-scene-link" onClick={() => openScene(sceneId, 'summary')}>
+                  <strong>{sceneNumbers.get(sceneId) ?? index + 1}. {scene.name || '名称未設定の場面'}</strong>
                   <span>{fieldText(scene.data.summary) || '要約は未入力です。'}</span>
                 </button>
                 {entry && <section className="character-arc-record" aria-label={`${scene.name || '場面'}の人物変化`}>
@@ -134,6 +139,8 @@ export function WritingWorkspace({ project, initialAxis = 'character', onOpenEnt
                   {entry.worldTicks.length > 0 && <p className="character-arc-time"><strong>世界時点</strong> {entry.worldTicks.join('、')}</p>}
                 </section>}
                 <div className="story-lane-actions">
+                  <button type="button" className="button primary small" onClick={() => openScene(sceneId, 'body')}>本文を書く</button>
+                  <button type="button" className="text-button" onClick={() => openScene(sceneId, 'summary')}>要約を開く</button>
                   {axis === 'chapter' && actualChapter && memberIndex >= 0 && onSaveProject && <>
                     <button type="button" className="text-button" disabled={memberIndex === 0} onClick={() => void saveCandidate(moveSceneWithinPresentation(project, actualChapter.id, scene.id, -1), '章内の場面提示順を変更')}>前へ</button>
                     <button type="button" className="text-button" disabled={memberIndex === actualChapter.data.sceneIds.length - 1} onClick={() => void saveCandidate(moveSceneWithinPresentation(project, actualChapter.id, scene.id, 1), '章内の場面提示順を変更')}>後へ</button>
