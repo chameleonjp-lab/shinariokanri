@@ -1,3 +1,4 @@
+import {CharacterImpactReviews} from './ProductionDependencies';
 import {useAuthorScope} from './StoreContext';
 import {catalogSearchStorageKey,parseCatalogSearchState,type CatalogSearchState} from './catalogSearchState';
 import {PagedSelect} from './PagedSelect';
@@ -18,7 +19,7 @@ import type { JapaneseAuthorIndexEntry } from '../domain/catalog';
 import { findCatalogTextPositions } from '../domain/catalogPositions';
 import { CatalogResultDiagram, CatalogResultTimeline } from './CatalogResultViews';
 
-export function CatalogPanel({ project, selectedId, onOpen, onSave, onSaveProject, onSaveMany, onSaveRelation, onOpenField, onOpenTarget, searchState, onSearchStateChange }: {
+export function CatalogPanel({ project, selectedId, onOpen, onSave, onSaveProject, onSaveMany, onSaveRelation, onOpenField, onOpenTarget, onSearchStateChange }: {
   onSaveRelation: (relation: Relation) => Promise<void>;
   onOpenTarget: (anchor: ContentAnchor, fieldPath?: string) => void;
   onSaveMany: (entities: Entity[], reason: string) => Promise<void>; onOpenField: (entityId: string, fieldPath: string) => void;
@@ -27,7 +28,7 @@ export function CatalogPanel({ project, selectedId, onOpen, onSave, onSaveProjec
   onSave: (entity: Entity) => Promise<Entity>; onSaveProject: (project: ProjectData, reason: string) => Promise<ProjectData>;
 }) {
   const authorScope=useAuthorScope(`catalog:${project.projectId}`),storageKey=catalogSearchStorageKey(authorScope);
-  const [returnState,setReturnState]=useState(()=>{try{return parseCatalogSearchState(localStorage.getItem(storageKey),searchState);}catch{return parseCatalogSearchState(null,searchState);}});
+  const [returnState,setReturnState]=useState(()=>{try{return parseCatalogSearchState(localStorage.getItem(storageKey));}catch{return parseCatalogSearchState(null);}});
   const stateRef=useRef(returnState);
   const updateReturn=(change:Partial<CatalogSearchState>)=>{
     const next={...stateRef.current,...change};stateRef.current=next;setReturnState(next);
@@ -93,7 +94,7 @@ export function CatalogPanel({ project, selectedId, onOpen, onSave, onSaveProjec
   const fields = source && survivor ? [...new Set([...Object.keys(source.data), ...Object.keys(survivor.data)])] : [];
   const run = async (action: () => Promise<void>) => { setBusy(true); setError(''); setNotice(''); try { await action(); } catch (failure) { setError((failure as Error).message); } finally { setBusy(false); } };
   const viewScope=`catalog:${project.projectId}:${text}:${kind}:${status}:${participant}:${chapter}:${foreshadow}:${resolution}:${disclosureRole}:${disclosureStage}:${production}:${collectionId}`;
-  const positionPage=useListWindow({items:textPositions,scope:viewScope+':positions'}),tablePage=useListWindow({items:results,scope:viewScope+':table',selectedId}),indexPage=useListWindow({items:indexResults,scope:viewScope+':index:'+indexClass}),maintenancePage=useListWindow({items:findings,scope:viewScope+':maintenance'}),reviewPage=useListWindow({items:active.filter((entity):entity is Entity<'review'>=>entity.kind==='review'&&entity.customValues['changeReview.generatedBy']==='semantic-change-review/v1'),scope:viewScope+':reviews',selectedId});
+  const positionPage=useListWindow({items:textPositions,scope:viewScope+':positions'}),tablePage=useListWindow({items:results,scope:viewScope+':table',selectedId}),indexPage=useListWindow({items:indexResults,scope:viewScope+':index:'+indexClass}),maintenancePage=useListWindow({items:findings,scope:viewScope+':maintenance'});
   const clearCollection = () => { setCollectionId(''); setSelected([]); setBulkPage(0); };
   const restoredPosition=useRef(false),searchRoot=useRef<HTMLElement>(null);
   useEffect(()=>{
@@ -134,6 +135,7 @@ export function CatalogPanel({ project, selectedId, onOpen, onSave, onSaveProjec
       <details><summary>今の検索結果を一覧に保存</summary><div className="form-row"><div className="form-field"><label htmlFor="catalog-name">一覧の名前</label><input id="catalog-name" value={collectionName} onChange={event => setCollectionName(event.target.value)}/></div><div className="form-field"><label htmlFor="catalog-mode">保存する内容</label><select id="catalog-mode" value={collectionMode} onChange={event => setCollectionMode(event.target.value as 'dynamic' | 'fixed')}><option value="dynamic">条件に合わせて変わる一覧</option><option value="fixed">今の結果を固定した一覧</option></select></div></div>
       <button className="button secondary" disabled={busy || !collectionName.trim()} onClick={() => void run(async () => { const saved = await onSave(createEntity(project.projectId, 'collection', collectionName.trim(), { mode: collectionMode, query: collectionMode === 'dynamic' ? collection?.data.query ?? effectiveQuery : null, memberIds: collectionMode === 'fixed' ? results.map(entity => entity.id) : [], sort: { field: 'name', direction: 'asc' } })); setCollectionId(saved.id); setNotice('一覧を保存しました。'); })}>一覧を保存</button></details>
       <div className="list-heading"><h2>検索結果</h2><span>{results.length}件</span></div>
+      {returnState.selectedPositionId&&!textPositions.some(hit=>hit.id===returnState.selectedPositionId)&&<p role="status">選んだ文章の位置が削除・変更されました。検索条件を保持して現在の結果を表示しています。該当する段落を選び直してください。</p>}
       {results.length===0&&<p role="status">一致する結果がありません。上の「直近の検索条件」から条件を解除するか、保存した一覧を選んでください。</p>}
       <details><summary>結果をまとめて編集</summary><p>選択した対象の変更差分を確認し、一度に保存します。保存後は作品の変更履歴から取り消せます。</p>
         <button className="button secondary small" onClick={() => setSelected(results.map(entity => entity.id))}>結果をすべて選択</button><button className="button secondary small" onClick={() => setSelected([])}>選択を解除</button>
@@ -154,9 +156,7 @@ export function CatalogPanel({ project, selectedId, onOpen, onSave, onSaveProjec
       <p>候補は自動判定の結論ではありません。参照元と変更理由を確認して扱ってください。</p>
       {maintenancePage.items.map(finding => <article key={finding.id}><p>{finding.reason}</p>{finding.targetIds.map(id => { const target = active.find(entity => entity.id === id); return <div key={id}><button className="reference-link" onClick={() => onOpen(id)}>{labelOf(target)}</button>{target && ['unreferenced', 'retained'].includes(finding.kind) && <button type="button" className="button secondary small" disabled={busy} onClick={() => void run(async () => { await onSaveMany([{ ...target, retainIfUnreferenced: !target.retainIfUnreferenced }], target.retainIfUnreferenced ? '背景情報の保持指定を解除' : '背景情報・外部利用のため保持を指定'); setNotice('保持指定を保存しました。'); })}>{target.retainIfUnreferenced ? '保持指定を解除' : '背景情報として保持'}</button>}{target && finding.kind === 'external_use' && <button type="button" className="text-button" onClick={() => onOpenField(target.id, 'data.externalUseDeclared')}>外部利用宣言を確認</button>}</div>; })}</article>)}
       <ListPager {...maintenancePage} label="見直し候補"/>
-      <h2>変更による見直し</h2><p>直接参照と作者が定めた意味上の関係を根拠として示します。内容は自動修正しません。</p>
-      {reviewPage.items.map(review => <article key={review.id}><h3>{labelOf(review)} · {review.data.stage === 'open' ? '確認待ち' : review.data.stage === 'fixed' ? '対応済み' : '再確認済み'}</h3><p>{fieldText(review.data.body)}</p><button type="button" className="reference-link" onClick={() => { const target = review.data.target; if (typeof target === 'string') onOpen(target); else onOpenTarget(target); }}>見直す箇所を開く</button><select aria-label={`${labelOf(review)}の対応状態`} value={review.data.stage} disabled={busy} onChange={event => { const stage = event.target.value as Entity<'review'>['data']['stage']; void run(async () => { await onSave({ ...review, data: { ...review.data, stage } }); setNotice('見直しの対応状態を保存しました。'); }); }}><option value="open">確認待ち</option><option value="fixed">対応済み</option><option value="verified">再確認済み</option></select><button type="button" className="text-button" onClick={() => onOpen(review.id)}>理由と解決内容を編集</button></article>)}
-      <ListPager {...reviewPage} label="変更による見直し"/>
+      <CharacterImpactReviews project={project} onOpen={onOpen} onOpenTarget={onOpenTarget} onSave={onSave}/>
       <h2>同じ種類の情報を統合</h2><p>残すIDと採用する項目を選んでください。公開済みの版は保持されます。</p>
       <PagedSelect label="統合する情報" scope={`catalog:${project.projectId}:merge-source`} value={mergeSource} items={active.map(entity=>({id:entity.id,label:KIND_LABELS[entity.kind]+' · '+labelOf(entity)}))} emptyLabel="統合元を選択" onChange={value=>{setMergeSource(value);setMergeTarget('');setMergeFields({});}}/>
       <PagedSelect label="統合後に残す情報" scope={`catalog:${project.projectId}:merge-target:${source?.kind??''}`} value={mergeTarget} items={active.filter(entity=>source&&entity.kind===source.kind&&entity.id!==source.id).map(entity=>({id:entity.id,label:labelOf(entity)+' · '+entity.id.slice(0,8)}))} emptyLabel="残すIDを選択" onChange={value=>{setMergeTarget(value);setMergeFields({});}}/>

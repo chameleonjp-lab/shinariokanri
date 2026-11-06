@@ -143,3 +143,34 @@ it('reviews both endpoints when one atomic change updates both linked settings',
   expect(reviews.find(review => review.data.target === second.id)?.customValues['changeReview.sourceIds']).toContain(first.id);
   expect(validateProject(result).ok).toBe(true);
 });
+
+it('follows a changed membership assertion through its character ID, quoting the affected scene and excluding a namesake',()=>{
+ const before=createDemoProject(),person=entity(before,'character'),namesake=createEntity(before.projectId,'character',person.name);
+ const scene=entity(before,'scene');scene.data.povId=person.id;scene.data.body=[{id:newId(),kind:'paragraph',text:'前の文。アオの所属を語る。後の文。',links:[{start:4,end:6,target:{entityId:person.id}}]}];
+ const other=createEntity(before.projectId,'scene','同名の別人の場面',{povId:namesake.id});
+ const membership=createEntity(before.projectId,'assertion','所属',{subjectId:person.id,predicate:'member_of',value:{type:'text',value:'旧組織'},truthKind:'author_truth',validity:emptyValidity()});
+ before.entities.push(namesake,other,membership);
+ const candidate=structuredClone(before),changed=candidate.entities.find(e=>e.id===membership.id) as Entity<'assertion'>;changed.data.value={type:'text',value:'新組織'};
+ const result=addChangeReviews(before,candidate),reviews=result.entities.filter((e):e is Entity<'review'>=>e.kind==='review');
+ const review=reviews.find(e=>e.data.target===scene.id)!;
+ expect(review).toBeDefined();expect(review.data.quotedText).toContain('前の文。');
+ expect(review.customValues['changeReview.subjectIds']).toContain(person.id);
+ expect(reviews.some(e=>e.data.target===other.id)).toBe(false);
+ expect(result.entities.find(e=>e.id===other.id)).toEqual(other);
+});
+
+it('reopens only the reviewed fields touched again and keeps the review ID and previous confirmation revision',()=>{
+ const before=createDemoProject(),person=entity(before,'character'),scene=entity(before,'scene');
+ const firstCandidate=structuredClone(before);entity(firstCandidate,'character').data.death={mode:'unknown',reason:'消息不明'};
+ const first=addChangeReviews(before,firstCandidate);first.revision='1';entity(first,'character').revision='1';
+ const deathReview=first.entities.find((e):e is Entity<'review'>=>e.kind==='review'&&e.data.target===scene.id)!;deathReview.data.stage='verified';deathReview.customValues['changeReview.reviewedRevision']='1';
+ const secondCandidate=structuredClone(first);entity(secondCandidate,'character').data.birth={mode:'unknown',reason:'出生不明'};
+ const second=addChangeReviews(first,secondCandidate);second.revision='2';entity(second,'character').revision='2';
+ const birthReview=second.entities.find((e):e is Entity<'review'>=>e.kind==='review'&&e.data.target===scene.id&&e.id!==deathReview.id)!;birthReview.data.stage='verified';
+ const thirdCandidate=structuredClone(second);entity(thirdCandidate,'character').data.death={mode:'unknown',reason:'生還を確認'};
+ const third=addChangeReviews(second,thirdCandidate),thirdReviews=third.entities.filter((e):e is Entity<'review'>=>e.kind==='review'&&e.data.target===scene.id);
+ expect(thirdReviews).toHaveLength(2);
+ expect(thirdReviews.find(e=>e.id===deathReview.id)).toMatchObject({data:{stage:'open'},customValues:{'changeReview.reviewedRevision':'1'}});
+ expect(thirdReviews.find(e=>e.id===birthReview.id)?.data.stage).toBe('verified');
+ expect(person.id).toBeTruthy();
+});
