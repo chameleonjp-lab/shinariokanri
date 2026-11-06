@@ -2,7 +2,8 @@ import 'fake-indexeddb/auto';
 import {afterEach,it,expect,vi} from 'vitest';
 import {createEntity,createProject,newId,textToRichText} from '../domain/model';
 import {sharedReviewFixture} from '../testing/sharedReviewFixture';
-import {createSharedCommentReview,reviewLatestPosition,commentStage,type SharedComment} from '../domain/sharedReviews';
+import {createSharedCommentReview,reviewLatestPosition,reviewCurrentMatch,reviewCurrentConfirmation,resolveReviewCurrentMatch,commentStage,type SharedComment} from '../domain/sharedReviews';
+import {remapEditedTextReferences} from '../domain/text';
 import {sha256} from './json';
 import {ScenarioStore,cloneProject} from './store';
 import {exportScenario,inspectScenario} from './archive';
@@ -23,3 +24,15 @@ it('keeps a changed public quote unresolved and refuses unknown, tampered, wrong
  const bytes=await exportScenario({...f.p,entities:[...f.p.entities,review]}),inspection=await inspectScenario(bytes,{worker:false});expect(inspection.project.entities.find(e=>e.id===review.id)?.data).toMatchObject({quotedText:'公開'});
 });
 it('captures edition, comment body and codepoint target before delayed hash verification',async()=>{const f=await sharedReviewFixture(),body=f.comment.body,expectedHash=await sha256(new TextEncoder().encode(JSON.stringify(body))),digest=crypto.subtle.digest.bind(crypto.subtle);let entered!:()=>void,release!:()=>void;const waiting=new Promise<void>(resolve=>entered=resolve),gate=new Promise<void>(resolve=>release=resolve);let first=true;vi.spyOn(crypto.subtle,'digest').mockImplementation(async(...args)=>{if(first){first=false;entered();await gate;}return digest(...args);});const pending=createSharedCommentReview(f.p,f.envelope,f.comment,'https://dedicated.invalid');await waiting;f.comment.body='遅れて変更した指摘';f.comment.start_cp=2;f.comment.end_cp=3;f.p.snapshots[0].content.entities[0].name='後で変更';release();const review=await pending;expect(review.data).toMatchObject({quotedText:'😀版',target:{start:0,end:2},sharedSource:{commentBodyHash:expectedHash}});expect(review.data.body.map(b=>b.text).join('')).toBe(body);});
+
+it('preserves explicit confirmation provenance through prefix editing, cold storage, archive and full clone',async()=>{
+ const f=await sharedReviewFixture(),received=await createSharedCommentReview(f.p,f.envelope,f.comment,'https://review.invalid');f.p.entities.push(received);
+ const name='review-confirmation-'+newId(),db=new ScenarioStore({databaseName:name});stores.push(db);let saved=(await db.saveProject(f.p,{reason:'指摘受領'})).project;
+ const review=resolveReviewCurrentMatch(saved,received,reviewCurrentMatch(saved,received).candidates[0].target,'作者がこの位置を確認'),confirmed=structuredClone(review.data.currentMatch!);
+ saved=(await db.saveProject({...saved,entities:saved.entities.map(e=>e.id===review.id?review:e)},{reason:'現稿照合を明示保存'})).project;expect(saved.revision).not.toBe(confirmed.revision);expect(reviewCurrentConfirmation(saved,saved.entities.find(e=>e.id===review.id)! as typeof review)).toBe('current');
+ const before=saved.entities.find(e=>e.id===f.line.id)! as typeof f.line,after={...before,data:{...before.data,text:textToRichText('前置き七文字分'+before.data.text.map(b=>b.text).join('\n'))}};
+ saved=(await db.saveProject({...saved,entities:remapEditedTextReferences(saved.entities.map(e=>e.id===after.id?after:e),before,after)},{reason:'照合後に本文を編集'})).project;db.close();
+ const cold=new ScenarioStore({databaseName:name});stores.push(cold);const restored=(await cold.getProject(saved.projectId))!,record=restored.entities.find(e=>e.id===review.id)! as typeof review;expect(record.data.currentMatch).toEqual(confirmed);expect(reviewCurrentConfirmation(restored,record)).toBe('stale');
+ const inspection=await inspectScenario(await cold.exportProject(saved.projectId),{worker:false}),{project:clone,idMap}=await cloneProject(inspection.project),copy=clone.entities.find(e=>e.id===idMap[review.id])! as typeof review;
+ expect(copy.data.currentMatch).toEqual({...confirmed,target:{...confirmed.target,entityId:idMap[confirmed.target.entityId],blockId:idMap[confirmed.target.blockId!],sourceVersionId:clone.projectId}});expect(copy.data.targetVersionId).toBe(idMap[f.pin.id]);expect(copy.data.receivedContext!.sourceVersionId).toBe(idMap[f.pin.id]);expect(reviewCurrentConfirmation(clone,copy)).toBe('stale');
+});

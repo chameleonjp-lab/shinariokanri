@@ -259,10 +259,10 @@ export function remapEditedTextReferences(entities: Entity[], beforeEntity: Enti
   const walk = editedTextRemapper(beforeEntity, afterEntity); if (!walk) return entities;
   const textEdits=Object.entries(beforeEntity.data).flatMap(([key,before])=>{const after=(afterEntity.data as unknown as Record<string,unknown>)[key];return isRichText(before)&&Array.isArray(after)&&JSON.stringify(before)!==JSON.stringify(after)?[{before,transform:buildTextTransform(before,after as RichText)}]:[];});
   return entities.map(entity => {
-    // Review targets name the historical targetVersionId even without sourceVersionId.
+    // Received targets and explicit current-match observations retain their confirmed coordinates.
     const historicalReview = entity.kind === 'review' && entity.data.targetVersionId !== beforeEntity.projectId;
     const data = entity.data;
-    const fields = historicalReview ? Object.entries(data).map(([key, value]) => [key, key === 'target' ? value : walk(value)] as const) : undefined;
+    const fields = entity.kind === 'review' ? Object.entries(data).map(([key, value]) => [key, key === 'currentMatch' || historicalReview && key === 'target' ? value : walk(value)] as const) : undefined;
     let changed = fields ? fields.some(([key, value]) => value !== (data as unknown as Record<string, unknown>)[key]) ? Object.fromEntries(fields) : data : walk(data);
     if (entity.id === beforeEntity.id && entity.kind === 'scene' && entity.data.blockIds?.length) {
       const blockIds = [...new Set(entity.data.blockIds.map(blockId => {

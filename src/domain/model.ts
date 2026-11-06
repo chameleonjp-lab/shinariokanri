@@ -245,7 +245,7 @@ export const ENTITY_SCHEMAS: Record<EntityKind, Schema> = {
   travel_route: obj({ fromPlaceId: req(ref('place')), toPlaceId: req(ref('place')), direction: req(en('one_way', 'two_way')), method: opt(txt()), minimumTicks: opt(tick), maximumTicks: opt(tick), evidence: opt(refs()), validity: opt(nullableValidity) }),
   template: obj({ targetKind: req(en(...ENTITY_KINDS)), fields: req(arr(fieldDefinition)), description: opt(txt()), version: opt({ type: 'revision' }), defaults: opt(record({ type: 'custom' }, key)) }),
   collection: obj({ purpose: opt(en('regression')), mode: req(en('dynamic', 'fixed')), query: opt({ type: 'query' }), memberIds: opt(refs()), sort: opt(obj({ field: req(en('name', 'createdAt', 'updatedAt', 'kind')), direction: req(en('asc', 'desc')) })) }),
-  review: obj({ target: req(union(anchor, ref())), targetVersionId: req(scopedRef('snapshot')), body: req(rich), stage: req(en('open', 'fixed', 'verified')), assigneeId: opt(scopedRef('identity')), quotedText: opt(txt()), resolution: opt(rich),receivedContext:opt(obj({sourceVersionId:req(scopedRef('snapshot')),before:req(txt()),after:req(txt())})),currentMatch:opt(obj({target:req(anchor),revision:req({type:'revision'}),reason:req(txt(1))})),sharedSource:opt(obj({connection:req(txt(1)),sharedSnapshot:req(txt(1)),comment:req(txt(1)),publicVersion:req(txt(1)),publicEntity:opt(txt(1)),publicRelation:opt(txt(1)),publicBlock:opt(txt(1)),startCp:opt(num(0,undefined,true)),endCp:opt(num(0,undefined,true)),projectionHash:req(txt(64,64)),commentBodyHash:req(txt(64,64)),quotedText:req(txt()),observedStage:req(en('open','fixed','verified'))})) }),
+  review: obj({ target: req(union(anchor, ref())), targetVersionId: req(scopedRef('snapshot')), body: req(rich), stage: req(en('open', 'fixed', 'verified')), assigneeId: opt(scopedRef('identity')), quotedText: opt(txt()), resolution: opt(rich),receivedContext:opt(obj({sourceVersionId:req(scopedRef('snapshot')),before:req(txt()),after:req(txt())})),currentMatch:opt(obj({target:req(anchor),revision:req({type:'revision'}),reason:req(txt(1)),confirmedText:optionalValue(txt())})),sharedSource:opt(obj({connection:req(txt(1)),sharedSnapshot:req(txt(1)),comment:req(txt(1)),publicVersion:req(txt(1)),publicEntity:opt(txt(1)),publicRelation:opt(txt(1)),publicBlock:opt(txt(1)),startCp:opt(num(0,undefined,true)),endCp:opt(num(0,undefined,true)),projectionHash:req(txt(64,64)),commentBodyHash:req(txt(64,64)),quotedText:req(txt()),observedStage:req(en('open','fixed','verified'))})) }),
   creative_brief: obj({ targetAudience: req(rich), experience: req(rich), theme: req(rich), tone: req(rich), scope: req(rich), deliverableIds: opt(refs()), decisionIds: opt(refs('decision')) }),
   decision: obj({ subject: req(txt(1)), reason: req(rich), targetVersionId: req(scopedRef('snapshot')), outcome: req(en('accepted', 'rejected', 'deferred')), priority: opt(short), requirementIds: opt(arr(short, true)), reviewIds: opt(refs('review')) }),
   gameplay_spec: obj({ sceneId: req(ref('scene')), action: req(rich), mechanic: opt(txt()), tutorial: opt(rich), reward: opt(typed), questId: opt(ref('quest')), taskIds: opt(refs('production_task')), intentionalDifference: opt(txt()) }),
@@ -907,6 +907,9 @@ function validateContent(input: unknown, path: string, options: ProjectValidatio
   project.entities.forEach((entity, i) => {
     const prefix = `${path}.entities[${i}]`;
     for (const reference of referencesFor(entity)) {
+      // A saved review confirmation names the observed block, which later edits may replace.
+      // Its block coordinates are validated against the saved observation below, never a live block.
+      if(entity.kind==='review'&&reference.path==='data.currentMatch.target.blockId')continue;
       const parts = pathParts(reference.path), parent = parts.slice(0, -1).reduce<unknown>((object, field) => object && typeof object === 'object' ? (object as Record<string, unknown>)[field] : undefined, entity);
       const reuseVersion = (entity.kind === 'scene' || entity.kind === 'flow_node') && entity.data.reuse && reference.path === 'data.reuse.sourceId' ? entity.data.reuse.pinnedSnapshotId : undefined;
       const profileVersion=entity.kind==='projection_profile'&&entity.data.sourceVersionId&&/^data\.(?:includedIds|publicTexts|blockSources|publicIds|publicValues|namePolicy|allowedRelationIds|approvedAttachmentIds)(?:\.|\[)/.test(reference.path)?entity.data.sourceVersionId:undefined;
@@ -1092,9 +1095,19 @@ function validateCrossEntityRules(project: ProjectContent, entityMap: Map<ID, En
     if (entity.kind === 'flow_edge' && options.runtime && typeof entity.data.toId !== 'string') addIssue(issues, `${location}.data.toId`, '未完成の分岐先は実行用出力できません。', 'EXPORT_UNSUPPORTED');
     if (entity.kind === 'variable' && options.runtime && entity.data.initial.type === 'unknown' && !entity.data.derived) addIssue(issues, `${location}.data.initial`, '初期値が未定です。', 'CONDITION_UNKNOWN');
     validateConditionTypesInValue(entity.data, location, entityMap, issues);
-    if (entity.kind === 'review' && typeof entity.data.target === 'object') {
-      validateAnchors(entity.data.target, `${location}.data.target`, entityMap, blocks, issues, 0, resolveVersion, entity.data.targetVersionId);
-      validateAnchors({ ...entity.data, target: null }, `${location}.data`, entityMap, blocks, issues, 0, resolveVersion);
+    if (entity.kind === 'review') {
+      if(typeof entity.data.target==='object')validateAnchors(entity.data.target, `${location}.data.target`, entityMap, blocks, issues, 0, resolveVersion, entity.data.targetVersionId);
+      const saved=entity.data.currentMatch;
+      if(saved){
+        const target=saved.target;
+        if(target.sourceVersionId!==project.projectId||!target.blockId||target.lineId!=null||target.positionStatus!=null||target.start==null||target.end==null)addIssue(issues,`${location}.data.currentMatch.target`,'現稿の確認記録には作品・本文ブロックと確認した文字範囲が必要です。');
+        if(saved.confirmedText!==undefined){
+          const observedBlocks=new Map(target.blockId?[[target.blockId,{entityId:target.entityId,text:saved.confirmedText}]]:[]);
+          validateAnchors(target,`${location}.data.currentMatch.target`,entityMap,observedBlocks,issues);
+          if(Array.from(saved.confirmedText).slice(target.start??0,target.end??0).join('')!==(entity.data.quotedText??entity.data.sharedSource?.quotedText??''))addIssue(issues,`${location}.data.currentMatch.confirmedText`,'確認時本文の文字範囲は受領した引用と一致する必要があります。');
+        }
+      }
+      validateAnchors({ ...entity.data, target: null,currentMatch:null }, `${location}.data`, entityMap, blocks, issues, 0, resolveVersion);
     } else validateAnchors(entity.data, `${location}.data`, entityMap, blocks, issues, 0, resolveVersion);
     if (entity.kind === 'projection_profile') {
       const policy = entity.data.namePolicy;

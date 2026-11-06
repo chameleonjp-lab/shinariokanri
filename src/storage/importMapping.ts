@@ -123,6 +123,7 @@ function collectImportIdsInternal(project: ProjectData, workerTransport: boolean
   const found = new Map<string, ImportId>();
   const bindings: { id: string; ownerId: string }[] = [];
   const copiedBlocks: { id: string; ownerId: string }[] = [];
+  const observedBlocks: { id: string; ownerId: string }[] = [];
   const runtimeItems = new Set<string>();
   let entityDataRoots: WeakMap<object, string> | undefined;
   let entityDataRootCount = 0;
@@ -181,6 +182,9 @@ function collectImportIdsInternal(project: ProjectData, workerTransport: boolean
       add(entity.id, entity.kind === 'snapshot' ? 'snapshot' : `entity:${entity.kind}`);
       if (entity.deletionOperationId) add(entity.deletionOperationId, 'operation');
       declareEntityData(entity.data, entity.id);
+      if (entity.kind === 'review' && typeof entity.data.currentMatch?.confirmedText === 'string' && entity.data.currentMatch.target.blockId) {
+        observedBlocks.push({ id: entity.data.currentMatch.target.blockId, ownerId: entity.data.currentMatch.target.entityId });
+      }
     }
     for (const relation of content.relations) { add(relation.id, 'relation'); if (relation.deletionOperationId) add(relation.deletionOperationId, 'operation'); }
     for (const view of content.views) add(view.id, 'view');
@@ -200,6 +204,9 @@ function collectImportIdsInternal(project: ProjectData, workerTransport: boolean
   // Public-only paragraphs still own IDs; an earlier public copy is not canonical.
   const canonicalBlockIds = new Set([...found.values()].filter(item => item.role === 'block').map(item => item.id));
   for (const block of copiedBlocks) if (!canonicalBlockIds.has(block.id)) add(block.id, 'block', block.ownerId);
+  // Confirmed observations retain their own block identity after the live block is replaced.
+  // They must remap on clone and may not borrow a different entity's block identity.
+  for (const block of observedBlocks) add(block.id, 'block', block.ownerId);
   // Declared individual items and aggregate type quantities use their entity ID in runtime.
   // Generated instances own independent IDs; they must still reject other roles.
   for (const id of runtimeItems) if (found.get(id)?.role !== 'entity:item') add(id, 'runtime_item');
