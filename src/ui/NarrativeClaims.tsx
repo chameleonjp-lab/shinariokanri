@@ -1,6 +1,9 @@
+import { useMemo, useState } from 'react';
+import { PagedSelect } from './PagedSelect';
+import { assertionValueLabel } from '../domain/world';
 import type { ContentAnchor, Entity, ProjectData, RuntimeState } from '../domain/types';
 import { adoptedRecord } from '../domain/adoption';
-import { assessPresentationClaims, type NarrativeOccurrence } from '../domain/narrative';
+import { assessPresentationClaims, compareNarrativePerspectives, type NarrativeOccurrence, type NarrativePerspectiveItem } from '../domain/narrative';
 import { labelOf } from './Fields';
 import { ListPager, useListWindow } from './ListWindow';
 import {WindowedList} from './WindowedList';
@@ -8,12 +11,28 @@ const KINDS = { author_truth: '作者の真実', testimony: '証言', belief: '�
 const STATUS = { candidate: '確認候補', unknown: '未確認', intentional: '意図した発言', passed_for_checked_scope: 'この提示時点で確認' };
 export function NarrativeClaims({ project, state, occurrences = [], referenceEntities = [], onOpenTarget }: { project: ProjectData; state: RuntimeState; occurrences?: NarrativeOccurrence[]; referenceEntities?: Entity[]; onOpenTarget: (anchor: ContentAnchor) => void }) {
   const entities = [...project.entities, ...referenceEntities], assessments = assessPresentationClaims(project, occurrences, referenceEntities).map(item => ({ ...item, id: `${item.occurrenceIndex}:${item.lineId}:${item.assertionId}` }));
+  const characters = entities.filter((entity): entity is Entity<'character'> => entity.kind === 'character' && adoptedRecord(entity));
+  const [holder, setHolder] = useState(''), [selectedOccurrence, setSelectedOccurrence] = useState('');
+  const holderId = characters.some(character => character.id === holder) ? holder : characters[0]?.id ?? '';
+  const comparisons = occurrences.flatMap((occurrence, occurrenceIndex) => { const positionId = occurrence.target.nodeId ?? occurrence.target.sceneId; return positionId && occurrence.state.seenIds.includes(positionId) ? [{ occurrenceIndex, positionId }] : []; });
+  const selected = comparisons.find(item => String(item.occurrenceIndex) === selectedOccurrence) ?? comparisons.at(-1);
+  const comparison = useMemo(() => { if (!selected) return undefined; const result = compareNarrativePerspectives(project, [occurrences[selected.occurrenceIndex]], holderId, referenceEntities)[0]; return result ? { ...result, occurrenceIndex: selected.occurrenceIndex } : undefined; }, [project, occurrences, selected?.occurrenceIndex, holderId, referenceEntities]);
+  const entityIndex = new Map(entities.map(entity => [entity.id, entity]));
+  const perspectiveItem = (item: NarrativePerspectiveItem) => {
+    const entity = entityIndex.get(item.id);
+    return <article><button className="text-button" onClick={() => onOpenTarget({ entityId: item.id })}>{labelOf(entity)}</button> · {item.status === 'presented' ? '提示済み' : item.status === 'not_presented' ? 'この経路では未提示' : item.status === 'unknown' ? '未確認' : item.status === 'false' ? '否定した認識' : '記録あり'}{entity?.kind === 'assertion' && <p>{assertionValueLabel(entity.data.value, entityIndex)}</p>}<WindowedList items={item.sources.map((anchor, index) => ({ id: String(index), anchor }))} scope={`${project.projectId}:${comparison?.occurrenceIndex}:${item.id}:perspective-sources`} label="認識の出所" render={({ anchor }) => <button className="text-button" onClick={() => onOpenTarget(anchor)}>元の台詞・出来事 · {labelOf(entityIndex.get(anchor.entityId))}</button>}/></article>;
+  };
   const page = useListWindow({ items: assessments, scope: `${project.projectId}:narrative-claims:${state.contentVersionId}` });
   const presentations = occurrences.map((occurrence, index) => ({ ...occurrence, id: `${index}`, index })).filter(occurrence => occurrence.conditions.length);
   const presentationPage = useListWindow({ items: presentations, scope: `${project.projectId}:narrative-presentations:${state.contentVersionId}` });
   const legacyLines = !occurrences.length ? entities.filter((entity): entity is Entity<'dialogue_line'> => entity.kind === 'dialogue_line' && adoptedRecord(entity) && state.seenIds.includes(entity.id) && !!entity.data.claimAssertionIds?.length) : [];
-  if (!assessments.length && !legacyLines.length && !presentations.length) return null;
+  if (!assessments.length && !legacyLines.length && !presentations.length && !comparisons.length) return null;
   return <section aria-label="発言と提示時点の認識"><h3>発言・真実・信念と提示</h3><p className="field-hint">章順または経路の条件を同じ効果前状態で観測し、確定した効果を本文順に発言まで照合します。読者の理解は認定しません。</p>
+    {comparison && <section aria-label="場面ごとの三つの認識"><h4>場面ごとの三つの認識</h4><PagedSelect label="比べる人物" scope={`${project.projectId}:perspective-holder`} items={characters.map(character => ({ id: character.id, label: labelOf(character) }))} value={holderId} onChange={setHolder}/><PagedSelect label="比べる場面の提示" scope={`${project.projectId}:perspective-position`} items={comparisons.map(item => ({ id: String(item.occurrenceIndex), label: `提示${item.occurrenceIndex + 1} · ${labelOf(entityIndex.get(item.positionId))}` }))} value={String(comparison.occurrenceIndex)} onChange={setSelectedOccurrence}/><p>場面の提示後の記録です。対象版 {comparison.contentVersionId} · 世界時点 {comparison.worldTick ?? '未選択'}。読者の理解は判定しません。</p><div className="narrative-perspectives" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 16rem), 1fr))', gap: '1rem' }}>
+      <section aria-label="作者が定めた真実"><h4>作者が定めた真実</h4><WindowedList items={comparison.authorTruths} scope={`${project.projectId}:${comparison.occurrenceIndex}:truths`} label="この場面の作者の真実" render={perspectiveItem}/>{!comparison.authorTruths.length && <p>この時点に適用する真実の記録はありません。</p>}</section>
+      <section aria-label="選んだ人物の信念"><h4>選んだ人物の信念</h4><WindowedList items={comparison.characterBeliefs} scope={`${project.projectId}:${comparison.occurrenceIndex}:${holderId}:beliefs`} label="この人物の取得記録" render={perspectiveItem}/>{!comparison.characterBeliefs.length && <p>この人物の取得記録はありません。作者の真実からは補いません。</p>}</section>
+      <section aria-label="選んだ経路で読者に提示"><h4>選んだ経路で読者に提示</h4><WindowedList items={comparison.readerExposures} scope={`${project.projectId}:${comparison.occurrenceIndex}:exposures`} label="この経路での提示" render={perspectiveItem}/></section>
+    </div></section>}
     {!!presentations.length && <div><h4>読み手への提示記録</h4><ListPager {...presentationPage} label="読み手への提示記録"/>{presentationPage.items.map(occurrence => <details key={occurrence.id}><summary>提示 {occurrence.index + 1} · {labelOf(entities.find(entity => entity.id === (occurrence.target.nodeId ?? occurrence.target.sceneId)))} · {occurrence.state.provenance === 'full_play' ? '宣言入口からの経路' : '途中・仮値を含む提示'}</summary>{<WindowedList items={occurrence.conditions.map(result=>({...result,id:result.targetId}))} scope={`${project.projectId}:${state.contentVersionId}:${occurrence.index}:conditions`} label="提示条件の観測" render={result => { const disclosure = entities.find((entity): entity is Entity<'disclosure'> => entity.kind === 'disclosure' && entity.id === result.targetId), shown = result.value === 'true' && occurrence.state.seenIds.includes(result.targetId); return <p key={result.targetId}>{shown ? '実際に提示' : result.value === 'false' ? '条件不成立で提示せず' : '提示は未確認'} · {disclosure?.data.stage} · <button className="text-button" onClick={() => onOpenTarget(disclosure?.data.anchor ?? { entityId: result.targetId })}>{labelOf(disclosure)}</button> · {disclosure?.data.role === 'payoff' ? '回収' : '手掛かり'}{result.reasons.join('、')}</p>; }}/>}<p>人物の取得記録: 効果前 {occurrence.observationState?.assertions.filter(assertion => assertion.holderId && assertion.truth === 'true').length ?? '未確認'}件 → 提示後 {occurrence.state.assertions.filter(assertion => assertion.holderId && assertion.truth === 'true').length}件。本文の提示だけで取得・理解とは認定しません。</p></details>)}</div>}
     <ListPager {...page} label="提示時点の発言"/>
     {page.items.map(item => {

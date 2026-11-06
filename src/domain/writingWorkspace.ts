@@ -565,3 +565,43 @@ export function applySceneMove(project: ProjectData, preview: SceneMovePreview):
   const index = preview.beforeSceneId === null ? destination.data.sceneIds.length : destination.data.sceneIds.indexOf(preview.beforeSceneId);
   return moveScenePresentation(next, preview.sceneId, preview.chapterId, index);
 }
+
+export interface PresentationOrderChange {
+  projectId: ID;
+  chapterOrder?: { before: ID[]; after: ID[] };
+  chapters: { id: ID; before: ID[]; after: ID[] }[];
+  scenes: { id: ID; before: ID | null | undefined; after: ID | null | undefined }[];
+}
+/** An ephemeral undo receipt contains only presentation fields, never dates or prose. */
+export function capturePresentationOrderChange(before: ProjectData, after: ProjectData): PresentationOrderChange {
+  if (before.projectId !== after.projectId) throw new Error('提示順の作品が一致しません。');
+  const beforeOrder = presentationState(before).chapterOrder, afterOrder = presentationState(after).chapterOrder;
+  const originals = new Map(before.entities.map(entity => [entity.id, entity]));
+  const chapters: PresentationOrderChange['chapters'] = [], scenes: PresentationOrderChange['scenes'] = [];
+  for (const entity of after.entities) {
+    const original = originals.get(entity.id);
+    if (entity.kind === 'chapter' && original?.kind === 'chapter' && !jsonEqual(entity.data.sceneIds, original.data.sceneIds)) chapters.push({ id: entity.id, before: [...original.data.sceneIds], after: [...entity.data.sceneIds] });
+    if (entity.kind === 'scene' && original?.kind === 'scene' && entity.data.chapterId !== original.data.chapterId) scenes.push({ id: entity.id, before: original.data.chapterId, after: entity.data.chapterId });
+  }
+  return { projectId: before.projectId, ...(!jsonEqual(beforeOrder, afterOrder) ? { chapterOrder: { before: beforeOrder, after: afterOrder } } : {}), chapters, scenes };
+}
+/** Refuse changed presentation fields; retain every later date, prose and unrelated entity edit. */
+export function undoPresentationOrder(project: ProjectData, change: PresentationOrderChange): ProjectData {
+  if (project.projectId !== change.projectId) throw new Error('提示順を取り消す作品が一致しません。');
+  const current = new Map(project.entities.map(entity => [entity.id, entity]));
+  const stale = () => { throw new Error('提示順が後から変更されています。取消前に現在版を確認してください。'); };
+  if (change.chapterOrder && !jsonEqual(presentationState(project).chapterOrder, change.chapterOrder.after)) stale();
+  for (const row of change.chapters) { const entity = current.get(row.id); if (entity?.kind !== 'chapter' || entity.deletedAt || !jsonEqual(entity.data.sceneIds, row.after)) stale(); }
+  for (const row of change.scenes) { const entity = current.get(row.id); if (entity?.kind !== 'scene' || entity.deletedAt || entity.data.chapterId !== row.after) stale(); }
+  const next = editableProjectCopy(project);
+  for (const entity of next.entities) {
+    if (entity.kind === 'chapter') { const row = change.chapters.find(row => row.id === entity.id); if (row) entity.data.sceneIds = [...row.before]; }
+    if (entity.kind === 'scene') { const row = change.scenes.find(row => row.id === entity.id); if (row) { if (row.before === undefined) delete entity.data.chapterId; else entity.data.chapterId = row.before; } }
+  }
+  if (change.chapterOrder) {
+    const index = new Map(next.entities.map(entity => [entity.id, entity]));
+    const positions = next.entities.flatMap((entity, index) => entity.kind === 'chapter' && !entity.deletedAt ? [index] : []);
+    positions.forEach((position, offset) => { next.entities[position] = index.get(change.chapterOrder!.before[offset])!; });
+  }
+  return next;
+}

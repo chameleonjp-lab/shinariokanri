@@ -226,3 +226,46 @@ export function assessPresentationClaims(project: ProjectData, occurrences: Narr
   }
   return assessments;
 }
+
+export interface NarrativePerspectiveItem {
+  id: ID; status: 'true' | 'false' | 'unknown' | 'presented' | 'not_presented'; sources: ContentAnchor[];
+}
+export interface NarrativePerspective {
+  occurrenceIndex: number; positionId: ID; holderId: ID; worldTick?: string; contentVersionId: ID;
+  authorTruths: NarrativePerspectiveItem[]; characterBeliefs: NarrativePerspectiveItem[]; readerExposures: NarrativePerspectiveItem[];
+  readerUnderstanding: 'not_assessed';
+}
+
+/** Author-only comparison of a committed occurrence. Exposure never grants belief or understanding. */
+export function compareNarrativePerspectives(project: ProjectData, occurrences: NarrativeOccurrence[], holderId: ID, referenceEntities: Entity[] = []): NarrativePerspective[] {
+  const entities = [...new Map([...project.entities, ...referenceEntities].filter(adoptedRecord).map(entity => [entity.id, entity])).values()];
+  const assertions = entities.filter((entity): entity is Entity<'assertion'> => entity.kind === 'assertion');
+  const disclosures = entities.filter((entity): entity is Entity<'disclosure'> => entity.kind === 'disclosure');
+  const sources = (assertion: Entity<'assertion'>): ContentAnchor[] => [...(assertion.data.evidenceLocation ? [assertion.data.evidenceLocation] : []), ...(assertion.data.sourceIds ?? []).map(entityId => ({ entityId }))];
+  return withReferences(occurrences, referenceEntities).flatMap((occurrence, occurrenceIndex) => {
+    const positionId = occurrence.target.nodeId ?? occurrence.target.sceneId;
+    if (!positionId || !occurrence.state.seenIds.includes(positionId)) return [];
+    const authorTruths = assertions.filter(assertion => assertion.data.truthKind === 'author_truth').flatMap(assertion => {
+      const context = occurrenceContext(project, occurrence, referenceEntities, assertion.id), validity = assertion.data.validity;
+      let status = assessWorldValidity(validity ? { ...validity, presentationAnchor: null } : validity, { at: occurrence.worldTick, context }).value;
+      if (validity?.presentationAnchor) {
+        const anchor = reuseExecutionAnchor(project, validity.presentationAnchor, assertion.id);
+        if (anchor.positionStatus === 'unresolved' || anchor.sourceVersionId && ![project.projectId, occurrence.state.contentVersionId, context.ruleContext.sourceVersionId].includes(anchor.sourceVersionId)) status = status === 'false' ? 'false' : 'unknown';
+        else if (![anchor.entityId, anchor.blockId, anchor.lineId].filter(Boolean).every(id => occurrence.state.seenIds.includes(id!))) status = 'false';
+      }
+      if (status === 'false') return [];
+      return [{ id: assertion.id, status: assertion.status === 'confirmed' ? status : 'unknown' as const, sources: sources(assertion) }];
+    });
+    const characterBeliefs = occurrence.state.assertions.filter(record => record.holderId === holderId).flatMap(record => {
+      const assertion = assertions.find(assertion => assertion.id === record.assertionId);
+      return assertion ? [{ id: assertion.id, status: record.truth, sources: [...sources(assertion), ...(record.sourceEffectId ? [{ entityId: record.sourceEffectId }] : [])] }] : [];
+    });
+    const readerExposures: NarrativePerspectiveItem[] = disclosures.map(disclosure => {
+      const condition = occurrence.conditions.find(condition => condition.targetId === disclosure.id);
+      const status = disclosure.data.anchor.positionStatus === 'unresolved' ? 'unknown' : occurrence.state.seenIds.includes(disclosure.id) ? 'presented' : condition?.value === 'unknown' || occurrence.state.provenance !== 'full_play' ? 'unknown' : 'not_presented';
+      return { id: disclosure.id, status, sources: [disclosure.data.anchor] };
+    });
+    for (const line of entities.filter((entity): entity is Entity<'dialogue_line'> => entity.kind === 'dialogue_line' && occurrence.state.seenIds.includes(entity.id))) readerExposures.push({ id: line.id, status: 'presented', sources: [{ entityId: line.id, lineId: line.id, ...(line.data.text[0] ? { blockId: line.data.text[0].id } : {}) }] });
+    return [{ occurrenceIndex, positionId, holderId, worldTick: occurrence.worldTick, contentVersionId: occurrence.state.contentVersionId, authorTruths, characterBeliefs, readerExposures, readerUnderstanding: 'not_assessed' as const }];
+  });
+}

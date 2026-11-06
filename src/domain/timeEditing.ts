@@ -193,7 +193,9 @@ export function previewTimeEdit(project: ProjectData, edit: TimeEdit, options: T
         if ((bound.lower !== undefined && bound.lower > 0n) || (bound.upper !== undefined && bound.upper < 0n)) {
           affected.add(event.id); affected.add(constraint.targetEventId);
           const name = originalIndex.get(constraint.targetEventId)?.name || constraint.targetEventId;
-          conflicts.push(issue(event.id, `「${name}」との日時制約に衝突しています${!approved.has(constraint.targetEventId) ? '（連動先は固定日時）' : ''}。`));
+          const sourceName = event.name || event.id;
+          const relation = constraint.type === 'before' ? `「${sourceName}」の後に「${name}」` : constraint.type === 'same_start' ? `「${sourceName}」と「${name}」が同時に始まる` : `「${sourceName}」の終了から「${name}」まで${constraint.minimumTicks}〜${constraint.maximumTicks}の時間差`;
+          conflicts.push(issue(event.id, `${relation}という日時制約に衝突しています${!approved.has(constraint.targetEventId) ? '（連動先は固定日時）' : ''}。`));
         }
       } catch (error) { conflicts.push(issue(event.id, error instanceof Error ? error.message : '日時制約を解決できません。')); }
     }
