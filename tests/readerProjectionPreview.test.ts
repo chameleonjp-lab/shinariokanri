@@ -54,3 +54,54 @@ it('prepares every chapter and public-only reader surfaces from the selected rec
     expect(result.preview.omissions.some(item => item.entityId === secret.id)).toBe(true);
   }
 });
+
+function publicMaterialFixture() {
+  const project = createProject('SECRET_SOURCE');
+  const group = createEntity(project.projectId, 'group', 'SECRET_GROUP');
+  const place = createEntity(project.projectId, 'place', 'SECRET_PLACE');
+  const map = createEntity(project.projectId, 'map', 'SECRET_MAP', { placeId: place.id });
+  const attachment = createEntity(project.projectId, 'attachment', 'SECRET_FILE', { mediaType: 'audio/wav', contentHash: 'b'.repeat(64), assetPath: 'assets/secret.wav', byteSize: 0, displayName: 'SECRET_RAW_FILENAME.wav' });
+  const entities = [group, place, map, attachment];
+  const policy = createEntity(project.projectId, 'projection_profile', 'SECRET_POLICY', {
+    audience: 'reader', publicTitle: 'Approved materials', includedIds: entities.map(entity => entity.id),
+    allowedKinds: ['group', 'place', 'map', 'attachment'], approvedAttachmentIds: [attachment.id],
+    namePolicy: { byEntityId: Object.fromEntries(entities.map((entity, index) => [entity.id, { mode: 'replace' as const, replacement: ['Approved empty group', 'Approved place', 'Approved map', 'Public attachment entity'][index] }])) },
+    publicTexts: { [attachment.id]: { displayName: 'Approved filename.wav' } },
+  });
+  [...entities, policy].forEach(entity => { entity.status = 'confirmed'; });
+  project.entities = [...entities, policy];
+  return { project, policy };
+}
+
+it.each(['markdown', 'html'] as const)('keeps the preview catalog and %s artifact entries for approved kinds without prose', async readerFormat => {
+  const { project, policy } = publicMaterialFixture();
+  const result = await exportProject(project, { profile: 'reader', projectionProfileId: policy.id, targetRevision: project.revision, readerFormat });
+  expect(result.ok, result.ok ? undefined : JSON.stringify(result.issues)).toBe(true);
+  if (!result.ok || !result.readerOutput) throw new Error('Expected prepared reader output');
+  const modal = renderToStaticMarkup(createElement(ReaderProjectionPreview, { output: result.readerOutput }));
+  for (const term of ['Approved empty group', 'Approved map']) {
+    expect(modal.includes(term)).toBe(true);
+    expect(result.artifact.content.includes(term)).toBe(true);
+    const entity = result.readerOutput.projection.entities.find(entity => entity.name === term)!;
+    const indexLink = readerFormat === 'html' ? `<a href="#${entity.id}">${term}</a>` : `- [${term}](#${entity.id})`;
+    expect(result.artifact.content.includes(indexLink)).toBe(true);
+    const materialPage = buildPublicReaderPages(result.readerOutput.projection).find(page => page.projection.entities.some(item => item.id === entity.id))!;
+    expect(renderReaderHtml(materialPage.projection).includes(`<section id="${entity.id}">`)).toBe(true);
+    expect(result.artifact.content.includes(readerFormat === 'html' ? `<section id="${entity.id}">` : `<a id="${entity.id}"></a>`)).toBe(true);
+  }
+  expect(modal).not.toContain('SECRET');
+  expect(result.artifact.content).not.toContain('SECRET');
+});
+
+it.each(['markdown', 'html'] as const)('shows the same approved attachment entity and filename in preview and %s artifact', async readerFormat => {
+  const { project, policy } = publicMaterialFixture();
+  const result = await exportProject(project, { profile: 'reader', projectionProfileId: policy.id, targetRevision: project.revision, readerFormat });
+  expect(result.ok, result.ok ? undefined : JSON.stringify(result.issues)).toBe(true);
+  if (!result.ok || !result.readerOutput) throw new Error('Expected prepared reader output');
+  const modal = renderToStaticMarkup(createElement(ReaderProjectionPreview, { output: result.readerOutput }));
+  expect(modal.includes('Public attachment entity · Approved filename.wav')).toBe(true);
+  const savedLabel = readerFormat === 'html' ? 'Public attachment entity · Approved filename.wav' : 'Public attachment entity · Approved filename\\.wav';
+  expect(result.artifact.content.includes(savedLabel)).toBe(true);
+  expect(modal).not.toContain('SECRET_RAW_FILENAME');
+  expect(result.artifact.content).not.toContain('SECRET_RAW_FILENAME');
+});

@@ -9,7 +9,7 @@ import { strToU8, zipSync } from 'fflate';
 import { createProjection, PROJECTION_FIELDS } from './projection';
 import { selectExportSource as selectSource, executionExportView, prepareExportCitations, validatePublicPositions, type CitationSource } from './exportPreparation';
 import type { ProjectedBlock, ProjectedEntity, ProjectionIssue, ProjectionOmission, PublicProjection, PublicValue } from './projection';
-import { buildPublicCatalogIndex } from './publicCatalog';
+import { buildPublicCatalogIndex, publicReaderEntities as readingEntities, publicReaderEntityLabel } from './publicCatalog';
 
 export type ExportProfile = 'reader' | 'runtime_json' | 'localization' | 'production' | 'consultation' | 'playable_preview';
 export interface ExportArtifact { filename: string; mimeType: string; content: string; bytes?: Uint8Array<ArrayBuffer> }
@@ -349,14 +349,6 @@ function blockHtml(block: ProjectedBlock, markdown = false,version='public-proje
   for (const link of block.links ?? []) {const target=readerId(link.blockId??link.lineId??link.targetId,link.sourceVersionId??version),position=link.blockId&&link.targetStart!=null&&link.targetEnd!=null?`--${link.targetStart}--${link.targetEnd}`:'';output+=` <a href="#${escapeHtml(target+position)}"${link.sourceVersionId?` data-source-version="${escapeHtml(link.sourceVersionId)}"`:''}>関連${position?`（文字${link.targetStart}〜${link.targetEnd}）`:''}</a>`;}
   return output;
 }
-function readingEntities(projection: PublicProjection): ProjectedEntity[] {
-  const scenes = new Map(byKind(projection, 'scene').map(scene => [scene.id, scene]));
-  const order: ProjectedEntity[] = [], seen = new Set<string>();
-  const add = (entity: ProjectedEntity) => { if (!seen.has(entity.id)) { seen.add(entity.id); order.push(entity); } };
-  for (const chapter of byKind(projection, 'chapter')) { add(chapter); for (const id of Array.isArray(chapter.data.sceneIds) ? chapter.data.sceneIds : []) if (typeof id === 'string' && scenes.has(id)) add(scenes.get(id)!); }
-  for (const entity of projection.entities) if (entityDocuments(entity).length || ['scene', 'dialogue_line', 'character', 'event', 'place', 'item', 'note', 'lore', 'goal', 'terminology', 'media_variant', 'attachment'].includes(entity.kind)) add(entity);
-  return order;
-}
 function entityDocuments(entity: ProjectedEntity): [string, ProjectedBlock[]][] {
   return ['body', 'text', 'summary', 'description', 'usageNotes','caption','action','tutorial','interpretation','targetAudience','experience','theme','tone','scope'].filter(field => blocks(entity.data[field]).length).map(field => [field, blocks(entity.data[field])]);
 }
@@ -380,7 +372,7 @@ export function renderReaderMarkdown(projection: PublicProjection, versionLabel 
   const index = readerPublicIndex(edition);
   if (index.length) output.push('## 五十音・分類索引','',...index.map(entry => `- [${escapeMarkdown(entry.term)}](#${encodeURIComponent(readerId(entry.targetId,version))})${entry.reading ? ` · ${escapeMarkdown(entry.reading)}` : ''}${entry.classifications.length ? ` · ${entry.classifications.map(escapeMarkdown).join('、')}` : ''}`),'');
   for(const entity of readingEntities(edition)){
-   output.push(`<a id="${escapeHtml(readerId(entity.id,version))}"></a>`,`## ${escapeMarkdown(entity.name||entity.kind)}`,'');
+   output.push(`<a id="${escapeHtml(readerId(entity.id,version))}"></a>`,`## ${escapeMarkdown(publicReaderEntityLabel(entity))}`,'');
    if(entity.status!=='confirmed')output.push(`採用状態: ${escapeMarkdown(entity.status)}`,'');
    for(const [field,document]of entityDocuments(entity)){if(field==='summary'&&entityDocuments(entity).length>1)output.push('### 要約','');for(const block of document){output.push(`<a id="${escapeHtml(readerId(block.id,version))}"></a>`);const prefix=block.kind==='heading'?'### ':block.kind==='quote'?'> ':block.kind==='list_item'?'- ':'';output.push(`${prefix}${blockHtml(block,true,version,ranges)}`,'');}}
   }
@@ -392,7 +384,7 @@ export function renderReaderMarkdown(projection: PublicProjection, versionLabel 
  return `${output.join('\n')}\n`;
 }
 export function renderReaderHtml(projection: PublicProjection, versionLabel = '公開版', writingMode: 'horizontal' | 'vertical' = 'horizontal'): string {
- const ranges=readerRanges(projection),sections=([['public-project',projection],...(projection.versions??[]).map(pin=>[pin.id,pin.projection])] as [string,PublicProjection][]).map(([version,edition])=>`${version!=='public-project'?`<h2>引用固定版 ${escapeHtml(edition.title)} (${escapeHtml(version)})</h2>`:''}${readerPublicIndexHtml(edition,version)}${readingEntities(edition).map(entity=>`<section id="${escapeHtml(readerId(entity.id,version))}"><h2>${escapeHtml(entity.name||entity.kind)}</h2>${entityDocuments(entity).map(([,document])=>document.map(block=>{const tag=block.kind==='heading'?'h3':block.kind==='quote'?'blockquote':'p';return `<${tag} id="${escapeHtml(readerId(block.id,version))}">${blockHtml(block,false,version,ranges)}</${tag}>`;}).join('')).join('')}</section>`).join('\n')}${readerRelationsHtml(edition)}`).join('\n');
+ const ranges=readerRanges(projection),sections=([['public-project',projection],...(projection.versions??[]).map(pin=>[pin.id,pin.projection])] as [string,PublicProjection][]).map(([version,edition])=>`${version!=='public-project'?`<h2>引用固定版 ${escapeHtml(edition.title)} (${escapeHtml(version)})</h2>`:''}${readerPublicIndexHtml(edition,version)}${readingEntities(edition).map(entity=>`<section id="${escapeHtml(readerId(entity.id,version))}"><h2>${escapeHtml(publicReaderEntityLabel(entity))}</h2>${entityDocuments(entity).map(([,document])=>document.map(block=>{const tag=block.kind==='heading'?'h3':block.kind==='quote'?'blockquote':'p';return `<${tag} id="${escapeHtml(readerId(block.id,version))}">${blockHtml(block,false,version,ranges)}</${tag}>`;}).join('')).join('')}</section>`).join('\n')}${readerRelationsHtml(edition)}`).join('\n');
  return `<!doctype html>\n<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'"><title>${escapeHtml(projection.title)}</title><style>body{font-family:serif;line-height:1.9;margin:2rem;overflow-wrap:anywhere;${writingMode==='vertical'?'writing-mode:vertical-rl;':''}}section{margin-block:2rem}rt{font-size:.55em}</style></head><body><h1>${escapeHtml(projection.title)}</h1><p>対象版: ${escapeHtml(versionLabel)}</p>${sections}</body></html>\n`;
 }
 
