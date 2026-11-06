@@ -14,7 +14,7 @@ import { BackupTrialPreview } from './BackupTrialPreview';
 
 interface Verification { created?: {createdAt: string; sourceHash: string; assetMode: 'embedded' | 'metadata_only'}; selection?: 'checking' | 'checked' | 'failed' | 'cancelled'; inspection?: BackupInspection; trial?: BackupTrial; capacity?: BackupCapacity }
 
-interface Draft extends ImportDraft { verification?: Verification; selectedBytes?: Uint8Array; prepared?: PreparedScenario; preview?: ImportPreview; checked: boolean; busy: boolean; ready: boolean; error: string; notice: string; progress: string; saved?: { projectId: string; revision: string }; controller?: AbortController }
+interface Draft extends ImportDraft { verification?: Verification; verificationOwner?: {projectId: string; baseRevision: string}; selectedBytes?: Uint8Array; prepared?: PreparedScenario; preview?: ImportPreview; checked: boolean; busy: boolean; ready: boolean; error: string; notice: string; progress: string; saved?: { projectId: string; revision: string }; controller?: AbortController }
 const drafts = new Map<string, Draft>(), listeners = new Set<() => void>(), writes = new Map<string, Promise<unknown>>();
 const queuedFiles = new Map<string, File>();
 function recoveryErrorMessage(cause: unknown, fileName?: string): string {
@@ -100,7 +100,7 @@ export function BackupPanel({ project, projects, onImported }: { project: Projec
     if (load(key).ready || load(key).busy) return;
     update(key, { busy: true, progress: '保持した復元入力を読み込み中…' });
     void Promise.all([scenarioStore.getImportDraft(key), scenarioStore.getAuthorToolDraft(`${key}:backup-verification`)]).then(async ([saved, record]) => {
-      if (record?.fields.verification) update(key, {verification: record.fields.verification as Verification});
+      if (record?.fields.verification) update(key, {verification: record.fields.verification as Verification, verificationOwner: {projectId: record.projectId, baseRevision: record.baseRevision}});
       return saved;
     }).then(async saved => {if(!saved&&key.startsWith('guest:')){const old=await scenarioStore.getImportDraft(key.slice(6));if(old){saved={...old,key};await scenarioStore.saveImportDraft(saved);await scenarioStore.clearImportDraft(key.slice(6));}}
       if (saved) {
@@ -112,13 +112,24 @@ export function BackupPanel({ project, projects, onImported }: { project: Projec
   }, [key]);
   useEffect(() => { if (!draft.busy && draft.ready) { const file = queuedFiles.get(key); if (file) { queuedFiles.delete(key); void inspect(file); } } }, [key, draft.busy, draft.ready]);
   function verification(patch: Partial<Verification>) {
-    const previous = load(key).verification, value = {...previous, ...patch}; update(key, {verification: value});
-    const projectId = project?.projectId ?? value.inspection?.projectId ?? previous?.inspection?.projectId;
-    if (!projectId) return;
-    const pending = (writes.get(key) ?? Promise.resolve()).catch(() => {}).then(() => scenarioStore.saveAuthorToolDraft({key: `${key}:backup-verification`, projectId, baseRevision: project?.revision ?? value.inspection?.revision ?? previous?.inspection?.revision ?? '0', fields: {verification: value}})).catch(cause => update(key, {error: `確認記録の端末内保存に失敗しました。画面内の結果は保持しています。${recoveryErrorMessage(cause)}`}));
+    const current = load(key), previous = current.verification, value = {...previous, ...patch};
+    // Evidence is cleared when another selection starts. Its account-bound
+    // persistence owner must survive until that attempt reaches a terminal state.
+    const source = value.inspection ?? previous?.inspection;
+    const owner = project ? {projectId: project.projectId, baseRevision: project.revision} : source ? {projectId: source.projectId, baseRevision: source.revision} : current.verificationOwner;
+    update(key, {verification: value, verificationOwner: owner});
+    if (!owner) return;
+    const pending = (writes.get(key) ?? Promise.resolve()).catch(() => {}).then(() => scenarioStore.saveAuthorToolDraft({key: `${key}:backup-verification`, ...owner, fields: {verification: value}})).catch(cause => update(key, {error: `確認記録の端末内保存に失敗しました。画面内の結果は保持しています。${recoveryErrorMessage(cause)}`}));
     writes.set(key, pending);
   }
-  function cancelSelection(event?: Event) { event?.stopPropagation(); verification({selection: 'cancelled', inspection: undefined, trial: undefined, capacity: undefined}); }
+  function cancelSelection(event?: Event) {
+    event?.stopPropagation();
+    // File reads and capacity estimates may resolve after the picker cancels.
+    // Abort their inspection before clearing evidence so it cannot become success.
+    if (load(key).verification?.selection === 'checking') load(key).controller?.abort();
+    queuedFiles.delete(key);
+    verification({selection: 'cancelled', inspection: undefined, trial: undefined, capacity: undefined});
+  }
   async function trialRestore() {
     const request = load(key), inspection = request.verification?.inspection;
     if (request.busy || !request.selectedBytes || !inspection || request.verification?.trial) return;

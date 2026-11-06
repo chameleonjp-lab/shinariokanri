@@ -118,3 +118,57 @@ test('ファイル選択の取消を記録し、再起動後も成功扱いに�
   await expect(check).not.toContainText('ファイル検査に成功');
   await expect(check.getByRole('button', {name: '元作品を残して別コピーへ試し復元', exact: true})).toBeDisabled();
 });
+
+async function storedLibrarySelection(page: Page) {
+  return page.evaluate(async () => {
+    const db = await new Promise<IDBDatabase>((resolve, reject) => {
+      const request = indexedDB.open('scenario-manager-local-v1');
+      request.onsuccess = () => resolve(request.result); request.onerror = () => reject(request.error);
+    });
+    try {
+      return await new Promise<string | undefined>((resolve, reject) => {
+        const request = db.transaction('authorToolDrafts').objectStore('authorToolDrafts').get('guest:library:backup-verification');
+        request.onsuccess = () => resolve(request.result?.fields?.verification?.selection); request.onerror = () => reject(request.error);
+      });
+    } finally {db.close();}
+  });
+}
+
+for (const outcome of ['corrupt', 'abort', 'native-cancel'] as const) {
+  test(`ライブラリーの再検査の終端を保持する · ${outcome}`, async ({page}) => {
+    const f = await fixture();
+    await page.goto('./');
+    await page.getByRole('button', {name: '保存ファイルを読み込む', exact: true}).click();
+    const input = page.locator('input[type=file]'), check = page.getByLabel('控えの確認記録');
+    await input.setInputFiles({name: '最初の正常な控え.scenario', mimeType: 'application/zip', buffer: Buffer.from(f.bytes)});
+    await expect(page.getByLabel('復元方法と対象への影響を確認しました')).toBeEnabled();
+    await expect.poll(() => storedLibrarySelection(page)).toBe('checked');
+    await page.evaluate(() => {
+      const read = File.prototype.arrayBuffer;
+      File.prototype.arrayBuffer = async function () {
+        if (this.name === '再検査.scenario') {
+          (window as any).__backupReadStarted = true;
+          await new Promise<void>(resolve => {(window as any).__releaseBackupRead = resolve;});
+        }
+        return read.call(this);
+      };
+    });
+    await input.setInputFiles({name: '再検査.scenario', mimeType: 'application/zip', buffer: outcome === 'corrupt' ? Buffer.from('broken') : Buffer.from(f.bytes)});
+    await expect.poll(() => page.evaluate(() => (window as any).__backupReadStarted)).toBe(true);
+    await expect.poll(() => storedLibrarySelection(page)).toBe('checking');
+    if (outcome === 'abort') await page.locator('.backup-page > p[role="status"]').getByRole('button', {name: '中止', exact: true}).click();
+    if (outcome === 'native-cancel') await input.dispatchEvent('cancel');
+    await page.evaluate(() => (window as any).__releaseBackupRead());
+    await expect(input).toBeEnabled();
+    const terminal = outcome === 'corrupt' ? 'ファイル検査に失敗しました' : 'ファイルの選択を取り消しました';
+    await expect(check).toContainText(terminal);
+    await page.reload();
+    await page.getByRole('button', {name: '保存ファイルを読み込む', exact: true}).click();
+    await expect(input).toBeEnabled();
+    await expect(check).toContainText(terminal);
+    await expect(check).not.toContainText('実ファイルを検査中');
+    await expect(check).not.toContainText('ファイル検査に成功');
+    await expect(check.getByRole('button', {name: '元作品を残して別コピーへ試し復元', exact: true})).toBeDisabled();
+    await expect.poll(() => storedLibrarySelection(page)).toBe(outcome === 'corrupt' ? 'failed' : 'cancelled');
+  });
+}
