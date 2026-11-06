@@ -182,6 +182,17 @@ export function editRichText(before: RichText, nextText: string, replacement?: T
   return after;
 }
 
+/** Restore a uniquely identified block, retaining explicit origins for every other paragraph. */
+export function restoreRichTextBlock(before: RichText, source: Block): RichText {
+  const matches = before.filter(block => block.id === source.id);
+  if (matches.length !== 1) throw new Error('段落を一意に特定できません。選び直してください。');
+  let start = 0;
+  for (const block of before) { if (block.id === source.id) break; start += Array.from(block.text).length + 1; }
+  const after = before.map(block => block.id === source.id ? structuredClone(source) : block);
+  editOrigins.set(after, { before, transform: buildTextTransform(before, after, { start, end: start + Array.from(matches[0].text).length }), depth: 1 });
+  return after;
+}
+
 export function transformAnchor(anchor: ContentAnchor, entityId: string, before: RichText, transform: TextTransform, currentVersionId?: string): ContentAnchor {
   if (anchor.entityId !== entityId || (anchor.sourceVersionId && anchor.sourceVersionId !== currentVersionId) || anchor.positionStatus === 'unresolved') return anchor;
   const oldBlock = before.find(block => block.id === anchor.blockId);

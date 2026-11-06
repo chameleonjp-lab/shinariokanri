@@ -1,3 +1,4 @@
+import {compareEditions,restoreSelectedParagraphs,replaceSelectedOccurrences,type ParagraphSelection,type ReplacementOccurrence} from '../domain/selectiveEdits';
 import {bindCanonicalHistoryWrites,readHistoryPageCommands} from './historyMetadata';
 import {readWorldClosure} from './worldClosure';
 import {DerivedIndexBudget,ProjectDerivedOwner} from '../domain/derivedIndexes';
@@ -1211,6 +1212,39 @@ export class ScenarioStore {
     if (!current || current.revision !== request.baseRevision) throw new StorageError('REVISION_CONFLICT', '復元の確定前に作品が更新されました。');
     const next = preservePublishedVersions({ ...copy(command[request.side]), revision: current.revision, history: current.history }, current);
     return this.saveProject(next, { reason: `作品全体を操作 ${request.historyOperationId} の${request.side === 'before' ? '変更前' : '変更後'}（版 ${request.sourceRevision}）へ復元`, compensatesOperationId: request.historyOperationId, includeHistory: true });
+  }
+
+  async previewParagraphRestore(projectId:string,sourceId:string,comparisonId:string,selected:ParagraphSelection[]) {
+    const current=await this.getProjectForEditing(projectId);
+    if(!current)throw new StorageError('NOT_FOUND','作品が見つかりません。');
+    const source=current.snapshots.find(s=>s.id===sourceId),comparison=current.snapshots.find(s=>s.id===comparisonId);
+    if(!source||!comparison||sourceId===comparisonId)throw new StorageError('NOT_FOUND','異なる二つの固定稿を選んでください。');
+    const changed=compareEditions(source,comparison).paragraphs;
+    if(selected.some(s=>!changed.some(c=>c.selectable&&c.entityId===s.entityId&&c.field===s.field&&c.blockId===s.blockId)))throw new StorageError('VALIDATION_FAILED','比較した差分から一意な段落を選び直してください。');
+    const candidate=restoreSelectedParagraphs(current,source,selected);
+    const changes=selected.map(s=>({ ...s,before:(current.entities.find(e=>e.id===s.entityId)!.data as unknown as Record<string,Block[]>)[s.field].find(b=>b.id===s.blockId)!,after:(candidate.entities.find(e=>e.id===s.entityId)!.data as unknown as Record<string,Block[]>)[s.field].find(b=>b.id===s.blockId)! }));
+    const payload={projectId,baseRevision:current.revision,sourceId,comparisonId,selected:copy(selected),changes};
+    return {...payload,confirmationHash:await sha256(jsonBytes(payload))};
+  }
+  async restoreParagraphs(projectId:string,approved:Awaited<ReturnType<ScenarioStore['previewParagraphRestore']>>):Promise<SaveResult>{
+    const request=copy(approved),fresh=await this.previewParagraphRestore(projectId,request.sourceId,request.comparisonId,request.selected);
+    const {confirmationHash,...payload}=request;
+    if(projectId!==request.projectId||fresh.confirmationHash!==confirmationHash||await sha256(jsonBytes(payload))!==confirmationHash)throw new StorageError('REVISION_CONFLICT','確認後に作品が更新されました。段落を再比較してください。');
+    const current=await this.getProjectForEditing(projectId);
+    if(!current||current.revision!==request.baseRevision)throw new StorageError('REVISION_CONFLICT','確定前に作品が更新されました。');
+    return this.saveProject(restoreSelectedParagraphs(current,current.snapshots.find(s=>s.id===request.sourceId)!,request.selected),{reason:'固定稿から選択段落を復元',includeHistory:true});
+  }
+  async previewOccurrenceReplacement(projectId:string,term:string,replacement:string,selected:ReplacementOccurrence[]){
+    const current=await this.getProjectForEditing(projectId);
+    if(!current)throw new StorageError('NOT_FOUND','作品が見つかりません。');
+    replaceSelectedOccurrences(current,term,replacement,selected);
+    const payload={projectId,baseRevision:current.revision,term,replacement,selected:copy(selected)};
+    return {...payload,confirmationHash:await sha256(jsonBytes(payload))};
+  }
+  async replaceOccurrences(projectId:string,approved:Awaited<ReturnType<ScenarioStore['previewOccurrenceReplacement']>>):Promise<SaveResult>{
+    const request=copy(approved),{confirmationHash,...payload}=request,current=await this.getProjectForEditing(projectId);
+    if(!current||projectId!==request.projectId||current.revision!==request.baseRevision||await sha256(jsonBytes(payload))!==confirmationHash)throw new StorageError('REVISION_CONFLICT','確認後に作品が更新されました。一致位置を再検索してください。');
+    return this.saveProject(replaceSelectedOccurrences(current,request.term,request.replacement,request.selected),{reason:'選択した一致位置だけを一括置換',includeHistory:true});
   }
 
   async restoreRevision(projectId: string, revision: string): Promise<SaveResult> {

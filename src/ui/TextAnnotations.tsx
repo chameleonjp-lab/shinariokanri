@@ -228,6 +228,7 @@ export function TextAnnotations({
   };
 
   return <section ref={annotationRoot} className="text-annotations" aria-label={`${fieldLabel}のルビとリンク`}>
+    <p className="field-hint">人名を複数箇所で変えるときは、編集中の内容を保存し、履歴の「文章を選んで人名を一括置換」で参照先と引用を確認してください。</p>
     <div className="section-heading"><h3>本文のルビ・リンク</h3><span>段落と語句を選んで追加</span></div>
     {!blocks.length ? <p className="field-hint">先に本文を入力すると、段落内の語句にルビやリンクを付けられます。</p> : <>
       <div className="form-field">
