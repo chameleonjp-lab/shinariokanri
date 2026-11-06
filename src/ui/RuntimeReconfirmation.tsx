@@ -1,13 +1,14 @@
+import { RegressionRunner } from './RegressionRunner';
 import {registerAuthorCache,registerAuthorBusy} from './StoreContext';
 import {useAuthorScope} from './StoreContext';
 import { useEffect, useRef, useState } from 'react';
 import type { Entity, ProjectContent, ProjectData, ProjectSnapshot } from '../domain/types';
 import { confirmedCheckpointMigration, previewCheckpointMigration, type CheckpointMigrationPlan } from '../domain/checkpoints';
-import { confirmTraceReconfirmation, prepareTraceReconfirmation, traceRevisionChanges, type ReconfirmationPlan } from '../domain/traceReconfirmation';
+import { replayTraceAgainstRevision, type RevisionReplay, confirmTraceReconfirmation, prepareTraceReconfirmation, traceRevisionChanges, type ReconfirmationPlan } from '../domain/traceReconfirmation';
 import { adoptedRecord } from '../domain/adoption';
 import { labelOf } from './Fields';
 import { ListPager, useListWindow } from './ListWindow';
-type Draft = { checkpointId: string; traceId: string; migration?: CheckpointMigrationPlan; reconfirmation?: ReconfirmationPlan; busy: boolean; error: string; progress: number; savedIds?: string[]; savedSnapshotIds?: string[]; notice?: string };
+type Draft = { divergence?: RevisionReplay; checkpointId: string; traceId: string; migration?: CheckpointMigrationPlan; reconfirmation?: ReconfirmationPlan; busy: boolean; error: string; progress: number; savedIds?: string[]; savedSnapshotIds?: string[]; notice?: string };
 const drafts = new Map<string, Draft>(), EVENT = 'scenario-runtime-reconfirmation';
 const fresh = (): Draft => ({ checkpointId: '', traceId: '', busy: false, error: '', progress: 0 });
 function load(projectId: string) {
@@ -15,7 +16,8 @@ function load(projectId: string) {
   try { const preferences = JSON.parse(localStorage.getItem(`scenario-reconfirmation-selection:${projectId}`) ?? '{}'); return { ...fresh(), checkpointId: typeof preferences.checkpointId === 'string' ? preferences.checkpointId : '', traceId: typeof preferences.traceId === 'string' ? preferences.traceId : '' }; } catch { return fresh(); }
 }
 export const runtimeReconfirmationBusy = (projectId: string) => load(projectId).busy;
-export function RuntimeReconfirmation({ project, version, entryId, selectedCheckpointId, worldSnapshots, disabled, onBusy, onSaveMany, mode = 'flow', worldTick = '', sceneId = '' }: {
+export function RuntimeReconfirmation({ project, version, entryId, selectedCheckpointId, worldSnapshots, disabled, onBusy, onSaveMany, mode = 'flow', worldTick = '', sceneId = '', onOpenTarget }: {
+  onOpenTarget?: (anchor: import('../domain/types').ContentAnchor) => void;
   project: ProjectData; version: string; entryId: string; selectedCheckpointId: string; worldSnapshots: Record<string, ProjectContent>; disabled: boolean; onBusy: (busy: boolean) => void; mode?: 'flow' | 'chapters'; worldTick?: string; sceneId?: string;
   onSaveMany: (entities: Entity[], reason: string, assets?: undefined, snapshots?: ProjectSnapshot[], expectedRevision?: string) => Promise<void>;
 }) {
@@ -40,7 +42,15 @@ export function RuntimeReconfirmation({ project, version, entryId, selectedCheck
     const abort = new AbortController(); controller.current = abort;
     try {
       if (kind === 'migration') update({ migration: await previewCheckpointMigration(project, draft.checkpointId, { contentVersionId: version || undefined, entryId: entryId || undefined, chapterStart: mode === 'chapters', sceneId: sceneId || undefined, worldTick: worldTick || undefined, worldSnapshots }) });
-      else update({ reconfirmation: await prepareTraceReconfirmation(project, draft.traceId, { worldSnapshots, checkpointId: selectedCheckpointId || undefined, signal: abort.signal, onProgress: progress => update({ progress }) }) });
+      else {
+        update({ divergence: undefined });
+        try { update({ reconfirmation: await prepareTraceReconfirmation(project, draft.traceId, { worldSnapshots, checkpointId: selectedCheckpointId || undefined, signal: abort.signal, onProgress: progress => update({ progress }) }) }); }
+        catch (cause) {
+          if (mode !== 'flow' || abort.signal.aborted) throw cause;
+          const divergence = await replayTraceAgainstRevision(project, draft.traceId, { worldSnapshots, signal: abort.signal });
+          if (divergence.firstDifference) update({ divergence, reconfirmation: undefined }); else throw cause;
+        }
+      }
     } catch (cause) { update({ error: (cause as Error).message }); }
     finally { controller.current = null; update({ busy: false }); actions.current(false); }
   };
@@ -64,7 +74,9 @@ export function RuntimeReconfirmation({ project, version, entryId, selectedCheck
     {!!checkpoints.length && <details open={!!draft.checkpointId}><summary>別版の開始状態を移行する</summary><ListPager {...checkpointPage} label="移行元の開始状態"/>{checkpointPage.items.map(checkpoint => <label className="check-label" key={checkpoint.id}><input type="radio" name="migration-checkpoint" disabled={busy} checked={draft.checkpointId === checkpoint.id} onChange={() => update({ checkpointId: checkpoint.id, migration: undefined })}/>{labelOf(checkpoint)} · 固定版 {checkpoint.data.contentRevision ?? '未記録'} · {checkpoint.data.origin ?? '途中開始'}</label>)}<button className="button secondary" disabled={busy || !draft.checkpointId} onClick={() => void prepare('migration')}>開始状態の移行差分を確認</button></details>}
     {draft.migration && <div><p>確認基底revision {draft.migration.baseRevision}。移行対象 {draft.migration.targetVersionId === project.projectId ? '現在稿' : draft.migration.targetVersionId}。確認した開始点 {draft.migration.targetEntryId ? labelOf(project.entities.find(entity => entity.id === draft.migration!.targetEntryId)) : '章の提示開始'} · {draft.migration.targetEntryId ?? '章試読'}。開始場面 {draft.migration.targetSceneId ? labelOf(project.entities.find(entity => entity.id === draft.migration!.targetSceneId)) : '入口の場面'}。確認した世界内tick {draft.migration.targetWorldTick ?? '不明'}</p>{staleMigration && <p role="alert">確認後に作品版・開始点・読み方が変わりました（場面・提示時点も再確認が必要です）。入力を保持して差分を再確認してください。</p>}<ListPager {...migrationChanges} label="開始状態の移行差分"/>{migrationChanges.items.map(change => <p key={change.id}>{change.action === 'carry' ? '持ち越す' : change.action === 'reset' ? '初期化する' : '外す'} · {labelOf(project.entities.find(entity => entity.id === change.targetId))} · {change.reason}</p>)}<button className="button primary" disabled={busy || staleMigration} onClick={() => void save('migrate')}>確認した状態を新しい途中開始へ移行</button><button className="button secondary" disabled={busy || staleMigration} onClick={() => void save('recreate')}>対象版の初期値から途中開始を再作成</button></div>}
     {!!traces.length && <details open={!!draft.traceId}><summary>保存した経路を改訂稿で再確認する</summary><ListPager {...tracePage} label="再確認する経路"/>{tracePage.items.map(trace => { const changes = traceRevisionChanges(project, trace); return <label className="check-label" key={trace.id}><input type="radio" name="reconfirm-trace" disabled={busy} checked={draft.traceId === trace.id} onChange={() => update({ traceId: trace.id, reconfirmation: undefined })}/>{labelOf(trace)} · {changes.length ? `再確認待ち ${changes.length}箇所` : '宣言・本文の変更なし'} · {trace.data.mode === 'chapters' ? '章順' : '分岐'} · {trace.data.externalMode ?? '内部状態'}</label>; })}<button className="button secondary" disabled={busy || !draft.traceId} onClick={() => void prepare('trace')}>旧経路を改訂稿で再実行して確認</button></details>}
+    {draft.divergence?.firstDifference && <div role="status"><p>旧経路を保持し、最初の違いで停止しました。{draft.divergence.firstDifference.choice}手目 · {draft.divergence.firstDifference.reason}</p><p>元の固定版 {draft.divergence.sourceVersionId} · 再実行した版 {draft.divergence.targetVersionId}</p>{draft.divergence.firstDifference.edgeIds.map(id => <button className="text-button" key={id} disabled={!onOpenTarget} onClick={() => onOpenTarget?.({ entityId: id, sourceVersionId: draft.divergence!.sourceVersionId })}>進めない選択を旧版で開く</button>)}</div>}
     {draft.reconfirmation && <div><p>再実行基底revision {draft.reconfirmation.baseRevision}。新しい固定版 {draft.reconfirmation.targetVersionId}。旧経路を残して回帰集合へ新しい経路を追加します。</p>{staleTrace && <p role="alert">再実行後に作品が変わりました。結果を保持して再実行してください。</p>}<ListPager {...traceChanges} label="経路の変更影響"/>{traceChanges.items.map(change => <p key={change.id}>{labelOf(project.entities.find(entity => entity.id === change.id))} · {change.reason}</p>)}{draft.reconfirmation.findings.map((finding, i) => <p key={i}>{finding.status} · {finding.message}</p>)}<button className="button primary" disabled={busy || staleTrace} onClick={() => void save('trace')}>再実行した新しい経路と証跡を保存</button></div>}
+    <RegressionRunner project={project} version={version} worldSnapshots={worldSnapshots} disabled={busy} onBusy={onBusy} onSaveMany={onSaveMany} onOpenTarget={onOpenTarget}/>
   </section>;
 }
 

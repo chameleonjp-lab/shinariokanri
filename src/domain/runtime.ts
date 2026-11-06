@@ -849,7 +849,10 @@ export function pinTrialRecord(session: TrialSession, ids: { checkpointId: ID; s
 
 export type AnalysisStatus = 'confirmed_issue' | 'candidate' | 'unknown' | 'intentional' | 'passed_for_checked_scope';
 export interface AnalysisLimits { maxStates: number; maxTransitions: number; maxMs: number }
+export type AnalysisCategory = 'missing_target' | 'condition_false' | 'unknown_value' | 'exploration_limit' | 'other';
 export interface AnalysisFinding {
+  category?: AnalysisCategory;
+  repairPath?: string;
   status: AnalysisStatus;
   code: string;
   message: string;
@@ -898,6 +901,7 @@ export interface AnalysisOptions extends Partial<AnalysisLimits>, TrialStartOpti
   onProgress?: (progress: AnalysisProgress) => void;
 }
 export interface AnalysisResult {
+  boundaries: { complete: boolean; checkedNodeIds: ID[]; completedPaths: ID[][]; unfinished: { targetId?: ID; path: ID[]; reason: string }[] };
   status: AnalysisStatus;
   findings: AnalysisFinding[];
   coverage: TrialCoverage;
@@ -999,7 +1003,9 @@ function* analysisIterator(project: ProjectData, options: AnalysisOptions): Gene
     const key = `${status}:${code}:${targetId ?? ''}`;
     if (!unique.has(key)) {
       unique.add(key);
-      findings.push({ status, code, message, targetId, path, edgePath, startState: clone(activeStart) });
+      const category: AnalysisCategory = code === 'REFERENCE_INVALID' ? 'missing_target' : code === 'CONDITION_FALSE_AT_START' ? 'condition_false' : code === 'CONDITION_UNKNOWN' ? 'unknown_value' : code === 'ANALYSIS_LIMIT' || code === 'UNBOUNDED_LOOP' ? 'exploration_limit' : 'other';
+      const target = project.entities.find(entity => entity.id === targetId);
+      findings.push({ status, code, message, targetId, path, edgePath, startState: clone(activeStart), category, repairPath: category === 'missing_target' && target?.kind === 'flow_edge' ? 'toId' : category === 'condition_false' || category === 'unknown_value' ? target?.kind === 'flow_edge' ? 'condition' : 'gate' : undefined });
     }
   };
   for (const failure of flowReferences(project)) add('confirmed_issue', failure.issue.code, failure.issue.message, failure.targetId);
@@ -1060,7 +1066,7 @@ function* analysisIterator(project: ProjectData, options: AnalysisOptions): Gene
     }
     if (options.signal?.aborted || checkedStates >= limits.maxStates || now() - started >= limits.maxMs) {
       truncated = true;
-      add('unknown', 'ANALYSIS_LIMIT', options.signal?.aborted ? '解析を取り消しました。確認済み範囲だけを表示します。' : '探索上限に達しました。残りの経路は未確認です。');
+      add('unknown', 'ANALYSIS_LIMIT', options.signal?.aborted ? '解析を取り消しました。確認済み範囲だけを表示します。' : '探索上限に達しました。残りの経路は未確認です。', queue[cursor]?.session.nodeId ?? entryIds[nextEntry], cursor < queue.length ? witness(cursor) : entryIds[nextEntry] ? [entryIds[nextEntry]] : []);
       break;
     }
     // Start further declared entries lazily. Share only the captured immutable
@@ -1107,6 +1113,12 @@ function* analysisIterator(project: ProjectData, options: AnalysisOptions): Gene
     });
     if (structural.ok) for (const result of trialObservations([session])) observed.set(`${result.targetId}:${result.value}`, result);
     const path = () => witness(recordIndex);
+    const nodeGate = structural.ok ? evalAt(project, session.state, findNode(project, session.nodeId)?.data.gate, session.externalValues) : undefined;
+    if (nodeGate && nodeGate.value !== 'true') add(nodeGate.value === 'false' ? 'candidate' : 'unknown', nodeGate.value === 'false' ? 'CONDITION_FALSE_AT_START' : 'CONDITION_UNKNOWN', nodeGate.reasons.join('、') || 'この開始条件では場面の発火条件を満たしていません。', session.nodeId ?? undefined, path(), edgeWitness(recordIndex));
+    if (structural.ok && nodeGate?.value === 'true') for (const choice of getTrialChoices(project, session)) {
+      if (choice.result === 'false') add('candidate', 'CONDITION_FALSE_AT_START', `この開始状態では選べません。${choice.reasons.join('、')}。他の状態での到達不能を意味しません。`, choice.edgeId, path(), edgeWitness(recordIndex));
+      if (choice.result === 'unknown') add('unknown', 'CONDITION_UNKNOWN', choice.reasons.join('、') || '外部値などが未指定で判断できません。', choice.edgeId, path(), edgeWitness(recordIndex));
+    }
     if (session.status === 'terminal') add('intentional', 'TERMINAL', findNode(project, session.nodeId)?.data.terminalReason || '意図した終端', session.nodeId ?? undefined, path(), edgeWitness(recordIndex));
     else if (session.status === 'unknown') add('unknown', 'CONDITION_UNKNOWN', session.issues.map(value => value.message).join('、'), session.nodeId ?? undefined, path(), edgeWitness(recordIndex));
     else if (session.status === 'blocked' || session.status === 'error') add(session.status === 'error' ? 'confirmed_issue' : 'candidate', session.issues[0]?.code ?? 'TRANSITION_BLOCKED', session.issues.map(value => value.message).join('、'), session.nodeId ?? undefined, path(), edgeWitness(recordIndex));
@@ -1127,7 +1139,7 @@ function* analysisIterator(project: ProjectData, options: AnalysisOptions): Gene
           lastYield = requestTime;
           yield { checkedStates, pendingStates: queue.length - cursor, elapsedMs: requestTime - started, limits };
         }
-        if (queue.length >= limits.maxStates || options.signal?.aborted || now() - started >= limits.maxMs) { truncated = true; add('unknown', 'ANALYSIS_LIMIT', '探索の上限または取消により、残る経路は未確認です。'); break; }
+        if (queue.length >= limits.maxStates || options.signal?.aborted || now() - started >= limits.maxMs) { truncated = true; add('unknown', 'ANALYSIS_LIMIT', '探索の上限または取消により、残る経路は未確認です。', node.id, path(), edgeWitness(recordIndex)); break; }
         request.worldTick = options.worldTick;
         if (node.data.trigger) request.event = { event: node.data.trigger.event, eventKey: node.data.trigger.eventKey, occurrenceId: `analysis:${checkedStates}:${request.edgeId ?? 'auto'}` };
         const next = stepTrial(project, session, request);
@@ -1149,7 +1161,7 @@ function* analysisIterator(project: ProjectData, options: AnalysisOptions): Gene
     : findings.some(finding => finding.status === 'unknown') || truncated ? 'unknown'
     : findings.some(finding => finding.status === 'candidate') ? 'candidate' : 'passed_for_checked_scope';
   return {
-    status, findings, coverage: coverageFromEvidence(project, seen, traversed, [...observed.values()], first.state.provenance), checkedStates, limits, truncated,
+    status, findings, boundaries: { complete: !truncated && !findings.some(finding => finding.status === 'unknown'), checkedNodeIds: [...reached], completedPaths: findings.filter(finding => finding.code === 'TERMINAL').map(finding => finding.path), unfinished: findings.filter(finding => finding.status === 'unknown').map(finding => ({ targetId: finding.targetId, path: finding.path, reason: finding.message })) }, coverage: coverageFromEvidence(project, seen, traversed, [...observed.values()], first.state.provenance), checkedStates, limits, truncated,
     contentVersionId: first.state.contentVersionId, contentRevision: project.revision, targetIds: nodes(project).map(node => node.id), entryIds: exploredEntries, declaredEntryIds: declared,
     assumptions: [options.entryId || options.state || options.checkpointId ? '指定した開始状態の有限探索。未到達は到達不能の証明ではありません。' : '全宣言入口の初期状態からの有限探索。未到達は到達不能の証明ではありません。', '外部値を補いません。明示トリガーは宣言した入力が与えられる場合だけを確認します。', 'visitedは宣言した閾値まで状態に含めます。同状態の無制限ループは未確認です。'],
   };

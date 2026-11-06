@@ -1,6 +1,9 @@
 import type { Entity, ID, ProjectData, RuntimeState, TraceData } from './types';
 import { adoptedRecord } from './adoption';
-import { canonicalJson } from '../storage/json';
+import { canonicalJson, jsonBytes, sha256 } from '../storage/json';
+import { replaySavedTraceVerified } from './runtimeVerified';
+import { replayTraceAgainstRevision } from './traceReconfirmation';
+import { captureRuntimeContent } from './runtimeVersions';
 
 export function declaredRegressionPaths(project: ProjectData): { ids: ID[]; paths: Entity<'trace'>[]; missing: ID[] } {
   const ids = [...new Set(project.entities.filter((entity): entity is Entity<'collection'> => entity.kind === 'collection' && adoptedRecord(entity) && entity.data.purpose === 'regression').flatMap(collection => collection.data.memberIds ?? []))];
@@ -52,4 +55,54 @@ export function regressionPathCoverage(project: ProjectData, candidate: Pick<Tra
   const byExternalMode = Object.fromEntries((['internal', 'stub', 'actual', 'mixed'] as const).map(external => [external, { checked: external === 'actual' || external === 'mixed' ? 0 : matched.filter(path => mode(path) === external).length, total: declarations.paths.filter(path => mode(path) === external).length }]));
   const unknown = declarations.missing.length + declarations.paths.filter(path => path.data.contentVersionId !== candidate.contentVersionId || ['actual', 'mixed'].includes(mode(path)) || project.entities.some(entity => entity.id === path.data.startCheckpointId && entity.kind === 'checkpoint' && entity.data.presentationResults?.some(result => result.value === 'unknown')) || (!complete || observedUnknown) && matchingPaths.includes(path)).length;
   return { checked: matched.filter(path => provenance(path) === 'full_play' && mode(path) === 'internal' && start.provenance === 'full_play').length, total: declarations.ids.length, unknown, byProvenance, byExternalMode };
+}
+
+/** Seed expectations from verified old evidence; the author saves/adapts these explicitly. */
+export async function captureRegressionExpectation(project: ProjectData, traceId: ID, worldSnapshots: Record<ID, import('./types').ProjectContent> = {}): Promise<import('./types').RegressionExpectation> {
+  const trace = project.entities.find((entity): entity is Entity<'trace'> => entity.id === traceId && entity.kind === 'trace');
+  if (!trace || trace.data.mode === 'chapters') throw new Error('分岐の保存経路を選んでください。');
+  const old = await replaySavedTraceVerified(project, traceId, worldSnapshots);
+  const ending = old.content.entities.find(entity => entity.id === old.nodeId && entity.kind === 'flow_node');
+  if (old.status !== 'terminal' || ending?.kind !== 'flow_node' || ending.data.nodeType !== 'terminal') throw new Error('終端まで確認した経路に期待する結末を付けてください。');
+  return { ending: { entityId: ending.id, sourceVersionId: trace.data.contentVersionId, reason: ending.data.terminalReason! }, state: Object.entries(old.state.variableValues).map(([entityId, value]) => ({ entityId, sourceVersionId: trace.data.contentVersionId, value: structuredClone(value) })) };
+}
+export interface RegressionRouteResult {
+  traceId: ID; name: string; status: 'match' | 'mismatch' | 'unexecutable'; sourceVersionId?: ID; targetVersionId: ID;
+  startState?: RuntimeState; seed?: string; firstDifference?: import('./traceReconfirmation').PathDifference;
+  expected?: import('./types').RegressionExpectation; actualEnding?: { entityId: ID; reason?: string | null }; differences: string[];
+}
+export interface RegressionReport { projectId: ID; baseRevision: string; targetVersionId: ID; targetHash: string; routes: RegressionRouteResult[] }
+export async function runRegressionCollection(project: ProjectData, collectionId: ID, options: { targetVersionId?: ID; worldSnapshots?: Record<ID, import('./types').ProjectContent>; signal?: AbortSignal } = {}): Promise<RegressionReport> {
+  const source = structuredClone(project), targetVersionId = options.targetVersionId ?? source.projectId;
+  const target = await captureRuntimeContent(source, targetVersionId, { worldSnapshots: options.worldSnapshots });
+  const collection = source.entities.find((entity): entity is Entity<'collection'> => entity.id === collectionId && entity.kind === 'collection' && entity.data.purpose === 'regression' && entity.data.mode === 'fixed' && adoptedRecord(entity));
+  if (!collection) throw new Error('固定した回帰集合を選んでください。');
+  const routes: RegressionRouteResult[] = [];
+  for (const id of [...new Set(collection.data.memberIds ?? [])]) {
+    if (options.signal?.aborted) throw new Error('回帰集合の再実行を中止しました。期待値と旧経路は保持されています。');
+    const trace = source.entities.find((entity): entity is Entity<'trace'> => entity.id === id && entity.kind === 'trace' && adoptedRecord(entity));
+    const row: RegressionRouteResult = { traceId: id, name: trace?.name ?? id, status: 'unexecutable', sourceVersionId: trace?.data.contentVersionId, targetVersionId, expected: trace?.data.expectation ?? undefined, differences: [] };
+    const checkpoint = trace && source.entities.find((entity): entity is Entity<'checkpoint'> => entity.id === trace.data.startCheckpointId && entity.kind === 'checkpoint');
+    row.startState = checkpoint ? structuredClone(checkpoint.data.runtimeState) : undefined; row.seed = trace?.data.seed ?? checkpoint?.data.runtimeState.rngSeed;
+    if (!trace?.data.expectation) { row.differences.push(trace ? '作者の期待する結末・状態が未設定です。' : '宣言した経路がありません。'); routes.push(row); continue; }
+    try {
+      const replay = await replayTraceAgainstRevision(source, id, { ...options, targetVersionId });
+      row.startState = replay.startState ?? row.startState; row.seed = replay.seed ?? row.seed; row.firstDifference = replay.firstDifference;
+      if (replay.status === 'different_path') { row.status = 'mismatch'; row.differences.push(replay.firstDifference!.reason); const ending = replay.attempted?.content.entities.find(entity => entity.id === replay.attempted?.nodeId && entity.kind === 'flow_node'); if (ending?.kind === 'flow_node' && ending.data.nodeType === 'terminal') row.actualEnding = { entityId: ending.id, reason: ending.data.terminalReason }; routes.push(row); continue; }
+      if (replay.status === 'unexecutable' || !replay.session || replay.session.status !== 'terminal') { row.differences.push(replay.firstDifference?.reason ?? '終端まで実行できません。'); routes.push(row); continue; }
+      const expected = trace.data.expectation, session = replay.session, ending = session.content.entities.find(entity => entity.id === session.nodeId && entity.kind === 'flow_node');
+      row.actualEnding = { entityId: session.nodeId!, reason: ending?.kind === 'flow_node' ? ending.data.terminalReason : undefined };
+      if (expected.state.some(value => value.value.type === 'unknown') || Object.values(session.state.variableValues).some(value => value.type === 'unknown')) { row.differences.push('未知の状態値があり、一致を判断できません。'); routes.push(row); continue; }
+      if (row.actualEnding.entityId !== expected.ending.entityId || row.actualEnding.reason !== expected.ending.reason) row.differences.push(`期待する結末「${expected.ending.reason}」と実際の結末「${row.actualEnding.reason ?? '不明'}」が異なります。`);
+      for (const value of expected.state) if (canonicalJson(session.state.variableValues[value.entityId] ?? null) !== canonicalJson(value.value)) row.differences.push(`状態 ${value.entityId}: 期待 ${JSON.stringify(value.value)} / 実際 ${JSON.stringify(session.state.variableValues[value.entityId] ?? null)}`);
+      row.status = row.differences.length ? 'mismatch' : 'match';
+      if (row.status === 'mismatch') {
+        const first = session.trace.findIndex((step, index) => expected.state.some(value => canonicalJson(step.after.variableValues[value.entityId] ?? null) !== canonicalJson(trace.data.steps[index]?.after.variableValues[value.entityId] ?? null)));
+        const index = first >= 0 ? first : Math.max(0, session.trace.length - 1), step = trace.data.steps[index];
+        row.firstDifference = { choice: step ? index + 1 : 0, nodeId: step?.nodeId, edgeIds: step?.edgeIds ?? [], reason: row.differences.join('、') };
+      }
+    } catch (cause) { row.differences.push((cause as Error).message); }
+    routes.push(row);
+  }
+  return { projectId: source.projectId, baseRevision: source.revision, targetVersionId, targetHash: await sha256(jsonBytes(target)), routes };
 }

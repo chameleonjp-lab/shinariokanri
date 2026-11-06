@@ -1865,7 +1865,7 @@ function compensate(current: ProjectData, command: CommandRecord): ProjectData {
     if (!equalJson(current[field], command.after[field])) throw new StorageError('RESTORE_CONFLICT', '取り消す項目がその後に変更されています。', field);
     (next as unknown as Record<string, unknown>)[field] = copy(command.before[field]);
   }
-  return next;
+  return preservePublishedVersions(next, current);
 }
 
 

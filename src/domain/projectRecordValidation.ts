@@ -102,7 +102,7 @@ async function checkAlternatives(project: ProjectData, validationOptions: Projec
 async function checkChapterTraces(project: ProjectData, validationOptions: ProjectValidationOptions, digestCache: PinnedWorldDigestCache): Promise<ValidationIssue[]> {
   const issues: ValidationIssue[] = [];
   for (const [index, entity] of project.entities.entries()) {
-    if (entity.kind !== 'trace') continue;
+    if (entity.kind !== 'trace' || entity.deletedAt) continue;
     const location = `project.entities[${index}].data`;
     const checkpoint = project.entities.find(candidate => candidate.id === entity.data.startCheckpointId && candidate.kind === 'checkpoint');
     if (!checkpoint || checkpoint.kind !== 'checkpoint') {

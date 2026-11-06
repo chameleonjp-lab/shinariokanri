@@ -219,7 +219,7 @@ function parseManifest(value: unknown): ScenarioManifest {
   if (data.format !== 'scenario-package' || data.formatVersion !== FORMAT_VERSION) throw new StorageError('FORMAT_UNSUPPORTED', 'この専用形式の版には対応していません。元のファイルを保持してください。', 'manifest.json');
   const minimum = typeof data.minimumReaderVersion === 'string' && /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/.test(data.minimumReaderVersion) ? data.minimumReaderVersion.split('.').map(Number) : undefined;
   if (!minimum || minimum[0] > 1 || minimum[0] === 1 && (minimum[1] > 0 || minimum[2] > 0)) throw new StorageError('FORMAT_UNSUPPORTED', '読み込みに新しいアプリが必要です。', 'manifest.json/minimumReaderVersion');
-  if (data.requiredFeatures !== undefined && (!Array.isArray(data.requiredFeatures) || data.requiredFeatures.some(feature => !['portable-recovery-v1','native-sync-recovery-v1','shared-review-source-v1','video-script-v1',RECORD_DICTIONARY_FEATURE,RECORD_DELTA_FEATURE,CALENDAR_RECORD_FEATURE].includes(feature)))) throw new StorageError('FORMAT_UNSUPPORTED', '未知の必須機能が宣言されています。', 'manifest.json/requiredFeatures');
+  if (data.requiredFeatures !== undefined && (!Array.isArray(data.requiredFeatures) || data.requiredFeatures.some(feature => !['portable-recovery-v1','native-sync-recovery-v1','shared-review-source-v1','video-script-v1','regression-expectation-v1','trial-correction-v1',RECORD_DICTIONARY_FEATURE,RECORD_DELTA_FEATURE,CALENDAR_RECORD_FEATURE].includes(feature)))) throw new StorageError('FORMAT_UNSUPPORTED', '未知の必須機能が宣言されています。', 'manifest.json/requiredFeatures');
   if (typeof data.projectId !== 'string' || !uuid.test(data.projectId) || typeof data.snapshotId !== 'string' || !uuid.test(data.snapshotId)
     || typeof data.exportedAt !== 'string' || !Number.isFinite(Date.parse(data.exportedAt)) || !data.exportedAt.endsWith('Z')
     || !['embedded', 'metadata_only'].includes(data.assetMode as string) || !Array.isArray(data.files)) throw new StorageError('ARCHIVE_INVALID', 'manifestの必須項目が不正です。', 'manifest.json');
@@ -453,8 +453,10 @@ export async function inspectScenarioData(bytes: Uint8Array, options: InspectOpt
   // walker can share visits across already-frozen historic children as well.
   const operationalImages = captureImmutablePlainData([...recoveryImages(recovery),...syncRecoveryImages(syncRecovery)]).value;
   const sharedReviews=hasSharedReviewSource([project,...operationalImages,...Object.values(worlds)]);
+  const trialFeatures = detectTrialFeatures([project,...operationalImages,...Object.values(worlds)]);
   if(sharedReviews!==(manifest.requiredFeatures?.includes('shared-review-source-v1')??false))throw new StorageError('FORMAT_UNSUPPORTED','共有指摘の出所には対応する必須機能宣言が必要です。');
   if(hasVideoScript([project,...operationalImages,...Object.values(worlds)])!==(manifest.requiredFeatures?.includes('video-script-v1')??false))throw new StorageError('FORMAT_UNSUPPORTED','動画台本には対応する必須機能宣言が必要です。');
+  for (const feature of ['regression-expectation-v1','trial-correction-v1']) if (trialFeatures.includes(feature) !== (manifest.requiredFeatures?.includes(feature) ?? false)) throw new StorageError('FORMAT_UNSUPPORTED', '試読の期待値・修正位置には対応する必須機能宣言が必要です。');
   verifyWorlds([project, ...operationalImages, ...Object.values(worlds)], worlds);
   await verifySnapshotHashes([project, ...operationalImages, ...Object.values(worlds)]);
   await checkedProjectIntegrity(project, 'data/project.json', worldContents, validation);
@@ -548,9 +550,10 @@ export async function exportScenarioData(input: ProjectData, options: ExportOpti
   }
   const sharedReviews=hasSharedReviewSource([project,...operationalImages,...Object.values(worlds)]);
   const videoScript=hasVideoScript([project,...operationalImages,...Object.values(worlds)]);
+  const trialFeatures = detectTrialFeatures([project,...operationalImages,...Object.values(worlds)]);
   const manifest: ScenarioManifest = { format: 'scenario-package', formatVersion: FORMAT_VERSION, projectId: project.projectId,
     snapshotId: options.snapshotId ?? newId(), exportedAt: options.exportedAt ?? new Date().toISOString(), assetMode: mode,
-    files: manifestFiles, minimumReaderVersion: FORMAT_VERSION, ...((recovery||syncRecovery||dictionary||sharedReviews||videoScript)?{requiredFeatures:[...(recovery?['portable-recovery-v1']:[]),...(syncRecovery?['native-sync-recovery-v1']:[]),...(dictionary?[RECORD_DICTIONARY_FEATURE,...dictionary.usedFeatures]:[]),...(sharedReviews?['shared-review-source-v1']:[]),...(videoScript?['video-script-v1']:[])]}:{}) };
+    files: manifestFiles, minimumReaderVersion: FORMAT_VERSION, ...((recovery||syncRecovery||dictionary||sharedReviews||videoScript||trialFeatures.length)?{requiredFeatures:[...(recovery?['portable-recovery-v1']:[]),...(syncRecovery?['native-sync-recovery-v1']:[]),...(dictionary?[RECORD_DICTIONARY_FEATURE,...dictionary.usedFeatures]:[]),...(sharedReviews?['shared-review-source-v1']:[]),...(videoScript?['video-script-v1']:[]),...trialFeatures]}:{}) };
   // Validate metadata created from optional caller parameters, and count the manifest in all quotas.
   parseManifest(manifest);
   files['manifest.json'] = jsonBytes(manifest);
@@ -569,4 +572,7 @@ function hasSharedReviewSource(projects:ProjectData[]):boolean{
 
 function hasVideoScript(projects:ProjectData[]):boolean {
  const seen=new WeakSet<object>(); const walk=(value:unknown):boolean=>{if(!value||typeof value!=='object'||seen.has(value))return false;seen.add(value);const item=value as Record<string,unknown>;if(item.kind==='dialogue_line'&&item.data&&typeof item.data==='object'){const data=item.data as Record<string,unknown>;if(data.scriptKind!=null||data.scriptNumber!=null||data.sourceAnchor!=null)return true;}return Object.values(value).some(walk);};return projects.some(walk);
+}
+function detectTrialFeatures(projects: ProjectData[]): string[] {
+ const found = new Set<string>(), seen = new WeakSet<object>(); const walk = (value: unknown): void => { if (!value || typeof value !== 'object' || seen.has(value)) return; seen.add(value); const item = value as Record<string, unknown>; if (item.kind === 'trace' && item.data && typeof item.data === 'object') { const data = item.data as Record<string, unknown>; if (data.expectation) found.add('regression-expectation-v1'); if (data.correctionAnchor) found.add('trial-correction-v1'); } Object.values(value).forEach(walk); }; projects.forEach(walk); return [...found].sort();
 }
