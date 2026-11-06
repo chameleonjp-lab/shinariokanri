@@ -141,7 +141,7 @@ export function WritingWorkspace({ project, initialAxis = 'chapter', worldSnapsh
             </span>}
           </header>
           {!lane.sceneIds.length && <p className="field-hint">場面はまだありません。</p>}
-          <WindowedList as="ol" className="story-lane-scenes" items={sceneIds.map(id=>({id}))} selectedId={activeSceneId} scope={`writing-scenes:${project.projectId}:${axis}:${lane.id}:${arcOrder}`} label={`${lane.label}の場面`} size={20} searchText={({id})=>sceneTitle(project,id)} render={({id:sceneId}, index) => {
+          <WindowedList as="ol" className="story-lane-scenes" items={sceneIds.map(id=>({id}))} selectedId={activeSceneId} scope={`writing-scenes:${project.projectId}:${axis}:${lane.id}:${arcOrder}`} label={`${lane.label}の本文一覧`} size={20} searchText={({id})=>sceneTitle(project,id)} render={({id:sceneId}, index) => {
               const scene = project.entities.find((entity): entity is Entity<'scene'> => entity.id === sceneId && entity.kind === 'scene');
               if (!scene) return null;
               const entry = arc?.entries.find(item => item.scene.id === sceneId);
