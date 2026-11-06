@@ -1,0 +1,70 @@
+import { describe, expect, it } from 'vitest';
+import { createEntity, createProject, textToRichText, validateProject } from '../src/domain/model';
+import { parseTwee, importTweeAlternative } from '../src/domain/flowStructure';
+import { exportTweeAlternative, exportProject } from '../src/domain/exports';
+import { headAlternativeContent, rollbackAlternativeHead } from '../src/domain/writingWorkspace';
+import { sealAuthorAlternative, validateAuthorAlternatives } from '../src/domain/authorAlternativeIntegrity';
+import { ARCHIVE_LIMITS } from '../src/storage/json';
+
+export const source = ':: 開始\n門😀\n[[左へ->左]]\n[[右へ->右]]\n<<set $secret = 1>>\n\n:: 左\n左の本文\n\n:: 右\n右の本文';
+describe('limited author Twee interchange', () => {
+ it('preflights three passages, ordered choices and unsupported original with locations', () => {
+  const parsed = parseTwee(source);
+  expect(parsed.passages.map(p => p.name)).toEqual(['開始','左','右']);
+  expect(parsed.passages[0]).toMatchObject({body:'門😀',links:[{label:'左へ',target:'左'},{label:'右へ',target:'右'}]});
+  expect(parsed.issues).toEqual([expect.objectContaining({line:5,original:'<<set $secret = 1>>',blocking:false})]);
+  expect(parsed.original).toBe(source);
+ });
+ it('never guesses duplicate or missing targets and preserves malformed syntax', () => {
+  for (const raw of [':: A\n[[B]]\n:: B\nb\n:: B\nc',':: A\n[[missing]]']) {
+   const parsed=parseTwee(raw); expect(parsed.issues.some(i=>i.blocking)).toBe(true);
+   expect(()=>importTweeAlternative(createProject(),parsed,'import')).toThrow(); expect(parsed.original).toBe(raw);
+  }
+  const parsed=parseTwee(':: A\n<script>globalThis.bad=1</script>\n(set: $x to 2)\n[[bad][code]]');
+  expect(parsed.issues).toHaveLength(3); expect(parsed.passages[0].body).toBe('');
+  expect((globalThis as Record<string,unknown>).bad).toBeUndefined();
+ });
+ it('bounds raw input, rejects blank and refuses forged preview state',()=>{
+  expect(()=>parseTwee(' ')).toThrow(); expect(()=>parseTwee('x'.repeat(ARCHIVE_LIMITS.fieldBytes+1))).toThrow();
+  const parsed=parseTwee(source); parsed.passages[0].name='forged';
+  expect(()=>importTweeAlternative(createProject(),parsed,'import')).toThrow();
+ });
+ it('forks without changing canonical, seals, validates and reverses import as a whole version', async () => {
+  const project=createProject('canonical'), before=JSON.stringify(project);
+  const alternative=await sealAuthorAlternative(importTweeAlternative(project,parseTwee(source),'Twee案'));
+  expect(JSON.stringify(project)).toBe(before); expect(alternative.versions).toHaveLength(2);
+  const content=headAlternativeContent(alternative);
+  expect(validateProject({...content,history:[],snapshots:[]}).ok).toBe(true);
+  expect(await validateAuthorAlternatives(project.projectId,[alternative],{validateContent:content=>validateProject({...content,history:[],snapshots:[]})})).toEqual([]);
+  expect(content.entities.filter(e=>e.kind==='scene')).toHaveLength(3);
+  expect(content.entities.filter(e=>e.kind==='flow_edge').map(e=>e.kind==='flow_edge'&&e.data.label)).toEqual(['左へ','右へ']);
+  expect(headAlternativeContent(rollbackAlternativeHead(alternative,alternative.versions[0].id))).toEqual(alternative.baseContent);
+ });
+ it('exports stable supported prose/targets/order with omission preflight and separate original recovery',()=>{
+  const alternative=importTweeAlternative(createProject(),parseTwee(source),'Twee案');
+  const result=exportTweeAlternative(headAlternativeContent(alternative));
+  expect(result.omissions.some(o=>o.includes('未対応'))).toBe(true);
+  expect(result.originals[0].content).toBe(source); expect(result.artifact?.content).not.toContain('secret');
+  expect(parseTwee(result.artifact!.content).passages.map(({name,body,links})=>({name,body,links:links.map(({label,target})=>({label,target}))}))).toEqual(parseTwee(source).passages.map(({name,body,links})=>({name,body,links:links.map(({label,target})=>({label,target}))})));
+  const content=headAlternativeContent(alternative); content.entities.push(createEntity(content.projectId,'dialogue_line','字幕',{scriptKind:'subtitle',scriptNumber:9}));
+  expect(exportTweeAlternative(content).omissions.some(o=>o.includes('scriptKind')&&o.includes('scriptNumber'))).toBe(true);
+ });
+ it('keeps source private even when a recovery note is explicitly included in reader projection',async()=>{
+  const p=createProject(), alternative=importTweeAlternative(p,parseTwee(source),'Twee案');
+  p.entities=headAlternativeContent(alternative).entities;
+  const note=p.entities.find(e=>e.kind==='note')!; note.status='confirmed';
+  const profile=createEntity(p.projectId,'projection_profile','reader',{audience:'reader',includedIds:[note.id],allowedKinds:['note'],namePolicy:{defaultPolicy:{mode:'replace',replacement:'note'}},publicTitle:'title',publicVersionLabel:'v1'});
+  profile.status='confirmed';p.entities.push(profile); const result=await exportProject(p,{profile:'reader',projectionProfileId:profile.id,targetRevision:p.revision});
+  expect(result.ok,result.ok?'':JSON.stringify(result.issues)).toBe(true); if(result.ok) {expect(result.artifact.content).not.toContain('secret');expect(result.artifact.content).not.toContain('tweeOriginal');}
+ });
+});
+
+it('exports presentation order and never converts literal body markup into executable Twee syntax',()=>{
+ const p=createProject(),chapter=createEntity(p.projectId,'chapter','C');
+ const a=createEntity(p.projectId,'scene','A',{chapterId:chapter.id,body:textToRichText('plain\n<<run dangerous>>\n[[accidental]]\n:: header')}),b=createEntity(p.projectId,'scene','B',{chapterId:chapter.id,body:textToRichText('B body')});
+ chapter.data.sceneIds=[b.id,a.id];p.entities=[chapter,a,b];
+ const result=exportTweeAlternative(p);
+ expect(parseTwee(result.artifact!.content).passages.map(p=>p.name)).toEqual(['B','A']);
+ expect(result.artifact!.content).not.toContain('<<run');expect(result.artifact!.content).not.toContain('[[accidental]]');expect(result.artifact!.content).not.toContain(':: header');
+ expect(result.omissions.length).toBeGreaterThan(0);expect(result.originals.some(a=>a.content.includes('dangerous'))).toBe(true);
+});

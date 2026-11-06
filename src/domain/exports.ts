@@ -513,3 +513,5 @@ async function buildPlayableArchive(projection:PublicProjection,versionLabel:str
  files['manifest.json']=strToU8(JSON.stringify({format:'scenario-playable-package',formatVersion:'1.0.0',files:manifestFiles,contentVersionId:payload.contentVersionId,externalEvidence:'not_included',assetBytesIncluded:assets.complete},null,2));
  return {filename:'playable-preview.zip',mimeType:'application/zip',content:'',bytes:new Uint8Array(zipSync(files,{level:6}))};
 }
+
+export {exportTweeAlternative} from './twee';
