@@ -1,7 +1,7 @@
 import type { Entity, ID, ProjectData } from './types';
 import { collectReferences, newId } from './model';
 import { adoptedRecord } from './adoption';
-import { resolveReuseContent, reuseOrigin } from './reuse';
+import { resolveReuseContent, reuseFieldOrigin, reuseOrigin } from './reuse';
 import { measureText } from './textMetrics';
 
 function stable(value: unknown): string {
@@ -102,8 +102,10 @@ function writingCountView(project: ProjectData) {
    if(entity.kind!=='scene'&&entity.kind!=='dialogue_line'){unknown.add(id);continue;}
    if(entity.kind==='scene')pending.push(...entity.data.dialogueLineIds??[]);
    const blocks=entity.kind==='scene'?entity.data.body:entity.data.text;
+   // Body ownership follows that field through reuse, independently of scene/link overrides.
+   const contentId=entity.kind==='scene'?(reuseFieldOrigin(view,id,'body')?.entityId??id):key(id);
    // Remapped block IDs and ruby do not change authored text; changed fixed source text does.
-   const identity=JSON.stringify([entity.kind,key(id),blocks.map(block=>block.text)]);
+   const identity=JSON.stringify([entity.kind,contentId,blocks.map(block=>block.text)]);
    if(content.has(identity))continue;content.add(identity);
    for(const block of blocks)characters+=measureText(block.text).codePoints;
   }

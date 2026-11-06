@@ -44,6 +44,57 @@ describe('optional writing goals and reproducible Unicode counts',()=>{
   const source=p.entities.find(e=>e.id===f.common.id)!;if(source.kind==='scene')source.data.body=textToRichText('改稿');
   expect(writingCounts(p).characters).toBe(14);
  });
+ it.each(['dialogueLineIds','blockIds'] as const)('counts an inherited body once when only %s is overridden',async field=>{
+  const p=createProject('本文以外だけの上書き'),source=createEntity(p.projectId,'scene','本文の共通元',{body:textToRichText('ABCD'),dialogueLineIds:[],blockIds:[]}),use=createEntity(p.projectId,'scene','リンクだけ上書き',{dialogueLineIds:[],blockIds:[]});
+  const chapter=createEntity(p.projectId,'chapter','同じ本文の章',{sceneIds:[source.id,use.id]}),task=createEntity(p.projectId,'production_task','同じ本文の作業',{targetIds:[chapter.id,source.id,use.id],stage:'writing',progress:'todo'});
+  p.entities.push(source,use,chapter,task);
+  const candidate=(await prepareReuse(p,{ownerId:use.id,sourceId:source.id,mode:'override',overrideFields:[field]})).candidate;
+  expect(validateProject(candidate)).toMatchObject({ok:true});
+  expect(writingCounts(candidate).characters).toBe(4);
+  expect(writingCounts(candidate,chapter.id).characters).toBe(4);
+  expect(writingCounts(candidate,task.id).characters).toBe(4);
+  expect(productionWorkload(candidate,[source.id,use.id,use.id])).toMatchObject({uniqueScenes:2,reuseSites:1,routeOccurrences:3,routeWritingCharacters:12});
+ });
+ it('follows overridden dialogue links while sharing their inherited scene body',async()=>{
+  const p=createProject('本文共有と台詞の差'),line=createEntity(p.projectId,'dialogue_line','使用先だけの台詞',{text:textToRichText('ZZ')}),source=createEntity(p.projectId,'scene','本文の共通元',{body:textToRichText('ABCD'),dialogueLineIds:[]}),use=createEntity(p.projectId,'scene','台詞だけ変更',{dialogueLineIds:[line.id]});
+  const chapter=createEntity(p.projectId,'chapter','本文共有の章',{sceneIds:[source.id,use.id]}),task=createEntity(p.projectId,'production_task','使用先を書く',{targetIds:[use.id],stage:'writing',progress:'todo'});
+  p.entities.push(line,source,use,chapter,task);
+  const candidate=(await prepareReuse(p,{ownerId:use.id,sourceId:source.id,mode:'override',overrideFields:['dialogueLineIds']})).candidate;
+  expect(validateProject(candidate)).toMatchObject({ok:true});
+  expect(writingCounts(candidate).characters).toBe(6);
+  expect(writingCounts(candidate,chapter.id).characters).toBe(6);
+  expect(writingCounts(candidate,task.id).characters).toBe(6);
+  expect(productionWorkload(candidate,[source.id,use.id])).toMatchObject({uniqueScenes:2,uniqueLines:1,routeOccurrences:2,routeWritingCharacters:10});
+ });
+ it('counts a local body override once through two subsequent reference levels',async()=>{
+  const p=createProject('本文上書きへの固定参照'),source=createEntity(p.projectId,'scene','共通元',{body:textToRichText('ABCD'),dialogueLineIds:[]}),own=createEntity(p.projectId,'scene','本文上書き',{body:textToRichText('XY'),dialogueLineIds:[]}),first=createEntity(p.projectId,'scene','上書きを再利用'),second=createEntity(p.projectId,'scene','さらに再利用');
+  const chapter=createEntity(p.projectId,'chapter','再利用を並べる章',{sceneIds:[source.id,own.id,first.id,second.id]}),task=createEntity(p.projectId,'production_task','再利用を執筆',{targetIds:[chapter.id,first.id],stage:'writing',progress:'todo'});
+  p.entities.push(source,own,first,second,chapter,task);
+  let candidate=(await prepareReuse(p,{ownerId:own.id,sourceId:source.id,mode:'override',overrideFields:['body']})).candidate;
+  candidate=(await prepareReuse(candidate,{ownerId:first.id,sourceId:own.id,mode:'reference'})).candidate;
+  expect(validateProject(candidate)).toMatchObject({ok:true});expect(writingCounts(candidate).characters).toBe(6);
+  candidate=(await prepareReuse(candidate,{ownerId:second.id,sourceId:first.id,mode:'reference'})).candidate;
+  expect(validateProject(candidate)).toMatchObject({ok:true});
+  expect(writingCounts(candidate).characters).toBe(6);
+  expect(writingCounts(candidate,chapter.id).characters).toBe(6);
+  expect(writingCounts(candidate,task.id).characters).toBe(6);
+  expect(productionWorkload(candidate,[source.id,own.id,first.id,second.id])).toMatchObject({uniqueScenes:2,reuseSites:3,routeOccurrences:4,routeWritingCharacters:10});
+  candidate.entities.reverse();expect(writingCounts(candidate).characters).toBe(6);
+ });
+ it('keeps identical local body overrides independent while deduplicating their references',async()=>{
+  const p=createProject('同じ文を独立に上書き'),source=createEntity(p.projectId,'scene','共通元',{body:textToRichText('ABCD')}),a=createEntity(p.projectId,'scene','独立稿A',{body:textToRichText('XY')}),b=createEntity(p.projectId,'scene','独立稿B',{body:textToRichText('XY')}),useA=createEntity(p.projectId,'scene','Aへの参照'),useB=createEntity(p.projectId,'scene','Bへの参照');
+  const chapter=createEntity(p.projectId,'chapter','独立稿と再利用の章',{sceneIds:[source.id,a.id,b.id,useA.id,useB.id]}),task=createEntity(p.projectId,'production_task','独立稿を書く',{targetIds:[chapter.id],stage:'writing',progress:'todo'});
+  p.entities.push(source,a,b,useA,useB,chapter,task);
+  let candidate=(await prepareReuse(p,{ownerId:a.id,sourceId:source.id,mode:'override',overrideFields:['body']})).candidate;
+  candidate=(await prepareReuse(candidate,{ownerId:b.id,sourceId:source.id,mode:'override',overrideFields:['body']})).candidate;
+  candidate=(await prepareReuse(candidate,{ownerId:useA.id,sourceId:a.id,mode:'reference'})).candidate;
+  candidate=(await prepareReuse(candidate,{ownerId:useB.id,sourceId:b.id,mode:'reference'})).candidate;
+  expect(validateProject(candidate)).toMatchObject({ok:true});
+  expect(writingCounts(candidate).characters).toBe(8);
+  expect(writingCounts(candidate,chapter.id).characters).toBe(8);
+  expect(writingCounts(candidate,task.id).characters).toBe(8);
+  expect(productionWorkload(candidate,[source.id,a.id,b.id,useA.id,useB.id])).toMatchObject({uniqueScenes:3,reuseSites:4,routeOccurrences:5,routeWritingCharacters:12});
+ });
  it('measures the verified fixed edition of a saved route after the live body changes',async()=>{
   const f=story();let reading=await startChapterReading(f.p,{sceneIds:[f.common.id,f.a.id,f.common.id]});
   for(let visit=0;visit<3;visit++)reading=presentNextChapterScene(f.p,reading);
