@@ -544,12 +544,13 @@ export interface SceneMovePreview {
 }
 /** Select by stable scene IDs, rather than a presentation number that may change. */
 export function previewSceneMove(project: ProjectData, sceneId: ID, chapterId: ID, beforeSceneId: ID | null): SceneMovePreview {
-  const scene = orderedScenes(project).find(item => item.id === sceneId);
-  const chapter = orderedChapters(project).find(item => item.id === chapterId);
-  const destinations = orderedScenes(project, chapterId).filter(item => item.id !== sceneId);
+  const scene = authoringPresentationScenes(project).find(item => item.id === sceneId);
+  const chapters = project.entities.filter((entity): entity is Entity<'chapter'> => entity.kind === 'chapter' && !entity.deletedAt);
+  const chapter = chapters.find(item => item.id === chapterId);
+  const destinations = canonicalPresentationScenes(project, chapterId, true).filter(item => item.id !== sceneId);
   const index = beforeSceneId === null ? destinations.length : destinations.findIndex(item => item.id === beforeSceneId);
   if (!scene || !chapter || index < 0) throw new Error('移動先か場面が変わりました。移す場所を選び直してください。');
-  const sourceChapter = orderedChapters(project).find(item => item.data.sceneIds.includes(sceneId) || item.id === scene.data.chapterId);
+  const sourceChapter = chapters.find(item => item.data.sceneIds.includes(sceneId) || item.id === scene.data.chapterId);
   return {projectId:project.projectId, revision:project.revision, sceneId, chapterId, beforeSceneId,
     source:`${sourceChapter?.name || '章に未配置'}・${scene.name || '名称未設定の場面'}`,
     destination:chapter.name || '名称未設定の章', beforeName:destinations[index - 1]?.name || '章の先頭', afterName:destinations[index]?.name || '章末'};
@@ -557,10 +558,10 @@ export function previewSceneMove(project: ProjectData, sceneId: ID, chapterId: I
 export function applySceneMove(project: ProjectData, preview: SceneMovePreview): ProjectData {
   if (project.projectId !== preview.projectId || project.revision !== preview.revision) throw new Error('確認後に作品が変わりました。移す場所を選び直してください。');
   previewSceneMove(project, preview.sceneId, preview.chapterId, preview.beforeSceneId);
-  // Canonicalize the destination's visible order, including old unlisted scenes.
+  // Preserve the full authoring order, including rejected and old unlisted scenes.
   const next = editableProjectCopy(project);
   const destination = next.entities.find((entity): entity is Entity<'chapter'> => entity.id === preview.chapterId && entity.kind === 'chapter')!;
-  destination.data.sceneIds = orderedScenes(project, preview.chapterId).filter(scene => scene.id !== preview.sceneId).map(scene => scene.id);
+  destination.data.sceneIds = canonicalPresentationScenes(project, preview.chapterId, true).filter(scene => scene.id !== preview.sceneId).map(scene => scene.id);
   const index = preview.beforeSceneId === null ? destination.data.sceneIds.length : destination.data.sceneIds.indexOf(preview.beforeSceneId);
   return moveScenePresentation(next, preview.sceneId, preview.chapterId, index);
 }

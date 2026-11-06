@@ -98,3 +98,37 @@ it('reuses a retained capture ID after a committed save is interrupted before dr
   expect(restarted.entities).toHaveLength(1);
   expect(() => notes.prepareQuickNote(first, '異なる一文', id)).toThrow(/保存済み/);
 });
+it.each(['same chapter', 'cross chapter', 'cross rejected chapter'] as const)('retains rejected siblings in %s moves, preview, native undo, references and world dates', async mode => {
+  const db = store(), project = createProject('不採用の順序を保持');
+  const destination = createEntity(project.projectId, 'chapter', '移動先');
+  if (mode === 'cross rejected chapter') destination.status = 'rejected';
+  const a = createEntity(project.projectId, 'scene', 'A', {chapterId:destination.id});
+  const r = createEntity(project.projectId, 'scene', 'R', {chapterId:destination.id}); r.status = 'rejected';
+  const b = createEntity(project.projectId, 'scene', 'B', {chapterId:destination.id});
+  const source = mode === 'same chapter' ? destination : createEntity(project.projectId, 'chapter', '移動元');
+  const c = createEntity(project.projectId, 'scene', 'C', {chapterId:source.id});
+  const sourceRejected = createEntity(project.projectId, 'scene', '元の不採用', {chapterId:source.id}); sourceRejected.status = 'rejected';
+  const otherRejectedChapter = createEntity(project.projectId, 'chapter', '無関係の不採用章'); otherRejectedChapter.status = 'rejected';
+  const other = createEntity(project.projectId, 'scene', '無関係の場面', {chapterId:otherRejectedChapter.id}); otherRejectedChapter.data.sceneIds = [other.id];
+  destination.data.sceneIds = [a.id, r.id, b.id, ...(source === destination ? [sourceRejected.id,c.id] : [])];
+  if (source !== destination) source.data.sceneIds = [sourceRejected.id,c.id];
+  const event = createEntity(project.projectId, 'event', '世界の日', {time:{mode:'instant',at:'12345678901234567890',calendarId:project.calendarId}});
+  c.data.eventIds = [event.id]; r.data.eventIds = [event.id];
+  const node = createEntity(project.projectId, 'flow_node', 'Cへの分岐', {sceneId:c.id});
+  project.entities = [destination,a,r,b,...(source === destination ? [] : [source]),sourceRejected,c,otherRejectedChapter,other,event,node];
+  const initial = (await db.saveProject(project,{reason:'移動前'})).project;
+  const preview = writing.previewSceneMove(initial,c.id,destination.id,b.id);
+  expect(preview.beforeName).toBe('R'); expect(preview.afterName).toBe('B');
+  const saved = await db.saveProject(writing.applySceneMove(initial,preview),{reason:'選択した位置へ移動'});
+  const expectedOrder = [a.id,r.id,c.id,b.id,...(source === destination ? [sourceRejected.id] : [])];
+  expect(saved.project.entities.find(entity=>entity.id===destination.id)?.data).toMatchObject({sceneIds:expectedOrder});
+  expect(writing.authoringPresentationScenes(saved.project).filter(scene=>scene.data.chapterId===destination.id).map(scene=>scene.id)).toEqual(expectedOrder);
+  for (const entity of initial.entities.filter(entity=>![source.id,destination.id,c.id].includes(entity.id))) {
+    expect(saved.project.entities.find(record=>record.id===entity.id)?.data).toEqual(entity.data);
+  }
+  expect(saved.project.entities.find(entity=>entity.id===c.id)?.data).toEqual({...c.data,chapterId:destination.id});
+  expect(writing.buildChapterReadingSequence(saved.project).some(entry=>entry.scene.id===r.id||entry.scene.id===sourceRejected.id||entry.scene.id===other.id)).toBe(false);
+  if (destination.status === 'rejected') expect(writing.buildChapterReadingSequence(saved.project).some(entry=>entry.scene.id===c.id)).toBe(false);
+  const undone = (await db.undo(project.projectId,saved.operationId)).project;
+  expect(undone.entities.map(({id,kind,status,data})=>({id,kind,status,data}))).toEqual(initial.entities.map(({id,kind,status,data})=>({id,kind,status,data})));
+});
