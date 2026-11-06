@@ -27,6 +27,7 @@ async function add(page: Page, kind: string, name: string, configure?: () => Pro
 test('保存した複合一覧の再適用、一括変更、索引分類を通常フォームで行う', async ({ page }) => {
   await create(page); await add(page, 'character', '桜井あかり');
   await navigate(page, /^検索/); await page.getByLabel('作品内を検索', { exact: true }).fill('あかり');
+  await page.getByText('今の検索結果を一覧に保存', { exact: true }).click();
   await page.getByLabel('一覧の名前', { exact: true }).fill('人物候補');
   await page.getByRole('button', { name: '一覧を保存', exact: true }).click();
   await expect(page.locator('.search-page [role=status]').first()).toContainText('一覧を保存しました');

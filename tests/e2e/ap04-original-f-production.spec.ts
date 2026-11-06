@@ -48,6 +48,7 @@ test('AT-F51 世界日付の変更と六工程の実制作期限を分け、執�
     await expect(row).toContainText('制作期限 2026-12-10 / Asia/Tokyo');
   }
   await navigate(page, /^検索/);
+  await page.getByText('詳しい検索条件', { exact: true }).click();
   await page.getByLabel('情報の種類', { exact: true }).selectOption('scene');
   await page.getByLabel('制作進捗で絞り込む', { exact: true }).selectOption('todo');
   await expect(page.locator('.entity-card').filter({ has: page.getByRole('heading', { name: scene.name, exact: true }) })).toBeVisible();
