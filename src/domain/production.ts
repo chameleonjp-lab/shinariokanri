@@ -52,13 +52,30 @@ export async function reconcileDeliverables(before: ProjectData, candidate: Proj
  });
  // A fixed edition owns its anchor IDs. A live edit cannot invalidate that unchanged edition.
  const liveReference=(entity:Entity,path:string)=>{let value:unknown=entity;for(const part of path.split(/[.\[\]]+/).filter(Boolean)){if(value&&typeof value==='object'){const object=value as Record<string,unknown>,version=object.sourceVersionId??object.targetSnapshotId??((entity.kind==='trace'||entity.kind==='checkpoint')?object.contentVersionId:undefined);if(typeof version==='string'&&version!==candidate.projectId)return false;value=object[part];}else return true;}return true;};
- // Scene containment must not invalidate sibling frames/cues. A task explicitly
- // targeting the whole scene still owns every contained line, at every stage.
- // Historical ancestry does not change copied content.
- const reverse=new Map<ID,ID[]>();for(const entity of entities)if(!entity.deletedAt&&!['rejected','alternate'].includes(entity.status))for(const reference of collectReferences(entity))if(!(entity.kind==='scene'&&reference.path.startsWith('data.dialogueLineIds'))&&!reference.path.startsWith('data.lineage')&&!reference.path.startsWith('data.originLineIds')&&liveReference(entity,reference.path)){const uses=reverse.get(reference.id);if(uses)uses.push(entity.id);else reverse.set(reference.id,[entity.id]);}
- for(const task of entities)if(task.kind==='production_task'&&!task.deletedAt&&!['rejected','alternate'].includes(task.status))for(const id of task.data.targetIds){const scene=current.get(id);if(scene?.kind==='scene'&&!scene.deletedAt&&!['rejected','alternate'].includes(scene.status))for(const lineId of scene.data.dialogueLineIds??[]){const uses=reverse.get(lineId);if(uses)uses.push(task.id);else reverse.set(lineId,[task.id]);}}
- const affected=new Set(changedData),sourceAffected=new Set<ID>(),queue=[...affected];for(let at=0;at<queue.length;at++)for(const id of reverse.get(queue[at])??[]){sourceAffected.add(id);if(!affected.has(id)){affected.add(id);queue.push(id);}}
- const next={...candidate,entities:entities.map(entity=>{if(!affected.has(entity.id)||entity.deletedAt||['rejected','alternate'].includes(entity.status))return entity;
+ // Keep every typed owner/dependency path, including scene → chapter → task.
+ // Contained dialogue changes affect an owner's aggregate work, not its own
+ // body paragraphs. That distinction prevents sibling source anchors from
+ // propagating a row edit into unrelated cues/frames and their preparation.
+ const anchorReference=(entity:Entity,path:string)=>{
+  const parts=path.split(/[.\[\]]+/).filter(Boolean),field=parts.pop();
+  if(!['entityId','lineId','blockId'].includes(field??''))return false;
+  let value:unknown=entity;
+  for(const part of parts){if(!value||typeof value!=='object')return false;value=(value as Record<string,unknown>)[part];}
+  return !!value&&typeof value==='object'&&typeof (value as Record<string,unknown>).entityId==='string';
+ };
+ const reverse=new Map<ID,{id:ID;containment:boolean;anchor:boolean}[]>();
+ for(const entity of entities)if(!entity.deletedAt&&!['rejected','alternate'].includes(entity.status))for(const reference of collectReferences(entity))if(!reference.path.startsWith('data.lineage')&&!reference.path.startsWith('data.originLineIds')&&liveReference(entity,reference.path)){
+  const edge={id:entity.id,containment:entity.kind==='scene'&&reference.path.startsWith('data.dialogueLineIds'),anchor:anchorReference(entity,reference.path)},uses=reverse.get(reference.id);
+  if(uses)uses.push(edge);else reverse.set(reference.id,[edge]);
+ }
+ const affected=new Set(changedData),ownerAffected=new Set<ID>(),sourceAffected=new Set<ID>(),queue=[...affected].map(id=>({id,ownerOnly:false}));
+ for(let at=0;at<queue.length;at++)for(const edge of reverse.get(queue[at].id)??[]){
+  if(queue[at].ownerOnly&&edge.anchor)continue;
+  const ownerOnly=queue[at].ownerOnly||edge.containment,reached=ownerOnly?ownerAffected:affected;
+  sourceAffected.add(edge.id);
+  if(!reached.has(edge.id)){reached.add(edge.id);queue.push({id:edge.id,ownerOnly});}
+ }
+ const next={...candidate,entities:entities.map(entity=>{if(!affected.has(entity.id)&&!ownerAffected.has(entity.id)||entity.deletedAt||['rejected','alternate'].includes(entity.status))return entity;
   if(entity.kind==='storyboard_frame'&&previous.has(entity.id))return {...entity,status:'needs_review' as const};
   if(entity.kind==='media_variant'&&previous.has(entity.id))return {...entity,data:{...entity.data,needsReview:true}};
   if(entity.kind==='production_task'&&previous.has(entity.id)&&sourceAffected.has(entity.id)&&entity.data.progress==='done')return {...entity,data:{...entity.data,progress:'needs_review' as const}};
