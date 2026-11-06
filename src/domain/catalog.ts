@@ -483,3 +483,39 @@ function catalogMaintenance(project:ProjectData,stateUses:Map<ID,StateUsage[]>|u
   }
   return findings.sort((a, b) => compareValues(a.kind, b.kind) || compareValues(a.targetIds.join(','), b.targetIds.join(',')));
 }
+
+/** Local author results keep the selecting work and the exact source edition separate. */
+export interface WorkCatalogHit {
+  id: string; workId: string; workName: string; workRevision: string;
+  sourceProjectId: string; sourceName: string; sourceRevision: string;
+  sourceVersionId: string | null; sourceHash: string | null; versionLabel: string;
+  entityId: string; name: string; kind: EntityKind;
+}
+export function searchWorkCatalog(work: ProjectData, worlds: Record<string, ProjectData>, text: string): WorkCatalogHit[] {
+  const editions = [{source:work,content:work,versionId:null as string|null,hash:null as string|null,label:'現在の稿'}];
+  for (const ref of work.worldReferences) {
+    const source=Object.values(worlds).find(world=>world.projectId===ref.projectId && world.snapshots.some(snapshot=>snapshot.id===ref.immutableSnapshotId && snapshot.contentHash===ref.contentHash));
+    const snapshot=source?.snapshots.find(snapshot=>snapshot.id===ref.immutableSnapshotId && snapshot.contentHash===ref.contentHash);
+    if(source&&snapshot)editions.push({source,content:{...snapshot.content,snapshots:[],history:[]},versionId:snapshot.id,hash:snapshot.contentHash,label:snapshot.versionLabel});
+  }
+  return editions.flatMap(({source,content,versionId,hash,label})=>filterCatalogEntities(content,{op:'text',value:text}).map(entity=>({
+    id:JSON.stringify([work.projectId,work.revision,source.projectId,versionId,entity.id]),
+    workId:work.projectId,workName:work.name,workRevision:work.revision,
+    sourceProjectId:source.projectId,sourceName:content.name,sourceRevision:content.revision,
+    sourceVersionId:versionId,sourceHash:hash,versionLabel:label,entityId:entity.id,name:entity.name,kind:entity.kind,
+  })));
+}
+/** Re-resolve against a freshly loaded work before opening. Names never identify a target. */
+export function resolveWorkCatalogHit(work: ProjectData, worlds: Record<string, ProjectData>, hit: WorkCatalogHit): {source:ProjectData;entity:Entity}|undefined {
+  if(work.projectId!==hit.workId||work.revision!==hit.workRevision)return;
+  if(hit.sourceVersionId===null){
+    if(hit.sourceProjectId!==work.projectId||hit.sourceRevision!==work.revision||hit.sourceHash!==null)return;
+    const entity=work.entities.find(entity=>entity.id===hit.entityId&&!entity.deletedAt);
+    return entity?{source:work,entity}:undefined;
+  }
+  if(!work.worldReferences.some(ref=>ref.projectId===hit.sourceProjectId&&ref.immutableSnapshotId===hit.sourceVersionId&&ref.contentHash===hit.sourceHash))return;
+  const source=Object.values(worlds).find(world=>world.projectId===hit.sourceProjectId&&world.snapshots.some(snapshot=>snapshot.id===hit.sourceVersionId&&snapshot.contentHash===hit.sourceHash));
+  const snapshot=source?.snapshots.find(snapshot=>snapshot.id===hit.sourceVersionId&&snapshot.contentHash===hit.sourceHash);
+  const entity=snapshot?.content.entities.find(entity=>entity.id===hit.entityId&&!entity.deletedAt);
+  return source&&entity&&snapshot?.content.revision===hit.sourceRevision?{source,entity}:undefined;
+}

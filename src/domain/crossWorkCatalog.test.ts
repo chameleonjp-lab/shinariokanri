@@ -1,0 +1,21 @@
+import {expect,it} from 'vitest';
+import {createEntity,createProject,newId} from './model';
+import {searchWorkCatalog,resolveWorkCatalogHit} from './catalog';
+import type {ProjectSnapshot} from './types';
+it('keeps same-name entities and exact fixed world editions distinguishable',()=>{
+  const work=createProject('同名作品'),world=createProject('世界');
+  const person=createEntity(work.projectId,'character','光'),borrowed=createEntity(world.projectId,'character','光');
+  work.entities=[person];world.entities=[borrowed];
+  const {history:_h,snapshots:_s,...content}=world;
+  const old:ProjectSnapshot={id:newId(),versionLabel:'初稿',contentHash:'old-hash',createdAt:new Date().toISOString(),content};
+  world.snapshots=[old,{...old,id:newId(),versionLabel:'改稿',contentHash:'new-hash',content:{...content,entities:[{...borrowed,name:'別の名前'}]}}];
+  work.worldReferences=[{projectId:world.projectId,immutableSnapshotId:old.id,contentHash:old.contentHash}];
+  const hits=searchWorkCatalog(work,{world},'ひかり');expect(hits).toEqual([]);
+  const found=searchWorkCatalog(work,{world},'光');expect(found).toHaveLength(2);
+  expect(new Set(found.map(hit=>hit.id)).size).toBe(2);
+  expect(found[1]).toMatchObject({workId:work.projectId,sourceProjectId:world.projectId,sourceVersionId:old.id,sourceRevision:world.revision,versionLabel:'初稿',entityId:borrowed.id});
+  expect(resolveWorkCatalogHit(work,{world},found[1])?.source).toBe(world);
+  expect(resolveWorkCatalogHit({...work,revision:'2'},{world},found[1])).toBeUndefined();
+  expect(resolveWorkCatalogHit(work,{},found[1])).toBeUndefined();
+  expect(searchWorkCatalog(work,{world:{...world,snapshots:[world.snapshots[1]]}},'光')).toHaveLength(1);
+});

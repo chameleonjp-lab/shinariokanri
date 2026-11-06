@@ -489,7 +489,15 @@ export class ScenarioStore {
   derivedIndexRetention(){return {owners:this.derivedOwners.size,...this.derivedBudget.snapshot()};}
   private authorAccess:Map<string,string>|null=null;
   private accessGeneration=0;
-  setAuthorAccess(roles:Record<string,string>|null){this.authorAccess=roles?new Map(Object.entries(roles)):null;this.accessGeneration++;for(const id of this.cacheEpochs.keys())this.invalidateProjectCache(id);}
+  private catalogListeners=new Set<()=>void>();
+  private catalogEpoch=0;
+  get catalogGeneration(){return this.catalogEpoch;}
+  subscribeCatalogChanges=(listener:()=>void)=>{this.catalogListeners.add(listener);return ()=>{this.catalogListeners.delete(listener);};};
+  private catalogChanged(){
+    this.catalogEpoch++;
+    for(const listener of this.catalogListeners){try{listener();}catch{/* A view observer cannot change the outcome of a completed save. */}}
+  }
+  setAuthorAccess(roles:Record<string,string>|null){this.authorAccess=roles?new Map(Object.entries(roles)):null;this.accessGeneration++;for(const id of this.cacheEpochs.keys())this.invalidateProjectCache(id);this.catalogChanged();}
   /** Publish a fresh authoritative role response only in its original access/lifetime. */
   async refreshAuthorAccess(load:()=>Promise<Record<string,string>>,options:{signal?:AbortSignal;isCurrent?:()=>boolean}={}){
     const access=this.accessGeneration,lifetime=this.cacheLifetime,{signal,isCurrent}=options;checkCancelled(signal);
@@ -521,7 +529,7 @@ export class ScenarioStore {
     this.faultInjector = options.faultInjector;
     this.onSaveMetrics = options.onSaveMetrics;
     this.db = new ScenarioDatabase(options.databaseName ?? (this.accountId ? `scenario-manager-account-${encodeURIComponent(this.accountId)}` : 'scenario-manager-local-v1'));
-    for(const name of ['saveProject','importScenario','putAsset','commitPreparedAck','confirmSyncResolution','bindBootstrapBase','bindConfirmedProject','saveAuthorToolDraft','saveImportDraft','applyReceivedImage','saveWorkspaceInputs','restoreAuthorInputs','restoreAuthorToolDrafts']){const fn=(this as unknown as Record<string,(...args:unknown[])=>Promise<unknown>>)[name].bind(this);Object.defineProperty(this,name,{configurable:true,writable:true,value:async(...args:unknown[])=>{this.activeOperations++;try{return await fn(...args);}finally{this.activeOperations--;}}});}
+    for(const name of ['saveProject','importScenario','putAsset','commitPreparedAck','confirmSyncResolution','bindBootstrapBase','bindConfirmedProject','saveAuthorToolDraft','saveImportDraft','applyReceivedImage','saveWorkspaceInputs','restoreAuthorInputs','restoreAuthorToolDrafts']){const fn=(this as unknown as Record<string,(...args:unknown[])=>Promise<unknown>>)[name].bind(this);Object.defineProperty(this,name,{configurable:true,writable:true,value:async(...args:unknown[])=>{this.activeOperations++;try{const result=await fn(...args);if(['saveProject','importScenario','commitPreparedAck','confirmSyncResolution','bindBootstrapBase','bindConfirmedProject','applyReceivedImage'].includes(name))this.catalogChanged();return result;}finally{this.activeOperations--;}}});}
     const phases:Record<string,ProbePhase>={listProjectSummaries:'store.list',loadEditor:'store.read',listProjectsForEditing:'store.list',getProjectForEditing:'store.read',getProject:'store.fullRead',saveProject:'store.save',historyPage:'store.history',exportProject:'store.export',importScenario:'store.import',writeContent:'writeContent'};
     for(const [name,phase] of Object.entries(phases)){
       const fn=(this as unknown as Record<string,(...args:unknown[])=>Promise<unknown>>)[name].bind(this);
@@ -542,7 +550,7 @@ export class ScenarioStore {
       snapshots.set(snapshot.id, snapshot);
     }
   }
-  close(): void { this.cacheLifetime++; for (const id of this.cacheEpochs.keys()) this.invalidateProjectCache(id); this.db.close(); this.measureCache(); }
+  close(): void { this.cacheLifetime++; this.catalogChanged(); for (const id of this.cacheEpochs.keys()) this.invalidateProjectCache(id); this.db.close(); this.measureCache(); }
   /** Explicit open resets Dexie's failed-open state after an aborted native
    * migration. An already open connection stays open; no data is deleted. */
   async reopen(): Promise<void> { await this.db.open(); }

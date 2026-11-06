@@ -35,7 +35,8 @@ export function useWorkspaceView(projectId: string | null, preferences: Workspac
     void scenarioStore.getViewState(projectId, userId.current, device, WORKSPACE_VIEW_ID).then(stored => {
       const view = mirroredView(projectId, userId.current, device, stored);
       if (!live) return; previous.current = view;
-      if (switching && opening === JSON.stringify([latest.current.preferences, latest.current.selectedId])) {
+      // An explicit target opened with the work takes priority over a saved position.
+      if (switching && latest.current.selectedId === null && opening === JSON.stringify([latest.current.preferences, latest.current.selectedId])) {
         const next = restoreWorkspacePreferences(view); latest.current.restore(next, view?.lastOpenedId ?? null);
         requestAnimationFrame(() => { if (live && latest.current.preferences.page === next.page && latest.current.selectedId === (view?.lastOpenedId ?? null)) window.scrollTo(0, next.scrollY); });
       }
