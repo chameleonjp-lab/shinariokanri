@@ -3,7 +3,7 @@ import {captureRuntimeContent} from './runtimeVersions';
 import {resolveReuseContent} from './reuse';
 import {resolveEventTimes} from './time';
 import type {ContentAnchor,Entity,ProjectData} from './types';
-import type {WorldPoint} from './world';
+import {effectiveWorldContent,type WorldPoint} from './world';
 
 /** A scene must have one resolved instant; an unknown/ranged time never borrows today's state. */
 function writingPoint(project:ProjectData,sourceId:string):WorldPoint{
@@ -20,7 +20,17 @@ export async function resolveCharacterReference(project:ProjectData,anchor:Conte
  const fixed=!!anchor.sourceVersionId&&anchor.sourceVersionId!==project.projectId;
  const snapshot=fixed?project.snapshots.find(snapshot=>snapshot.id===anchor.sourceVersionId):undefined;
  if(fixed&&!snapshot)throw Error('人物の固定版が見つかりません。参照する版を確認してください。');
- const content=fixed?resolveReuseContent(await captureRuntimeContent(project,anchor.sourceVersionId!,{worldSnapshots:Object.fromEntries(project.snapshots.map(snapshot=>[snapshot.id,snapshot.content]))}),project.snapshots):project;
+ let content=project;
+ if(snapshot){
+  // The form combines owner envelopes for reference choices. Capture accepts
+  // only the selected owner's snapshots; external editions stay in its registry.
+  const byOwner=new Map<string,ProjectData>();
+  for(const pin of project.snapshots){const owner=byOwner.get(pin.content.projectId)??{...pin.content,snapshots:[],history:[]};owner.snapshots.push(pin);byOwner.set(pin.content.projectId,owner);}
+  const registry=Object.fromEntries(project.snapshots.map(pin=>[pin.id,pin.content]));
+  const captured=await captureRuntimeContent(byOwner.get(snapshot.content.projectId)!,snapshot.id,{worldSnapshots:registry});
+  const reused=resolveReuseContent(captured,captured.snapshots);
+  content={...reused,...effectiveWorldContent(reused,[...byOwner.values()])};
+ }
  const person=content.entities.find((entity):entity is Entity<'character'>=>entity.id===anchor.entityId&&entity.kind==='character'&&adoptedRecord(entity));
  if(!person)throw Error('この版の人物情報が見つかりません。対象と参照する版を確認してください。');
  const borrowedVersion=project.worldReferences.find(reference=>reference.projectId===person.projectId)?.immutableSnapshotId;

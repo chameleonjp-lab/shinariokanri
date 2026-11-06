@@ -174,3 +174,33 @@ it('reopens only the reviewed fields touched again and keeps the review ID and p
  expect(thirdReviews.find(e=>e.id===birthReview.id)?.data.stage).toBe('verified');
  expect(person.id).toBeTruthy();
 });
+
+for(const stage of ['open','verified'] as const)it(`retains an aggregate ${stage} birth/death obligation when only death changes again`,()=>{
+ const before=createDemoProject(),scene=entity(before,'scene');const firstCandidate=structuredClone(before),person=entity(firstCandidate,'character');person.data.birth={mode:'unknown',reason:'出生の変更'};person.data.death={mode:'unknown',reason:'消息の変更'};
+ const first=addChangeReviews(before,firstCandidate);first.revision='1';entity(first,'character').revision='1';
+ const aggregate=first.entities.find((row):row is Entity<'review'>=>row.kind==='review'&&row.data.target===scene.id)!;aggregate.data.stage=stage;if(stage==='verified')aggregate.customValues['changeReview.reviewedRevision']='1';const original=structuredClone(aggregate);
+ const secondCandidate=structuredClone(first);entity(secondCandidate,'character').data.death={mode:'unknown',reason:'消息の再変更'};
+ const second=addChangeReviews(first,secondCandidate),reviews=second.entities.filter((row):row is Entity<'review'>=>row.kind==='review'&&row.data.target===scene.id);
+ expect(reviews.find(row=>row.id===aggregate.id)).toEqual(original);
+ expect(reviews.some(row=>row.id!==aggregate.id&&row.data.stage==='open'&&row.customValues['changeReview.sourceFields']===JSON.stringify({[person.id]:['data.death']}))).toBe(true);
+ expect(reviews.find(row=>row.id===aggregate.id)!.data.body.map(block=>block.text).join('\n')).toContain('data.birth');
+ expect(validateProject(second).ok).toBe(true);
+});
+
+it('reviews both the previous and next character scenes when an assertion changes subjects',()=>{
+ const before=createDemoProject(),first=entity(before,'character'),firstScene=entity(before,'scene'),second=createEntity(before.projectId,'character',first.name),secondScene=createEntity(before.projectId,'scene','同名の別人の場面',{povId:second.id}),assertion=createEntity(before.projectId,'assertion','所属',{subjectId:first.id,predicate:'member_of',value:{type:'text',value:'組織'},truthKind:'author_truth',validity:emptyValidity()});
+ firstScene.data.povId=first.id;before.entities.push(second,secondScene,assertion);expect(validateProject(before).ok).toBe(true);
+ const candidate=structuredClone(before);(candidate.entities.find(row=>row.id===assertion.id) as Entity<'assertion'>).data.subjectId=second.id;
+ const result=addChangeReviews(before,candidate),reviews=result.entities.filter((row):row is Entity<'review'>=>row.kind==='review'&&[firstScene.id,secondScene.id].includes(row.data.target as string));
+ expect(reviews.map(row=>row.data.target).sort()).toEqual([firstScene.id,secondScene.id].sort());
+ for(const review of reviews){expect(review.data.stage).toBe('open');expect(review.customValues['changeReview.subjectIds']).toContain(first.id);expect(review.customValues['changeReview.subjectIds']).toContain(second.id);}
+ expect(result.entities.find(row=>row.id===firstScene.id)).toEqual(firstScene);expect(result.entities.find(row=>row.id===secondScene.id)).toEqual(secondScene);expect(validateProject(result).ok).toBe(true);
+});
+
+it('retains other source obligations in a pending multi-character aggregate',()=>{
+ const before=createDemoProject(),first=entity(before,'character'),scene=entity(before,'scene'),second=createEntity(before.projectId,'character','別の人物');before.entities.push(second);scene.data.body=[{id:newId(),kind:'paragraph',text:'別の人物',links:[{start:0,end:4,target:{entityId:second.id}}]}];scene.data.povId=first.id;expect(validateProject(before).ok).toBe(true);
+ const changed=structuredClone(before);(changed.entities.find(row=>row.id===first.id) as Entity<'character'>).data.death={mode:'unknown',reason:'人物Aの変更'};(changed.entities.find(row=>row.id===second.id) as Entity<'character'>).data.birth={mode:'unknown',reason:'人物Bの変更'};
+ const pending=addChangeReviews(before,changed);pending.revision='1';pending.entities.find(row=>row.id===first.id)!.revision='1';const aggregate=pending.entities.find((row):row is Entity<'review'>=>row.kind==='review'&&row.data.target===scene.id)!,original=structuredClone(aggregate);
+ const changedAgain=structuredClone(pending);(changedAgain.entities.find(row=>row.id===first.id) as Entity<'character'>).data.death={mode:'unknown',reason:'人物Aの再変更'};const result=addChangeReviews(pending,changedAgain);
+ expect(result.entities.find(row=>row.id===aggregate.id)).toEqual(original);expect(original.customValues['changeReview.sourceIds']).toContain(second.id);expect(original.data.stage).toBe('open');expect(validateProject(result).ok).toBe(true);
+});

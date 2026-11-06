@@ -69,6 +69,7 @@ function active(entity: Entity | undefined): entity is Entity {
 
 function detectSourceChanges(before: ProjectData, candidate: ProjectData): SourceChange[] {
   const nextById = new Map(candidate.entities.map(entity => [entity.id, entity]));
+  const previousById=new Map(before.entities.map(entity=>[entity.id,entity]));
   const result: SourceChange[] = [];
   for (const previous of before.entities) {
     const next = nextById.get(previous.id);
@@ -88,7 +89,7 @@ function detectSourceChanges(before: ProjectData, candidate: ProjectData): Sourc
       for(const key of new Set([...Object.keys(oldValues),...Object.keys(newValues)]))if(stable(oldValues[key])!==stable(newValues[key]))changedFields.push(`${area}.${key}`);
     }
     if(old.deleted!==current.deleted)changedFields.push('$deleted');
-    result.push({ source, sourceRevision: nextRevision(previous.revision),dependencyIds:changeDependencyIds(source,nextById),changedFields });
+    result.push({ source, sourceRevision: nextRevision(previous.revision),dependencyIds:[...new Set([...changeDependencyIds(previous,previousById),...changeDependencyIds(source,nextById)])],changedFields });
   }
   const previousIds=new Set(before.entities.map(entity=>entity.id));
   for(const source of candidate.entities)if(!previousIds.has(source.id)&&source.kind==='assertion'&&!source.deletedAt&&changeDependencyIds(source,nextById).length>1)result.push({source,sourceRevision:nextRevision(source.revision),dependencyIds:changeDependencyIds(source,nextById),changedFields:Object.keys(source.data).map(key=>`data.${key}`)});
@@ -249,7 +250,11 @@ export function addChangeReviews(before: ProjectData, candidate: ProjectData): P
       }]))),
     };
     const related=(existingByTarget.get(target.id)??[]).filter(entity=>reviewFieldsOverlap(entity,impacts));
-    if(related.length)for(const previous of related)replacements.set(previous.id,{...previous,status:'needs_review',data:{...previous.data,...review.data,resolution:previous.data.resolution},customValues:{...previous.customValues,...review.customValues}});
+    // A partially overlapping aggregate still records independent work at its
+    // original version. Keep it intact and create a narrow obligation for the
+    // latest change; only fully covered records can be reopened in place.
+    const replaceable=related.filter(previous=>reviewFieldsCovered(previous,impacts));
+    if(replaceable.length)for(const previous of replaceable)replacements.set(previous.id,{...previous,status:'needs_review',data:{...previous.data,...review.data,resolution:previous.data.resolution},customValues:{...previous.customValues,...review.customValues}});
     else reviews.push(review);
   }
 
@@ -263,6 +268,14 @@ function reviewFieldsOverlap(review:Entity<'review'>,impacts:SourceImpact[]):boo
     return impacts.some(impact=>Array.isArray(fields[impact.source.id])&&impact.changedFields.some(field=>fields[impact.source.id].includes(field)||field==='$deleted'||fields[impact.source.id].includes('$deleted')));
   }catch{return false;}
 }
+function reviewFieldsCovered(review:Entity<'review'>,impacts:SourceImpact[]):boolean{
+  try{
+    const previous=JSON.parse(String(review.customValues['changeReview.sourceFields']??'{}')) as Record<string,string[]>;
+    const current=new Map(impacts.map(impact=>[impact.source.id,impact.changedFields]));
+    return Object.keys(previous).length>0&&Object.entries(previous).every(([id,fields])=>Array.isArray(fields)&&fields.length>0&&fields.every(field=>current.get(id)?.includes(field)||current.get(id)?.includes('$deleted')));
+  }catch{return false;}
+}
+
 function reviewExcerpt(target:Entity,impacts:SourceImpact[]):string|null{
   const dependencies=new Set(impacts.flatMap(impact=>impact.dependencyIds));
   const data=target.data as unknown as Record<string,unknown>;
