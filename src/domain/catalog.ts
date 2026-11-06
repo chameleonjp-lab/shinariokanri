@@ -76,13 +76,14 @@ interface CatalogQueryIndex {
   scenesByEvent: Map<ID, Set<ID>>;
   productionTargets: Map<string, Set<ID>>;
   chapters: Set<ID>;
+  chapterMembers: Map<ID, Set<ID>>;
   foreshadows: Map<ID, Entity<'foreshadow'>>;
   disclosures: Entity<'disclosure'>[];
   sceneByNode: Map<ID, ID>;
 }
 function buildQueryIndex(project: ProjectData,knownRows?:Map<ID,Entity>): CatalogQueryIndex {
   const finish=probeSpan('query.index');probeCount('query.index.builds');probeCount('query.index.rows',project.entities.length);
-  const index: CatalogQueryIndex = { byId:knownRows??new Map(), participantEvents: new Map(), scenesByEvent: new Map(), productionTargets: new Map(), chapters: new Set(), foreshadows: new Map(), disclosures: [], sceneByNode: new Map() };
+  const index: CatalogQueryIndex = { byId:knownRows??new Map(), participantEvents: new Map(), scenesByEvent: new Map(), productionTargets: new Map(), chapters: new Set(), chapterMembers:new Map(), foreshadows: new Map(), disclosures: [], sceneByNode: new Map() };
   const add = <K>(map: Map<K, Set<ID>>, key: K, id: ID) => { let ids = map.get(key); if (!ids) { ids = new Set(); map.set(key, ids); } ids.add(id); };
   // One scan serves all dependency operators in the complete compound query.
   for (const entity of project.entities) {
@@ -90,14 +91,15 @@ function buildQueryIndex(project: ProjectData,knownRows?:Map<ID,Entity>): Catalo
     if(!knownRows)index.byId.set(entity.id, entity);
     switch (entity.kind) {
       case 'event': for (const participant of entity.data.participants ?? []) add(index.participantEvents, participant.characterId, entity.id); break;
-      case 'scene': for (const eventId of entity.data.eventIds) add(index.scenesByEvent, eventId, entity.id); break;
+      case 'scene': for (const eventId of entity.data.eventIds) add(index.scenesByEvent, eventId, entity.id); if(entity.data.chapterId)add(index.chapterMembers,entity.data.chapterId,entity.id);break;
       case 'production_task': add(index.productionTargets, entity.data.progress, entity.id); for (const id of entity.data.targetIds) add(index.productionTargets, entity.data.progress, id); break;
-      case 'chapter': index.chapters.add(entity.id); break;
+      case 'chapter': index.chapters.add(entity.id);for(const id of entity.data.sceneIds)add(index.chapterMembers,entity.id,id);break;
       case 'foreshadow': index.foreshadows.set(entity.id, entity); break;
       case 'disclosure': index.disclosures.push(entity); break;
       case 'flow_node': if (entity.data.sceneId) index.sceneByNode.set(entity.id, entity.data.sceneId); break;
     }
   }
+  for(const ids of index.chapterMembers.values())for(const id of [...ids]){const scene=index.byId.get(id);if(scene?.kind==='scene'&&!scene.deletedAt)for(const lineId of scene.data.dialogueLineIds??[])ids.add(lineId);}
   finish();return index;
 }
 
@@ -108,7 +110,7 @@ export function compileCatalogQuery(project: ProjectData, query: Query): (entity
 function queryIndex(project:ProjectData,evaluation?:DerivedEvaluation):CatalogQueryIndex{
   return evaluation?.get('catalog.dependencies','current',()=>{
     const knownRows=evaluation.peek<Map<ID,Entity>>('collection.rows','current');
-    const value=buildQueryIndex(project,knownRows),members=[...value.participantEvents.values(),...value.scenesByEvent.values(),...value.productionTargets.values()].reduce((n,ids)=>n+ids.size,0);
+    const value=buildQueryIndex(project,knownRows),members=[...value.participantEvents.values(),...value.scenesByEvent.values(),...value.productionTargets.values(),...value.chapterMembers.values()].reduce((n,ids)=>n+ids.size,0);
     return {value,cost:{references:(knownRows?0:2*value.byId.size)+members+value.chapters.size+2*value.foreshadows.size+value.disclosures.length+2*value.sceneByNode.size}};
   })??buildQueryIndex(project);
 }
@@ -143,8 +145,8 @@ function compileQuery(project:ProjectData,query:Query,initial?:DerivedEvaluation
         return entity => entity.kind === 'production_task' && entity.data.progress === query.value || ids?.has(entity.id) === true;
       }
       case 'chapter': {
-        const exists = dependencies().chapters.has(query.chapterId);
-        return entity => exists && (entity.kind === 'chapter' ? entity.id === query.chapterId : entity.kind === 'scene' && entity.data.chapterId === query.chapterId);
+        const current=dependencies(),exists=current.chapters.has(query.chapterId),members=current.chapterMembers.get(query.chapterId);
+        return entity => exists && (entity.kind === 'chapter' ? entity.id === query.chapterId : (entity.kind==='scene'||entity.kind==='dialogue_line')&&(members?.has(entity.id)===true||entity.kind==='scene'&&entity.data.chapterId===query.chapterId));
       }
       case 'participant': {
         const current = dependencies(), events = current.participantEvents.get(query.characterId), scenes = new Set<ID>();

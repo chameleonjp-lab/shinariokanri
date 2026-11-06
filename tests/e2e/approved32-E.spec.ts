@@ -1,0 +1,31 @@
+import {test,expect} from '@playwright/test';
+import {createEntity,createProject,textToRichText} from '../../src/domain/model';
+import {exportScenario} from '../../src/storage/archive';
+import {navigate,seed} from './ap04-original-helpers';
+
+test('09 search retains chapter, match page and selected paragraph after navigating away, with removable empty conditions',async({page})=>{
+ const project=createProject('09 検索の戻り先');
+ const first=createEntity(project.projectId,'scene','第1章の場面',{body:textToRichText('アオは第1章にいる。')});
+ const scene=createEntity(project.projectId,'scene','再会',{body:textToRichText(Array.from({length:65},(_,i)=>`アオの文章 ${i+1}`).join('\n'))});
+ const chapter=createEntity(project.projectId,'chapter','第2章',{sceneIds:[scene.id]});
+ scene.data.chapterId=chapter.id;project.entities.push(first,scene,chapter);
+ await page.setViewportSize({width:1280,height:900});await seed(page,await exportScenario(project));await navigate(page,/^検索/);
+ await expect(page.getByLabel('章で絞り込む',{exact:true})).not.toBeVisible();
+ await page.getByLabel('作品内を検索',{exact:true}).fill('アオ');
+ await page.getByText('詳しい検索条件',{exact:true}).click();
+ await page.getByLabel('章で絞り込む',{exact:true}).selectOption({label:'第2章'});
+ const positions=page.getByRole('region',{name:'本文の検索位置'});
+ await expect(positions).toContainText('第2章');
+ await positions.getByRole('button',{name:'次のページ',exact:true}).click();
+ const hit=positions.getByRole('button',{name:/第65段落/});await hit.click();
+ await expect(page.getByLabel('本文',{exact:true})).toHaveValue(scene.data.body.map(b=>b.text).join('\n'));
+ await navigate(page,/^資料/);await navigate(page,/^検索/);
+ await expect(page.getByLabel('作品内を検索',{exact:true})).toHaveValue('アオ');
+ await expect(page.getByLabel('章で絞り込む',{exact:true})).toHaveValue(chapter.id);
+ await expect(positions).toContainText('2 / 2');await expect(hit).toHaveAttribute('aria-pressed','true');
+ await page.reload();await expect(hit).toHaveAttribute('aria-pressed','true');
+ await page.getByLabel('作品内を検索',{exact:true}).fill('一致しない語');
+ await expect(page.getByText(/一致する結果がありません/)).toBeVisible();
+ await page.getByRole('button',{name:'語句「一致しない語」 を解除',exact:true}).click();
+ await expect(page.getByLabel('作品内を検索',{exact:true})).toHaveValue('');
+});

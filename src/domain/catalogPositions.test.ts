@@ -51,3 +51,9 @@ describe('normalized search position navigation', () => {
     expect(findCatalogTextPositions(project, [renamed], 'がらす')).toEqual([]);
   });
 });
+
+it('labels dialogue matches with their containing chapter and paragraph number',()=>{
+ const project=createProject('章検索'),line=createEntity(project.projectId,'dialogue_line','台詞',{text:[{id:newId(),kind:'paragraph',text:'前文'},{id:newId(),kind:'paragraph',text:'アオは言った'}]}),scene=createEntity(project.projectId,'scene','再会',{dialogueLineIds:[line.id]}),chapter=createEntity(project.projectId,'chapter','第2章',{sceneIds:[scene.id]});
+ project.entities=[line,scene,chapter];
+ expect(findCatalogTextPositions(project,[line],'アオ')[0]).toMatchObject({chapterNames:['第2章'],paragraphNumber:2});
+});

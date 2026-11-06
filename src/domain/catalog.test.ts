@@ -168,3 +168,10 @@ describe('catalog query and index helpers', () => {
     expect(findings.every(item => item.disposition === 'candidate' && item.reason.length > 0 && item.targetIds.length > 0)).toBe(true);
   });
 });
+
+it('restricts a chapter search to its scenes and dialogue lines through stable references',()=>{
+ const project=createProject(),line=add(project,'dialogue_line','台詞',{text:[{id:newId(),kind:'paragraph',text:'アオ'}]}),scene=add(project,'scene','場面',{dialogueLineIds:[line.id]}),chapter=add(project,'chapter','第2章',{sceneIds:[scene.id]}),other=add(project,'dialogue_line','別章の台詞');
+ expect(matchesQuery(project,line,{op:'chapter',chapterId:chapter.id})).toBe(true);
+ expect(matchesQuery(project,scene,{op:'chapter',chapterId:chapter.id})).toBe(true);
+ expect(matchesQuery(project,other,{op:'chapter',chapterId:chapter.id})).toBe(false);
+});
