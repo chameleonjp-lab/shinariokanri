@@ -1,3 +1,4 @@
+import {materialCreditReview} from './materials';
 import type { Entity, ID, ProjectContent, ProjectData, ProjectSnapshot, RichText, TypedValue } from './types';
 import portableScript from '../portable/generated/runtime.js?raw';
 import { portableRuntimeProject } from './portableRuntimeProject';
@@ -24,6 +25,7 @@ export interface ExportPreview {
   warnings: string[];
   assetCount: number;
   assetBytesIncluded: boolean;
+  materialCredits?: Awaited<ReturnType<typeof materialCreditReview>>;
   runtimeTarget?: { profileId: string; profileVersion: string; schemaVersion: string; implemented: boolean; verificationScope: string };
 }
 /** Safe reader input, deliberately separate from author diagnostics and source IDs. */
@@ -125,6 +127,11 @@ async function exportCapturedProject(input: ProjectData, options: ExportOptions)
   };
   if (!result.ok) return { ok: false, issues: [...targetIssues, ...result.issues], preview };
   const projection = result.projection;
+  if(preview.assetCount){
+    const editions=[{project,idMap:result.idMap,label:options.targetVersionId??project.projectId},...citations.sources.map(source=>({...source,label:source.publicVersionId}))];
+    const reviews=await Promise.all(editions.map(async edition=>{const rows=await materialCreditReview(edition.project,Object.keys(edition.idMap),options.profile);return {confirmed:rows.confirmed.map(row=>({...row,id:`${edition.label}:${row.id}`})),unknown:rows.unknown.map(row=>({...row,id:`${edition.label}:${row.id}`}))};}));
+    preview.materialCredits={confirmed:reviews.flatMap(review=>review.confirmed),unknown:reviews.flatMap(review=>review.unknown)};
+  }
   const positions=validatePublicPositions(projection);if(positions.length)return {ok:false,issues:positions,preview};
   if (targetIssues.length) return { ok: false, issues: targetIssues, preview };
   const policy = policyEntity!.data;
