@@ -361,6 +361,7 @@ export function AuthorAlternativeStudio({ project, alternatives: incoming, world
           <div className="alternative-heading"><h3>別案の本文・場面</h3><button type="button" className="button secondary small" onClick={addBranchScene}>別案の場面を作る</button></div>
           {chapters.length > 0 && <PagedSelect label="新しい場面を加える章" scope={`${project.projectId}:${alternative.id}:alternatives:scene-chapter`} value={newSceneChapterId}
             onChange={setNewSceneChapterId} emptyLabel="章に所属させない" items={chapters.map(chapter => ({ id: chapter.id, label: chapter.name || '名称未設定の章' }))}/>}
+          {contentDraft.entities.filter(entity=>entity.kind==='note'&&typeof entity.customValues.consultationReason==='string'&&entity.customValues.consultationReason).map(entity=><aside key={entity.id} aria-label="相談の変更理由"><h4>相談の変更理由（本文とは別に保持）</h4><p>{String(entity.customValues.consultationReason)}</p></aside>)}
           <PagedSelect label="別案内の編集対象" scope={`${project.projectId}:${alternative.id}:alternatives:entity`} value={selectedEntityId} onChange={setSelectedEntityId}
             items={entities.map(entity => ({ id: entity.id, label: entityLabel(entity) }))}/>
           <div className="form-row">

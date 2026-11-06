@@ -45,6 +45,9 @@ it('prepares every chapter and public-only reader surfaces from the selected rec
     expect(result.artifact.content.includes('公開されたつながり')).toBe(true);
     const html = renderToStaticMarkup(createElement(ReaderProjectionPreview, { output }));
     expect(html).toContain('読者用の章');
+    expect(html).toContain('ここで迷った');
+    expect(html).toContain('返さずに終了');
+    expect(html).not.toContain('確認した控えをファイルに保存');
     expect(html).not.toContain('SECRET');
     expect(html).not.toContain('出力から除かれる内容');
     const pages = buildPublicReaderPages(output.projection);

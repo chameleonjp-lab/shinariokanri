@@ -1,0 +1,12 @@
+import {useState} from 'react';
+import type {PublicProjection} from '../domain/projection';
+import {createReaderHesitation,readerReturnFile,type ReaderHesitation} from '../domain/sharedReviews';
+import {jsonBytes,sha256} from '../storage/json';
+import {downloadBytes} from './components';
+
+/** Recipient-only props. No author project, private IDs, history or omissions enter this control. */
+export function ReaderReturnControls({projection,publicScene,shownChoices=[],publicEdition}:{projection:PublicProjection;publicScene?:string;shownChoices?:{id:string;label:string}[];publicEdition?:string}){
+ const [rows,setRows]=useState<ReaderHesitation[]>([]),[selected,setSelected]=useState<string[]>([]),[note,setNote]=useState(''),[preview,setPreview]=useState<string|null>(null),[notice,setNotice]=useState(''),[busy,setBusy]=useState(false);
+ async function capture(){if(!publicScene||busy)return;setBusy(true);try{const edition=publicEdition??`sha256:${await sha256(jsonBytes(projection))}`,row=createReaderHesitation(projection,edition,publicScene!,shownChoices,note);setRows(previous=>[...previous,row]);setNote('');setPreview(null);setNotice('この端末の試読中だけ控えました。返す行を本人が選んでください。');}catch(cause){setNotice((cause as Error).message);}finally{setBusy(false);}}
+ return <section aria-label="読者が選んで返す控え"><h3>迷った場面の任意の控え</h3><p>押した時だけ、表示中の公開場面と選択肢、一言をこの試読中の端末内に控えます。自動送信しません。画面を閉じると控えは消えます。</p><label>迷った理由（任意）<textarea aria-label="迷った理由（任意）" maxLength={2000} value={note} onChange={e=>setNote(e.target.value)}/></label><button disabled={busy||!publicScene||rows.length>=10000} onClick={()=>void capture()}>ここで迷った</button>{rows.map((row,index)=><label className="check-label" key={row.id}><input type="checkbox" aria-label={`返す控え${index+1}`} checked={selected.includes(row.id)} onChange={e=>{setSelected(previous=>e.target.checked?[...previous,row.id]:previous.filter(id=>id!==row.id));setPreview(null);}}/>控え{index+1} · {row.publicScene} · {row.note}</label>)}<button disabled={busy} onClick={()=>{const file=readerReturnFile(rows,selected);setPreview(file);setNotice(file?'選んだ行だけの内容を確認して保存してください。':'選択は0件です。返却ファイルは作成しません。');}}>選んだ控えの返却内容を確認</button>{preview&&<><pre aria-label="返却ファイルの内容">{preview}</pre><button onClick={()=>downloadBytes(preview,'reader-return.json','application/json')}>確認した控えをファイルに保存</button></>}<button disabled={busy} onClick={()=>{setRows([]);setSelected([]);setNote('');setPreview(null);setNotice('控えを返さず終了しました。');}}>返さずに終了</button>{notice&&<p role="status">{notice}</p>}</section>;
+}

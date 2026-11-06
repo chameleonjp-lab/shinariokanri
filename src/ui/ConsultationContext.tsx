@@ -44,7 +44,7 @@ export function ConsultationContext({ project, policy, draft, binding, scope, on
   };
   const missing = draft.focusIds.some(id => !approved.some(entity => entity.id === id)) || rows.some(row => !row.variable);
   return <section className="consultation-context" aria-label="相談に添える対象と前後状態">
-    <h3>相談に添える対象と前後状態</h3>
+    <h3>相談に添える対象と前後状態</h3><p>手動で持ち出す範囲：{approved.map(entity=>label(entity.id)).join('、')||'対象なし'}。除外：公開範囲外の本文・作者メモ・未承認の名前や素材。内容を検査し、表示された除外一覧と本文を確認してからファイルへ保存してください。相談先への貼り付けは作者が行います。用意しただけでは外部へ送信しません。</p>
     <p className="field-hint">選択した版・公開範囲で作者が指定する状態です。試読の実測や読み手の理解を認定する値ではありません。不明な値は未確定のまま出力します。</p>
     <div className="form-field"><label>相談する人物・場面</label><RefList project={approvedProject} kinds={['character', 'scene']} value={draft.focusIds} onChange={focusIds => change({ ...draft, focusIds })}/></div>
     <PagedSelect label="相談へ前後状態を追加" scope={`${scope}:add-state`} value="" emptyLabel="公開範囲の状態を選ぶ" items={variables.filter(variable => !used.includes(variable.id)).map(variable => ({ id: variable.id, label: label(variable.id) }))} onChange={id => {

@@ -41,19 +41,53 @@ export async function createSharedCommentReview(project:ProjectData,raw:ReviewSo
  if(input.snapshotId!==comment.snapshot_id||!version||version.contentHash!==input.sourceHash||await sha256(jsonBytes(version.content))!==input.sourceHash||await sha256(jsonBytes(input.projection))!==input.projectionHash||!ID_PATTERN.test(comment.id)||typeof comment.body!=='string'||!comment.body.trim()||Array.from(comment.body).length>2000||!['open','fixed','verified'].includes(commentStage(comment))||typeof comment.resolved!=='boolean'||comment.review_stage!==undefined&&(comment.review_stage!=='open')!==comment.resolved)throw Error('REVIEW_SOURCE_UNKNOWN');
  const source=input.sourceMap[comment.public_version_id],projection=comment.public_version_id==='public-project'?input.projection:input.projection.versions?.find(v=>v.id===comment.public_version_id)?.projection;if(!source||!projection)throw Error('REVIEW_SOURCE_UNKNOWN');
  const url=new URL(connection);if(url.username||url.password||url.search||url.hash||url.pathname!=='/'||!(url.protocol==='https:'||url.protocol==='http:'&&['localhost','127.0.0.1','[::1]'].includes(url.hostname)))throw Error('REVIEW_CONNECTION_UNKNOWN');
- let target:ContentAnchor|string,quote='',targetVersionId:string;
+ let target:ContentAnchor|string,quote='',targetVersionId:string,contextBefore='',contextAfter='';
  if(comment.public_relation_id){const relation=source.relations[comment.public_relation_id],publicRelation=projection.relations.find(r=>r.id===comment.public_relation_id);if(!relation||!publicRelation)throw Error('REVIEW_SOURCE_UNKNOWN');target=relation.id;targetVersionId=relation.sourceVersionId;quote=JSON.stringify(publicRelation);}
  else{const entry=comment.public_entity_id?source.entities[comment.public_entity_id]:undefined,entity=projection.entities.find(e=>e.id===comment.public_entity_id);if(!entry||!entity)throw Error('REVIEW_SOURCE_UNKNOWN');target=structuredClone(entry.target);targetVersionId=target.sourceVersionId!;
-  if(comment.public_block_id){const block=publicBlocks(entity).find(b=>b.id===comment.public_block_id),mapped=entry.blocks[comment.public_block_id];if(!block||!Number.isSafeInteger(comment.start_cp)||!Number.isSafeInteger(comment.end_cp)||comment.start_cp!<0||comment.end_cp!<=comment.start_cp!||comment.end_cp!>Array.from(block.text).length)throw Error('REVIEW_PUBLIC_POSITION_UNKNOWN');quote=Array.from(block.text).slice(comment.start_cp!,comment.end_cp!).join('');
+  if(comment.public_block_id){const block=publicBlocks(entity).find(b=>b.id===comment.public_block_id),mapped=entry.blocks[comment.public_block_id];if(!block||!Number.isSafeInteger(comment.start_cp)||!Number.isSafeInteger(comment.end_cp)||comment.start_cp!<0||comment.end_cp!<=comment.start_cp!||comment.end_cp!>Array.from(block.text).length)throw Error('REVIEW_PUBLIC_POSITION_UNKNOWN');quote=Array.from(block.text).slice(comment.start_cp!,comment.end_cp!).join('');const ordered=publicBlocks(entity),blockIndex=ordered.findIndex(candidate=>candidate.id===block.id),beforeText=[...ordered.slice(0,blockIndex).map(candidate=>candidate.text),Array.from(block.text).slice(0,comment.start_cp!).join('')].join('\n'),afterText=[Array.from(block.text).slice(comment.end_cp!).join(''),...ordered.slice(blockIndex+1).map(candidate=>candidate.text)].join('\n');contextBefore=Array.from(beforeText).slice(-80).join('');contextAfter=Array.from(afterText).slice(0,80).join('');
    const fixed=project.snapshots.find(s=>s.id===mapped?.sourceVersionId)?.content??worlds[mapped?.sourceVersionId??''],privateEntity=fixed?.entities.find(e=>e.id===mapped?.entityId),privateBlock=privateEntity&&documents(privateEntity).find(b=>b.id===mapped?.blockId);
    if(mapped&&privateBlock&&Array.from(privateBlock.text).slice(comment.start_cp!,comment.end_cp!).join('')===quote)target={...mapped,start:comment.start_cp!,end:comment.end_cp!};
    else target={...target,positionStatus:'unresolved',positionReason:'公開文と私的本文の位置対応を確認できません。元の公開版の引用を保持しています。',quotedText:quote};
   }
  }
  const sharedSource:SharedReviewSource={connection:url.origin,sharedSnapshot:input.snapshotId,comment:comment.id,publicVersion:comment.public_version_id,...comment.public_entity_id?{publicEntity:comment.public_entity_id}:{},...comment.public_relation_id?{publicRelation:comment.public_relation_id}:{},...comment.public_block_id?{publicBlock:comment.public_block_id,startCp:comment.start_cp!,endCp:comment.end_cp!}:{},projectionHash:input.projectionHash,commentBodyHash:await sha256(jsonBytes(comment.body)),quotedText:quote,observedStage:commentStage(comment)};
- return createEntity(project.projectId,'review','共有指摘',{target,targetVersionId,body:textToRichText(comment.body),stage:'open',quotedText:quote,sharedSource});
+ return createEntity(project.projectId,'review','共有指摘',{target,targetVersionId,body:textToRichText(comment.body),stage:'open',quotedText:quote,sharedSource,receivedContext:{sourceVersionId:targetVersionId,before:contextBefore,after:contextAfter}});
 }
 export function reviewLatestPosition(project:ProjectData,review:Entity<'review'>):'known'|'unknown'{
  const target=review.data.target;if(typeof target==='string')return project.relations.some(r=>r.id===target&&!r.deletedAt)?'known':'unknown';
  if(target.positionStatus==='unresolved')return 'unknown';const entity=project.entities.find(e=>e.id===target.entityId&&!e.deletedAt);if(!entity)return 'unknown';if(!target.blockId)return 'known';const block=documents(entity).find(b=>b.id===target.blockId);if(!block)return 'unknown';return target.start==null||target.end==null||Array.from(block.text).slice(target.start,target.end).join('')===review.data.quotedText?'known':'unknown';
+}
+
+export interface ReviewCurrentCandidate {target:ContentAnchor;label:string}
+/** Search results are suggestions only. An identical quote elsewhere never changes the received anchor. */
+export function reviewCurrentMatch(project:ProjectData,review:Entity<'review'>):{status:'match'|'changed'|'ambiguous'|'deleted';candidates:ReviewCurrentCandidate[]}{
+ const target=review.data.target,quote=review.data.quotedText??review.data.sharedSource?.quotedText??'',candidates:ReviewCurrentCandidate[]=[];
+ if(typeof target==='string')return {status:project.relations.some(r=>r.id===target&&!r.deletedAt)?'match':'deleted',candidates};
+ const original=project.entities.find(e=>e.id===target.entityId&&!e.deletedAt),block=original&&documents(original).find(b=>b.id===target.blockId);
+ if(quote)for(const entity of project.entities.filter(e=>['scene','dialogue_line','chapter','note'].includes(e.kind)&&!e.deletedAt&&!['alternate','rejected'].includes(e.status)))for(const doc of documents(entity)){
+  const letters=Array.from(doc.text),needle=Array.from(quote);for(let start=0;start<=letters.length-needle.length;start++)if(needle.every((letter,index)=>letters[start+index]===letter))candidates.push({target:{entityId:entity.id,blockId:doc.id,start,end:start+needle.length,sourceVersionId:project.projectId},label:`${entity.name} · ${start}–${start+needle.length}`});
+ }
+ const receivedEdition=project.snapshots.find(snapshot=>snapshot.id===(target.sourceVersionId??review.data.targetVersionId))?.content,receivedEntity=receivedEdition?.entities.find(entity=>entity.id===target.entityId),receivedBlock=receivedEntity&&documents(receivedEntity).find(doc=>doc.id===target.blockId);
+ // Equality at an offset alone cannot distinguish a repeated phrase that slid into a deleted occurrence's place.
+ const unchangedBlock=!target.blockId||!!block&&!!receivedBlock&&block.text===receivedBlock.text;
+ const exact=unchangedBlock&&original&&target.positionStatus!=='unresolved'&&(!target.blockId||block&&(target.start==null||target.end==null||Array.from(block.text).slice(target.start,target.end).join('')===quote));
+ return {status:!original||target.blockId&&!block?'deleted':exact?'match':candidates.length>1?'ambiguous':'changed',candidates};
+}
+export function resolveReviewCurrentMatch(project:ProjectData,review:Entity<'review'>,target:ContentAnchor,reason:string,expectedRevision=project.revision):Entity<'review'>{
+ if(project.revision!==expectedRevision)throw Error('REVISION_CONFLICT: 現稿が変わりました。照合先と理由を確認し直してください。');
+ if(!reason.trim()||Array.from(reason).length>2000||!reviewCurrentMatch(project,review).candidates.some(c=>JSON.stringify(c.target)===JSON.stringify(target)))throw Error('REVIEW_MATCH_CONFIRMATION_REQUIRED');
+ return {...review,data:{...review.data,currentMatch:{target:structuredClone(target),revision:project.revision,reason:reason.trim()}}};
+}
+
+export interface ReaderHesitation {id:string;publicEdition:string;publicScene:string;shownChoices:{id:string;label:string}[];note:string}
+/** Call only from an explicit opt-in control, passing the choices actually rendered now. */
+export function createReaderHesitation(projection:PublicProjection,publicEdition:string,publicScene:string,shownChoices:{id:string;label:string}[],note=''):ReaderHesitation{
+ if(!publicEdition||!projection.entities.some(e=>e.id===publicScene&&['scene','flow_node','chapter'].includes(e.kind))||Array.from(note).length>2000||shownChoices.length>10000||shownChoices.some(c=>!projection.entities.some(e=>e.id===c.id&&e.kind==='flow_edge')||typeof c.label!=='string'))throw Error('READER_OBSERVATION_UNKNOWN');
+ return {id:crypto.randomUUID(),publicEdition,publicScene,shownChoices:shownChoices.map(c=>({id:c.id,label:c.label})),note};
+}
+/** Reconstruct an allowlisted payload; local row IDs, unselected rows and operation history never leave. */
+export function readerReturnFile(rows:ReaderHesitation[],selectedIds:readonly string[]):string|null{
+ const selected=new Set(selectedIds),approved=rows.filter(row=>selected.has(row.id));if(!approved.length)return null;
+ if(approved.length>10000)throw Error('READER_RETURN_LIMIT');
+ return JSON.stringify({format:'scenario-reader-return',formatVersion:'1.0.0',rows:approved.map(row=>({publicEdition:row.publicEdition,publicScene:row.publicScene,shownChoices:row.shownChoices.map(c=>({id:c.id,label:c.label})),note:row.note}))},null,2);
 }

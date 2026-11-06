@@ -103,6 +103,8 @@ test('相談の前後状態を版・範囲付き下書きとしてcold再開し�
   await page.getByLabel('出力する公開範囲', { exact: true }).selectOption(f.policy.id);
   await page.getByLabel('出力目的', { exact: true }).selectOption('consultation');
   const context = page.getByRole('region', { name: '相談に添える対象と前後状態' });
+  await expect(context).toContainText('手動で持ち出す範囲');
+  await expect(context).toContainText('除外：公開範囲外の本文');
   await context.getByLabel('追加する対象', { exact: true }).selectOption(f.scene.id);
   await context.getByLabel('相談へ前後状態を追加', { exact: true }).selectOption(f.state.id);
   const before = context.getByRole('group', { name: '前の状態 · 公開する許可状態' }), after = context.getByRole('group', { name: '後の状態 · 公開する許可状態' });
@@ -134,8 +136,8 @@ test('相談の前後状態を版・範囲付き下書きとしてcold再開し�
   await proposal.getByLabel('提案の出所', { exact: true }).fill('作者が確認した consultation.md');
   await proposal.getByLabel('提案の相談対象版', { exact: true }).selectOption(pin.id);
   await proposal.getByLabel('提案を比較する本文対象', { exact: true }).selectOption(f.scene.id);
-  await proposal.getByLabel('提案MDを選ぶ', { exact: true }).setInputFiles({ name: 'proposal.md', mimeType: 'text/markdown', buffer: Buffer.from('😀相談から届いた変更候補') });
-  await expect(proposal.getByLabel('提案Markdown', { exact: true })).toHaveValue('😀相談から届いた変更候補');
+  await proposal.getByLabel('提案MDを選ぶ', { exact: true }).setInputFiles({ name: 'proposal.md', mimeType: 'text/markdown', buffer: Buffer.from('## 本文\n😀相談から届いた変更候補\n\n## 理由\n理由は台詞に混ぜない😀') });
+  await expect(proposal.getByLabel('提案Markdown', { exact: true })).toHaveValue('## 本文\n😀相談から届いた変更候補\n\n## 理由\n理由は台詞に混ぜない😀');
   await proposal.getByRole('button', { name: '提案の別案差分を確認', exact: true }).click();
   await proposal.getByRole('button', { name: '提案を作者別案として保存', exact: true }).click();
   await expect(proposal.getByRole('status')).toContainText('作者別案へ保存');
@@ -143,6 +145,7 @@ test('相談の前後状態を版・範囲付き下書きとしてcold再開し�
   await page.getByRole('tab', { name: '作者別案', exact: true }).click();
   await page.getByLabel('別案内の編集対象', { exact: true }).selectOption(f.scene.id);
   await expect(page.getByLabel('別案内の場面本文', { exact: true })).toHaveValue('😀相談から届いた変更候補');
+  await expect(page.getByLabel('相談の変更理由',{exact:true})).toContainText('理由は台詞に混ぜない😀');
   await expect(page.locator('.alternative-diff-list')).toContainText('公開する場面Sの本文');
   await nav(page, /^作品・保存/); await page.getByRole('tab', { name: '完全保存・復元', exact: true }).click();
   const full = page.waitForEvent('download'); await page.getByRole('button', { name: '完全保存ファイルを作成', exact: true }).click();
@@ -154,7 +157,7 @@ test('相談の前後状態を版・範囲付き下書きとしてcold再開し�
   expect(restored.project.snapshots.find(snapshot => snapshot.id === pin.id)?.contentHash).toBe(pin.contentHash);
   expect(restored.project.entities.find(entity => entity.id === f.scene.id)).toMatchObject({ data: { body: [{ text: '公開する場面Sの本文' }] } });
   expect(restored.project.authorAlternatives?.[0].applyReceipts).toHaveLength(0);
-  expect(restored.project.authorAlternatives?.[0].versions.at(-1)?.content.entities.find(entity => entity.kind === 'note')?.customValues).toMatchObject({ consultationSource: '作者が確認した consultation.md', consultationTargetVersionId: pin.id });
+  expect(restored.project.authorAlternatives?.[0].versions.at(-1)?.content.entities.find(entity => entity.kind === 'note')?.customValues).toMatchObject({ consultationSource: '作者が確認した consultation.md', consultationTargetVersionId: pin.id,consultationReason:'理由は台詞に混ぜない😀' });
   expect(await restoreComplete(browser, new Uint8Array(fullBytes), 'new')).toEqual(restored.project);
   const cloned = await restoreComplete(browser, new Uint8Array(fullBytes), 'clone');
   expect(cloned.projectId).not.toBe(restored.project.projectId);
