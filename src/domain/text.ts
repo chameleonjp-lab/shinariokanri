@@ -189,7 +189,13 @@ export function restoreRichTextBlock(before: RichText, source: Block): RichText 
   let start = 0;
   for (const block of before) { if (block.id === source.id) break; start += Array.from(block.text).length + 1; }
   const after = before.map(block => block.id === source.id ? structuredClone(source) : block);
-  editOrigins.set(after, { before, transform: buildTextTransform(before, after, { start, end: start + Array.from(matches[0].text).length }), depth: 1 });
+  const knownBlock = buildTextTransform(before, after, { start, end: start + Array.from(matches[0].text).length });
+  const inferred = buildTextTransform(before, after);
+  // Stable IDs identify untouched paragraphs. Inside the restored paragraph,
+  // retain normal ambiguity checks rather than inventing an occurrence origin.
+  const transform: TextTransform = { ...knownBlock, lineRange: inferred.lineRange,
+    range: (blockId, from, to) => blockId === source.id ? inferred.range(blockId, from, to) : knownBlock.range(blockId, from, to) };
+  editOrigins.set(after, { before, transform, depth: 1 });
   return after;
 }
 

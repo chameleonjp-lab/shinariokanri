@@ -99,3 +99,42 @@ it('matches settings, state and attachment metadata by stable ID despite entity 
  const prior=structuredClone(p.snapshots[0]);p.entities=p.entities.map(e=>e.id===person.id?{...e,status:'confirmed'}:e.id===state.id?{...state,data:{...state.data,initial:{type:'boolean',value:true}}}:e.id===asset.id?{...asset,data:{...asset.data,displayName:'変更した素材名'}}:e).reverse() as typeof p.entities;p=await createWorldSnapshot(p,'後');
  const result=compareEditions(p.snapshots[0],p.snapshots[1]);for(const id of [person.id,state.id,asset.id])expect(result.records.some(r=>r.id===id)).toBe(true);expect(result.records.find(r=>r.id===asset.id)?.after).toMatchObject({data:{displayName:'変更した素材名'}});expect(p.snapshots[0]).toEqual(prior);
 });
+
+async function sourceAnchorFixture(){
+ let p=createProject('source coordinates');
+ const first=createEntity(p.projectId,'scene','一段落'),second=createEntity(p.projectId,'scene','二段落');
+ const one={id:newId(),kind:'paragraph' as const,text:'アオから手紙',links:[{start:0,end:2,target:{entityId:first.id,blockId:'',start:0,end:2}},{start:0,end:2,target:{entityId:second.id,blockId:'',start:0,end:2}}]};
+ const two={id:newId(),kind:'paragraph' as const,text:'手紙を読む',links:[{start:0,end:2,target:{entityId:first.id,blockId:one.id,start:0,end:2}}]};one.links[0].target.blockId=one.id;one.links[1].target.blockId=two.id;first.data.body=[one];second.data.body=[two];
+ const currentRef=createEntity(p.projectId,'note','現在参照',{body:[{id:newId(),kind:'paragraph',text:'参照',links:[{start:0,end:2,target:{entityId:first.id,blockId:one.id,start:0,end:2}}]}]});p.entities.push(first,second,currentRef);p=await createWorldSnapshot(p,'参照元稿');const source=p.snapshots[0];
+ p.entities=p.entities.map(e=>e.id===first.id||e.id===second.id?{...e,data:{...e.data,body:(e.data as any).body.map((b:any)=>({...b,text:`昨日${b.text}`,links:b.links.map((l:any)=>({...l,start:l.start+2,end:l.end+2,target:{...l.target,start:l.target.start+2,end:l.target.end+2}}))}))}}:e.id===currentRef.id?{...e,data:{...e.data,body:[{...(e.data as any).body[0],links:[{start:0,end:2,target:{entityId:first.id,blockId:one.id,start:2,end:4}},{start:0,end:2,target:{entityId:first.id,blockId:one.id,start:0,end:2,sourceVersionId:source.id}}]}]}}:e) as typeof p.entities;
+ p=await createWorldSnapshot(p,'現在稿');return {p,source,first,second,one,two,currentRef,selections:[{entityId:first.id,field:'body',blockId:one.id},{entityId:second.id,field:'body',blockId:two.id}]};
+}
+describe('F11 restored anchors retain source coordinate origins',()=>{
+ it.each([false,true])('keeps self and cross-selected targets in source coordinates in either selection order: reverse=%s',async(reverse)=>{
+ const {p,source,first,second,one,two,currentRef,selections}=await sourceAnchorFixture();const pins=structuredClone(p.snapshots),original=structuredClone(p);
+ const result=restoreSelectedParagraphs(p,source,reverse?[...selections].reverse():selections);
+ expect((result.entities.find(e=>e.id===first.id)!.data as any).body[0]).toEqual(one);expect((result.entities.find(e=>e.id===second.id)!.data as any).body[0]).toEqual(two);
+ const links=(result.entities.find(e=>e.id===currentRef.id)!.data as any).body[0].links;expect(links[0].target).toEqual({entityId:first.id,blockId:one.id,start:0,end:2});expect(links[1].target).toEqual({entityId:first.id,blockId:one.id,start:0,end:2,sourceVersionId:source.id});expect(result.snapshots).toEqual(pins);expect(p).toEqual(original);
+ });
+ it('pins a restored source link into an unselected changed paragraph to its source edition, and previews the effect',async()=>{
+ const {p,source,first,second,one,two,selections}=await sourceAnchorFixture();const store=new ScenarioStore({databaseName:`stage-f-source-${newId()}`});const current=(await store.saveProject(p,{reason:'fixture'})).project;
+ const preview=await store.previewParagraphRestore(p.projectId,source.id,p.snapshots[1].id,[selections[0]]);
+ expect(preview.referenceEffects.find(e=>e.id===first.id)?.after).toContainEqual({entityId:second.id,blockId:two.id,start:0,end:2,sourceVersionId:source.id});
+ const result=(await store.restoreParagraphs(p.projectId,preview)).project;const links=(result.entities.find(e=>e.id===first.id)!.data as any).body[0].links;
+ expect(links[0].target).toEqual(one.links[0].target);expect(links[1].target).toEqual({...one.links[1].target,sourceVersionId:source.id});expect((result.entities.find(e=>e.id===second.id)!.data as any).body[0].text).toBe(`昨日${two.text}`);expect(result.snapshots).toEqual(current.snapshots);
+ expect((await store.undo(p.projectId)).project.entities.find(e=>e.id===first.id)!.data).toEqual(current.entities.find(e=>e.id===first.id)!.data);
+ });
+});
+
+it.each([false,true])('keeps cross-selected paragraphs in the same text field order-independent: reverse=%s',async(reverse)=>{
+ let p=createProject('same field');const scene=createEntity(p.projectId,'scene','本文'),firstId=newId(),secondId=newId();
+ const body=[{id:firstId,kind:'paragraph' as const,text:'アオから手紙',links:[{start:0,end:2,target:{entityId:scene.id,blockId:secondId,start:0,end:2}}]},{id:secondId,kind:'paragraph' as const,text:'手紙を読む',links:[{start:0,end:2,target:{entityId:scene.id,blockId:firstId,start:0,end:2}}]}];scene.data.body=body;p.entities.push(scene);p=await createWorldSnapshot(p,'元稿');const source=p.snapshots[0];
+ p.entities=p.entities.map(e=>e.id===scene.id?{...scene,data:{...scene.data,body:body.map(b=>({...b,text:`昨日${b.text}`,links:b.links.map(l=>({...l,start:2,end:4,target:{...l.target,start:2,end:4}}))}))}}:e);
+ const selected=body.map(b=>({entityId:scene.id,field:'body',blockId:b.id}));const restored=restoreSelectedParagraphs(p,source,reverse?selected.reverse():selected);expect((restored.entities.find(e=>e.id===scene.id)!.data as any).body).toEqual(body);
+});
+
+it('does not guess which repeated current occurrence survived a paragraph restore',async()=>{
+ let p=createProject('ambiguous current origins');const blockId=newId(),scene=createEntity(p.projectId,'scene','本文',{body:[{id:blockId,kind:'paragraph',text:'アオ'}]});p.entities.push(scene);p=await createWorldSnapshot(p,'元稿');const source=p.snapshots[0];
+ p.entities=p.entities.map(e=>e.id===scene.id?{...scene,data:{...scene.data,body:[{id:blockId,kind:'paragraph',text:'アオアオ'}]}}:e);const note=createEntity(p.projectId,'note','現在の参照',{body:[{id:newId(),kind:'paragraph',text:'参照',links:[{start:0,end:2,target:{entityId:scene.id,blockId,start:0,end:2}}]}]});p.entities.push(note);
+ const result=restoreSelectedParagraphs(p,source,[{entityId:scene.id,field:'body',blockId}]);expect((result.entities.find(e=>e.id===note.id)!.data as any).body[0].links[0].target).toMatchObject({positionStatus:'unresolved',quotedText:'アオ'});
+});

@@ -1,4 +1,4 @@
-import type {Block,Entity,ProjectData,ProjectSnapshot,RichText} from './types';
+import type {Block,ContentAnchor,Entity,ProjectData,ProjectSnapshot,RichText} from './types';
 import {restoreRichTextBlock,editRichText,remapEditedTextReferences,remapEditedTextRelationReferences} from './text';
 
 export interface ParagraphSelection {entityId:string;field:string;blockId:string}
@@ -28,11 +28,54 @@ export function compareEditions(left:ProjectSnapshot,right:ProjectSnapshot){
  return {paragraphs,records};
 }
 function install(project:ProjectData,before:Entity,after:Entity):ProjectData{return {...project,entities:remapEditedTextReferences(project.entities.map(e=>e.id===before.id?after:e),before,after),relations:remapEditedTextRelationReferences(project.relations,before,after)};}
+function sourceAnchorText(content:Pick<ProjectData,'entities'>,anchor:ContentAnchor):string|undefined {
+ const entities=content.entities.filter(e=>e.id===(anchor.lineId??anchor.entityId)&&!e.deletedAt);
+ if(entities.length!==1)return undefined;
+ if(anchor.blockId){const blocks=richFields(entities[0]).flatMap(([,blocks])=>blocks).filter(b=>b.id===anchor.blockId);return blocks.length===1?blocks[0].text:undefined;}
+ if(anchor.lineId){const text=richFields(entities[0]).find(([field])=>field==='text');return text?.[1].map(b=>b.text).join('\n');}
+ return undefined;
+}
+/** Source anchors already use source coordinates. Bind changed, unselected targets
+ * to that immutable edition rather than guessing a current-draft location. */
+function bindRestoredSourceAnchors(block:Block,source:ProjectSnapshot,final:ProjectData):Block {
+ const walk=(value:unknown):unknown=>{
+  if(Array.isArray(value))return value.map(walk);
+  if(!value||typeof value!=='object')return value;
+  const object=value as Record<string,unknown>;
+  if(typeof object.entityId==='string'){
+   const anchor=object as unknown as ContentAnchor;
+   if(anchor.positionStatus==='unresolved'||anchor.sourceVersionId&&anchor.sourceVersionId!==final.projectId)return structuredClone(anchor);
+   const hasPosition=!!(anchor.blockId||anchor.lineId)||typeof anchor.start==='number'||typeof anchor.end==='number';
+   const sourceText=sourceAnchorText(source.content,anchor),finalText=sourceAnchorText(final,anchor);
+   const sameTarget=hasPosition?sourceText!==undefined&&sourceText===finalText:final.entities.some(e=>e.id===anchor.entityId&&!e.deletedAt);
+   return sameTarget?structuredClone(anchor):{...structuredClone(anchor),sourceVersionId:source.id};
+  }
+  return Object.fromEntries(Object.entries(object).map(([key,child])=>[key,walk(child)]));
+ };
+ return walk(block) as Block;
+}
+/** Confirmation records anchor effects separately from restored text. */
+export function paragraphRestoreReferenceEffects(before:ProjectData,after:ProjectData){
+ const anchors=(value:unknown):ContentAnchor[]=>{
+  if(Array.isArray(value))return value.flatMap(anchors);
+  if(!value||typeof value!=='object')return [];
+  const object=value as Record<string,unknown>;
+  return [...(typeof object.entityId==='string'?[object as unknown as ContentAnchor]:[]),...Object.values(object).flatMap(anchors)];
+ };
+ const effects:Array<{scope:'entity'|'relation';id:string;before:ContentAnchor[];after:ContentAnchor[]}>=[];
+ for(const [scope,previous,current]of [['entity',before.entities,after.entities],['relation',before.relations,after.relations]] as const){const byId=new Map<string,unknown>(previous.map(record=>[record.id,record]));for(const record of current){const oldAnchors=anchors(byId.get(record.id)),newAnchors=anchors(record);if(JSON.stringify(oldAnchors)!==JSON.stringify(newAnchors))effects.push({scope,id:record.id,before:oldAnchors,after:newAnchors});}}
+ return effects;
+}
 export function restoreSelectedParagraphs(project:ProjectData,source:ProjectSnapshot,selected:ParagraphSelection[]):ProjectData{
  if(!selected.length||new Set(selected.map(selectionKey)).size!==selected.length)throw new Error('復元する段落を重複なく選んでください。');
  // Resolve every selection before creating any changes. Never infer positions by text.
  const resolved=selected.map(s=>({s,source:locate(source.content,s).block,current:locate(project,s).block}));
- let next=project;for(const {s,source:block}of resolved){const {entity,blocks}=locate(next,s);const after={...entity,data:{...entity.data,[s.field]:restoreRichTextBlock(blocks,block)}} as Entity;next=install(next,entity,after);}return next;
+ let next=project;for(const {s,source:block}of resolved){const {entity,blocks}=locate(next,s);const after={...entity,data:{...entity.data,[s.field]:restoreRichTextBlock(blocks,block)}} as Entity;next=install(next,entity,after);}
+ // Current-origin references have now traversed every current-to-restored edit.
+ // Publish source-origin blocks only after all edits, independent of selection order.
+ const final=next;
+ for(const {s,source:block}of resolved){const {entity,blocks}=locate(next,s);next={...next,entities:next.entities.map(e=>e.id===entity.id?{...entity,data:{...entity.data,[s.field]:blocks.map(b=>b.id===s.blockId?bindRestoredSourceAnchors(block,source,final):b)}} as Entity:e)};}
+ return next;
 }
 function quotationPositions(chars:string[]):Set<number> {
  const stack:string[]=[],positions=new Set<number>(),pairs:Record<string,string>={'「':'」','『':'』','“':'”'};

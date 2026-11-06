@@ -1,4 +1,4 @@
-import {compareEditions,restoreSelectedParagraphs,replaceSelectedOccurrences,type ParagraphSelection,type ReplacementOccurrence} from '../domain/selectiveEdits';
+import {compareEditions,paragraphRestoreReferenceEffects,restoreSelectedParagraphs,replaceSelectedOccurrences,type ParagraphSelection,type ReplacementOccurrence} from '../domain/selectiveEdits';
 import {bindCanonicalHistoryWrites,readHistoryPageCommands} from './historyMetadata';
 import {readWorldClosure} from './worldClosure';
 import {DerivedIndexBudget,ProjectDerivedOwner} from '../domain/derivedIndexes';
@@ -1223,7 +1223,7 @@ export class ScenarioStore {
     if(selected.some(s=>!changed.some(c=>c.selectable&&c.entityId===s.entityId&&c.field===s.field&&c.blockId===s.blockId)))throw new StorageError('VALIDATION_FAILED','比較した差分から一意な段落を選び直してください。');
     const candidate=restoreSelectedParagraphs(current,source,selected);
     const changes=selected.map(s=>({ ...s,before:(current.entities.find(e=>e.id===s.entityId)!.data as unknown as Record<string,Block[]>)[s.field].find(b=>b.id===s.blockId)!,after:(candidate.entities.find(e=>e.id===s.entityId)!.data as unknown as Record<string,Block[]>)[s.field].find(b=>b.id===s.blockId)! }));
-    const payload={projectId,baseRevision:current.revision,sourceId,comparisonId,selected:copy(selected),changes};
+    const payload={projectId,baseRevision:current.revision,sourceId,comparisonId,selected:copy(selected),changes,referenceEffects:paragraphRestoreReferenceEffects(current,candidate)};
     return {...payload,confirmationHash:await sha256(jsonBytes(payload))};
   }
   async restoreParagraphs(projectId:string,approved:Awaited<ReturnType<ScenarioStore['previewParagraphRestore']>>):Promise<SaveResult>{
