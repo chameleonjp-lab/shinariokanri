@@ -17,23 +17,27 @@ function writingPoint(project:ProjectData,sourceId:string):WorldPoint{
  return {at:points.size===1?[...points][0]:null};
 }
 export async function resolveCharacterReference(project:ProjectData,anchor:ContentAnchor,sourceEntityId:string){
- const fixed=!!anchor.sourceVersionId&&anchor.sourceVersionId!==project.projectId;
- const snapshot=fixed?project.snapshots.find(snapshot=>snapshot.id===anchor.sourceVersionId):undefined;
+ const {entityId,sourceVersionId}=anchor,point=writingPoint(project,sourceEntityId);
+ const fixed=!!sourceVersionId&&sourceVersionId!==project.projectId;
+ // Hash verification awaits asynchronously. Keep every later snapshot read on
+ // this private registry, including the world closure and displayed edition.
+ const snapshots=fixed?structuredClone(project.snapshots):project.snapshots;
+ const snapshot=fixed?snapshots.find(snapshot=>snapshot.id===sourceVersionId):undefined;
  if(fixed&&!snapshot)throw Error('人物の固定版が見つかりません。参照する版を確認してください。');
  let content=project;
  if(snapshot){
   // The form combines owner envelopes for reference choices. Capture accepts
   // only the selected owner's snapshots; external editions stay in its registry.
   const byOwner=new Map<string,ProjectData>();
-  for(const pin of project.snapshots){const owner=byOwner.get(pin.content.projectId)??{...pin.content,snapshots:[],history:[]};owner.snapshots.push(pin);byOwner.set(pin.content.projectId,owner);}
-  const registry=Object.fromEntries(project.snapshots.map(pin=>[pin.id,pin.content]));
+  for(const pin of snapshots){const owner=byOwner.get(pin.content.projectId)??{...pin.content,snapshots:[],history:[]};owner.snapshots.push(pin);byOwner.set(pin.content.projectId,owner);}
+  const registry=Object.fromEntries(snapshots.map(pin=>[pin.id,pin.content]));
   const captured=await captureRuntimeContent(byOwner.get(snapshot.content.projectId)!,snapshot.id,{worldSnapshots:registry});
   const reused=resolveReuseContent(captured,captured.snapshots);
   content={...reused,...effectiveWorldContent(reused,[...byOwner.values()])};
  }
- const person=content.entities.find((entity):entity is Entity<'character'>=>entity.id===anchor.entityId&&entity.kind==='character'&&adoptedRecord(entity));
+ const person=content.entities.find((entity):entity is Entity<'character'>=>entity.id===entityId&&entity.kind==='character'&&adoptedRecord(entity));
  if(!person)throw Error('この版の人物情報が見つかりません。対象と参照する版を確認してください。');
- const borrowedVersion=project.worldReferences.find(reference=>reference.projectId===person.projectId)?.immutableSnapshotId;
+ const borrowedVersion=!snapshot?project.worldReferences.find(reference=>reference.projectId===person.projectId)?.immutableSnapshotId:undefined;
  const versionLabel=snapshot?`固定版 ${snapshot.versionLabel}`:borrowedVersion?`共通世界の固定版 ${project.snapshots.find(snapshot=>snapshot.id===borrowedVersion)?.versionLabel??borrowedVersion}`:`作品改訂 ${project.revision}`;
- return {person,project:content,point:writingPoint(project,sourceEntityId),versionLabel};
+ return {person,project:content,point,versionLabel};
 }

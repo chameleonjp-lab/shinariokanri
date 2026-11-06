@@ -55,3 +55,20 @@ it('resolves a selected world pin through its verified transitive world closure'
  const result=await resolveCharacterReference(formProject,{entityId:fixture.person.id,sourceVersionId:sharedPin.id},fixture.scene.id);
  expect(result.person.id).toBe(fixture.person.id);expect(worldStateCandidates(result.project,fixture.person.id,'member_of',result.point).candidates.map(candidate=>candidate.targetId)).toEqual([fixture.group.id]);
 });
+
+for(const version of ['worldPin','workPin'] as const)it(`keeps ${version} bytes, label and writing time captured before asynchronous verification`,async()=>{
+ const fixture=await mixedOwnerCharacterFixture(),expectedLabel=fixture[version].versionLabel;
+ const pending=resolveCharacterReference(fixture.formProject,{entityId:fixture.person.id,sourceVersionId:fixture[version].id},fixture.scene.id);
+ fixture.worldPin.content.entities.find(entity=>entity.id===fixture.person.id)!.name='検証後の未検証の人物';
+ fixture.worldPin.content.entities.find(entity=>entity.id===fixture.group.id)!.name='検証後の未検証の所属';
+ fixture[version].versionLabel='待機中に変更した版名';
+ const event=fixture.formProject.entities.find((entity):entity is ReturnType<typeof createEntity<'event'>>=>entity.kind==='event')!;event.data.time={mode:'instant',at:'20',calendarId:fixture.formProject.calendarId};
+ const result=await pending;
+ expect(result.person.name).toBe('世界の人物');expect(result.project.entities.find(entity=>entity.id===fixture.group.id)!.name).toBe('固定した所属');
+ expect(result.versionLabel).toBe(`固定版 ${expectedLabel}`);expect(result.point.at).toBe('10');
+});
+it('keeps the selected character identity when the caller changes the anchor during capture',async()=>{
+ const fixture=await mixedOwnerCharacterFixture(),anchor={entityId:fixture.person.id,sourceVersionId:fixture.workPin.id};
+ const pending=resolveCharacterReference(fixture.formProject,anchor,fixture.scene.id);anchor.entityId=fixture.group.id;
+ expect((await pending).person.id).toBe(fixture.person.id);
+});
