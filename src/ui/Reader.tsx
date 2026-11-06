@@ -19,7 +19,7 @@ import { analyzeFlowInBrowser } from './flowAnalysis';
 import { useEffect, useId, useMemo, useState } from 'react';
 import type { ContentAnchor, Entity, ProjectContent, ProjectData, ProjectSnapshot, TypedValue } from '../domain/types';
 import { createEntity, newId, getEntitiesByKind } from '../domain/model';
-import { declaredEntrypoints, defaultTrialEntry, backTrial, diffRuntimeStates, checkTrialForeshadows, getTrialChoices, getTrialContent, getTrialNode, pinTrialRecord, restartTrial, setTrialStubValues, stepTrial, trialCoverage, trialNarrativeOccurrences, type TrialSession } from '../domain/runtime';
+import { availableTrialEntrypoints, defaultTrialEntry, backTrial, diffRuntimeStates, checkTrialForeshadows, getTrialChoices, getTrialContent, getTrialNode, pinTrialRecord, restartTrial, setTrialStubValues, stepTrial, trialCoverage, trialNarrativeOccurrences, type TrialSession } from '../domain/runtime';
 import { worldTimeUnit } from '../domain/timeEditing';
 import { jsonBytes, sha256 } from '../storage';
 import { EmptyState, Icon, Modal, downloadBytes, safeFileName } from './components';
@@ -77,7 +77,7 @@ export function Reader({ project, worldSnapshots = {}, onOpen, onOpenTarget, onS
   useEffect(() => () => analysisOperation.controller?.abort(), [analysisOperation]);
   const selectedContent = version ? project.snapshots.find(snapshot => snapshot.id === version)?.content : project;
   const startContent = selectedContent ? { ...selectedContent, history: [], snapshots: [] } : undefined;
-  const declaredEntries = startContent ? declaredEntrypoints(startContent).filter(id => startContent.entities.some(entity => entity.id === id && entity.kind === 'flow_node' && !entity.deletedAt && !['rejected', 'alternate'].includes(entity.status))) : [];
+  const declaredEntries = startContent ? availableTrialEntrypoints(startContent) : [];
   const defaultEntry = startContent ? defaultTrialEntry(startContent) : undefined;
   const startUnit = worldTimeUnit(selectedContent?.calendars.find(calendar => calendar.id === selectedContent.calendarId));
   const analysisContent = analysis?.contentVersionId === project.projectId ? project : project.snapshots.find(snapshot => snapshot.id === analysis?.contentVersionId)?.content;

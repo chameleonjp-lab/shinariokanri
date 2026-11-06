@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { createEntity, createProject, textToRichText } from '../../src/domain/model';
+import { createWorldSnapshot } from '../../src/domain/world';
 import { exportScenario } from '../../src/storage/archive';
 import type { ProjectData } from '../../src/domain/types';
 
@@ -103,4 +104,68 @@ test('時が未定義の暦で最小単位を確認し、日時の一括移動�
   await expect(page.getByRole('status').filter({ hasText: '全出来事の日時を移動しました' })).toBeVisible();
   await page.getByRole('button', { name: '前回の日時変更を一括取消', exact: true }).click();
   await expect(page.getByRole('status').filter({ hasText: '日時の変更をすべて取り消しました' })).toBeVisible();
+});
+
+async function oldSourceFixture() {
+  let project = createProject('以前の版と比較元を分ける');
+  project.revision = '7';
+  const scene = createEntity(project.projectId, 'scene', '元の場面', { body: textToRichText('以前の本文。') });
+  scene.status = 'confirmed'; project.entities.push(scene);
+  project = await createWorldSnapshot(project, '作品の旧版7');
+  const pin = project.snapshots.at(-1)!;
+  const media = createEntity(project.projectId, 'media_variant', '小説の公開稿', { medium: 'novel', baseSnapshotId: pin.id, sourceIds: [scene.id], body: textToRichText('旧版に基づく本文。') });
+  media.status = 'confirmed'; project.entities.push(media); project.revision = '15';
+  return { project, pin, media };
+}
+
+test('媒体の詳細で元の版番号7と比較した現在稿15を分ける', async ({ page }) => {
+  const { project, pin, media } = await oldSourceFixture();
+  await seed(page, project); await navigate(page, /^資料/);
+  await page.getByLabel('情報の種類', { exact: true }).selectOption('media_variant');
+  await page.locator('.entity-card').filter({ has: page.getByRole('heading', { name: media.name, exact: true }) }).click();
+  const tool = page.locator('.detail-panel details').filter({ has: page.locator('summary').filter({ hasText: '媒体の旧公開版と改訂候補を比較' }) });
+  await tool.locator('summary').first().click();
+  await tool.getByRole('button', { name: '媒体の改訂差分を確認', exact: true }).click();
+  await tool.getByText('元にした作品の版の詳細', { exact: true }).click();
+  await expect(tool).toContainText('元にした作品の版番号 7');
+  await expect(tool).toContainText('比較時の現在稿の版番号 15');
+  await expect(tool).toContainText(pin.id);
+  await expect(tool).toContainText(pin.contentHash);
+});
+
+test('相談の詳細で対象の版番号7と比較した現在稿15を分ける', async ({ page }) => {
+  const { project, pin } = await oldSourceFixture();
+  await seed(page, project); await navigate(page, /^作品・保存$/);
+  await page.getByRole('tab', { name: '目的別出力', exact: true }).click();
+  const panel = page.locator('.consultation-import'); await panel.locator('summary').first().click();
+  await panel.getByLabel('提案の出所', { exact: true }).fill('相談した原稿');
+  await panel.getByLabel('提案の相談対象版', { exact: true }).selectOption(pin.id);
+  await panel.getByLabel('提案Markdown', { exact: true }).fill('旧版についての提案。');
+  await panel.getByRole('button', { name: '提案の別案差分を確認', exact: true }).click();
+  await panel.getByText('相談した作品の版の詳細', { exact: true }).click();
+  await expect(panel).toContainText('相談した作品の版番号 7');
+  await expect(panel).toContainText('比較時の現在稿の版番号 15');
+  await expect(panel).toContainText(pin.id);
+});
+
+test('相対日時の入力は基準の24単位の日を継承して換算する', async ({ page }) => {
+  const project = createProject('異なる暦の相対入力');
+  project.calendars.push({ id: 'fiction', name: '一日24単位の暦', kind: 'repeating', originLabel: '原点', ticksPerDay: '24', years: [{ months: [{ name: '始月', days: 30 }] }] });
+  const anchor = createEntity(project.projectId, 'event', '別暦の基準', { time: { mode: 'instant', at: '0', calendarId: 'fiction' }, laneRole: 'common' });
+  const relative = createEntity(project.projectId, 'event', '翌日の出来事', { time: { mode: 'relative', anchorEventId: anchor.id, anchorPoint: 'start', minOffset: '24', maxOffset: '24' }, laneRole: 'common' });
+  project.entities.push(anchor, relative);
+  await seed(page, project); await navigate(page, /^年表/);
+  await page.locator(`[data-event-id="${relative.id}"]`).first().click();
+  const close = page.getByRole('button', { name: '詳細を閉じる' });
+  if (await close.isVisible()) await close.click();
+  else await page.getByRole('button', { name: '一覧に戻る' }).click();
+  await page.getByRole('button', { name: '選択した出来事の日時・制約', exact: true }).click();
+  const dialog = page.getByRole('dialog', { name: `日時・前後関係 · ${relative.name}` });
+  await expect(dialog).toContainText('1日 24 時間の最小単位');
+  await dialog.getByLabel('相対日時の差の入力単位', { exact: true }).selectOption('day');
+  await expect(dialog.getByLabel('相対日時の差の最小', { exact: true })).toHaveValue('1');
+  await expect(dialog.getByLabel('相対日時の差の最大', { exact: true })).toHaveValue('1');
+  await dialog.getByLabel('相対日時の差の最大', { exact: true }).fill('2');
+  await dialog.getByRole('button', { name: '変更前の影響を確認', exact: true }).click();
+  await expect(dialog).toContainText('0年1月2日 〜 0年1月3日');
 });

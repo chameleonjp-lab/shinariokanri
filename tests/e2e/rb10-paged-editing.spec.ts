@@ -467,7 +467,7 @@ test('日時影響と世界確認の129根拠を分割して開き、取消・�
   const openTime = async () => { await page.getByRole('button', { name: '選択した出来事の日時・制約', exact: true }).click(); return page.getByRole('dialog', { name: `日時・前後関係 · ${second.name}`, exact: true }); };
   let modal = await openTime();
   const preview = async () => {
-    await modal.getByLabel('出来事の世界内tick', { exact: true }).fill('100');
+    await modal.getByLabel('出来事の日時', { exact: true }).fill('100');
     await modal.getByRole('button', { name: '変更前の影響を確認', exact: true }).click();
     await modal.getByText('年齢・所属・移動・関連情報への影響を確認', { exact: true }).click();
     return modal.locator('.world-check-candidate').filter({ hasText: '最低所要時間より短い候補' });
@@ -480,7 +480,7 @@ test('日時影響と世界確認の129根拠を分割して開き、取消・�
   await expect(page.locator('.detail-panel').getByLabel('名前', { exact: true })).toHaveValue('移動根拠125');
   await page.locator('.detail-panel').getByRole('button', { name: '詳細を閉じる', exact: true }).click();
   await page.locator(`button[data-event-id="${second.id}"]`).click(); modal = await openTime();
-  await expect(modal.getByLabel('出来事の世界内tick', { exact: true })).toHaveValue('300');
+  await expect(modal.getByLabel('出来事の日時', { exact: true })).toHaveValue('300');
   candidate = await preview(); await expect(candidate.locator('[data-windowed-list="候補の根拠"] > button')).toHaveCount(9);
   await modal.getByRole('button', { name: '差分を一括確定', exact: true }).click(); await expect(modal).toHaveCount(0);
   await page.getByRole('tab', { name: '世界・地図・履歴', exact: true }).click(); await page.getByRole('tab', { name: '世界時点の確認候補', exact: true }).click();

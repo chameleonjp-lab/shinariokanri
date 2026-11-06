@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { CalendarDefinition, Entity, ID, ProjectData, Relation, Tick, TimeSpec } from '../domain/types';
 import { emptyValidity, newId, RELATION_LABELS, RELATION_TYPES } from '../domain/model';
 import { compareTicks, formatRelativeTick, isTick, MAX_TICK, parseTick, type TimeResolution } from '../domain/time';
-import { applyTimeEditPreview, formatWorldTick, worldTimeUnit, calendarAxisTicks, calendarDisplayUnits, characterTimeSummary, displayUnitTicks, resolveEventTimes, shiftAllEventTimes, undoTimeEdit, type CalendarDisplayUnit, type TimeEditChange, type TimeEditPreview } from '../domain/timeEditing';
+import { applyTimeEditPreview, calendarForTime, formatWorldTick, worldTimeUnit, calendarAxisTicks, calendarDisplayUnits, characterTimeSummary, displayUnitTicks, resolveEventTimes, shiftAllEventTimes, undoTimeEdit, type CalendarDisplayUnit, type TimeEditChange, type TimeEditPreview } from '../domain/timeEditing';
 import { buildTimelineLanes, buildTimelineLayout, timelineWindow } from '../domain/timelineLayout';
 import { EmptyState, Icon, Modal, StatusBadge, fieldText } from './components';
 import { labelOf } from './Fields';
@@ -28,15 +28,7 @@ export function timeLabel(value: unknown, project: ProjectData): string {
   if (time.mode === 'interval') return `${label(time.start)} 〜 ${label(time.end)}（終了を含まない）`;
   if (time.mode === 'uncertain') return `${label(time.earliest)} 〜 ${label(time.latest)} · ${time.precision}`;
   if (time.mode === 'relative') {
-    let anchor = project.entities.find((entity): entity is Entity<'event'> => entity.id === time.anchorEventId && entity.kind === 'event' && !entity.deletedAt);
-    const seen = new Set<ID>();
-    while (anchor?.data.time.mode === 'relative' && !seen.has(anchor.id)) {
-      seen.add(anchor.id);
-      const nextId = anchor.data.time.anchorEventId;
-      anchor = project.entities.find((entity): entity is Entity<'event'> => entity.id === nextId && entity.kind === 'event' && !entity.deletedAt);
-    }
-    const anchorCalendarId = anchor && 'calendarId' in anchor.data.time ? anchor.data.time.calendarId : undefined;
-    const anchorCalendar = project.calendars.find(candidate => candidate.id === anchorCalendarId);
+    const anchorCalendar = calendarForTime(time, project);
     return `${labelOf(project.entities.find(entity => entity.id === time.anchorEventId))}の${time.anchorPoint === 'start' ? '開始' : '終了'}から ${time.minOffset}〜${time.maxOffset} ${worldTimeUnit(anchorCalendar)}`;
   }
   return `日時未定${time.mode === 'unknown' && time.reason ? ` · ${time.reason}` : ''}`;

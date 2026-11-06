@@ -1,6 +1,6 @@
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { TickInput } from '../src/ui/TimelineEditors';
+import { TickInput, TimelineTimeEditor } from '../src/ui/TimelineEditors';
 import { describe, expect, it } from 'vitest';
 import { createEntity, createProject } from '../src/domain/model';
 import { calendarDisplayUnits } from '../src/domain/timeEditing';
@@ -13,6 +13,30 @@ describe('stage A human-readable world time', () => {
     expect(markup).toContain('秒で入力');
     expect(markup).toContain('1日 86400 秒');
     expect(markup).toContain('日時の詳細');
+  });
+  it('inherits relative editor units from the resolved anchor instead of the project default', () => {
+    const project = createProject();
+    project.calendars.push({ id: 'fiction', name: '架空暦', kind: 'repeating', originLabel: '創世', ticksPerDay: '24', years: [{ months: [{ name: '始月', days: 30 }] }] });
+    const anchor = createEntity(project.projectId, 'event', '独自暦の基準', { time: { mode: 'instant', at: '0', calendarId: 'fiction' } });
+    const relative = createEntity(project.projectId, 'event', '一日後', { time: { mode: 'relative', anchorEventId: anchor.id, anchorPoint: 'start', minOffset: '24', maxOffset: '24' } });
+    project.entities.push(anchor, relative);
+    const markup = renderToStaticMarkup(createElement(TimelineTimeEditor, { project, event: relative, onClose: () => undefined, onSave: async p => p, onApplied: () => undefined }));
+    expect(markup).toContain('1日 24 時間の最小単位');
+    expect(markup).not.toContain('秒');
+    expect(timeLabel(relative.data.time, project)).toContain('時間の最小単位');
+  });
+  it.each(['missing', 'cycle', 'unknown', 'conflict'])('uses only smallest units for a relative editor with a %s anchor', mode => {
+    const project = createProject();
+    const anchor = createEntity(project.projectId, 'event', '基準', { time: { mode: 'instant', at: '0', calendarId: project.calendarId } });
+    const relative = createEntity(project.projectId, 'event', '相対日時', { time: { mode: 'relative', anchorEventId: anchor.id, anchorPoint: 'start', minOffset: '24', maxOffset: '24' } });
+    if (mode === 'unknown') anchor.data.time = { mode: 'unknown', reason: '未定' };
+    if (mode === 'conflict') anchor.data.time = { mode: 'interval', start: '1', end: '0', calendarId: project.calendarId };
+    if (mode === 'cycle') anchor.data.time = { ...relative.data.time as Extract<typeof relative.data.time, { mode: 'relative' }>, anchorEventId: relative.id };
+    project.entities.push(...(mode === 'missing' ? [] : [anchor]), relative);
+    const markup = renderToStaticMarkup(createElement(TimelineTimeEditor, { project, event: relative, onClose: () => undefined, onSave: async p => p, onApplied: () => undefined }));
+    expect(markup).toContain('時間の最小単位');
+    expect(markup).not.toContain('秒');
+    expect(markup).not.toContain('1日 86400');
   });
   it('shows seconds and clock time only for the calendar that defines them', () => {
     const project = createProject();

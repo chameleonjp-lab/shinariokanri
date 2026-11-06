@@ -198,8 +198,15 @@ export function declaredEntrypoints(project: ProjectData): ID[] {
   if (roots.length > 0) return [...new Set(roots.flatMap(graph => graph.data.entryIds))];
   return nodes(project).filter(node => node.projectId === project.projectId && node.data.nodeType === 'entry').map(node => node.id);
 }
+/** Automatic starts use adopted local declarations; an inactive graph never becomes a legacy node-only work. */
+export function availableTrialEntrypoints(project: ProjectData): ID[] {
+  project = reuseAuthorContent(project);
+  const localGraphs = project.entities.filter((entity): entity is Entity<'flow_graph'> => entity.kind === 'flow_graph' && entity.projectId === project.projectId);
+  const declared = localGraphs.length ? localGraphs.filter(graph => adoptedRecord(graph) && !graph.data.parentGraphId).flatMap(graph => graph.data.entryIds) : declaredEntrypoints(project);
+  return [...new Set(declared)].filter(id => { const node = findNode(project, id); return !!node && adoptedRecord(node); });
+}
 export function defaultTrialEntry(project: ProjectData): ID | undefined {
-  const entries = declaredEntrypoints(project).filter(id => !!findNode(project, id));
+  const entries = availableTrialEntrypoints(project);
   const saved = project.views.filter(view => view.view === 'reader' && view.entityIds.length === 1).map(view => view.entityIds[0]).filter(id => entries.includes(id));
   const defaults = [...new Set(saved)];
   return defaults.length === 1 ? defaults[0] : entries.length === 1 ? entries[0] : undefined;

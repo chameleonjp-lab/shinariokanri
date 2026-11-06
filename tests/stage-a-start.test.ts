@@ -48,6 +48,33 @@ describe('stage A initial reading', { timeout: 30_000 }, () => {
     expect(startTrial(project).nodeId).toBe(nodes[0].id);
   });
 
+  it('ignores alternate saved and sole entrances while preserving explicit active overrides', () => {
+    const { project, nodes, graph } = work(2);
+    project.views.push({ id: crypto.randomUUID(), name: '本編の開始', view: 'reader', entityIds: [nodes[0].id], settings: {} });
+    nodes[0].status = 'alternate';
+    expect(startTrial(project).nodeId).toBe(nodes[1].id);
+    expect(startTrial(project, { entryId: nodes[1].id }).nodeId).toBe(nodes[1].id);
+    expect(startTrial(project, { entryId: nodes[0].id }).status).toBe('error');
+    graph.data.entryIds = [nodes[0].id];
+    expect(startTrial(project).issues[0]?.path).toBe('entryId');
+    graph.data.entryIds = [];
+    expect(startTrial(project).issues[0]?.path).toBe('entryId');
+  });
+
+  it('does not revive declarations from an alternate root graph or choose between two remaining active entries', () => {
+    const { project, nodes, graph } = work(1);
+    project.entities = [nodes[0], graph];
+    graph.status = 'alternate';
+    expect(startTrial(project).issues[0]?.path).toBe('entryId');
+    expect(startTrial(project, { entryId: nodes[0].id }).nodeId).toBe(nodes[0].id);
+    const extra = createEntity(project.projectId, 'flow_node', '有効な別入口', { nodeType: 'entry', gate: null });
+    const activeGraph = createEntity(project.projectId, 'flow_graph', '採用した本編', { nodeIds: [nodes[1].id, extra.id], entryIds: [nodes[1].id, extra.id] });
+    project.entities.push(nodes[1], extra, activeGraph);
+    expect(startTrial(project).issues[0]?.path).toBe('entryId');
+    activeGraph.data.entryIds = [extra.id];
+    expect(startTrial(project).nodeId).toBe(extra.id);
+  });
+
   it('preserves the authored entry when native import creates a separate copy with new IDs', async () => {
     const { project, nodes } = work(2), target = createProject('別のコピー');
     project.views.push({ id: crypto.randomUUID(), name: '本編の開始', view: 'reader', entityIds: [nodes[1].id], settings: {} });

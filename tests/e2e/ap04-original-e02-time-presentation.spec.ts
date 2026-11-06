@@ -66,9 +66,9 @@ test('AT-E02 -10tickの後章回想を同じ作品で単位・基準・章順変
     const before = await authorFingerprint(page);
     let dialog = await timeEditor(page, past.id, past.name);
     await dialog.getByRole('button', { name: '暦の年月日', exact: true }).click();
-    await dialog.getByLabel('出来事の世界内tickの年', { exact: true }).fill('1');
-    await dialog.getByLabel('出来事の世界内tickの月', { exact: true }).fill('2');
-    await dialog.getByLabel('出来事の世界内tickの日', { exact: true }).fill('30');
+    await dialog.getByLabel('出来事の日時の年', { exact: true }).fill('1');
+    await dialog.getByLabel('出来事の日時の月', { exact: true }).fill('2');
+    await dialog.getByLabel('出来事の日時の日', { exact: true }).fill('30');
     await expect(dialog.getByRole('alert')).toBeVisible();
     await expect(dialog.getByRole('button', { name: '変更前の影響を確認', exact: true })).toBeDisabled();
     await dialog.getByRole('button', { name: '変更を中止', exact: true }).click();
