@@ -198,9 +198,11 @@ export function declaredEntrypoints(project: ProjectData): ID[] {
   if (roots.length > 0) return [...new Set(roots.flatMap(graph => graph.data.entryIds))];
   return nodes(project).filter(node => node.projectId === project.projectId && node.data.nodeType === 'entry').map(node => node.id);
 }
-function declaredEntry(project: ProjectData): ID | undefined {
-  const entries = declaredEntrypoints(project);
-  return entries.length === 1 ? entries[0] : undefined;
+export function defaultTrialEntry(project: ProjectData): ID | undefined {
+  const entries = declaredEntrypoints(project).filter(id => !!findNode(project, id));
+  const saved = project.views.filter(view => view.view === 'reader' && view.entityIds.length === 1).map(view => view.entityIds[0]).filter(id => entries.includes(id));
+  const defaults = [...new Set(saved)];
+  return defaults.length === 1 ? defaults[0] : entries.length === 1 ? entries[0] : undefined;
 }
 
 /** Flow and chapter readers use one atomic presentation contract. */
@@ -316,7 +318,7 @@ function startTrialInternal(project: ProjectData, options: TrialStartOptions = {
     }
   }
   if (options.seed !== undefined) state.rngSeed = options.seed;
-  const entry = options.entryId ?? state.presentationPosition ?? declaredEntry(project);
+  const entry = options.entryId ?? state.presentationPosition ?? defaultTrialEntry(project);
   if (!failure) {
     const shape = validateRuntimeState(state);
     if (!shape.ok) failure = shape.issues[0];

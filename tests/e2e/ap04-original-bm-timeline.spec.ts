@@ -126,7 +126,7 @@ test('AT-B06 本編基準だけを変更し、前後出来事の絶対tickと内
   const beforeContext = await page.locator('.timeline-context').textContent();
   await clause('AT-B06', 'when', async () => {
     await page.getByRole('button', { name: '本編開始の基準を変更', exact: true }).click(); const dialog = page.getByRole('dialog', { name: '本編開始の基準を変更' });
-    await dialog.getByLabel('本編開始の世界内tick', { exact: true }).fill('10'); await dialog.getByRole('button', { name: '本編の基準を保存', exact: true }).click(); await expect(dialog).toHaveCount(0);
+    await dialog.getByLabel('本編開始の日時', { exact: true }).fill('10'); await dialog.getByRole('button', { name: '本編の基準を保存', exact: true }).click(); await expect(dialog).toHaveCount(0);
   });
   await clause('AT-B06', 'then', async () => { await expect(page.locator('.timeline-context')).toContainText('本編開始 10 tick'); expect(await page.locator('.timeline-context').textContent()).not.toBe(beforeContext); });
   await clause('AT-B06', 'negative_or_edge', async () => { await page.reload(); const saved = await backup(page); expect(saved.project.mainStart).toBe('10'); for (const e of [f.common, f.shared]) expect(findEntity(saved.project, e.id, 'event').data).toEqual(e.data); await attachObservation(info, 'AT-B06-observed', { mainStart: saved.project.mainStart, retainedTimes: saved.project.entities.filter(e => e.kind === 'event').map(e => e.data.time) }); });

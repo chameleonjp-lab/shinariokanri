@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import type { CalendarDefinition, Entity, ID, ProjectData, Tick, TimeConstraint, TimeSpec } from '../domain/types';
-import { calendarDateToTick, formatCalendarTick, isTick, MAX_TICK, parseTick, tickToCalendarDate, type TimeResolution } from '../domain/time';
-import { applyTimeEditPreview, previewTimeEdit, type TimeEdit, type TimeEditChange, type TimeEditPreview } from '../domain/timeEditing';
+import { calendarDateToTick, isTick, MAX_TICK, parseTick, tickToCalendarDate, type TimeResolution } from '../domain/time';
+import { applyTimeEditPreview, formatWorldTick, worldTimeUnit, previewTimeEdit, type TimeEdit, type TimeEditChange, type TimeEditPreview } from '../domain/timeEditing';
 import { Modal } from './components';
 import { labelOf } from './Fields';
 import { WorldTimeImpactPreview } from './WorldTimeImpactPreview';
@@ -15,7 +15,7 @@ export type TimelineSave = (candidate: ProjectData, reason: string) => Promise<P
 export function resolutionLabel(time: TimeResolution, project: ProjectData): string {
   if (time.status !== 'resolved') return time.reason;
   const calendar = project.calendars.find(candidate => candidate.id === time.calendarId);
-  const format = (tick: Tick) => { try { return calendar ? formatCalendarTick(tick, calendar) : `${tick} tick`; } catch { return `${tick} tick`; } };
+  const format = (tick: Tick) => formatWorldTick(tick, calendar);
   return time.earliest === time.endLatest ? format(time.earliest) : `${format(time.earliest)} 〜 ${format(time.endLatest)}`;
 }
 
@@ -31,9 +31,9 @@ export function TickInput({ label, value, calendar, onChange, onValid }: { label
       setError(''); onValid?.(true); onChange(tick);
     } catch (cause) { setError((cause as Error).message); onValid?.(false); }
   };
-  return <div className="form-field timeline-tick-input"><label>{label}</label><div className="timeline-input-format"><button type="button" aria-pressed={format === 'tick'} onClick={() => setFormat('tick')}>世界内tick</button><button type="button" aria-pressed={format === 'date'} onClick={() => setFormat('date')}>暦の年月日</button></div>{format === 'tick' ? <input aria-label={label} value={value} onChange={event => { const next = event.target.value, valid = isTick(next); onChange(next); onValid?.(valid); setError(valid ? '' : 'tickは38桁以内の整数で入力してください。'); if (valid) setDate(makeDate(next)); }}/>
-    : <div className="timeline-calendar-input">{(['year', 'month', 'day', 'tickOfDay'] as const).map(field => <label key={field}>{{ year: '年', month: '月', day: '日', tickOfDay: '日内tick' }[field]}<input aria-label={`${label}の${{ year: '年', month: '月', day: '日', tickOfDay: '日内tick' }[field]}`} value={date[field]} inputMode={field === 'year' ? 'text' : 'numeric'} onChange={event => updateDate(field, event.target.value)}/></label>)}</div>}
-    <span className="field-hint">{calendar.name} · 1日 {calendar.ticksPerDay} tick{format === 'date' && ` · 世界内tick ${value}`}</span>{error && <span className="field-error" role="alert">{error}</span>}</div>;
+  return <div className="form-field timeline-tick-input"><label>{label}</label><div className="timeline-input-format"><button type="button" aria-pressed={format === 'tick'} onClick={() => setFormat('tick')}>{worldTimeUnit(calendar)}で入力</button><button type="button" aria-pressed={format === 'date'} onClick={() => setFormat('date')}>暦の年月日</button></div>{format === 'tick' ? <input aria-label={label} value={value} onChange={event => { const next = event.target.value, valid = isTick(next); onChange(next); onValid?.(valid); setError(valid ? '' : '38桁以内の整数で入力してください。暦の年月日でも指定できます。'); if (valid) setDate(makeDate(next)); }}/>
+    : <div className="timeline-calendar-input">{(['year', 'month', 'day', 'tickOfDay'] as const).map(field => <label key={field}>{{ year: '年', month: '月', day: '日', tickOfDay: `日内の${worldTimeUnit(calendar)}` }[field]}<input aria-label={`${label}の${{ year: '年', month: '月', day: '日', tickOfDay: `日内の${worldTimeUnit(calendar)}` }[field]}`} value={date[field]} inputMode={field === 'year' ? 'text' : 'numeric'} onChange={event => updateDate(field, event.target.value)}/></label>)}</div>}
+    <span className="field-hint">{calendar.name} · 1日 {calendar.ticksPerDay} {worldTimeUnit(calendar)}</span><details><summary>日時の詳細</summary><p>tick {value} · 暦 {calendar.id}</p></details>{error && <span className="field-error" role="alert">{error}</span>}</div>;
 }
 
 export function EntityChoice({ entities, value, onChange, label, excludeId }: { entities: Entity[]; value: ID; onChange: (id: ID) => void; label: string; excludeId?: ID }) {
@@ -64,7 +64,7 @@ function OffsetInputs({ label, minimum, maximum, calendar, onChange }: { label: 
   const display = (value: Tick) => isTick(value) && parseTick(value) % width === 0n ? (parseTick(value) / width).toString() : value;
   const convert = (value: string) => isTick(value) ? (parseTick(value) * width).toString() : value;
   const divisible = isTick(minimum) && isTick(maximum) && parseTick(minimum) % parseTick(calendar.ticksPerDay) === 0n && parseTick(maximum) % parseTick(calendar.ticksPerDay) === 0n;
-  return <div className="form-field"><label>{label}</label><div className="timeline-offset-input"><select aria-label={`${label}の入力単位`} value={unit} onChange={event => setUnit(event.target.value as 'tick' | 'day')}><option value="tick">tick</option><option value="day" disabled={!divisible} title={!divisible ? '日未満の端数があるため、tickで入力してください。' : undefined}>日</option></select><label>最小<input aria-label={`${label}の最小`} value={display(minimum)} onChange={event => onChange(convert(event.target.value), maximum)}/></label><label>最大<input aria-label={`${label}の最大`} value={display(maximum)} onChange={event => onChange(minimum, convert(event.target.value))}/></label></div><span className="field-hint">1日 {calendar.ticksPerDay} tick{!divisible && ' · 日未満の端数はtickで入力します。'}</span></div>;
+  return <div className="form-field"><label>{label}</label><div className="timeline-offset-input"><select aria-label={`${label}の入力単位`} value={unit} onChange={event => setUnit(event.target.value as 'tick' | 'day')}><option value="tick">{worldTimeUnit(calendar)}</option><option value="day" disabled={!divisible} title={!divisible ? '日未満の端数があるため、時間の最小単位で入力してください。' : undefined}>日</option></select><label>最小<input aria-label={`${label}の最小`} value={display(minimum)} onChange={event => onChange(convert(event.target.value), maximum)}/></label><label>最大<input aria-label={`${label}の最大`} value={display(maximum)} onChange={event => onChange(minimum, convert(event.target.value))}/></label></div><span className="field-hint">1日 {calendar.ticksPerDay} {worldTimeUnit(calendar)}{!divisible && ' · 日未満の端数は時間の最小単位で入力します。'}</span></div>;
 }
 
 export function TimelineTimeEditor({ project, referenceProject, event, onClose, onSave, onApplied, point, onOpen }: { project: ProjectData; referenceProject?: ProjectData; event: Entity<'event'>; onClose: () => void; onSave: TimelineSave; onApplied: (changes: TimeEditChange[]) => void; point?: WorldPoint; onOpen?: (id: ID) => void }) {

@@ -290,6 +290,7 @@ export function enrichAdventureStory(project: ProjectData): void {
   if (base.length !== 12) throw new Error('充実版は元の12場面へ一度だけ適用します。');
   const chapters = project.entities.filter((entity): entity is Entity<'chapter'> => entity.kind === 'chapter');
   const graph = find('flow_graph', '全3章・星還りの旅');
+  project.views.push({ id: newId(), name: '本編の試読開始', view: 'reader', entityIds: [...graph.data.entryIds], settings: {} });
   const originalNodes = base.map(scene => project.entities.find((entity): entity is Entity<'flow_node'> => entity.kind === 'flow_node' && entity.data.sceneId === scene.id)!);
   const originalEdges = graph.data.edgeIds.map(id => project.entities.find((entity): entity is Entity<'flow_edge'> => entity.kind === 'flow_edge' && entity.id === id)!);
   const earlyEffects = new Map<number, string[]>([

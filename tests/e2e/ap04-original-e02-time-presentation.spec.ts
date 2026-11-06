@@ -45,7 +45,7 @@ test('AT-E02 -10tickの後章回想を同じ作品で単位・基準・章順変
     expect(await authorFingerprint(page)).toBe(before);
     await page.getByRole('button', { name: '本編開始の基準を変更', exact: true }).click();
     const dialog = page.getByRole('dialog', { name: '本編開始の基準を変更', exact: true });
-    await dialog.getByLabel('本編開始の世界内tick', { exact: true }).fill('10');
+    await dialog.getByLabel('本編開始の日時', { exact: true }).fill('10');
     await dialog.getByRole('button', { name: '本編の基準を保存', exact: true }).click();
     await expect(dialog).toBeHidden();
     await expect(page.locator('.timeline-context')).toContainText('中心の本編基準 −10 tick');

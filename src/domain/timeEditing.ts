@@ -1,11 +1,28 @@
 import type { CalendarDefinition, Entity, EventData, ID, ProjectData, Tick, TimeConstraint, TimeSpec, ValidationIssue } from './types';
 import { addTicks, calendarDateToTick, compareTicks, floorDiv, isTick, MAX_TICK, parseTick, resolveEventTimes, resolveRelativeTime, resolveTime, tickToCalendarDate, toTick, type CalendarDate, type ResolvedTime, type TimeResolution } from './time';
 
+/** Only the standard Gregorian calendar defines seconds and clock hours. */
+export function worldTimeUnit(calendar?: CalendarDefinition): string {
+  return calendar?.kind === 'gregorian' && calendar.ticksPerDay === '86400' ? '秒' : '時間の最小単位';
+}
+export function formatWorldTick(tick: Tick, calendar?: CalendarDefinition): string {
+  if (!calendar) return `時間の最小単位 ${tick}（暦の対応未定）`;
+  try {
+    const date = tickToCalendarDate(tick, calendar), day = `${date.year}年${date.month}月${date.day}日`;
+    const within = parseTick(date.tickOfDay ?? '0');
+    if (calendar.kind === 'gregorian') {
+      const clock = [within / 3600n, within / 60n % 60n, within % 60n].map(value => value.toString().padStart(2, '0')).join(':');
+      return `${day} ${clock}`;
+    }
+    return within === 0n ? day : `${day} + 時間の最小単位 ${within}`;
+  } catch { return `時間の最小単位 ${tick}（暦の対応未定）`; }
+}
+
 export type CalendarDisplayUnit = 'tick' | 'hour' | 'day' | 'month' | 'year' | 'custom';
 export interface DisplayUnitChoice { key: CalendarDisplayUnit; label: string; available: boolean; reason?: string }
 export function calendarDisplayUnits(calendar: CalendarDefinition): DisplayUnitChoice[] {
   return [
-    { key: 'tick', label: 'tick', available: true },
+    { key: 'tick', label: worldTimeUnit(calendar), available: true },
     { key: 'hour', label: '時', available: calendar.kind === 'gregorian', ...(calendar.kind !== 'gregorian' ? { reason: 'この暦には時の定義がありません。' } : {}) },
     { key: 'day', label: '日', available: true }, { key: 'month', label: '月', available: true },
     { key: 'year', label: '年', available: true }, { key: 'custom', label: '独自表示単位', available: true },
