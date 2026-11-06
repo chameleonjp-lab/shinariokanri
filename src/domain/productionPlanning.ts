@@ -1,5 +1,6 @@
 import { adoptedRecord } from './adoption';
 import { resolveReuseContent, reuseOrigin } from './reuse';
+import { productionContentView as workloadView, writingCounts, writingRouteCounts } from './production';
 import { createEntity } from './model';
 import { createWorldSnapshot } from './world';
 import { sha256, jsonBytes } from '../storage/json';
@@ -13,21 +14,11 @@ import {replayChapterReading} from './presentation';
 import {editRichText,remapEditedTextReferences,remapEditedTextRelationReferences} from './text';
 import type { Entity, ID, ProjectData, ProjectContent, Estimate, RichText } from './types';
 
-/** Production identity is the originating record and content, rather than each reuse site. */
-function workloadView(project: ProjectData) {
- const view = resolveReuseContent(project, project.snapshots),ownById=new Map(project.entities.map(entity=>[entity.id,entity])),reverseBindings=new WeakMap<object,Map<ID,ID>>();
- const key = (id: ID) => {
-  const origin = reuseOrigin(view,id),own=ownById.get(id);
-  if(!origin||own?.kind==='scene'&&own.data.reuse?.mode==='override'&&own.data.reuse.overrideFields.some(field=>['body','dialogueLineIds','blockIds'].includes(field)))return id;
-  let reverse=reverseBindings.get(origin.bindings);if(!reverse){reverse=new Map(Object.entries(origin.bindings).map(([source,target])=>[target,source]));reverseBindings.set(origin.bindings,reverse);}return reverse.get(id)??origin.entityId;
- };
- return { view, key };
-}
 export function productionWorkload(project:ProjectData,routeSceneIds:readonly ID[]=[],routeEdition:ProjectData=project) {
  const {view,key}=workloadView(project), scenes=view.entities.filter((e):e is Entity<'scene'>=>e.kind==='scene'&&adoptedRecord(e)),sceneIds=new Set(scenes.map(e=>e.id));
  const lines=view.entities.filter(e=>e.kind==='dialogue_line'&&adoptedRecord(e)),assets=view.entities.filter(e=>e.kind==='attachment'&&adoptedRecord(e)),tasks=project.entities.filter((e):e is Entity<'production_task'>=>e.kind==='production_task'&&adoptedRecord(e)),taskById=new Map(tasks.map(task=>[task.id,task]));
  const routeIds=routeEdition===project?sceneIds:new Set(workloadView(routeEdition).view.entities.filter(entity=>entity.kind==='scene'&&adoptedRecord(entity)).map(entity=>entity.id));
- return {uniqueScenes:new Set(scenes.map(e=>key(e.id))).size,uniqueLines:new Set(lines.map(e=>key(e.id))).size,uniqueAssets:new Set(assets.map(e=>key(e.id))).size,reuseSites:scenes.filter(e=>reuseOrigin(view,e.id)).length,routeOccurrences:routeSceneIds.filter(id=>routeIds.has(id)).length,unknownRouteReferences:routeSceneIds.filter(id=>!routeIds.has(id)).length,rows:tasks.map(task=>({task,dependencies:(task.data.dependsOn??[]).map(id=>({id,status:taskById.get(id)?.data.progress??'unknown'})),deadlineConflict:(task.data.dependsOn??[]).some(id=>{const before=taskById.get(id)?.data.deadline,after=task.data.deadline;return !!before&&!!after&&(before.timeZone!==after.timeZone||before.date>after.date);}),blocked:!!task.data.blockingReason||(task.data.dependsOn??[]).some(id=>taskById.get(id)?.data.progress!=='done'),estimate:task.data.estimate??null}))};
+ return {writingCharacters:writingCounts(project).characters,routeWritingCharacters:writingRouteCounts(routeEdition,routeSceneIds).characters,uniqueScenes:new Set(scenes.map(e=>key(e.id))).size,uniqueLines:new Set(lines.map(e=>key(e.id))).size,uniqueAssets:new Set(assets.map(e=>key(e.id))).size,reuseSites:scenes.filter(e=>reuseOrigin(view,e.id)).length,routeOccurrences:routeSceneIds.filter(id=>routeIds.has(id)).length,unknownRouteReferences:routeSceneIds.filter(id=>!routeIds.has(id)).length,rows:tasks.map(task=>({task,dependencies:(task.data.dependsOn??[]).map(id=>({id,status:taskById.get(id)?.data.progress??'unknown'})),deadlineConflict:(task.data.dependsOn??[]).some(id=>{const before=taskById.get(id)?.data.deadline,after=task.data.deadline;return !!before&&!!after&&(before.timeZone!==after.timeZone||before.date>after.date);}),blocked:!!task.data.blockingReason||(task.data.dependsOn??[]).some(id=>taskById.get(id)?.data.progress!=='done'),estimate:task.data.estimate??null}))};
 }
 export async function productionTraceWorkload(input:ProjectData,traceId:ID,worldSnapshots:Record<ID,ProjectContent>={}){
  const project=structuredClone(input),registry=structuredClone(worldSnapshots),trace=project.entities.find((entity):entity is Entity<'trace'>=>entity.id===traceId&&entity.kind==='trace'&&adoptedRecord(entity));if(!trace)throw Error('REFERENCE_INVALID: 制作量を比較する保存経路がありません。');

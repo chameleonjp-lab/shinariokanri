@@ -1,5 +1,8 @@
 import type { Entity, ID, ProjectData } from './types';
-import { collectReferences } from './model';
+import { collectReferences, newId } from './model';
+import { adoptedRecord } from './adoption';
+import { resolveReuseContent, reuseOrigin } from './reuse';
+import { measureText } from './textMetrics';
 
 function stable(value: unknown): string {
  if(value===null || typeof value!=='object') return JSON.stringify(value);
@@ -72,4 +75,70 @@ export function pendingSourceHashes(project: ProjectData) {
   const line=project.entities.find((e):e is Entity<'dialogue_line'>=>e.kind==='dialogue_line'&&e.id===entity.data.sourceLineId&&!e.deletedAt&&!['rejected','alternate'].includes(e.status));
   return {id:entity.id,sourceLineId:entity.data.sourceLineId,stale:!line||entity.data.sourceHash!==await dialogueContentHash(project,line)};
  }));
+}
+
+/** Production identity is the originating record and content, rather than each reuse site. */
+export function productionContentView(project: ProjectData) {
+ const view = resolveReuseContent(project, project.snapshots),ownById=new Map(project.entities.map(entity=>[entity.id,entity])),reverseBindings=new WeakMap<object,Map<ID,ID>>();
+ const key = (id: ID) => {
+  const origin = reuseOrigin(view,id),own=ownById.get(id);
+  if(!origin||own?.kind==='scene'&&own.data.reuse?.mode==='override'&&own.data.reuse.overrideFields.some(field=>['body','dialogueLineIds','blockIds'].includes(field)))return id;
+  let reverse=reverseBindings.get(origin.bindings);if(!reverse){reverse=new Map(Object.entries(origin.bindings).map(([source,target])=>[target,source]));reverseBindings.set(origin.bindings,reverse);}return reverse.get(id)??origin.entityId;
+ };
+ return { view, key };
+}
+
+/** Counts actual block text as Unicode code points, without ruby readings or implicit separators. */
+function writingCountView(project: ProjectData) {
+ const {view,key}=productionContentView(project);
+ const byId=new Map(view.entities.filter(adoptedRecord).map(entity=>[entity.id,entity]));
+ const count=(targetIds:readonly ID[])=>{
+  const pending=[...targetIds],visited=new Set<ID>(),content=new Set<string>(),unknown=new Set<ID>();let characters=0;
+  while(pending.length){
+   const id=pending.pop()!;if(visited.has(id))continue;visited.add(id);
+   const entity=byId.get(id);if(!entity){unknown.add(id);continue;}
+   if(entity.kind==='chapter'){pending.push(...entity.data.sceneIds);continue;}
+   if(entity.kind==='production_task'){pending.push(...entity.data.targetIds);continue;}
+   if(entity.kind!=='scene'&&entity.kind!=='dialogue_line'){unknown.add(id);continue;}
+   if(entity.kind==='scene')pending.push(...entity.data.dialogueLineIds??[]);
+   const blocks=entity.kind==='scene'?entity.data.body:entity.data.text;
+   // Remapped block IDs and ruby do not change authored text; changed fixed source text does.
+   const identity=JSON.stringify([entity.kind,key(id),blocks.map(block=>block.text)]);
+   if(content.has(identity))continue;content.add(identity);
+   for(const block of blocks)characters+=measureText(block.text).codePoints;
+  }
+  return {characters,unknownReferences:unknown.size};
+ };
+ return {byId,count};
+}
+/** Work includes all active scene bodies and dialogue; a chapter/task follows only its targets. */
+export function writingCounts(project: ProjectData, scopeId?: ID) {
+ const {byId,count}=writingCountView(project);
+ if(scopeId){const scope=byId.get(scopeId);if(!scope||!['chapter','production_task'].includes(scope.kind))throw Error('REFERENCE_INVALID: 文字数目標の対象の章・作業単位がありません。');}
+ return count(scopeId?[scopeId]:[...byId.values()].filter(entity=>entity.kind==='scene'||entity.kind==='dialogue_line').map(entity=>entity.id));
+}
+/** Route visits are measured independently, including another reading of the same scene/line. */
+export function writingRouteCounts(project: ProjectData, sceneIds: readonly ID[]) {
+ if(!sceneIds.length)return {characters:0,unknownReferences:0};
+ const {byId,count}=writingCountView(project);let characters=0,unknownReferences=0;
+ const perScene=new Map<ID,ReturnType<typeof count>>();
+ for(const id of sceneIds){if(byId.get(id)?.kind!=='scene'){unknownReferences++;continue;}let measured=perScene.get(id);if(!measured){measured=count([id]);perScene.set(id,measured);}characters+=measured.characters;unknownReferences+=measured.unknownReferences;}
+ return {characters,unknownReferences};
+}
+const goalView='writing-goal';
+const goalMatches=(view:ProjectData['views'][number],scopeId?:ID)=>view.view===goalView&&view.entityIds.length===(scopeId?1:0)&&(!scopeId||view.entityIds[0]===scopeId);
+export function writingGoal(project:ProjectData,scopeId?:ID):number|null {
+ const value=project.views.find(view=>goalMatches(view,scopeId))?.settings.characters;
+ return typeof value==='number'&&Number.isSafeInteger(value)&&value>0?value:null;
+}
+/** Optional goals use the existing saved-view contract and ordinary project save/undo. */
+export function setWritingGoal(project:ProjectData,scopeId:ID|undefined,characters:number|null):ProjectData {
+ if(characters!==null&&(!Number.isSafeInteger(characters)||characters<=0))throw Error('VALIDATION_FAILED: 文字数目標は1以上の安全な整数、または未設定にしてください。');
+ if(scopeId&&!project.entities.some(entity=>entity.id===scopeId&&['chapter','production_task'].includes(entity.kind)&&adoptedRecord(entity)))throw Error('REFERENCE_INVALID: 文字数目標の対象の章・作業単位がありません。');
+ const old=project.views.find(view=>goalMatches(view,scopeId));
+ if(!old&&characters===null)return project;
+ if(old&&writingGoal(project,scopeId)===characters&&characters!==null)return project;
+ const views=project.views.filter(view=>!goalMatches(view,scopeId));
+ if(characters!==null)views.push({...old,id:old?.id??newId(),name:old?.name??'任意の文字数目標',view:goalView,entityIds:scopeId?[scopeId]:[],settings:{...old?.settings,characters,countingRule:'code-points-v1'}});
+ return {...project,views};
 }
