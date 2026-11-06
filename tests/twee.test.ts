@@ -68,3 +68,8 @@ it('exports presentation order and never converts literal body markup into execu
  expect(result.artifact!.content).not.toContain('<<run');expect(result.artifact!.content).not.toContain('[[accidental]]');expect(result.artifact!.content).not.toContain(':: header');
  expect(result.omissions.length).toBeGreaterThan(0);expect(result.originals.some(a=>a.content.includes('dangerous'))).toBe(true);
 });
+
+it('keeps uppercase HTML and variable interpolation in recovery rather than supported plain passages',()=>{
+ const raw=':: A\n<SCRIPT>globalThis.bad=1</SCRIPT>\n$secret\nplain';const parsed=parseTwee(raw);expect(parsed.issues).toHaveLength(2);expect(parsed.passages[0].body).toBe('plain');
+ const p=createProject(),scene=createEntity(p.projectId,'scene','A',{body:textToRichText('<IMG SRC=x onerror=alert(1)>\n$secret\nplain')});p.entities=[scene];const result=exportTweeAlternative(p);expect(result.artifact?.content).not.toContain('<IMG');expect(result.artifact?.content).not.toContain('$secret');expect(result.originals.some(artifact=>artifact.content.includes('onerror'))).toBe(true);
+});
