@@ -11,6 +11,19 @@ function inputs(): WorkspaceDrafts {
   return {drafts:{[`${project.projectId}:${scene.id}`]:scene}, jsonBuffers:{}, settingsDrafts:{}, alternativeDrafts:{}};
 }
 describe('workspace draft recovery mirror', () => {
+  it.each(['read', 'recover', 'mirror'] as const)('handles denied localStorage getter during %s without throwing', operation => {
+    const previous = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
+    Object.defineProperty(globalThis, 'localStorage', {configurable:true, get:() => {throw new DOMException('storage denied', 'SecurityError');}});
+    try {
+      const empty = {drafts:{}, jsonBuffers:{}, settingsDrafts:{}, alternativeDrafts:{}};
+      if (operation === 'read') expect(readWorkspaceDrafts(null)).toEqual(empty);
+      else if (operation === 'recover') expect(readWorkspaceRecovery(null)).toEqual({accountId:null, retainedAt:null, inputs:empty});
+      else expect(mirrorWorkspaceDrafts(null, inputs())).toContain('保持できません');
+    } finally {
+      if (previous) Object.defineProperty(globalThis, 'localStorage', previous);
+      else Reflect.deleteProperty(globalThis, 'localStorage');
+    }
+  });
   it('retains account-scoped inputs with a recovery time while keeping storage inputs backward compatible', () => {
     const storage = memoryStorage(), value = inputs(), retainedAt = '2026-11-06T12:30:00.000Z';
     expect(mirrorWorkspaceDrafts('author-a', value, storage, retainedAt)).toBe('');

@@ -8,13 +8,13 @@ export interface WorkspaceDrafts {drafts:Record<string,Entity>;jsonBuffers:Recor
 export function workspaceDraftKey(accountId:string|null){return `scenario-workspace-input:v1:${accountId??'guest'}`;}
 const empty=():WorkspaceDrafts=>({drafts:{},jsonBuffers:{},settingsDrafts:{},alternativeDrafts:{}});
 type MirrorReader=Pick<Storage,'getItem'>;
-export function readWorkspaceDrafts(accountId:string|null,storage:MirrorReader=localStorage):WorkspaceDrafts{try{const parsed=JSON.parse(storage.getItem(workspaceDraftKey(accountId))??'null');if(parsed&&['drafts','jsonBuffers','settingsDrafts','alternativeDrafts'].every(k=>parsed[k]&&typeof parsed[k]==='object'&&!Array.isArray(parsed[k])))return {drafts:parsed.drafts,jsonBuffers:parsed.jsonBuffers,settingsDrafts:parsed.settingsDrafts,alternativeDrafts:parsed.alternativeDrafts};}catch{}return empty();}
+export function readWorkspaceDrafts(accountId:string|null,storage?:MirrorReader):WorkspaceDrafts{try{const parsed=JSON.parse((storage??localStorage).getItem(workspaceDraftKey(accountId))??'null');if(parsed&&['drafts','jsonBuffers','settingsDrafts','alternativeDrafts'].every(k=>parsed[k]&&typeof parsed[k]==='object'&&!Array.isArray(parsed[k])))return {drafts:parsed.drafts,jsonBuffers:parsed.jsonBuffers,settingsDrafts:parsed.settingsDrafts,alternativeDrafts:parsed.alternativeDrafts};}catch{}return empty();}
 /** Mirror metadata never enters the versioned database input format. */
-export function mirrorWorkspaceDrafts(accountId:string|null,value:WorkspaceDrafts,storage:Pick<Storage,'setItem'>=localStorage,retainedAt=new Date().toISOString()):string{
- try{storage.setItem(workspaceDraftKey(accountId),JSON.stringify({...value,retainedAt}));return '';}catch{return '表示用キャッシュへ保持できません。';}
+export function mirrorWorkspaceDrafts(accountId:string|null,value:WorkspaceDrafts,storage?:Pick<Storage,'setItem'>,retainedAt=new Date().toISOString()):string{
+ try{(storage??localStorage).setItem(workspaceDraftKey(accountId),JSON.stringify({...value,retainedAt}));return '';}catch{return '表示用キャッシュへ保持できません。';}
 }
-export function readWorkspaceRecovery(accountId:string|null,storage:MirrorReader=localStorage){
- let retainedAt:string|null=null;try{const value=JSON.parse(storage.getItem(workspaceDraftKey(accountId))??'null')?.retainedAt;if(typeof value==='string'&&!Number.isNaN(Date.parse(value)))retainedAt=value;}catch{}
+export function readWorkspaceRecovery(accountId:string|null,storage?:MirrorReader){
+ let retainedAt:string|null=null;try{const value=JSON.parse((storage??localStorage).getItem(workspaceDraftKey(accountId))??'null')?.retainedAt;if(typeof value==='string'&&!Number.isNaN(Date.parse(value)))retainedAt=value;}catch{}
  return {accountId,retainedAt,inputs:readWorkspaceDrafts(accountId,storage)};
 }
 interface Persistence {base:WorkspaceDrafts|undefined;latest:WorkspaceDrafts;pending:Promise<void>;waiting:number;failed:boolean}

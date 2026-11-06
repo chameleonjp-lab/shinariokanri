@@ -3,6 +3,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { createEntity, createProject, textToRichText } from '../domain/model';
 import { ChapterReadingView, StructurePreview, WritingWorkspace } from './WritingWorkspace';
+import {buildChapterReadingSequence} from '../domain/writingWorkspace';
 
 function storyFixture() {
   const project = createProject('章と本文');
@@ -36,6 +37,22 @@ describe('writing workspace UI', () => {
     const markup = renderToStaticMarkup(createElement(WritingWorkspace, {project, initialAxis:'character', onOpenEntity:() => undefined}));
     expect(markup).toContain(`data-scene-id="${scene.id}" data-scene-number="2"`);
     expect(markup).toContain('<strong>2. 門の場面</strong>');
+  });
+  it.each(['scene', 'chapter'] as const)('keeps authoring numbers across axes for a rejected %s while retaining reader rules', rejectedKind => {
+    const {project, scene, firstChapter} = storyFixture();
+    const opening = createEntity(project.projectId, 'scene', '別人物の冒頭', {chapterId:firstChapter.id});
+    firstChapter.data.sceneIds.unshift(opening.id);
+    project.entities.push(opening);
+    if (rejectedKind === 'scene') scene.status = 'rejected';
+    else firstChapter.status = 'rejected';
+    const beforeReading = buildChapterReadingSequence(project);
+    if (rejectedKind === 'scene') expect(beforeReading.some(entry => entry.scene.id === scene.id)).toBe(false);
+    for (const initialAxis of ['chapter', 'character'] as const) {
+      const markup = renderToStaticMarkup(createElement(WritingWorkspace, {project, initialAxis, onOpenEntity:() => undefined}));
+      expect(markup).toContain(`data-scene-id="${scene.id}" data-scene-number="2"`);
+      expect(markup).toContain('<strong>2. 門の場面</strong>');
+    }
+    expect(buildChapterReadingSequence(project)).toEqual(beforeReading);
   });
   it('shows the same canonical scene in independent thread lanes and offers chapter presentation controls', () => {
     const { project, scene } = storyFixture();

@@ -110,6 +110,11 @@ export function orderedScenes(project: ProjectData, chapterId?: ID): Entity<'sce
   return canonicalPresentationScenes(project, chapterId, false);
 }
 
+/** Authoring includes rejected records so every visible row keeps its presentation number. */
+export function authoringPresentationScenes(project: ProjectData): Entity<'scene'>[] {
+  return canonicalPresentationScenes(project, undefined, true);
+}
+
 /** A read-through projection. An explicit path preserves its order and can revisit the same canonical scene. */
 export function buildChapterReadingSequence(project: ProjectData, chapterIds?: readonly ID[], scenePath?: readonly ID[]): ChapterReadingEntry[] {
   const allScenes = new Map<ID, Entity<'scene'>>(project.entities.filter((entity): entity is Entity<'scene'> => entity.kind === 'scene').map(scene => [scene.id, scene]));

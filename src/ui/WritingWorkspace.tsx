@@ -11,6 +11,7 @@ import type { ContentAnchor, Entity, ProjectContent, ProjectData, ProjectSnapsho
 import {
   STRUCTURE_TEMPLATES,
   applyStructureOrderPreview,
+  authoringPresentationScenes,
   buildCharacterArc,
   buildChapterReadingSequence,
   buildStoryLanes,
@@ -75,7 +76,7 @@ export function WritingWorkspace({ project, initialAxis = 'chapter', onOpenEntit
   };
   const [arcOrder, setArcOrder] = useState<ArcOrder>('presentation');
   const lanes = useMemo(() => buildStoryLanes(project, axis), [project, axis]);
-  const sceneNumbers = useMemo(() => new Map(buildChapterReadingSequence(project).map((entry, index) => [entry.scene.id, index + 1])), [project]);
+  const sceneNumbers = useMemo(() => new Map(authoringPresentationScenes(project).map((scene, index) => [scene.id, index + 1])), [project]);
   const characters = project.entities.filter((entity): entity is Entity<'character'> => entity.kind === 'character' && !entity.deletedAt);
   const chapters = project.entities.filter((entity): entity is Entity<'chapter'> => entity.kind === 'chapter' && !entity.deletedAt);
   const canEdit = Boolean(onSaveProject);
