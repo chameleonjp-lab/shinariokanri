@@ -37,3 +37,9 @@ describe('TextAnnotations', () => {
     expect(markup).not.toContain('<textarea');
   });
 });
+
+it('offers character information from a confirmed link without leaving the writing editor',()=>{
+ const project=createProject('人物設定'),person=createEntity(project.projectId,'character','アオ'),scene=createEntity(project.projectId,'scene','場面');project.entities=[person,scene];
+ const markup=renderToStaticMarkup(createElement(TextAnnotations,{value:[{id:'paragraph',kind:'paragraph',text:'アオ',links:[{start:0,end:2,target:{entityId:person.id}}]}],project,sourceEntityId:scene.id,onChange:()=>{}}));
+ expect(markup).toContain('人物設定を開く');
+});

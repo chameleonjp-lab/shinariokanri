@@ -1,5 +1,5 @@
 import {test,expect} from '@playwright/test';
-import {createEntity,createProject,textToRichText} from '../../src/domain/model';
+import {createEntity,createProject,textToRichText,newId} from '../../src/domain/model';
 import {addChangeReviews} from '../../src/domain/changeReviews';
 import {exportScenario} from '../../src/storage/archive';
 import {navigate,seed} from './ap04-original-helpers';
@@ -18,7 +18,7 @@ test('09 search retains chapter, match page and selected paragraph after navigat
  const positions=page.getByRole('region',{name:'本文の検索位置'});
  await expect(positions).toContainText('第2章');
  await positions.getByRole('button',{name:'次のページ',exact:true}).click();
- const hit=positions.getByRole('button',{name:/第65段落/});await hit.click();
+ const hit=positions.getByRole('button',{name:/第65段落/});await expect(hit).toHaveCSS('min-height','48px');await hit.click();
  await expect(page.getByLabel('本文',{exact:true})).toHaveValue(scene.data.body.map(b=>b.text).join('\n'));
  await navigate(page,/^資料/);await navigate(page,/^検索/);
  await expect(page.getByLabel('作品内を検索',{exact:true})).toHaveValue('アオ');
@@ -53,4 +53,22 @@ test('18 character changes retain confirmation and show word-only candidates sep
  await expect(reviews.getByRole('heading',{name:/本人の場面 · 再確認済み/})).toBeVisible();
  await reviews.getByRole('button',{name:'単語だけ一致した候補を確認',exact:true}).click();
  await expect(reviews.getByRole('region',{name:'単語だけ一致した候補'})).toContainText('語句だけの候補');
+});
+
+for(const viewport of [{width:1280,height:900},{width:402,height:700}])test(`08 a character sheet preserves the mounted draft, paragraph selection and historical affiliation at ${viewport.width}px`,async({page})=>{
+ const project=createProject('08 人物を開いて本文へ戻る'),person=createEntity(project.projectId,'character','アオ'),namesake=createEntity(project.projectId,'character','アオ'),oldGroup=createEntity(project.projectId,'group','昔の所属'),newGroup=createEntity(project.projectId,'group','今の所属');
+ const event=createEntity(project.projectId,'event','過去の出来事',{time:{mode:'instant',at:'10',calendarId:project.calendarId}}),scene=createEntity(project.projectId,'scene','回想',{eventIds:[event.id],body:[{id:newId(),kind:'paragraph',text:'😀アオは過去を語る。',links:[{start:1,end:3,target:{entityId:person.id}}]}]});
+ const membership=(name:string,groupId:string,start:string,end:string|null)=>createEntity(project.projectId,'assertion',name,{subjectId:person.id,predicate:'member_of',value:groupId,truthKind:'author_truth',validity:{worldRange:{start,end},routeCondition:null,presentationAnchor:null}});
+ project.entities.push(person,namesake,oldGroup,newGroup,event,scene,membership('過去の所属',oldGroup.id,'0','20'),membership('現在の所属',newGroup.id,'20',null));
+ await page.setViewportSize(viewport);await seed(page,await exportScenario(project));await navigate(page,/^資料/);await page.getByLabel('情報の種類',{exact:true}).selectOption('scene');await page.locator('.entity-card').filter({hasText:'回想'}).click();await page.getByRole('tab',{name:'本文',exact:true}).click();
+ const input=page.getByLabel('本文',{exact:true}),raw='😀アオは過去を語る。\n未保存の次の段落も保持する。';await input.fill(raw);
+ await input.evaluate((element:HTMLTextAreaElement)=>{element.dataset.retainedEditor='same';element.focus();element.setSelectionRange(5,9);element.scrollTop=4;});
+ await page.getByRole('button',{name:'人物設定を開く',exact:true}).click();
+ const sheet=page.getByRole('dialog',{name:'人物設定',exact:true});await expect(sheet).toContainText(person.id.slice(-6));await expect(sheet).toContainText('昔の所属');await expect(sheet).not.toContainText('今の所属');
+ await sheet.getByRole('button',{name:'本文の選択範囲へ戻る',exact:true}).click();
+ await expect(input).toHaveValue(raw);await expect(input).toBeFocused();expect(await input.evaluate((element:HTMLTextAreaElement)=>[element.selectionStart,element.selectionEnd,element.dataset.retainedEditor])).toEqual([5,9,'same']);
+ const candidates=page.getByLabel('本文に見つかった候補',{exact:true});
+ const options=await candidates.locator('option').allTextContents();expect(options.some(label=>label.includes(person.id.slice(-6)))).toBe(true);expect(options.some(label=>label.includes(namesake.id.slice(-6)))).toBe(true);
+ await candidates.selectOption({label:options.find(label=>label.includes(namesake.id.slice(-6)))!});
+ await page.getByRole('button',{name:'候補の人物設定を開く',exact:true}).click();await expect(sheet).toContainText(namesake.id.slice(-6));await sheet.getByRole('button',{name:'閉じる',exact:true}).click();await expect(input).toHaveValue(raw);
 });

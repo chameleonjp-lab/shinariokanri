@@ -1,5 +1,8 @@
+import {resolveCharacterReference} from '../domain/characterReference';
+import {WorldCharacterSummary} from './WorldHistories';
+import {Modal} from './components';
 import {useAuthorScope} from './StoreContext';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ContentAnchor, Entity, ProjectData, RichText, UnresolvedTextAnnotation } from '../domain/types';
 import {
   addRubyAnnotation,
@@ -75,6 +78,22 @@ export function TextAnnotations({
   const blocks = Array.isArray(value) ? value : [];
   const [selectedBlockId, setSelectedBlockId] = useState(blocks[0]?.id ?? '');
   const [candidateId, setCandidateId] = useState('');
+  const annotationRoot=useRef<HTMLElement>(null),sheetRequest=useRef(0);
+  const [characterSheet,setCharacterSheet]=useState<{value?:Awaited<ReturnType<typeof resolveCharacterReference>>;error?:string}|null>(null);
+  const returnSelection=useRef<{element:HTMLTextAreaElement;start:number;end:number;direction:HTMLTextAreaElement['selectionDirection'];scrollTop:number;windowY:number;container:HTMLElement|null;containerScroll:number}|null>(null);
+  const openCharacter=(anchor:ContentAnchor)=>{
+    const element=annotationRoot.current?.closest('.rich-text-editor')?.querySelector<HTMLTextAreaElement>('textarea[data-rich-text-editor]');
+    if(element){const container=element.closest<HTMLElement>('.editor-content');returnSelection.current={element,start:element.selectionStart,end:element.selectionEnd,direction:element.selectionDirection,scrollTop:element.scrollTop,windowY:window.scrollY,container,containerScroll:container?.scrollTop??0};}
+    const request=++sheetRequest.current;setCharacterSheet({});
+    void resolveCharacterReference(project,anchor,sourceEntityId).then(value=>{if(sheetRequest.current===request)setCharacterSheet({value});},cause=>{if(sheetRequest.current===request)setCharacterSheet({error:(cause as Error).message});});
+  };
+  const closeCharacter=()=>{
+    sheetRequest.current++;setCharacterSheet(null);
+    const saved=returnSelection.current;returnSelection.current=null;
+    if(saved)requestAnimationFrame(()=>{if(!saved.element.isConnected)return;saved.element.focus({preventScroll:true});saved.element.setSelectionRange(saved.start,saved.end,saved.direction);saved.element.scrollTop=saved.scrollTop;if(saved.container)saved.container.scrollTop=saved.containerScroll;window.scrollTo({top:saved.windowY});const bounds=saved.element.getBoundingClientRect();if(bounds.top<0||bounds.top>window.innerHeight-80)saved.element.scrollIntoView({block:'center'});});
+  };
+  useEffect(()=>()=>{sheetRequest.current++;},[]);
+
   const [phrase, setPhrase] = useState('');
   const [occurrenceIndex, setOccurrenceIndex] = useState(0);
   const [markKind, setMarkKind] = useState<'link' | 'ruby'>('link');
@@ -208,7 +227,7 @@ export function TextAnnotations({
     setError('');
   };
 
-  return <section className="text-annotations" aria-label={`${fieldLabel}のルビとリンク`}>
+  return <section ref={annotationRoot} className="text-annotations" aria-label={`${fieldLabel}のルビとリンク`}>
     <div className="section-heading"><h3>本文のルビ・リンク</h3><span>段落と語句を選んで追加</span></div>
     {!blocks.length ? <p className="field-hint">先に本文を入力すると、段落内の語句にルビやリンクを付けられます。</p> : <>
       <div className="form-field">
@@ -224,6 +243,7 @@ export function TextAnnotations({
           <PagedSelect id={`annotation-candidate-${sourceEntityId}`} label="本文に見つかった候補" scope={`${scope}:${activeBlock.id}:candidates`} value={selectedCandidate?.id ?? ''}
             items={candidates.map(candidate => ({ id: candidate.id, label: `${candidate.label} · 「${candidate.term}」 · ${candidate.start + 1}〜${candidate.end}文字目` }))}
             emptyLabel="候補を選ぶ（手入力もできます）" onChange={id => chooseCandidate(candidates.find(candidate => candidate.id === id))}/>
+          {selectedCandidate?.entityKind==='character'&&<button type="button" className="button secondary" onClick={()=>openCharacter({entityId:selectedCandidate.entityId})}>候補の人物設定を開く</button>}
           {!candidates.length && <span className="field-hint">一致する候補はありません。本文の語句を直接入力できます。</span>}
           {(persistedIgnored.size > 0 || locallyIgnored.size > 0) && <button type="button" className="text-button" onClick={restoreIgnoredCandidates}>この本文の候補除外を解除</button>}
         </div>
@@ -292,8 +312,10 @@ export function TextAnnotations({
           const link = mark.annotation;
           const target = link.target.sourceVersionId ? undefined : project.entities.find(entity => entity.id === link.target.entityId);
           const references = incomingByTarget.get(link.target.entityId) ?? [];
+          const characterTarget=referenceProject(project,link.target.sourceVersionId??undefined)?.entities.find(entity=>entity.id===link.target.entityId)?.kind==='character';
           return <div className="condition-row" key={mark.id}>
             <span>リンク：「{annotationText(block, link.start, link.end)}」→ {link.target.sourceVersionId ? `固定版 ${link.target.sourceVersionId} · 対象 ${link.target.entityId}` : targetLabel(target)}</span>
+            {characterTarget&&<button type="button" className="button secondary" onClick={()=>openCharacter(link.target)}>人物設定を開く</button>}
             {onOpenTarget && <button type="button" className="text-button" onClick={() => onOpenTarget(link.target, { entityId: sourceEntityId, blockId: block.id, start: link.start, end: link.end })}>対象を開く</button>}
             {onOpenReferences && <button type="button" className="text-button" onClick={() => onOpenReferences(link.target.entityId)}>参照元 {references.length}件</button>}
             <button type="button" className="text-button danger" aria-label={`リンク ${annotationText(block, link.start, link.end)} を削除`} onClick={() => onChange(removeTextAnnotation(blocks, block.id, 'link', index))}>削除</button>
@@ -330,6 +352,7 @@ export function TextAnnotations({
         </div>;
       }}/>
     </div>}
+    {characterSheet&&<Modal title="人物設定" onClose={closeCharacter}>{characterSheet.error?<p role="alert">{characterSheet.error}</p>:characterSheet.value?<><p>{characterSheet.value.versionLabel}</p><WorldCharacterSummary {...characterSheet.value}/></>:<p role="status">参照する版と人物の設定を確認しています。</p>}<button type="button" className="button primary" onClick={closeCharacter}>本文の選択範囲へ戻る</button></Modal>}
   </section>;
 }
 
