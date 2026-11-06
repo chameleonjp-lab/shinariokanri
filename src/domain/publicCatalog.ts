@@ -89,3 +89,24 @@ export function searchPublicCatalogIndex(entries: readonly PublicCatalogIndexEnt
   return entries.filter(entry => (!kind || entry.kind === kind)
     && (entry.normalizedTerm.includes(needle) || entry.normalizedReading.includes(needle)));
 }
+
+export interface PublicReaderPage { id: string; title: string; projection: PublicProjection }
+
+/** Paging is a view of the prepared projection, never a second projection of author data. */
+export function buildPublicReaderPages(projection: PublicProjection): PublicReaderPage[] {
+  const assigned = new Set<string>(), pages: PublicReaderPage[] = [];
+  const page = (id: string, title: string, entities: ProjectedEntity[], includeVersions = false): PublicReaderPage => ({
+    id, title, projection: { ...projection, entities, searchIndex: projection.searchIndex.filter(entry => entities.some(entity => entity.id === entry.entityId)), versions: includeVersions ? projection.versions : undefined },
+  });
+  for (const chapter of projection.entities.filter(entity => entity.kind === 'chapter')) {
+    const sceneIds = new Set(Array.isArray(chapter.data.sceneIds) ? chapter.data.sceneIds : []);
+    const scenes = projection.entities.filter(entity => entity.kind === 'scene' && (sceneIds.has(entity.id) || entity.data.chapterId === chapter.id));
+    const lineIds = new Set(scenes.flatMap(scene => Array.isArray(scene.data.dialogueLineIds) ? scene.data.dialogueLineIds : []));
+    const entities = [chapter, ...scenes, ...projection.entities.filter(entity => entity.kind === 'dialogue_line' && lineIds.has(entity.id))];
+    entities.forEach(entity => assigned.add(entity.id));
+    pages.push(page(chapter.id, chapter.name || '章', entities));
+  }
+  const remaining = projection.entities.filter(entity => !assigned.has(entity.id));
+  if (remaining.length || projection.versions?.length || !pages.length) pages.push(page('public-materials', '人物・資料・引用版', remaining, true));
+  return pages;
+}
