@@ -55,7 +55,8 @@ test('狭い画面で文章メモを場面へ変換し元メモと履歴を保�
   await expect(page.getByLabel('短い文章を追加', { exact: true })).toHaveValue('');
   await page.getByLabel('変換先', { exact: true }).selectOption('scene');
   await page.getByLabel('変換先の名前', { exact: true }).fill('駅の再会');
-  await page.getByRole('button', { name: '場面を作成して元メモを残す', exact: true }).click();
+  await page.getByRole('button', { name: '変換の差分を確認', exact: true }).click();
+  await page.getByRole('button', { name: '確認した変換を保存', exact: true }).click();
   await expect(page.getByRole('complementary', { name: '場面の詳細' })).toBeVisible();
   await page.getByRole('tab', { name: '本文', exact: true }).click();
   await expect(page.getByLabel('本文', { exact: true })).toHaveValue('😀雨の駅で再会する。');
@@ -91,7 +92,8 @@ test('AT-F01 文章・画像・音声の元メモと変換先のID・履歴・�
   await openEntity(page, 'note', note.name);
   await page.getByLabel('変換先', { exact: true }).selectOption('scene');
   await page.getByLabel('変換先の名前', { exact: true }).fill('塔の鍵を探す場面');
-  await page.getByRole('button', { name: '場面を作成して元メモを残す', exact: true }).click();
+  await page.getByRole('button', { name: '変換の差分を確認', exact: true }).click();
+  await page.getByRole('button', { name: '確認した変換を保存', exact: true }).click();
   await expect(page.getByRole('complementary', { name: '場面の詳細' })).toBeVisible();
   await page.getByRole('tab', { name: '本文', exact: true }).click();
   await expect(page.getByLabel('本文', { exact: true })).toHaveValue('塔の鍵は鳥が持つ');

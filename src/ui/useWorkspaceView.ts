@@ -4,7 +4,7 @@ import type { ViewState } from '../domain/types';
 import { recordRecentEntity, restoreWorkspacePreferences, saveWorkspaceViewState, parseEntityNavigationMarks, serializeEntityNavigationMarks, toggleFavoriteEntity, workspaceMarksStorageKey, WORKSPACE_VIEW_ID, type EntityNavigationMarks, type WorkspacePreferences } from './viewPreferences';
 
 function deviceClass(): ViewState['deviceClass'] { return window.innerWidth < 768 ? 'phone' : window.innerWidth < 1200 ? 'tablet' : 'desktop'; }
-function localUser() { try { const key = 'scenario-local-view-user'; let id = localStorage.getItem(key); if (!id) { id = crypto.randomUUID(); localStorage.setItem(key, id); } return id; } catch { return 'local-device'; } }
+export function localUser() { try { const key = 'scenario-local-view-user'; let id = localStorage.getItem(key); if (!id) { id = crypto.randomUUID(); localStorage.setItem(key, id); } return id; } catch { return 'local-device'; } }
 function mirrorKey(projectId: string, userId: string, device: ViewState['deviceClass']) { return `scenario-workspace-view:v1:${encodeURIComponent(userId)}:${encodeURIComponent(projectId)}:${device}`; }
 function mirroredView(projectId: string, userId: string, device: ViewState['deviceClass'], stored?: ViewState): ViewState | undefined {
   try {
@@ -59,5 +59,5 @@ export function useWorkspaceView(projectId: string | null, preferences: Workspac
     return () => { window.clearTimeout(timer); window.removeEventListener('pagehide', mirror); };
   }, [projectId, ready, device, preferences.page, preferences.structureTab, preferences.workTab, preferences.timelineTab, preferences.kind, preferences.searchKind, preferences.statusFilter, preferences.query, preferences.hiddenPages?.join(','), preferences.worldTick, preferences.worldCheckpoint, preferences.worldPlace, selectedId, scrollY]);
   const changeMarks = (next: EntityNavigationMarks) => { setMarks(next); if (projectId) { try { localStorage.setItem(workspaceMarksStorageKey(userId.current, projectId), serializeEntityNavigationMarks(next)); } catch { /* Optional navigation preferences. */ } } };
-  return { marks, recordRecent: (id: string) => changeMarks(recordRecentEntity(marks, id)), toggleFavorite: (id: string) => changeMarks(toggleFavoriteEntity(marks, id)) };
+  return { ready, marks, recordRecent: (id: string) => changeMarks(recordRecentEntity(marks, id)), toggleFavorite: (id: string) => changeMarks(toggleFavoriteEntity(marks, id)) };
 }

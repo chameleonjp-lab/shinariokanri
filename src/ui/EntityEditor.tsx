@@ -27,7 +27,7 @@ const EDITOR_TABS = [['main', '要約'], ['body', '本文'], ['notes', '作者�
 
 export interface EditorFailure extends Error { issues?: { path: string; message: string }[] }
 
-export function EntityEditor({ entity, project, referenceProject, isNew, hasUnsavedDraft, onSave, onSaveMany, onSaveProject, onClose, onDraft, onArchive, onOpen, onOpenTarget, navigationTarget, jsonBuffers, onJsonBuffer }: {
+export function EntityEditor({ entity, project, referenceProject, isNew, hasUnsavedDraft, onSave, onSaveMany, onSaveProject, onClose, onDraft, onArchive, onOpen, onOpenTarget, navigationTarget, jsonBuffers, onJsonBuffer, onWritingEdit }: {
   entity: Entity;
   project: ProjectData;
   referenceProject?: ProjectData;
@@ -36,6 +36,7 @@ export function EntityEditor({ entity, project, referenceProject, isNew, hasUnsa
   onSave: (entity: Entity) => Promise<Entity>;
   onSaveMany?: (entities: Entity[], reason: string, assets?: AssetInput[]) => Promise<void>;
   onSaveProject?: (project: ProjectData, reason: string, assets?: AssetInput[]) => Promise<ProjectData>;
+  onWritingEdit?: (position: import('./viewPreferences').WritingResumePosition) => void;
   onClose: () => void;
   onDraft: (entity: Entity, dirty: boolean) => void;
   onArchive: (entity: Entity) => Promise<void>;
@@ -206,7 +207,14 @@ export function EntityEditor({ entity, project, referenceProject, isNew, hasUnsa
   };
 
   useEffect(() => { if (!dirty || draft.kind === 'template' || saving || composing || invalidJson.length) return; const timer = window.setTimeout(() => { void save(); }, 500); return () => window.clearTimeout(timer); }, [draft, dirty, composing, invalidJson, saving]);
-  const change = (next: Entity) => { setDraft(next); setDirty(true); setError(''); setIssues([]); };
+  const change = (next: Entity) => {
+    if (draft.kind === 'scene' && next.kind === 'scene' && Array.isArray(next.data.body) && JSON.stringify(draft.data.body) !== JSON.stringify(next.data.body)) {
+      const control = document.activeElement;
+      const index = control instanceof HTMLTextAreaElement && control.dataset.richTextEditor ? control.value.slice(0, control.selectionStart).split('\n').length - 1 : Math.max(0, next.data.body.findIndex((block, i) => block.text !== draft.data.body[i]?.text));
+      onWritingEdit?.({sceneId:draft.id, blockId:next.data.body[index]?.id ?? null, blockIndex:index});
+    }
+    setDraft(next); setDirty(true); setError(''); setIssues([]);
+  };
   const changeData = (key: string, value: unknown) => {
     const data = { ...dataOf(draft), [key]: value };
     if (value === undefined) delete data[key];

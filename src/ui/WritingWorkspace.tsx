@@ -18,6 +18,7 @@ import {
   buildTensionProfile,
   moveChapterPresentation,
   moveScenePresentation,
+  previewSceneMove, applySceneMove, orderedScenes, type SceneMovePreview,
   moveSceneWithinPresentation,
   previewStructureOrder,
   type ArcOrder,
@@ -74,6 +75,8 @@ export function WritingWorkspace({ project, initialAxis = 'chapter', onOpenEntit
     catch (cause) { setError(cause instanceof Error ? cause.message : '構成の変更を保存できませんでした。入力を確認して再試行してください。'); }
     finally { saving.current = false; setBusy(false); }
   };
+  const [moveSceneId, setMoveSceneId] = useState(''), [moveChapterId, setMoveChapterId] = useState(''), [moveBeforeId, setMoveBeforeId] = useState('');
+  const [movePreview, setMovePreview] = useState<SceneMovePreview | null>(null), [moveNotice, setMoveNotice] = useState('');
   const [arcOrder, setArcOrder] = useState<ArcOrder>('presentation');
   const lanes = useMemo(() => buildStoryLanes(project, axis), [project, axis]);
   const sceneNumbers = useMemo(() => new Map(authoringPresentationScenes(project).map((scene, index) => [scene.id, index + 1])), [project]);
@@ -94,6 +97,15 @@ export function WritingWorkspace({ project, initialAxis = 'chapter', onOpenEntit
   return <section className="writing-workspace" aria-label="物語の構成"><fieldset disabled={busy} className="writing-save-fields">
     <div className="section-heading"><h2>物語を並べて見る</h2><span>同じ場面IDを切り替えて表示します</span></div>
     <label className="form-field"><span>書く章を選ぶ</span><select aria-label="書く章を選ぶ" value={chapterId} onChange={event => { setChapterId(event.target.value); setAxis('chapter'); }}><option value="">すべての章</option>{chapters.map(chapter => <option key={chapter.id} value={chapter.id}>{chapter.name || '名称未設定の章'}</option>)}</select></label>
+    {moveSceneId && <section className="settings-card" aria-label="場面を移す場所">
+      <h3>{sceneTitle(project, moveSceneId)}を移す場所</h3>
+      <label className="form-field">移動先の章<select aria-label="移動先の章" value={moveChapterId} onChange={event => { setMoveChapterId(event.target.value); setMoveBeforeId(''); setMovePreview(null); }}><option value="">章を選ぶ</option>{chapters.filter(chapter => chapter.status !== 'rejected').map(chapter => <option key={chapter.id} value={chapter.id}>{chapter.name}</option>)}</select></label>
+      <label className="form-field">挿入する場所<select aria-label="挿入する場所" value={moveBeforeId} onChange={event => { setMoveBeforeId(event.target.value); setMovePreview(null); }}><option value="">章末</option>{orderedScenes(project, moveChapterId).filter(scene => scene.id !== moveSceneId).map(scene => <option key={scene.id} value={scene.id}>{scene.name}の前</option>)}</select></label>
+      <button type="button" className="button secondary" disabled={!moveChapterId} onClick={() => { try { setMovePreview(previewSceneMove(project, moveSceneId, moveChapterId, moveBeforeId || null)); setError(''); } catch (cause) { setError((cause as Error).message); setMovePreview(null); } }}>移動を予告</button>
+      {movePreview && <><p role="status">元：{movePreview.source} → {movePreview.destination}。前：{movePreview.beforeName} ／ 後：{movePreview.afterName}</p>{movePreview.revision !== project.revision && <p role="alert">確認後に作品が変わりました。移動を予告し直して場所を選び直してください。</p>}<button type="button" className="button primary" disabled={movePreview.revision !== project.revision} onClick={async () => { try { const candidate = applySceneMove(project, movePreview); if (!onSaveProject || saving.current) return; saving.current = true; setBusy(true); await onSaveProject(candidate, '場面の所属章と提示順を直接選んで移動'); setMoveNotice(`${movePreview.source}から${movePreview.destination}へ移しました。前：${movePreview.beforeName}、後：${movePreview.afterName}。変更履歴から1回で取り消せます。`); setMoveSceneId(''); setMovePreview(null); } catch (cause) { setError((cause as Error).message); } finally { saving.current = false; setBusy(false); } }}>確認した場所へ移す</button></>}
+      <button type="button" className="button secondary" onClick={() => { setMoveSceneId(''); setMovePreview(null); }}>移動を取り消す</button>
+    </section>}
+    {moveNotice && <p role="status" aria-live="polite">{moveNotice}</p>}
     {laneAxisControl(axis, setAxis)}
     {axis === 'character' && <label className="form-field">
       <span>人物の変化を見る順</span>
@@ -146,6 +158,7 @@ export function WritingWorkspace({ project, initialAxis = 'chapter', onOpenEntit
                     <button type="button" className="text-button" disabled={memberIndex === 0} onClick={() => void saveCandidate(moveSceneWithinPresentation(project, actualChapter.id, scene.id, -1), '章内の場面提示順を変更')}>前へ</button>
                     <button type="button" className="text-button" disabled={memberIndex === actualChapter.data.sceneIds.length - 1} onClick={() => void saveCandidate(moveSceneWithinPresentation(project, actualChapter.id, scene.id, 1), '章内の場面提示順を変更')}>後へ</button>
                   </>}
+                  {canEdit && <button type="button" className="text-button" onClick={() => { setMoveSceneId(scene.id); setMoveChapterId(scene.data.chapterId ?? ''); setMoveBeforeId(''); setMovePreview(null); setMoveNotice(''); }}>移す場所を選ぶ</button>}
                   {axis === 'thread' && scene.data.threadIds?.includes(lane.id) && onSaveProject && <button type="button" className="text-button danger" onClick={() => void removeFromThread(scene.id, lane.id)}>この筋から外す</button>}
                   {axis === 'chapter' && chapters.length > 1 && onSaveProject && <label className="inline-move-control">章を移す
                     <PagedSelect label={`${scene.name||'場面'}の移動先の章`} scope={`writing-move:${project.projectId}:${scene.id}`} value={scene.data.chapterId??''} emptyLabel="章に所属させない" items={chapters.map(chapter=>({id:chapter.id,label:chapter.name||'名称未設定の章'}))} onChange={id=>void saveCandidate(moveScenePresentation(project,scene.id,id||null,999),'場面の所属章と提示順を変更')}/>
