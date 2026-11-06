@@ -169,7 +169,7 @@ describe('versioned entity and reference contracts', () => {
     const snapshot = project.entities.find(entity => entity.kind === 'snapshot')!; (snapshot.data as unknown as Record<string, unknown>).immutable = false; expect(validateEntity(snapshot).ok).toBe(false);
   });
   it('keeps the portable schema artifact aligned with all executable field schemas', () => {
-    const schema = JSON.parse(readFileSync(new URL('./schema.json', import.meta.url), 'utf8'));
+    const schema = JSON.parse(readFileSync(new URL('./schema-current.json', import.meta.url), 'utf8'));
     expect(schema).toEqual(toJsonSchema());
     expect(Object.keys(schema.$defs).filter(name => name.startsWith('Entity_'))).toHaveLength(43);
     expect(schema.$defs.Entity_variable.properties.data.required).toContain('initial');
