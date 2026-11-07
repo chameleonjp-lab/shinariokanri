@@ -92,7 +92,7 @@ export async function runRegressionCollection(project: ProjectData, collectionId
       if (replay.status === 'unexecutable' || !replay.session || replay.session.status !== 'terminal') { row.differences.push(replay.firstDifference?.reason ?? '終端まで実行できません。'); routes.push(row); continue; }
       const expected = trace.data.expectation, session = replay.session, ending = session.content.entities.find(entity => entity.id === session.nodeId && entity.kind === 'flow_node');
       row.actualEnding = { entityId: session.nodeId!, reason: ending?.kind === 'flow_node' ? ending.data.terminalReason : undefined };
-      if (expected.state.some(value => value.value.type === 'unknown') || Object.values(session.state.variableValues).some(value => value.type === 'unknown')) { row.differences.push('未知の状態値があり、一致を判断できません。'); routes.push(row); continue; }
+      if (expected.state.some(value => value.value.type === 'unknown' || session.state.variableValues[value.entityId]?.type === 'unknown')) { row.differences.push('期待値または比較する状態値が未定のため、一致を判断できません。'); routes.push(row); continue; }
       if (row.actualEnding.entityId !== expected.ending.entityId || row.actualEnding.reason !== expected.ending.reason) row.differences.push(`期待する結末「${expected.ending.reason}」と実際の結末「${row.actualEnding.reason ?? '不明'}」が異なります。`);
       for (const value of expected.state) if (canonicalJson(session.state.variableValues[value.entityId] ?? null) !== canonicalJson(value.value)) row.differences.push(`状態 ${value.entityId}: 期待 ${JSON.stringify(value.value)} / 実際 ${JSON.stringify(session.state.variableValues[value.entityId] ?? null)}`);
       row.status = row.differences.length ? 'mismatch' : 'match';
