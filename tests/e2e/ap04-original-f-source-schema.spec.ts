@@ -576,7 +576,7 @@ test('AT-F29 ローカル引用保護: reviewer UUID の版1指摘から改訂�
   expect(record(revised.project, review.id, 'review').data).toEqual(review.data);
   expect(revised.project.snapshots).toEqual(f.p.snapshots);
   await openEntity(page, 'review', review.name);
-  await expect(actions).toContainText('現在稿の位置 不明');
+  await expect(actions).toContainText('現在稿の位置 削除');
   await expect(actions.locator('blockquote')).toHaveText(quotedText);
   await expectOriginalReviewQuote(page, originalBody, quotedText);
 
@@ -597,7 +597,7 @@ test('AT-F29 ローカル引用保護: reviewer UUID の版1指摘から改訂�
   expect(record(deleted.project, review.id, 'review').data.quotedText).toBe(quotedText);
   expect(deleted.project.snapshots).toEqual(f.p.snapshots);
   await openEntity(page, 'review', review.name);
-  await expect(actions).toContainText('現在稿の位置 不明');
+  await expect(actions).toContainText('現在稿の位置 削除');
   await expect(actions.locator('blockquote')).toHaveText(quotedText);
 
   await actions.getByRole('button', { name: '修正済みとして保存', exact: true }).click();
@@ -614,7 +614,7 @@ test('AT-F29 ローカル引用保護: reviewer UUID の版1指摘から改訂�
   await page.reload();
   await openEntity(page, 'review', review.name);
   await expect(actions).toContainText('確認済み');
-  await expect(actions).toContainText('現在稿の位置 不明');
+  await expect(actions).toContainText('現在稿の位置 削除');
   await expectOriginalReviewQuote(page, originalBody, quotedText);
   const cold = await backup(page);
   expect(cold.project).toEqual(beforeCold.project);
@@ -662,7 +662,7 @@ test('AT-F29 ローカル引用保護: reviewer UUID の版1指摘から改訂�
         expect(record(clonedDeletion.after, clonedLineId, 'dialogue_line').data.text).toEqual([]);
       }
       await openEntity(restoredPage, 'review', review.name);
-      await expect(restoredPage.getByRole('region', { name: '指摘の修正と確認', exact: true })).toContainText('現在稿の位置 不明');
+      await expect(restoredPage.getByRole('region', { name: '指摘の修正と確認', exact: true })).toContainText('現在稿の位置 削除');
       await expectOriginalReviewQuote(restoredPage, originalBody, quotedText);
       await attachObservation(info, `AT-F29-${mode}-observed`, { reviewId: restoredReview.id, target: restoredReview.data.target, targetVersionId: restoredReview.data.targetVersionId, quote: restoredReview.data.quotedText, stage: restoredReview.data.stage, retainedPublicProvenance: restoredReview.data.sharedSource, realReviewerAuthentication: 'not_run', realRolePermissions: 'not_run' });
     } finally { await context.close(); }

@@ -47,7 +47,7 @@ await page.getByLabel('出来事一覧を検索').fill('A開始');
 await page.locator('.event-table-row').click();
 await page.getByRole('button',{name:'選択した出来事の日時・制約',exact:true}).click();
 const dialog=page.getByRole('dialog');
-await dialog.getByLabel('終了の世界内tick',{exact:true}).fill('180');
+await dialog.getByLabel('終了の日時',{exact:true}).fill('180');
 await dialog.getByRole('button',{name:'変更前の影響を確認',exact:true}).click();
 assert.equal(await dialog.getByRole('button',{name:'差分を一括確定'}).isDisabled(),true,'fixed dependent cannot move implicitly');
 await dialog.getByLabel('日時変更の連動先の扱い').selectOption('move');
