@@ -1240,7 +1240,8 @@ export class ScenarioStore {
     if(projectId!==request.projectId||fresh.confirmationHash!==confirmationHash||await sha256(jsonBytes(payload))!==confirmationHash)throw new StorageError('REVISION_CONFLICT','確認後に作品が更新されました。段落を再比較してください。');
     const current=await this.getProjectForEditing(projectId);
     if(!current||current.revision!==request.baseRevision)throw new StorageError('REVISION_CONFLICT','確定前に作品が更新されました。');
-    return this.saveProject(restoreSelectedParagraphs(current,current.snapshots.find(s=>s.id===request.sourceId)!,request.selected),{reason:'固定稿から選択段落を復元',includeHistory:true});
+    const candidate=restoreSelectedParagraphs(current,current.snapshots.find(s=>s.id===request.sourceId)!,request.selected);
+    return this.saveProject(addChangeReviews(current,candidate),{reason:'固定稿から選択段落を復元',includeHistory:true});
   }
   async previewOccurrenceReplacement(projectId:string,term:string,replacement:string,selected:ReplacementOccurrence[]){
     const current=await this.getProjectForEditing(projectId);
@@ -1252,7 +1253,8 @@ export class ScenarioStore {
   async replaceOccurrences(projectId:string,approved:Awaited<ReturnType<ScenarioStore['previewOccurrenceReplacement']>>):Promise<SaveResult>{
     const request=copy(approved),{confirmationHash,...payload}=request,current=await this.getProjectForEditing(projectId);
     if(!current||projectId!==request.projectId||current.revision!==request.baseRevision||await sha256(jsonBytes(payload))!==confirmationHash)throw new StorageError('REVISION_CONFLICT','確認後に作品が更新されました。一致位置を再検索してください。');
-    return this.saveProject(replaceSelectedOccurrences(current,request.term,request.replacement,request.selected),{reason:'選択した一致位置だけを一括置換',includeHistory:true});
+    const candidate=replaceSelectedOccurrences(current,request.term,request.replacement,request.selected);
+    return this.saveProject(addChangeReviews(current,candidate),{reason:'選択した一致位置だけを一括置換',includeHistory:true});
   }
 
   async restoreRevision(projectId: string, revision: string): Promise<SaveResult> {
