@@ -10,7 +10,7 @@ test('translation CSV preflight holds broken rows, cancels, retries quota failur
  const p=createProject('CSVの作品'),a=createEntity(p.projectId,'dialogue_line','日本語台詞',{text:textToRichText('鍵 {name} 😀')}),b=createEntity(p.projectId,'dialogue_line','別の台詞',{text:textToRichText('Bye {name}')});p.entities=[a,b];
  const cells=translationCsvCells(await exportTranslationCsv(p,'en'));cells[1][5]="'=SUM(1,2) key {name} 😀\nquoted \"text\"";cells[2][5]="'missing placeholder";
  await seed(page,await exportScenario(p));await navigate(page,/^構成/);await page.getByRole('tab',{name:'制作',exact:true}).click();
- const panel=page.getByRole('region',{name:'翻訳CSVの往復'});
+ const panel=page.getByRole('region',{name:'翻訳CSVの往復'});const exportSize=await panel.getByRole('button',{name:'翻訳CSVを書き出す',exact:true}).boundingBox();expect(exportSize?.height).toBeGreaterThanOrEqual(48);
  const file={name:'translations.csv',mimeType:'text/csv',buffer:Buffer.from(encodeTranslationCsv(cells))};await panel.getByLabel('編集した翻訳CSV').setInputFiles(file);
  await expect(panel).toContainText('保留 1行');await expect(panel).toContainText('埋込み語の欠落または重複');await panel.getByRole('button',{name:'CSV取込を中止',exact:true}).click();await expect(panel.getByRole('checkbox')).toHaveCount(0);
  await panel.getByLabel('編集した翻訳CSV').setInputFiles(file);await panel.getByRole('checkbox',{name:/行 1/}).check();await panel.getByRole('button',{name:'選んだ訳文の差分を確認',exact:true}).click();

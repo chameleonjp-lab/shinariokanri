@@ -76,7 +76,7 @@ test('作成・実ファイル検査・隔離コピーの読み戻しを分け�
 });
 
 test('容量不明と素材なしを明記し、容量不足の試し復元を確認済みにしない', async ({page}) => {
-  await page.addInitScript(() => Object.defineProperty(navigator.storage, 'estimate', {configurable: true, value: async () => {throw new Error('unavailable');}}));
+  await page.addInitScript(() => Object.defineProperty(Object.getPrototypeOf(navigator.storage), 'estimate', {configurable: true, value: async () => {throw new Error('unavailable');}}));
   const f = await fixture(); await seed(page, f.bytes);
   const bytes = await download(page, true);
   await page.locator('input[type=file]').setInputFiles({name: '素材なし.scenario', mimeType: 'application/zip', buffer: Buffer.from(bytes)});
