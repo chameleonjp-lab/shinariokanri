@@ -59,6 +59,20 @@ async function durable(page: Page) {
     } finally { db.close(); }
   });
 }
+async function expectRejectedFileState(page: Page, before: Awaited<ReturnType<typeof durable>>, projectId: string) {
+  const expected = structuredClone(before);
+  const receipts = (expected.authorToolDrafts as {key: string; fields: Record<string, unknown>}[])
+    .filter(row => row.key === `guest:${projectId}:backup-verification`);
+  expect(receipts).toHaveLength(1);
+  // Selecting another file invalidates that file's verification receipt, while
+  // every native byte, editing draft and prior import input must stay unchanged.
+  const receipt = receipts[0];
+  const created = (receipt.fields.verification as {created?: unknown} | undefined)?.created;
+  receipt.fields = {verification: {created,
+    selection: 'failed', inspection: undefined, trial: undefined, capacity: undefined}};
+  await expect(page.getByLabel('控えの確認記録')).toContainText('ファイル検査に失敗');
+  await expect.poll(() => durable(page)).toEqual(expected);
+}
 function assetsAndWorlds(value: PreparedScenario) {
   return { worlds: value.worlds, assets: value.assets.map(asset => ({
     path: asset.path, hash: asset.contentHash, mediaType: asset.mediaType,
@@ -101,7 +115,7 @@ test('AT-N09 rejects every original corrupt fixture with its path and reason, ke
     await expect(page.getByRole('heading', { name: `検査済みの作品 · ${original.project.name}`, exact: true })).toBeVisible();
     await expect(page.getByLabel('復元方法', { exact: true })).toHaveValue('clone');
     await expect(confirmation).toBeChecked();
-    expect(await durable(page)).toEqual(saved);
+    await expectRejectedFileState(page, saved, original.project.projectId);
   }
   // An unreadable container has no inner path; keep the known selected name.
   const brokenContainer = Buffer.from(goodBytes), saved = await durable(page);
@@ -111,7 +125,7 @@ test('AT-N09 rejects every original corrupt fixture with its path and reason, ke
   await expect(containerAlert).toContainText('broken-container.scenario');
   await expect(containerAlert).toContainText(/ZIP|コンテナ|中央/);
   await expect(confirmation).toBeChecked();
-  expect(await durable(page)).toEqual(saved);
+  await expectRejectedFileState(page, saved, original.project.projectId);
   await page.reload();
   const after = await backup(page);
   expect(after.project).toEqual(before.project);

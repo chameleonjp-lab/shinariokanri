@@ -20,7 +20,7 @@ test('AT-F48 時期で変わる一人称と表記ゆれ・意図した例外を�
   let earlyTraceId = '', lateTraceId = '';
   await clause('AT-F48', 'when', async () => {
     for (const [entry, tick] of [[earlyEntry, '9'], [lateEntry, '10']] as const) {
-      await start(page, entry.id); await page.getByLabel('試読時点の世界内tick', { exact: true }).fill(tick); await page.getByRole('button', { name: 'この状態から開始し直す', exact: true }).click(); await page.getByRole('button', { name: `${entry.name}から終える`, exact: true }).click(); await record(page);
+      await start(page, entry.id); await page.getByLabel('試読中の日時', { exact: true }).fill(tick); await page.getByRole('button', { name: 'この状態から開始し直す', exact: true }).click(); await page.getByRole('button', { name: `${entry.name}から終える`, exact: true }).click(); await record(page);
       const saved = (await backup(page)).project, last = saved.entities.filter((row): row is Entity<'trace'> => row.kind === 'trace').at(-1)!;
       if (tick === '9') earlyTraceId = last.id; else lateTraceId = last.id;
     }

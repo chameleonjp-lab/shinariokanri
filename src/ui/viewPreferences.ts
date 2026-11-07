@@ -206,3 +206,16 @@ export function reconcileEntityNavigationMarks(marks: EntityNavigationMarks, val
     staleIds,
   };
 }
+
+export interface WritingResumePosition { sceneId: string; blockId: string | null; blockIndex: number }
+/** A physical browser identity stays stable across viewport rotation; account scopes remain separate. */
+export function writingResumeStorageKey(accountId: string | null, deviceId: string, projectId: string): string {
+  return `scenario-writing-resume:v1:${encodeURIComponent(accountId ?? 'guest')}:${encodeURIComponent(deviceId)}:${encodeURIComponent(projectId)}`;
+}
+export function parseWritingResume(raw: string | null): WritingResumePosition | null {
+  try {
+    const value = JSON.parse(raw ?? 'null');
+    return value && ID_PATTERN.test(value.sceneId) && (value.blockId === null || typeof value.blockId === 'string' && ID_PATTERN.test(value.blockId)) && Number.isSafeInteger(value.blockIndex) && value.blockIndex >= 0
+      ? {sceneId:value.sceneId, blockId:value.blockId, blockIndex:value.blockIndex} : null;
+  } catch { return null; }
+}

@@ -126,9 +126,9 @@ test('AT-B06 本編基準だけを変更し、前後出来事の絶対tickと内
   const beforeContext = await page.locator('.timeline-context').textContent();
   await clause('AT-B06', 'when', async () => {
     await page.getByRole('button', { name: '本編開始の基準を変更', exact: true }).click(); const dialog = page.getByRole('dialog', { name: '本編開始の基準を変更' });
-    await dialog.getByLabel('本編開始の世界内tick', { exact: true }).fill('10'); await dialog.getByRole('button', { name: '本編の基準を保存', exact: true }).click(); await expect(dialog).toHaveCount(0);
+    await dialog.getByLabel('本編開始の日時', { exact: true }).fill('10'); await dialog.getByRole('button', { name: '本編の基準を保存', exact: true }).click(); await expect(dialog).toHaveCount(0);
   });
-  await clause('AT-B06', 'then', async () => { await expect(page.locator('.timeline-context')).toContainText('本編開始 10 tick'); expect(await page.locator('.timeline-context').textContent()).not.toBe(beforeContext); });
+  await clause('AT-B06', 'then', async () => { await page.locator('.timeline-context').getByText('日時の詳細',{exact:true}).click();await expect(page.locator('.timeline-context')).toContainText('本編開始 tick 10'); expect(await page.locator('.timeline-context').textContent()).not.toBe(beforeContext); });
   await clause('AT-B06', 'negative_or_edge', async () => { await page.reload(); const saved = await backup(page); expect(saved.project.mainStart).toBe('10'); for (const e of [f.common, f.shared]) expect(findEntity(saved.project, e.id, 'event').data).toEqual(e.data); await attachObservation(info, 'AT-B06-observed', { mainStart: saved.project.mainStart, retainedTimes: saved.project.entities.filter(e => e.kind === 'event').map(e => e.data.time) }); });
 });
 
@@ -220,6 +220,6 @@ test('AT-B21 未定日時からの日数範囲を保存し、相対循環と存�
   });
   await clause('AT-B21', 'negative_or_edge', async () => {
     const original = await authorFingerprint(page); let modal = await openTime(pending.name, pending.id); await modal.getByLabel('日時の種類', { exact: true }).selectOption('relative'); await modal.getByLabel('相対日時の基準', { exact: true }).selectOption(relative.id); await modal.getByRole('button', { name: '変更前の影響を確認', exact: true }).click(); await expect(modal).toContainText('循環'); await expect(modal.getByRole('button', { name: '差分を一括確定', exact: true })).toBeDisabled(); expect(await authorFingerprint(page)).toBe(original); await modal.getByRole('button', { name: '変更を中止', exact: true }).click();
-    modal = await openTime(pending.name, pending.id); await modal.getByLabel('日時の種類', { exact: true }).selectOption('instant'); await modal.getByRole('button', { name: '暦の年月日', exact: true }).click(); await modal.getByLabel('出来事の世界内tickの年', { exact: true }).fill('2025'); await modal.getByLabel('出来事の世界内tickの月', { exact: true }).fill('2'); await modal.getByLabel('出来事の世界内tickの日', { exact: true }).fill('30'); await expect(modal.getByRole('alert')).toContainText('暦に存在しない日付'); await expect(modal.getByRole('button', { name: '変更前の影響を確認', exact: true })).toBeDisabled(); expect(await authorFingerprint(page)).toBe(original); await modal.getByRole('button', { name: '変更を中止', exact: true }).click();
+    modal = await openTime(pending.name, pending.id); await modal.getByLabel('日時の種類', { exact: true }).selectOption('instant'); await modal.getByRole('button', { name: '暦の年月日', exact: true }).click(); await modal.getByLabel('出来事の日時の年', { exact: true }).fill('2025'); await modal.getByLabel('出来事の日時の月', { exact: true }).fill('2'); await modal.getByLabel('出来事の日時の日', { exact: true }).fill('30'); await expect(modal.getByRole('alert')).toContainText('暦に存在しない日付'); await expect(modal.getByRole('button', { name: '変更前の影響を確認', exact: true })).toBeDisabled(); expect(await authorFingerprint(page)).toBe(original); await modal.getByRole('button', { name: '変更を中止', exact: true }).click();
   });
 });

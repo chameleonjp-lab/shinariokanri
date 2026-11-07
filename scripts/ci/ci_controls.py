@@ -9,7 +9,8 @@ import re
 import subprocess
 import sys
 
-ENGINES = ("chromium", "firefox", "webkit")
+# PR #90 follow-up excludes Firefox; every supported engine still needs full evidence.
+ENGINES = ("chromium", "webkit")
 MARKDOWN_ROOTS = (
     "docs/implementation/",
     "docs/completion-replan-2026-10-12/",

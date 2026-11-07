@@ -84,9 +84,9 @@ async function mount(kind, width = 1440) {
 
 try {
   {
-    const page = await mount('date'), dialog = page.getByRole('dialog'), input = dialog.getByLabel('出来事の世界内tick', { exact: true });
-    const dateButton = dialog.getByRole('button', { name: '暦の年月日', exact: true }), tickButton = dialog.getByRole('button', { name: '世界内tick', exact: true }), previewButton = dialog.getByRole('button', { name: '変更前の影響を確認', exact: true });
-    await dateButton.click(); const month = dialog.getByLabel('出来事の世界内tickの月', { exact: true }); await month.fill('13'); await dateButton.click(); assert.equal(await month.inputValue(), '13'); assert.equal(await previewButton.isDisabled(), true);
+    const page = await mount('date'), dialog = page.getByRole('dialog'), input = dialog.getByLabel('出来事の日時', { exact: true });
+    const dateButton = dialog.getByRole('button', { name: '暦の年月日', exact: true }), tickButton = dialog.getByRole('button', { name: '秒で入力', exact: true }), previewButton = dialog.getByRole('button', { name: '変更前の影響を確認', exact: true });
+    await dateButton.click(); const month = dialog.getByLabel('出来事の日時の月', { exact: true }); await month.fill('13'); await dateButton.click(); assert.equal(await month.inputValue(), '13'); assert.equal(await previewButton.isDisabled(), true);
     await month.fill('-'); await dateButton.click(); assert.equal(await month.inputValue(), '-'); await tickButton.click(); await dateButton.click(); assert.equal(await month.inputValue(), '-'); assert.equal(await previewButton.isDisabled(), true); assert.equal(await dialog.getByRole('alert').count(), 1);
     await month.fill('1'); await tickButton.click();
     await input.fill('11'); await dialog.getByRole('button', { name: '変更前の影響を確認', exact: true }).click(); await dialog.getByRole('button', { name: '差分を一括確定', exact: true }).click();

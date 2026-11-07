@@ -1,6 +1,9 @@
+import {CharacterImpactReviews} from './ProductionDependencies';
+import {useAuthorScope} from './StoreContext';
+import {catalogSearchStorageKey,parseCatalogSearchState,type CatalogSearchState} from './catalogSearchState';
 import {PagedSelect} from './PagedSelect';
 import {ListPager,useListWindow} from './ListWindow';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ContentAnchor, DisclosureData, Entity, EntityKind, ProjectData, Query, Relation, ResolutionPolicy, Status } from '../domain/types';
 import { createEntity, KIND_LABELS, newId } from '../domain/model';
 import { buildJapaneseAuthorIndex, evaluateCollection, filterCatalogEntities, findCatalogMaintenance,findCatalogMaintenanceVerified, searchJapaneseAuthorIndex } from '../domain/catalog';
@@ -16,7 +19,7 @@ import type { JapaneseAuthorIndexEntry } from '../domain/catalog';
 import { findCatalogTextPositions } from '../domain/catalogPositions';
 import { CatalogResultDiagram, CatalogResultTimeline } from './CatalogResultViews';
 
-export function CatalogPanel({ project, selectedId, onOpen, onSave, onSaveProject, onSaveMany, onSaveRelation, onOpenField, onOpenTarget, searchState, onSearchStateChange }: {
+export function CatalogPanel({ project, selectedId, onOpen, onSave, onSaveProject, onSaveMany, onSaveRelation, onOpenField, onOpenTarget, onSearchStateChange }: {
   onSaveRelation: (relation: Relation) => Promise<void>;
   onOpenTarget: (anchor: ContentAnchor, fieldPath?: string) => void;
   onSaveMany: (entities: Entity[], reason: string) => Promise<void>; onOpenField: (entityId: string, fieldPath: string) => void;
@@ -24,7 +27,16 @@ export function CatalogPanel({ project, selectedId, onOpen, onSave, onSaveProjec
   project: ProjectData; selectedId: string | null; onOpen: (id: string) => void;
   onSave: (entity: Entity) => Promise<Entity>; onSaveProject: (project: ProjectData, reason: string) => Promise<ProjectData>;
 }) {
-  const [resultView, setResultView] = useState<'cards' | 'table' | 'diagram' | 'timeline'>('cards');
+  const authorScope=useAuthorScope(`catalog:${project.projectId}`),storageKey=catalogSearchStorageKey(authorScope);
+  const [returnState,setReturnState]=useState(()=>{try{return parseCatalogSearchState(localStorage.getItem(storageKey));}catch{return parseCatalogSearchState(null);}});
+  const stateRef=useRef(returnState);
+  const updateReturn=(change:Partial<CatalogSearchState>)=>{
+    const next={...stateRef.current,...change};stateRef.current=next;setReturnState(next);
+    try{localStorage.setItem(storageKey,JSON.stringify(next));}catch{/* Search remains usable when device preferences cannot be saved. */}
+    if('text' in change||'kind' in change||'status' in change)onSearchStateChange?.({text:next.text,kind:next.kind,status:next.status});
+  };
+  const {resultView,text,kind,status,chapter,participant,production,foreshadow,resolution,disclosureRole,disclosureStage,collectionId}=returnState;
+  const setResultView=(resultView:CatalogSearchState['resultView'])=>updateReturn({resultView});
   const [tab, setTab] = useState<'search' | 'index' | 'maintenance'>('search');
   const [verifiedMaintenance,setVerifiedMaintenance]=useState<{project:ProjectData;revision:string;findings:CatalogMaintenanceFinding[]}|null>(null);
   useEffect(()=>{
@@ -33,23 +45,19 @@ export function CatalogPanel({ project, selectedId, onOpen, onSave, onSaveProjec
     let current=true;void findCatalogMaintenanceVerified(project).then(findings=>{if(current&&project.revision===revision)setVerifiedMaintenance({project,revision,findings});});
     return()=>{current=false;};
   },[tab,project,project.revision]);
-  const [localSearch, setLocalSearch] = useState({ text: '', kind: 'all', status: 'all' });
-  const { text, kind, status } = searchState ?? localSearch;
-  const updateSearch = (change: Partial<typeof localSearch>) => { const next = { ...(searchState ?? localSearch), ...change }; if (onSearchStateChange) onSearchStateChange(next); else setLocalSearch(next); };
-  const setText = (text: string) => updateSearch({ text });
-  const setKind = (kind: string) => updateSearch({ kind });
-  const setStatus = (status: string) => updateSearch({ status });
+  const updateSearch=(change:Partial<CatalogSearchState>)=>updateReturn({...change,selectedPositionId:''});
+  const setText=(text:string)=>updateSearch({text}),setKind=(kind:string)=>updateSearch({kind}),setStatus=(status:string)=>updateSearch({status});
   const [indexEntry, setIndexEntry] = useState<JapaneseAuthorIndexEntry | null>(null);
-  const [chapter, setChapter] = useState('');
-  const [foreshadow, setForeshadow] = useState('');
-  const [resolution, setResolution] = useState('');
-  const [disclosureRole, setDisclosureRole] = useState('');
-  const [disclosureStage, setDisclosureStage] = useState('');
-  const [participant, setParticipant] = useState('');
-  const [production, setProduction] = useState('all');
+  const setChapter=(chapter:string)=>updateSearch({chapter});
+  const setForeshadow=(foreshadow:string)=>updateSearch({foreshadow});
+  const setResolution=(resolution:string)=>updateSearch({resolution});
+  const setDisclosureRole=(disclosureRole:string)=>updateSearch({disclosureRole});
+  const setDisclosureStage=(disclosureStage:string)=>updateSearch({disclosureStage});
+  const setParticipant=(participant:string)=>updateSearch({participant});
+  const setProduction=(production:string)=>updateSearch({production});
   const [bulkPage, setBulkPage] = useState(0);
   const [indexClass, setIndexClass] = useState('all');
-  const [collectionId, setCollectionId] = useState('');
+  const setCollectionId=(collectionId:string)=>updateSearch({collectionId});
   const [collectionName, setCollectionName] = useState('');
   const [collectionMode, setCollectionMode] = useState<'fixed' | 'dynamic'>('dynamic');
   const [selected, setSelected] = useState<string[]>([]);
@@ -86,9 +94,22 @@ export function CatalogPanel({ project, selectedId, onOpen, onSave, onSaveProjec
   const fields = source && survivor ? [...new Set([...Object.keys(source.data), ...Object.keys(survivor.data)])] : [];
   const run = async (action: () => Promise<void>) => { setBusy(true); setError(''); setNotice(''); try { await action(); } catch (failure) { setError((failure as Error).message); } finally { setBusy(false); } };
   const viewScope=`catalog:${project.projectId}:${text}:${kind}:${status}:${participant}:${chapter}:${foreshadow}:${resolution}:${disclosureRole}:${disclosureStage}:${production}:${collectionId}`;
-  const positionPage=useListWindow({items:textPositions,scope:viewScope+':positions'}),tablePage=useListWindow({items:results,scope:viewScope+':table',selectedId}),indexPage=useListWindow({items:indexResults,scope:viewScope+':index:'+indexClass}),maintenancePage=useListWindow({items:findings,scope:viewScope+':maintenance'}),reviewPage=useListWindow({items:active.filter((entity):entity is Entity<'review'>=>entity.kind==='review'&&entity.customValues['changeReview.generatedBy']==='semantic-change-review/v1'),scope:viewScope+':reviews',selectedId});
+  const positionPage=useListWindow({items:textPositions,scope:viewScope+':positions'}),tablePage=useListWindow({items:results,scope:viewScope+':table',selectedId}),indexPage=useListWindow({items:indexResults,scope:viewScope+':index:'+indexClass}),maintenancePage=useListWindow({items:findings,scope:viewScope+':maintenance'});
   const clearCollection = () => { setCollectionId(''); setSelected([]); setBulkPage(0); };
-  return <section className="search-page">
+  const restoredPosition=useRef(false),searchRoot=useRef<HTMLElement>(null);
+  useEffect(()=>{
+    if(restoredPosition.current||!returnState.selectedPositionId)return;
+    const button=searchRoot.current?.querySelector<HTMLButtonElement>('[data-selected-search-position="true"]');
+    if(button){restoredPosition.current=true;button.scrollIntoView({block:'center'});button.focus({preventScroll:true});}
+  },[returnState.selectedPositionId,positionPage.page]);
+  const conditions=([
+    {key:'text',label:`語句「${text}」`,clear:''},{key:'kind',label:KIND_LABELS[kind as EntityKind]??kind,clear:'all'},
+    {key:'status',label:STATUS_LABELS[status as Status]??status,clear:'all'},{key:'chapter',label:`章: ${labelOf(active.find(e=>e.id===chapter))}`,clear:''},
+    {key:'participant',label:`人物: ${labelOf(active.find(e=>e.id===participant))}`,clear:''},{key:'production',label:`制作進捗: ${production}`,clear:'all'},
+    {key:'foreshadow',label:`伏線: ${labelOf(active.find(e=>e.id===foreshadow))}`,clear:''},{key:'resolution',label:'回収方針',clear:''},
+    {key:'disclosureRole',label:'手掛かり・回収の役割',clear:''},{key:'disclosureStage',label:'提示段階',clear:''},
+  ] satisfies {key:keyof CatalogSearchState;label:string;clear:string}[]).filter(condition=>returnState[condition.key]!==condition.clear);
+  return <section ref={searchRoot} className="search-page">
     <div className="section-tabs" role="tablist" aria-label="検索と整理">
       {([['search', '複合検索・一覧'], ['index', '五十音・分類索引'], ['maintenance', '見直しと統合']] as const).map(([key, label]) => <button key={key} role="tab" aria-selected={tab === key} className={tab === key ? 'active' : ''} onClick={() => { setTab(key); }}>{label}</button>)}
     </div>
@@ -96,6 +117,8 @@ export function CatalogPanel({ project, selectedId, onOpen, onSave, onSaveProjec
     {notice && <p role="status">{notice}</p>}
     {tab !== 'maintenance' && <div className="form-field"><label htmlFor="catalog-search">作品内を検索</label><input id="catalog-search" value={text} onChange={event => { setText(event.target.value); clearCollection(); }} placeholder="名前・読み・別名・本文"/></div>}
     {tab === 'search' && <>
+      <section aria-label="直近の検索条件"><h3>直近の検索条件</h3>{conditions.length?conditions.map(condition=><button type="button" key={condition.key} className="button secondary small" onClick={()=>{updateSearch({[condition.key]:condition.clear});clearCollection();}}>{condition.label} を解除</button>):<p>すべての情報から検索します。</p>}</section>
+      <details className="advanced-details" open={returnState.detailsOpen} onToggle={event=>{const detailsOpen=event.currentTarget.open;if(detailsOpen!==stateRef.current.detailsOpen)updateReturn({detailsOpen});}}><summary>詳しい検索条件</summary>
       <div className="list-toolbar"><KindPicker value={kind} all onChange={value => { setKind(value); clearCollection(); }}/>
         <select aria-label="情報の状態で絞り込む" value={status} onChange={event => { setStatus(event.target.value); clearCollection(); }}><option value="all">すべての状態</option>{Object.entries(STATUS_LABELS).map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select>
         <PagedSelect label="参加人物で絞り込む" scope={`catalog:${project.projectId}:participant`} value={participant} items={active.filter(e=>e.kind==='character').map(e=>({id:e.id,label:labelOf(e)}))} emptyLabel="すべての参加人物" onChange={value=>{setParticipant(value);clearCollection();}}/>
@@ -106,11 +129,14 @@ export function CatalogPanel({ project, selectedId, onOpen, onSave, onSaveProjec
         <select aria-label="手掛かり・回収の役割" value={disclosureRole} onChange={event => { setDisclosureRole(event.target.value); clearCollection(); }}><option value="">すべての役割</option><option value="clue">手掛かり</option><option value="payoff">回収</option></select>
         <select aria-label="提示段階で絞り込む" value={disclosureStage} onChange={event => { setDisclosureStage(event.target.value); clearCollection(); }}><option value="">すべての提示段階</option>{([['hint','示唆'],['suspicion','疑念'],['reinforce','補強'],['reveal','開示'],['alternative','別案']] as const).map(([value,label]) => <option value={value} key={value}>{label}</option>)}</select>
       </div>
+      </details>
       <PagedSelect label="保存した一覧を再表示" scope={`catalog:${project.projectId}:collections`} value={collectionId} items={active.filter(e=>e.kind==='collection').map(e=>({id:e.id,label:labelOf(e)}))} emptyLabel="現在の検索条件" onChange={value=>{setCollectionId(value);setSelected([]);}}/>
       {collection && evaluateCollection(project, collection).missingIds.length > 0 && <p role="status">固定一覧に削除・不明の参照があります。既存の情報だけ表示しています。</p>}
-      <div className="form-row"><div className="form-field"><label htmlFor="catalog-name">一覧の名前</label><input id="catalog-name" value={collectionName} onChange={event => setCollectionName(event.target.value)}/></div><div className="form-field"><label htmlFor="catalog-mode">保存する内容</label><select id="catalog-mode" value={collectionMode} onChange={event => setCollectionMode(event.target.value as 'dynamic' | 'fixed')}><option value="dynamic">条件に合わせて変わる一覧</option><option value="fixed">今の結果を固定した一覧</option></select></div></div>
-      <button className="button secondary" disabled={busy || !collectionName.trim()} onClick={() => void run(async () => { const saved = await onSave(createEntity(project.projectId, 'collection', collectionName.trim(), { mode: collectionMode, query: collectionMode === 'dynamic' ? collection?.data.query ?? effectiveQuery : null, memberIds: collectionMode === 'fixed' ? results.map(entity => entity.id) : [], sort: { field: 'name', direction: 'asc' } })); setCollectionId(saved.id); setNotice('一覧を保存しました。'); })}>一覧を保存</button>
+      <details className="advanced-details"><summary>今の検索結果を一覧に保存</summary><div className="form-row"><div className="form-field"><label htmlFor="catalog-name">一覧の名前</label><input id="catalog-name" value={collectionName} onChange={event => setCollectionName(event.target.value)}/></div><div className="form-field"><label htmlFor="catalog-mode">保存する内容</label><select id="catalog-mode" value={collectionMode} onChange={event => setCollectionMode(event.target.value as 'dynamic' | 'fixed')}><option value="dynamic">条件に合わせて変わる一覧</option><option value="fixed">今の結果を固定した一覧</option></select></div></div>
+      <button className="button secondary" disabled={busy || !collectionName.trim()} onClick={() => void run(async () => { const saved = await onSave(createEntity(project.projectId, 'collection', collectionName.trim(), { mode: collectionMode, query: collectionMode === 'dynamic' ? collection?.data.query ?? effectiveQuery : null, memberIds: collectionMode === 'fixed' ? results.map(entity => entity.id) : [], sort: { field: 'name', direction: 'asc' } })); setCollectionId(saved.id); setNotice('一覧を保存しました。'); })}>一覧を保存</button></details>
       <div className="list-heading"><h2>検索結果</h2><span>{results.length}件</span></div>
+      {returnState.selectedPositionId&&!textPositions.some(hit=>hit.id===returnState.selectedPositionId)&&<p role="status">選んだ文章の位置が削除・変更されました。検索条件を保持して現在の結果を表示しています。該当する段落を選び直してください。</p>}
+      {results.length===0&&<p role="status">一致する結果がありません。上の「直近の検索条件」から条件を解除するか、保存した一覧を選んでください。</p>}
       <details><summary>結果をまとめて編集</summary><p>選択した対象の変更差分を確認し、一度に保存します。保存後は作品の変更履歴から取り消せます。</p>
         <button className="button secondary small" onClick={() => setSelected(results.map(entity => entity.id))}>結果をすべて選択</button><button className="button secondary small" onClick={() => setSelected([])}>選択を解除</button>
         {results.slice(bulkPage * 60, (bulkPage + 1) * 60).map(entity => <label className="check-label" key={entity.id}><input type="checkbox" checked={selected.includes(entity.id)} onChange={event => setSelected(ids => event.target.checked ? [...ids, entity.id] : ids.filter(id => id !== entity.id))}/>{labelOf(entity)}</label>)}
@@ -118,7 +144,7 @@ export function CatalogPanel({ project, selectedId, onOpen, onSave, onSaveProjec
         <select aria-label="まとめて設定する状態" value={bulkStatus} onChange={event => setBulkStatus(event.target.value as Status)}>{Object.entries(STATUS_LABELS).map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select>
         <button className="button primary" disabled={busy || !selected.length} onClick={() => setPreview({ project: { ...project, entities: project.entities.map(entity => selected.includes(entity.id) ? { ...entity, status: bulkStatus } : entity) }, reason: '一覧から情報の状態を一括変更', details: active.filter(entity => selected.includes(entity.id)).map(entity => `${labelOf(entity)}: ${STATUS_LABELS[entity.status]} → ${STATUS_LABELS[bulkStatus]}`) })}>変更差分を確認</button>
       </details>
-      {textPositions.length > 0 && <section aria-label="本文の検索位置"><h3>一致した文章の位置 · {textPositions.length}件</h3>{positionPage.items.map(hit => <button key={hit.id} className="reference-link" type="button" onClick={() => onOpenTarget(hit.anchor, hit.fieldPath)}><strong>{hit.name || '無題'}</strong> · {FIELD_SPECS[active.find(entity => entity.id === hit.entityId)?.kind ?? 'note'].find(field => `data.${field.key}` === hit.fieldPath)?.label ?? '文章'}<span>{Array.from(hit.text).slice(Math.max(0, (hit.anchor.start ?? 0) - 12), (hit.anchor.end ?? 0) + 24).join('')}</span></button>)}<ListPager {...positionPage} label="本文の検索位置"/></section>}
+      {textPositions.length > 0 && <section aria-label="本文の検索位置"><h3>一致した文章の位置 · {textPositions.length}件</h3>{positionPage.items.map(hit => <button key={hit.id} className="reference-link" type="button" aria-pressed={returnState.selectedPositionId===hit.id} data-selected-search-position={returnState.selectedPositionId===hit.id} onClick={() => {updateReturn({selectedPositionId:hit.id});onOpenTarget(hit.anchor, hit.fieldPath);}}><strong>{hit.chapterNames.join('・')||'章未設定'} · {hit.name || '無題'}</strong> · 第{hit.paragraphNumber}段落 · {FIELD_SPECS[active.find(entity => entity.id === hit.entityId)?.kind ?? 'note'].find(field => `data.${field.key}` === hit.fieldPath)?.label ?? '文章'}<span>{Array.from(hit.text).slice(Math.max(0, (hit.anchor.start ?? 0) - 12), (hit.anchor.end ?? 0) + 24).join('')}</span></button>)}<ListPager {...positionPage} label="本文の検索位置"/></section>}
       <div className="filter-pills" aria-label="検索結果の表示">{([['cards', 'カード'], ['table', '表'], ['diagram', '図'], ['timeline', '年表']] as const).map(([view, label]) => <button key={view} type="button" aria-pressed={resultView === view} className={resultView === view ? 'active' : ''} onClick={() => setResultView(view)}>{label}</button>)}</div>
       {resultView === 'cards' && <EntityCards entities={results} project={project} selectedId={selectedId} onSelect={onOpen}/>}
       {resultView === 'table' && <><div className="table-scroll"><table><caption>同じ検索結果の一覧</caption><thead><tr><th>名前</th><th>種類</th><th>状態</th><th>操作</th></tr></thead><tbody>{tablePage.items.map(entity => <tr key={entity.id}><td>{labelOf(entity)}</td><td>{KIND_LABELS[entity.kind]}</td><td>{STATUS_LABELS[entity.status]}</td><td><button type="button" className="text-button" onClick={() => onOpen(entity.id)}>詳細を開く</button></td></tr>)}</tbody></table></div><ListPager {...tablePage} label="検索結果表"/></>}
@@ -130,9 +156,7 @@ export function CatalogPanel({ project, selectedId, onOpen, onSave, onSaveProjec
       <p>候補は自動判定の結論ではありません。参照元と変更理由を確認して扱ってください。</p>
       {maintenancePage.items.map(finding => <article key={finding.id}><p>{finding.reason}</p>{finding.targetIds.map(id => { const target = active.find(entity => entity.id === id); return <div key={id}><button className="reference-link" onClick={() => onOpen(id)}>{labelOf(target)}</button>{target && ['unreferenced', 'retained'].includes(finding.kind) && <button type="button" className="button secondary small" disabled={busy} onClick={() => void run(async () => { await onSaveMany([{ ...target, retainIfUnreferenced: !target.retainIfUnreferenced }], target.retainIfUnreferenced ? '背景情報の保持指定を解除' : '背景情報・外部利用のため保持を指定'); setNotice('保持指定を保存しました。'); })}>{target.retainIfUnreferenced ? '保持指定を解除' : '背景情報として保持'}</button>}{target && finding.kind === 'external_use' && <button type="button" className="text-button" onClick={() => onOpenField(target.id, 'data.externalUseDeclared')}>外部利用宣言を確認</button>}</div>; })}</article>)}
       <ListPager {...maintenancePage} label="見直し候補"/>
-      <h2>変更による見直し</h2><p>直接参照と作者が定めた意味上の関係を根拠として示します。内容は自動修正しません。</p>
-      {reviewPage.items.map(review => <article key={review.id}><h3>{labelOf(review)} · {review.data.stage === 'open' ? '確認待ち' : review.data.stage === 'fixed' ? '対応済み' : '再確認済み'}</h3><p>{fieldText(review.data.body)}</p><button type="button" className="reference-link" onClick={() => { const target = review.data.target; if (typeof target === 'string') onOpen(target); else onOpenTarget(target); }}>見直す箇所を開く</button><select aria-label={`${labelOf(review)}の対応状態`} value={review.data.stage} disabled={busy} onChange={event => { const stage = event.target.value as Entity<'review'>['data']['stage']; void run(async () => { await onSave({ ...review, data: { ...review.data, stage } }); setNotice('見直しの対応状態を保存しました。'); }); }}><option value="open">確認待ち</option><option value="fixed">対応済み</option><option value="verified">再確認済み</option></select><button type="button" className="text-button" onClick={() => onOpen(review.id)}>理由と解決内容を編集</button></article>)}
-      <ListPager {...reviewPage} label="変更による見直し"/>
+      <CharacterImpactReviews project={project} onOpen={onOpen} onOpenTarget={onOpenTarget} onSave={onSave}/>
       <h2>同じ種類の情報を統合</h2><p>残すIDと採用する項目を選んでください。公開済みの版は保持されます。</p>
       <PagedSelect label="統合する情報" scope={`catalog:${project.projectId}:merge-source`} value={mergeSource} items={active.map(entity=>({id:entity.id,label:KIND_LABELS[entity.kind]+' · '+labelOf(entity)}))} emptyLabel="統合元を選択" onChange={value=>{setMergeSource(value);setMergeTarget('');setMergeFields({});}}/>
       <PagedSelect label="統合後に残す情報" scope={`catalog:${project.projectId}:merge-target:${source?.kind??''}`} value={mergeTarget} items={active.filter(entity=>source&&entity.kind===source.kind&&entity.id!==source.id).map(entity=>({id:entity.id,label:labelOf(entity)+' · '+entity.id.slice(0,8)}))} emptyLabel="残すIDを選択" onChange={value=>{setMergeTarget(value);setMergeFields({});}}/>

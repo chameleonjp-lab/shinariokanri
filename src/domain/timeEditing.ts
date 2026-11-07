@@ -1,11 +1,46 @@
 import type { CalendarDefinition, Entity, EventData, ID, ProjectData, Tick, TimeConstraint, TimeSpec, ValidationIssue } from './types';
 import { addTicks, calendarDateToTick, compareTicks, floorDiv, isTick, MAX_TICK, parseTick, resolveEventTimes, resolveRelativeTime, resolveTime, tickToCalendarDate, toTick, type CalendarDate, type ResolvedTime, type TimeResolution } from './time';
 
+/** Only the standard Gregorian calendar defines seconds and clock hours. */
+export function worldTimeUnit(calendar?: CalendarDefinition): string {
+  return calendar?.kind === 'gregorian' && calendar.ticksPerDay === '86400' ? '秒' : '時間の最小単位';
+}
+/** Resolve the anchor chain independently of the relative offsets being edited. */
+export function calendarForTime(time: TimeSpec, project: Pick<ProjectData, 'entities' | 'calendars'> & Partial<Pick<ProjectData, 'projectId' | 'calendarId'>>): CalendarDefinition | undefined {
+  const events = project.entities.filter((entity): entity is Entity<'event'> => entity.kind === 'event' && !entity.deletedAt);
+  const anchor = time.mode === 'relative' ? events.find(event => event.id === time.anchorEventId) : undefined;
+  const resolved = time.mode === 'relative' ? anchor && resolveTime(anchor.data.time, events, [anchor.id]) : resolveTime(time, events);
+  if (resolved?.status === 'resolved') return project.calendars.find(calendar => calendar.id === resolved.calendarId);
+  // An undated local event still belongs to the explicitly declared project calendar.
+  // This supplies an offset scale only; its absolute date remains unresolved.
+  if (resolved?.status !== 'unknown' || !anchor || !project.projectId || !project.calendarId) return undefined;
+  let leaf: Entity<'event'> | undefined = anchor;
+  const visited = new Set<ID>();
+  while (leaf?.data.time.mode === 'relative') {
+    const relative: Extract<TimeSpec, {mode: 'relative'}> = leaf.data.time;
+    if (visited.has(leaf.id) || !isTick(relative.minOffset) || !isTick(relative.maxOffset) || compareTicks(relative.minOffset, relative.maxOffset) > 0) return undefined;
+    visited.add(leaf.id); leaf = events.find(event => event.id === relative.anchorEventId);
+  }
+  return leaf?.data.time.mode === 'unknown' && leaf.projectId === project.projectId ? project.calendars.find(calendar => calendar.id === project.calendarId) : undefined;
+}
+export function formatWorldTick(tick: Tick, calendar?: CalendarDefinition): string {
+  if (!calendar) return `時間の最小単位 ${tick}（暦の対応未定）`;
+  try {
+    const date = tickToCalendarDate(tick, calendar), day = `${date.year}年${date.month}月${date.day}日`;
+    const within = parseTick(date.tickOfDay ?? '0');
+    if (calendar.kind === 'gregorian') {
+      const clock = [within / 3600n, within / 60n % 60n, within % 60n].map(value => value.toString().padStart(2, '0')).join(':');
+      return `${day} ${clock}`;
+    }
+    return within === 0n ? day : `${day} + 時間の最小単位 ${within}`;
+  } catch { return `時間の最小単位 ${tick}（暦の対応未定）`; }
+}
+
 export type CalendarDisplayUnit = 'tick' | 'hour' | 'day' | 'month' | 'year' | 'custom';
 export interface DisplayUnitChoice { key: CalendarDisplayUnit; label: string; available: boolean; reason?: string }
 export function calendarDisplayUnits(calendar: CalendarDefinition): DisplayUnitChoice[] {
   return [
-    { key: 'tick', label: 'tick', available: true },
+    { key: 'tick', label: worldTimeUnit(calendar), available: true },
     { key: 'hour', label: '時', available: calendar.kind === 'gregorian', ...(calendar.kind !== 'gregorian' ? { reason: 'この暦には時の定義がありません。' } : {}) },
     { key: 'day', label: '日', available: true }, { key: 'month', label: '月', available: true },
     { key: 'year', label: '年', available: true }, { key: 'custom', label: '独自表示単位', available: true },
@@ -169,7 +204,9 @@ export function previewTimeEdit(project: ProjectData, edit: TimeEdit, options: T
         if ((bound.lower !== undefined && bound.lower > 0n) || (bound.upper !== undefined && bound.upper < 0n)) {
           affected.add(event.id); affected.add(constraint.targetEventId);
           const name = originalIndex.get(constraint.targetEventId)?.name || constraint.targetEventId;
-          conflicts.push(issue(event.id, `「${name}」との日時制約に衝突しています${!approved.has(constraint.targetEventId) ? '（連動先は固定日時）' : ''}。`));
+          const sourceName = event.name || event.id;
+          const relation = constraint.type === 'before' ? `「${sourceName}」の後に「${name}」` : constraint.type === 'same_start' ? `「${sourceName}」と「${name}」が同時に始まる` : `「${sourceName}」の終了から「${name}」まで${constraint.minimumTicks}〜${constraint.maximumTicks}の時間差`;
+          conflicts.push(issue(event.id, `${relation}という日時制約に衝突しています${!approved.has(constraint.targetEventId) ? '（連動先は固定日時）' : ''}。`));
         }
       } catch (error) { conflicts.push(issue(event.id, error instanceof Error ? error.message : '日時制約を解決できません。')); }
     }

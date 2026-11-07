@@ -202,7 +202,8 @@ test('AT-N14 実完全保存を端末内正本も履歴もない空 context に�
   expect(external.assets).toHaveLength(1);
   expect(external.assets[0].bytes).toEqual(assetBytes);
   await info.attach('AT-N14-external-backup.scenario', { body: Buffer.from(external.bytes), contentType: 'application/zip' });
-  await expect(page.locator('.backup-page')).toContainText('端末のダウンロードを確認してください');
+  await expect(page.locator('.backup-page')).toContainText('画像・音声を同梱する控えを作成しました');
+  await expect(page.getByLabel('控えの確認記録')).toContainText('実ファイルは未検査');
 
   // given: no source database, local history, cookie or localStorage is copied.
   // This is declared browser storage-loss isolation, not physical-device loss.
@@ -227,16 +228,19 @@ test('AT-N14 実完全保存を端末内正本も履歴もない空 context に�
     if (await bodyTab.isVisible()) await bodyTab.click();
     await expect(restoredPage.locator('.detail-panel').getByRole('textbox', { name: '本文', exact: true })).toHaveValue('外部ファイルへ保存した本文😀');
     await editBody(restoredPage, '空環境で編集を再開した本文😀');
-    // The first scene save already created one dependency review. Resuming
-    // author editing creates exactly one more, before the cold reread.
+    // The first scene save created one dependency review. Resumed editing
+    // reopens that same obligation and preserves its previous image in history.
     const resumed = await backup(restoredPage);
     const externalIds = new Set(external.project.entities.map(entity => entity.id));
+    const externalReviews = external.project.entities.filter(entity => entity.kind === 'review');
+    expect(externalReviews).toHaveLength(1);
+    const externalReview = externalReviews[0];
     expect(external.project.entities).toHaveLength(7);
     expect(resumed.project.entities.filter(entity => externalIds.has(entity.id))
       .map(({ id, kind }) => ({ id, kind })).sort((a, b) => a.id.localeCompare(b.id)))
       .toEqual(external.project.entities.map(({ id, kind }) => ({ id, kind })).sort((a, b) => a.id.localeCompare(b.id)));
-    expect(resumed.project.entities.filter(entity => externalIds.has(entity.id) && entity.id !== scene.id))
-      .toEqual(external.project.entities.filter(entity => entity.id !== scene.id));
+    expect(resumed.project.entities.filter(entity => externalIds.has(entity.id) && entity.id !== scene.id && entity.id !== externalReview.id))
+      .toEqual(external.project.entities.filter(entity => entity.id !== scene.id && entity.id !== externalReview.id));
     const resumedScene = resumed.project.entities.find(entity => entity.id === scene.id);
     if (!resumedScene || resumedScene.kind !== 'scene') throw new Error('再編集した本文がありません');
     expect(resumedScene.revision).toBe('2');
@@ -245,7 +249,8 @@ test('AT-N14 実完全保存を端末内正本も履歴もない空 context に�
     expect(resumedBodyId).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
     expect(resumedBodyId).not.toBe(externalBodyId);
     expect(resumedScene.data).toEqual({ ...externalScene.data, body: [{ ...externalScene.data.body[0], id: resumedBodyId, text: '空環境で編集を再開した本文😀' }] });
-    const resumedReviews = resumed.project.entities.filter(entity => !externalIds.has(entity.id));
+    expect(resumed.project.entities.filter(entity => !externalIds.has(entity.id))).toEqual([]);
+    const resumedReviews = resumed.project.entities.filter(entity => entity.id === externalReview.id);
     expect(resumedReviews).toHaveLength(1);
     const review = resumedReviews[0];
     if (!review || review.kind !== 'review') throw new Error('本文の再編集が変更確認以外の情報を追加しました');
@@ -256,10 +261,12 @@ test('AT-N14 実完全保存を端末内正本も履歴もない空 context に�
     expect(JSON.parse(String(review.customValues['changeReview.sourceRevisions']))).toEqual({ [scene.id]: '2' });
     expect(JSON.parse(String(review.customValues['changeReview.paths'])))
       .toEqual({ [scene.id]: { directPaths: ['data.sceneId'], relationLabels: [] } });
+    expect(JSON.parse(String(review.customValues['changeReview.sourceFields'])))
+      .toEqual({ [scene.id]: ['data.body'] });
     expect(JSON.parse(String(review.customValues['changeReview.key'])))
-      .toEqual({ targetId: entry.id, sources: [{ id: scene.id, revision: '2', directPaths: ['data.sceneId'], relationLabels: [] }] });
+      .toEqual({ targetId: entry.id, sources: [{ id: scene.id, revision: '2', directPaths: ['data.sceneId'], relationLabels: [], changedFields: ['data.body'] }] });
     expect(review.data.body.map(block => block.text).join('\n')).toContain(`(${scene.id})。改訂 1 → 2。`);
-    expect(resumed.project.entities).toHaveLength(8);
+    expect(resumed.project.entities).toHaveLength(7);
     expect(resumed.assets).toEqual(external.assets);
     expect(resumed.project.history.slice(0, imported.project.history.length)).toEqual(imported.project.history);
     expect(resumed.project.history).toHaveLength(imported.project.history.length + 1);
@@ -267,6 +274,8 @@ test('AT-N14 実完全保存を端末内正本も履歴もない空 context に�
     expect(resumedEdit.operationId).not.toBe(externalEdit?.operationId);
     expect(resumedEdit.before.entities.find(entity => entity.id === scene.id)).toEqual(externalScene);
     expect(resumedEdit.after.entities.find(entity => entity.id === scene.id)).toEqual(resumedScene);
+    expect(resumedEdit.before.entities.find(entity => entity.id === externalReview.id)).toEqual(externalReview);
+    expect(resumedEdit.after.entities.find(entity => entity.id === externalReview.id)).toEqual(review);
     expect(resumed.project.snapshots).toEqual(imported.project.snapshots);
     const resumedFingerprint = await authorFingerprint(restoredPage);
     await restoredPage.reload();

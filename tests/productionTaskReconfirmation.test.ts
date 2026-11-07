@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createEntity, createProject, textToRichText } from '../src/domain/model';
 import { dialogueContentHash, reconcileDeliverables } from '../src/domain/production';
-import type { ProjectData } from '../src/domain/types';
+import type { ProjectData, ProductionStage } from '../src/domain/types';
 
 function fixture() {
   const p = createProject('制作タスクの明示再確認');
@@ -19,6 +19,47 @@ function taskProgress(project: ProjectData, id: string) {
 }
 
 describe('production task reconfirmation boundaries', () => {
+  it.each<ProductionStage>(['writing', 'review', 'implementation', 'translation', 'recording', 'verification', 'publication'])('rechecks containing owners and their downstream tasks at %s without touching unrelated anchored preparation', async stage => {
+    const { p, line, scene } = fixture();
+    const sibling = createEntity(p.projectId, 'dialogue_line', '変更しない台詞', { text: textToRichText('別の台詞。') });
+    scene.data.dialogueLineIds!.push(sibling.id);
+    const chapter = createEntity(p.projectId, 'chapter', '章全体', { sceneIds: [scene.id] });
+    scene.data.chapterId = chapter.id;
+    const node = createEntity(p.projectId, 'flow_node', '場面の提示', { sceneId: scene.id });
+    const graph = createEntity(p.projectId, 'flow_graph', '分岐全体', { nodeIds: [node.id] });
+    const group = createEntity(p.projectId, 'group', '場面のまとまり', { members: [scene.id] });
+    const collection = createEntity(p.projectId, 'collection', '章と分岐の一覧', { memberIds: [chapter.id, graph.id] });
+    const linked = createEntity(p.projectId, 'storyboard_frame', '変更した行のコマ', { anchor: { entityId: line.id, lineId: line.id } });
+    const other = createEntity(p.projectId, 'storyboard_frame', '別の行のコマ', { anchor: { entityId: sibling.id, lineId: sibling.id } });
+    const cue = createEntity(p.projectId, 'cue', '場面に置いた環境音', { anchor: { entityId: scene.id }, cueType: 'environment_sound' });
+    const cueTask = createEntity(p.projectId, 'production_task', '環境音の準備', { targetIds: [cue.id], stage, progress: 'done' });
+    const frameTask = createEntity(p.projectId, 'production_task', '別のコマの準備', { targetIds: [other.id], stage, progress: 'done' });
+    // A paragraph anchor into the scene body is a precise source, not ownership
+    // of every dialogue row contained in that scene.
+    sibling.data.sourceAnchor = { entityId: scene.id, blockId: scene.data.body[0].id };
+    const owners = [scene, chapter, graph, group, collection];
+    const ownerTasks = owners.map(owner => createEntity(p.projectId, 'production_task', `${owner.name}の作業`, { targetIds: [owner.id], stage, progress: 'done' }));
+    const downstream = ownerTasks.map(task => createEntity(p.projectId, 'production_task', `${task.name}の後続`, { targetIds: [], stage, progress: 'done', dependsOn: [task.id] }));
+    p.entities.push(sibling, chapter, node, graph, group, collection, linked, other, cue, cueTask, frameTask, ...ownerTasks, ...downstream);
+    p.entities.forEach(row => { row.status = 'confirmed'; });
+    const candidate = structuredClone(p), changed = candidate.entities.find(row => row.id === line.id)!;
+    if (changed.kind !== 'dialogue_line') throw Error('型違い');
+    changed.data.text[0].text = 'この台詞だけを改訂。';
+    const next = await reconcileDeliverables(p, candidate);
+    for (const task of [...ownerTasks, ...downstream]) expect(taskProgress(next, task.id), task.name).toBe('needs_review');
+    expect(next.entities.find(row => row.id === linked.id)?.status).toBe('needs_review');
+    expect(next.entities.find(row => row.id === other.id)?.status).toBe('confirmed');
+    expect(taskProgress(next, cueTask.id)).toBe('done');
+    expect(taskProgress(next, frameTask.id)).toBe('done');
+    expect(next.entities.find(row => row.id === cue.id)).toEqual(cue);
+    expect(p.entities.find(row => row.id === chapter.id)).toEqual(chapter);
+    const bodyEdit = structuredClone(candidate), changedScene = bodyEdit.entities.find(row => row.id === scene.id)!;
+    if (changedScene.kind !== 'scene') throw Error('型違い');
+    changedScene.data.body[0].text = '元の段落そのものも改訂。';
+    const bodyChanged = await reconcileDeliverables(p, bodyEdit);
+    expect(taskProgress(bodyChanged, cueTask.id)).toBe('needs_review');
+    expect(taskProgress(bodyChanged, frameTask.id)).toBe('needs_review');
+  });
   it('retains an explicit reviewed task completion and invalidates its downstream task', async () => {
     const { p, writing, implementation } = fixture(), candidate = structuredClone(p);
     const row = candidate.entities.find(entity => entity.id === writing.id)!; if (row.kind !== 'production_task') throw Error('型違い'); row.data.progress = 'done';

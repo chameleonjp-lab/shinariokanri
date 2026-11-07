@@ -14,10 +14,10 @@ const git = (...args) => execFileSync('git', args, { encoding: 'utf8' }).trim();
 const project = createProject(), goal = createEntity(project.projectId, 'goal', 'synthetic goal');
 const character = createEntity(project.projectId, 'character', 'synthetic character', { goals: [goal.id] });
 const group = createEntity(project.projectId, 'group', 'synthetic category', { members: [character.id] });
-const fields = fieldSemanticInventory(), schema = await readFile('src/domain/schema.json');
+const fields = fieldSemanticInventory(), schema = await readFile('src/domain/schema-current.json');
 const result = { version: 1, recordedAt: new Date().toISOString(), sourceCommit: git('rev-parse', 'HEAD'), sourceTree: git('rev-parse', 'HEAD^{tree}'), productTree: git('rev-parse', 'HEAD:src'), dirty: !!git('status', '--porcelain'),
   scope: 'Static authoritative schema/UI/projection inventory; original acceptance NOT_PERFORMED',
-  schemaSha256: createHash('sha256').update(schema).digest('hex'), fields,
+  schemaPath: 'src/domain/schema-current.json', schemaSha256: createHash('sha256').update(schema).digest('hex'), fields,
   findings: [character, group].map(entity => {
     const paths=indexedFormalReferencePaths(entity);
     return {kind:entity.kind,paths,status:paths.length?'CURRENT_PRODUCT_DISCREPANCY_UNFIXED':'RESOLVED_REFERENCE_LEAVES_EXCLUDED',

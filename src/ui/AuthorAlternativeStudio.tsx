@@ -1,3 +1,4 @@
+import {TweeInterchangePanel} from './TweeInterchangePanel';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Entity, EntityKind, ProjectContent, ProjectData, Status } from '../domain/types';
 import { createEntity, KIND_LABELS, validateProject } from '../domain/model';
@@ -336,6 +337,7 @@ export function AuthorAlternativeStudio({ project, alternatives: incoming, world
 
   return <section className="author-alternative-studio" aria-label="作者別案と正本の管理"><fieldset disabled={busy} className="writing-save-fields">
     <div className="section-heading"><h2>作者別案</h2><span>ゲーム内の選択分岐とは別の制作案です</span></div>
+    <TweeInterchangePanel project={project} alternatives={alternatives} disabled={busy} onImport={branch=>persist([...alternatives,branch],branch.id)}/>
     <div className="alternative-panel">
       <h3>別案を作る</h3>
       <label className="form-field"><span>別案の名前</span><input aria-label="新しい別案の名前" value={newBranchName} onChange={event => setNewBranchName(event.target.value)} placeholder="例：門を開けない展開"/></label>
@@ -361,6 +363,7 @@ export function AuthorAlternativeStudio({ project, alternatives: incoming, world
           <div className="alternative-heading"><h3>別案の本文・場面</h3><button type="button" className="button secondary small" onClick={addBranchScene}>別案の場面を作る</button></div>
           {chapters.length > 0 && <PagedSelect label="新しい場面を加える章" scope={`${project.projectId}:${alternative.id}:alternatives:scene-chapter`} value={newSceneChapterId}
             onChange={setNewSceneChapterId} emptyLabel="章に所属させない" items={chapters.map(chapter => ({ id: chapter.id, label: chapter.name || '名称未設定の章' }))}/>}
+          {contentDraft.entities.filter(entity=>entity.kind==='note'&&typeof entity.customValues.consultationReason==='string'&&entity.customValues.consultationReason).map(entity=><aside key={entity.id} aria-label="相談の変更理由"><h4>相談の変更理由（本文とは別に保持）</h4><p>{String(entity.customValues.consultationReason)}</p></aside>)}
           <PagedSelect label="別案内の編集対象" scope={`${project.projectId}:${alternative.id}:alternatives:entity`} value={selectedEntityId} onChange={setSelectedEntityId}
             items={entities.map(entity => ({ id: entity.id, label: entityLabel(entity) }))}/>
           <div className="form-row">

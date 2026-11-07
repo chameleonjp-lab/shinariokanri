@@ -112,7 +112,7 @@ test('AT-F58 未実装かつ人物Aが出る動的一覧と固定ID一覧を場�
   expect(saved.project.entities.find(entity => entity.id === first.id)?.status).toBe('confirmed');
   expect(saved.project.entities.find(entity => entity.id === addedId)?.status).toBe('provisional');
   expect(saved.project.entities.find(entity => entity.id === task.id)).toMatchObject({ data: { targetIds: [first.id, addedId], progress: 'todo' } });
-  await catalog(page); await panel.getByLabel('保存した一覧を再表示', { exact: true }).selectOption(dynamic.id); await expect(panel.locator('.entity-card')).toHaveCount(2);
+  await catalog(page); await panel.getByLabel('保存した一覧を再表示', { exact: true }).selectOption(dynamic.id); await panel.getByRole('button', { name: 'カード', exact: true }).click(); await expect(panel.locator('.entity-card')).toHaveCount(2);
   await panel.getByLabel('保存した一覧を再表示', { exact: true }).selectOption(fixed.id); await expect(panel.locator('.entity-card')).toHaveCount(1);
   await attachObservation(info, 'AT-F58-observed', { dynamicId: dynamic.id, fixedId: fixed.id, initialIds: [first.id], addedId, dynamicIds: [first.id, addedId], fixedIds: [first.id], cardIds, tableIds, diagramIds, cardTableAndDiagramIdsEqual: true, authorDataUnchangedByViews: true, canceledPreviewUnchanged: true, secondWriteFailureAtomic: true, retryAndCompensationRetainedAllIds: true, revision: saved.project.revision });
 });
@@ -155,7 +155,7 @@ test('AT-F60 重複人物の残すID/参照書換えを事前確認し統合と�
   const held = await backup(page);
   expect(held.project.entities.find(entity => entity.id === background.id)?.retainIfUnreferenced).toBe(true); expect(held.project.entities.find(entity => entity.id === external.id)?.retainIfUnreferenced).toBe(true);
   expect(held.project.entities.find(entity => entity.id === external.id)?.data).toEqual(external.data);
-  await catalog(page); await panel.getByLabel('情報の種類', { exact: true }).selectOption('character');
+  await catalog(page); await panel.getByText('詳しい検索条件', { exact: true }).click(); await panel.getByLabel('情報の種類', { exact: true }).selectOption('character');
   const bulk = panel.locator('details').filter({ has: page.locator('summary').filter({ hasText: '結果をまとめて編集' }) });
   await bulk.locator('summary').click(); await bulk.getByRole('button', { name: '結果をすべて選択', exact: true }).click(); await bulk.getByLabel('まとめて設定する状態', { exact: true }).selectOption('needs_review');
   const beforeBulk = await authorFingerprint(page); await bulk.getByRole('button', { name: '変更差分を確認', exact: true }).click(); await expect(preview).toContainText('確定 → 確認待ち');

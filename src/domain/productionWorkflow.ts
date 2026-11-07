@@ -38,7 +38,7 @@ export async function previewDialogueChange(project: ProjectData, request: Dialo
   if (!request.reason.trim() || new Set(request.sourceIds).size !== request.sourceIds.length || request.sourceIds.length > 50) throw new Error('VALIDATION_FAILED: 理由と重複しない台詞を指定してください（最大50件）。');
   const sources = request.sourceIds.map(id => lineOf(project, id)), first = sources[0];
   if (!first || ['split','copy'].includes(request.mode) && sources.length !== 1 || request.mode === 'merge' && sources.length < 2) throw new Error('VALIDATION_FAILED: 分割は一つ、統合は二つ以上の台詞を選んでください。');
-  if (sources.some(source => source.data.speakerId !== first.data.speakerId || source.data.choiceEdgeId !== first.data.choiceEdgeId || source.data.assertionIntent !== first.data.assertionIntent)) throw new Error('VALIDATION_FAILED: 話者・選択肢・発言の意図が異なります。先に採用する内容を個別に確認してください。');
+  if (sources.some(source => (source.data.scriptKind??'dialogue') !== (first.data.scriptKind??'dialogue') || source.data.speakerId !== first.data.speakerId || source.data.choiceEdgeId !== first.data.choiceEdgeId || source.data.assertionIntent !== first.data.assertionIntent)) throw new Error('VALIDATION_FAILED: 話者・選択肢・発言の意図が異なります。先に採用する内容を個別に確認してください。');
   const parts: { block: Block; sourceId: ID; start: number; end: number }[][] = [];
   if (request.mode === 'split') {
     const index = first.data.text.findIndex(block => block.id === request.blockId), block = first.data.text[index], offset = request.offset;
@@ -50,6 +50,7 @@ export async function previewDialogueChange(project: ProjectData, request: Dialo
   const segments: DialogueLineage['segments'] = [], newLines = parts.map((part, index) => {
     const line = createEntity(project.projectId, 'dialogue_line', `${first.name || '台詞'} · ${request.mode === 'split' ? `分割${index + 1}` : request.mode === 'copy' ? '独立複製' : '統合'}`, { ...structuredClone(first.data), text: [], originLineIds: [...new Set(sources.flatMap(source => [source.id, ...source.data.originLineIds ?? []]))], cueIds: [...new Set(sources.flatMap(source => source.data.cueIds ?? []))], claimAssertionIds: [...new Set(sources.flatMap(source => source.data.claimAssertionIds ?? []))] });
     delete line.data.replacedByLineIds;
+    if(first.data.scriptNumber!=null)line.data.scriptNumber=1+index+Math.max(0,...project.entities.flatMap(e=>e.kind==='dialogue_line'?[e.data.scriptNumber??0]:[]));
     const reasons = [...new Set(sources.map(source => source.data.assertionReason?.trim()).filter((reason): reason is string => !!reason))];
     if (reasons.length) line.data.assertionReason = reasons.join('\n');
     const ownSegments: DialogueLineage['segments'] = [];

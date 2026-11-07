@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Entity, ProjectData } from '../domain/types';
-import { previewNoteConversion, type NoteConversionKind } from '../domain/notes';
+import { prepareQuickNote, unorganizedNotes, previewNoteConversion, type NoteConversionKind } from '../domain/notes';
 import { createEntity, newId } from '../domain/model';
 import { prepareAsset } from '../domain/attachments';
 import type { AssetInput } from '../storage';
@@ -65,6 +65,8 @@ export function NotesTools({ project, note, onSaveMany, onSaveProject, onOpen, c
   const [textDraft, setTextDraft] = useState(captureDraft ?? '');
   const [conversionKind, setConversionKind] = useState<NoteConversionKind>('character');
   const [conversionName, setConversionName] = useState(note.name);
+  const [conversionPreview, setConversionPreview] = useState<{candidate:ProjectData; sourceRevision:string; kind:NoteConversionKind; targetId:string} | null>(null);
+  const conversionSaving = useRef(false);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [pendingRecording, setPendingRecording] = useState<{ blob: Blob; noteId: string } | null>(null);
   const [recording, setRecording] = useState(false);
@@ -84,7 +86,7 @@ export function NotesTools({ project, note, onSaveMany, onSaveProject, onOpen, c
   useEffect(() => {
     const retainedText = captureDraft ?? '';
     textDraftRef.current = retainedText;
-    setTextDraft(retainedText); setConversionName(note.name); setPendingFile(null); setPendingRecording(null); setError(''); setNotice('');
+    setTextDraft(retainedText); setConversionName(note.name); setConversionPreview(null); setPendingFile(null); setPendingRecording(null); setError(''); setNotice('');
   }, [note.id]);
   useEffect(() => {
     if (previousCaptureDraft.current === captureDraft) return;
@@ -219,17 +221,24 @@ export function NotesTools({ project, note, onSaveMany, onSaveProject, onOpen, c
     try { active.stop(); } catch (failure) { setError(`録音を停止できませんでした。${(failure as Error).message}`); }
   };
 
-  const convertNote = async () => {
-    setBusy(true); setError(''); setNotice('');
+  const prepareConversion = () => {
     try {
       const source = getCurrentNote();
-      const preview = previewNoteConversion(source, { kind: conversionKind, name: conversionName, entityId: newId(), relationId: newId(), createdAt: new Date().toISOString(), blockIds: source.data.body.map(() => newId()) });
+      const preview = previewNoteConversion(source, {kind:conversionKind, name:conversionName, entityId:newId(), relationId:newId(), createdAt:new Date().toISOString(), blockIds:source.data.body.map(() => newId())});
       const existing = project.entities.some(entity => entity.id === source.id);
       const entities = existing ? project.entities.map(entity => entity.id === source.id ? preview.note : entity).concat(preview.entity) : [...project.entities, preview.note, preview.entity];
-      await onSaveProject({ ...project, entities, relations: [...project.relations, preview.relation] }, `メモを${TARGET_LABELS[conversionKind]}へ変換（元メモと参照を保持）`);
-      setNotice(`元のメモを残したまま${TARGET_LABELS[conversionKind]}を作成しました。`); onOpen?.(preview.entity.id);
+      setConversionPreview({candidate:{...project, entities, relations:[...project.relations, preview.relation]}, sourceRevision:source.revision, kind:conversionKind, targetId:preview.entity.id}); setError('');
     } catch (failure) { setError((failure as Error).message); }
-    finally { setBusy(false); }
+  };
+  const convertNote = async () => {
+    if (!conversionPreview || conversionSaving.current) return;
+    conversionSaving.current = true; setBusy(true); setError(''); setNotice('');
+    try {
+      if (conversionPreview.candidate.revision !== project.revision || getCurrentNote().revision !== conversionPreview.sourceRevision) throw new Error('確認後に作品かメモが変わりました。変換の差分を確認し直してください。');
+      await onSaveProject(conversionPreview.candidate, `メモを${TARGET_LABELS[conversionPreview.kind]}へ変換（元メモと参照を保持）`);
+      setNotice(`元のメモを残したまま${TARGET_LABELS[conversionPreview.kind]}を作成しました。変更履歴から変換だけを取り消せます。`); onOpen?.(conversionPreview.targetId); setConversionPreview(null);
+    } catch (failure) { setError((failure as Error).message); }
+    finally { conversionSaving.current = false; setBusy(false); }
   };
 
   const attached = (note.data.attachmentIds ?? []).map(id => project.entities.find((entity): entity is Entity<'attachment'> => entity.id === id && entity.kind === 'attachment' && !entity.deletedAt)).filter((entity): entity is Entity<'attachment'> => Boolean(entity));
@@ -248,9 +257,32 @@ export function NotesTools({ project, note, onSaveMany, onSaveProject, onOpen, c
     {attached.length > 0 && <div className="attached-files"><span>このメモの添付</span>{attached.map(asset => <button type="button" className="text-button" key={asset.id} onClick={() => onOpen?.(asset.id)}>{asset.data.displayName || asset.name}</button>)}</div>}
 
     <h4>このメモから作成</h4>
-    <div className="form-row"><div className="form-field"><label htmlFor="note-conversion-kind">変換先</label><select id="note-conversion-kind" disabled={busy} value={conversionKind} onChange={event => setConversionKind(event.target.value as NoteConversionKind)}>{Object.entries(TARGET_LABELS).map(([kind, label]) => <option key={kind} value={kind}>{label}</option>)}</select></div><div className="form-field"><label htmlFor="note-conversion-name">変換先の名前</label><input id="note-conversion-name" disabled={busy} value={conversionName} onChange={event => setConversionName(event.target.value)}/></div></div>
+    <div className="form-row"><div className="form-field"><label htmlFor="note-conversion-kind">変換先</label><select id="note-conversion-kind" disabled={busy} value={conversionKind} onChange={event => { setConversionKind(event.target.value as NoteConversionKind); setConversionPreview(null); }}>{Object.entries(TARGET_LABELS).map(([kind, label]) => <option key={kind} value={kind}>{label}</option>)}</select></div><div className="form-field"><label htmlFor="note-conversion-name">変換先の名前</label><input id="note-conversion-name" disabled={busy} value={conversionName} onChange={event => { setConversionName(event.target.value); setConversionPreview(null); }}/></div></div>
     <p className="field-hint">本文を人物の要約、場面の本文、または伏線の問いへコピーします。段落IDを新しく作り、元メモへの参照関係を残します。</p>
-    <button type="button" className="button primary" disabled={busy || recording || !conversionName.trim()} onClick={() => void convertNote()}>{busy ? '保存中…' : `${TARGET_LABELS[conversionKind]}を作成して元メモを残す`}</button>
+    <button type="button" className="button primary" disabled={busy || recording || !conversionName.trim()} onClick={prepareConversion}>変換の差分を確認</button>
+    {conversionPreview && <section aria-label="メモ変換の差分"><p>元メモと本文を保持し、{TARGET_LABELS[conversionPreview.kind]}「{conversionPreview.candidate.entities.find(entity => entity.id === conversionPreview.targetId)?.name}」を1件、対応する参照を1件追加します。</p><p>{note.data.body.map(block => block.text).join('\n')}</p>{conversionPreview.candidate.revision !== project.revision && <p role="alert">確認後に作品が変わりました。差分を確認し直してください。</p>}<button type="button" className="button primary" disabled={busy || conversionPreview.candidate.revision !== project.revision} onClick={() => void convertNote()}>確認した変換を保存</button><button type="button" className="button secondary" disabled={busy} onClick={() => setConversionPreview(null)}>変換を取り消す</button></section>}
     {error && <div className="error-notice" role="alert"><strong>操作を完了できませんでした</strong><p>{error}</p><span className="field-hint">入力内容は保持されています。説明にある方法で修正し、再試行できます。</span></div>}{notice && <p role="status" className="success-notice">{notice}</p>}
   </section>;
+}
+
+
+/** Captures use the same atomic project command and source-note mapping as the full editor. */
+export function QuickNoteInbox({project, raw, captureId, onFlush, onRaw, onSaveProject, onOpen}: {project:ProjectData; raw:string; captureId:string; onFlush:()=>Promise<void>; onRaw:(value:string, expectedRaw?:string)=>void; onSaveProject:(project:ProjectData, reason:string)=>Promise<ProjectData>; onOpen:(id:string)=>void}) {
+  const [busy,setBusy] = useState(false), [error,setError] = useState('');
+  const pending = useRef<{candidate:ProjectData; raw:string} | null>(null), saving = useRef(false);
+  const capture = async () => {
+    if (saving.current || !raw.trim()) return;
+    saving.current = true; setBusy(true); setError('');
+    try {
+      await onFlush();
+      if (!captureId) throw new Error('一文を入力し直して保存してください。');
+      if (!pending.current || pending.current.raw !== raw) pending.current = {candidate:prepareQuickNote(project, raw, captureId), raw};
+      const submitted = pending.current;
+      if (submitted.candidate !== project) await onSaveProject(submitted.candidate, '一文メモを端末に保存');
+      onRaw('',submitted.raw); if (pending.current === submitted) pending.current = null;
+    } catch (cause) { setError((cause as Error).message); }
+    finally { saving.current = false; setBusy(false); }
+  };
+  const notes = unorganizedNotes(project);
+  return <section><p>この端末に保存します。あとで人物・場面・伏線に整理できます。</p><label className="form-field">一文メモ<textarea aria-label="一文メモ" rows={3} maxLength={10000} value={raw} onChange={event => { onRaw(event.target.value); pending.current = null; }}/></label><button type="button" className="button primary" disabled={busy || !raw.trim()} onClick={() => void capture()}>一文を端末に保存</button>{error && <p role="alert">{error} 入力は保持しています。</p>}<h3>未整理のメモ（{notes.length}件）</h3>{notes.map(note => <button type="button" className="reference-link" key={note.id} aria-label={`${note.name}を整理`} onClick={() => onOpen(note.id)}>{note.name}</button>)}</section>;
 }
