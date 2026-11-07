@@ -169,8 +169,11 @@ export async function prepareTrialCorrectionSave(project: ProjectData, plan: Tri
   const before = project.entities.find(entity => entity.id === plan.candidate.id);
   if (!before || before.kind !== plan.candidate.kind || semantic(before) !== semantic(plan.candidate)) throw new Error('修正元の本文が更新されました。入力を保持して比較してください。');
   const candidate = structuredClone(plan.candidate), blocks = candidate.kind === 'scene' ? candidate.data.body : candidate.data.text;
+  const selectedBlockIndex = blocks.findIndex(block => block.id === plan.anchor.blockId);
   const wholeText = blocks.map(block => block.id === plan.anchor.blockId ? text : block.text).join('\n');
   const edited = editRichText(blocks, wholeText);
+  // Edits split all lines; a no-op keeps imported blocks with embedded line breaks intact.
+  const targetBlockIndex = edited === blocks ? selectedBlockIndex : blocks.slice(0, selectedBlockIndex).reduce((count, block) => count + block.text.split('\n').length, 0);
   if (candidate.kind === 'scene') candidate.data.body = edited; else candidate.data.text = edited;
   const entities = remapEditedTextReferences([...project.entities.map(entity => entity.id === candidate.id ? candidate : entity), ...plan.entities], before, candidate);
   const relations = remapEditedTextRelationReferences(project.relations, before, candidate);
@@ -178,5 +181,6 @@ export async function prepareTrialCorrectionSave(project: ProjectData, plan: Tri
   const captured = await captureRuntimeContent(next, next.projectId, { worldSnapshots });
   const { snapshots: _snapshots, history: _history, authorAlternatives: _alternatives, ...content } = captured;
   const snapshot: ProjectSnapshot = { id: newId(), content, contentHash: await sha256(jsonBytes(content)), createdAt: new Date().toISOString(), versionLabel: `一文修正後の試読 · ${project.revision}` };
-  return { project: { ...next, snapshots: [...next.snapshots, snapshot] }, targetVersionId: snapshot.id };
+  const targetAnchor = { entityId: candidate.id, blockId: edited[targetBlockIndex].id, sourceVersionId: snapshot.id };
+  return { project: { ...next, snapshots: [...next.snapshots, snapshot] }, targetVersionId: snapshot.id, targetAnchor };
 }

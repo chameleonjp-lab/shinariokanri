@@ -22,7 +22,7 @@ export function TrialCorrection({ project, session, scene, worldSnapshots, disab
  };
  const save = async () => {
   if (!plan || operation.current || composing.current) return; operation.current = true; onBusy(true); setError('');
-  try { const prepared = await prepareTrialCorrectionSave(project, plan, text, worldSnapshots); await onSaveProject(prepared.project, '試読の一文修正を採用・旧経路と新しい固定版を原子保存'); setPending({ traceId: plan.sourceTrace.id, version: prepared.targetVersionId, anchor: plan.anchor }); setNotice('保存した新しい固定版で同じ選択を再実行しています。'); }
+  try { const prepared = await prepareTrialCorrectionSave(project, plan, text, worldSnapshots); await onSaveProject(prepared.project, '試読の一文修正を採用・旧経路と新しい固定版を原子保存'); setPending({ traceId: plan.sourceTrace.id, version: prepared.targetVersionId, anchor: prepared.targetAnchor }); setNotice('保存した新しい固定版で同じ選択を再実行しています。'); }
   catch (cause) { setError((cause as Error).message); operation.current = false; onBusy(false); }
  };
  useEffect(() => {
@@ -30,7 +30,7 @@ export function TrialCorrection({ project, session, scene, worldSnapshots, disab
   let live = true;
   void replayTraceAgainstRevision(project, pending.traceId, { targetVersionId: pending.version, worldSnapshots }).then(replayed => {
    if (!live) return; operation.current = false; onBusy(false); setResult(replayed); setPlan(null); setPending(null);
-   if (replayed.status === 'same_path' && replayed.session) { onReplay(replayed.session, pending.version, { ...pending.anchor, sourceVersionId: pending.version }); setNotice('同じ選択で修正した場面・段落に戻りました。修正前の固定版と経路も保持しています。'); }
+   if (replayed.status === 'same_path' && replayed.session) { onReplay(replayed.session, pending.version, pending.anchor); setNotice('同じ選択で修正した場面・段落に戻りました。修正前の固定版と経路も保持しています。'); }
    else setNotice('最初に進めない選択で停止しました。旧経路を保持しています。');
   }).catch(cause => { if (live) { operation.current = false; onBusy(false); setError((cause as Error).message); setPending(null); } });
   return () => { live = false; };

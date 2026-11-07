@@ -18,6 +18,28 @@ describe('G12 separate correction and same path replay',()=>{
   const result=await replayTraceAgainstRevision(f.p,plan.sourceTrace.id);
   expect(result.status).toBe('same_path');expect(result.session?.nodeId).toBe(f.target.id);expect(result.session?.content.entities.find(e=>e.id===f.scene.id)?.data).toMatchObject({body:[{text:'直した一文。'}]});expect(plan.sourceTrace).toEqual(old);
  });
+ it.each([['leading paragraph','🌌🦊XYZ'], ['leading paragraph','🌌🦊XYZ\nΔΩЖ'], ['leading\nparagraph','🌌🦊XYZ\nΔΩЖ']])('returns a new snapshot anchor past %s to a completely rewritten paragraph: %s',async(leading,text)=>{
+  const f=fixture(), oldBlockId=f.scene.data.body[0].id;
+  f.scene.data.body=[{id:newId(),kind:'paragraph',text:leading}, {id:oldBlockId,kind:'paragraph',text:'abc'}, {id:newId(),kind:'paragraph',text:'trailing paragraph'}];
+  const session=stepTrial(f.p,startTrial(f.p),{edgeId:f.edge.id}), plan=await prepareTrialCorrection(f.p,session,{entityId:f.scene.id,blockId:oldBlockId}), oldPlan=structuredClone(plan);
+  const prepared=await prepareTrialCorrectionSave(f.p,plan,text), replay=await replayTraceAgainstRevision(prepared.project,plan.sourceTrace.id,{targetVersionId:prepared.targetVersionId});
+  expect(replay.status).toBe('same_path');
+  const corrected=replay.session?.content.entities.find(entity=>entity.id===f.scene.id);
+  if(corrected?.kind!=='scene')throw new Error('corrected scene missing');
+  expect(corrected.data.body.map(block=>block.text)).toEqual([...leading.split('\n'),...text.split('\n'),'trailing paragraph']);
+  const correctedBlock=corrected.data.body[leading.split('\n').length];
+  expect(correctedBlock.id).not.toBe(oldBlockId);
+  expect(prepared.targetAnchor).toEqual({entityId:f.scene.id,blockId:correctedBlock.id,sourceVersionId:prepared.targetVersionId});
+  expect(prepared.project.entities.find(entity=>entity.id===plan.sourceTrace.id)).toEqual(oldPlan.sourceTrace);
+  expect(prepared.project.snapshots.find(snapshot=>snapshot.id===plan.snapshots[0].id)).toEqual(oldPlan.snapshots[0]);
+  expect(plan).toEqual(oldPlan);
+ });
+ it('keeps the selected target when saving unchanged text after an imported multiline block',async()=>{
+  const f=fixture(), blockId=f.scene.data.body[0].id;
+  f.scene.data.body.unshift({id:newId(),kind:'paragraph',text:'leading\nparagraph'});
+  const session=stepTrial(f.p,startTrial(f.p),{edgeId:f.edge.id}), plan=await prepareTrialCorrection(f.p,session,{entityId:f.scene.id,blockId}), prepared=await prepareTrialCorrectionSave(f.p,plan,'旧い一文。');
+  expect(prepared.targetAnchor).toEqual({entityId:f.scene.id,blockId,sourceVersionId:prepared.targetVersionId});
+ });
  it('stops on the first removed choice and keeps the original trace byte for byte',async()=>{
   const f=fixture(), session=stepTrial(f.p,startTrial(f.p),{edgeId:f.edge.id}), plan=await prepareTrialCorrection(f.p,session,{entityId:f.scene.id,blockId:f.scene.data.body[0].id});
   f.p.entities.push(...plan.entities);f.p.snapshots.push(...plan.snapshots);const old=JSON.stringify(plan.sourceTrace);f.p.entities=f.p.entities.filter(e=>e.id!==f.edge.id);f.p.revision='2';
