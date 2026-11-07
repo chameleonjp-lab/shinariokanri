@@ -91,8 +91,9 @@ class EvidenceTests(unittest.TestCase):
     def verify(self, needs=None, attempt=1):
         return validate_results(needs or self.needs, self.root, self.commit, self.run, attempt)
 
-    def test_complete_three_browser_evidence_passes(self):
-        self.assertEqual([row["tests"] for row in self.verify()["browsers"]], [2, 2, 2])
+    def test_complete_supported_browser_evidence_passes(self):
+        self.assertEqual([(row["engine"], row["tests"]) for row in self.verify()["browsers"]],
+                         [("chromium", 2), ("webkit", 2)])
 
     def test_any_required_failure_cancellation_or_skip_fails(self):
         for name in self.needs:
@@ -131,16 +132,16 @@ class EvidenceTests(unittest.TestCase):
             self.change("webkit", "source", lambda row: row.update(original))
 
     def test_partial_inventory_and_duplicate_or_other_browser_tests_fail(self):
-        original = json.loads((self.root / "browser-evidence-firefox-attempt1/ci-browser-evidence/results.json").read_text())
+        original = json.loads((self.root / "browser-evidence-webkit-attempt1/ci-browser-evidence/results.json").read_text())
         for operation in (
             lambda row: row["suites"][0]["suites"][0]["specs"].pop(),
             lambda row: row["suites"][0]["suites"][0]["specs"].append(row["suites"][0]["suites"][0]["specs"][0]),
             lambda row: row["suites"][0]["suites"][0]["specs"][0]["tests"][0].update(projectName="chromium"),
         ):
-            self.change("firefox", "results", operation)
+            self.change("webkit", "results", operation)
             with self.assertRaises(ValueError):
                 self.verify()
-            self.change("firefox", "results", lambda row: row.update(copy.deepcopy(original)))
+            self.change("webkit", "results", lambda row: row.update(copy.deepcopy(original)))
 
     def test_failed_flaky_skipped_or_wrong_count_fail(self):
         for key, value in (("unexpected", 1), ("flaky", 1), ("skipped", 1), ("expected", 1)):
@@ -162,7 +163,8 @@ class EvidenceTests(unittest.TestCase):
         self.change("webkit", "results", lambda row: row["stats"].update(unexpected=1, expected=1))
         self.make_evidence("webkit", 2)
         result = self.verify(attempt=2)
-        self.assertEqual([row["attempt"] for row in result["browsers"]], [1, 1, 2])
+        self.assertEqual([(row["engine"], row["attempt"]) for row in result["browsers"]],
+                         [("chromium", 1), ("webkit", 2)])
         self.assertTrue((self.root / "browser-evidence-webkit-attempt1/ci-browser-evidence/results.json").exists())
         self.change("webkit", "results", lambda row: row["stats"].update(skipped=1), attempt=2)
         with self.assertRaises(ValueError):
