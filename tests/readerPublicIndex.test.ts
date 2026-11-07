@@ -34,4 +34,12 @@ describe('reader public index artifacts', () => {
     expect(html).toContain('href="#published-1--public-paragraph"'); expect(html).toContain('id="published-1--public-paragraph"');
     expect(renderReaderMarkdown(cited)).toContain('](#published-1--public-paragraph)');
   });
+
+  it.each(['public-project', 'published-1'])('renders an incoming text selection when its source chapter is paged out: %s', version => {
+    const page = version === 'public-project' ? projection : {...projection, entities: [], versions: [{id: version, projection}]};
+    const html = renderReaderHtml(page, '公開版', 'horizontal', [{version, blockId: 'public-paragraph', start: 0, end: 2}]);
+    const target = version === 'public-project' ? 'public-paragraph' : 'published-1--public-paragraph';
+    expect(html).toContain(`<mark id="${target}--0--2" data-target-start="0" data-target-end="2">公開</mark>`);
+    expect(html).not.toContain('SECRET');
+  });
 });

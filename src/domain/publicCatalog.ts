@@ -117,12 +117,13 @@ export interface PublicReaderPage { id: string; title: string; projection: Publi
 /** Paging is a view of the prepared projection, never a second projection of author data. */
 export function buildPublicReaderPages(projection: PublicProjection): PublicReaderPage[] {
   const assigned = new Set<string>(), pages: PublicReaderPage[] = [];
+  const ordered = publicReaderEntities(projection);
   const page = (id: string, title: string, entities: ProjectedEntity[], includeVersions = false): PublicReaderPage => ({
     id, title, projection: { ...projection, entities, searchIndex: projection.searchIndex.filter(entry => entities.some(entity => entity.id === entry.entityId)), versions: includeVersions ? projection.versions : undefined },
   });
   for (const chapter of projection.entities.filter(entity => entity.kind === 'chapter')) {
     const sceneIds = new Set(Array.isArray(chapter.data.sceneIds) ? chapter.data.sceneIds : []);
-    const scenes = projection.entities.filter(entity => entity.kind === 'scene' && (sceneIds.has(entity.id) || entity.data.chapterId === chapter.id));
+    const scenes = ordered.filter(entity => entity.kind === 'scene' && (sceneIds.has(entity.id) || entity.data.chapterId === chapter.id));
     const lineIds = new Set(scenes.flatMap(scene => Array.isArray(scene.data.dialogueLineIds) ? scene.data.dialogueLineIds : []));
     const entities = [chapter, ...scenes, ...projection.entities.filter(entity => entity.kind === 'dialogue_line' && lineIds.has(entity.id))];
     entities.forEach(entity => assigned.add(entity.id));

@@ -7,6 +7,7 @@ import { ReaderProjectionPreview } from '../src/ui/ReaderProjectionPreview';
 import { buildPublicReaderPages } from '../src/domain/publicCatalog';
 import { projectContent } from '../src/domain/writingWorkspace';
 import { jsonBytes, sha256 } from '../src/storage/json';
+import type {PublicProjection} from '../src/domain/projection';
 
 it('prepares every chapter and public-only reader surfaces from the selected recipient and fixed version', async () => {
   const project = createProject('SECRET_AUTHOR_TITLE');
@@ -107,4 +108,17 @@ it.each(['markdown', 'html'] as const)('shows the same approved attachment entit
   expect(result.artifact.content.includes(savedLabel)).toBe(true);
   expect(modal).not.toContain('SECRET_RAW_FILENAME');
   expect(result.artifact.content).not.toContain('SECRET_RAW_FILENAME');
+});
+
+it('keeps the declared scene order of the complete artifact when paging a chapter', () => {
+  const projection: PublicProjection = {format: 'scenario-projection', formatVersion: '1.0.0', title: '並べた本文', calendars: [], relations: [], searchIndex: [], entities: [
+    {id: 'chapter', kind: 'chapter', name: '章', status: 'confirmed', data: {sceneIds: ['second', 'first']}},
+    {id: 'first', kind: 'scene', name: '先に作った場面', status: 'confirmed', data: {body: [{id: 'first-text', kind: 'paragraph', text: '後から読む本文'}]}},
+    {id: 'second', kind: 'scene', name: '後で作った場面', status: 'confirmed', data: {body: [{id: 'second-text', kind: 'paragraph', text: '先に読む本文'}]}},
+  ]};
+  const page = buildPublicReaderPages(projection)[0];
+  expect(page.projection.entities.map(entity => entity.id)).toEqual(['chapter', 'second', 'first']);
+  for (const html of [renderReaderHtml(projection), renderReaderHtml(page.projection)]) {
+    expect(html.indexOf('<p id="second-text">')).toBeLessThan(html.indexOf('<p id="first-text">'));
+  }
 });
