@@ -40,11 +40,10 @@ describe('stage A human-readable world time', () => {
     anchor.data.time = { ...anchor.data.time as Extract<typeof anchor.data.time, { mode: 'relative' }>, minOffset: '', maxOffset: '24' };
     expect(calendarForTime({ mode: 'relative', anchorEventId: anchor.id, anchorPoint: 'start', ...offsets }, project)).toBeUndefined();
   });
-  it.each(['missing', 'cycle', 'unknown', 'conflict'])('uses only smallest units for a relative editor with a %s anchor', mode => {
+  it.each(['missing', 'cycle', 'conflict'])('uses only smallest units for a relative editor with a %s anchor', mode => {
     const project = createProject();
     const anchor = createEntity(project.projectId, 'event', '基準', { time: { mode: 'instant', at: '0', calendarId: project.calendarId } });
     const relative = createEntity(project.projectId, 'event', '相対日時', { time: { mode: 'relative', anchorEventId: anchor.id, anchorPoint: 'start', minOffset: '24', maxOffset: '24' } });
-    if (mode === 'unknown') anchor.data.time = { mode: 'unknown', reason: '未定' };
     if (mode === 'conflict') anchor.data.time = { mode: 'interval', start: '1', end: '0', calendarId: project.calendarId };
     if (mode === 'cycle') anchor.data.time = { ...relative.data.time as Extract<typeof relative.data.time, { mode: 'relative' }>, anchorEventId: relative.id };
     project.entities.push(...(mode === 'missing' ? [] : [anchor]), relative);
@@ -73,4 +72,12 @@ describe('stage A human-readable world time', () => {
     project.entities.push(anchor);
     expect(timeLabel({ mode: 'relative', anchorEventId: anchor.id, anchorPoint: 'start', minOffset: '60', maxOffset: '120' }, project)).toBe('出発の開始から 60〜120 秒');
   });
+});
+
+it('keeps day offsets for an undated local anchor in its explicitly declared project calendar without resolving its date',()=>{
+ const project=createProject(),anchor=createEntity(project.projectId,'event','日付未定',{time:{mode:'unknown',reason:'日付を決めていない'}});project.entities.push(anchor);
+ const relative={mode:'relative' as const,anchorEventId:anchor.id,anchorPoint:'end' as const,minOffset:'172800',maxOffset:'345600'};
+ expect(calendarForTime(relative,project)).toBe(project.calendars.find(c=>c.id===project.calendarId));
+ const markup=renderToStaticMarkup(createElement(TimelineTimeEditor,{project,event:createEntity(project.projectId,'event','二〜四日後',{time:relative}),onClose:()=>undefined,onSave:async p=>p,onApplied:()=>undefined}));expect(markup).toContain('1日 86400 秒');
+ anchor.projectId='00000000-0000-4000-8000-000000000001';expect(calendarForTime(relative,project)).toBeUndefined();
 });

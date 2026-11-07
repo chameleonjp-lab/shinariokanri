@@ -36,7 +36,7 @@ test('AT-E02 -10tickの後章回想を同じ作品で単位・基準・章順変
     await seed(page, bytes); await chapterReading(page);
     expect(await page.locator('.chapter-reading-sequence > li').evaluateAll(nodes => nodes.map(node => node.getAttribute('data-scene-id')))).toEqual([currentScene.id, memoryScene.id]);
     await timeline(page); await page.getByLabel('年表の表示単位', { exact: true }).selectOption('tick');
-    await expect(page.locator('.timeline-context')).toContainText('中心の本編基準 0 tick');
+    await expect(page.locator('.timeline-context')).toContainText('中心の本編基準 0 秒');
   });
   await test.step('AT-E02 when: 表示単位、本編基準点、回想章順をそれぞれ変更する', async () => {
     const before = await authorFingerprint(page);
@@ -48,7 +48,7 @@ test('AT-E02 -10tickの後章回想を同じ作品で単位・基準・章順変
     await dialog.getByLabel('本編開始の日時', { exact: true }).fill('10');
     await dialog.getByRole('button', { name: '本編の基準を保存', exact: true }).click();
     await expect(dialog).toBeHidden();
-    await expect(page.locator('.timeline-context')).toContainText('中心の本編基準 −10 tick');
+    await expect(page.locator('.timeline-context')).toContainText('中心の本編基準 −10 秒');
     await navigate(page, /^構成/); await page.getByRole('tab', { name: '章・本文', exact: true }).click();
     await page.getByLabel('物語の並べ方', { exact: true }).selectOption('chapter');
     await expect(page.getByLabel('物語の並べ方', { exact: true })).toHaveValue('chapter');

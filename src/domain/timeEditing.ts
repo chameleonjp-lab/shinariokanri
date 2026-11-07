@@ -6,11 +6,22 @@ export function worldTimeUnit(calendar?: CalendarDefinition): string {
   return calendar?.kind === 'gregorian' && calendar.ticksPerDay === '86400' ? '秒' : '時間の最小単位';
 }
 /** Resolve the anchor chain independently of the relative offsets being edited. */
-export function calendarForTime(time: TimeSpec, project: Pick<ProjectData, 'entities' | 'calendars'>): CalendarDefinition | undefined {
+export function calendarForTime(time: TimeSpec, project: Pick<ProjectData, 'entities' | 'calendars'> & Partial<Pick<ProjectData, 'projectId' | 'calendarId'>>): CalendarDefinition | undefined {
   const events = project.entities.filter((entity): entity is Entity<'event'> => entity.kind === 'event' && !entity.deletedAt);
   const anchor = time.mode === 'relative' ? events.find(event => event.id === time.anchorEventId) : undefined;
   const resolved = time.mode === 'relative' ? anchor && resolveTime(anchor.data.time, events, [anchor.id]) : resolveTime(time, events);
-  return resolved?.status === 'resolved' ? project.calendars.find(calendar => calendar.id === resolved.calendarId) : undefined;
+  if (resolved?.status === 'resolved') return project.calendars.find(calendar => calendar.id === resolved.calendarId);
+  // An undated local event still belongs to the explicitly declared project calendar.
+  // This supplies an offset scale only; its absolute date remains unresolved.
+  if (resolved?.status !== 'unknown' || !anchor || !project.projectId || !project.calendarId) return undefined;
+  let leaf: Entity<'event'> | undefined = anchor;
+  const visited = new Set<ID>();
+  while (leaf?.data.time.mode === 'relative') {
+    const relative: Extract<TimeSpec, {mode: 'relative'}> = leaf.data.time;
+    if (visited.has(leaf.id) || !isTick(relative.minOffset) || !isTick(relative.maxOffset) || compareTicks(relative.minOffset, relative.maxOffset) > 0) return undefined;
+    visited.add(leaf.id); leaf = events.find(event => event.id === relative.anchorEventId);
+  }
+  return leaf?.data.time.mode === 'unknown' && leaf.projectId === project.projectId ? project.calendars.find(calendar => calendar.id === project.calendarId) : undefined;
 }
 export function formatWorldTick(tick: Tick, calendar?: CalendarDefinition): string {
   if (!calendar) return `時間の最小単位 ${tick}（暦の対応未定）`;
