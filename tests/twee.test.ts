@@ -24,6 +24,35 @@ describe('limited author Twee interchange', () => {
   expect(parsed.issues).toHaveLength(3); expect(parsed.passages[0].body).toBe('');
   expect((globalThis as Record<string,unknown>).bad).toBeUndefined();
  });
+ it.each([
+  '[[go->B->C]]', '[[B<-go<-C]]', '[[go|B|C]]',
+  '[[go->B<-C]]', '[[go->B|C]]', '[[B<-go->C]]',
+  '[[B<-go|C]]', '[[go|B->C]]', '[[B|C<-go]]',
+ ])('blocks multi-separator link %s without guessing a destination', link => {
+  const raw=`:: A\n${link}\n:: B\nB text\n:: C\nC text`, parsed=parseTwee(raw);
+  expect(parsed.issues).toEqual([expect.objectContaining({line:2,original:link,blocking:true})]);
+  expect(parsed.passages.map(({name,body,links})=>({name,body,links}))).toEqual([
+   {name:'A',body:'',links:[]}, {name:'B',body:'B text',links:[]}, {name:'C',body:'C text',links:[]},
+  ]);
+  expect(parsed.original).toBe(raw);
+  const project=createProject(), before=JSON.stringify(project);
+  expect(()=>importTweeAlternative(project,parsed,'import')).toThrow();
+  expect(JSON.stringify(project)).toBe(before);
+ });
+ it.each([
+  ['[[ B ]]','B'], ['[[ go -> B ]]','go'], ['[[ B <- go ]]','go'], ['[[ go | B ]]','go'],
+ ])('roundtrips supported simple link %s and preserves its original', (link,label) => {
+  const raw=`:: A\n${link}\n:: B\nB text`, parsed=parseTwee(raw);
+  expect(parsed.issues).toEqual([]);
+  expect(parsed.passages[0].links).toEqual([{label,target:'B',line:2}]);
+  const result=exportTweeAlternative(headAlternativeContent(importTweeAlternative(createProject(),parsed,'import')));
+  expect(result.originals.some(artifact=>artifact.content===raw)).toBe(true);
+  const reparsed=parseTwee(result.artifact!.content);
+  expect(reparsed.issues).toEqual([]);
+  expect(reparsed.passages.map(({name,body,links})=>({name,body,links:links.map(({label,target})=>({label,target}))}))).toEqual([
+   {name:'A',body:'',links:[{label,target:'B'}]}, {name:'B',body:'B text',links:[]},
+  ]);
+ });
  it('bounds raw input, rejects blank and refuses forged preview state',()=>{
   expect(()=>parseTwee(' ')).toThrow(); expect(()=>parseTwee('x'.repeat(ARCHIVE_LIMITS.fieldBytes+1))).toThrow();
   const parsed=parseTwee(source); parsed.passages[0].name='forged';
