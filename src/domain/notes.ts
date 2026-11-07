@@ -1,3 +1,4 @@
+import {createEntity, textToRichText} from './model';
 import type { Entity, ID, Relation } from './types';
 
 export type NoteConversionKind = 'character' | 'scene' | 'foreshadow';
@@ -78,4 +79,23 @@ export function previewNoteConversion(note: Entity<'note'>, options: NoteConvers
     ...(note.projectionProfileId ? { projectionProfileId: note.projectionProfileId } : {}),
   };
   return { entity, note: updatedNote, relation };
+}
+
+/** One independent note per capture; existing note conversion preserves its source. */
+export function createQuickNote(projectId: string, text: string): Entity<'note'> {
+  const body = text.trim();
+  if (!body) throw new Error('一文メモを入力してください。');
+  return createEntity(projectId, 'note', Array.from(body).slice(0, 40).join(''), {body:textToRichText(body)});
+}
+export function unorganizedNotes(project: import('./types').ProjectData): Entity<'note'>[] {
+  return project.entities.filter((entity): entity is Entity<'note'> => entity.kind === 'note' && !entity.deletedAt && !(entity.data.convertedToIds ?? []).some(id => project.entities.some(target => target.id === id && !target.deletedAt)));
+}
+/** The retained ID also recognizes a commit completed before input cleanup. */
+export function prepareQuickNote(project: import('./types').ProjectData, raw: string, noteId: string): import('./types').ProjectData {
+  const existing = project.entities.find(entity => entity.id === noteId);
+  if (existing) {
+    if (existing.kind === 'note' && !existing.deletedAt && existing.data.body.map(block => block.text).join('\n') === raw.trim()) return project;
+    throw new Error('この入力のメモは保存済みで内容が変わりました。一文を入力し直してください。');
+  }
+  return {...project, entities:[...project.entities, {...createQuickNote(project.projectId, raw), id:noteId}]};
 }

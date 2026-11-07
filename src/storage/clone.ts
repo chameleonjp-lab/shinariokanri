@@ -24,6 +24,11 @@ export async function cloneProject(input: ProjectData): Promise<{ project: Proje
     if (!value || typeof value !== 'object' || declarations.has(value)) return;
     declarations.add(value);
     if (Array.isArray(value)) return value.forEach(collect);
+    const record = value as Record<string, unknown>;
+    if (record.kind === 'review') {
+      const match = (record.data as Entity<'review'>['data'] | undefined)?.currentMatch;
+      if (typeof match?.confirmedText === 'string' && match.target.blockId) idMap[match.target.blockId] ??= newId();
+    }
     for (const [key, item] of Object.entries(value)) {
       if (['id', 'operationId', 'instanceId', 'deletionOperationId'].includes(key) && typeof item === 'string' && /^[0-9a-f-]{36}$/.test(item)) idMap[item] ??= newId();
       if (key === 'bindings' && item && typeof item === 'object' && !Array.isArray(item)) for (const id of Object.values(item)) if (typeof id === 'string' && /^[0-9a-f-]{36}$/.test(id)) idMap[id] ??= newId();

@@ -1,3 +1,6 @@
+import { resolvePinnedWorlds } from '../domain/pinnedWorlds';
+import { TimelineTimeEditor } from './TimelineEditors';
+import { undoTimeEdit, type TimeEditChange } from '../domain/timeEditing';
 import {ListPager,useListWindow} from './ListWindow';
 import {registerAuthorCache,registerAuthorBusy} from './StoreContext';
 import {useAuthorScope} from './StoreContext';
@@ -10,13 +13,16 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ContentAnchor, Entity, ProjectContent, ProjectData, ProjectSnapshot } from '../domain/types';
 import {
   STRUCTURE_TEMPLATES,
+  capturePresentationOrderChange, undoPresentationOrder, type PresentationOrderChange,
   applyStructureOrderPreview,
+  authoringPresentationScenes,
   buildCharacterArc,
   buildChapterReadingSequence,
   buildStoryLanes,
   buildTensionProfile,
   moveChapterPresentation,
   moveScenePresentation,
+  previewSceneMove, applySceneMove, orderedScenes, type SceneMovePreview,
   moveSceneWithinPresentation,
   previewStructureOrder,
   type ArcOrder,
@@ -43,7 +49,8 @@ const AXIS_LABELS: Record<StoryLaneAxis, string> = {
 export interface WritingWorkspaceProps {
   project: ProjectData;
   initialAxis?: StoryLaneAxis;
-  onOpenEntity: (id: string) => void;
+  worldSnapshots?: Record<string, ProjectContent>;
+  onOpenEntity: (id: string, fieldPath?: string) => void;
   /** The host saves this as a canonical project command, including revision/history updates. */
   onSaveProject?: (project: ProjectData, reason: string) => unknown | Promise<unknown>;
 }
@@ -61,21 +68,34 @@ function laneAxisControl(axis: StoryLaneAxis, onChange: (next: StoryLaneAxis) =>
   </label>;
 }
 
-export function WritingWorkspace({ project, initialAxis = 'character', onOpenEntity, onSaveProject }: WritingWorkspaceProps) {
+export function WritingWorkspace({ project, initialAxis = 'chapter', worldSnapshots = {}, onOpenEntity, onSaveProject }: WritingWorkspaceProps) {
   const [axis, setAxis] = useState<StoryLaneAxis>(initialAxis);
+  const [chapterId, setChapterId] = useState('');
+  const [activeSceneId, setActiveSceneId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false), [error, setError] = useState(''), saving = useRef(false);
   const saveCandidate = async (candidate: ProjectData, reason: string) => {
-    if (!onSaveProject || saving.current) return;
+    if (!onSaveProject || saving.current) return false;
     saving.current = true; setBusy(true); setError('');
-    try { await onSaveProject(candidate, reason); }
-    catch (cause) { setError(cause instanceof Error ? cause.message : '構成の変更を保存できませんでした。入力を確認して再試行してください。'); }
+    try { await onSaveProject(candidate, reason); return true; }
+    catch (cause) { setError(cause instanceof Error ? cause.message : '構成の変更を保存できませんでした。入力を確認して再試行してください。'); return false; }
     finally { saving.current = false; setBusy(false); }
   };
+  const [moveSceneId, setMoveSceneId] = useState(''), [moveChapterId, setMoveChapterId] = useState(''), [moveBeforeId, setMoveBeforeId] = useState('');
+  const [movePreview, setMovePreview] = useState<SceneMovePreview | null>(null), [moveNotice, setMoveNotice] = useState('');
+  const [editOperation, setEditOperation] = useState<'presentation' | 'world_date'>('presentation');
+  const [lastPresentation, setLastPresentation] = useState<PresentationOrderChange | null>(null), [lastDates, setLastDates] = useState<TimeEditChange[] | null>(null), [editingEventId, setEditingEventId] = useState('');
+  const savePresentation = async (candidate: ProjectData, reason: string) => { const undo = capturePresentationOrderChange(project, candidate); if (await saveCandidate(candidate, reason)) setLastPresentation(undo); };
   const [arcOrder, setArcOrder] = useState<ArcOrder>('presentation');
   const lanes = useMemo(() => buildStoryLanes(project, axis), [project, axis]);
+  const sceneNumbers = useMemo(() => new Map(authoringPresentationScenes(project).map((scene, index) => [scene.id, index + 1])), [project]);
   const characters = project.entities.filter((entity): entity is Entity<'character'> => entity.kind === 'character' && !entity.deletedAt);
   const chapters = project.entities.filter((entity): entity is Entity<'chapter'> => entity.kind === 'chapter' && !entity.deletedAt);
   const canEdit = Boolean(onSaveProject);
+  const dateReferences = useMemo(() => {
+    try { const worlds = resolvePinnedWorlds(project, worldSnapshots).worlds; return { ...project, calendars: [...project.calendars, ...worlds.flatMap(world => world.calendars).filter(calendar => !project.calendars.some(local => local.id === calendar.id))], entities: [...project.entities, ...worlds.flatMap(world => world.entities)] }; }
+    catch { return project; }
+  }, [project, worldSnapshots]);
+  const openScene = (sceneId: string, fieldPath: string) => { setActiveSceneId(sceneId); onOpenEntity(sceneId, fieldPath); };
 
   const removeFromThread = async (sceneId: string, threadId: string) => {
     if (!onSaveProject) return;
@@ -88,6 +108,17 @@ export function WritingWorkspace({ project, initialAxis = 'character', onOpenEnt
 
   return <section className="writing-workspace" aria-label="物語の構成"><fieldset disabled={busy} className="writing-save-fields">
     <div className="section-heading"><h2>物語を並べて見る</h2><span>同じ場面IDを切り替えて表示します</span></div>
+    <label className="form-field"><span>書く章を選ぶ</span><select aria-label="書く章を選ぶ" value={chapterId} onChange={event => { setChapterId(event.target.value); setAxis('chapter'); }}><option value="">すべての章</option>{chapters.map(chapter => <option key={chapter.id} value={chapter.id}>{chapter.name || '名称未設定の章'}</option>)}</select></label>
+    {canEdit && <><label className="form-field">変更するもの<select aria-label="変更するもの" value={editOperation} onChange={event => { setEditOperation(event.target.value as 'presentation' | 'world_date'); setMoveSceneId(''); setMovePreview(null); }}><option value="presentation">読者が読む順</option><option value="world_date">作中の日付</option></select></label><p className="field-hint">{editOperation === 'presentation' ? '読者が読む順を変更します。回想を先に移しても作中の日付は変わりません。' : '作中の日付を変更します。日時の予告で連動先・前後関係を確認します。章や場面の提示順は変わりません。'}</p><div className="backup-actions"><button type="button" className="button secondary" disabled={!lastPresentation} onClick={async () => { if (!lastPresentation) return; try { if (await saveCandidate(undoPresentationOrder(project, lastPresentation), '提示順だけを取り消す')) { setLastPresentation(null); setMoveNotice('読者が読む順だけを取り消しました。作中の日付は保持しています。'); } } catch (cause) { setError((cause as Error).message); } }}>前回の提示順変更を取り消す</button><button type="button" className="button secondary" disabled={!lastDates} onClick={async () => { if (!lastDates) return; try { if (await saveCandidate(undoTimeEdit(project, lastDates), '作中の日付だけを取り消す')) { setLastDates(null); setMoveNotice('作中の日付だけを取り消しました。読者が読む順は保持しています。'); } } catch (cause) { setError((cause as Error).message); } }}>前回の作中の日付変更を取り消す</button></div></>}
+    {moveSceneId && editOperation === 'presentation' && <section className="settings-card" aria-label="場面を移す場所">
+      <h3>{sceneTitle(project, moveSceneId)}を移す場所</h3>
+      <label className="form-field">移動先の章<select aria-label="移動先の章" value={moveChapterId} onChange={event => { setMoveChapterId(event.target.value); setMoveBeforeId(''); setMovePreview(null); }}><option value="">章を選ぶ</option>{chapters.filter(chapter => chapter.status !== 'rejected').map(chapter => <option key={chapter.id} value={chapter.id}>{chapter.name}</option>)}</select></label>
+      <label className="form-field">挿入する場所<select aria-label="挿入する場所" value={moveBeforeId} onChange={event => { setMoveBeforeId(event.target.value); setMovePreview(null); }}><option value="">章末</option>{orderedScenes(project, moveChapterId).filter(scene => scene.id !== moveSceneId).map(scene => <option key={scene.id} value={scene.id}>{scene.name}の前</option>)}</select></label>
+      <button type="button" className="button secondary" disabled={!moveChapterId} onClick={() => { try { setMovePreview(previewSceneMove(project, moveSceneId, moveChapterId, moveBeforeId || null)); setError(''); } catch (cause) { setError((cause as Error).message); setMovePreview(null); } }}>移動を予告</button>
+      {movePreview && <><p role="status">元：{movePreview.source} → {movePreview.destination}。前：{movePreview.beforeName} ／ 後：{movePreview.afterName}</p>{movePreview.revision !== project.revision && <p role="alert">確認後に作品が変わりました。移動を予告し直して場所を選び直してください。</p>}<button type="button" className="button primary" disabled={movePreview.revision !== project.revision} onClick={async () => { try { const candidate = applySceneMove(project, movePreview); if (!onSaveProject || saving.current) return; saving.current = true; setBusy(true); const undo = capturePresentationOrderChange(project, candidate); await onSaveProject(candidate, '場面の所属章と提示順を直接選んで移動'); setLastPresentation(undo); setMoveNotice(`${movePreview.source}から${movePreview.destination}へ移しました。前：${movePreview.beforeName}、後：${movePreview.afterName}。変更履歴から1回で取り消せます。`); setMoveSceneId(''); setMovePreview(null); } catch (cause) { setError((cause as Error).message); } finally { saving.current = false; setBusy(false); } }}>確認した場所へ移す</button></>}
+      <button type="button" className="button secondary" onClick={() => { setMoveSceneId(''); setMovePreview(null); }}>移動を取り消す</button>
+    </section>}
+    {moveNotice && <p role="status" aria-live="polite">{moveNotice}</p>}
     {laneAxisControl(axis, setAxis)}
     {axis === 'character' && <label className="form-field">
       <span>人物の変化を見る順</span>
@@ -96,7 +127,7 @@ export function WritingWorkspace({ project, initialAxis = 'character', onOpenEnt
       </select>
     </label>}
     {!lanes.length && <p className="field-hint">この軸に表示できる項目はありません。</p>}
-    <WindowedList className="story-lanes" items={lanes} scope={`writing-lanes:${project.projectId}:${axis}`} label="物語の並び" size={8} searchText={lane=>lane.label} render={lane => {
+    <WindowedList className="story-lanes" items={axis === 'chapter' && chapterId ? lanes.filter(lane => lane.id === chapterId) : lanes} scope={`writing-lanes:${project.projectId}:${axis}:${chapterId}`} label="物語の並び" size={8} searchText={lane=>lane.label} render={lane => {
         const arc = lane.kind === 'character' ? buildCharacterArc(project, lane.id, arcOrder) : undefined;
         const sceneIds = arc ? arc.entries.map(entry => entry.scene.id) : lane.sceneIds;
         const actualChapter = lane.kind === 'chapter' ? chapters.find(chapter => chapter.id === lane.id) : undefined;
@@ -104,20 +135,20 @@ export function WritingWorkspace({ project, initialAxis = 'character', onOpenEnt
           <header className="story-lane-heading">
             <h3>{lane.label}</h3><span>{lane.sceneIds.length}場面</span>
             {lane.kind !== 'unassigned' && <button type="button" className="text-button" onClick={() => onOpenEntity(lane.id)}>{KIND_LABELS[lane.kind]}</button>}
-            {axis === 'chapter' && actualChapter && onSaveProject && <span className="chapter-order-actions" aria-label={`${actualChapter.name || '章'}の提示順`}>
-              <button type="button" className="text-button" aria-label={`${actualChapter.name || '章'}を上へ`} disabled={chapters.findIndex(chapter => chapter.id === actualChapter.id) === 0} onClick={() => void saveCandidate(moveChapterPresentation(project, actualChapter.id, -1), '章の提示順を変更')}>章を上へ</button>
-              <button type="button" className="text-button" aria-label={`${actualChapter.name || '章'}を下へ`} disabled={chapters.findIndex(chapter => chapter.id === actualChapter.id) === chapters.length - 1} onClick={() => void saveCandidate(moveChapterPresentation(project, actualChapter.id, 1), '章の提示順を変更')}>章を下へ</button>
+            {editOperation === 'presentation' && axis === 'chapter' && actualChapter && onSaveProject && <span className="chapter-order-actions" aria-label={`${actualChapter.name || '章'}の提示順`}>
+              <button type="button" className="text-button" aria-label={`${actualChapter.name || '章'}を上へ`} disabled={chapters.findIndex(chapter => chapter.id === actualChapter.id) === 0} onClick={() => void savePresentation(moveChapterPresentation(project, actualChapter.id, -1), '章の提示順を変更')}>章を上へ</button>
+              <button type="button" className="text-button" aria-label={`${actualChapter.name || '章'}を下へ`} disabled={chapters.findIndex(chapter => chapter.id === actualChapter.id) === chapters.length - 1} onClick={() => void savePresentation(moveChapterPresentation(project, actualChapter.id, 1), '章の提示順を変更')}>章を下へ</button>
             </span>}
           </header>
           {!lane.sceneIds.length && <p className="field-hint">場面はまだありません。</p>}
-          <WindowedList as="ol" className="story-lane-scenes" items={sceneIds.map(id=>({id}))} scope={`writing-scenes:${project.projectId}:${axis}:${lane.id}:${arcOrder}`} label={`${lane.label}の場面`} size={20} searchText={({id})=>sceneTitle(project,id)} render={({id:sceneId}, index) => {
+          <WindowedList as="ol" className="story-lane-scenes" items={sceneIds.map(id=>({id}))} selectedId={activeSceneId} scope={`writing-scenes:${project.projectId}:${axis}:${lane.id}:${arcOrder}`} label={`${lane.label}の本文一覧`} size={20} searchText={({id})=>sceneTitle(project,id)} render={({id:sceneId}, index) => {
               const scene = project.entities.find((entity): entity is Entity<'scene'> => entity.id === sceneId && entity.kind === 'scene');
               if (!scene) return null;
               const entry = arc?.entries.find(item => item.scene.id === sceneId);
               const memberIndex = actualChapter?.data.sceneIds.indexOf(sceneId) ?? -1;
-              return <li key={sceneId} data-scene-id={sceneId}>
-                <button type="button" className="story-scene-link" onClick={() => onOpenEntity(sceneId)}>
-                  <strong>{index + 1}. {scene.name || '名称未設定の場面'}</strong>
+              return <li key={sceneId} data-scene-id={sceneId} data-scene-number={sceneNumbers.get(sceneId)} aria-current={activeSceneId === sceneId ? 'true' : undefined}>
+                <button type="button" className="story-scene-link" onClick={() => openScene(sceneId, 'summary')}>
+                  <strong>{sceneNumbers.get(sceneId) ?? index + 1}. {scene.name || '名称未設定の場面'}</strong>
                   <span>{fieldText(scene.data.summary) || '要約は未入力です。'}</span>
                 </button>
                 {entry && <section className="character-arc-record" aria-label={`${scene.name || '場面'}の人物変化`}>
@@ -134,14 +165,18 @@ export function WritingWorkspace({ project, initialAxis = 'character', onOpenEnt
                   {entry.worldTicks.length > 0 && <p className="character-arc-time"><strong>世界時点</strong> {entry.worldTicks.join('、')}</p>}
                 </section>}
                 <div className="story-lane-actions">
-                  {axis === 'chapter' && actualChapter && memberIndex >= 0 && onSaveProject && <>
-                    <button type="button" className="text-button" disabled={memberIndex === 0} onClick={() => void saveCandidate(moveSceneWithinPresentation(project, actualChapter.id, scene.id, -1), '章内の場面提示順を変更')}>前へ</button>
-                    <button type="button" className="text-button" disabled={memberIndex === actualChapter.data.sceneIds.length - 1} onClick={() => void saveCandidate(moveSceneWithinPresentation(project, actualChapter.id, scene.id, 1), '章内の場面提示順を変更')}>後へ</button>
+                  <button type="button" className="button primary small" onClick={() => openScene(sceneId, 'body')}>本文を書く</button>
+                  <button type="button" className="text-button" onClick={() => openScene(sceneId, 'summary')}>要約を開く</button>
+                  {editOperation === 'presentation' && axis === 'chapter' && actualChapter && memberIndex >= 0 && onSaveProject && <>
+                    <button type="button" className="text-button" disabled={memberIndex === 0} onClick={() => void savePresentation(moveSceneWithinPresentation(project, actualChapter.id, scene.id, -1), '章内の場面提示順を変更')}>前へ</button>
+                    <button type="button" className="text-button" disabled={memberIndex === actualChapter.data.sceneIds.length - 1} onClick={() => void savePresentation(moveSceneWithinPresentation(project, actualChapter.id, scene.id, 1), '章内の場面提示順を変更')}>後へ</button>
                   </>}
+                  {editOperation === 'presentation' && canEdit && <button type="button" className="text-button" onClick={() => { setMoveSceneId(scene.id); setMoveChapterId(scene.data.chapterId ?? ''); setMoveBeforeId(''); setMovePreview(null); setMoveNotice(''); }}>移す場所を選ぶ</button>}
                   {axis === 'thread' && scene.data.threadIds?.includes(lane.id) && onSaveProject && <button type="button" className="text-button danger" onClick={() => void removeFromThread(scene.id, lane.id)}>この筋から外す</button>}
-                  {axis === 'chapter' && chapters.length > 1 && onSaveProject && <label className="inline-move-control">章を移す
-                    <PagedSelect label={`${scene.name||'場面'}の移動先の章`} scope={`writing-move:${project.projectId}:${scene.id}`} value={scene.data.chapterId??''} emptyLabel="章に所属させない" items={chapters.map(chapter=>({id:chapter.id,label:chapter.name||'名称未設定の章'}))} onChange={id=>void saveCandidate(moveScenePresentation(project,scene.id,id||null,999),'場面の所属章と提示順を変更')}/>
+                  {editOperation === 'presentation' && axis === 'chapter' && chapters.length > 1 && onSaveProject && <label className="inline-move-control">章を移す
+                    <PagedSelect label={`${scene.name||'場面'}の移動先の章`} scope={`writing-move:${project.projectId}:${scene.id}`} value={scene.data.chapterId??''} emptyLabel="章に所属させない" items={chapters.map(chapter=>({id:chapter.id,label:chapter.name||'名称未設定の章'}))} onChange={id=>void savePresentation(moveScenePresentation(project,scene.id,id||null,999),'場面の所属章と提示順を変更')}/>
                   </label>}
+                  {editOperation === 'world_date' && canEdit && <>{scene.data.eventIds.flatMap(id => { const event = project.entities.find((entity): entity is Entity<'event'> => entity.id === id && entity.kind === 'event' && !entity.deletedAt); return event ? [<button key={id} type="button" className="button secondary small" onClick={() => setEditingEventId(id)}>{event.name || '出来事'}の作中の日付を変更</button>] : []; })}{!scene.data.eventIds.length && <p className="field-hint">この場面に日時を持つ出来事が結び付いていません。</p>}</>}
                 </div>
               </li>;
             }}/>
@@ -165,7 +200,7 @@ export function WritingWorkspace({ project, initialAxis = 'character', onOpenEnt
       }}/>
     {!canEdit && <p className="field-hint">並べ替えや筋からの除外を行うには、保存先を指定してください。</p>}
     {busy && <p role="status">構成の変更を保存中…</p>}{error && <p role="alert" className="field-error">{error}</p>}
-  </fieldset></section>;
+  </fieldset>{editingEventId && onSaveProject && project.entities.find(entity => entity.id === editingEventId)?.kind === 'event' && <TimelineTimeEditor project={project} referenceProject={dateReferences} event={project.entities.find(entity => entity.id === editingEventId) as Entity<'event'>} onClose={() => setEditingEventId('')} onSave={async (candidate, reason) => { await onSaveProject(candidate, reason); return candidate; }} onApplied={changes => { setLastDates(changes); setMoveNotice('作中の日付と承認した連動先を保存しました。読者が読む順は保持しています。'); }} onOpen={id => onOpenEntity(id)}/>}</section>;
 }
 
 export interface ChapterReadingViewProps {

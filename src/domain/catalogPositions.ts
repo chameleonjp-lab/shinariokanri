@@ -1,7 +1,7 @@
 import type { ContentAnchor, Entity, ProjectData, RichText } from './types';
 import { normalizeCatalogText } from './catalog';
 import {probeEnabled,probeCount,probeSpan} from '../observability/probe';
-export interface CatalogTextPosition { id: string; entityId: string; name: string; fieldPath: string; text: string; anchor: ContentAnchor }
+export interface CatalogTextPosition { id: string; entityId: string; name: string; chapterNames: string[]; paragraphNumber: number; fieldPath: string; text: string; anchor: ContentAnchor }
 function tracedText(text: string) {
   const parts: string[] = [], starts: number[] = [], ends: number[] = []; let offset = 0;
   const segments = new Intl.Segmenter('ja', { granularity: 'grapheme' }).segment(text);
@@ -37,18 +37,29 @@ export function findCatalogTextPositions(project: ProjectData, entities: Entity[
   const work=probeEnabled()?{blocks:0,builds:0,hits:0}:undefined,finish=probeSpan('query.positions');
   probeCount('query.positions.rows',entities.length);
   const positions: CatalogTextPosition[] = [];
+  const live=project.entities.filter(entity=>!entity.deletedAt&&entity.projectId===project.projectId);
+  const chapters=live.filter((entity):entity is Entity<'chapter'>=>entity.kind==='chapter');
+  const scenes=live.filter((entity):entity is Entity<'scene'>=>entity.kind==='scene');
+  const scenesByChapter=new Map<string,Set<string>>(),chaptersByEntity=new Map<string,string[]>();
+  for(const scene of scenes)if(scene.data.chapterId){const ids=scenesByChapter.get(scene.data.chapterId)??new Set<string>();ids.add(scene.id);scenesByChapter.set(scene.data.chapterId,ids);}
+  const byId=new Map(live.map(entity=>[entity.id,entity]));
+  for(const chapter of chapters){
+    const ids=new Set([...chapter.data.sceneIds,...scenesByChapter.get(chapter.id)??[]]);
+    for(const id of [...ids]){const scene=byId.get(id);if(scene?.kind==='scene')for(const lineId of scene.data.dialogueLineIds??[])ids.add(lineId);}
+    for(const id of ids){const names=chaptersByEntity.get(id)??[];names.push(chapter.name||'無題の章');chaptersByEntity.set(id,names);}
+  }
   try{
   for (const entity of entities) {
     if (entity.deletedAt || entity.projectId !== project.projectId) continue;
     for (const [key, value] of Object.entries(entity.data)) {
       if (!Array.isArray(value) || !value.every(block => block && typeof block === 'object' && typeof block.id === 'string' && typeof block.text === 'string' && ['paragraph', 'heading', 'list_item', 'quote'].includes(String(block.kind)))) continue;
-      for (const block of value as RichText) {
+      for (const [paragraphIndex,block] of (value as RichText).entries()) {
         if(work)work.blocks++;
         const trace = blockTrace(block,work); let offset = 0;
         while ((offset = trace.text.indexOf(needle, offset)) >= 0) {
           const first = Array.from(trace.text.slice(0, offset)).length, last = first + Array.from(needle).length - 1;
           const start = trace.starts[first], end = trace.ends[last];
-          if (start !== undefined && end !== undefined) positions.push({ id: `${entity.id}:${key}:${block.id}:${start}:${end}`, entityId: entity.id, name: entity.name, fieldPath: `data.${key}`, text: block.text, anchor: { entityId: entity.id, blockId: block.id, start, end, ...(entity.kind === 'dialogue_line' && key === 'text' ? { lineId: entity.id } : {}) } });
+          if (start !== undefined && end !== undefined) positions.push({ id: `${entity.id}:${key}:${block.id}:${start}:${end}`, entityId: entity.id, name: entity.name, chapterNames: [...new Set(entity.kind==='chapter'?[entity.name]:chaptersByEntity.get(entity.id)??[])], paragraphNumber: paragraphIndex+1, fieldPath: `data.${key}`, text: block.text, anchor: { entityId: entity.id, blockId: block.id, start, end, ...(entity.kind === 'dialogue_line' && key === 'text' ? { lineId: entity.id } : {}) } });
           offset += Math.max(1, needle.length);
         }
       }

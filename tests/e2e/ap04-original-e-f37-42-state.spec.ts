@@ -187,9 +187,9 @@ test('AT-F41 クエスト禁止遷移と所持金加算を原子的に拒否し�
   });
   await clause('AT-F41', 'negative_or_edge', async () => {
     const exception = { reason: '根拠に従ったこの経路限定の完了解除', targetScope: { projectId: p.projectId, graphId: graph.id }, validity: { ...emptyValidity(), worldRange: { start: '0', end: '10' } }, evidenceIds: [evidence.id] };
-    await openEntity(page, 'effect', illegal.name); await editData(page, { ...illegal.data, exceptionDetails: exception }); await start(page, entry.id); await page.getByLabel('試読時点の世界内tick', { exact: true }).fill('5'); await page.getByRole('button', { name: /^(試読を始める|この状態から開始し直す)$/ }).click();
+    await openEntity(page, 'effect', illegal.name); await editData(page, { ...illegal.data, exceptionDetails: exception }); await start(page, entry.id); await page.getByLabel('試読中の日時', { exact: true }).fill('5'); await page.getByRole('button', { name: /^(試読を始める|この状態から開始し直す)$/ }).click();
     await page.getByRole('button', { name: batch.name, exact: true }).click(); await expect(page.locator('.runtime-variable').filter({ hasText: money.name })).toContainText('15'); await record(page);
-    await start(page, entry.id); await page.getByLabel('試読時点の世界内tick', { exact: true }).fill('10'); await page.getByRole('button', { name: /^(試読を始める|この状態から開始し直す)$/ }).click(); await page.getByRole('button', { name: batch.name, exact: true }).click(); await expect(page.locator('.reader-issue')).toContainText(/期限|期間|成立|遷移/); await expect(page.locator('.runtime-variable').filter({ hasText: money.name })).toContainText('10');
+    await start(page, entry.id); await page.getByLabel('試読中の日時', { exact: true }).fill('10'); await page.getByRole('button', { name: /^(試読を始める|この状態から開始し直す)$/ }).click(); await page.getByRole('button', { name: batch.name, exact: true }).click(); await expect(page.locator('.reader-issue')).toContainText(/期限|期間|成立|遷移/); await expect(page.locator('.runtime-variable').filter({ hasText: money.name })).toContainText('10');
     await attachObservation(info, 'AT-F41-observed', { atomicRejection: { money: 10, state: '完了' }, resetReason: reset.data.reason, explicitException: exception, allowedWorldTick: '5', expiredWorldTick: '10' });
   });
 });

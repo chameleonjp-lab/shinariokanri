@@ -71,8 +71,9 @@ test('phase3: 空作品の通常制作から参照・試読・履歴・秘密出
   await save(page);
   await navigate(page, /^検索/);
   await page.getByLabel('作品内を検索', {exact:true}).fill('約束を守る');
-  await expect(page.locator('.entity-card h3')).toHaveText(scene.name);
-  await page.locator('.entity-card').click();
+  const matchingScene = page.locator('.entity-card').filter({has: page.getByRole('heading', {name: scene.name, exact: true})});
+  await expect(matchingScene).toHaveCount(1);
+  await matchingScene.click();
   await editor.getByRole('tab', {name:'本文', exact:true}).click();
   await expect(editor.getByRole('textbox', {name:'本文', exact:true})).toHaveValue(body);
   await editor.getByRole('button', {name:'詳細を閉じる', exact:true}).click();

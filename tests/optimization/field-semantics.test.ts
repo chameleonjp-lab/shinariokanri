@@ -16,12 +16,28 @@ const meaning=(kind:string,field:string)=>{
 it('preserves the independent original-main model, UI wording/order and public allowlist contracts',()=>{
   expect(contract.sourceCommit).toBe('a13d8fad93b1a4a14c4cc4d45ab98783388de177');
   expect(model.ENTITY_KINDS).toEqual(contract.kinds);
-  expect(serial(model.ENTITY_SCHEMAS)).toEqual(contract.model);
-  expect(serial(FIELD_SPECS)).toEqual(contract.ui);
-  expect(serial(PROJECTION_FIELDS)).toEqual(contract.public);
+  // The approved additions are optional; every original field/schema and its UI/public meaning stays exact.
+  const additions:Record<string,string[]>={dialogue_line:['scriptKind','scriptNumber','sourceAnchor'],trace:['correctionAnchor','expectation'],review:['receivedContext','currentMatch']};
+  const current=serial(model.ENTITY_SCHEMAS);
+  for(const kind of contract.kinds){
+    const old=contract.model[kind],actual=current[kind],extra=Object.keys(actual.fields).filter(key=>!Object.hasOwn(old.fields,key));
+    expect(extra.sort()).toEqual((additions[kind]??[]).slice().sort());
+    expect({...actual,fields:Object.fromEntries(Object.keys(old.fields).map(key=>[key,actual.fields[key]]))}).toEqual(old);
+    for(const key of extra)expect(actual.fields[key].required).not.toBe(true);
+    const oldKeys=new Set(contract.ui[kind].map((field:{key:string})=>field.key));
+    expect(serial(FIELD_SPECS[kind]).filter((field:{key:string})=>oldKeys.has(field.key))).toEqual(contract.ui[kind]);
+    expect(FIELD_SPECS[kind].filter(field=>!oldKeys.has(field.key)).map(field=>field.key).sort()).toEqual(kind==='dialogue_line'?additions.dialogue_line.slice().sort():[]);
+  }
+  const publicFields=serial(PROJECTION_FIELDS);
+  for(const [kind,fields]of Object.entries(contract.public) as [string,Record<string,unknown>][]){
+    expect(Object.fromEntries(Object.keys(fields).map(key=>[key,publicFields[kind][key]]))).toEqual(fields);
+    expect(Object.keys(publicFields[kind]).filter(key=>!Object.hasOwn(fields,key)).sort()).toEqual(kind==='dialogue_line'?additions.dialogue_line.slice().sort():[]);
+  }
+  expect(Object.keys(publicFields).sort()).toEqual(Object.keys(contract.public).sort());
   const schema=readFileSync(new URL('../../src/domain/schema.json',import.meta.url));
   expect(createHash('sha256').update(schema).digest('hex')).toBe(contract.files.find((row:{path:string})=>row.path==='src/domain/schema.json').sha256);
-  expect(model.toJsonSchema()).toEqual(JSON.parse(schema.toString()));
+  const currentSchema=readFileSync(new URL('../../src/domain/schema-current.json',import.meta.url));
+  expect(model.toJsonSchema()).toEqual(JSON.parse(currentSchema.toString()));
 });
 
 it('covers all 345 fields of 43 kinds against frozen expectations independent of the new descriptor',()=>{

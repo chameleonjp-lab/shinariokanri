@@ -1,3 +1,4 @@
+import {materialCreditReview} from './materials';
 import type { Entity, ID, ProjectContent, ProjectData, ProjectSnapshot, RichText, TypedValue } from './types';
 import portableScript from '../portable/generated/runtime.js?raw';
 import { portableRuntimeProject } from './portableRuntimeProject';
@@ -9,7 +10,7 @@ import { strToU8, zipSync } from 'fflate';
 import { createProjection, PROJECTION_FIELDS } from './projection';
 import { selectExportSource as selectSource, executionExportView, prepareExportCitations, validatePublicPositions, type CitationSource } from './exportPreparation';
 import type { ProjectedBlock, ProjectedEntity, ProjectionIssue, ProjectionOmission, PublicProjection, PublicValue } from './projection';
-import { buildPublicCatalogIndex } from './publicCatalog';
+import { buildPublicCatalogIndex, publicReaderEntities as readingEntities, publicReaderEntityLabel } from './publicCatalog';
 
 export type ExportProfile = 'reader' | 'runtime_json' | 'localization' | 'production' | 'consultation' | 'playable_preview';
 export interface ExportArtifact { filename: string; mimeType: string; content: string; bytes?: Uint8Array<ArrayBuffer> }
@@ -24,10 +25,13 @@ export interface ExportPreview {
   warnings: string[];
   assetCount: number;
   assetBytesIncluded: boolean;
+  materialCredits?: Awaited<ReturnType<typeof materialCreditReview>>;
   runtimeTarget?: { profileId: string; profileVersion: string; schemaVersion: string; implemented: boolean; verificationScope: string };
 }
+/** Safe reader input, deliberately separate from author diagnostics and source IDs. */
+export interface ReaderOutput { projection: PublicProjection; versionLabel: string }
 export type ExportResult =
-  | { ok: true; artifact: ExportArtifact; artifacts: ExportArtifact[]; preview: ExportPreview }
+  | { ok: true; artifact: ExportArtifact; artifacts: ExportArtifact[]; preview: ExportPreview; readerOutput?: ReaderOutput }
   | { ok: false; issues: ProjectionIssue[]; preview?: ExportPreview };
 export interface RuntimeExportProfile {
   profileId: string;
@@ -123,12 +127,17 @@ async function exportCapturedProject(input: ProjectData, options: ExportOptions)
   };
   if (!result.ok) return { ok: false, issues: [...targetIssues, ...result.issues], preview };
   const projection = result.projection;
+  if(preview.assetCount){
+    const editions=[{project,idMap:result.idMap,label:options.targetVersionId??project.projectId},...citations.sources.map(source=>({...source,label:source.publicVersionId}))];
+    const reviews=await Promise.all(editions.map(async edition=>{const rows=await materialCreditReview(edition.project,Object.keys(edition.idMap),options.profile);return {confirmed:rows.confirmed.map(row=>({...row,id:`${edition.label}:${row.id}`})),unknown:rows.unknown.map(row=>({...row,id:`${edition.label}:${row.id}`}))};}));
+    preview.materialCredits={confirmed:reviews.flatMap(review=>review.confirmed),unknown:reviews.flatMap(review=>review.unknown)};
+  }
   const positions=validatePublicPositions(projection);if(positions.length)return {ok:false,issues:positions,preview};
   if (targetIssues.length) return { ok: false, issues: targetIssues, preview };
   const policy = policyEntity!.data;
   const publicVersionLabel = policy.publicVersionLabel ?? '公開版';
   const artifact = (filename: string, mimeType: string, content: string): ExportArtifact => ({ filename, mimeType, content });
-  const succeed = (artifacts: ExportArtifact[]): ExportResult => ({ ok: true, artifact: artifacts[0], artifacts, preview });
+  const succeed = (artifacts: ExportArtifact[]): ExportResult => ({ ok: true, artifact: artifacts[0], artifacts, preview, ...(options.profile === 'reader' ? { readerOutput: { projection, versionLabel: publicVersionLabel } } : {}) });
   if (preview.assetCount) preview.warnings.push('この出力に素材bytesは含まれません。素材の対応と取得状況は別に確認してください。');
   if (projection.calendars.length) preview.warnings.push('公開用の暦・月・原点のラベルは匿名の表記に置き換えます。tickと暦の数値定義は保持します。');
   switch (options.profile) {
@@ -329,9 +338,9 @@ function checkConditionCapability(input: unknown, profile: RuntimeExportProfile,
 const escapeHtml = (value: string): string => value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 const escapeMarkdown = (value: string): string => escapeHtml(value).replace(/([\\`*_[\]{}()#+.!|~>-])/g, '\\$1');
 function blocks(value: PublicValue | undefined): ProjectedBlock[] { return Array.isArray(value) ? value as unknown as ProjectedBlock[] : []; }
-const readerId=(id:string,version='public-project')=>version==='public-project'?id:`${version}--${id}`;
-type ReaderRange={version:string;blockId:string;start:number;end:number};
-function readerRanges(projection:PublicProjection):ReaderRange[]{const ranges=([{id:'public-project',projection},...projection.versions??[]]).flatMap(({id:version,projection:edition})=>edition.entities.flatMap(entity=>entityDocuments(entity).flatMap(([,document])=>document.flatMap(block=>(block.links??[]).flatMap(link=>link.blockId&&link.targetStart!=null&&link.targetEnd!=null?[{version:link.sourceVersionId??version,blockId:link.blockId,start:link.targetStart,end:link.targetEnd}]:[])))));return [...new Map(ranges.map(range=>[JSON.stringify(range),range])).values()];}
+export const readerId=(id:string,version='public-project')=>version==='public-project'?id:`${version}--${id}`;
+export type ReaderRange={version:string;blockId:string;start:number;end:number};
+export function readerRanges(projection:PublicProjection):ReaderRange[]{const ranges=([{id:'public-project',projection},...projection.versions??[]]).flatMap(({id:version,projection:edition})=>edition.entities.flatMap(entity=>entityDocuments(entity).flatMap(([,document])=>document.flatMap(block=>(block.links??[]).flatMap(link=>link.blockId&&link.targetStart!=null&&link.targetEnd!=null?[{version:link.sourceVersionId??version,blockId:link.blockId,start:link.targetStart,end:link.targetEnd}]:[])))));return [...new Map(ranges.map(range=>[JSON.stringify(range),range])).values()];}
 function blockHtml(block: ProjectedBlock, markdown = false,version='public-project',ranges:readonly ReaderRange[]=[]): string {
   const escape = markdown ? escapeMarkdown : escapeHtml;
   const letters = [...block.text];
@@ -347,20 +356,18 @@ function blockHtml(block: ProjectedBlock, markdown = false,version='public-proje
   for (const link of block.links ?? []) {const target=readerId(link.blockId??link.lineId??link.targetId,link.sourceVersionId??version),position=link.blockId&&link.targetStart!=null&&link.targetEnd!=null?`--${link.targetStart}--${link.targetEnd}`:'';output+=` <a href="#${escapeHtml(target+position)}"${link.sourceVersionId?` data-source-version="${escapeHtml(link.sourceVersionId)}"`:''}>関連${position?`（文字${link.targetStart}〜${link.targetEnd}）`:''}</a>`;}
   return output;
 }
-function readingEntities(projection: PublicProjection): ProjectedEntity[] {
-  const scenes = new Map(byKind(projection, 'scene').map(scene => [scene.id, scene]));
-  const order: ProjectedEntity[] = [], seen = new Set<string>();
-  const add = (entity: ProjectedEntity) => { if (!seen.has(entity.id)) { seen.add(entity.id); order.push(entity); } };
-  for (const chapter of byKind(projection, 'chapter')) { add(chapter); for (const id of Array.isArray(chapter.data.sceneIds) ? chapter.data.sceneIds : []) if (typeof id === 'string' && scenes.has(id)) add(scenes.get(id)!); }
-  for (const entity of projection.entities) if (entityDocuments(entity).length || ['scene', 'dialogue_line', 'character', 'event', 'place', 'item', 'note', 'lore', 'goal', 'terminology', 'media_variant'].includes(entity.kind)) add(entity);
-  return order;
-}
 function entityDocuments(entity: ProjectedEntity): [string, ProjectedBlock[]][] {
   return ['body', 'text', 'summary', 'description', 'usageNotes','caption','action','tutorial','interpretation','targetAudience','experience','theme','tone','scope'].filter(field => blocks(entity.data[field]).length).map(field => [field, blocks(entity.data[field])]);
 }
+export {entityDocuments as readerEntityDocuments};
 function readerPublicIndex(projection: PublicProjection) {
  const entities = new Map(readingEntities(projection).map(entity => [entity.id, entity]));
  return buildPublicCatalogIndex(projection).filter(entry => entities.has(entry.entityId)).map(entry => ({ ...entry, targetId: entityDocuments(entities.get(entry.entityId)!)[0]?.[1][0]?.id ?? entry.entityId }));
+}
+function readerRelationsHtml(projection: PublicProjection): string {
+ const names = new Map(projection.entities.map(entity => [entity.id, entity.name]));
+ const relations = projection.relations.filter(relation => names.has(relation.fromId) && names.has(relation.toId));
+ return relations.length ? `<section aria-label="公開された関係"><h2>公開された関係</h2><ul>${relations.map(relation => `<li>${escapeHtml(names.get(relation.fromId)!)} · ${escapeHtml(relation.relationType)} · ${escapeHtml(names.get(relation.toId)!)}</li>`).join('')}</ul></section>` : '';
 }
 function readerPublicIndexHtml(projection: PublicProjection, version: string) {
  const entries = readerPublicIndex(projection);
@@ -373,15 +380,19 @@ export function renderReaderMarkdown(projection: PublicProjection, versionLabel 
   const index = readerPublicIndex(edition);
   if (index.length) output.push('## 五十音・分類索引','',...index.map(entry => `- [${escapeMarkdown(entry.term)}](#${encodeURIComponent(readerId(entry.targetId,version))})${entry.reading ? ` · ${escapeMarkdown(entry.reading)}` : ''}${entry.classifications.length ? ` · ${entry.classifications.map(escapeMarkdown).join('、')}` : ''}`),'');
   for(const entity of readingEntities(edition)){
-   output.push(`<a id="${escapeHtml(readerId(entity.id,version))}"></a>`,`## ${escapeMarkdown(entity.name||entity.kind)}`,'');
+   output.push(`<a id="${escapeHtml(readerId(entity.id,version))}"></a>`,`## ${escapeMarkdown(publicReaderEntityLabel(entity))}`,'');
    if(entity.status!=='confirmed')output.push(`採用状態: ${escapeMarkdown(entity.status)}`,'');
    for(const [field,document]of entityDocuments(entity)){if(field==='summary'&&entityDocuments(entity).length>1)output.push('### 要約','');for(const block of document){output.push(`<a id="${escapeHtml(readerId(block.id,version))}"></a>`);const prefix=block.kind==='heading'?'### ':block.kind==='quote'?'> ':block.kind==='list_item'?'- ':'';output.push(`${prefix}${blockHtml(block,true,version,ranges)}`,'');}}
+  }
+  if (edition.relations.length) {
+    const names = new Map(edition.entities.map(entity => [entity.id, entity.name]));
+    output.push('## 公開された関係', '', ...edition.relations.filter(relation => names.has(relation.fromId) && names.has(relation.toId)).map(relation => `- ${escapeMarkdown(names.get(relation.fromId)!)} · ${escapeMarkdown(relation.relationType)} · ${escapeMarkdown(names.get(relation.toId)!)}`), '');
   }
  }
  return `${output.join('\n')}\n`;
 }
-export function renderReaderHtml(projection: PublicProjection, versionLabel = '公開版', writingMode: 'horizontal' | 'vertical' = 'horizontal'): string {
- const ranges=readerRanges(projection),sections=([['public-project',projection],...(projection.versions??[]).map(pin=>[pin.id,pin.projection])] as [string,PublicProjection][]).map(([version,edition])=>`${version!=='public-project'?`<h2>引用固定版 ${escapeHtml(edition.title)} (${escapeHtml(version)})</h2>`:''}${readerPublicIndexHtml(edition,version)}${readingEntities(edition).map(entity=>`<section id="${escapeHtml(readerId(entity.id,version))}"><h2>${escapeHtml(entity.name||entity.kind)}</h2>${entityDocuments(entity).map(([,document])=>document.map(block=>{const tag=block.kind==='heading'?'h3':block.kind==='quote'?'blockquote':'p';return `<${tag} id="${escapeHtml(readerId(block.id,version))}">${blockHtml(block,false,version,ranges)}</${tag}>`;}).join('')).join('')}</section>`).join('\n')}`).join('\n');
+export function renderReaderHtml(projection: PublicProjection, versionLabel = '公開版', writingMode: 'horizontal' | 'vertical' = 'horizontal', ranges: readonly ReaderRange[] = readerRanges(projection)): string {
+ const sections=([['public-project',projection],...(projection.versions??[]).map(pin=>[pin.id,pin.projection])] as [string,PublicProjection][]).map(([version,edition])=>`${version!=='public-project'?`<h2>引用固定版 ${escapeHtml(edition.title)} (${escapeHtml(version)})</h2>`:''}${readerPublicIndexHtml(edition,version)}${readingEntities(edition).map(entity=>`<section id="${escapeHtml(readerId(entity.id,version))}"><h2>${escapeHtml(publicReaderEntityLabel(entity))}</h2>${entityDocuments(entity).map(([,document])=>document.map(block=>{const tag=block.kind==='heading'?'h3':block.kind==='quote'?'blockquote':'p';return `<${tag} id="${escapeHtml(readerId(block.id,version))}">${blockHtml(block,false,version,ranges)}</${tag}>`;}).join('')).join('')}</section>`).join('\n')}${readerRelationsHtml(edition)}`).join('\n');
  return `<!doctype html>\n<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'"><title>${escapeHtml(projection.title)}</title><style>body{font-family:serif;line-height:1.9;margin:2rem;overflow-wrap:anywhere;${writingMode==='vertical'?'writing-mode:vertical-rl;':''}}section{margin-block:2rem}rt{font-size:.55em}</style></head><body><h1>${escapeHtml(projection.title)}</h1><p>対象版: ${escapeHtml(versionLabel)}</p>${sections}</body></html>\n`;
 }
 
@@ -503,3 +514,5 @@ async function buildPlayableArchive(projection:PublicProjection,versionLabel:str
  files['manifest.json']=strToU8(JSON.stringify({format:'scenario-playable-package',formatVersion:'1.0.0',files:manifestFiles,contentVersionId:payload.contentVersionId,externalEvidence:'not_included',assetBytesIncluded:assets.complete},null,2));
  return {filename:'playable-preview.zip',mimeType:'application/zip',content:'',bytes:new Uint8Array(zipSync(files,{level:6}))};
 }
+
+export {exportTweeAlternative} from './twee';

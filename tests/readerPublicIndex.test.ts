@@ -19,7 +19,9 @@ describe('reader public index artifacts', () => {
     for (const secret of ['SECRET_ALIAS', 'SECRET_NOTES', 'secret-notes', 'referenceCount', '17']) expect(html).not.toContain(secret);
     const targets = [...html.matchAll(/href="#([^"]+)"/g)].map(match => match[1]);
     for (const target of targets) expect(html).toContain(`id="${target}"`);
-    expect(html).not.toContain('href="#public-category"');
+    // Approved kinds without prose now have a matching section in both the preview and file.
+    expect(html).toContain('<a href="#public-category">公開分類</a>');
+    expect(html).toContain('<section id="public-category"><h2>公開分類</h2></section>');
   });
 
   it('uses public paragraph IDs in Markdown and scopes citation IDs to the emitted edition', () => {
@@ -31,5 +33,13 @@ describe('reader public index artifacts', () => {
     const html = renderReaderHtml(cited);
     expect(html).toContain('href="#published-1--public-paragraph"'); expect(html).toContain('id="published-1--public-paragraph"');
     expect(renderReaderMarkdown(cited)).toContain('](#published-1--public-paragraph)');
+  });
+
+  it.each(['public-project', 'published-1'])('renders an incoming text selection when its source chapter is paged out: %s', version => {
+    const page = version === 'public-project' ? projection : {...projection, entities: [], versions: [{id: version, projection}]};
+    const html = renderReaderHtml(page, '公開版', 'horizontal', [{version, blockId: 'public-paragraph', start: 0, end: 2}]);
+    const target = version === 'public-project' ? 'public-paragraph' : 'published-1--public-paragraph';
+    expect(html).toContain(`<mark id="${target}--0--2" data-target-start="0" data-target-end="2">公開</mark>`);
+    expect(html).not.toContain('SECRET');
   });
 });

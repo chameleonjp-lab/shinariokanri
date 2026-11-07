@@ -102,7 +102,7 @@ async function checkAlternatives(project: ProjectData, validationOptions: Projec
 async function checkChapterTraces(project: ProjectData, validationOptions: ProjectValidationOptions, digestCache: PinnedWorldDigestCache): Promise<ValidationIssue[]> {
   const issues: ValidationIssue[] = [];
   for (const [index, entity] of project.entities.entries()) {
-    if (entity.kind !== 'trace') continue;
+    if (entity.kind !== 'trace' || entity.deletedAt) continue;
     const location = `project.entities[${index}].data`;
     const checkpoint = project.entities.find(candidate => candidate.id === entity.data.startCheckpointId && candidate.kind === 'checkpoint');
     if (!checkpoint || checkpoint.kind !== 'checkpoint') {
@@ -166,6 +166,7 @@ async function validateProjectIntegrityData(input: ProjectData, options: Project
   const reviewChanges=(before:ProjectData['entities'],after:ProjectData['entities'],path:string)=>{
     const old=new Map(before.filter(e=>e.kind==='review'&&e.data.sharedSource).map(e=>[e.id,e]));
     for(const entity of after){const prior=old.get(entity.id);if(entity.kind!=='review'||prior?.kind!=='review')continue;
+      if(canonicalJson(prior.data.receivedContext??null)!==canonicalJson(entity.data.receivedContext??null))issues.push({code:'INTEGRITY_FAILED',path:`${path}.${entity.id}.data.receivedContext`,message:'受領した元版と引用の前後文は変更できません。現稿の照合先と理由を別に保存してください。'});
       if(canonicalJson(prior.data.sharedSource)!==canonicalJson(entity.data.sharedSource??null))issues.push({code:'INTEGRITY_FAILED',path:`${path}.${entity.id}.data.sharedSource`,message:'元の共有指摘・公開版・位置・引用の記録は変更できません。解決文を別に保存してください。'});
       if(canonicalJson([prior.data.target,prior.data.targetVersionId,prior.data.quotedText??null])!==canonicalJson([entity.data.target,entity.data.targetVersionId,entity.data.quotedText??null]))issues.push({code:'INTEGRITY_FAILED',path:`${path}.${entity.id}.data.target`,message:'元の共有指摘の私的固定版と引用は変更できません。現在稿の修正は別に保存してください。'});
       if(prior.data.stage==='open'&&entity.data.stage==='verified')issues.push({code:'INTEGRITY_FAILED',path:`${path}.${entity.id}.data.stage`,message:'共有指摘は修正済みを保存してから再確認してください。'});

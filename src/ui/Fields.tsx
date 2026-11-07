@@ -291,5 +291,5 @@ export function RichTextView({ value, vertical = false, onOpen, onOpenTarget }: 
     output.push(chars.slice(cursor).join(''));
     return output;
   };
-  return <div className={`rich-text ${vertical ? 'vertical-text' : ''}`}>{blocks.map(b => b.kind === 'heading' ? <h3 key={b.id}>{inline(b)}</h3> : b.kind === 'quote' ? <blockquote key={b.id}>{inline(b)}</blockquote> : <p key={b.id}>{inline(b) || <br/>}</p>)}</div>;
+  return <div className={`rich-text ${vertical ? 'vertical-text' : ''}`}>{blocks.map(b => b.kind === 'heading' ? <h3 key={b.id} data-reading-block-id={b.id} tabIndex={-1}>{inline(b)}</h3> : b.kind === 'quote' ? <blockquote key={b.id} data-reading-block-id={b.id} tabIndex={-1}>{inline(b)}</blockquote> : <p key={b.id} data-reading-block-id={b.id} tabIndex={-1}>{inline(b) || <br/>}</p>)}</div>;
 }

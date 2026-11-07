@@ -76,7 +76,7 @@ for (const fixedEdition of [false, true]) test(`AT-N05 retains cancelled ${fixed
   await reader(page);
   if (fixedEdition) await page.getByLabel('試読する作品版', { exact: true }).selectOption(snapshotId);
   await page.getByLabel('試読の開始点', { exact: true }).selectOption(entry.id);
-  await page.getByLabel('試読開始時点の世界内tick', { exact: true }).fill('5');
+  await page.getByLabel('試読開始時点の日時', { exact: true }).fill('5');
   const before = await native(page);
   if (fixedEdition) await page.evaluate(() => {
     const postMessage = Worker.prototype.postMessage;
@@ -118,7 +118,7 @@ for (const fixedEdition of [false, true]) test(`AT-N05 retains cancelled ${fixed
   await reader(page);
   await expect(page.locator('.analysis-result-heading')).toContainText('探索打切り');
   await expect(page.getByLabel('試読する作品版', { exact: true })).toHaveValue(fixedEdition ? snapshotId : '');
-  await expect(page.getByLabel('試読開始時点の世界内tick', { exact: true })).toHaveValue('5');
+  await expect(page.getByLabel('試読開始時点の日時', { exact: true })).toHaveValue('5');
   expect(await result(page)).toEqual(cancelled);
   await page.getByLabel('試読する作品版', { exact: true }).selectOption(fixedEdition ? '' : snapshotId);
   await expect(page.locator('.analysis-section')).toContainText('選択中の版とは別の版');

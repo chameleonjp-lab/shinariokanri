@@ -40,3 +40,11 @@ export function resolveEditorNavigation(entity: Entity, anchor: ContentAnchor, f
   const points = Array.from(text);
   return { ok: true, fieldKey, ...(anchor.blockId ? { blockId: anchor.blockId } : {}), start: points.slice(0, prefix + start).join('').length, end: points.slice(0, prefix + end).join('').length };
 }
+
+export function resolveWritingResume(project: import('../domain/types').ProjectData, position: import('./viewPreferences').WritingResumePosition): {anchor: ContentAnchor | null; message: string} {
+  const scene = project.entities.find((entity): entity is Entity<'scene'> => entity.id === position.sceneId && entity.kind === 'scene' && !entity.deletedAt && entity.status !== 'rejected');
+  if (!scene) return {anchor:null, message:'書いていた場面が削除されたか不採用になりました。章一覧から書く場所を選んでください。'};
+  const exact = scene.data.body.find(block => block.id === position.blockId);
+  const block = exact ?? scene.data.body[Math.min(position.blockIndex, scene.data.body.length - 1)];
+  return {anchor:{entityId:scene.id, ...(block ? {blockId:block.id} : {})}, message:position.blockId && !exact ? block ? '書いていた段落がなくなったため、同じ場面の近い段落を開きました。' : '書いていた段落がなくなったため、同じ場面の本文を開きました。' : ''};
+}

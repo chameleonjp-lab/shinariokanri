@@ -110,6 +110,11 @@ export function orderedScenes(project: ProjectData, chapterId?: ID): Entity<'sce
   return canonicalPresentationScenes(project, chapterId, false);
 }
 
+/** Authoring includes rejected records so every visible row keeps its presentation number. */
+export function authoringPresentationScenes(project: ProjectData): Entity<'scene'>[] {
+  return canonicalPresentationScenes(project, undefined, true);
+}
+
 /** A read-through projection. An explicit path preserves its order and can revisit the same canonical scene. */
 export function buildChapterReadingSequence(project: ProjectData, chapterIds?: readonly ID[], scenePath?: readonly ID[]): ChapterReadingEntry[] {
   const allScenes = new Map<ID, Entity<'scene'>>(project.entities.filter((entity): entity is Entity<'scene'> => entity.kind === 'scene').map(scene => [scene.id, scene]));
@@ -532,3 +537,71 @@ export function recordAlternativeApplication(alternative: AuthorAlternative, rec
 }
 
 export const WRITING_STATUS_LABELS: Record<Status, string> = { confirmed: '確定', provisional: '仮', needs_review: '要確認', rejected: '没', alternate: '別案' };
+
+export interface SceneMovePreview {
+  projectId: ID; revision: string; sceneId: ID; chapterId: ID; beforeSceneId: ID | null;
+  source: string; destination: string; beforeName: string; afterName: string;
+}
+/** Select by stable scene IDs, rather than a presentation number that may change. */
+export function previewSceneMove(project: ProjectData, sceneId: ID, chapterId: ID, beforeSceneId: ID | null): SceneMovePreview {
+  const scene = authoringPresentationScenes(project).find(item => item.id === sceneId);
+  const chapters = project.entities.filter((entity): entity is Entity<'chapter'> => entity.kind === 'chapter' && !entity.deletedAt);
+  const chapter = chapters.find(item => item.id === chapterId);
+  const destinations = canonicalPresentationScenes(project, chapterId, true).filter(item => item.id !== sceneId);
+  const index = beforeSceneId === null ? destinations.length : destinations.findIndex(item => item.id === beforeSceneId);
+  if (!scene || !chapter || index < 0) throw new Error('移動先か場面が変わりました。移す場所を選び直してください。');
+  const sourceChapter = chapters.find(item => item.data.sceneIds.includes(sceneId) || item.id === scene.data.chapterId);
+  return {projectId:project.projectId, revision:project.revision, sceneId, chapterId, beforeSceneId,
+    source:`${sourceChapter?.name || '章に未配置'}・${scene.name || '名称未設定の場面'}`,
+    destination:chapter.name || '名称未設定の章', beforeName:destinations[index - 1]?.name || '章の先頭', afterName:destinations[index]?.name || '章末'};
+}
+export function applySceneMove(project: ProjectData, preview: SceneMovePreview): ProjectData {
+  if (project.projectId !== preview.projectId || project.revision !== preview.revision) throw new Error('確認後に作品が変わりました。移す場所を選び直してください。');
+  previewSceneMove(project, preview.sceneId, preview.chapterId, preview.beforeSceneId);
+  // Preserve the full authoring order, including rejected and old unlisted scenes.
+  const next = editableProjectCopy(project);
+  const destination = next.entities.find((entity): entity is Entity<'chapter'> => entity.id === preview.chapterId && entity.kind === 'chapter')!;
+  destination.data.sceneIds = canonicalPresentationScenes(project, preview.chapterId, true).filter(scene => scene.id !== preview.sceneId).map(scene => scene.id);
+  const index = preview.beforeSceneId === null ? destination.data.sceneIds.length : destination.data.sceneIds.indexOf(preview.beforeSceneId);
+  return moveScenePresentation(next, preview.sceneId, preview.chapterId, index);
+}
+
+export interface PresentationOrderChange {
+  projectId: ID;
+  chapterOrder?: { before: ID[]; after: ID[] };
+  chapters: { id: ID; before: ID[]; after: ID[] }[];
+  scenes: { id: ID; before: ID | null | undefined; after: ID | null | undefined }[];
+}
+/** An ephemeral undo receipt contains only presentation fields, never dates or prose. */
+export function capturePresentationOrderChange(before: ProjectData, after: ProjectData): PresentationOrderChange {
+  if (before.projectId !== after.projectId) throw new Error('提示順の作品が一致しません。');
+  const beforeOrder = presentationState(before).chapterOrder, afterOrder = presentationState(after).chapterOrder;
+  const originals = new Map(before.entities.map(entity => [entity.id, entity]));
+  const chapters: PresentationOrderChange['chapters'] = [], scenes: PresentationOrderChange['scenes'] = [];
+  for (const entity of after.entities) {
+    const original = originals.get(entity.id);
+    if (entity.kind === 'chapter' && original?.kind === 'chapter' && !jsonEqual(entity.data.sceneIds, original.data.sceneIds)) chapters.push({ id: entity.id, before: [...original.data.sceneIds], after: [...entity.data.sceneIds] });
+    if (entity.kind === 'scene' && original?.kind === 'scene' && entity.data.chapterId !== original.data.chapterId) scenes.push({ id: entity.id, before: original.data.chapterId, after: entity.data.chapterId });
+  }
+  return { projectId: before.projectId, ...(!jsonEqual(beforeOrder, afterOrder) ? { chapterOrder: { before: beforeOrder, after: afterOrder } } : {}), chapters, scenes };
+}
+/** Refuse changed presentation fields; retain every later date, prose and unrelated entity edit. */
+export function undoPresentationOrder(project: ProjectData, change: PresentationOrderChange): ProjectData {
+  if (project.projectId !== change.projectId) throw new Error('提示順を取り消す作品が一致しません。');
+  const current = new Map(project.entities.map(entity => [entity.id, entity]));
+  const stale = () => { throw new Error('提示順が後から変更されています。取消前に現在版を確認してください。'); };
+  if (change.chapterOrder && !jsonEqual(presentationState(project).chapterOrder, change.chapterOrder.after)) stale();
+  for (const row of change.chapters) { const entity = current.get(row.id); if (entity?.kind !== 'chapter' || entity.deletedAt || !jsonEqual(entity.data.sceneIds, row.after)) stale(); }
+  for (const row of change.scenes) { const entity = current.get(row.id); if (entity?.kind !== 'scene' || entity.deletedAt || entity.data.chapterId !== row.after) stale(); }
+  const next = editableProjectCopy(project);
+  for (const entity of next.entities) {
+    if (entity.kind === 'chapter') { const row = change.chapters.find(row => row.id === entity.id); if (row) entity.data.sceneIds = [...row.before]; }
+    if (entity.kind === 'scene') { const row = change.scenes.find(row => row.id === entity.id); if (row) { if (row.before === undefined) delete entity.data.chapterId; else entity.data.chapterId = row.before; } }
+  }
+  if (change.chapterOrder) {
+    const index = new Map(next.entities.map(entity => [entity.id, entity]));
+    const positions = next.entities.flatMap((entity, index) => entity.kind === 'chapter' && !entity.deletedAt ? [index] : []);
+    positions.forEach((position, offset) => { next.entities[position] = index.get(change.chapterOrder!.before[offset])!; });
+  }
+  return next;
+}

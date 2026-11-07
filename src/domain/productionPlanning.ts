@@ -1,5 +1,6 @@
 import { adoptedRecord } from './adoption';
 import { resolveReuseContent, reuseOrigin } from './reuse';
+import { productionContentView as workloadView, writingCounts, writingRouteCounts } from './production';
 import { createEntity } from './model';
 import { createWorldSnapshot } from './world';
 import { sha256, jsonBytes } from '../storage/json';
@@ -13,21 +14,11 @@ import {replayChapterReading} from './presentation';
 import {editRichText,remapEditedTextReferences,remapEditedTextRelationReferences} from './text';
 import type { Entity, ID, ProjectData, ProjectContent, Estimate, RichText } from './types';
 
-/** Production identity is the originating record and content, rather than each reuse site. */
-function workloadView(project: ProjectData) {
- const view = resolveReuseContent(project, project.snapshots),ownById=new Map(project.entities.map(entity=>[entity.id,entity])),reverseBindings=new WeakMap<object,Map<ID,ID>>();
- const key = (id: ID) => {
-  const origin = reuseOrigin(view,id),own=ownById.get(id);
-  if(!origin||own?.kind==='scene'&&own.data.reuse?.mode==='override'&&own.data.reuse.overrideFields.some(field=>['body','dialogueLineIds','blockIds'].includes(field)))return id;
-  let reverse=reverseBindings.get(origin.bindings);if(!reverse){reverse=new Map(Object.entries(origin.bindings).map(([source,target])=>[target,source]));reverseBindings.set(origin.bindings,reverse);}return reverse.get(id)??origin.entityId;
- };
- return { view, key };
-}
 export function productionWorkload(project:ProjectData,routeSceneIds:readonly ID[]=[],routeEdition:ProjectData=project) {
  const {view,key}=workloadView(project), scenes=view.entities.filter((e):e is Entity<'scene'>=>e.kind==='scene'&&adoptedRecord(e)),sceneIds=new Set(scenes.map(e=>e.id));
  const lines=view.entities.filter(e=>e.kind==='dialogue_line'&&adoptedRecord(e)),assets=view.entities.filter(e=>e.kind==='attachment'&&adoptedRecord(e)),tasks=project.entities.filter((e):e is Entity<'production_task'>=>e.kind==='production_task'&&adoptedRecord(e)),taskById=new Map(tasks.map(task=>[task.id,task]));
  const routeIds=routeEdition===project?sceneIds:new Set(workloadView(routeEdition).view.entities.filter(entity=>entity.kind==='scene'&&adoptedRecord(entity)).map(entity=>entity.id));
- return {uniqueScenes:new Set(scenes.map(e=>key(e.id))).size,uniqueLines:new Set(lines.map(e=>key(e.id))).size,uniqueAssets:new Set(assets.map(e=>key(e.id))).size,reuseSites:scenes.filter(e=>reuseOrigin(view,e.id)).length,routeOccurrences:routeSceneIds.filter(id=>routeIds.has(id)).length,unknownRouteReferences:routeSceneIds.filter(id=>!routeIds.has(id)).length,rows:tasks.map(task=>({task,dependencies:(task.data.dependsOn??[]).map(id=>({id,status:taskById.get(id)?.data.progress??'unknown'})),deadlineConflict:(task.data.dependsOn??[]).some(id=>{const before=taskById.get(id)?.data.deadline,after=task.data.deadline;return !!before&&!!after&&(before.timeZone!==after.timeZone||before.date>after.date);}),blocked:!!task.data.blockingReason||(task.data.dependsOn??[]).some(id=>taskById.get(id)?.data.progress!=='done'),estimate:task.data.estimate??null}))};
+ return {writingCharacters:writingCounts(project).characters,routeWritingCharacters:writingRouteCounts(routeEdition,routeSceneIds).characters,uniqueScenes:new Set(scenes.map(e=>key(e.id))).size,uniqueLines:new Set(lines.map(e=>key(e.id))).size,uniqueAssets:new Set(assets.map(e=>key(e.id))).size,reuseSites:scenes.filter(e=>reuseOrigin(view,e.id)).length,routeOccurrences:routeSceneIds.filter(id=>routeIds.has(id)).length,unknownRouteReferences:routeSceneIds.filter(id=>!routeIds.has(id)).length,rows:tasks.map(task=>({task,dependencies:(task.data.dependsOn??[]).map(id=>({id,status:taskById.get(id)?.data.progress??'unknown'})),deadlineConflict:(task.data.dependsOn??[]).some(id=>{const before=taskById.get(id)?.data.deadline,after=task.data.deadline;return !!before&&!!after&&(before.timeZone!==after.timeZone||before.date>after.date);}),blocked:!!task.data.blockingReason||(task.data.dependsOn??[]).some(id=>taskById.get(id)?.data.progress!=='done'),estimate:task.data.estimate??null}))};
 }
 export async function productionTraceWorkload(input:ProjectData,traceId:ID,worldSnapshots:Record<ID,ProjectContent>={}){
  const project=structuredClone(input),registry=structuredClone(worldSnapshots),trace=project.entities.find((entity):entity is Entity<'trace'>=>entity.id===traceId&&entity.kind==='trace'&&adoptedRecord(entity));if(!trace)throw Error('REFERENCE_INVALID: 制作量を比較する保存経路がありません。');
@@ -63,12 +54,18 @@ export async function previewMediaRevision(inputProject:ProjectData,id:ID,inputB
  const candidate={...pinned,entities:[...pinned.entities,next]},payload={projectId:project.projectId,baseRevision:project.revision,oldId:id,newId:next.id,baseHash:base.contentHash,differencesHash:await sha256(jsonBytes(differences)),candidateHash:await digest(candidate)};return {...payload,old,base,candidate,differences,confirmationHash:await sha256(jsonBytes(payload))};
 }
 export async function confirmMediaRevision(inputProject:ProjectData,inputPlan:Awaited<ReturnType<typeof previewMediaRevision>>){const project=capture(inputProject),plan=structuredClone(inputPlan);const {candidate,old:_old,base:_base,differences,confirmationHash,...payload}=plan;if(project.projectId!==plan.projectId||project.revision!==plan.baseRevision||await digest(candidate)!==plan.candidateHash||await sha256(jsonBytes(differences))!==plan.differencesHash||await sha256(jsonBytes(payload))!==confirmationHash)throw new Error('REVISION_CONFLICT: 媒体比較後に作品または差分が変わりました。');return {...candidate,history:project.history};}
-export async function previewConsultationImport(inputProject:ProjectData,input:{text:string;source:string;versionId:ID;targetId?:ID}){
+/** Deliberate reply sections keep explanatory prose out of replacement dialogue. */
+export function splitConsultationReply(text:string,reason=''):{text:string;reason:string}{
+ const normalized=text.replace(/\r\n?/g,'\n'),parts=normalized.match(/^(?:#{1,6}\s*(?:本文|差し替える本文|Replacement text)\s*\n)?([\s\S]*?)\n#{1,6}\s*(?:理由|変更理由|Reasons?)\s*\n([\s\S]*)$/i);
+ return {text:(parts?parts[1]:normalized).trim(),reason:[parts?.[2]?.trim(),reason.trim()].filter(Boolean).join('\n\n')};
+}
+export async function previewConsultationImport(inputProject:ProjectData,input:{text:string;reason?:string;source:string;versionId:ID;targetId?:ID}){
  const project=capture(inputProject);input=structuredClone(input);
+ const reply=splitConsultationReply(input.text,input.reason);if(new TextEncoder().encode(reply.reason).byteLength>1024*1024)throw Error('VALIDATION_FAILED: 変更理由は1 MiB以下で指定してください。');
  const snapshot=input.versionId===project.projectId?undefined:project.snapshots.find(s=>s.id===input.versionId);if(input.versionId!==project.projectId&&(!snapshot||await sha256(jsonBytes(snapshot.content))!==snapshot.contentHash))throw new Error('INTEGRITY_FAILED: 相談対象版を確認できません。');
- const source=snapshot?{...snapshot.content,snapshots:project.snapshots,history:[]}:project,proposal=createConsultationProposal(source,{id:crypto.randomUUID(),blockId:crypto.randomUUID(),text:input.text,source:input.source,targetRevision:source.revision,createdAt:new Date().toISOString()});proposal.candidate.customValues.consultationTargetVersionId=input.versionId;
+ const source=snapshot?{...snapshot.content,snapshots:project.snapshots,history:[]}:project,proposal=createConsultationProposal(source,{id:crypto.randomUUID(),blockId:crypto.randomUUID(),text:reply.text,source:input.source,targetRevision:source.revision,createdAt:new Date().toISOString()});proposal.candidate.customValues.consultationTargetVersionId=input.versionId;proposal.candidate.customValues.consultationReason=reply.reason;
  const branch=forkAuthorAlternative(project,'相談からの提案',{snapshotId:snapshot?.id});let content={...source,entities:[...source.entities,{...proposal.candidate,status:'provisional' as const}]};
- if(input.targetId){const target=content.entities.find(e=>e.id===input.targetId&&adoptedRecord(e));if(!target||!['scene','dialogue_line','chapter','note'].includes(target.kind))throw new Error('REFERENCE_INVALID: 対象版内の本文を選んでください。');const field=target.kind==='dialogue_line'?'text':target.kind==='chapter'?'summary':'body',before=(target.data as unknown as Record<string,RichText>)[field]??[],after={...target,data:{...target.data,[field]:editRichText(before,input.text)}} as Entity;content={...content,entities:remapEditedTextReferences(content.entities.map(e=>e.id===target.id?after:e),target,after),relations:remapEditedTextRelationReferences(content.relations,target,after)};}
+ if(input.targetId){const target=content.entities.find(e=>e.id===input.targetId&&adoptedRecord(e));if(!target||!['scene','dialogue_line','chapter','note'].includes(target.kind))throw new Error('REFERENCE_INVALID: 対象版内の本文を選んでください。');const field=target.kind==='dialogue_line'?'text':target.kind==='chapter'?'summary':'body',before=(target.data as unknown as Record<string,RichText>)[field]??[],after={...target,data:{...target.data,[field]:editRichText(before,reply.text)}} as Entity;content={...content,entities:remapEditedTextReferences(content.entities.map(e=>e.id===target.id?after:e),target,after),relations:remapEditedTextRelationReferences(content.relations,target,after)};}
  const alternative=await sealAuthorAlternative(appendAlternativeVersion(branch,content,`出所: ${input.source}`)),payload={projectId:project.projectId,baseRevision:project.revision,versionId:input.versionId,alternativeHash:await sha256(jsonBytes(alternative))};return {...payload,alternative,confirmationHash:await sha256(jsonBytes(payload))};
 }
 export async function confirmConsultationImport(inputProject:ProjectData,inputPlan:Awaited<ReturnType<typeof previewConsultationImport>>){const project=capture(inputProject),plan=structuredClone(inputPlan);const {alternative,confirmationHash,...payload}=plan;if(project.projectId!==plan.projectId||project.revision!==plan.baseRevision||await sha256(jsonBytes(alternative))!==plan.alternativeHash||await sha256(jsonBytes(payload))!==confirmationHash)throw new Error('REVISION_CONFLICT: 相談の確認後に作品または提案が変わりました。');return {...project,authorAlternatives:[...project.authorAlternatives??[],alternative]};}

@@ -1,3 +1,4 @@
+import {compareEditions,paragraphRestoreReferenceEffects,restoreSelectedParagraphs,replaceSelectedOccurrences,type ParagraphSelection,type ReplacementOccurrence} from '../domain/selectiveEdits';
 import {bindCanonicalHistoryWrites,readHistoryPageCommands} from './historyMetadata';
 import {readWorldClosure} from './worldClosure';
 import {DerivedIndexBudget,ProjectDerivedOwner} from '../domain/derivedIndexes';
@@ -488,7 +489,15 @@ export class ScenarioStore {
   derivedIndexRetention(){return {owners:this.derivedOwners.size,...this.derivedBudget.snapshot()};}
   private authorAccess:Map<string,string>|null=null;
   private accessGeneration=0;
-  setAuthorAccess(roles:Record<string,string>|null){this.authorAccess=roles?new Map(Object.entries(roles)):null;this.accessGeneration++;for(const id of this.cacheEpochs.keys())this.invalidateProjectCache(id);}
+  private catalogListeners=new Set<()=>void>();
+  private catalogEpoch=0;
+  get catalogGeneration(){return this.catalogEpoch;}
+  subscribeCatalogChanges=(listener:()=>void)=>{this.catalogListeners.add(listener);return ()=>{this.catalogListeners.delete(listener);};};
+  private catalogChanged(){
+    this.catalogEpoch++;
+    for(const listener of this.catalogListeners){try{listener();}catch{/* A view observer cannot change the outcome of a completed save. */}}
+  }
+  setAuthorAccess(roles:Record<string,string>|null){this.authorAccess=roles?new Map(Object.entries(roles)):null;this.accessGeneration++;for(const id of this.cacheEpochs.keys())this.invalidateProjectCache(id);this.catalogChanged();}
   /** Publish a fresh authoritative role response only in its original access/lifetime. */
   async refreshAuthorAccess(load:()=>Promise<Record<string,string>>,options:{signal?:AbortSignal;isCurrent?:()=>boolean}={}){
     const access=this.accessGeneration,lifetime=this.cacheLifetime,{signal,isCurrent}=options;checkCancelled(signal);
@@ -520,7 +529,7 @@ export class ScenarioStore {
     this.faultInjector = options.faultInjector;
     this.onSaveMetrics = options.onSaveMetrics;
     this.db = new ScenarioDatabase(options.databaseName ?? (this.accountId ? `scenario-manager-account-${encodeURIComponent(this.accountId)}` : 'scenario-manager-local-v1'));
-    for(const name of ['saveProject','importScenario','putAsset','commitPreparedAck','confirmSyncResolution','bindBootstrapBase','bindConfirmedProject','saveAuthorToolDraft','saveImportDraft','applyReceivedImage','saveWorkspaceInputs','restoreAuthorInputs','restoreAuthorToolDrafts']){const fn=(this as unknown as Record<string,(...args:unknown[])=>Promise<unknown>>)[name].bind(this);Object.defineProperty(this,name,{configurable:true,writable:true,value:async(...args:unknown[])=>{this.activeOperations++;try{return await fn(...args);}finally{this.activeOperations--;}}});}
+    for(const name of ['saveProject','importScenario','putAsset','commitPreparedAck','confirmSyncResolution','bindBootstrapBase','bindConfirmedProject','saveAuthorToolDraft','saveImportDraft','applyReceivedImage','saveWorkspaceInputs','restoreAuthorInputs','restoreAuthorToolDrafts']){const fn=(this as unknown as Record<string,(...args:unknown[])=>Promise<unknown>>)[name].bind(this);Object.defineProperty(this,name,{configurable:true,writable:true,value:async(...args:unknown[])=>{this.activeOperations++;try{const result=await fn(...args);if(['saveProject','importScenario','commitPreparedAck','confirmSyncResolution','bindBootstrapBase','bindConfirmedProject','applyReceivedImage'].includes(name))this.catalogChanged();return result;}finally{this.activeOperations--;}}});}
     const phases:Record<string,ProbePhase>={listProjectSummaries:'store.list',loadEditor:'store.read',listProjectsForEditing:'store.list',getProjectForEditing:'store.read',getProject:'store.fullRead',saveProject:'store.save',historyPage:'store.history',exportProject:'store.export',importScenario:'store.import',writeContent:'writeContent'};
     for(const [name,phase] of Object.entries(phases)){
       const fn=(this as unknown as Record<string,(...args:unknown[])=>Promise<unknown>>)[name].bind(this);
@@ -541,7 +550,7 @@ export class ScenarioStore {
       snapshots.set(snapshot.id, snapshot);
     }
   }
-  close(): void { this.cacheLifetime++; for (const id of this.cacheEpochs.keys()) this.invalidateProjectCache(id); this.db.close(); this.measureCache(); }
+  close(): void { this.cacheLifetime++; this.catalogChanged(); for (const id of this.cacheEpochs.keys()) this.invalidateProjectCache(id); this.db.close(); this.measureCache(); }
   /** Explicit open resets Dexie's failed-open state after an aborted native
    * migration. An already open connection stays open; no data is deleted. */
   async reopen(): Promise<void> { await this.db.open(); }
@@ -1213,6 +1222,41 @@ export class ScenarioStore {
     return this.saveProject(next, { reason: `作品全体を操作 ${request.historyOperationId} の${request.side === 'before' ? '変更前' : '変更後'}（版 ${request.sourceRevision}）へ復元`, compensatesOperationId: request.historyOperationId, includeHistory: true });
   }
 
+  async previewParagraphRestore(projectId:string,sourceId:string,comparisonId:string,selected:ParagraphSelection[]) {
+    const current=await this.getProjectForEditing(projectId);
+    if(!current)throw new StorageError('NOT_FOUND','作品が見つかりません。');
+    const source=current.snapshots.find(s=>s.id===sourceId),comparison=current.snapshots.find(s=>s.id===comparisonId);
+    if(!source||!comparison||sourceId===comparisonId)throw new StorageError('NOT_FOUND','異なる二つの固定稿を選んでください。');
+    const changed=compareEditions(source,comparison).paragraphs;
+    if(selected.some(s=>!changed.some(c=>c.selectable&&c.entityId===s.entityId&&c.field===s.field&&c.blockId===s.blockId)))throw new StorageError('VALIDATION_FAILED','比較した差分から一意な段落を選び直してください。');
+    const candidate=restoreSelectedParagraphs(current,source,selected);
+    const changes=selected.map(s=>({ ...s,before:(current.entities.find(e=>e.id===s.entityId)!.data as unknown as Record<string,Block[]>)[s.field].find(b=>b.id===s.blockId)!,after:(candidate.entities.find(e=>e.id===s.entityId)!.data as unknown as Record<string,Block[]>)[s.field].find(b=>b.id===s.blockId)! }));
+    const payload={projectId,baseRevision:current.revision,sourceId,comparisonId,selected:copy(selected),changes,referenceEffects:paragraphRestoreReferenceEffects(current,candidate)};
+    return {...payload,confirmationHash:await sha256(jsonBytes(payload))};
+  }
+  async restoreParagraphs(projectId:string,approved:Awaited<ReturnType<ScenarioStore['previewParagraphRestore']>>):Promise<SaveResult>{
+    const request=copy(approved),fresh=await this.previewParagraphRestore(projectId,request.sourceId,request.comparisonId,request.selected);
+    const {confirmationHash,...payload}=request;
+    if(projectId!==request.projectId||fresh.confirmationHash!==confirmationHash||await sha256(jsonBytes(payload))!==confirmationHash)throw new StorageError('REVISION_CONFLICT','確認後に作品が更新されました。段落を再比較してください。');
+    const current=await this.getProjectForEditing(projectId);
+    if(!current||current.revision!==request.baseRevision)throw new StorageError('REVISION_CONFLICT','確定前に作品が更新されました。');
+    const candidate=restoreSelectedParagraphs(current,current.snapshots.find(s=>s.id===request.sourceId)!,request.selected);
+    return this.saveProject(addChangeReviews(current,candidate),{reason:'固定稿から選択段落を復元',includeHistory:true});
+  }
+  async previewOccurrenceReplacement(projectId:string,term:string,replacement:string,selected:ReplacementOccurrence[]){
+    const current=await this.getProjectForEditing(projectId);
+    if(!current)throw new StorageError('NOT_FOUND','作品が見つかりません。');
+    replaceSelectedOccurrences(current,term,replacement,selected);
+    const payload={projectId,baseRevision:current.revision,term,replacement,selected:copy(selected)};
+    return {...payload,confirmationHash:await sha256(jsonBytes(payload))};
+  }
+  async replaceOccurrences(projectId:string,approved:Awaited<ReturnType<ScenarioStore['previewOccurrenceReplacement']>>):Promise<SaveResult>{
+    const request=copy(approved),{confirmationHash,...payload}=request,current=await this.getProjectForEditing(projectId);
+    if(!current||projectId!==request.projectId||current.revision!==request.baseRevision||await sha256(jsonBytes(payload))!==confirmationHash)throw new StorageError('REVISION_CONFLICT','確認後に作品が更新されました。一致位置を再検索してください。');
+    const candidate=replaceSelectedOccurrences(current,request.term,request.replacement,request.selected);
+    return this.saveProject(addChangeReviews(current,candidate),{reason:'選択した一致位置だけを一括置換',includeHistory:true});
+  }
+
   async restoreRevision(projectId: string, revision: string): Promise<SaveResult> {
     const [current, historical] = await Promise.all([this.getProject(projectId), this.getProjectAtRevision(projectId, revision)]);
     if (!current || !historical) throw new StorageError('NOT_FOUND', '復元する版が見つかりません。');
@@ -1823,7 +1867,7 @@ function compensate(current: ProjectData, command: CommandRecord): ProjectData {
     if (!equalJson(current[field], command.after[field])) throw new StorageError('RESTORE_CONFLICT', '取り消す項目がその後に変更されています。', field);
     (next as unknown as Record<string, unknown>)[field] = copy(command.before[field]);
   }
-  return next;
+  return preservePublishedVersions(next, current);
 }
 
 

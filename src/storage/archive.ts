@@ -112,3 +112,6 @@ function exportInWorker(request:{input:ProjectData;options:ExportOptions}|{nativ
   } catch(error) {finish(error);}
  });
 }
+
+export {inspectBackupFile, restoreBackupTrial, estimateBackupCapacity} from './backupVerification';
+export type {BackupInspection, BackupTrial, BackupCapacity} from './backupVerification';

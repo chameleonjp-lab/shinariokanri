@@ -1,3 +1,4 @@
+import {MaterialRightsEditor} from './MaterialRights';
 import {EntityReferenceSection} from './EntityReferenceSection';
 import {StateMeaningPanel} from './StateMeaningPanel';
 import {WindowedList} from './WindowedList';
@@ -21,13 +22,15 @@ import { resolveReuseContent, reuseTargetAnchor } from '../domain/reuse';
 import { ReuseManager } from './ReuseManager';
 import { MediaRevisionTools } from './MediaConsultationTools';
 import { ProductionTools } from './ProductionTools';
+import { VideoScriptTools } from './VideoScriptTools';
+import { ProductionSourceLinks } from './ProductionDependencies';
 import {ReviewActions} from './ReviewActions';
 
 const EDITOR_TABS = [['main', '要約'], ['body', '本文'], ['notes', '作者メモ'], ['detail', '詳細'], ['preview', '確認表示']] as const;
 
 export interface EditorFailure extends Error { issues?: { path: string; message: string }[] }
 
-export function EntityEditor({ entity, project, referenceProject, isNew, hasUnsavedDraft, onSave, onSaveMany, onSaveProject, onClose, onDraft, onArchive, onOpen, onOpenTarget, navigationTarget, jsonBuffers, onJsonBuffer }: {
+export function EntityEditor({ entity, project, referenceProject, isNew, hasUnsavedDraft, onSave, onSaveMany, onSaveProject, onClose, onDraft, onArchive, onOpen, onOpenTarget, navigationTarget, jsonBuffers, onJsonBuffer, onWritingEdit }: {
   entity: Entity;
   project: ProjectData;
   referenceProject?: ProjectData;
@@ -36,6 +39,7 @@ export function EntityEditor({ entity, project, referenceProject, isNew, hasUnsa
   onSave: (entity: Entity) => Promise<Entity>;
   onSaveMany?: (entities: Entity[], reason: string, assets?: AssetInput[]) => Promise<void>;
   onSaveProject?: (project: ProjectData, reason: string, assets?: AssetInput[]) => Promise<ProjectData>;
+  onWritingEdit?: (position: import('./viewPreferences').WritingResumePosition) => void;
   onClose: () => void;
   onDraft: (entity: Entity, dirty: boolean) => void;
   onArchive: (entity: Entity) => Promise<void>;
@@ -206,7 +210,14 @@ export function EntityEditor({ entity, project, referenceProject, isNew, hasUnsa
   };
 
   useEffect(() => { if (!dirty || draft.kind === 'template' || saving || composing || invalidJson.length) return; const timer = window.setTimeout(() => { void save(); }, 500); return () => window.clearTimeout(timer); }, [draft, dirty, composing, invalidJson, saving]);
-  const change = (next: Entity) => { setDraft(next); setDirty(true); setError(''); setIssues([]); };
+  const change = (next: Entity) => {
+    if (draft.kind === 'scene' && next.kind === 'scene' && Array.isArray(next.data.body) && JSON.stringify(draft.data.body) !== JSON.stringify(next.data.body)) {
+      const control = document.activeElement;
+      const index = control instanceof HTMLTextAreaElement && control.dataset.richTextEditor ? control.value.slice(0, control.selectionStart).split('\n').length - 1 : Math.max(0, next.data.body.findIndex((block, i) => block.text !== draft.data.body[i]?.text));
+      onWritingEdit?.({sceneId:draft.id, blockId:next.data.body[index]?.id ?? null, blockIndex:index});
+    }
+    setDraft(next); setDirty(true); setError(''); setIssues([]);
+  };
   const changeData = (key: string, value: unknown) => {
     const data = { ...dataOf(draft), [key]: value };
     if (value === undefined) delete data[key];
@@ -275,10 +286,12 @@ export function EntityEditor({ entity, project, referenceProject, isNew, hasUnsa
     {draft.deletedAt && <p className="info-notice" role="status">アーカイブ済みの情報です。内容と参照は保持されています。作品・保存の変更履歴から復元できます。</p>}
     {navigationNotice && <p className="error-notice" role="alert">{navigationNotice}</p>}
     {error && <div className="error-notice" role="alert"><strong>保存できませんでした</strong><p>{error}</p>{issues.length > 0 && <ul>{issues.map((issue, i) => <li key={i}>{issue.message}</li>)}</ul>}<button type="button" className="text-button" onClick={() => downloadBytes(JSON.stringify(draft, null, 2), `${safeFileName(draft.name)}-未保存.json`)}><Icon name="download" size={16}/>入力を一時ファイルに保存</button></div>}
-    <div className="editor-content" ref={editorContent} onScroll={() => persistPosition()}><fieldset className="editor-inputs" disabled={reuseBusy}>{draft.kind === "attachment" && <AssetPreview entity={draft}/>} {draft.kind === "source" && safeExternalUrl(draft.data.locator) && <a className="button secondary small source-link" href={safeExternalUrl(draft.data.locator)!} target="_blank" rel="noopener noreferrer">資料のURLを開く<Icon name="arrow" size={16}/></a>}{!display.hiddenFields.includes('name') && <div className="form-field" data-field="name"><label htmlFor="entity-name">{entity.kind === 'event' ? '出来事の名前（要約だけでも登録可）' : '名前'}</label><input id="entity-name" value={draft.name} onChange={e => change({ ...draft, name: e.target.value })} onBlur={() => { if (dirty) void save(); }} placeholder={`${KIND_LABELS[draft.kind]}の名前`}/></div>}
+    <div className="editor-content" ref={editorContent} onScroll={() => persistPosition()}><fieldset className="editor-inputs" disabled={reuseBusy}>{draft.kind === "attachment" && <><AssetPreview entity={draft}/>{!isNew&&onSaveProject&&<MaterialRightsEditor key={draft.id} project={project} entity={draft} disabled={dirty||invalidJson.length>0||composing} onSaveProject={onSaveProject}/>}</>} {draft.kind === "source" && safeExternalUrl(draft.data.locator) && <a className="button secondary small source-link" href={safeExternalUrl(draft.data.locator)!} target="_blank" rel="noopener noreferrer">資料のURLを開く<Icon name="arrow" size={16}/></a>}{!display.hiddenFields.includes('name') && <div className="form-field" data-field="name"><label htmlFor="entity-name">{entity.kind === 'event' ? '出来事の名前（要約だけでも登録可）' : '名前'}</label><input id="entity-name" value={draft.name} onChange={e => change({ ...draft, name: e.target.value })} onBlur={() => { if (dirty) void save(); }} placeholder={`${KIND_LABELS[draft.kind]}の名前`}/></div>}
       <div className="form-row">{!display.hiddenFields.includes('status') && <div className="form-field" data-field="status"><label htmlFor="entity-status">情報の状態</label><select id="entity-status" value={draft.status} onChange={e => change({ ...draft, status: e.target.value } as Entity)}>{Object.entries(STATUS_LABELS).map(([v, label]) => <option key={v} value={v}>{label}</option>)}</select></div>}{!display.hiddenFields.includes('visibility') && <div className="form-field" data-field="visibility"><label htmlFor="entity-visibility">公開範囲</label><select id="entity-visibility" value={draft.visibility} onChange={e => change({ ...draft, visibility: e.target.value } as Entity)}><option value="private">自分だけ</option><option value="team">作品の編集者</option><option value="projection">投影プロファイル</option></select></div>}</div>
       {!display.hiddenFields.includes('retainIfUnreferenced') && <div className="form-field" data-field="retainIfUnreferenced"><label className="check-label"><input type="checkbox" aria-label="未参照でも保持する" checked={!!draft.retainIfUnreferenced} onChange={event => change({ ...draft, retainIfUnreferenced: event.target.checked })}/>未参照でも保持する</label><span className="field-hint">背景設定など、参照がなくても残す情報を指定できます。確認候補からの除外は保存後に反映します。</span></div>}
       {!isNew && draft.kind==='media_variant' && onSaveProject && <MediaRevisionTools project={project} entity={draft} disabled={dirty||saving||composing} onSaveProject={onSaveProject} onOpen={onOpen}/>}
+      {!isNew && <ProductionSourceLinks project={project} entity={draft} onOpenTarget={anchor=>followTextTarget(anchor, undefined, '')}/>}
+      {!isNew && !draft.deletedAt && !['rejected','alternate'].includes(draft.status) && draft.kind==='scene' && onSaveProject && <VideoScriptTools onOpenTarget={anchor=>followTextTarget(anchor, undefined, '')} key={`video:${draft.id}`} project={project} scene={draft} disabled={dirty || invalidJson.length > 0} onSaveProject={onSaveProject} onOpen={onOpen} onBusy={busy => { savingRef.current=busy;setSaving(busy);setReuseBusy(busy); }} onApplied={saved => {setDraft(saved);setDirty(false);}}/>}
       {!isNew && ['dialogue_line', 'localization', 'recording', 'source', 'attachment'].includes(draft.kind) && onSaveProject && <ProductionTools key={draft.id} project={project} entity={draft} disabled={dirty || invalidJson.length > 0 || composing} onSaveProject={onSaveProject} onOpen={onOpen} onBusy={busy => { savingRef.current = busy; setSaving(busy); setReuseBusy(busy); }} onApplied={saved => { setDraft(saved); setDirty(false); }}/> }
       {!isNew && (draft.kind === 'scene' || draft.kind === 'flow_node') && onSaveProject && <ReuseManager key={draft.id} project={project} owner={draft} disabled={dirty || invalidJson.length > 0 || composing} onSaveProject={onSaveProject} onBusy={busy => { savingRef.current = busy; setSaving(busy); setReuseBusy(busy); }} onApplied={saved => { setDraft(saved); setDirty(false); }}/>}
       {reuse && reuse.mode !== 'clone' && <p className="field-hint">共通元の固定版 {reuse.pinnedSnapshotId} を継承しています。上書き対象にした項目以外は共通元で編集し、更新差分を確認してください。</p>}

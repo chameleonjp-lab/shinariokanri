@@ -330,3 +330,21 @@ export function indexTextLinkReferences(project: ProjectData): Map<string, TextL
 export function findTextLinkReferences(project: ProjectData, targetEntityId: string): TextLinkReference[] {
   return indexTextLinkReferences(project).get(targetEntityId) ?? [];
 }
+
+export interface CharacterMentionCandidate {id:string;sourceEntityId:string;sourceName:string;anchor:ContentAnchor;fieldPath:string;context:string;term:string}
+/** Unconfirmed spellings are an optional, separate queue; existing links to a namesake win. */
+export function findCharacterMentionCandidates(project:ProjectData,characterId:string):CharacterMentionCandidate[]{
+ const person=project.entities.find(entity=>entity.id===characterId&&entity.kind==='character'&&!entity.deletedAt);if(!person)return [];
+ const hits:CharacterMentionCandidate[]=[];
+ for(const source of project.entities){
+  if(source.deletedAt||!['scene','dialogue_line'].includes(source.kind))continue;
+  for(const [field,raw] of Object.entries(dataRecord(source))){
+   if(!['body','text','summary'].includes(field)||!isRichText(raw))continue;
+   for(const block of raw)for(const candidate of suggestLinkCandidates(block.text,[person],{sourceEntityId:source.id,projectId:project.projectId})){
+    if(block.links?.some(link=>candidate.start<link.end&&link.start<candidate.end))continue;
+    hits.push({id:`${source.id}:${field}:${block.id}:${candidate.id}`,sourceEntityId:source.id,sourceName:source.name,anchor:{entityId:source.id,blockId:block.id,start:candidate.start,end:candidate.end,...source.kind==='dialogue_line'?{lineId:source.id}:{}},fieldPath:`data.${field}`,context:Array.from(block.text).slice(Math.max(0,candidate.start-40),candidate.end+60).join(''),term:candidate.term});
+   }
+  }
+ }
+ return hits;
+}

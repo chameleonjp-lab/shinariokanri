@@ -1,4 +1,5 @@
 import type { Entity, ID, ProjectData, ProjectSnapshot } from './types';
+import { editRichText, remapEditedTextReferences, remapEditedTextRelationReferences } from './text';
 import { adoptedRecord } from './adoption';
 import { canonicalJson, jsonBytes, sha256 } from '../storage/json';
 import { createEntity, newId, textToRichText } from './model';
@@ -106,4 +107,80 @@ export async function confirmTraceReconfirmation(project: ProjectData, plan: Rec
   if (source.projectId !== plan.projectId || source.revision !== approved.baseRevision) throw new Error('再確認中に作品が更新されました。結果を保持して改訂稿を再実行してください。');
   if (await sha256(jsonBytes(payload)) !== confirmationHash) throw new Error('確認した結果が変更されています。再実行してください。');
   return { entities: approved.entities, snapshots: approved.snapshots };
+}
+
+export interface PathDifference { choice: number; nodeId?: ID; edgeIds: ID[]; reason: string }
+export interface RevisionReplay {
+  status: 'same_path' | 'different_path' | 'unexecutable'; sourceTraceId: ID; sourceVersionId: ID; targetVersionId: ID;
+  startState?: import('./types').RuntimeState; seed?: string; session?: TrialSession; attempted?: TrialSession; firstDifference?: PathDifference;
+}
+/** Replays a captured prefix as well as a completed route. The source evidence is never edited. */
+export async function replayTraceAgainstRevision(project: ProjectData, traceId: ID, options: { targetVersionId?: ID; worldSnapshots?: Record<ID, import('./types').ProjectContent>; signal?: AbortSignal } = {}): Promise<RevisionReplay> {
+  const source = structuredClone(project), trace = source.entities.find((entity): entity is Entity<'trace'> => entity.id === traceId && entity.kind === 'trace' && adoptedRecord(entity));
+  if (!trace) throw new Error('再実行する旧経路がありません。');
+  const targetVersionId = options.targetVersionId ?? source.projectId;
+  const base: RevisionReplay = { status: 'unexecutable', sourceTraceId: trace.id, sourceVersionId: trace.data.contentVersionId, targetVersionId };
+  const failure = (reason: string, choice = 0, session?: TrialSession, edgeIds: ID[] = [], nodeId?: ID): RevisionReplay => ({ ...base, session, firstDifference: { choice, edgeIds, nodeId, reason } });
+  if (trace.data.mode === 'chapters') return failure('章順の経路は開始範囲の再確認を使ってください。');
+  if (['actual', 'mixed'].includes(trace.data.externalMode ?? '')) return failure('実ゲーム入力は受領証跡の対象版を確認してください。');
+  if (trace.data.steps.length > 10_000) return failure('一経路10,000遷移の上限を超えています。');
+  const old = await replaySavedTraceVerified(source, trace.id, options.worldSnapshots);
+  if (old.status !== 'ready' && old.status !== 'terminal') return failure(`旧固定版の証跡を再生できません。${old.issues.map(issue => issue.message).join('、')}`);
+  const state = { ...structuredClone(old.startState), contentVersionId: targetVersionId };
+  let next = await startTrialVerified(source, { state, contentVersionId: targetVersionId, externalValues: structuredClone(old.startExternalValues), seed: old.startState.rngSeed, worldTick: old.initialWorldTick }, options.worldSnapshots);
+  base.startState = structuredClone(next.startState); base.seed = next.startState.rngSeed;
+  if (next.status !== 'ready' && next.status !== 'terminal' && !(next.status === 'blocked' && old.trace.length)) return failure(`固定した開始状態では開始できません。${next.issues.map(issue => issue.message).join('、')}`, 0, next);
+  const started = performance.now();
+  for (const [index, step] of old.trace.entries()) {
+    if (options.signal?.aborted) return failure('再実行を中止しました。残りの経路は未実行です。', index + 1, next, step.edgeIds, step.fromId);
+    if (performance.now() - started > 30_000) return failure('再実行は30秒の上限に達しました。', index + 1, next, step.edgeIds, step.fromId);
+    if (index % 50 === 0) await new Promise<void>(resolve => setTimeout(resolve, 0));
+    const attempted = stepTrial(source, next, structuredClone(step.request));
+    if (attempted.status === 'error' || attempted.status === 'unknown' || attempted.status === 'blocked' || attempted.trace.length !== next.trace.length + 1) return failure(attempted.issues.map(issue => issue.message).join('、') || '保存した選択を実行できません。', index + 1, next, step.edgeIds, step.fromId);
+    if (attempted.nodeId !== step.toId || canonicalJson(attempted.trace.at(-1)?.edgeIds ?? []) !== canonicalJson(step.edgeIds)) return { ...failure('選択先または実行した分岐が旧経路から変わりました。', index + 1, next, step.edgeIds, step.fromId), status: 'different_path', attempted };
+    next = attempted;
+  }
+  return { ...base, status: 'same_path', session: next };
+}
+
+export interface TrialCorrectionPlan {
+  baseRevision: string; anchor: import('./types').ContentAnchor; candidate: Entity<'scene'> | Entity<'dialogue_line'>;
+  sourceTrace: Entity<'trace'>; entities: Entity[]; snapshots: ProjectSnapshot[];
+}
+/** The editor receives a detached candidate and a pinned old prefix, never the live trial entity. */
+export async function prepareTrialCorrection(project: ProjectData, session: TrialSession, anchor: import('./types').ContentAnchor): Promise<TrialCorrectionPlan> {
+  if (session.status !== 'ready' && session.status !== 'terminal') throw new Error('未確認の条件を解決してから修正候補を開いてください。');
+  const currentNode = session.content.entities.find(entity => entity.id === session.nodeId && entity.kind === 'flow_node');
+  const scene = currentNode?.kind === 'flow_node' ? session.content.entities.find(entity => entity.id === currentNode.data.sceneId && entity.kind === 'scene') : undefined;
+  if (!scene || scene.kind !== 'scene' || anchor.entityId !== scene.id && !scene.data.dialogueLineIds?.includes(anchor.entityId)) throw new Error('試読中の場面・台詞を選んでください。');
+  const candidate = project.entities.find((entity): entity is Entity<'scene'> | Entity<'dialogue_line'> => entity.id === anchor.entityId && (entity.kind === 'scene' || entity.kind === 'dialogue_line') && adoptedRecord(entity));
+  if (!candidate) throw new Error('現在稿から本文が取り除かれています。旧版を確認してください。');
+  const blocks = candidate.kind === 'scene' ? candidate.data.body : candidate.data.text;
+  if (!anchor.blockId || !blocks.some(block => block.id === anchor.blockId)) throw new Error('元の段落が現在稿にありません。移動先を確認してください。');
+  const ids = { checkpointId: newId(), snapshotId: newId() }, record = pinTrialRecord(session, ids, project);
+  const checkpoint = { ...createEntity(project.projectId, 'checkpoint', '修正前の試読開始', record.checkpoint), id: ids.checkpointId };
+  const sourceTrace = createEntity(project.projectId, 'trace', '修正前の試読経路', { ...record.trace, correctionAnchor: { ...anchor, sourceVersionId: ids.snapshotId } });
+  const snapshot = { id: ids.snapshotId, content: record.content, contentHash: await sha256(jsonBytes(record.content)), createdAt: new Date().toISOString(), versionLabel: `修正前の試読 · ${session.contentRevision}` };
+  return { baseRevision: project.revision, anchor: { ...anchor, sourceVersionId: ids.snapshotId }, candidate: structuredClone(candidate), sourceTrace, entities: [checkpoint, sourceTrace], snapshots: [snapshot] };
+}
+
+export async function prepareTrialCorrectionSave(project: ProjectData, plan: TrialCorrectionPlan, text: string, worldSnapshots: Record<ID, import('./types').ProjectContent> = {}) {
+  if (project.revision !== plan.baseRevision || project.projectId !== plan.candidate.projectId) throw new Error('修正候補を開いた後に作品が更新されました。入力を保持して現在稿と比較してください。');
+  const before = project.entities.find(entity => entity.id === plan.candidate.id);
+  if (!before || before.kind !== plan.candidate.kind || semantic(before) !== semantic(plan.candidate)) throw new Error('修正元の本文が更新されました。入力を保持して比較してください。');
+  const candidate = structuredClone(plan.candidate), blocks = candidate.kind === 'scene' ? candidate.data.body : candidate.data.text;
+  const selectedBlockIndex = blocks.findIndex(block => block.id === plan.anchor.blockId);
+  const wholeText = blocks.map(block => block.id === plan.anchor.blockId ? text : block.text).join('\n');
+  const edited = editRichText(blocks, wholeText);
+  // Edits split all lines; a no-op keeps imported blocks with embedded line breaks intact.
+  const targetBlockIndex = edited === blocks ? selectedBlockIndex : blocks.slice(0, selectedBlockIndex).reduce((count, block) => count + block.text.split('\n').length, 0);
+  if (candidate.kind === 'scene') candidate.data.body = edited; else candidate.data.text = edited;
+  const entities = remapEditedTextReferences([...project.entities.map(entity => entity.id === candidate.id ? candidate : entity), ...plan.entities], before, candidate);
+  const relations = remapEditedTextRelationReferences(project.relations, before, candidate);
+  const next = { ...project, entities, relations, snapshots: [...project.snapshots, ...plan.snapshots] };
+  const captured = await captureRuntimeContent(next, next.projectId, { worldSnapshots });
+  const { snapshots: _snapshots, history: _history, authorAlternatives: _alternatives, ...content } = captured;
+  const snapshot: ProjectSnapshot = { id: newId(), content, contentHash: await sha256(jsonBytes(content)), createdAt: new Date().toISOString(), versionLabel: `一文修正後の試読 · ${project.revision}` };
+  const targetAnchor = { entityId: candidate.id, blockId: edited[targetBlockIndex].id, sourceVersionId: snapshot.id };
+  return { project: { ...next, snapshots: [...next.snapshots, snapshot] }, targetVersionId: snapshot.id, targetAnchor };
 }

@@ -57,7 +57,7 @@ function indexableTerms(entity: ProjectedEntity): { source: PublicCatalogTermSou
 export function buildPublicCatalogIndex(projection: PublicProjection): PublicCatalogIndexEntry[] {
   const classifications = classificationsByProjectedId(projection);
   const entries: PublicCatalogIndexEntry[] = [];
-  for (const entity of projection.entities) {
+  for (const entity of publicReaderEntities(projection)) {
     const categoryNames = classifications.get(entity.id) ?? [];
     for (const value of indexableTerms(entity)) {
       const term = value.term.trim(), reading = value.reading.trim();
@@ -88,4 +88,48 @@ export function searchPublicCatalogIndex(entries: readonly PublicCatalogIndexEnt
   if (!needle) return entries.filter(entry => !kind || entry.kind === kind).slice();
   return entries.filter(entry => (!kind || entry.kind === kind)
     && (entry.normalizedTerm.includes(needle) || entry.normalizedReading.includes(needle)));
+}
+
+/** Every entity in a prepared projection is approved for reader names and index entries. */
+export function publicReaderEntities(projection: PublicProjection): ProjectedEntity[] {
+  const entities = new Map(projection.entities.map(entity => [entity.id, entity]));
+  const ordered = new Map<string, ProjectedEntity>();
+  for (const chapter of projection.entities.filter(entity => entity.kind === 'chapter')) {
+    ordered.set(chapter.id, chapter);
+    for (const id of Array.isArray(chapter.data.sceneIds) ? chapter.data.sceneIds : []) {
+      const scene = typeof id === 'string' ? entities.get(id) : undefined;
+      if (scene?.kind === 'scene') ordered.set(scene.id, scene);
+    }
+  }
+  for (const entity of projection.entities) ordered.set(entity.id, entity);
+  return [...ordered.values()];
+}
+
+/** Uses only the approved public filename, never attachment source metadata. */
+export function publicReaderEntityLabel(entity: ProjectedEntity): string {
+  const name = entity.name || entity.kind;
+  const filename = entity.kind === 'attachment' ? stringValue(entity.data.displayName) : '';
+  return filename && filename !== name ? `${name} · ${filename}` : name;
+}
+
+export interface PublicReaderPage { id: string; title: string; projection: PublicProjection }
+
+/** Paging is a view of the prepared projection, never a second projection of author data. */
+export function buildPublicReaderPages(projection: PublicProjection): PublicReaderPage[] {
+  const assigned = new Set<string>(), pages: PublicReaderPage[] = [];
+  const ordered = publicReaderEntities(projection);
+  const page = (id: string, title: string, entities: ProjectedEntity[], includeVersions = false): PublicReaderPage => ({
+    id, title, projection: { ...projection, entities, searchIndex: projection.searchIndex.filter(entry => entities.some(entity => entity.id === entry.entityId)), versions: includeVersions ? projection.versions : undefined },
+  });
+  for (const chapter of projection.entities.filter(entity => entity.kind === 'chapter')) {
+    const sceneIds = new Set(Array.isArray(chapter.data.sceneIds) ? chapter.data.sceneIds : []);
+    const scenes = ordered.filter(entity => entity.kind === 'scene' && (sceneIds.has(entity.id) || entity.data.chapterId === chapter.id));
+    const lineIds = new Set(scenes.flatMap(scene => Array.isArray(scene.data.dialogueLineIds) ? scene.data.dialogueLineIds : []));
+    const entities = [chapter, ...scenes, ...projection.entities.filter(entity => entity.kind === 'dialogue_line' && lineIds.has(entity.id))];
+    entities.forEach(entity => assigned.add(entity.id));
+    pages.push(page(chapter.id, chapter.name || '章', entities));
+  }
+  const remaining = projection.entities.filter(entity => !assigned.has(entity.id));
+  if (remaining.length || projection.versions?.length || !pages.length) pages.push(page('public-materials', '人物・資料・引用版', remaining, true));
+  return pages;
 }

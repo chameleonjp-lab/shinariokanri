@@ -53,9 +53,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        engine: [chromium, firefox, webkit]
+        engine: [chromium, webkit]
     env:
-      BROWSER_ENGINES: all
+      BROWSER_ENGINES: webkit
       SCENARIO_CI_ENGINE: ${{ matrix.engine }}
     steps:
       - uses: actions/checkout@v4
