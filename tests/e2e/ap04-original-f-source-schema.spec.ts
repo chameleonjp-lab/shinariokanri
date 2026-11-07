@@ -545,7 +545,7 @@ test('AT-F29 ローカル引用保護: reviewer UUID の版1指摘から改訂�
 
   await openEntity(page, 'review', review.name);
   const actions = page.getByRole('region', { name: '指摘の修正と確認', exact: true });
-  await expect(actions).toContainText('現在稿の位置 確認できる');
+  await expect(actions).toContainText('現在稿の位置 一致');
   await expect(actions.locator('blockquote')).toHaveText(quotedText);
   await expectOriginalReviewQuote(page, originalBody, quotedText);
 
