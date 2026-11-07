@@ -19,7 +19,9 @@ describe('reader public index artifacts', () => {
     for (const secret of ['SECRET_ALIAS', 'SECRET_NOTES', 'secret-notes', 'referenceCount', '17']) expect(html).not.toContain(secret);
     const targets = [...html.matchAll(/href="#([^"]+)"/g)].map(match => match[1]);
     for (const target of targets) expect(html).toContain(`id="${target}"`);
-    expect(html).not.toContain('href="#public-category"');
+    // Approved kinds without prose now have a matching section in both the preview and file.
+    expect(html).toContain('<a href="#public-category">公開分類</a>');
+    expect(html).toContain('<section id="public-category"><h2>公開分類</h2></section>');
   });
 
   it('uses public paragraph IDs in Markdown and scopes citation IDs to the emitted edition', () => {
