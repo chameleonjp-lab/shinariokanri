@@ -21,6 +21,36 @@ function story() {
 }
 
 describe('optional writing goals and reproducible Unicode counts',()=>{
+ it('counts chapterId-only members for chapter and task goals',()=>{
+  const p=createProject('章IDだけの所属'),chapter=createEntity(p.projectId,'chapter','第一章',{sceneIds:[]});
+  const scene=createEntity(p.projectId,'scene','所属する場面',{chapterId:chapter.id,body:textToRichText('abc')});
+  const task=createEntity(p.projectId,'production_task','章を書く',{targetIds:[chapter.id],stage:'writing',progress:'todo'});
+  p.entities.push(chapter,scene,task);
+  expect(validateProject(p)).toMatchObject({ok:true});
+  expect(writingCounts(p)).toEqual({characters:3,unknownReferences:0});
+  expect(writingCounts(p,chapter.id)).toEqual({characters:3,unknownReferences:0});
+  expect(writingCounts(p,task.id)).toEqual({characters:3,unknownReferences:0});
+ });
+ it('deduplicates explicit and implicit chapter members and excludes inactive implicit members',()=>{
+  const p=createProject('章の所属を一度だけ集計'),chapter=createEntity(p.projectId,'chapter','第一章',{sceneIds:[]});
+  const line=createEntity(p.projectId,'dialogue_line','共有する声',{text:textToRichText('声😀')});
+  const explicit=createEntity(p.projectId,'scene','明示と章IDの両方',{chapterId:chapter.id,body:textToRichText('AB'),dialogueLineIds:[line.id]});
+  const implicit=createEntity(p.projectId,'scene','章IDだけ',{chapterId:chapter.id,body:textToRichText('c'),dialogueLineIds:[line.id]});
+  const other=createEntity(p.projectId,'scene','章の外',{body:textToRichText('外外')});
+  const inactive=['alternate','rejected','deleted'].map(status=>{
+   const scene=createEntity(p.projectId,'scene',status,{chapterId:chapter.id,body:textToRichText('除外')});
+   if(status==='deleted'){scene.deletedAt='2026-11-06T00:00:00Z';scene.deletionOperationId=newId();}else scene.status=status as 'alternate'|'rejected';
+   return scene;
+  });
+  chapter.data.sceneIds=[explicit.id];
+  const task=createEntity(p.projectId,'production_task','重なる対象',{targetIds:[chapter.id,explicit.id,implicit.id,line.id],stage:'writing',progress:'todo'});
+  p.entities.push(chapter,line,explicit,implicit,other,...inactive,task);
+  expect(validateProject(p)).toMatchObject({ok:true});
+  expect(writingCounts(p,chapter.id)).toEqual({characters:5,unknownReferences:0});
+  expect(writingCounts(p,task.id)).toEqual({characters:5,unknownReferences:0});
+  expect(writingCounts(p)).toEqual({characters:7,unknownReferences:0});
+  p.entities.reverse();expect(writingCounts(p,chapter.id)).toEqual({characters:5,unknownReferences:0});
+ });
  it('counts authored bodies and linked dialogue once, and each route visit separately',()=>{
   const {p,common,a,b,chapter,task}=story();
   expect(writingCounts(p)).toMatchObject({characters:12,unknownReferences:0});

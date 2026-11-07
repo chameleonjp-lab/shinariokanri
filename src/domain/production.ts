@@ -3,6 +3,7 @@ import { collectReferences, newId } from './model';
 import { adoptedRecord } from './adoption';
 import { resolveReuseContent, reuseFieldOrigin, reuseOrigin } from './reuse';
 import { measureText } from './textMetrics';
+import { orderedScenes } from './writingWorkspace';
 
 function stable(value: unknown): string {
  if(value===null || typeof value!=='object') return JSON.stringify(value);
@@ -117,7 +118,8 @@ function writingCountView(project: ProjectData) {
   while(pending.length){
    const id=pending.pop()!;if(visited.has(id))continue;visited.add(id);
    const entity=byId.get(id);if(!entity){unknown.add(id);continue;}
-   if(entity.kind==='chapter'){pending.push(...entity.data.sceneIds);continue;}
+   // Keep explicit unresolved targets visible, and include legacy chapterId-only members.
+   if(entity.kind==='chapter'){pending.push(...entity.data.sceneIds,...orderedScenes(view,id).filter(adoptedRecord).map(scene=>scene.id));continue;}
    if(entity.kind==='production_task'){pending.push(...entity.data.targetIds);continue;}
    if(entity.kind!=='scene'&&entity.kind!=='dialogue_line'){unknown.add(id);continue;}
    if(entity.kind==='scene')pending.push(...entity.data.dialogueLineIds??[]);
