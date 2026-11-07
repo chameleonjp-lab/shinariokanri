@@ -114,6 +114,7 @@ test.describe('AT-F32 常時見えるボタンと一覧の操作', () => {
 
       await modeNavigate(page, /^検索/, mode);
       await activate(page.getByRole('tab', { name: '複合検索・一覧', exact: true }), mode);
+      await activate(page.locator('.search-page').getByText('詳しい検索条件', { exact: true }), mode);
       await choose(page.locator('.search-page').getByLabel('情報の種類', { exact: true }), 'note', mode);
       const bulk = page.locator('.search-page details').filter({ has: page.locator('summary').filter({ hasText: '結果をまとめて編集' }) });
       await activate(bulk.locator('summary'), mode);

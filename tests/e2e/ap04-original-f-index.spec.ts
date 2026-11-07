@@ -133,7 +133,9 @@ test('AT-F57 読み/旧名/別名/同名を原文と別に探し、作者の分�
     expect(links).toContain(publicFirst[0].id); expect(links).toContain(publicSame[0].id);
     for (const target of links) expect(document).toContain(`id="${target}"`);
     for (const block of publicFirst) expect(document).toContain(block.text);
-    expect(document).not.toContain(`href="#${category.id}"`);
+    // Approved categories now have an emitted section in both reader formats.
+    expect(links).toContain(category.id);
+    expect(document).toContain(format === 'html' ? `<section id="${category.id}">` : `<a id="${category.id}"></a>`);
   }
   expect(await authorFingerprint(page)).toBe(beforeNavigation);
   await page.reload(); const saved = await backup(page);

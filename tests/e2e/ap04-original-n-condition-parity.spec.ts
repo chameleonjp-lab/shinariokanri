@@ -110,15 +110,19 @@ test('AT-N16 同じ条件 ID を構造化画面と JSON で編集し、純粋評
   if (!externalEdge || externalEdge.kind !== 'flow_edge') throw new Error('外部条件がありません');
   const externalCondition: Condition = { op: 'external', contractId: contract.id };
   expect(externalEdge.data.condition).toEqual(externalCondition);
-  // Normal author saves of initial=unknown and its restoration create exactly
-  // two dependency reviews. They precede the stub and retain all six given IDs.
+  // The same pending initial-value obligation is reopened on restoration.
+  // Check both transitions and its immutable before-image, retaining all six given IDs.
   const givenIds = new Set(p.entities.map(entity => entity.id));
   const retainedGiven = external.project.entities.filter(entity => givenIds.has(entity.id));
   expect(retainedGiven.map(({ id, kind }) => ({ id, kind })).sort((a, b) => a.id.localeCompare(b.id)))
     .toEqual(p.entities.map(({ id, kind }) => ({ id, kind })).sort((a, b) => a.id.localeCompare(b.id)));
   const generatedReviews = external.project.entities.filter(entity => !givenIds.has(entity.id));
-  expect(generatedReviews).toHaveLength(2);
-  const transitions = generatedReviews.map(review => {
+  const firstReviews = unknown.project.entities.filter(entity => !givenIds.has(entity.id));
+  expect(firstReviews).toHaveLength(1);
+  expect(generatedReviews).toHaveLength(1);
+  expect(generatedReviews[0].id).toBe(firstReviews[0].id);
+  expect(external.project.history.flatMap(command => command.before.entities)).toContainEqual(firstReviews[0]);
+  const transitions = [...firstReviews, ...generatedReviews].map(review => {
     if (review.kind !== 'review') throw new Error('通常保存が変更確認以外の情報を追加しました');
     const sourceRevisions = JSON.parse(String(review.customValues['changeReview.sourceRevisions'])) as Record<string, string>;
     const next = sourceRevisions[variable.id];
@@ -131,9 +135,11 @@ test('AT-N16 同じ条件 ID を構造化画面と JSON で編集し、純粋評
     expect(sourceRevisions).toEqual({ [variable.id]: next });
     expect(JSON.parse(String(review.customValues['changeReview.paths'])))
       .toEqual({ [variable.id]: { directPaths: ['data.condition.variableId'], relationLabels: [] } });
+    expect(JSON.parse(String(review.customValues['changeReview.sourceFields'])))
+      .toEqual({ [variable.id]: ['data.initial'] });
     expect(JSON.parse(String(review.customValues['changeReview.key'])))
       .toEqual({ targetId: edge.id, sources: [{ id: variable.id, revision: next,
-        directPaths: ['data.condition.variableId'], relationLabels: [] }] });
+        directPaths: ['data.condition.variableId'], relationLabels: [], changedFields: ['data.initial'] }] });
     expect(review.data.body.map(block => block.text).join('\n'))
       .toContain(`(${variable.id})。改訂 ${next === '1' ? '0' : '1'} → ${next}。`);
     return next;
@@ -141,7 +147,7 @@ test('AT-N16 同じ条件 ID を構造化画面と JSON で編集し、純粋評
   expect(transitions.sort()).toEqual(['1', '2']);
   const baselineEntities = external.project.entities;
   const baselineIds = baselineEntities.map(entity => entity.id).sort();
-  expect(baselineIds).toHaveLength(8);
+  expect(baselineIds).toHaveLength(7);
   await openEntity(page, 'flow_edge', edge.name);
   await editData(page, { ...externalEdge.data, condition: externalCondition });
   const input: Record<string, TypedValue> = { [contract.id]: { type: 'integer', value: 1 } };
